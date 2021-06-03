@@ -37,9 +37,9 @@ class RedisDb(KeyValueStorage):
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        self._host = conf['default:host']
-        self._port = int(conf['default:port'])
-        self._db = int(conf['default:id'])
+        self._host = conf['host']
+        self._port = int(conf['port'])
+        self._db = int(conf['id'])
         self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._db)
         self._scan_chunk_size = 50
 

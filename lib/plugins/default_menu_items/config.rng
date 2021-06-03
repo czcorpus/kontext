@@ -7,9 +7,6 @@
                 <value>default_menu_items</value>
             </element>
             <element name="data_path">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>

@@ -36,9 +36,6 @@
                         ]
                     ]]>
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="cache_db_path">
@@ -49,9 +46,6 @@
                     the same element we want only a single request to be performed and
                     the rest should run from API).
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>

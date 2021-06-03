@@ -51,12 +51,12 @@ class DbTest(unittest.TestCase):
         # redis direct connection:
         self.rd = redis.StrictRedis(REDIS_HOST, REDIS_PORT, REDIS_DB)
         # redis plugin connection:
-        conf = {'default:host': REDIS_HOST, 'default:port': REDIS_PORT, 'default:id': REDIS_DB}
+        conf = {'host': REDIS_HOST, 'port': REDIS_PORT, 'id': REDIS_DB}
         self.r = RedisDb(conf)
         # sqlite3 direct connection:
         self.sd = sqlite3.connect(SQLITE3_DB)
         # sqlite3 plugin connection:
-        conf = {'default:db_path': SQLITE3_DB}
+        conf = {'db_path': SQLITE3_DB}
         self.s = DefaultDb(conf)
 
     def setUp(self):

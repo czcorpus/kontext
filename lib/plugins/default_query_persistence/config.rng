@@ -8,9 +8,6 @@
                 <value>default_query_persistence</value>
             </element>
             <element name="ttl_days">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="nonNegativeInteger" />
             </element>
             <element name="archive_dir">
@@ -20,9 +17,6 @@
                   use redis_db as main key-value storage (in such case, the archived items
                   would end-up in RAM which is not very effective).
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <optional>

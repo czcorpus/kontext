@@ -53,8 +53,8 @@ def create_instance(conf):
     arguments:
     conf -- settings module or some compatible object (a compatible get() method is enough here)
     """
-    cookie_name = conf.get('plugins', 'getlang')['default:cookie']
-    fallback_lang = conf.get('plugins', 'getlang').get('default:fallback_lang', '')
+    cookie_name = conf.get('plugins', 'getlang')['cookie']
+    fallback_lang = conf.get('plugins', 'getlang').get('fallback_lang', '')
     if fallback_lang is None:
         fallback_lang = ''
     else:

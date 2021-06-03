@@ -300,9 +300,9 @@ def create_instance(settings, db, auth):
     Creates a plugin instance.
     """
     plugin_conf = settings.get('plugins', 'query_persistence')
-    archive_dir = plugin_conf.get('default:archive_dir', None)
-    ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_TTL_DAYS))
-    anonymous_ttl_days = int(plugin_conf.get('default:ttl_days', DEFAULT_ANONYMOUS_USER_TTL_DAYS))
+    archive_dir = plugin_conf.get('archive_dir', None)
+    ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_TTL_DAYS))
+    anonymous_ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_ANONYMOUS_USER_TTL_DAYS))
 
     if archive_dir:
         backend = Sqlite3ArchBackend(archive_dir=archive_dir)

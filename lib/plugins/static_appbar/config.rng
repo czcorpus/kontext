@@ -7,22 +7,13 @@
                 <value>static_appbar</value>
             </element>
             <element name="html_dir">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="default_lang">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <optional>
                 <element name="css_urls">
-                    <attribute name="extension-by">
-                        <value>default</value>
-                    </attribute>
                     <zeroOrMore>
                         <element name="item">
                             <data type="anyURI" />
@@ -32,9 +23,6 @@
             </optional>
             <optional>
                 <element name="js_urls">
-                    <attribute name="extension-by">
-                        <value>default</value>
-                    </attribute>
                     <zeroOrMore>
                         <element name="item">
                             <data type="anyURI" />

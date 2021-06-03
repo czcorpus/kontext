@@ -115,8 +115,10 @@ class DefaultKwicConnect(AbstractKwicConnect):
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
-                    data, status = backend.fetch(corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1))
-                    ans.append(frontend.export_data(data, status, lang, is_kwic_view=False).to_dict())
+                    data, status = backend.fetch(
+                        corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1))
+                    ans.append(frontend.export_data(
+                        data, status, lang, is_kwic_view=False).to_dict())
             except EnvironmentError as ex:
                 logging.getLogger(__name__).error('KwicConnect backend error: {0}'.format(ex))
                 raise ex
@@ -127,8 +129,8 @@ class DefaultKwicConnect(AbstractKwicConnect):
 def create_instance(settings, corparch):
     providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
     plg_conf = settings.get('plugins', 'kwic_connect')
-    kwic_conn = DefaultKwicConnect(providers, corparch, max_kwic_words=plg_conf['default:max_kwic_words'],
-                                   load_chunk_size=plg_conf['default:load_chunk_size'])
+    kwic_conn = DefaultKwicConnect(providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],
+                                   load_chunk_size=plg_conf['load_chunk_size'])
     if cache_path:
         kwic_conn.set_cache_path(cache_path)
     return kwic_conn

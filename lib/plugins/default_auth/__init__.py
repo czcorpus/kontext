@@ -335,7 +335,7 @@ def create_instance(conf, db, sessions):
                               sessions=sessions,
                               anonymous_user_id=int(plugin_conf['anonymous_user_id']),
                               case_sensitive_corpora_names=plugin_conf.get(
-                                  'default:case_sensitive_corpora_names', False),
+                                  'case_sensitive_corpora_names', False),
                               login_url=plugin_conf.get('login_url', '/user/login'),
                               logout_url=plugin_conf.get('logout_url', '/user/logoutx'),
                               smtp_server=conf.get('mailing', 'smtp_server'),

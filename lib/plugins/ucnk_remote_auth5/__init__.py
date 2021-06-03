@@ -46,9 +46,9 @@ IMPLICIT_CORPUS = 'susanne'
 
 class ToolbarConf(object):
     def __init__(self, conf):
-        self.server = conf.get('plugins', 'auth')['ucnk:toolbar_server']
-        self.path = conf.get('plugins', 'auth')['ucnk:toolbar_path']
-        self.port = int(conf.get('plugins', 'auth')['ucnk:toolbar_port'])
+        self.server = conf.get('plugins', 'auth')['toolbar_server']
+        self.path = conf.get('plugins', 'auth')['toolbar_path']
+        self.port = int(conf.get('plugins', 'auth')['toolbar_port'])
 
 
 class AuthConf(object):
@@ -57,13 +57,13 @@ class AuthConf(object):
         self.logout_url = conf.get('plugins', 'auth')['logout_url']
         self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
         self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
-                                          'ucnk:toolbar_server_timeout'])
-        self.cookie_sid = conf.get('plugins', 'auth')['ucnk:cookie_sid']
-        self.cookie_at = conf.get('plugins', 'auth')['ucnk:cookie_at']
-        self.cookie_rmme = conf.get('plugins', 'auth')['ucnk:cookie_rmme']
-        self.cookie_lang = conf.get('plugins', 'auth')['ucnk:cookie_lang']
+                                          'toolbar_server_timeout'])
+        self.cookie_sid = conf.get('plugins', 'auth')['cookie_sid']
+        self.cookie_at = conf.get('plugins', 'auth')['cookie_at']
+        self.cookie_rmme = conf.get('plugins', 'auth')['cookie_rmme']
+        self.cookie_lang = conf.get('plugins', 'auth')['cookie_lang']
         self.unverified_ssl_cert = bool(int(conf.get('plugins', 'auth', {}).get(
-            'ucnk:toolbar_unverified_ssl_cert', '0')))
+            'toolbar_unverified_ssl_cert', '0')))
 
 
 class CentralAuth(AbstractRemoteAuth):

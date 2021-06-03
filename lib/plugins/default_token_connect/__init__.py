@@ -211,9 +211,9 @@ def init_provider(conf, ident):
 
 
 def setup_providers(plg_conf):
-    with open(plg_conf['default:providers_conf'], 'rb') as fr:
+    with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    cache_path = plg_conf.get('default:cache_db_path')
+    cache_path = plg_conf.get('cache_db_path')
     providers = dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf)
     if cache_path:
         cache_manager = CacheMan(cache_path)

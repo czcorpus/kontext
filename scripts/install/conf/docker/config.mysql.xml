@@ -95,7 +95,7 @@
         </action_log>
         <conc_cache>
             <module>default_conc_cache</module>
-            <cache_dir extension-by="default">/var/local/corpora/cache</cache_dir>
+            <cache_dir>/var/local/corpora/cache</cache_dir>
         </conc_cache>
         <query_persistence>
             <module>mysql_query_persistence</module>
@@ -114,9 +114,9 @@
         </corparch>
         <db>
             <module>redis_db</module>
-            <host extension-by="default">kontext_redis_1</host>
-            <port extension-by="default">6379</port>
-            <id extension-by="default">1</id>
+            <host>kontext_redis_1</host>
+            <port>6379</port>
+            <id>1</id>
         </db>
         <integration_db>
             <module>mysql_integration_db</module>
@@ -142,23 +142,23 @@
         </footer_bar>
         <getlang>
             <module>default_getlang</module>
-            <cookie extension-by="default">kontext_toolbar_lang</cookie>
-            <fallback_lang extension-by="default">en-US</fallback_lang>
+            <cookie>kontext_toolbar_lang</cookie>
+            <fallback_lang>en-US</fallback_lang>
         </getlang>
         <live_attributes/>
         <menu_items>
             <module>default_menu_items</module>
-            <data_path extension-by="default">/opt/kontext/conf/main-menu.sample.json</data_path>
+            <data_path>/opt/kontext/conf/main-menu.sample.json</data_path>
         </menu_items>
         <query_history>
             <module>default_query_history</module>
             <page_num_records>10</page_num_records>
-            <ttl_days extension-by="default">10</ttl_days>
+            <ttl_days>10</ttl_days>
         </query_history>
         <query_suggest />
         <settings_storage>
             <module>default_settings_storage</module>
-            <excluded_users extension-by="default">
+            <excluded_users>
                 <item>1</item>
                 <item>3</item>
             </excluded_users>

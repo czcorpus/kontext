@@ -28,7 +28,6 @@ element syntax_viewer {
     element module { "ucnk_syntax_viewer" }
     element js_module { "defaultSyntaxViewer" }  # here we use default plug-in implementation
     element config_path {
-        attribute extension-by { "default" }
         text # a path to JSON config file (see below)
     }
 }

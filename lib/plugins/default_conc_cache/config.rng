@@ -7,9 +7,6 @@
                 <value>default_conc_cache</value>
             </element>
             <element name="cache_dir">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
         </element>

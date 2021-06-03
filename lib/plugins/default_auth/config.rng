@@ -48,9 +48,6 @@
                     Setting this to true (or 1) disables the conversion and allows having corpora.
                     like 'Foo', 'FOO', 'foo' side by side.
                 </a:documentation>
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="boolean" />
             </element>
         </element>

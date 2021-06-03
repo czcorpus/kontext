@@ -12,7 +12,7 @@ import settings
 
 
 def get_db(conf):
-    return redis.StrictRedis(host=conf['default:host'], port=int(conf['default:port']), db=int(conf['default:id']))
+    return redis.StrictRedis(host=conf['host'], port=int(conf['port']), db=int(conf['id']))
 
 
 if __name__ == '__main__':

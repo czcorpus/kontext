@@ -7,9 +7,6 @@
                 <value>default_settings_storage</value>
             </element>
             <element name="excluded_users">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <zeroOrMore>
                     <element name="item">
                         <data type="nonNegativeInteger" />

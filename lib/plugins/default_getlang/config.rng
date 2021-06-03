@@ -7,15 +7,9 @@
                 <value>default_getlang</value>
             </element>
             <element name="cookie">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="fallback_lang">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="language" />
             </element>
         </element>

@@ -8,21 +8,12 @@
                 <value>redis_db</value>
             </element>
             <element name="host">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="port">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="integer" />
             </element>
              <element name="id">
-                 <attribute name="extension-by">
-                    <value>default</value>
-                 </attribute>
                  <data type="integer" />
              </element>
         </element>

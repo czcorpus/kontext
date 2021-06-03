@@ -57,7 +57,7 @@ class DefaultDb(KeyValueStorage):
         Returns thread-local connection
         """
         if not hasattr(thread_local, 'conn'):
-            thread_local.conn = sqlite3.connect(self.conf.get('default:db_path'))
+            thread_local.conn = sqlite3.connect(self.conf.get('db_path'))
         return thread_local.conn
 
     def _delete_expired(self, key):

@@ -58,7 +58,7 @@ class QueryHistory(AbstractQueryHistory):
         conf -- the 'settings' module (or some compatible object)
         db -- default_db history backend
         """
-        tmp = conf.get('plugins', 'query_history').get('default:ttl_days', None)
+        tmp = conf.get('plugins', 'query_history').get('ttl_days', None)
         if tmp:
             self.ttl_days = int(tmp)
         else:

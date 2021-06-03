@@ -29,11 +29,9 @@ Required XML:
 element taghelper {
   element module { "default_taghelper" }
   element clear_interval {
-    attribute extension-by { "default" }
     text # TTL - number of seconds
   }
   element tags_cache_dir {
-    attribute extension-by { "default" }
     text #  a path to a dir where files are cached
   }
 }
@@ -88,15 +86,15 @@ class Taghelper(AbstractTaghelper):
                 if tagset.tagset_type == 'positional':
                     self._loaders[(corpus_name, tagset.tagset_name)] = PositionalTagVariantLoader(
                         corpus_name=corpus_name, tagset_name=tagset.tagset_name,
-                        cache_dir=self._conf['default:tags_cache_dir'],
-                        tags_src_dir=self._conf['default:tags_src_dir'],
-                        cache_clear_interval=self._conf['default:clear_interval'],
-                        taglist_path=self._conf['default:taglist_path'])
+                        cache_dir=self._conf['tags_cache_dir'],
+                        tags_src_dir=self._conf['tags_src_dir'],
+                        cache_clear_interval=self._conf['clear_interval'],
+                        taglist_path=self._conf['taglist_path'])
                     self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
                 elif tagset.tagset_type == 'keyval':
                     self._loaders[(corpus_name, tagset.tagset_name)] = KeyvalTagVariantLoader(
                         corpus_name=corpus_name, tagset_name=tagset.tagset_name,
-                        tags_src_dir=self._conf['default:tags_src_dir'],
+                        tags_src_dir=self._conf['tags_src_dir'],
                     )
                     self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
                 else:

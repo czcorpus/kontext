@@ -54,7 +54,7 @@ class FootBar(AbstractFootbar):
 def create_instance(settings):
     plugin_conf = settings.get('plugins', 'footer_bar')
     templates = {
-        'cs_CZ': plugin_conf['lindat:template_cs'],
-        'en_US': plugin_conf['lindat:template_en']
+        'cs_CZ': plugin_conf['template_cs'],
+        'en_US': plugin_conf['template_en']
     }
     return FootBar(templates=templates)

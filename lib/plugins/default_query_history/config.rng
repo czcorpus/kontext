@@ -11,9 +11,6 @@
                 <data type="positiveInteger" />
             </element>
             <element name="ttl_days">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <data type="positiveInteger" />
             </element>
         </element>

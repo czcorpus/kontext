@@ -61,7 +61,8 @@ class SettingsStorage(AbstractSettingsStorage):
         for corp, cs in corp_set.items():
             self.db.hash_set(self._mk_corp_key(user_id), corp, cs)
         if len(gen) < len(data):
-            logging.getLogger(__name__).warning('Upgraded legacy format settings for user {}'.format(user_id))
+            logging.getLogger(__name__).warning(
+                'Upgraded legacy format settings for user {}'.format(user_id))
             self.db.set(self._mk_key(user_id), gen)
         return gen
 
@@ -78,7 +79,7 @@ class SettingsStorage(AbstractSettingsStorage):
 @inject(plugins.runtime.DB)
 def create_instance(conf, db):
     conf = conf.get('plugins', 'settings_storage')
-    excluded_users = conf.get('default:excluded_users', None)
+    excluded_users = conf.get('excluded_users', None)
     if excluded_users is None:
         excluded_users = []
     else:

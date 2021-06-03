@@ -12,7 +12,7 @@ from plugins import redis_db
 plugins.install_plugin('db', redis_db, autoconf.settings)
 
 
-DB_CONF_ENTRY = 'ucnk:archive_db_path'
+DB_CONF_ENTRY = 'archive_db_path'
 
 
 def fix_new_lines(data):
@@ -55,4 +55,3 @@ if __name__ == '__main__':
             sqldb.commit()
     else:
         print('No archive database found, skipping.')
-

@@ -24,7 +24,6 @@ required XML structure:
 element menu_items {
   element module { "default_menu_items" }
   element data_path {
-    attribute extension-by { "default" }
     text # path to a json file containing menu_items.json
   }
 }
@@ -65,7 +64,7 @@ from plugins.abstract.menu_items import AbstractMenuItems, StaticMenuItem, Dynam
 class MenuItems(AbstractMenuItems):
 
     def __init__(self, conf):
-        with open(conf['default:data_path'], 'rb') as f:
+        with open(conf['data_path'], 'rb') as f:
             self._data = json.load(f)
 
     def get_items(self, menu_section, lang):

@@ -11,21 +11,12 @@
                 <value>defaultIssueReporting</value>
             </element>
             <element name="smtp_server">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="mail_sender">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <text />
             </element>
             <element name="mail_recipients">
-                <attribute name="extension-by">
-                    <value>default</value>
-                </attribute>
                 <zeroOrMore>
                     <element name="item">
                         <text />

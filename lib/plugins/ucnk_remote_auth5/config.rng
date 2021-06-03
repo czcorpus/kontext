@@ -3,12 +3,6 @@
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
          xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0">
 
-    <define name="ucnk-custom">
-        <attribute name="extension-by">
-            <value>ucnk</value>
-        </attribute>
-    </define>
-
     <start>
         <element name="auth">
             <element name="module">
@@ -36,42 +30,33 @@
                 <text />
             </element>
             <element name="cookie_sid">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="cookie_at">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="cookie_rmme">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="cookie_lang">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="toolbar_server">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="toolbar_port">
-                <ref name="ucnk-custom" />
                 <data type="positiveInteger" />
             </element>
             <element name="toolbar_path">
-                <ref name="ucnk-custom" />
                 <text />
             </element>
             <element name="toolbar_server_timeout">
-                <ref name="ucnk-custom" />
                 <data type="nonNegativeInteger" />
             </element>
             <element name="toolbar_unverified_ssl_cert">
                 <a:documentation>In case you use an unverified SSL certificate (e.g. for development or some internal
                 use) set this to 1/true - otherwise, the plug-in will refuse to communicate with central auth
                 server.</a:documentation>
-                <ref name="ucnk-custom" />
                 <choice>
                     <value>0</value>
                     <value>1</value>
@@ -81,32 +66,25 @@
             </element>
             <optional>
                 <element name="sync_host">
-                    <ref name="ucnk-custom" />
                     <text />
                 </element>
                 <element name="sync_db">
-                    <ref name="ucnk-custom" />
                     <text />
                 </element>
                 <element name="sync_user">
-                    <ref name="ucnk-custom" />
                     <text />
                 </element>
                 <element name="sync_passwd">
-                    <ref name="ucnk-custom" />
                     <text />
                 </element>
                 <element name="sync_pool_size">
                     <a:documentation>1 should be OK in most cases</a:documentation>
-                    <ref name="ucnk-custom" />
                     <data type="integer" />
                 </element>
                 <element name="sync_retry_delay">
-                    <ref name="ucnk-custom" />
                     <data type="integer" />
                 </element>
                 <element name="sync_retry_attempts">
-                    <ref name="ucnk-custom" />
                     <data type="integer" />
                 </element>
             </optional>

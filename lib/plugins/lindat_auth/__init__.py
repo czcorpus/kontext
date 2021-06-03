@@ -89,7 +89,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._login_url = conf['login_url']
         self._conf = conf
         self._entitlement2group = {entitlement: group for entitlement, group
-                                   in map(_e2g_splitter, self._conf.get('lindat:entitlements_to_groups', []))}
+                                   in map(_e2g_splitter, self._conf.get('entitlements_to_groups', []))}
 
     def validate_user(self, plugin_ctx, username, password):
         """
@@ -214,12 +214,12 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
 
     def export(self, plugin_ctx):
         return {
-            'metadataFeed': self._conf['lindat:metadataFeed'],
+            'metadataFeed': self._conf['metadataFeed'],
             'login_url': plugin_ctx.root_url + self._conf['login_url'],
-            'service_name': self._conf['lindat:service_name'],
-            'response_url': self._conf['lindat:response_url']
-            if self._conf['lindat:response_url'] else '',
-            'local_action': self._conf['lindat:local_action'],
+            'service_name': self._conf['service_name'],
+            'response_url': self._conf['response_url']
+            if self._conf['response_url'] else '',
+            'local_action': self._conf['local_action'],
         }
 
     def export_actions(self):
@@ -326,10 +326,8 @@ def create_instance(conf, db, sessions):
     auth_conf = conf.get('plugins', 'auth')
     corparch_conf = conf.get('plugins', 'corparch')
     corplist_file = None
-    if 'lindat:file' in corparch_conf:
-        corplist_file = corparch_conf['lindat:file']
-    elif 'default:file' in corparch_conf:
-        corplist_file = corparch_conf['default:file']
+    if 'file' in corparch_conf:
+        corplist_file = corparch_conf['file']
     if corplist_file is None or not os.path.exists(corplist_file):
         raise PluginException("Corplist file [%s] in lindat_auth does not exist!" % corplist_file)
     corplist = _load_corplist(corplist_file)
