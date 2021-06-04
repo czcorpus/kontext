@@ -16,7 +16,8 @@ DROP TABLE IF EXISTS kontext_simple_query_default_attrs;
 DROP TABLE IF EXISTS corpus_posattr;
 DROP TABLE IF EXISTS corpus_structure;
 DROP TABLE IF EXISTS corpus_structattr;
-DROP TABLE IF EXISTS kontext_corpus_taghelper;
+DROP TABLE IF EXISTS tagset;
+DROP TABLE IF EXISTS corpus_tagset;
 DROP TABLE IF EXISTS kontext_interval_attr;
 DROP TABLE IF EXISTS kontext_conc_persistence;
 
@@ -198,19 +199,30 @@ CREATE TABLE corpus_structattr (
   CONSTRAINT corpus_structattr_structure_name_fkey FOREIGN KEY (corpus_name, structure_name) REFERENCES corpus_structure (corpus_name, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- --------------- tagset builder  ---------------------
+-- --------------- tagset info (incl. props for tag builder)  ---------------------
 
-CREATE TABLE kontext_corpus_taghelper (
-  corpus_name varchar(63) NOT NULL,
-  pos_attr varchar(63),
-  feat_attr varchar(63) NOT NULL,
-  tagset_type enum('positional','keyval','other') NOT NULL,
-  tagset_name varchar(63),
-  widget_enabled tinyint(4) NOT NULL DEFAULT '0',
-  doc_url_local varchar(255),
-  doc_url_en varchar(255),
-  PRIMARY KEY (corpus_name, feat_attr),
-  CONSTRAINT kontext_corpus_taghelper_ibfk_1 FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr (corpus_name, name) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE tagset (
+  name varchar(63) NOT NULL,
+  full_name text NOT NULL,
+  tagset_type enum('positional', 'keyval', 'other') NOT NULL,
+  doc_url_local varchar(255) DEFAULT NULL,
+  doc_url_en varchar(255) DEFAULT NULL,
+  PRIMARY KEY (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE corpus_tagset (
+  corpus_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
+  tagset_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
+  pos_attr varchar(63) CHARACTER SET utf8 DEFAULT NULL,
+  feat_attr varchar(63) CHARACTER SET utf8 NOT NULL,
+  kontext_widget_enabled tinyint(4) NOT NULL DEFAULT 0,
+  KEY corpus_tagset_ibfk_1 (corpus_name,feat_attr),
+  KEY corpus_tagset_ibfk_2 (corpus_name,pos_attr),
+  KEY corpus_tagset_ibfk_3 (tagset_name),
+  CONSTRAINT corpus_tagset_ibfk_1 FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr (corpus_name, name) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT corpus_tagset_ibfk_2 FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr (corpus_name, name) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT corpus_tagset_ibfk_3 FOREIGN KEY (tagset_name) REFERENCES tagset (name) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT corpus_tagset_ibfk_4 FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------- interval attributes for text type selection -------------
