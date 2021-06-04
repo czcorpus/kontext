@@ -219,6 +219,7 @@ CREATE TABLE corpus_tagset (
   KEY corpus_tagset_ibfk_1 (corpus_name,feat_attr),
   KEY corpus_tagset_ibfk_2 (corpus_name,pos_attr),
   KEY corpus_tagset_ibfk_3 (tagset_name),
+  PRIMARY KEY(corpus_name, tagset_name),
   CONSTRAINT corpus_tagset_ibfk_1 FOREIGN KEY (corpus_name, feat_attr) REFERENCES corpus_posattr (corpus_name, name) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT corpus_tagset_ibfk_2 FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr (corpus_name, name) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT corpus_tagset_ibfk_3 FOREIGN KEY (tagset_name) REFERENCES tagset (name) ON DELETE CASCADE ON UPDATE CASCADE,
