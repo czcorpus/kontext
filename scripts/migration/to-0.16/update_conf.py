@@ -49,6 +49,14 @@ def update_2(doc):
                 srch.text = 'ucnk_query_persistence'
 
 
+def update_3(doc):
+    plugins = doc.find('/plugins')
+    for plugin in plugins:
+        for element in plugin:
+            if 'extension-by' in element.attrib:
+                del element.attrib['extension-by']
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.15.x '
