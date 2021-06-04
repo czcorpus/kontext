@@ -341,10 +341,10 @@ class Backend(DatabaseBackend):
 
     def load_corpus_tagsets(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT corpus_name, pos_attr, feat_attr, tagset_type, tagset_name, '
-                       'widget_enabled, doc_url_local, doc_url_en '
-                       'FROM kontext_corpus_taghelper '
-                       'WHERE corpus_name = %s', (corpus_id,))
+        cursor.execute('SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, t.name AS tagset_name, '
+                       'ct.kontext_widget_enabled AS widget_enabled, t.doc_url_local, t.doc_url_en '
+                       'FROM tagset AS t JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
+                       'WHERE ct.corpus_name = %s', (corpus_id, ))
         return cursor.fetchall()
 
     def load_interval_attrs(self, corpus_id):
