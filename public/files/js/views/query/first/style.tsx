@@ -118,6 +118,10 @@ export const QueryHelp = styled.div`
                     color: ${theme.colorLogoPink};
                     font-weight: bold;
                 }
+
+                .tagset {
+                    font-style: italic;
+                }
             }
         }
     }

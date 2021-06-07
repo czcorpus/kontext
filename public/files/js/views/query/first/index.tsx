@@ -500,13 +500,15 @@ export function init({
                                                             tagset,
                                                             props.isLocalUiLang ? tagset.docUrlLocal : tagset.docUrlEn
                                                         )),
-                                                        List.filter(([,url]) => !!url),
                                                         List.map(
                                                             ([tagset, url]) => (
                                                                 <li key={`item:${tagset.ident}`}>
-                                                                    {he.translate('global__attribute').toLocaleLowerCase()}{'\u00a0'}
-                                                                    <span className="attr">{tagset.featAttr}</span>{'\u00a0'}
-                                                                    - <a className="external" target="_blank" href={url}>{url}</a>
+                                                                    {he.translate('global__tagset').toLocaleLowerCase()}{'\u00a0'}
+                                                                    <span className="tagset">{tagset.ident}</span>{'\u00a0'}
+                                                                    <span className="tagset">({tagset.type})</span>{'\u00a0'}
+                                                                    {he.translate('global__on_attr').toLocaleLowerCase()}{'\u00a0'}
+                                                                    <span className="attr">"{tagset.featAttr}"</span>{'\u00a0'}
+                                                                    {url ? <span> - <a className="external" target="_blank" href={url}>{url}</a></span> : null}
                                                                 </li>
                                                             )
                                                         )
