@@ -212,6 +212,8 @@
         "global__corp_info_attrs_remark_label": "Remark UNTRANSLATED",
         "global__corp_info_attrs_remark_text": "figures listed denote a number of different attributes / structures (i.e. types) in the corpus. UNTRANSLATED",
         "global__attribute": "Attribute UNTRANSLATED",
+        "global__tagset": "Tagset UNTRANSLATED",
+        "global__on_attr": "on attribute UNTRANSLATED",
         "global__keywords": "Keywords UNTRANSLATED",
         "global__query_type_mismatch_confirm_{type}": "It seems that syntax of the actual query does not match the currently selected type \"{type}\". Do you want to continue? UNTRANSLATED",
         "global__get_more_info": "Detailed information UNTRANSLATED",
