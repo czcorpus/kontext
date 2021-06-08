@@ -34,7 +34,7 @@ services:
       - ./public/files/misc:/opt/kontext/public/files/misc
       - ./public/files/themes:/opt/kontext/public/files/themes
       - corpora-data:/var/lib/manatee
-      - corpora-cache:/var/local/copora
+      - corpora-cache:/var/local/corpora
     networks:
       - databases
       - kontext
@@ -47,7 +47,7 @@ services:
       dockerfile: dockerfiles/Dockerfile.rqworker
     environment:
       - TZ=Europe/Prague
-    command: bash -c "pip3 install debugpy && python3 -m debugpy --listen 0.0.0.0:5679 /opt/kontext/worker/rqworker.py"
+    command: bash -c "pip3 install debugpy pyinotify && python3 scripts/dev/reloader.py /opt/kontext py \"python3 -m debugpy --listen 0.0.0.0:5679 /opt/kontext/worker/rqworker.py\""
     ports:
      # rqworker debug port
      - "5679:5679"
@@ -55,6 +55,7 @@ services:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       - ./lib:/opt/kontext/lib
       - ./worker:/opt/kontext/worker
+      - ./scripts:/opt/kontext/scripts
       - corpora-data:/var/lib/manatee
       - corpora-cache:/var/local/corpora
     networks:
