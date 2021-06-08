@@ -13,8 +13,6 @@ services:
     ports:
       # kontext debug port
       - "5678:5678"
-      # rqworker debug port
-      - "5679:5679"
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       # we have to bind folders separatelly
@@ -35,11 +33,45 @@ services:
       - ./public/files/js:/opt/kontext/public/files/js
       - ./public/files/misc:/opt/kontext/public/files/misc
       - ./public/files/themes:/opt/kontext/public/files/themes
-      - corpora-cache:/var/local/copora
       - corpora-data:/var/lib/manatee
+      - corpora-cache:/var/local/copora
     networks:
       - databases
       - kontext
+    depends_on: 
+      - redis
+
+  rq-worker:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.rqworker
+    environment:
+      - TZ=Europe/Prague
+    command: bash -c "pip3 install debugpy && python3 -m debugpy --listen 0.0.0.0:5679 /opt/kontext/worker/rqworker.py"
+    ports:
+     # rqworker debug port
+     - "5679:5679"
+    volumes:
+      - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
+      - ./lib:/opt/kontext/lib
+      - ./worker:/opt/kontext/worker
+      - corpora-data:/var/lib/manatee
+      - corpora-cache:/var/local/corpora
+    networks:
+      - databases
+    depends_on:
+      - redis
+      - kontext-dev
+
+  rq-scheduler:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.rqscheduler
+    environment:
+      - TZ=Europe/Prague
+    command: rqscheduler --host kontext_redis_1 --db 2 -i 10
+    networks:
+      - databases
     depends_on: 
       - redis
 
