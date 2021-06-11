@@ -21,8 +21,6 @@ from typing import Tuple, Optional
 import os
 import time
 import logging
-import sys
-import re
 
 import settings
 import plugins
@@ -33,8 +31,8 @@ from corplib.corpus import KCorpus
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
-from conclib.errors import (ConcordanceException, ConcCalculationStatusException, ConcNotFoundException,
-                            BrokenConcordanceException)
+from conclib.errors import (ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException,
+                            extract_manatee_syntax_error)
 import bgcalc
 from bgcalc.errors import CalcTaskNotFoundError
 
@@ -133,10 +131,10 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
         return False, False
-    err = status.test_error(TASK_TIME_LIMIT)
-    if err is not None:
+    status.check_for_errors(TASK_TIME_LIMIT)
+    if status.error is not None:
         cache_map.del_full_entry(subchash, q)
-        raise err
+        raise status.error
     return status.has_some_result(minsize=minsize), status.finished
 
 
@@ -295,20 +293,9 @@ class ConcCalculation(GeneralWorker):
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
             # here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
-            if isinstance(e, RuntimeError) and 'unexpected character' in str(e):
-                srch = re.match(r'unexpected character(.*)at position (\d+)', str(e))
-                if srch:
-                    # TODO please note that currently due to loss of information about error type during
-                    # ConcCacheStatus storing/restoring, the message is normalized to a more general form
-                    norm_err = ConcordanceException(
-                        'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
-                else:
-                    norm_err = ConcordanceException('Syntax error. Please check the query and its type')
-            else:
-                norm_err = e
+            synt_err = extract_manatee_syntax_error(e)
+            norm_err = synt_err if synt_err else e
             import traceback
-            logging.getLogger(__name__).error('Background calculation error: %s' % norm_err)
-            logging.getLogger(__name__).error(''.join(traceback.format_exception(*sys.exc_info())))
             if cache_map is not None:
                 cache_map.update_calc_status(subchash, query, finished=True, error=norm_err)
 

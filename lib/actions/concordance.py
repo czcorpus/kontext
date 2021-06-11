@@ -2,6 +2,7 @@
 # Copyright (c) 2013 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,7 +37,8 @@ import conclib
 from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
-from conclib.errors import UnknownConcordanceAction
+from conclib.errors import (
+    UnknownConcordanceAction, ConcordanceException, ConcordanceQuerySyntaxError, extract_manatee_syntax_error)
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -225,11 +227,11 @@ class Actions(Querying):
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
         except (ConcCacheStatusException, RuntimeError) as ex:
-            if 'syntax error' in f'{ex}'.lower():
-                self.add_system_message(
-                    'error', translate('Syntax error. Please check the query and its type.'))
+            synt_err = extract_manatee_syntax_error(ex)
+            if isinstance(synt_err, ConcordanceQuerySyntaxError):
+                raise UserActionException(synt_err, code=422)
             elif 'AttrNotFound' in str(ex):
-                raise UserActionException(ex)
+                raise UserActionException(ex, code=422)
             else:
                 raise ex
         except UnknownConcordanceAction as ex:
@@ -686,12 +688,11 @@ class Actions(Querying):
             ans['size'] = 0
             ans['finished'] = True
             self.add_system_message('warning', str(e))
-        except ConcCacheStatusException as ex:
+        except (ConcordanceException, ConcCacheStatusException) as ex:
             ans['size'] = 0
             ans['finished'] = True
-            if 'syntax error' in f'{ex}'.lower():
-                raise UserActionException(
-                    translate('Syntax error. Please check the query and its type.'))
+            if isinstance(ex, ConcordanceQuerySyntaxError):
+                raise UserActionException(ex, code=422)
             elif 'AttrNotFound' in str(ex):
                 raise UserActionException(ex)
             else:
