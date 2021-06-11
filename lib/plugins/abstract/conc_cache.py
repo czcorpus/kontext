@@ -24,12 +24,13 @@ of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
 the instance of AbstractConcCache is request-dependent.
 """
 
-import abc
-from typing import Dict, Any, Optional, Union, Tuple
-from corplib.corpus import KCorpus
-
 import os
 import time
+import importlib
+import logging
+import abc
+from typing import Dict, Any, Optional, Union, Tuple, List
+from corplib.corpus import KCorpus
 
 QueryType = Tuple[str, ...]
 
@@ -38,12 +39,16 @@ class ConcCacheStatusException(Exception):
     pass
 
 
+class UnrecognizedSerializedException(ConcCacheStatusException):
+    pass
+
+
 class ConcCacheStatus(object):
 
     def __init__(self, task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
                  last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
                  relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
-                 error: Union[str, BaseException, None] = None, finished: Optional[bool] = False,
+                 error: Union[str, Exception, None] = None, finished: Optional[bool] = False,
                  q0hash: str = None, cachefile: str = None, readable: bool = False) -> None:
         self.task_id: Optional[str] = task_id
         self.pid = pid if pid else os.getpid()
@@ -53,26 +58,44 @@ class ConcCacheStatus(object):
         self.fullsize = fullsize
         self.relconcsize = relconcsize
         self.arf = arf
-        if isinstance(error, BaseException):
-            self.error = f'{error} ({error.__class__.__name__})'
-        else:
-            self.error = error
+        self.error = ConcCacheStatus.normalize_error(error)
         self.finished = finished
         self.q0hash = q0hash
         self.cachefile = cachefile
         self.readable = readable
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self.__dict__)
+    @staticmethod
+    def from_storage(
+            task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
+            last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
+            relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
+            error: Optional[List[str]] = None, finished: Optional[bool] = False,
+            q0hash: str = None, cachefile: str = None, readable: bool = False):
+        return ConcCacheStatus(
+            task_id=task_id, pid=pid, created=created, last_upd=last_upd, concsize=concsize, fullsize=fullsize,
+            relconcsize=relconcsize, arf=arf, error=ConcCacheStatus.deserialize_error(error),
+            finished=finished, q0hash=q0hash, cachefile=cachefile, readable=readable)
 
-    def test_error(self, time_limit: int) -> Optional[BaseException]:
-        if self.error is not None:
-            return ConcCacheStatusException(self.error)
+    def to_dict(self) -> Dict[str, Any]:
+        ans = dict(self.__dict__)
+        ans['error'] = ConcCacheStatus.serialize_error(self.error)
+        return ans
+
+    def check_for_errors(self, time_limit: int):
+        """
+        check_for_errors checks for possible additional errors not detected
+        during calc. process - typically a timeout error. It also tries
+        to keep the status consistent (e.g. self.error => self.finished == True)
+        """
+        if self.error is not None and not self.finished:
+            logging.getLogger(__name__).warning(
+                'ConcCacheStatus.test_error - self.error set but self.finished is False - fixing')
         t1 = time.time()
         if not self.finished and t1 - self.last_upd > time_limit:
-            return ConcCacheStatusException(f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
-                                            f', limit: {time_limit})')
-        return None
+            self.error = ConcCacheStatusException(
+                f'Wait limit for initial data exceeded (waited {t1 - self.last_upd} '
+                f', limit: {time_limit})')
+            self.finished = True
 
     def has_some_result(self, minsize: int) -> bool:
         return self.finished or (self.readable and self.concsize >= minsize)
@@ -80,12 +103,59 @@ class ConcCacheStatus(object):
     def update(self, **kw) -> 'ConcCacheStatus':
         for k, v in kw.items():
             if hasattr(self, k):
-                v_norm = str(v) if isinstance(v, BaseException) else v
-                setattr(self, k, v_norm)
+                if k == 'error':
+                    self.error = ConcCacheStatus.normalize_error(v)
+                else:
+                    setattr(self, k, str(v))
             else:
                 raise AssertionError(f'Unknown {self.__class__.__name__}  attribute: {k}')
         self.last_upd = int(time.time())
         return self
+
+    @staticmethod
+    def normalize_error(err: Union[Exception, str, None]) -> Optional[Exception]:
+        """
+        normalize_error transforms possible alternative str-based error specification
+        into a proper exception. None is also accepted (and passed without transformation).
+        """
+        if err is None:
+            return None
+        elif isinstance(err, Exception):
+            return err
+        return ConcCacheStatusException(str(err))
+
+    @staticmethod
+    def serialize_error(err: Union[Exception, None]):
+        """
+        serialize_error transforms an actual optional error into
+        a tuple of two values (fully_qualified_class_name, error_message)
+        so it can be JSON-serialized
+        """
+        if err is None:
+            return err
+        elif type(err) is str:
+            return 'Exception', err
+        else:
+            m = err.__module__
+            if m == 'builtins':
+                return err.__class__.__qualname__, str(err)
+            else:
+                return f'{err.__module__}.{err.__class__.__qualname__}', str(err)
+
+    @staticmethod
+    def deserialize_error(err: List[str]) -> Optional[Exception]:
+        """
+        deserialize_error is a reverse function to serialize_error
+        """
+        if type(err) is tuple or type(err) is list:
+            try:
+                mname, cname = err[0].rsplit('.', 1)
+                mod = importlib.import_module(mname)
+                clazz = getattr(mod, cname)
+                return clazz(err[1])
+            except (ModuleNotFoundError, AttributeError, IndexError) as ex:
+                raise UnrecognizedSerializedException(ex)
+        return None
 
 
 class AbstractConcCache(abc.ABC):

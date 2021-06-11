@@ -175,6 +175,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
                       args=(initial_args, user_id, corpus_id,
                             subc_name, subchash, query, samplesize),
                       soft_time_limit=time_limit)
+        # there is no return from the send_task as we obtain the status via conc cache map
     return initial_args
 
 

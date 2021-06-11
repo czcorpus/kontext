@@ -17,8 +17,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from typing import Optional
+import re
+
 
 class ConcordanceException(Exception):
+    pass
+
+
+class ConcordanceQuerySyntaxError(ConcordanceException):
+    pass
+
+
+class ConcordanceQueryParamsError(ConcordanceException):
     pass
 
 
@@ -47,3 +58,19 @@ class ConcNotFoundException(ConcordanceException):
 
 class BrokenConcordanceException(ConcordanceException):
     pass
+
+
+def extract_manatee_syntax_error(err: Exception) -> Optional[ConcordanceQuerySyntaxError]:
+    """
+    Test and extract Manatee syntax error. In case of a match,
+    a normalized er
+    """
+    msg = str(err)
+    if isinstance(err, RuntimeError) and ('syntax error' in msg or 'unexpected character' in msg):
+        srch = re.match(r'unexpected character(.*)at position (\d+)', msg)
+        if srch:
+            return ConcordanceQuerySyntaxError(
+                'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
+        else:
+            return ConcordanceQuerySyntaxError('Syntax error. Please check the query and its type')
+    return None

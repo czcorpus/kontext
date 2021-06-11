@@ -70,10 +70,7 @@ class GeneralWorker(object):
         status = cache_map.get_calc_status(corp.subchash, q)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
-        status.test_error(TASK_TIME_LIMIT)
-        if status.error is not None:
-            raise ConcCalculationStatusException('Concordance calculation failed', status.error)
-
+        status.check_for_errors(TASK_TIME_LIMIT)
         if status.error:
             ans['finished'] = True
             ans['error'] = status.error

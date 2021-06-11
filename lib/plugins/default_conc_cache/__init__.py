@@ -77,7 +77,7 @@ class DefaultCacheMapping(AbstractConcCache):
     def _get_entry(self, subchash, q) -> Union[ConcCacheStatus, None]:
         val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val and type(val) is dict:
-            return ConcCacheStatus(**val)
+            return ConcCacheStatus.from_storage(**val)
         return None
 
     def _set_entry(self, subchash, q, data: ConcCacheStatus):
@@ -146,7 +146,7 @@ class DefaultCacheMapping(AbstractConcCache):
                         'Removed unsupported conc cache value: {}'.format(stored))
                     self._db.hash_del(self._mk_key(), k)
                 else:
-                    status = ConcCacheStatus(**stored)
+                    status = ConcCacheStatus.from_storage(**stored)
                     if _uniqname(subchash, q[:1]) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
                         # must use direct access here (no del_entry())

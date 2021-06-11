@@ -2,7 +2,7 @@
 # pip install -r requirements.txt
 #
 # for more convenient logging, install concurrent_log_handler
-jinja2 >= 2.10
+jinja2 >= 2.11.3
 Werkzeug >= 1.0.1, < 2.0.0
 secure-cookie >= 0.1.0
 # please note that lxml package requires the following system packages:
