@@ -38,7 +38,8 @@ from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
 from conclib.errors import (
-    UnknownConcordanceAction, ConcordanceException, ConcordanceQuerySyntaxError, extract_manatee_syntax_error)
+    UnknownConcordanceAction, ConcordanceException, ConcordanceQuerySyntaxError, ConcordanceQueryParamsError,
+    extract_manatee_syntax_error)
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -57,10 +58,6 @@ from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
 import pydub
-
-
-class ConcError(UserActionException):
-    pass
 
 
 class Actions(Querying):
@@ -684,7 +681,7 @@ class Actions(Querying):
             ans['finished'] = conc.finished()
             self.on_conc_store = store_last_op
             self._status = 201
-        except ConcError as e:
+        except ConcordanceQueryParamsError as e:
             ans['size'] = 0
             ans['finished'] = True
             self.add_system_message('warning', str(e))
@@ -752,14 +749,14 @@ class Actions(Querying):
         try:
             query = self._compile_query(data=ff_args, corpus=maincorp)
             if query is None:
-                raise ConcError(translate('No query entered.'))
-        except ConcError:
+                raise ConcordanceQueryParamsError(translate('No query entered.'))
+        except ConcordanceQueryParamsError:
             if texttypes:
                 query = '[]'
                 ff_args.filfpos = '0'
                 ff_args.filtpos = '0'
             else:
-                raise ConcError(translate('No query entered.'))
+                raise ConcordanceQueryParamsError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
         if ff_args.within:
             wquery = f' within {maincorp}:({query})'
@@ -1183,7 +1180,7 @@ class Actions(Querying):
     @exposed(access_level=1, template='freqs.html', page_model='freq', func_arg_mapped=True)
     def freqtt(self, flimit=0, fttattr=()):
         if not fttattr:
-            raise ConcError(translate('No text type selected'))
+            raise ConcordanceQueryParamsError(translate('No text type selected'))
         return self.freqs(['%s 0' % a for a in fttattr], flimit)
 
     @exposed(access_level=1, page_model='freq', template='freqs.html')
@@ -1526,7 +1523,7 @@ class Actions(Querying):
                         kwic_key = 'Kwic'
                         right_key = 'Sen_Right'
                     else:
-                        raise ConcError(translate('Invalid data'))
+                        raise ConcordanceQueryParamsError(translate('Invalid data'))
 
                     for i in range(len(data['Lines'])):
                         line = data['Lines'][i]

@@ -29,6 +29,10 @@ class ConcordanceQuerySyntaxError(ConcordanceException):
     pass
 
 
+class ConcordanceQueryParamsError(ConcordanceException):
+    pass
+
+
 class EmptyParallelCorporaIntersection(ConcordanceException):
     pass
 
