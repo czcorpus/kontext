@@ -95,6 +95,11 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
             total, rows = load_cached_full(path)
             return (total,
                     l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[offset:offset+limit])
+        elif sort.startswith('freq-'):
+            conc_idx = pquery.conc_ids.index(sort[len('freq-'):])
+            total, rows = load_cached_full(path)
+            return (total,
+                    sorted(rows, key=lambda x: x[conc_idx+1], reverse=reverse))[offset:offset+limit]
         else:
             raise PqueryArgumentError(f'Invalid sort argument: {sort}')
 
@@ -140,5 +145,5 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcp
         freq_info = _extract_freqs(freq_table)
         for word, freq in freq_info:
             merged[word].append(freq)
-    items = list((w, sum(freq)) for w, freq in merged.items() if len(freq) == num_tasks)
-    return [('total', len(items))] + sorted(items, key=lambda v: v[1], reverse=True)
+    items = list((w, ) + tuple(freq) for w, freq in merged.items() if len(freq) == num_tasks)
+    return [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))] + sorted(items, key=lambda v: sum(v[1:]), reverse=True)

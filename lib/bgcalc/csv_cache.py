@@ -26,7 +26,7 @@ def load_cached_partial(path, offset, limit):
         for row in csv_reader:
             if i == offset + limit:
                 break
-            ans.append((row[0], int(row[1])))
+            ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
             i += 1
     return int(total_str), ans
 
@@ -37,5 +37,5 @@ def load_cached_full(path):
         csv_reader = csv.reader(fr)
         _, total_str = next(csv_reader)
         for row in csv_reader:
-            ans.append((row[0], int(row[1])))
+            ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
     return int(total_str), ans
