@@ -32,6 +32,7 @@ export interface PqueryResultModelState {
     isBusy:boolean;
     data:PqueryResult;
     queryId:string;
+    concIds:Array<string>;
     sortKey:SortKey;
     numLines:number;
     page:number;
@@ -39,11 +40,22 @@ export interface PqueryResultModelState {
     saveFormActive:boolean;
 }
 
-export type SortColumn = 'freq'|'value';
+export type SortColumn = {type: 'freq'}|{type:'value'}|{type: 'partial_freq', concId: string};
 
 export interface SortKey {
     column:SortColumn;
     reverse:boolean;
+}
+
+
+function exportSortColumn(sc:SortColumn):string {
+    switch (sc.type) {
+        case 'freq':
+        case 'value':
+            return sc.type;
+        case 'partial_freq':
+            return `freq-${sc.concId}`;
+    }
 }
 
 
@@ -109,7 +121,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         const args = {
             q: `~${this.state.queryId}`,
             page: this.state.page,
-            sort: this.state.sortKey.column,
+            sort: exportSortColumn(this.state.sortKey.column),
             reverse: this.state.sortKey.reverse ? 1 : 0
         };
 
@@ -140,7 +152,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             name: ActionName.SaveFormPrepareSubmitArgsDone,
             payload: {
                 queryId: this.state.queryId,
-                sort: this.state.sortKey.column,
+                sort: exportSortColumn(this.state.sortKey.column),
                 reverse: this.state.sortKey.reverse ? 1 : 0
             }
         });

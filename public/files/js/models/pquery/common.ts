@@ -29,8 +29,10 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 
 /**
  * PqueryResult is a result of a Paradigmatic query
+ * The first item is the word, other items are individual absolute
+ * frequencies of all the involved concordances.
  */
-export type PqueryResult = Array<[string, number]>;
+export type PqueryResult = Array<[string, ...number[]]>;
 
 
 export interface FreqIntersectionArgs {

@@ -77,15 +77,25 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
     // ------------------------ <ThSortable /> --------------------------
 
     const ThSortable:React.FC<{
-        ident:string;
-        sortKey:SortKey;
+        sortColumn:SortColumn;
+        actualSortKey:SortKey;
         label:string;
 
     }> = (props) => {
 
+        const isSortedByMe = () => {
+            if (!props.actualSortKey) {
+                return false;
+            }
+            if (props.sortColumn.type === 'partial_freq' && props.actualSortKey.column.type === 'partial_freq') {
+                return props.sortColumn.concId === props.actualSortKey.column.concId;
+            }
+            return props.sortColumn.type === props.actualSortKey.column.type;
+        }
+
         const renderSortFlag = () => {
-            if (props.sortKey) {
-                if (props.sortKey.reverse) {
+            if (isSortedByMe()) {
+                if (props.actualSortKey.reverse) {
                     return <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />;
 
                 } else {
@@ -101,14 +111,14 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
             dispatcher.dispatch<Actions.SortLines>({
                 name: ActionName.SortLines,
                 payload: {
-                    column: props.ident as SortColumn,
-                    reverse: props.sortKey ? !props.sortKey.reverse : false
+                    column: {...props.sortColumn},
+                    reverse: !(isSortedByMe() && props.actualSortKey.reverse)
                 }
             });
         };
 
         const getTitle = () => {
-            if (props.sortKey) {
+            if (isSortedByMe()) {
                 return he.translate('global__sorted_click_change');
             }
             return he.translate('global__click_to_sort');
@@ -157,15 +167,20 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                             <tbody>
                                 <tr>
                                     <th />
-                                    <ThSortable ident="value" sortKey={_exportSortKey("value")} label="Value"/>
-                                    <ThSortable ident="freq" sortKey={_exportSortKey("freq")} label="Freq"/>
+                                    <ThSortable sortColumn={{type: 'value'}} actualSortKey={props.sortKey} label="Value"/>
+                                    {List.map(
+                                    (concId, i) => <ThSortable key={concId} sortColumn={{type: 'partial_freq', concId}}  actualSortKey={props.sortKey} label={`Freq ${i+1}`}/>,
+                                        props.concIds
+                                    )}
+                                    <ThSortable sortColumn={{type: 'freq'}} actualSortKey={props.sortKey} label={'Freq \u2211'} />
                                 </tr>
                                 {List.map(
-                                    ([word, freq], i) => (
+                                    ([word, ...freqs], i) => (
                                         <tr key={`${i}:${word}`}>
                                             <td className="num">{(props.page-1)*props.pageSize+i+1}</td>
                                             <td>{word}</td>
-                                            <td className="num">{freq}</td>
+                                            {List.map((f, i) => <td key={props.concIds[i]} className="num">{f}</td>, freqs)}
+                                            <td className="num">{List.foldl((acc, curr) => acc + curr, 0, freqs)}</td>
                                         </tr>
                                     ),
                                     props.data
