@@ -29,6 +29,7 @@ import { CTFreqServerArgs } from '../common';
 import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities, CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData, isDummyResponse } from './common';
 import { Actions,  ActionName } from '../actions';
 import { TextTypes } from '../../../types/common';
+import { colorHeatmap } from '../../../views/theme/default';
 
 /**
  * A representation of 2D freq table.
@@ -182,10 +183,6 @@ export interface Freq2DTableModelState extends GeneralFreq2DModelState {
 export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> {
 
     private throttleTimeout:number;
-
-    private static COLOR_HEATMAP = [
-        '#ffffff', '#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177', '#49006a'
-    ];
 
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:CTFormProperties) {
         super(
@@ -718,9 +715,9 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         );
 
         const mappingFunc:(c:CTFreqCell)=>string = (() => {
-            const a = Freq2DTableModel.COLOR_HEATMAP.length - 1;
+            const a = colorHeatmap.length - 1;
             if (state.colorMapping === ColorMappings.LINEAR) {
-                return (c:CTFreqCell) => Freq2DTableModel.COLOR_HEATMAP[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
+                return (c:CTFreqCell) => colorHeatmap[~~Math.floor((fetchFreq(c) - fMin) * a / (fMax - fMin))];
 
 
             } else if (state.colorMapping === ColorMappings.PERCENTILE) {
@@ -733,7 +730,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
                 const numOrdered = List.size(orderedAsList); // we must preserve this to keep correct size as...
                 const ordered = Dict.fromEntries(orderedAsList); // ... now we loose some size due to non-unique "origOrder"
                 return (c:CTFreqCell) => {
-                    return Freq2DTableModel.COLOR_HEATMAP[~~Math.floor(ordered[c.origOrder] * (a + 1) / numOrdered)];
+                    return colorHeatmap[~~Math.floor(ordered[c.origOrder] * (a + 1) / numOrdered)];
                 }
 
             } else {

@@ -26,9 +26,10 @@ import { Kontext } from '../../../types/common';
 import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result';
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
-import { List } from 'cnc-tskit';
+import { Color, id, List, pipe } from 'cnc-tskit';
 import { init as initSaveViews } from './save';
 import { PqueryResultsSaveModel } from '../../../models/pquery/save';
+import { colorHeatmap } from '../../theme/default';
 
 export interface PqueryFormViewsArgs {
     dispatcher:IActionDispatcher;
@@ -142,6 +143,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
             })
         };
 
+        const mapColor = (idx:number) => colorHeatmap[~~Math.floor((idx) * (colorHeatmap.length - 1) / props.concIds.length)];
+
         const renderContent = () => {
             if (props.isBusy) {
                 return <layoutViews.AjaxLoaderImage />;
@@ -175,8 +178,29 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                                         <tr key={`${i}:${word}`}>
                                             <td className="num">{(props.page-1)*props.pageSize+i+1}</td>
                                             <td>{word}</td>
-                                            {List.map((f, i) => <td key={props.concIds[i]} className="num">{f}</td>, freqs)}
-                                            <td className="num">{List.foldl((acc, curr) => acc + curr, 0, freqs)}</td>
+                                            {List.map(
+                                                (f, i) => {
+                                                    const idx = pipe(
+                                                        freqs,
+                                                        List.sortedBy(id),
+                                                        List.findIndex(v => v === f)
+                                                    );
+                                                    const bgCol = mapColor(idx);
+                                                    const textCol = pipe(
+                                                            bgCol,
+                                                            Color.importColor(1),
+                                                            Color.textColorFromBg(),
+                                                            Color.color2str()
+                                                    );
+                                                    const style = {
+                                                        backgroundColor: bgCol,
+                                                        color: textCol
+                                                    };
+                                                    return <td style={style} key={props.concIds[i]} className="num">{f}</td>;
+                                                },
+                                                freqs
+                                            )}
+                                            <td className="num sum">{List.foldl((acc, curr) => acc + curr, 0, freqs)}</td>
                                         </tr>
                                     ),
                                     props.data
