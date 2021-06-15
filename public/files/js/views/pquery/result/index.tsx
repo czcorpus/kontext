@@ -145,6 +145,17 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
 
         const mapColor = (idx:number) => colorHeatmap[~~Math.floor((idx) * (colorHeatmap.length - 1) / props.concIds.length)];
 
+        const _handleFilter = (value:string, concId:string) => (e) => {
+            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
+                name: ActionName.ResultApplyQuickFilter,
+                payload: {
+                    value,
+                    concId,
+                    blankWindow: e.ctrlKey
+                }
+            });
+        };
+
         const renderContent = () => {
             if (props.isBusy) {
                 return <layoutViews.AjaxLoaderImage />;
@@ -196,7 +207,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                                                         backgroundColor: bgCol,
                                                         color: textCol
                                                     };
-                                                    return <td style={style} key={props.concIds[i]} className="num">{f}</td>;
+
+                                                    return <td style={style} key={props.concIds[i]} className="num">{f} (<a onClick={_handleFilter(word, props.concIds[i])}>p</a>)</td>;
                                                 },
                                                 freqs
                                             )}

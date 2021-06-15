@@ -52,6 +52,7 @@ export enum ActionName {
     SaveFormPrepareSubmitArgsDone = 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE',
     ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
     ParamsToggleForm = 'PQUERY_PARAMS_TOGGLE_FORM',
+    ResultApplyQuickFilter = 'PQUERY_RESULT_APPLY_QUICK_FILTER',
 }
 
 
@@ -195,5 +196,12 @@ export namespace Actions {
     export interface ParamsToggleForm extends Action<{
     }> {
         name: ActionName.ParamsToggleForm;
+    }
+    export interface ResultApplyQuickFilter extends Action<{
+        value:string;
+        concId:string;
+        blankWindow:boolean;
+    }> {
+        name: ActionName.ResultApplyQuickFilter;
     }
 }
