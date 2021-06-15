@@ -33,6 +33,10 @@ export const PqueryResultSection = styled.section`
 
     table.data {
         margin: 1em 2em 1em 0;
+
+        td.sum {
+            font-size: 110%;
+        }
     }
 
 `;

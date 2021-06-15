@@ -69,6 +69,14 @@ export const colorWidgetOrange = '#F76B0B';
 export const colorButtonDefault = '#F0FAFF';
 export const colorButtonHover = '#F9FDFF';
 
+export const colorHeatmap = [
+    '#ffffff', '#fff7f3',
+    '#fde0dd', '#fcc5c0',
+    '#fa9fb5', '#f768a1',
+    '#dd3497', '#ae017e',
+    '#7a0177', '#49006a'
+];
+
 // misc.
 
 export const borderRadiusDefault = '5px';
