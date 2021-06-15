@@ -132,7 +132,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * events (e.g. the 'ESC' key). But it is always a preferred approach
      * to focus a suitable element and catch event via that.
      */
-    private globalKeyHandlers:Array<(evt:Event)=>void>;
+    private globalKeyHandlers:Array<(evt:KeyboardEvent)=>void>;
 
     private readonly appNavig:AppNavigation;
 
@@ -254,17 +254,16 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
     /**
      *
-     * @param filename
-     * @param url
-     * @param args
      */
     bgDownload<T=Kontext.AjaxArgs>(
-        filename:string,
-        type:DownloadType,
-        url:string,
-        contentType:string,
-        args?:T
-    ):void {
+        {filename, type, url, contentType, args}:
+        {
+            filename:string,
+            type:DownloadType,
+            url:string,
+            contentType:string,
+            args?:T
+        }):void {
 
         const taskId = `${new Date().getTime()}:${url}`;
         const method = () => {
@@ -283,9 +282,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 category: type
             }
         });
-        this.appNavig.bgDownload<T>(
-            filename, url, method(), contentType, args
-        ).subscribe(
+        this.appNavig.bgDownload<T>({
+            filename,
+            url,
+            method: method(),
+            contentType,
+            args
+        }).subscribe(
             () => {
                 this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
                     name: ATActionName.InboxUpdateAsyncTask,

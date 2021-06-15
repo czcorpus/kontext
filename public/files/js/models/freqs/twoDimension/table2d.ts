@@ -412,13 +412,13 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         const args = new MultiDict();
         args.set('saveformat', format);
         args.set('savemode', 'table');
-        this.pageModel.bgDownload(
-            `2d-frequency.${format}`,
-            DownloadType.FREQ2D,
-            this.pageModel.createActionUrl('export_freqct', args),
-            'multipart/form-data',
-            {data: JSON.stringify(this.exportData())}
-        );
+        this.pageModel.bgDownload({
+            filename: `2d-frequency.${format}`,
+            type: DownloadType.FREQ2D,
+            url: this.pageModel.createActionUrl('export_freqct', args),
+            contentType: 'multipart/form-data',
+            args: {data: JSON.stringify(this.exportData())}
+        });
     }
 
     private sortByDimension(state:Freq2DTableModelState, dim:Dimensions, sortAttr:string):void {

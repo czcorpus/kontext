@@ -279,8 +279,12 @@ export class CollPage {
     }
 
     setDownloadLink(filename:string, url:string) {
-        this.layoutModel.bgDownload(
-            filename, DownloadType.COLL, 'multipart/form-data', url);
+        this.layoutModel.bgDownload({
+            filename,
+            type: DownloadType.COLL,
+            contentType: 'multipart/form-data',
+            url
+        });
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {

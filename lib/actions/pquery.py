@@ -223,7 +223,7 @@ class ParadigmaticQuery(Kontext):
         return dict(rows=freqs)
 
     @exposed(access_level=1, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
-    def download(self, query_id='', sort='value', reverse='0', saveformat='', from_line=1, to_line='',
+    def download(self, sort='value', reverse='0', saveformat='', from_line=1, to_line='',
                  colheaders=0, heading=0):
         """
         dawnload a paradigmatic query results

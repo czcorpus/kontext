@@ -122,8 +122,12 @@ class ParadigmaticQueryPage {
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 saveLinkFn: (filename:string, url:string) => {
-                    this.layoutModel.bgDownload(
-                        filename, DownloadType.PQUERY, 'multipart/form-data', url);
+                    this.layoutModel.bgDownload({
+                        filename,
+                        type: DownloadType.PQUERY,
+                        url,
+                        contentType: 'multipart/form-data'
+                    });
                 },
                 quickSaveRowLimit: 10000 // TODO
             });

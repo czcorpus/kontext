@@ -216,13 +216,13 @@ export class LineSelGroupsRatiosChart {
                         )
                     );
                     postArgs.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
-                    this.layoutModel.bgDownload(
-                        'line-selection-overview.xlsx',
-                        DownloadType.LINE_SELECTION,
-                        this.layoutModel.createActionUrl('export_line_groups_chart', args),
-                        'multipart/form-data',
-                        postArgs
-                    );
+                    this.layoutModel.bgDownload({
+                        filename: 'line-selection-overview.xlsx',
+                        type: DownloadType.LINE_SELECTION,
+                        url: this.layoutModel.createActionUrl('export_line_groups_chart', args),
+                        contentType: 'multipart/form-data',
+                        args: postArgs
+                    });
                 });
             });
         }
