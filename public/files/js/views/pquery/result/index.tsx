@@ -23,7 +23,7 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { PqueryResultModel, PqueryResultModelState, SortColumn, SortKey } from '../../../models/pquery/result';
+import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result';
 import { ActionName, Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { List } from 'cnc-tskit';
@@ -78,29 +78,27 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
 
     const ThSortable:React.FC<{
         sortColumn:SortColumn;
-        actualSortKey:SortKey;
+        actualSortColumn:SortColumn;
         label:string;
 
     }> = (props) => {
 
         const isSortedByMe = () => {
-            if (!props.actualSortKey) {
+            if (!props.actualSortColumn) {
                 return false;
             }
-            if (props.sortColumn.type === 'partial_freq' && props.actualSortKey.column.type === 'partial_freq') {
-                return props.sortColumn.concId === props.actualSortKey.column.concId;
+            if (props.sortColumn.type === 'partial_freq' &&
+                    props.actualSortColumn.type === 'partial_freq') {
+                return props.sortColumn.concId === props.actualSortColumn.concId;
             }
-            return props.sortColumn.type === props.actualSortKey.column.type;
+            return props.sortColumn.type === props.actualSortColumn.type;
         }
 
         const renderSortFlag = () => {
             if (isSortedByMe()) {
-                if (props.actualSortKey.reverse) {
-                    return <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />;
-
-                } else {
-                    return <img className="sort-flag" src={he.createStaticUrl('img/sort_asc.svg')} />;
-                }
+                return props.actualSortColumn.reverse ?
+                    <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} /> :
+                    <img className="sort-flag" src={he.createStaticUrl('img/sort_asc.svg')} />;
 
             } else {
                 return null;
@@ -111,8 +109,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
             dispatcher.dispatch<Actions.SortLines>({
                 name: ActionName.SortLines,
                 payload: {
-                    column: {...props.sortColumn},
-                    reverse: !(isSortedByMe() && props.actualSortKey.reverse)
+                    ...props.sortColumn,
+                    reverse: !(isSortedByMe() && props.actualSortColumn.reverse)
                 }
             });
         };
@@ -138,13 +136,6 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
 
     const PqueryResultSection:React.FC<PqueryResultModelState> = (props) => {
 
-        const _exportSortKey = (name) => {
-            if (name === props.sortKey.column) {
-                return props.sortKey;
-            }
-            return null;
-        };
-
         const _handleSaveFormClose = () => {
             dispatcher.dispatch<Actions.ResultCloseSaveForm>({
                 name: ActionName.ResultCloseSaveForm
@@ -167,12 +158,17 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                             <tbody>
                                 <tr>
                                     <th />
-                                    <ThSortable sortColumn={{type: 'value'}} actualSortKey={props.sortKey} label="Value"/>
+                                    <ThSortable sortColumn={{type: 'value', reverse: false}}
+                                            actualSortColumn={props.sortColumn} label="Value"/>
                                     {List.map(
-                                    (concId, i) => <ThSortable key={concId} sortColumn={{type: 'partial_freq', concId}}  actualSortKey={props.sortKey} label={`Freq ${i+1}`}/>,
+                                        (concId, i) => (
+                                            <ThSortable key={concId} sortColumn={{type: 'partial_freq', concId, reverse: false}}
+                                                    actualSortColumn={props.sortColumn} label={`Freq ${i+1}`}/>
+                                        ),
                                         props.concIds
                                     )}
-                                    <ThSortable sortColumn={{type: 'freq'}} actualSortKey={props.sortKey} label={'Freq \u2211'} />
+                                    <ThSortable sortColumn={{type: 'freq', reverse: false}} actualSortColumn={props.sortColumn}
+                                            label={'Freq \u2211'} />
                                 </tr>
                                 {List.map(
                                     ([word, ...freqs], i) => (

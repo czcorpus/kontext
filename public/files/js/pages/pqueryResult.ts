@@ -109,7 +109,7 @@ class ParadigmaticQueryPage {
                     data: this.layoutModel.getConf<PqueryResult>('Freqs'),
                     queryId: this.layoutModel.getConf<string>('QueryId'),
                     concIds: pqForm.conc_ids,
-                    sortKey: {column: {type: 'freq'}, reverse: true},
+                    sortColumn: {type: 'freq', reverse: true},
                     numLines: this.layoutModel.getConf<number>('TotalNumLines'),
                     page: 1,
                     pageSize: this.layoutModel.getConf<number>('Pagesize'),
