@@ -23,7 +23,7 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AsyncTaskArgs, HistoryArgs } from './common';
-import { SortKey } from './result';
+import { SortColumn } from './result';
 import {SaveData} from '../../app/navigation';
 
 
@@ -112,7 +112,7 @@ export namespace Actions {
         name: ActionName.AttrChange;
     }
 
-    export interface SortLines extends Action<SortKey> {
+    export interface SortLines extends Action<SortColumn> {
         name: ActionName.SortLines;
     }
 
@@ -191,7 +191,7 @@ export namespace Actions {
     }> {
         name: ActionName.ResultCloseSaveForm;
     }
-    
+
     export interface ParamsToggleForm extends Action<{
     }> {
         name: ActionName.ParamsToggleForm;

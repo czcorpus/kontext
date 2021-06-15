@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
+import { Kontext } from '../../types/common';
+import { SaveData } from '../../app/navigation';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { ActionName, Actions } from './actions';
@@ -188,7 +188,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
 
     private submit(pqueryResultArgs:{queryId:string; sort:string; reverse:number}):void {
         const args = new MultiDict();
-        args.set('query_id', pqueryResultArgs.queryId);
+        args.set('q', '~' + pqueryResultArgs.queryId);
         args.set('sort', pqueryResultArgs.sort);
         args.set('reverse', pqueryResultArgs.reverse);
         args.set('saveformat', this.state.saveformat);

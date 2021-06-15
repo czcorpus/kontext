@@ -323,11 +323,14 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * Downloads a remote file using window.URL.
      */
     bgDownload<T=Kontext.AjaxArgs>(
-        filename:string,
-        url:string,
-        method:HTTP.Method,
-        contentType:string,
-        args?:T
+        {filename, url, method, contentType, args}:
+        {
+            filename:string,
+            url:string,
+            method:HTTP.Method,
+            contentType:string,
+            args?:T
+        }
     ):Observable<boolean> {
         return this.ajax$<Blob>(
             method,

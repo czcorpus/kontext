@@ -77,14 +77,14 @@ export class WordlistPage {
         );
     }
 
-    setDownloadLink(file:string, url:string, args:WordlistSaveArgs):void {
-        this.layoutModel.bgDownload(
-            file,
-            DownloadType.WORDLIST,
+    setDownloadLink(filename:string, url:string, args:WordlistSaveArgs):void {
+        this.layoutModel.bgDownload({
+            filename,
+            type: DownloadType.WORDLIST,
             url,
-            'application/json',
+            contentType: 'application/json',
             args
-        );
+        });
     }
 
     private initCorpnameLink(model:WordlistFormModel):void {

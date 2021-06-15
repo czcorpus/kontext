@@ -33,19 +33,17 @@ export interface PqueryResultModelState {
     data:PqueryResult;
     queryId:string;
     concIds:Array<string>;
-    sortKey:SortKey;
+    sortColumn:SortColumn;
     numLines:number;
     page:number;
     pageSize:number;
     saveFormActive:boolean;
 }
 
-export type SortColumn = {type: 'freq'}|{type:'value'}|{type: 'partial_freq', concId: string};
-
-export interface SortKey {
-    column:SortColumn;
-    reverse:boolean;
-}
+export type SortColumn =
+    {type:'freq'; reverse:boolean} |
+    {type:'value'; reverse:boolean} |
+    {type: 'partial_freq', concId: string; reverse:boolean};
 
 
 function exportSortColumn(sc:SortColumn):string {
@@ -71,7 +69,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             ActionName.SortLines,
             action => {
                 this.changeState(state => {
-                    state.sortKey = action.payload;
+                    state.sortColumn = action.payload;
                     state.isBusy = true;
                 });
                 this.reloadData();
@@ -121,8 +119,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         const args = {
             q: `~${this.state.queryId}`,
             page: this.state.page,
-            sort: exportSortColumn(this.state.sortKey.column),
-            reverse: this.state.sortKey.reverse ? 1 : 0
+            sort: exportSortColumn(this.state.sortColumn),
+            reverse: this.state.sortColumn.reverse ? 1 : 0
         };
 
         this.layoutModel.ajax$<{rows: PqueryResult}>(
@@ -152,8 +150,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             name: ActionName.SaveFormPrepareSubmitArgsDone,
             payload: {
                 queryId: this.state.queryId,
-                sort: exportSortColumn(this.state.sortKey.column),
-                reverse: this.state.sortKey.reverse ? 1 : 0
+                sort: exportSortColumn(this.state.sortColumn),
+                reverse: this.state.sortColumn.reverse ? 1 : 0
             }
         });
     }

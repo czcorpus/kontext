@@ -109,7 +109,7 @@ class ParadigmaticQueryPage {
                     data: this.layoutModel.getConf<PqueryResult>('Freqs'),
                     queryId: this.layoutModel.getConf<string>('QueryId'),
                     concIds: pqForm.conc_ids,
-                    sortKey: {column: {type: 'freq'}, reverse: true},
+                    sortColumn: {type: 'freq', reverse: true},
                     numLines: this.layoutModel.getConf<number>('TotalNumLines'),
                     page: 1,
                     pageSize: this.layoutModel.getConf<number>('Pagesize'),
@@ -122,8 +122,12 @@ class ParadigmaticQueryPage {
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
                 saveLinkFn: (filename:string, url:string) => {
-                    this.layoutModel.bgDownload(
-                        filename, DownloadType.PQUERY, 'multipart/form-data', url);
+                    this.layoutModel.bgDownload({
+                        filename,
+                        type: DownloadType.PQUERY,
+                        url,
+                        contentType: 'multipart/form-data'
+                    });
                 },
                 quickSaveRowLimit: 10000 // TODO
             });
