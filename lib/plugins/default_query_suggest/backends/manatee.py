@@ -52,7 +52,6 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         args.collator_locale = 'en_US'  # TODO xx
         args.fmaxitems = 1
         args.fpage = 1
-        args.line_offset = 0
         args.force_cache = False
 
         freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,

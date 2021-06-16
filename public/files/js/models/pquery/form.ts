@@ -347,7 +347,21 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     state.concWait[action.payload.sourceId] = 'finished';
                 });
             }
-        )
+        );
+
+        this.addActionHandler<Actions.ResultApplyQuickFilter>(
+            ActionName.ResultApplyQuickFilter,
+            action => {
+                this.dispatchSideEffect<Actions.ResultApplyQuickFilterArgsReady>({
+                    name: ActionName.ResultApplyQuickFilterArgsReady,
+                    payload: {
+                        attr: this.state.attr,
+                        posAlign: this.state.posAlign,
+                        posSpec: this.getPosition(this.state)
+                    }
+                });
+            }
+        );
     }
 
     getPositionRangeLabels():Array<string> {

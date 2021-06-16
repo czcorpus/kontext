@@ -145,6 +145,17 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
 
         const mapColor = (idx:number) => colorHeatmap[~~Math.floor((idx) * (colorHeatmap.length - 1) / props.concIds.length)];
 
+        const _handleFilter = (value:string, concId:string) => (e) => {
+            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
+                name: ActionName.ResultApplyQuickFilter,
+                payload: {
+                    value,
+                    concId,
+                    blankWindow: e.ctrlKey
+                }
+            });
+        };
+
         const renderContent = () => {
             if (props.isBusy) {
                 return <layoutViews.AjaxLoaderImage />;
@@ -158,21 +169,38 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                         <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
                         <PageCounter maxPage={Math.ceil(props.numLines/props.pageSize)} currPage={props.page} />
                         <table className="data">
-                            <tbody>
+                            <thead>
+                                <tr>
+                                    <th colSpan={2} />
+                                    {List.map(
+                                        (concId, i) => (
+                                            <React.Fragment key={concId}>
+                                                <th className="conc-group" colSpan={2}>{`Conc ${i+1}`}</th>
+                                            </React.Fragment>
+                                        ),
+                                        props.concIds
+                                    )}
+                                    <th />
+                                </tr>
                                 <tr>
                                     <th />
                                     <ThSortable sortColumn={{type: 'value', reverse: false}}
                                             actualSortColumn={props.sortColumn} label="Value"/>
                                     {List.map(
                                         (concId, i) => (
-                                            <ThSortable key={concId} sortColumn={{type: 'partial_freq', concId, reverse: false}}
-                                                    actualSortColumn={props.sortColumn} label={`Freq ${i+1}`}/>
+                                            <React.Fragment key={concId}>
+                                                <ThSortable sortColumn={{type: 'partial_freq', concId, reverse: false}}
+                                                        actualSortColumn={props.sortColumn} label="Freq" />
+                                                <th>Filter</th>
+                                            </React.Fragment>
                                         ),
                                         props.concIds
                                     )}
                                     <ThSortable sortColumn={{type: 'freq', reverse: false}} actualSortColumn={props.sortColumn}
                                             label={'Freq \u2211'} />
                                 </tr>
+                            </thead>
+                            <tbody>
                                 {List.map(
                                     ([word, ...freqs], i) => (
                                         <tr key={`${i}:${word}`}>
@@ -196,7 +224,13 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                                                         backgroundColor: bgCol,
                                                         color: textCol
                                                     };
-                                                    return <td style={style} key={props.concIds[i]} className="num">{f}</td>;
+
+                                                    return (
+                                                        <React.Fragment key={props.concIds[i]}>
+                                                            <td style={style} className="num">{f}</td>
+                                                            <td><a onClick={_handleFilter(word, props.concIds[i])}>p</a></td>
+                                                        </React.Fragment>
+                                                    );
                                                 },
                                                 freqs
                                             )}

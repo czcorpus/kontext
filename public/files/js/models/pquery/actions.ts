@@ -52,6 +52,8 @@ export enum ActionName {
     SaveFormPrepareSubmitArgsDone = 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE',
     ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
     ParamsToggleForm = 'PQUERY_PARAMS_TOGGLE_FORM',
+    ResultApplyQuickFilter = 'PQUERY_RESULT_APPLY_QUICK_FILTER',
+    ResultApplyQuickFilterArgsReady = 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY'
 }
 
 
@@ -195,5 +197,25 @@ export namespace Actions {
     export interface ParamsToggleForm extends Action<{
     }> {
         name: ActionName.ParamsToggleForm;
+    }
+
+    export interface ResultApplyQuickFilter extends Action<{
+        value:string;
+        concId:string;
+        blankWindow:boolean;
+    }> {
+        name: ActionName.ResultApplyQuickFilter;
+    }
+
+    export interface ResultApplyQuickFilterArgsReady extends Action<{
+        attr:string;
+        posAlign:AlignTypes;
+        posSpec:string; // the Manatee format (e.g. 0<0)
+    }> {
+        name: ActionName.ResultApplyQuickFilterArgsReady;
+    }
+
+    export function isResultApplyQuickFilterArgsReady(a:Action):a is ResultApplyQuickFilterArgsReady {
+        return a.name === ActionName.ResultApplyQuickFilterArgsReady;
     }
 }

@@ -37,6 +37,10 @@ export const PqueryResultSection = styled.section`
         td.sum {
             font-size: 110%;
         }
+
+        th.conc-group {
+            text-align: center;
+        }
     }
 
 `;

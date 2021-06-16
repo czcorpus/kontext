@@ -26,6 +26,7 @@ import { Actions, ActionName } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { PqueryResult } from './common';
 import { Actions as MMActions, ActionName as MMActionName } from '../mainMenu/actions';
+import { AlignTypes } from '../freqs/twoDimension/common';
 
 
 export interface PqueryResultModelState {
@@ -112,6 +113,32 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         this.addActionHandler<MainMenuActions.DirectSave>(
             MainMenuActionName.DirectSave,
             action => {this.sendSaveArgs(dispatcher)}
+        );
+
+        this.addActionHandler<Actions.ResultApplyQuickFilter>(
+            ActionName.ResultApplyQuickFilter,
+            action => {
+                this.suspendWithTimeout(
+                    1000,
+                    {},
+                    (action2, syncData) => Actions.isResultApplyQuickFilterArgsReady(action2) ? null : syncData
+                ).subscribe({
+                    next: (action2) => {
+                        if (Actions.isResultApplyQuickFilterArgsReady(action2)) {
+                            const alignIdx = action2.payload.posAlign === AlignTypes.LEFT ? '-1' : '1';
+                            const url = this.layoutModel.createActionUrl('quick_filter', [
+                                ['q', `~${action.payload.concId}`],
+                                ['q2', `p${action2.payload.posSpec} ${action2.payload.posSpec} ${alignIdx} [${action2.payload.attr}="${action.payload.value}"]`]
+                            ]);
+                            this.layoutModel.setLocationPost(url, [], action.payload.blankWindow);
+                        }
+
+                    },
+                    error: (error) => {
+
+                    }
+                })
+            }
         );
     }
 

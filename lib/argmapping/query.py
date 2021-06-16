@@ -441,7 +441,7 @@ class QuickFilterArgsConv:
 
     @staticmethod
     def _parse(q: str) -> Tuple[str, ...]:
-        srch = re.search(r'^([pPnN])(-?\d+)([<>]\d+)?\s(-?\d+)([<>]\d+)?\s(\d+)\s(.*)', q)
+        srch = re.search(r'^([pPnN])(-?\d+)([<>]\d+)?\s(-?\d+)([<>]\d+)?\s(-?\d+)\s(.*)', q)
         if srch:
             return tuple(x.strip() if x is not None else x for x in srch.groups())
         else:
