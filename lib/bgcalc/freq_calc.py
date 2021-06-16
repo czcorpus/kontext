@@ -62,7 +62,6 @@ class FreqCalsArgs(FixedDict):
     ftt_include_empty = None  # default ??
     rel_mode = None
     fmaxitems = None  # default ??
-    line_offset = None  # ??
     cache_path = None
     force_cache = False
 
@@ -289,8 +288,8 @@ def calculate_freqs(args: FreqCalsArgs):
     if len(data) == 1:  # a single block => pagination
         total_length = len(data[0]['Items']) if 'Items' in data[0] else 0
         items_per_page = args.fmaxitems
-        fstart = (args.fpage - 1) * args.fmaxitems + args.line_offset
-        fmaxitems = args.fmaxitems * args.fpage + 1 + args.line_offset
+        fstart = (args.fpage - 1) * args.fmaxitems
+        fmaxitems = args.fmaxitems * args.fpage + 1
         if total_length < fmaxitems:
             lastpage = 1
         else:

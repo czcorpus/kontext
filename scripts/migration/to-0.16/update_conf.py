@@ -57,6 +57,12 @@ def update_3(doc):
                 del element.attrib['extension-by']
 
 
+def update_4(doc):
+    srch = doc.find('/corpora/colls_cache_min_lines')
+    if srch is not None:
+        srch.getparent().remove(srch)
+
+
 if __name__ == '__main__':
     import argparse
     argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.15.x '
@@ -76,9 +82,7 @@ if __name__ == '__main__':
     if getattr(args, 'print'):
         print(result_xml)
     else:
-        output_path = '%s.new.xml' % args.conf_file.rsplit('.', 1)[0]
+        output_path = '{}.new.xml'.format(args.conf_file.rsplit('.', 1)[0])
         with open(output_path, 'wb') as f:
             f.write(result_xml)
             print(('DONE!\nConverted config written to %s\n' % output_path))
-    print('\nPlease do not forget to update subcorpora paths by running updsubc.py!\n')
-    print('\nPlease do not forget to update user_index by running upd_user_index.py!\n')

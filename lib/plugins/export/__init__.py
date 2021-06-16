@@ -22,6 +22,8 @@ free to be replaced/changed.
 """
 
 from translation import ugettext as _
+from typing import List, Any
+import abc
 
 
 class ExportPluginException(Exception):
@@ -30,25 +32,28 @@ class ExportPluginException(Exception):
 
 class AbstractExport(object):
 
-    def set_corpnames(self, corpnames):
+    def set_corpnames(self, corpnames: List[str]):
         pass
 
-    def content_type(self):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def content_type(self) -> str:
+        pass
 
-    def raw_content(self):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def raw_content(self) -> str:
+        pass
 
-    def writerow(self, line_num, *lang_rows):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def writerow(self, line_num: int, *lang_rows: List[Any]):
+        pass
 
     def set_col_types(self, *types):
         pass
 
-    def writeheading(self, data):
+    def writeheading(self, data: List[Any]):
         pass  # optional implementation
 
-    def write_ref_headings(self, data):
+    def write_ref_headings(self, data: List[Any]):
         pass  # optional implementation
 
 

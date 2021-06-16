@@ -22,6 +22,8 @@ import json
 from collections import defaultdict
 import time
 from typing import Dict, Any, List, Union, Optional
+from dataclasses import asdict
+import math
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -43,6 +45,7 @@ from conclib.errors import (
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
+from bgcalc.coll_calc import CalculateCollsResult
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 from translation import ugettext as translate
@@ -65,7 +68,6 @@ class Actions(Querying):
     KonText actions are specified here
     """
 
-    SAVECOLL_MAX_LINES = 1000000
     CONC_QUICK_SAVE_MAX_LINES = 10000
     FREQ_QUICK_SAVE_MAX_LINES = 10000
     COLLS_QUICK_SAVE_MAX_LINES = 10000
@@ -885,7 +887,6 @@ class Actions(Querying):
                         'cminfreq': request.args.get('cminfreq'),
                         'citemsperpage': request.args.get('citemsperpage'),
                         'collpage': request.args.get('collpage'),
-                        'line_offset': request.args.get('line_offset'),
                         'num_lines': request.args.get('num_lines')}
         except TypeError as ex:
             self.add_system_message('error', str(ex))
@@ -1246,46 +1247,13 @@ class Actions(Querying):
                 self.args.corpname)
         return exporter.raw_content()
 
-    @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, page_model='coll')
-    def collx(self, line_offset=0, num_lines=0):
+    @exposed(access_level=1, page_model='coll')
+    def collx(self, request):
         """
         list collocations
         """
-        try:
-            require_existing_conc(self.corp, self.args.q)
-            return self._collx(line_offset, num_lines)
-        except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'collx')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
-
-    def _collx(self, line_offset=0, num_lines=0):
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
-        self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
-        if self.args.csortfn == '':
-            self.args.csortfn = 't'
-
-        calc_args = coll_calc.CollCalcArgs()
-        calc_args.corpus_encoding = self.corp.get_conf('ENCODING')
-        calc_args.corpname = self.args.corpname
-        calc_args.subcname = getattr(self.corp, 'subcname', None)
-        calc_args.subcpath = self.subcpath
-        calc_args.user_id = self.session_get('user', 'id')
-        calc_args.q = self.args.q
-        calc_args.save = self.args.save
-        calc_args.samplesize = 0  # TODO (check also freqs)
-        calc_args.cattr = self.args.cattr
-        calc_args.csortfn = self.args.csortfn
-        calc_args.cbgrfns = ''.join(self.args.cbgrfns)
-        calc_args.cfromw = self.args.cfromw
-        calc_args.ctow = self.args.ctow
-        calc_args.cminbgr = self.args.cminbgr
-        calc_args.cminfreq = self.args.cminfreq
-        calc_args.line_offset = line_offset
-        calc_args.num_lines = num_lines
-        calc_args.citemsperpage = self.args.citemsperpage
-        calc_args.collpage = self.args.collpage
-
         self._add_save_menu_item('CSV', save_format='csv',
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
@@ -1299,17 +1267,47 @@ class Actions(Querying):
                                  hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                      self.CONC_QUICK_SAVE_MAX_LINES)))
         self._add_save_menu_item(translate('Custom'))
+        self._save_options(self.LOCAL_COLL_OPTIONS, self.args.corpname)
 
-        ans = coll_calc.calculate_colls(calc_args)
-        ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
-        ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
-        ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
-        ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
-        ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
-        ans['savecoll_max_lines'] = self.SAVECOLL_MAX_LINES
-        self._attach_query_overview(ans)
-        return ans
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            ans = asdict(self._collx(self.args.collpage, self.args.citemsperpage))
+            ans['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
+            ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
+            ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
+            ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
+            ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
+            ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
+            self._attach_query_overview(ans)
+            return ans
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'collx')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+
+    def _collx(self, collpage, citemsperpage) -> CalculateCollsResult:
+
+        if self.args.csortfn == '':
+            self.args.csortfn = 't'
+
+        calc_args = coll_calc.CollCalcArgs(
+            corpus_encoding=self.corp.get_conf('ENCODING'),
+            corpname=self.args.corpname,
+            subcname=getattr(self.corp, 'subcname', None),
+            subcpath=self.subcpath,
+            user_id=self.session_get('user', 'id'),
+            q=self.args.q,
+            save=bool(self.args.save),
+            samplesize=0,  # TODO (check also freqs)
+            cattr=self.args.cattr,
+            csortfn=self.args.csortfn,
+            cbgrfns=''.join(self.args.cbgrfns),
+            cfromw=self.args.cfromw,
+            ctow=self.args.ctow,
+            cminbgr=self.args.cminbgr,
+            cminfreq=self.args.cminfreq,
+            citemsperpage=citemsperpage,
+            collpage=collpage)
+        return coll_calc.calculate_colls(calc_args)
 
     @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/savecoll.html',
              return_type='plain')
@@ -1317,47 +1315,47 @@ class Actions(Querying):
         """
         save collocations
         """
-        from_line = int(from_line)
-        if to_line == '':
-            to_line = Actions.SAVECOLL_MAX_LINES
-        else:
-            to_line = int(to_line)
-        num_lines = to_line - from_line + 1
-        self.args.collpage = 1
-        self.args.citemsperpage = Actions.SAVECOLL_MAX_LINES   # we need a one big page when saving
-        result = self.collx(line_offset=(from_line - 1), num_lines=num_lines)
-        saved_filename = self.args.corpname
-        if saveformat == 'text':
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
-                saved_filename,)
-            out_data = result
-            out_data['Desc'] = self.concdesc_json()['Desc']
-            out_data['saveformat'] = saveformat
-            out_data['from_line'] = from_line
-            out_data['to_line'] = to_line
-            out_data['heading'] = heading
-            out_data['colheaders'] = colheaders
-        elif saveformat in ('csv', 'xml', 'xlsx'):
-            def mkfilename(suffix): return '%s-collocations.%s' % (self.args.corpname, suffix)
-            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
-            writer.set_col_types(int, str, *(8 * (float,)))
+        try:
+            require_existing_conc(self.corp, tuple(self.args.q))
+            from_line = int(from_line)
+            to_line = self.corp.size if to_line == '' else int(to_line)  # 'corp.size' is just a safe max value
+            result = self._collx(collpage=1, citemsperpage=to_line)
+            result.Items = result.Items[from_line-1:]
+            saved_filename = self.args.corpname
+            if saveformat == 'text':
+                self._headers['Content-Type'] = 'application/text'
+                self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
+                    saved_filename,)
+                out_data = asdict(result)
+                out_data['Desc'] = self.concdesc_json()['Desc']
+                out_data['saveformat'] = saveformat
+                out_data['from_line'] = from_line
+                out_data['to_line'] = to_line
+                out_data['heading'] = heading
+                out_data['colheaders'] = colheaders
+            elif saveformat in ('csv', 'xml', 'xlsx'):
+                def mk_filename(suffix):
+                    return f'{self.args.corpname}-collocations.{suffix}'
 
-            self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
-                mkfilename(saveformat),)
+                writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
+                writer.set_col_types(int, str, *(8 * (float,)))
 
-            if colheaders or heading:
-                writer.writeheading([''] + [item['n'] for item in result['Head']])
-            i = 1
-            for item in result['Items']:
-                writer.writerow(i, (item['str'],
-                                    str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
-                i += 1
-            out_data = writer.raw_content()
-        else:
-            raise UserActionException('Unknown format: %s' % (saveformat,))
-        return out_data
+                self._headers['Content-Type'] = writer.content_type()
+                self._headers['Content-Disposition'] = f'attachment; filename="{mk_filename(saveformat)}"'
+                if colheaders or heading:
+                    writer.writeheading([''] + [item['n'] for item in result.Head])
+                i = 1
+                for item in result.Items:
+                    writer.writerow(
+                        i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
+                    i += 1
+                out_data = writer.raw_content()
+            else:
+                raise UserActionException(f'Unknown format: {saveformat}')
+            return out_data
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'collx')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
     @exposed(access_level=1, func_arg_mapped=True, return_type='json')
     def structctx(self, pos=0, struct='doc'):

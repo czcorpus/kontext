@@ -191,8 +191,7 @@ export class CollPage {
             dispatcher: this.layoutModel.dispatcher,
             layoutModel: this.layoutModel,
             saveLinkFn: this.setDownloadLink.bind(this),
-            quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-            saveCollMaxLines: this.layoutModel.getConf<number>('SaveCollMaxLines')
+            quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
         });
 
         const collResultViews = collResultViewInit(
