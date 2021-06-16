@@ -113,6 +113,19 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             MainMenuActionName.DirectSave,
             action => {this.sendSaveArgs(dispatcher)}
         );
+
+        this.addActionHandler<Actions.ResultApplyQuickFilter>(
+            ActionName.ResultApplyQuickFilter,
+            action => {
+                const attr = this.layoutModel.getNestedConf('FormData', 'attr');
+                const position = this.layoutModel.getNestedConf('FormData', 'position');
+                const url = this.layoutModel.createActionUrl('quick_filter', [
+                    ['q', `~${action.payload.concId}`],
+                    ['q2', `p${position} ${position} 0 [${attr}="${action.payload.value}"]`]
+                ]);
+                this.layoutModel.setLocationPost(url, [], action.payload.blankWindow);
+            }
+        );
     }
 
     reloadData():void {
