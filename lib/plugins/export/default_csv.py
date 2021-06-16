@@ -59,6 +59,9 @@ class CSVExport(AbstractExport):
     def write_ref_headings(self, data):
         self.csv_writer.writerow(data)
 
+    def writeheading(self, data):
+        self.csv_writer.writerow(data)
+
     def writerow(self, line_num, *lang_rows):
         row = []
         if line_num is not None:

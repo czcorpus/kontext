@@ -88,20 +88,7 @@ def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
-
-class CollsTask(app.Task):
-
-    cache_data = None
-    cache_path = None
-
-    def after_return(self, *args, **kw):
-        if self.cache_data:
-            with open(self.cache_path, 'wb') as f:
-                pickle.dump(self.cache_data, f)
-                self.cache_data = None
-
-
-@app.task(base=CollsTask, name='calculate_colls')
+@app.task(name='calculate_colls')
 def calculate_colls(coll_args):
     return general.calculate_colls(coll_args)
 

@@ -188,12 +188,13 @@ export function init(
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
                         <input type="text" name="to_line" value={props.toValue.value}
-                                onChange={handleToInput} style={{width: '4em'}} />
+                                onChange={handleToInput} style={{width: '4em'}}
+                                placeholder="MAX" />
                     </layoutViews.ValidatedItem>
 
-                    <div className="hint">
-                        ({utils.translate('coll__save_form_leave_to_load_to_end')}
-                    </div>
+                    <p className="hint">
+                        ({utils.translate('coll__save_form_leave_to_load_to_end')})
+                    </p>
                 </td>
             </tr>
         );

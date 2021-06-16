@@ -37,7 +37,6 @@ __conf.CollSaveLinesLimit = {{ save_line_limit|to_json }};
 __conf.CollUnfinished = {{ processing|to_json }};
 __conf.textTypesData = {{ text_types_data|to_json }};
 __conf.QuickSaveRowLimit = {{ quick_save_row_limit|to_json }};
-__conf.SaveCollMaxLines = {{ savecoll_max_lines|to_json }};
 __conf.CurrentPage = {{ collpage|to_json }};
 collPage.init(__conf, {{ processing|to_json}});
 {% endblock %}

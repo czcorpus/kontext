@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { SaveData } from '../../../app/navigation';
-import { CollResultsSaveModel } from '../../../models/coll/save';
+import { CollResultsSaveModel, CollResultsSaveModelState } from '../../../models/coll/save';
 import { Actions, ActionName } from '../../../models/coll/actions';
 import * as S from './style';
 
@@ -39,18 +39,6 @@ export interface SaveCollFormProps {
     saveLinesLimit:number;
     onClose:()=>void;
 }
-
-
-interface SaveCollFormState {
-    saveformat:string;
-    includeColHeaders:boolean;
-    includeHeading:boolean;
-    fromLine:Kontext.FormValue<string>;
-    toLine:Kontext.FormValue<string>;
-    saveLinesLimit:number;
-    lineLimitHintVisible:boolean;
-}
-
 
 export interface SaveCollFormViews {
     SaveCollForm:React.ComponentClass<SaveCollFormProps>;
@@ -149,9 +137,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     const TRSelLineRangeInputs:React.FC<{
         fromValue:Kontext.FormValue<string>;
         toValue:Kontext.FormValue<string>;
-        lineLimitHintVisible:boolean;
         saveLinesLimit:number;
-        onLineLimitHintShow:(v:boolean)=>void;
 
     }> = (props) => {
 
@@ -188,22 +174,11 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
                     <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
                         <input type="text" name="to_line" value={props.toValue.value}
-                                onChange={handleToInput} style={{width: '4em'}} />
+                                onChange={handleToInput} style={{width: '4em'}} placeholder="MAX" />
                     </layoutViews.ValidatedItem>
-                    <div className="hint">
-                        ({utils.translate('coll__save_form_leave_to_load_to_end')}
-                        <a className="context-help" onClick={()=>props.onLineLimitHintShow(true)}>
-                            <img className="save-limit-help context-help"
-                                src={utils.createStaticUrl('img/question-mark.svg')} />
-                        </a>)
-                        {props.lineLimitHintVisible ?
-                            <layoutViews.PopupBox onCloseClick={()=>props.onLineLimitHintShow(false)}>
-                                {utils.translate('global__coll_save_max_lines_warning_{max_coll_save_size}',
-                                    {max_coll_save_size: props.saveLinesLimit})}
-                            </layoutViews.PopupBox> :
-                            null
-                        }
-                    </div>
+                    <p className="hint">
+                        {utils.translate('coll__save_form_leave_to_load_to_end')}
+                    </p>
                 </td>
             </S.TRSelLineRangeInputs>
         )
@@ -211,71 +186,61 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
     // --------------- <SaveCollForm /> ------------------------
 
-    class SaveCollForm extends React.PureComponent<SaveCollFormProps & SaveCollFormState> {
+    const SaveCollForm:React.FC<SaveCollFormProps & CollResultsSaveModelState> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSubmitClick = this._handleSubmitClick.bind(this);
-            this._switchLineLimitHint = this._switchLineLimitHint.bind(this);
-        }
-
-        _handleSubmitClick() {
+        const handleSubmitClick = () => {
             dispatcher.dispatch<Actions.SaveFormSubmit>({
                 name: ActionName.SaveFormSubmit
             });
-        }
+        };
 
-        _renderFormatDependentOptions() {
-            switch (this.props.saveformat) {
+        const renderFormatDependentOptions = () => {
+            switch (props.saveformat) {
                 case SaveData.Format.XML:
-                    return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
+                    return <TRIncludeHeadingCheckbox value={props.includeHeading} />;
                 case SaveData.Format.CSV:
                 case SaveData.Format.XLSX:
-                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
+                    return <TRColHeadersCheckbox value={props.includeColHeaders} />
                 default:
                 return <span />;
             }
         }
 
-        _switchLineLimitHint(v) {
+        const switchLineLimitHint = (v) => {
             /* TODO implement within model
 
             const state = this._fetchModelState();
             state.lineLimitHintVisible = v;
             this.setState(state);
             */
-        }
+        };
 
-        render() {
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.onClose}>
-                    <layoutViews.CloseableFrame onCloseClick={this.props.onClose} label={utils.translate('coll__save_form_label')}>
-                        <S.SaveCollForm>
-                            <table className="form">
-                                <tbody>
-                                    <TRSaveFormatSelect value={this.props.saveformat} />
-                                    {this._renderFormatDependentOptions()}
-                                    <TRSelLineRangeInputs
-                                            fromValue={this.props.fromLine}
-                                            toValue={this.props.toLine}
-                                            saveLinesLimit={this.props.saveLinesLimit}
-                                            lineLimitHintVisible={this.props.lineLimitHintVisible}
-                                            onLineLimitHintShow={this._switchLineLimitHint} />
-                                </tbody>
-                            </table>
-                            <button type="button" className="default-button"
-                                    onClick={this._handleSubmitClick}>
-                                {utils.translate('coll__save_form_submit_btn')}
-                            </button>
-                        </S.SaveCollForm>
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            );
-        }
+        return (
+            <layoutViews.ModalOverlay onCloseKey={props.onClose}>
+                <layoutViews.CloseableFrame onCloseClick={props.onClose} label={utils.translate('coll__save_form_label')}>
+                    <S.SaveCollForm>
+                        <table className="form">
+                            <tbody>
+                                <TRSaveFormatSelect value={props.saveformat} />
+                                {renderFormatDependentOptions()}
+                                <TRSelLineRangeInputs
+                                        fromValue={props.fromLine}
+                                        toValue={props.toLine}
+                                        saveLinesLimit={props.saveLinesLimit} />
+                            </tbody>
+                        </table>
+                        <button type="button" className="default-button"
+                                onClick={handleSubmitClick}>
+                            {utils.translate('coll__save_form_submit_btn')}
+                        </button>
+                    </S.SaveCollForm>
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        );
     }
 
     return {
-        SaveCollForm
+        SaveCollForm: BoundWithProps<SaveCollFormProps, CollResultsSaveModelState>(SaveCollForm, collSaveModel)
     };
 
 }

@@ -30,7 +30,6 @@ export interface COllResultsSaveModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    saveCollMaxLines:number;
     saveLinkFn:(file:string, url:string)=>void;
 }
 
@@ -42,7 +41,6 @@ export interface CollResultsSaveModelState {
     fromLine:Kontext.FormValue<string>;
     toLine:Kontext.FormValue<string>;
     quickSaveRowLimit:number;
-    saveCollMaxLines:number;
     isBusy:boolean;
 }
 
@@ -54,8 +52,11 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
     private readonly saveLinkFn:(file:string, url:string)=>void;
 
     constructor({
-            dispatcher, layoutModel, quickSaveRowLimit,
-            saveCollMaxLines, saveLinkFn}:COllResultsSaveModelArgs) {
+            dispatcher,
+            layoutModel,
+            quickSaveRowLimit,
+            saveLinkFn
+    }:COllResultsSaveModelArgs) {
         super(
             dispatcher,
             {
@@ -65,8 +66,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                 toLine: {value: '', isInvalid: false, isRequired: true},
                 includeColHeaders: false,
                 includeHeading: false,
-                quickSaveRowLimit: quickSaveRowLimit,
-                saveCollMaxLines: saveCollMaxLines,
+                quickSaveRowLimit,
                 isBusy: false
             }
         );
@@ -197,7 +197,9 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                 args.set('colheaders', state.includeColHeaders ? '1' : '0');
                 args.set('heading', state.includeHeading ? '1' : '0');
                 args.set('from_line', parseInt(state.fromLine.value));
-                args.set('to_line', parseInt(state.toLine.value));
+                args.set('to_line', state.toLine.value ?
+                            parseInt(state.toLine.value) :
+                            undefined);
                 this.saveLinkFn(
                     `collocation.${SaveData.formatToExt(state.saveformat)}`,
                     this.layoutModel.createActionUrl('savecoll', args.items())

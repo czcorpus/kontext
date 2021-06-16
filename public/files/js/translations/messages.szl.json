@@ -107,7 +107,6 @@
         "global__subc_search_in_subc": "Szukej we korpusie",
         "global__subc_all_the_tokens": "Ôbier wszyjske pozycyje, co sztymujōm ze wyrażyniym",
         "global__subc_all_the_matching_tokens_{prev}": "... Spostrzōd nich ôbier te, co sztymujōm ze wyrażyniym",
-        "global__coll_save_max_lines_warning_{max_coll_save_size}": "Pamiyntej, iże skuli wydajności KonText zapisuje nojwiyncyj {max_coll_save_size, plural, one{# elymynt}, other {# elymyntōw}}.",
         "global__calculate": "Rachuj",
         "global__unknown_error": "Niyznany feler",
         "global__warning_icon": "Symbol uwŏgi",

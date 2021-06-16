@@ -30,9 +30,10 @@ complete and properly configured KonText package.
 """
 
 import os
-import imp
+import importlib.util
 import sys
 import time
+import pickle
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/../lib')
@@ -75,7 +76,7 @@ stderr_redirector = get_stderr_redirector(settings)
 
 
 def load_script_module(name, path):
-    return imp.load_source(name, path)
+    return importlib.util.spec_from_file_location(name, path)
 
 
 class WorkerTaskException(Exception):
@@ -213,19 +214,13 @@ def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
 
-def calculate_colls(coll_args):
+def calculate_colls(coll_args: coll_calc.CollCalcArgs):
     """
-    arguments:
-    coll_args -- dict-serialized coll_calc.CollCalcArgs
     """
-    coll_args = coll_calc.CollCalcArgs(**coll_args)
-    calculate_colls.cache_path = coll_args.cache_path
     ans = coll_calc.calculate_colls_bg(coll_args)
-    trigger_cache_limit = settings.get_int('corpora', 'colls_cache_min_lines', 10)
-    if not ans['processing'] and len(ans['data']['Items']) >= trigger_cache_limit:
-        calculate_colls.cache_data = ans['data']
-    else:
-        calculate_colls.cache_data = None
+    if not ans['processing'] and len(ans['data']['Items']) > 0:
+        with open(coll_args.cache_path, 'wb') as f:
+            pickle.dump(ans['data'], f)
     return ans
 
 

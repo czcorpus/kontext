@@ -16,13 +16,14 @@ import pickle
 import hashlib
 import os
 import time
+from typing import List, Any, Optional
+from dataclasses import dataclass, field, asdict
 
 import corplib
 from conclib.calc import require_existing_conc
 from corplib.errors import MissingSubCorpFreqFile
 from bgcalc import freq_calc
 import settings
-from structures import FixedDict
 from bgcalc.errors import UnfinishedConcordanceError
 from translation import ugettext as _
 import bgcalc
@@ -30,37 +31,33 @@ import bgcalc
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-class CollCalcArgs(FixedDict):
+@dataclass
+class CollCalcArgs:
     """
     Collects all the required arguments passed around when
     calculating collocation profiles.
     """
-    q = None
-    user_id = None
-    corpname = None
-    corpus_encoding = None
-    subcname = None
-    subcpath = None
-    num_lines = None
-    collpage = None
-    citemsperpage = None
-    line_offset = None
-    save = 0
-    samplesize = 0
-    cattr = None
-    csortfn = None
-    cbgrfns = None
-    cfromw = None
-    ctow = None
-    cminbgr = None
-    cminfreq = None
-    cache_path = None
-    num_fetch_items = None
+    q: List[str]
+    user_id: int
+    corpname: str
+    corpus_encoding: str
+    collpage: int
+    citemsperpage: int
+    save: bool
+    cattr: str
+    csortfn: str
+    cbgrfns: str
+    cfromw: int
+    ctow: int
+    cminbgr: int
+    cminfreq: int
+    subcname: Optional[str]
+    subcpath: List[str] = field(default_factory=list)
+    cache_path: Optional[str] = field(default=None)
+    samplesize: int = field(default=0)
 
 
 class CollCalcCache(object):
-
-    MANATEE_DEFAULT_NUM_FETCH_LINES = 50
 
     def __init__(self, corpname, subcname, subcpath, user_id, q, save=0, samplesize=0):
         self._corpname = corpname
@@ -93,11 +90,13 @@ class CollCalcCache(object):
         return collocs, cache_path
 
 
-def calculate_colls_bg(coll_args):  # TODO !!!! FIX (missing user-id, deprecated handling of MissingSubCorpFreqFile
+# TODO !!!! FIX (missing user-id, deprecated handling of MissingSubCorpFreqFile
+def calculate_colls_bg(coll_args: CollCalcArgs):
     """
-    Background collocations calculation.
-    This function is expected to be run either
-    from Celery or from other process (via multiprocessing).
+    Background collocations calculation running on a worker server.
+    In case auxiliary data files are needed and not present already
+    (MissingSubCorpFreqFile exception), the function triggers
+    a respective calculation.
     """
     cm = corplib.CorpusManager(subcpath=coll_args.subcpath)
     corp = cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
@@ -110,14 +109,14 @@ def calculate_colls_bg(coll_args):  # TODO !!!! FIX (missing user-id, deprecated
                 _('Cannot calculate yet - source concordance not finished. Please try again later.'))
         collocs = conc.collocs(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
-                               cminbgr=coll_args.cminbgr, max_lines=coll_args.num_fetch_items)
+                               cminbgr=coll_args.cminbgr, max_lines=conc.size())
         for item in collocs['Items']:
             item['pfilter'] = [('q2', item['pfilter'])]
             item['nfilter'] = [('q2', item['nfilter'])]
         return dict(data=collocs, processing=0, tasks=[])
-    except MissingSubCorpFreqFile as e:
+    except MissingSubCorpFreqFile:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
-        out = freq_calc.build_arf_db(e.corpus, coll_args.cattr)
+        out = freq_calc.build_arf_db(corp, coll_args.cattr)
         if type(out) is list:
             processing = 1
             ans['tasks'].extend(out)
@@ -128,23 +127,26 @@ def calculate_colls_bg(coll_args):  # TODO !!!! FIX (missing user-id, deprecated
         return ans
 
 
-def calculate_colls(coll_args):
+@dataclass
+class CalculateCollsResult:
+    Head: str
+    attrname: str
+    processing: bool
+    lastpage: bool
+    Items: List[Any]
+
+
+def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     """
     Calculates required collocations based on passed arguments.
-    Function is able to reuse cached values and utilize configured
-    backend (either Celery or multiprocessing).
+    Result values are cached.
 
     returns:
     a dictionary ready to be used in a respective template (collx.tmpl)
     (keys: Head, Items, cmaxitems, attrname, processing, collstart, lastpage)
     """
-    if coll_args.num_lines > 0:
-        collstart = 0
-        collend = coll_args.num_lines
-    else:
-        collstart = (int(coll_args.collpage) - 1) * int(coll_args.citemsperpage) + int(coll_args.line_offset)
-        collend = collstart + int(coll_args.citemsperpage) + 1
-
+    collstart = (coll_args.collpage - 1) * coll_args.citemsperpage
+    collend = collstart + coll_args.citemsperpage
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
                           user_id=coll_args.user_id, q=coll_args.q, save=coll_args.save,
                           samplesize=coll_args.samplesize)
@@ -152,34 +154,20 @@ def calculate_colls(coll_args):
                                     cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
                                     cminfreq=coll_args.cminfreq)
     if collocs is None:
-        num_fetch_items = CollCalcCache.MANATEE_DEFAULT_NUM_FETCH_LINES
-    else:
-        num_fetch_items = len(collocs['Items'])
-
-    if collocs is None or collend > num_fetch_items:
-        if os.path.isfile(cache_path):  # cache avail. but not enough items
-            os.unlink(cache_path)
-        if collend >= num_fetch_items:
-            num_fetch_items += (collend - num_fetch_items) + 10 * int(coll_args.citemsperpage)  # TODO heuristics :)
-
         coll_args.cache_path = cache_path
-        coll_args.num_fetch_items = num_fetch_items
         app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('calculate_colls', args=(coll_args.to_dict(),),
-                            time_limit=TASK_TIME_LIMIT)
+        res = app.send_task('calculate_colls', args=(coll_args,), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         ans = res.get()
     else:
         ans = dict(data=collocs, processing=0)
-    result = dict(
+    return CalculateCollsResult(
         Head=ans['data']['Head'],
         attrname=coll_args.cattr,
         processing=ans['processing'],
-        collstart=collstart,
-        lastpage=0 if collstart + coll_args.citemsperpage < len(ans['data']['Items']) else 1,
-        Items=ans['data']['Items'][collstart:collend - 1]
+        lastpage=not collstart + coll_args.citemsperpage < len(ans['data']['Items']),
+        Items=ans['data']['Items'][collstart:collend]
     )
-    return result
 
 
 def clean_colls_cache():

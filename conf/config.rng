@@ -562,11 +562,6 @@
                         </a:documentation>
                         <data type="nonNegativeInteger" />
                     </element>
-                    <element name="colls_cache_min_lines">
-                        <a:documentation>Specifies a minimum number of items collocations data must contain to
-                        be cacheable.</a:documentation>
-                        <data type="positiveInteger" />
-                    </element>
                     <element name="default_corpora">
                         <a:documentation>Specifies a default corpous to be offered to a user
                         in case she does not specify anything. A list can be used to define
