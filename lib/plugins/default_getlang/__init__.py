@@ -15,12 +15,13 @@
 import http.cookies
 from collections import defaultdict
 import os
+from plugins.abstract.getlang import AbstractGetLang
 
 
 def normalize_lang(s): return s.replace('-', '_')
 
 
-class GetLang(object):
+class GetLang(AbstractGetLang):
     """
     A simple implementation of the 'getlang' plugin where a selected
     language is stored in a defined cookie.

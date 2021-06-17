@@ -1045,6 +1045,8 @@ class Kontext(Controller):
         # available languages; used just by UI language switch
         result['avail_languages'] = avail_languages
         result['uiLang'] = ui_lang
+        with plugins.runtime.GETLANG as gl:
+            result['lang_switch_ui'] = gl.allow_default_lang_switch_ui()
         result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
                                          for code, meta in avail_languages if code == ui_lang)
 
