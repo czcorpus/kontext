@@ -12,14 +12,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-"""
-A simple implementation of the 'getlang' plugin.
-"""
+import http.cookies
+from collections import defaultdict
+import os
+
+
+def normalize_lang(s): return s.replace('-', '_')
 
 
 class GetLang(object):
     """
-    A getlang plugin implementation which always returns the 'fallback_lang'.
+    A simple implementation of the 'getlang' plugin where a selected
+    language is stored in a defined cookie.
 
     arguments:
     cookie_name -- name of the cookie storing current language setting
@@ -29,6 +33,17 @@ class GetLang(object):
     def __init__(self, cookie_name, fallback_lang='en_US'):
         self.cookie_name = cookie_name
         self.fallback_lang = fallback_lang
+        self._translations = self.fetch_translations()
+
+    @staticmethod
+    def fetch_translations():
+        ans = defaultdict(lambda: [])
+        ans['en'].append('en_US')
+        root_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locale')
+        for item in os.listdir(root_dir):
+            c = item.split('_')[0]
+            ans[c].append(item)
+        return ans
 
     def fetch_current_language(self, source):
         """
@@ -43,7 +58,15 @@ class GetLang(object):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or an empty string in case no value was found
         """
-        return self.fallback_lang
+        code = self.fallback_lang
+        if not isinstance(source, http.cookies.BaseCookie):
+            raise TypeError(f'{__file__} plugin expects Cookie.BaseCookie instance as a source')
+        if self.cookie_name in source:
+            key = normalize_lang(source[self.cookie_name].value).split('_')[0]
+            variants = self._translations[key]
+            if len(variants) > 0:
+                code = variants[0]
+        return code
 
 
 def create_instance(conf):

@@ -228,14 +228,11 @@ class User(Kontext):
 
     @exposed(skip_corpus_init=True, http_method='POST', access_level=0)
     def switch_language(self, request):
-        if plugins.runtime.GETLANG.exists:
-            pass  # TODO should the plug-in do something here?
-        else:
-            path_prefix = settings.get_str('global', 'action_path_prefix')
-            self._new_cookies['kontext_ui_lang'] = request.form.get('language')
-            self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
-            self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
-                                                                            time.gmtime(time.time() + 180 * 24 * 3600))
-            self.redirect(
-                request.environ.get('HTTP_REFERER', self.create_url('query', dict(corpname=self.args.corpname))))
+        path_prefix = settings.get_str('global', 'action_path_prefix')
+        self._new_cookies['kontext_ui_lang'] = request.form.get('language')
+        self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
+        self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
+                                                                        time.gmtime(time.time() + 180 * 24 * 3600))
+        self.redirect(
+            request.environ.get('HTTP_REFERER', self.create_url('query', dict(corpname=self.args.corpname))))
         return {}
