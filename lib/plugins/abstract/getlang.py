@@ -42,3 +42,16 @@ class AbstractGetLang(abc.ABC):
         underscore-separated ISO 639 language code and ISO 3166 country code
         of the detected language or None in case no value was found
         """
+
+    def allow_default_lang_switch_ui(self) -> bool:
+        """
+        In case a different way of language switching is expected
+        to be used (e.g. via a footer/header UI), the default links
+        rendered as part of the footer can be disabled by overriding
+        this method.
+
+        Please note that in case a non-default footer_bar plug-in is
+        used, the method has no effect as the whole footer content
+        is replaced by the one provided by the footer_bar plug-in.
+        """
+        return True

@@ -71,13 +71,16 @@ class GetLang(AbstractGetLang):
         """
         code = self.fallback_lang
         if not isinstance(source, http.cookies.BaseCookie):
-            raise TypeError('%s plugin expects Cookie.BaseCookie instance as a source' % __file__)
+            raise TypeError(f'{__file__} plugin expects Cookie.BaseCookie instance as a source')
         if self.cookie_name in source:
             key = normalize_lang(source[self.cookie_name].value).split('_')[0]
             variants = self._translations[key]
             if len(variants) > 0:
                 code = variants[0]
         return code
+
+    def allow_default_lang_switch_ui(self):
+        return False
 
 
 def create_instance(conf):
