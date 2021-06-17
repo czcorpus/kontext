@@ -636,9 +636,9 @@ def texttype_values(corp: Corpus, subcorpattrs: str, maxlistsize: int, shrink_li
 
 def _get_attr_hierarchy(vals, hsep):
     result = {}
-    values = set([])
+    values = set()
     for v in vals:
-        values.add(v)
+        values.add(v['v'])
     for value in sorted(values):
         level = result
         while hsep in value:

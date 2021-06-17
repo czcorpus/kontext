@@ -186,7 +186,7 @@ __conf.InitialFreqLevel = {{ last_freq_level|default(1, true)|to_json }};
             <div>
                 <a href="https://www.github.com/czcorpus/kontext" target="_blank" rel="noopener">{{ "View on GitHub"|_ }}</a>
             </div>
-            {% if avail_languages|length > 0 %}
+            {% if lang_switch_ui and avail_languages|length > 0 %}
             <span class="separ">|</span>
             <div id="switch-language-box">{{ "user interface languages"|_ }}:
                 <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
