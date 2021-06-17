@@ -1043,10 +1043,7 @@ class Kontext(Controller):
         avail_languages = settings.get_full('global', 'translations')
         ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
         # available languages; used just by UI language switch
-        if plugins.runtime.GETLANG.exists:
-            result['avail_languages'] = ()  # getlang plug-in provides customized switch
-        else:
-            result['avail_languages'] = avail_languages
+        result['avail_languages'] = avail_languages
         result['uiLang'] = ui_lang
         result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
                                          for code, meta in avail_languages if code == ui_lang)
