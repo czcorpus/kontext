@@ -41,7 +41,8 @@ export interface FreqIntersectionArgs {
     conc_ids:Array<string>;
     min_freq:number;
     attr:string;
-    pos_index:number;
+    pos_left:number;
+    pos_right:number;
     pos_align:AlignTypes;
     position:string;
 }
@@ -89,7 +90,8 @@ export interface PqueryFormModelState {
     concWait:{[sourceId:string]:ConcStatus};
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:number;
-    posIndex:number;
+    posLeft:number;
+    posRight:number;
     posAlign:AlignTypes;
     attr:string;
     attrs:Array<Kontext.AttrItem>;
@@ -158,7 +160,8 @@ export function newModelState(
         ),
         task: undefined,
         minFreq: 5,
-        posIndex: 6,
+        posLeft: 0,
+        posRight: 0,
         posAlign: AlignTypes.LEFT,
         attr: defaultAttr,
         attrs,
@@ -232,7 +235,8 @@ export function storedQueryToModel(
         ),
         task: undefined,
         minFreq: sq.min_freq,
-        posIndex: sq.pos_index,
+        posLeft: sq.pos_left,
+        posRight: sq.pos_right,
         posAlign: sq.pos_align,
         attr: sq.attr,
         attrs,

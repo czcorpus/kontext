@@ -188,31 +188,6 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         );
     };
 
-
-    // ---------------------- <PositionSelect /> ---------------------
-
-    const PositionSelect:React.FC<{
-        positionIndex:number;
-        positionRangeLabels:Array<string>;
-    }> = (props) => {
-
-        const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.SetPositionIndex>({
-                name: ActionName.SetPositionIndex,
-                payload: {value: evt.target.value}
-            });
-        };
-
-        return (
-            <select onChange={handleSelection} value={props.positionIndex}>
-                {props.positionRangeLabels.map((item, i) => {
-                    return <option key={`opt_${i}`} value={i}>{item}</option>;
-                })}
-            </select>
-        );
-    };
-
-
     // ---------------------- <PosAlignmentSelect /> ---------------------
 
     const PosAlignmentSelect:React.FC<{
@@ -277,6 +252,13 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         }
 
+        const handleKwicRangeSelection = (left:number, right:number, inclKwic:boolean) => {
+            dispatcher.dispatch<Actions.SetPositionIndex>({
+                name: ActionName.SetPositionIndex,
+                payload: {valueLeft: left, valueRight: right}
+            });
+        };
+
         const _renderMainFieldset = () => (
             <S.StylelessFieldset disabled={props.isBusy}>
                 <S.EditorFieldset>
@@ -313,9 +295,17 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
                             <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
                         </S.MinFreqField>
+                    </S.ParametersFieldset>
+                    <S.ParametersFieldset>
                         <S.ParameterField>
                             <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
-                            <PositionSelect positionIndex={props.posIndex} positionRangeLabels={model.getPositionRangeLabels()}/>
+                            <layoutViews.KwicRangeSelector
+                                initialLeft={props.posLeft}
+                                initialRight={props.posRight}
+                                isKwicExcluded={false}
+                                rangeSize={6}
+                                onClick={handleKwicRangeSelection}>
+                            </layoutViews.KwicRangeSelector>
                             <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
                             <PosAlignmentSelect alignType={props.posAlign}/>
                         </S.ParameterField>
