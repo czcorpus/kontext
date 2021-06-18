@@ -95,7 +95,7 @@ class CorptreeParser(object):
     def parse_node(self, elm):
         data = {}
         if elm.tag == 'corplist':
-            data['name'] = elm.attrib['name']
+            data['name'] = elm.attrib.get('name', '-')
         elif elm.tag == 'corpus':
             data['ident'] = elm.attrib['ident'].lower()
             data['name'] = elm.attrib['name'] if 'name' in elm.attrib else data['ident']

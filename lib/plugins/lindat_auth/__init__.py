@@ -138,7 +138,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         # fetch groups based on user_id (manual and shib based) intersect with corplist
         groups = self.get_groups_for(user_dict)
         return [corpora['ident'] for corpora in self._corplist
-                if len(set(corpora['access']).intersection(set(groups))) > 0]
+                if len(set(corpora.get('access', [])).intersection(set(groups))) > 0]
 
     def on_forbidden_corpus(self, plugin_ctx, corpname, corp_variant):
         if self.is_anonymous(plugin_ctx.user_id):
@@ -290,7 +290,7 @@ def _load_corplist(corptree_path):
 
         Private can be added via user database.
     """
-    from plugins.lindat_corparch import CorptreeParser
+    from plugins.tree_corparch import CorptreeParser
     data, metadata = CorptreeParser().parse_xml_tree(corptree_path)
     flat_corplist = _flatten_corplist(data['corplist'])
     return flat_corplist
