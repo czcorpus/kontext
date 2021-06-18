@@ -21,7 +21,8 @@ class PqueryFormArgs(object):
         self.corpname = None
         self.usesubcorp = None
         self.min_freq = 0
-        self.pos_index = 0
+        self.pos_left = 0
+        self.pos_right = 0
         self.pos_align = 'left'
         self.position = None
         self.attr = None
@@ -32,7 +33,8 @@ class PqueryFormArgs(object):
         self.corpname = data['corpname']
         self.usesubcorp = data.get('usesubcorp')
         self.min_freq = data['min_freq']
-        self.pos_index = data['pos_index']
+        self.pos_left = data['pos_left']
+        self.pos_right = data['pos_right']
         self.pos_align = data['pos_align']
         self.position = data['position']
         self.attr = data['attr']

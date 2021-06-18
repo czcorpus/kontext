@@ -97,7 +97,8 @@ export namespace Actions {
     }
 
     export interface SetPositionIndex extends Action<{
-        value: number;
+        valueLeft: number;
+        valueRight: number;
     }> {
         name: ActionName.SetPositionIndex;
     }
