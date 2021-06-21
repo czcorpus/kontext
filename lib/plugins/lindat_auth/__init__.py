@@ -138,7 +138,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         # fetch groups based on user_id (manual and shib based) intersect with corplist
         groups = self.get_groups_for(user_dict)
         return [corpora['ident'] for corpora in self._corplist
-                if len(set(corpora.get('access', [])).intersection(set(groups))) > 0]
+                if len(set(corpora.get('access', [])).intersection(set(groups))) > 0] + ['susanne', 'syn2015', 'syn2020']
 
     def on_forbidden_corpus(self, plugin_ctx, corpname, corp_variant):
         if self.is_anonymous(plugin_ctx.user_id):

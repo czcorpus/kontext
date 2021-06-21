@@ -25,7 +25,7 @@ export const GlobalStyle = createGlobalStyle`
 
     #common-bar {
 
-        background-color: transparent !important;
+        background-color: #f0f0f0 !important;
 
         height: auto !important;
 
@@ -62,7 +62,6 @@ export const GlobalStyle = createGlobalStyle`
         }
     }
 
-
     @media (min-width: 992px) {
         .lindat-footer-content {
             flex-wrap: nowrap;
@@ -70,56 +69,56 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     .lindat-footer {
-            color: #606060;
-            text-align: center;
-            margin: 0
-        }
+        color: #606060;
+        text-align: center;
+        margin: 0
+    }
 
-        .lindat-footer h1 {
-            border-bottom: 1px solid silver;
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 25px;
-            margin: 0 0 5px;
-            color: #606060
-        }
+    .lindat-footer h1 {
+        border-bottom: 1px solid silver;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 25px;
+        margin: 0 0 5px;
+        color: #606060
+    }
 
-        .lindat-footer a {
-            color: gray;
-            font-weight: 700;
-            font-size: 12px;
-            text-decoration: none
-        }
+    .lindat-footer a {
+        color: gray;
+        font-weight: 700;
+        font-size: 12px;
+        text-decoration: none
+    }
 
-        .lindat-footer a:hover {
-            text-decoration: underline
-        }
+    .lindat-footer a:hover {
+        text-decoration: underline
+    }
 
-        .lindat-footer ul {
-            padding-left: 20px;
-            margin: 0;
-            text-align: left
-        }
+    .lindat-footer ul {
+        padding-left: 20px;
+        margin: 0;
+        text-align: left
+    }
 
-        .lindat-footer li {
-            line-height: 20px
-        }
+    .lindat-footer li {
+        line-height: 20px
+    }
 
-        .lindat-footer-main {
-            text-align: left;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: inset 0 -1px 0 #fff;
-            background-color: #f8f8f8;
-            padding-top: 20px
-        }
+    .lindat-footer-main {
+        text-align: left;
+        border-top: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: inset 0 -1px 0 #fff;
+        background-color: #f8f8f8;
+        padding-top: 20px
+    }
 
-        .lindat-footer-content {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: center
-        }
+    .lindat-footer-content {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center
+    }
 
     .lindat-footer-left {
         flex: 0 0 auto;
