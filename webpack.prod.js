@@ -43,7 +43,10 @@ module.exports = (env) => merge(common.wpConf(env), {
 				test: /\.less$/,
 				use: [
 					{
-						loader: MiniCssExtractPlugin.loader
+						loader: MiniCssExtractPlugin.loader,
+						options: {
+						    publicPath: ''
+						}
 					},
 					{ loader: 'css-loader' },
 					{
