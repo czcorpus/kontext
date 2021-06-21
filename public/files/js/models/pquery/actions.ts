@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs } from './common';
+import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common';
 import { SortColumn } from './result';
 import {SaveData} from '../../app/navigation';
 
@@ -104,7 +104,7 @@ export namespace Actions {
     }
 
     export interface SetAlignType extends Action<{
-        value: AlignTypes;
+        value: AlignTypes|PqueryAlignTypes;
     }> {
         name: ActionName.SetAlignType;
     }
@@ -210,7 +210,7 @@ export namespace Actions {
 
     export interface ResultApplyQuickFilterArgsReady extends Action<{
         attr:string;
-        posAlign:AlignTypes;
+        posAlign:AlignTypes|PqueryAlignTypes;
         posSpec:string; // the Manatee format (e.g. 0<0)
     }> {
         name: ActionName.ResultApplyQuickFilterArgsReady;
