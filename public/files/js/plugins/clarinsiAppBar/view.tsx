@@ -54,7 +54,7 @@ export function init(
             <S.Widget>
                 <GS.GlobalStyle />
                 <div className="buttons">
-                    <ul className="localization-bar">
+                    <S.LocalizationBar>
                         <li>
                             <a className="flag flag-si" onClick={handleLangClick('sl-SI')}>
                                 <img src={flagSI} title="Slovenščina" style={{width: '24px', height: '12px'}} />
@@ -70,35 +70,35 @@ export function init(
                                 <img src={flagCS} title="Czech" style={{width: '24px', height: '12px'}} />
                             </a>
                         </li>
-                    </ul>
+                    </S.LocalizationBar>
                     <div className="lindat-auth-bar"></div>
                 </div>
-                <nav className="lindat-common" role="navigation" data-version="1.5.0" data-build="d73d463931712e2fc9c875a0a4673dae1c4e26cb">
-                    <button type="button" className="lindat-menu-btn" onClick={handleMenuToggleClick}>
+                <S.Navigation className="lindat-common" role="navigation">
+                    <S.MenuButton type="button" onClick={handleMenuToggleClick}>
                         <span className="lindat-menu-icon">
-                        <span className="lindat-icon-bar"> </span>
-                        <span className="lindat-icon-bar"> </span>
-                        <span className="lindat-icon-bar"> </span>
+                            <span className="lindat-icon-bar" />
+                            <span className="lindat-icon-bar" />
+                            <span className="lindat-icon-bar" />
                         </span>
-                    </button>
-                    <ul className={`lindat-menu ${props.menuVisible ? ' lindat-open' : ''}`}>
+                    </S.MenuButton>
+                    <S.Menu className={props.menuVisible ? ' lindat-open' : ''}>
                         <li className="lindat-home-item">
-                        <a href="http://www.clarin.si/" className="clarin-si-logo"><span></span></a>
+                            <a href="http://www.clarin.si/" className="clarin-si-logo"><span></span></a>
                         </li>
                         <li className="lindat-repository-item">
-                        <a href="https://www.clarin.si/repository/xmlui/?locale-attribute=en"><span>Repository</span></a>
+                            <a href="https://www.clarin.si/repository/xmlui/?locale-attribute=en"><span>Repository</span></a>
                         </li>
                         <li className="lindat-about-item">
-                        <a href="http://www.clarin.si/info/about-repository/"><span>About</span></a>
+                            <a href="http://www.clarin.si/info/about-repository/"><span>About</span></a>
                         </li>
                         <li id="lindat-about-item">
-                        <a href="http://www.clarin.si/info/contact/"><span>Contact</span></a>
+                            <a href="http://www.clarin.si/info/contact/"><span>Contact</span></a>
                         </li>
                         <li className="lindat-clarin-menu">
-                        <a href="http://www.clarin.eu" className="clarin-logo"><span>CLARIN</span></a>
+                            <a href="http://www.clarin.eu" className="clarin-logo"><span>CLARIN</span></a>
                         </li>
-                    </ul>
-                </nav>
+                    </S.Menu>
+                </S.Navigation>
             </S.Widget>
         );
     }
