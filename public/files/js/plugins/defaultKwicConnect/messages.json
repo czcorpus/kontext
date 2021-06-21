@@ -22,5 +22,7 @@
         "default_kwic_connect__abs_freq": "Abs. frequency",
         "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus",
         "default_kwic_connect__item_been_ommitted_due_size": "One or more items has been omitted due to KWIC size"
+    },
+    "sl-SI": {
     }
 }

@@ -215,7 +215,7 @@ class CorptreeParser(object):
         elif elm.tag == 'corpus':
             data['ident'] = elm.attrib['ident'].lower()
             data['name'] = elm.attrib['name'] if 'name' in elm.attrib else data['ident']
-            data['features'] = elm.attrib['features']
+            data['features'] = elm.attrib.get('features')
             data['access'] = [group.strip()
                               for group in elm.attrib.get('access', 'anonymous').split(',')]
             data['repo'] = elm.attrib['repo'] if 'repo' in elm.attrib and elm.attrib['repo'] != '' else 'no'

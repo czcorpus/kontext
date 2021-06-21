@@ -19,5 +19,7 @@
         "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source",
         "defaultTD__plug_in_error_symbol_alt": "Plug-in error",
         "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
+    },
+    "sl-SI": {
     }
 }
