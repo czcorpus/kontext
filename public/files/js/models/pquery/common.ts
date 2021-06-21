@@ -43,7 +43,7 @@ export interface FreqIntersectionArgs {
     attr:string;
     pos_left:number;
     pos_right:number;
-    pos_align:AlignTypes;
+    pos_align:AlignTypes|PqueryAlignTypes;
     position:string;
 }
 
@@ -78,6 +78,10 @@ export interface HistoryArgs {
 
 export type InvolvedConcFormArgs = {[queryId:string]:AjaxResponse.QueryFormArgs};
 
+export const enum PqueryAlignTypes {
+    WHOLE_KWIC = 'whole'
+}
+
 export interface PqueryFormModelState {
     isBusy:boolean;
     modalVisible:boolean;
@@ -92,7 +96,7 @@ export interface PqueryFormModelState {
     minFreq:number;
     posLeft:number;
     posRight:number;
-    posAlign:AlignTypes;
+    posAlign:AlignTypes|PqueryAlignTypes;
     attr:string;
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;

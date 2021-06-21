@@ -34,7 +34,8 @@ import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
-    PqueryFormModelState } from './common';
+    PqueryFormModelState, 
+    PqueryAlignTypes} from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -47,7 +48,7 @@ interface PqueryFormModelSwitchPreserve {
     attr:string;
     posLeft:number;
     posRight:number;
-    posAlign:AlignTypes;
+    posAlign:AlignTypes|PqueryAlignTypes;
 }
 
 interface HistoryState {
@@ -361,9 +362,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private getPositionRange(state:PqueryFormModelState):string {
-        return state.posAlign === AlignTypes.LEFT ?
-            `${state.posLeft}<0~${state.posRight}<0` :
-            `${state.posLeft}>0~${state.posRight}>0`;
+        switch (state.posAlign) {
+            case AlignTypes.LEFT:
+                return `${state.posLeft}<0~${state.posRight}<0`
+            case AlignTypes.RIGHT:
+                return `${state.posLeft}>0~${state.posRight}>0`
+            case PqueryAlignTypes.WHOLE_KWIC:
+                return `${state.posLeft}<0~${state.posRight}>0`
+        }
     }
 
     private removeItem(data:{[sourceId:string]:any}, removeId:string):{[sourceId:string]:any} {

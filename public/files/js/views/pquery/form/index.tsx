@@ -29,7 +29,7 @@ import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
 import { Dict, List } from 'cnc-tskit';
-import { ConcStatus, PqueryFormModelState } from '../../../models/pquery/common';
+import { ConcStatus, PqueryAlignTypes, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
@@ -191,7 +191,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
     // ---------------------- <PosAlignmentSelect /> ---------------------
 
     const PosAlignmentSelect:React.FC<{
-        alignType:AlignTypes
+        alignType:AlignTypes|PqueryAlignTypes
     }> = (props) => {
 
         const handleSelection = (evt) => {
@@ -206,6 +206,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                     onChange={handleSelection}>
                 <option value={AlignTypes.LEFT}>{he.translate('freq__align_type_left')}</option>
                 <option value={AlignTypes.RIGHT}>{he.translate('freq__align_type_right')}</option>
+                <option value={PqueryAlignTypes.WHOLE_KWIC}>{he.translate('pquery__align_type_whole_kwic')}</option>
             </select>
         );
     };

@@ -820,6 +820,7 @@
         "pquery__no_result": "The search has no result. Please check your queries and query parameters.",
         "pquery_overview_title": "Paradigmatic query",
         "pquery__save_form_label": "Save paradigmatic query results",
-        "pquery__parameters_form": "Paradigmatic query parameters"
+        "pquery__parameters_form": "Paradigmatic query parameters",
+        "pquery__align_type_whole_kwic": "whole KWIC as one word"
     }
 }
