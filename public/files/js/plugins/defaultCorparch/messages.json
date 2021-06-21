@@ -110,5 +110,6 @@
     "defaultCorparch__item_will_be_removed": "Elymynt bydzie skasowany ze listy za chwilã. Kliknij ikōnã gwiŏzdy, żeby go dodać nazŏd do podryncznych.",
     "defaultCorparch__err001": "Maksymalnŏ wielość ({maxNum}) podryncznych korpusōw bōł przekroczōny. Żeby dodać nowy elymynt, nojprzōd skasuj jakiś inkszy.",
     "defaultCorparch__favourites_filter_label": "favourites"
-  }
+  },
+  "sl-SI": {}
 }
