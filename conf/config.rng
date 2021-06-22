@@ -151,9 +151,11 @@
                     <zeroOrMore>
                         <element>
                             <anyName />
-                            <attribute name="extension-by">
-                                <text />
-                            </attribute>
+                            <optional>
+                                <attribute name="extension-by">
+                                    <text />
+                                </attribute>
+                            </optional>
                             <choice>
                                 <text />
                                 <zeroOrMore>
