@@ -12,5 +12,7 @@
         "ucnkQS__only_current_corpus": "Ino zapytania we terŏźnym korpusie"
     },
     "sl-SI": {
+        "ucnkQS__recent_queries": "Recent queries UNTRANSLATED",
+        "ucnkQS__only_current_corpus": "Only queries on the current corpus UNTRANSLATED"
     }
 }

@@ -6,5 +6,6 @@
        "defaultAuth__cannot_use_username": "Uživatelské jméno nelze použít"
     },
     "sl-SI": {
+      "defaultAuth__cannot_use_username": "Cannot use username UNTRANSLATED"
     }
 }

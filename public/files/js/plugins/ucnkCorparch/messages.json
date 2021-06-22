@@ -38,5 +38,17 @@
     "ucnkCorparch__tmp_hint_alt": "Wyeklerowanie zmian nŏczyniŏ wyboru korpusu",
     "ucnkCorparch__not_avail_for_public": "Not available for public access"
   },
-  "sl-SI": {}
+  "sl-SI": {
+    "ucnkCorparch__please_give_me_access_{corpname}": "\u201CPlease give me an access to the {corpname} corpus\u201D UNTRANSLATED",
+    "ucnkCorparch__custom_message": "Custom message (optional) UNTRANSLATED",
+    "ucnkCorparch__access_req_form_heading": "Access request UNTRANSLATED",
+    "ucnkCorparch__click_to_ask_access": "Click to ask for access. UNTRANSLATED",
+    "ucnkCorparch__message_icon": "Message icon UNTRANSLATED",
+    "ucnkCorparch__send": "Send UNTRANSLATED",
+    "ucnkCorparch__load_all": "Load all UNTRANSLATED",
+    "ucnkCorparch__next_{num}": "Load next {num} UNTRANSLATED",
+    "ucnkCorparch__your_message_sent": "Your request has been sent. You will be informed by e-mail once it is resolved. UNTRANSLATED",
+    "ucnkCorparch__tmp_hint_alt": "Corpus selection tool change explained UNTRANSLATED",
+    "ucnkCorparch__not_avail_for_public": "Not available for public access UNTRANSLATED"
+  }
 }

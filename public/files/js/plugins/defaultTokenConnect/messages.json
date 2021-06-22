@@ -17,5 +17,10 @@
        "defaultTD__failed_to_fetch_external_information": "Niy szło zaladować informacyji ze zewnyntrznego zdrzōdła",
        "defaultTD__plug_in_error_symbol_alt": "Plug-in error"
     },
-    "sl-SI": {}
+    "sl-SI": {
+        "defaultTD__unsupported_renderer": "Required renderer module not found UNTRANSLATED",
+        "defaultTD__original_data": "Data UNTRANSLATED",
+        "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source UNTRANSLATED",
+        "defaultTD__plug_in_error_symbol_alt": "Plug-in error UNTRANSLATED"
+    }
 }
