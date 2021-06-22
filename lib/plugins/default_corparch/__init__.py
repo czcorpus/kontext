@@ -327,6 +327,7 @@ class DefaultCorplistProvider(CorplistProvider):
                 if self.matches_all(tests):
                     corp['size'] = corp['size']
                     corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
+                    corp['keywords'] = []
                     for k in keywords:
                         if k not in all_keywords_map:
                             logging.getLogger(__name__).warning(f'Undefined search keyword {k} (corpus {corp["id"]}')
