@@ -59,8 +59,8 @@ module.exports = (env) => merge(common.wpConf(env), {
         */
         contentBase: path.resolve(__dirname, "../../public/files/dist"),
         compress: true,
-        port: 9000,
-        host: 'localhost',
+        port: process.env.DEV_SERVER_PORT || 9000,
+        host: process.env.DEV_SERVER_HOST || 'localhost',
         public: 'kontext6.korpus.test',
         publicPath: common.PUBLIC_PATH + '/files/dist/',
         inline: false,
