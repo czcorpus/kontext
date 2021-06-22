@@ -32,5 +32,15 @@
       "taghelper__part_of_speech_label": "Part of speech",
       "taghelper__features_label": "Features"
   },
-  "sl-SI": {}
+  "sl-SI": {
+    "taghelper__create_tag_heading": "Create / edit a tag UNTRANSLATED",
+    "taghelper__insert_btn": "Insert UNTRANSLATED",
+    "taghelper__unfulfilled": "Unspecified UNTRANSLATED",
+    "taghelper__reset": "Reset UNTRANSLATED",
+    "taghelper__undo": "Undo UNTRANSLATED",
+    "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported. UNTRANSLATED",
+    "taghelper__selected_features_label": "Selected features UNTRANSLATED",
+    "taghelper__part_of_speech_label": "Part of speech UNTRANSLATED",
+    "taghelper__features_label": "Features UNTRANSLATED"
+  }
 }

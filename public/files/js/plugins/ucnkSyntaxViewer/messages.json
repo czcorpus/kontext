@@ -8,5 +8,7 @@
     "szl": {
         "ucnkSyntaxViewer__click_to_see_details": "Kliknij, żeby ôbejzdrzeć szczegōły"
     },
-    "sl-SI": {}
+    "sl-SI": {
+        "ucnkSyntaxViewer__click_to_see_details": "Click to see details UNTRANSLATED"
+    }
 }
