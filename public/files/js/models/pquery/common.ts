@@ -21,7 +21,7 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
-import { highlightSyntaxStatic } from '../query/cqleditor/parser';
+import { highlightSyntaxStatic, ParsedAttr } from '../query/cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -82,12 +82,24 @@ export const enum PqueryAlignTypes {
     WHOLE_KWIC = 'whole'
 }
 
+export const enum PqueryExpressionRoles {
+    SPECIFICATION = 'specification',
+    SUBSET = 'subset',
+    SUPERSET = 'superset',
+}
+
+export type ExpressionRoleType = {type:PqueryExpressionRoles.SPECIFICATION}|{type:PqueryExpressionRoles.SUBSET, maxNonMatchingRatio:number}|{type:PqueryExpressionRoles.SUPERSET, maxNonMatchingRatio:number};
+
+export interface ParadigmaticQuery extends AdvancedQuery {
+    expressionRole:ExpressionRoleType;
+}
+
 export interface PqueryFormModelState {
     isBusy:boolean;
     modalVisible:boolean;
     corpname:string;
     usesubcorp:string;
-    queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
+    queries:{[sourceId:string]:ParadigmaticQuery}; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:string};
     useRichQueryEditor:boolean;
@@ -128,7 +140,7 @@ export function newModelState(
         corpname,
         usesubcorp,
         queries: pipe(
-            List.repeat<[string, AdvancedQuery]>(
+            List.repeat<[string, ParadigmaticQuery]>(
                 idx => tuple(
                     createSourceId(idx),
                     {
@@ -143,6 +155,7 @@ export function newModelState(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
+                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION}
                     }
                 ),
                 2
@@ -189,7 +202,7 @@ export function storedQueryToModel(
         usesubcorp: sq.usesubcorp,
         queries: pipe(
             concQueries,
-            List.map<AdvancedQuerySubmit, [string, AdvancedQuery]>(
+            List.map<AdvancedQuerySubmit, [string, ParadigmaticQuery]>(
                 (query, i) => {
                     const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
                         query.query,
@@ -212,7 +225,8 @@ export function storedQueryToModel(
                             queryHtml,
                             pcq_pos_neg: 'pos',
                             include_empty: query.include_empty,
-                            default_attr: query.default_attr
+                            default_attr: query.default_attr,
+                            expressionRole: {type:PqueryExpressionRoles.SPECIFICATION}
                         }
                     )
                 }

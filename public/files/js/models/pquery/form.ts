@@ -35,7 +35,9 @@ import { concatMap, map, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState, 
-    PqueryAlignTypes} from './common';
+    PqueryAlignTypes,
+    PqueryExpressionRoles,
+    ParadigmaticQuery} from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -214,7 +216,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         focusedAttr: undefined,
                         pcq_pos_neg: 'pos',
                         include_empty: false,
-                        default_attr: null
+                        default_attr: null,
+                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION}
                     }
                 });
             }
@@ -403,7 +406,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             state.queries = Dict.map(v => {
                 v.corpname = state.corpname;
                 return v;
-            }, JSON.parse(data.queries) as {[sourceId:string]:AdvancedQuery});
+            }, JSON.parse(data.queries) as {[sourceId:string]:ParadigmaticQuery});
             state.minFreq = data.minFreq;
             state.posLeft = data.posLeft;
             state.posRight = data.posRight;
