@@ -12,22 +12,27 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
+from dataclasses import dataclass, field, asdict
 
 
-class PqueryFormArgs(object):
+@dataclass
+class PqueryFormArgs:
 
-    def __init__(self):
-        self.corpname = None
-        self.usesubcorp = None
-        self.min_freq = 0
-        self.pos_left = 0
-        self.pos_right = 0
-        self.pos_align = 'left'
-        self.position = None
-        self.attr = None
-        self.form_type = 'pquery'
-        self.conc_ids = []
+    corpname: str
+    position: str
+    attr: str
+    usesubcorp: Optional[str] = field(default=None)
+    min_freq: int = field(default=0)
+    pos_left: int = field(default=0)
+    pos_right: int = field(default=0)
+    pos_align: str = field(default='left')
+    form_type: str = field(default='pquery')
+    conc_ids: List[str] = field(default_factory=list)
+    conc_subset_complement_id: Optional[str] = field(default=None)
+    condition_never_tolerance: Optional[float] = field(default=0.0)
+    conc_superset_id: Optional[str] = field(default=None)
+    condition_always_tolerance: Optional[float] = field(default=0.0)
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -41,12 +46,12 @@ class PqueryFormArgs(object):
         self.conc_ids = data['conc_ids']
 
     def to_dict(self) -> Dict[str, Any]:
-        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
-        return tmp
+        return asdict(self)
 
     def to_qp(self) -> Dict[str, Any]:
         return self.to_dict()
 
     def from_dict(self, data):
         for k, v in data.items():
-            setattr(self, k, v)
+            if hasattr(self, k):
+                setattr(self, k, v)
