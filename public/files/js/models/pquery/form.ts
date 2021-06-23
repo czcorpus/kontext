@@ -352,9 +352,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.addActionHandler<Actions.SetExpressionRoleType>(
             ActionName.SetExpressionRoleType,
             action => {
-                this.changeState(state => {
-                    state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
-                });
+                if (action.payload.value !== PqueryExpressionRoles.SPECIFICATION && Dict.some((v, _) => v.expressionRole.type === action.payload.value, this.state.queries)) {
+                    this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
+
+                } else {
+                    this.changeState(state => {
+                        state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
+                    });
+                }
             }
         );
 
