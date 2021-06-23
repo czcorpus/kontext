@@ -29,7 +29,7 @@ import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
 import { Dict, List } from 'cnc-tskit';
-import { ConcStatus, PqueryAlignTypes, PqueryFormModelState } from '../../../models/pquery/common';
+import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
@@ -152,13 +152,40 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         useRichQueryEditor:boolean;
         numQueries:number;
         concStatus:ConcStatus;
+        expressionRole:ExpressionRoleType;
 
     }> = (props) => {
+        
+        const handleExpressionRoleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.SetExpressionRoleType>({
+                name: ActionName.SetExpressionRoleType,
+                payload: {sourceId: props.sourceId, value: evt.target.value}
+            });
+        };
+
+        const handleExpressionRoleRatioChange = (evt) => {
+            dispatcher.dispatch<Actions.SetExpressionRoleRatio>({
+                name: ActionName.SetExpressionRoleRatio,
+                payload: {sourceId: props.sourceId, value: parseInt(evt.target.value)}
+            });
+        };
 
         const queryInputElement = React.useRef();
 
         return (
             <QS.QueryArea>
+                <S.QueryRowDiv>
+                    <label htmlFor={`roleType-${props.sourceId}`}>Role (TODO)</label>
+                    <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
+                        <option value={PqueryExpressionRoles.SPECIFICATION}>{PqueryExpressionRoles.SPECIFICATION}</option>
+                        <option value={PqueryExpressionRoles.SUBSET}>{PqueryExpressionRoles.SUBSET}</option>
+                        <option value={PqueryExpressionRoles.SUPERSET}>{PqueryExpressionRoles.SUPERSET}</option>
+                    </select>
+                    <label htmlFor={`roleRatio-${props.sourceId}`}>Ratio (TODO)</label>
+                    <input id={`roleRatio-${props.sourceId}`} disabled={props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION} onChange={handleExpressionRoleRatioChange}
+                        value={props.expressionRole.maxNonMatchingRatio}/>
+                    <label htmlFor={`roleRatio-${props.sourceId}`}>%</label>
+                </S.QueryRowDiv>
                 <S.QueryRowDiv>
                 {props.useRichQueryEditor ?
                     <cqlEditorViews.CQLEditor
@@ -264,11 +291,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <S.StylelessFieldset disabled={props.isBusy}>
                 <S.EditorFieldset>
                     {Dict.mapEntries(
-                        ([sourceId,]) => (
+                        ([sourceId, query]) => (
                             <EditorDiv key={sourceId} sourceId={sourceId}
                                     concStatus={props.concWait[sourceId]} corpname={props.corpname}
                                     numQueries={Dict.size(props.queries)}
-                                    useRichQueryEditor={props.useRichQueryEditor} />
+                                    useRichQueryEditor={props.useRichQueryEditor}
+                                    expressionRole={query.expressionRole} />
                         ),
                         props.queries
                     )}

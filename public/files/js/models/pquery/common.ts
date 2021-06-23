@@ -88,7 +88,7 @@ export const enum PqueryExpressionRoles {
     SUPERSET = 'superset',
 }
 
-export type ExpressionRoleType = {type:PqueryExpressionRoles.SPECIFICATION}|{type:PqueryExpressionRoles.SUBSET, maxNonMatchingRatio:number}|{type:PqueryExpressionRoles.SUPERSET, maxNonMatchingRatio:number};
+export type ExpressionRoleType = {type:PqueryExpressionRoles, maxNonMatchingRatio:number};
 
 export interface ParadigmaticQuery extends AdvancedQuery {
     expressionRole:ExpressionRoleType;
@@ -155,7 +155,7 @@ export function newModelState(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
-                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION}
+                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION, maxNonMatchingRatio: 100}
                     }
                 ),
                 2
@@ -226,7 +226,7 @@ export function storedQueryToModel(
                             pcq_pos_neg: 'pos',
                             include_empty: query.include_empty,
                             default_attr: query.default_attr,
-                            expressionRole: {type:PqueryExpressionRoles.SPECIFICATION}
+                            expressionRole: {type: PqueryExpressionRoles.SPECIFICATION, maxNonMatchingRatio: 100}
                         }
                     )
                 }

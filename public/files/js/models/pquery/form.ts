@@ -217,7 +217,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         pcq_pos_neg: 'pos',
                         include_empty: false,
                         default_attr: null,
-                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION}
+                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION, maxNonMatchingRatio: 100}
                     }
                 });
             }
@@ -349,17 +349,21 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<Actions.SetExpressionRoleType>(
+            ActionName.SetExpressionRoleType,
             action => {
-                this.dispatchSideEffect<Actions.ResultApplyQuickFilterArgsReady>({
-                    name: ActionName.ResultApplyQuickFilterArgsReady,
-                    payload: {
-                        attr: this.state.attr,
-                        posAlign: this.state.posAlign,
-                        posSpec: this.getPositionRange(this.state)
-                    }
+                this.changeState(state => {
+                    state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
                 });
+            }
+        );
+
+        this.addActionHandler<Actions.SetExpressionRoleRatio>(
+            ActionName.SetExpressionRoleRatio,
+            action => {
+                this.changeState(state => {
+                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio = action.payload.value
+                });                
             }
         );
     }
