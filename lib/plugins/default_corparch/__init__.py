@@ -107,7 +107,7 @@ from collections import OrderedDict
 import copy
 import re
 from functools import reduce
-
+import logging
 try:
     from markdown import markdown
 except ImportError:
@@ -307,7 +307,12 @@ class DefaultCorplistProvider(CorplistProvider):
                 if self.matches_all(tests):
                     corp['size'] = corp['size']
                     corp['size_info'] = l10n.simplify_num(corp['size']) if corp['size'] else None
-                    corp['keywords'] = [(k, all_keywords_map[k]) for k in keywords]
+                    corp['keywords'] = []
+                    for k in keywords:
+                        if k not in all_keywords_map:
+                            logging.getLogger(__name__).warning(f'Undefined search keyword {k} (corpus {corp["id"]}')
+                            continue
+                        corp['keywords'].append((k, all_keywords_map[k]))
                     corp['found_in'] = found_in
                     corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
