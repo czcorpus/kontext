@@ -102,8 +102,12 @@ class ParadigmaticQuery(Kontext):
         ans = super().pre_dispatch(action_name, action_metadata)
         if self._prev_q_data is not None:
             if self._prev_q_data.get('form', {}).get('form_type') != 'pquery':
-                raise UserActionException('Invalid search session for word-list')
-            self._curr_pquery_args = PqueryFormArgs()
+                raise UserActionException('Invalid search session for a paradimatic query')
+            self._curr_pquery_args = PqueryFormArgs(
+                corpname=self.corp.corpname,
+                attr=self._get_default_attr(),
+                position='0<0~0>0'
+            )
             self._curr_pquery_args.from_dict(self._prev_q_data['form'])
 
         return ans
@@ -174,7 +178,10 @@ class ParadigmaticQuery(Kontext):
         app = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
 
-        self._curr_pquery_args = PqueryFormArgs()
+        self._curr_pquery_args = PqueryFormArgs(
+                corpname=self.corp.corpname,
+                attr=self._get_default_attr(),
+                position='0<0~0>0')
         self._curr_pquery_args.update_by_user_query(request.json)
         conc_forms, raw_queries = _load_conc_queries(
             self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
