@@ -496,12 +496,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitFreqIntersection(
         state:PqueryFormModelState,
         concIds:Array<string>,
+        concSubsetComplementIds:Array<string>
     ):Observable<FreqIntersectionResponse> {
 
         const args:FreqIntersectionArgs = {
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             conc_ids: concIds,
+            conc_subset_complement_ids: concSubsetComplementIds,
             min_freq: state.minFreq,
             attr: state.attr,
             pos_left: state.posLeft,
