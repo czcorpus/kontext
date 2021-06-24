@@ -127,6 +127,9 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sentence'))
         ans = {
             'corpname': self.args.corpname,
             'tagsets': self._get_tagsets(),
@@ -179,9 +182,9 @@ class ParadigmaticQuery(Kontext):
         corp_info = self.get_corpus_info(self.args.corpname)
 
         self._curr_pquery_args = PqueryFormArgs(
-                corpname=self.corp.corpname,
-                attr=self._get_default_attr(),
-                position='0<0~0>0')
+            corpname=self.corp.corpname,
+            attr=self._get_default_attr(),
+            position='0<0~0>0')
         self._curr_pquery_args.update_by_user_query(request.json)
         conc_forms, raw_queries = _load_conc_queries(
             self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
