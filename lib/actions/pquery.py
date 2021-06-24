@@ -129,7 +129,7 @@ class ParadigmaticQuery(Kontext):
     def index(self, request):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sentence'))
+                                    MainMenu.VIEW('kwic-sent-switch'))
         ans = {
             'corpname': self.args.corpname,
             'tagsets': self._get_tagsets(),

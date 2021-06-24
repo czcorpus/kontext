@@ -365,7 +365,7 @@ class Actions(Querying):
     def query(self, _):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sentence'))
+                                    MainMenu.VIEW('kwic-sent-switch'))
         out = {'aligned_corpora': self.args.align}
         tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -1316,9 +1316,10 @@ class Actions(Querying):
         try:
             require_existing_conc(self.corp, tuple(self.args.q))
             from_line = int(from_line)
-            to_line = self.corp.size if to_line == '' else int(to_line)  # 'corp.size' is just a safe max value
+            to_line = self.corp.size if to_line == '' else int(
+                to_line)  # 'corp.size' is just a safe max value
             result = self._collx(collpage=1, citemsperpage=to_line)
-            result.Items = result.Items[from_line-1:]
+            result.Items = result.Items[from_line - 1:]
             saved_filename = self.args.corpname
             if saveformat == 'text':
                 self._headers['Content-Type'] = 'application/text'
@@ -1784,7 +1785,7 @@ class Actions(Querying):
     def ajax_switch_corpus(self, _):
         self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sentence'))
+                                    MainMenu.VIEW('kwic-sent-switch'))
 
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
