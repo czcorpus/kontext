@@ -175,16 +175,18 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         return (
             <QS.QueryArea>
                 <S.QueryRowDiv>
-                    <label htmlFor={`roleType-${props.sourceId}`}>Role (TODO)</label>
-                    <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
-                        <option value={PqueryExpressionRoles.SPECIFICATION}>{PqueryExpressionRoles.SPECIFICATION}</option>
-                        <option value={PqueryExpressionRoles.SUBSET}>{PqueryExpressionRoles.SUBSET}</option>
-                        <option value={PqueryExpressionRoles.SUPERSET}>{PqueryExpressionRoles.SUPERSET}</option>
-                    </select>
-                    <label htmlFor={`roleRatio-${props.sourceId}`}>Ratio (TODO)</label>
-                    <input id={`roleRatio-${props.sourceId}`} disabled={props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION} onChange={handleExpressionRoleRatioChange}
-                        value={props.expressionRole.maxNonMatchingRatio}/>
-                    <label htmlFor={`roleRatio-${props.sourceId}`}>%</label>
+                    <fieldset>
+                        <label htmlFor={`roleType-${props.sourceId}`}>Role (TODO)</label>
+                        <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
+                            <option value={PqueryExpressionRoles.SPECIFICATION}>{PqueryExpressionRoles.SPECIFICATION}</option>
+                            <option value={PqueryExpressionRoles.SUBSET}>{PqueryExpressionRoles.SUBSET}</option>
+                            <option value={PqueryExpressionRoles.SUPERSET}>{PqueryExpressionRoles.SUPERSET}</option>
+                        </select>
+                        <label htmlFor={`roleRatio-${props.sourceId}`}>Ratio (TODO)</label>
+                        <input id={`roleRatio-${props.sourceId}`} disabled={props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION} onChange={handleExpressionRoleRatioChange}
+                            value={props.expressionRole.maxNonMatchingRatio}/>
+                        <label htmlFor={`roleRatio-${props.sourceId}`}>%</label>
+                    </fieldset>
                 </S.QueryRowDiv>
                 <S.QueryRowDiv>
                 {props.useRichQueryEditor ?

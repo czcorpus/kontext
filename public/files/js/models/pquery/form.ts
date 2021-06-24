@@ -21,7 +21,7 @@
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
@@ -32,7 +32,7 @@ import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
-import { ConcQueryArgs, QueryContextArgs } from '../query/common';
+import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState, 
     PqueryAlignTypes,
@@ -448,6 +448,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         return forkJoin(pipe(
             state.queries,
             Dict.toEntries(),
+            List.filter(([_, query]) => query.expressionRole.type === PqueryExpressionRoles.SPECIFICATION),
             List.map(
                 ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
@@ -471,11 +472,50 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             )
         )).pipe(
             concatMap(
-                (concResponses) => this.submitFreqIntersection(
+                (concResponses) => {
+                    if (Dict.some(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries)) {
+                        const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries);
+                        return forkJoin([
+                            of(concResponses),
+                            forkJoin(
+                                pipe(
+                                    concResponses,
+                                    List.map(
+                                        concResp => this.layoutModel.ajax$<ConcQueryResponse>(
+                                            HTTP.Method.POST,
+                                            this.layoutModel.createActionUrl('filter', [tuple('format', 'json')]),
+                                            this.createFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
+                                            {contentType: 'application/json'}
+                                        )    
+                                    )
+                                )
+                            ).pipe(
+                                tap(v => console.log(v))
+                            )
+                        ]).pipe(
+                            tap( _ => {
+                                this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                    name: ActionName.ConcordanceReady,
+                                    payload: {sourceId: subsetSourceId}
+                                })
+                            })
+                        )
+
+                    } else {
+                        return of([concResponses, []])
+                    }
+                }
+            ),
+            concatMap(
+                ([concResponses, subset]) => this.submitFreqIntersection(
                     state,
                     List.map(
                         resp => resp.conc_persistence_op_id,
                         concResponses
+                    ),
+                    List.map(
+                        resp => resp.conc_persistence_op_id,
+                        subset
                     )
                 )
             ),
@@ -563,6 +603,37 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
+    private createFilterSubmitArgs(state:PqueryFormModelState, query:ParadigmaticQuery, concId:string):FilterServerArgs {
+        const currArgs = this.layoutModel.getConcArgs();
+
+        return {
+            type: 'filterQueryArgs',
+            maincorp: state.corpname,
+            viewmode: 'kwic',
+            pagesize: 1,
+            attrs: '', // TODO
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: null,
+            structs: null,
+            refs: null,
+            fromp: 1,
+            qtype: 'advanced',
+            query: query.query,
+            queryParsed: undefined,
+            default_attr: query.default_attr,
+            qmcase: false,
+            use_regexp: false,
+            pnfilter: 'n',
+            filfl: state.posAlign === AlignTypes.LEFT ? 'f' : state.posAlign === AlignTypes.RIGHT ? 'l' : '', // TODO
+            filfpos: `${state.posLeft}`,
+            filtpos: `${state.posRight}`,
+            inclkwic: 1,
+            within: false,
+            format: 'json',
+            q: '~' + concId
+        }
+    }
 
     private hintListener(sourceId:string, msg:string):void {
         this.changeState(state => {
