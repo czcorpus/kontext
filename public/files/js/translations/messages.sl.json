@@ -821,6 +821,10 @@
         "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
         "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED",
         "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED",
-        "pquery__align_type_whole_kwic": "whole KWIC as one word UNTRANSLATED"
+        "pquery__align_type_whole_kwic": "whole KWIC as one word UNTRANSLATED",
+        "pquery__expression_role_specification": "Specification UNTRANSLATED",
+        "pquery__expression_role_never": "Never UNTRANSLATED",
+        "pquery__expression_role_always": "Always UNTRANSLATED",
+        "pquery__expression_role_ratio": "ratio UNTRANSLATED"
     }
 }

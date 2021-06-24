@@ -29,7 +29,7 @@ import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
 import { Dict, List } from 'cnc-tskit';
-import { ConcStatus, PqueryAlignTypes, PqueryFormModelState } from '../../../models/pquery/common';
+import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles, PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
@@ -152,14 +152,43 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         useRichQueryEditor:boolean;
         numQueries:number;
         concStatus:ConcStatus;
+        expressionRole:ExpressionRoleType;
 
     }> = (props) => {
+        
+        const handleExpressionRoleTypeChange = (evt) => {
+            dispatcher.dispatch<Actions.SetExpressionRoleType>({
+                name: ActionName.SetExpressionRoleType,
+                payload: {sourceId: props.sourceId, value: evt.target.value}
+            });
+        };
+
+        const handleExpressionRoleRatioChange = (evt) => {
+            dispatcher.dispatch<Actions.SetExpressionRoleRatio>({
+                name: ActionName.SetExpressionRoleRatio,
+                payload: {sourceId: props.sourceId, value: parseInt(evt.target.value)}
+            });
+        };
 
         const queryInputElement = React.useRef();
 
         return (
             <QS.QueryArea>
-                <S.QueryRowDiv>
+                <S.QueryRowDiv key="options">
+                    <S.ExpressionRoleFieldset>
+                        <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
+                            <option key={PqueryExpressionRoles.SPECIFICATION} value={PqueryExpressionRoles.SPECIFICATION}>{he.translate('pquery__expression_role_specification')}</option>
+                            <option key={PqueryExpressionRoles.SUBSET} value={PqueryExpressionRoles.SUBSET}>{he.translate('pquery__expression_role_never')}</option>
+                            <option key={PqueryExpressionRoles.SUPERSET} value={PqueryExpressionRoles.SUPERSET}>{he.translate('pquery__expression_role_always')}</option>
+                        </select>
+                        {props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION ? null : [
+                            <S.VerticalSeparator/>,
+                            <input id={`roleRatio-${props.sourceId}`} onChange={handleExpressionRoleRatioChange} value={props.expressionRole.maxNonMatchingRatio}/>,
+                            <label htmlFor={`roleRatio-${props.sourceId}`}>% {he.translate('pquery__expression_role_ratio')}</label>
+                        ]}
+                    </S.ExpressionRoleFieldset>
+                </S.QueryRowDiv>
+                <S.QueryRowDiv key="editor">
                 {props.useRichQueryEditor ?
                     <cqlEditorViews.CQLEditor
                             formType={Kontext.ConcFormTypes.QUERY}
@@ -264,11 +293,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <S.StylelessFieldset disabled={props.isBusy}>
                 <S.EditorFieldset>
                     {Dict.mapEntries(
-                        ([sourceId,]) => (
+                        ([sourceId, query]) => (
                             <EditorDiv key={sourceId} sourceId={sourceId}
                                     concStatus={props.concWait[sourceId]} corpname={props.corpname}
                                     numQueries={Dict.size(props.queries)}
-                                    useRichQueryEditor={props.useRichQueryEditor} />
+                                    useRichQueryEditor={props.useRichQueryEditor}
+                                    expressionRole={query.expressionRole} />
                         ),
                         props.queries
                     )}

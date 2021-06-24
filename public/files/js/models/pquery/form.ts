@@ -21,7 +21,7 @@
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
@@ -32,10 +32,12 @@ import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
 import { concatMap, map, tap } from 'rxjs/operators';
-import { ConcQueryArgs, QueryContextArgs } from '../query/common';
+import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState, 
-    PqueryAlignTypes} from './common';
+    PqueryAlignTypes,
+    PqueryExpressionRoles,
+    ParadigmaticQuery} from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -214,7 +216,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         focusedAttr: undefined,
                         pcq_pos_neg: 'pos',
                         include_empty: false,
-                        default_attr: null
+                        default_attr: null,
+                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION, maxNonMatchingRatio: 100}
                     }
                 });
             }
@@ -346,17 +349,26 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<Actions.SetExpressionRoleType>(
+            ActionName.SetExpressionRoleType,
             action => {
-                this.dispatchSideEffect<Actions.ResultApplyQuickFilterArgsReady>({
-                    name: ActionName.ResultApplyQuickFilterArgsReady,
-                    payload: {
-                        attr: this.state.attr,
-                        posAlign: this.state.posAlign,
-                        posSpec: this.getPositionRange(this.state)
-                    }
-                });
+                if (action.payload.value !== PqueryExpressionRoles.SPECIFICATION && Dict.some((v, _) => v.expressionRole.type === action.payload.value, this.state.queries)) {
+                    this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
+
+                } else {
+                    this.changeState(state => {
+                        state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
+                    });
+                }
+            }
+        );
+
+        this.addActionHandler<Actions.SetExpressionRoleRatio>(
+            ActionName.SetExpressionRoleRatio,
+            action => {
+                this.changeState(state => {
+                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio = action.payload.value
+                });                
             }
         );
     }
@@ -403,7 +415,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             state.queries = Dict.map(v => {
                 v.corpname = state.corpname;
                 return v;
-            }, JSON.parse(data.queries) as {[sourceId:string]:AdvancedQuery});
+            }, JSON.parse(data.queries) as {[sourceId:string]:ParadigmaticQuery});
             state.minFreq = data.minFreq;
             state.posLeft = data.posLeft;
             state.posRight = data.posRight;
@@ -436,6 +448,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         return forkJoin(pipe(
             state.queries,
             Dict.toEntries(),
+            List.filter(([_, query]) => query.expressionRole.type === PqueryExpressionRoles.SPECIFICATION),
             List.map(
                 ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
@@ -459,11 +472,51 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             )
         )).pipe(
             concatMap(
-                (concResponses) => this.submitFreqIntersection(
+                (concResponses) => {
+                    if (Dict.some(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries)) {
+                        const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries);
+                        return forkJoin([
+                            of(concResponses),
+                            forkJoin(
+                                pipe(
+                                    concResponses,
+                                    List.map(
+                                        concResp => this.layoutModel.ajax$<ConcQueryResponse>(
+                                            HTTP.Method.POST,
+                                            this.layoutModel.createActionUrl(
+                                                'filter',
+                                                [tuple('format', 'json')]
+                                            ),
+                                            this.createPFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
+                                            {contentType: 'application/json'}
+                                        )    
+                                    )
+                                )
+                            )
+                        ]).pipe(
+                            tap( _ => {
+                                this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                    name: ActionName.ConcordanceReady,
+                                    payload: {sourceId: subsetSourceId}
+                                })
+                            })
+                        )
+
+                    } else {
+                        return of([concResponses, []])
+                    }
+                }
+            ),
+            concatMap(
+                ([concResponses, subset]) => this.submitFreqIntersection(
                     state,
                     List.map(
                         resp => resp.conc_persistence_op_id,
                         concResponses
+                    ),
+                    List.map(
+                        resp => resp.conc_persistence_op_id,
+                        subset
                     )
                 )
             ),
@@ -484,12 +537,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitFreqIntersection(
         state:PqueryFormModelState,
         concIds:Array<string>,
+        concSubsetComplementIds:Array<string>
     ):Observable<FreqIntersectionResponse> {
 
         const args:FreqIntersectionArgs = {
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             conc_ids: concIds,
+            conc_subset_complement_ids: concSubsetComplementIds,
             min_freq: state.minFreq,
             attr: state.attr,
             pos_left: state.posLeft,
@@ -549,6 +604,38 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
+    private createPFilterSubmitArgs(state:PqueryFormModelState, query:ParadigmaticQuery, concId:string):FilterServerArgs {
+        const currArgs = this.layoutModel.getConcArgs();
+
+        return {
+            type: 'filterQueryArgs',
+            maincorp: state.corpname,
+            viewmode: 'kwic',
+            pagesize: 1,
+            attrs: '', // TODO
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: null,
+            structs: null,
+            refs: null,
+            fromp: 1,
+            qtype: 'advanced',
+            query: query.query,
+            queryParsed: undefined,
+            default_attr: query.default_attr,
+            qmcase: false,
+            use_regexp: false,
+            pnfilter: 'p',
+            // position kwic as one word is handled as `first`
+            filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
+            filfpos: '1', // TODO
+            filtpos: '1', // TODO
+            inclkwic: 1,
+            within: false,
+            format: 'json',
+            q: '~' + concId
+        }
+    }
 
     private hintListener(sourceId:string, msg:string):void {
         this.changeState(state => {

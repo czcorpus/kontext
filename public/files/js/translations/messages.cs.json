@@ -821,6 +821,10 @@
         "pquery_overview_title": "Paradigmatický dotaz",
         "pquery__save_form_label": "Uložit výsledky paradigmatického dotazu",
         "pquery__parameters_form": "Parametry paradigmatického dotazu",
-        "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo"
+        "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo",
+        "pquery__expression_role_specification": "Specifikace",
+        "pquery__expression_role_never": "Nikdy",
+        "pquery__expression_role_always": "Vždy",
+        "pquery__expression_role_ratio": "poměr"
     }
 }
