@@ -483,7 +483,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                                     List.map(
                                         concResp => this.layoutModel.ajax$<ConcQueryResponse>(
                                             HTTP.Method.POST,
-                                            this.layoutModel.createActionUrl('filter', [tuple('format', 'json')]),
+                                            this.layoutModel.createActionUrl(
+                                                'filter',
+                                                [tuple('format', 'json')]
+                                            ),
                                             this.createFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
                                             {contentType: 'application/json'}
                                         )    

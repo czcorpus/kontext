@@ -176,14 +176,14 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <QS.QueryArea>
                 <S.QueryRowDiv>
                     <fieldset>
-                        <label htmlFor={`roleType-${props.sourceId}`}>Role (TODO)</label>
                         <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
-                            <option value={PqueryExpressionRoles.SPECIFICATION}>{PqueryExpressionRoles.SPECIFICATION}</option>
-                            <option value={PqueryExpressionRoles.SUBSET}>{PqueryExpressionRoles.SUBSET}</option>
-                            <option value={PqueryExpressionRoles.SUPERSET}>{PqueryExpressionRoles.SUPERSET}</option>
+                            <option value={PqueryExpressionRoles.SPECIFICATION}>{he.translate('pquery__expression_role_specification')}</option>
+                            <option value={PqueryExpressionRoles.SUBSET}>{he.translate('pquery__expression_role_never')}</option>
+                            <option value={PqueryExpressionRoles.SUPERSET}>{he.translate('pquery__expression_role_always')}</option>
                         </select>
-                        <label htmlFor={`roleRatio-${props.sourceId}`}>Ratio (TODO)</label>
-                        <input id={`roleRatio-${props.sourceId}`} disabled={props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION} onChange={handleExpressionRoleRatioChange}
+                        <label htmlFor={`roleRatio-${props.sourceId}`}>{he.translate('pquery__expression_role_ratio')}</label>
+                        <input id={`roleRatio-${props.sourceId}`} disabled={props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION}
+                            onChange={handleExpressionRoleRatioChange}
                             value={props.expressionRole.maxNonMatchingRatio}/>
                         <label htmlFor={`roleRatio-${props.sourceId}`}>%</label>
                     </fieldset>
