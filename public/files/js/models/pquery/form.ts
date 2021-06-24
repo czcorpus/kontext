@@ -492,8 +492,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                                         )    
                                     )
                                 )
-                            ).pipe(
-                                tap(v => console.log(v))
                             )
                         ]).pipe(
                             tap( _ => {
@@ -628,9 +626,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             qmcase: false,
             use_regexp: false,
             pnfilter: 'n',
-            filfl: state.posAlign === AlignTypes.LEFT ? 'f' : state.posAlign === AlignTypes.RIGHT ? 'l' : '', // TODO
-            filfpos: `${state.posLeft}`,
-            filtpos: `${state.posRight}`,
+            // position kwic as one word is handled as `first`
+            filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f', // TODO
+            filfpos: '1', // TODO
+            filtpos: '1', // TODO
             inclkwic: 1,
             within: false,
             format: 'json',

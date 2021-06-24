@@ -703,7 +703,7 @@ class Actions(Querying):
     @exposed(template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def quick_filter(self, request):
         """
-        A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls pages).
+        A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls/pquery pages).
         """
         new_q = request.args.getlist('q2')
         q_conv = QuickFilterArgsConv(self._plugin_ctx, self.args)
