@@ -185,6 +185,14 @@ class ParadigmaticQuery(Kontext):
         self._curr_pquery_args.update_by_user_query(request.json)
         conc_forms, raw_queries = _load_conc_queries(
             self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
+        if len(self._curr_pquery_args.conc_subset_complement_ids) > 0:
+            conc_forms2, raw_queries2 = _load_conc_queries(
+                self._plugin_ctx, self._curr_pquery_args.conc_subset_complement_ids, self.args.corpname)
+            raw_queries.update(raw_queries2)
+        if self._curr_pquery_args.conc_superset_id:
+            conc_forms3, raw_queries3 = _load_conc_queries(
+                self._plugin_ctx, [self._curr_pquery_args.conc_superset_id], self.args.corpname)
+            raw_queries.update(raw_queries3)
         calc_args = (
             self._curr_pquery_args,
             raw_queries,
