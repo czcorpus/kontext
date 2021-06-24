@@ -29,7 +29,7 @@ class PqueryFormArgs:
     pos_align: str = field(default='left')
     form_type: str = field(default='pquery')
     conc_ids: List[str] = field(default_factory=list)
-    conc_subset_complement_id: Optional[str] = field(default=None)
+    conc_subset_complement_ids: List[str] = field(default_factory=list)
     condition_never_tolerance: Optional[float] = field(default=0.0)
     conc_superset_id: Optional[str] = field(default=None)
     condition_always_tolerance: Optional[float] = field(default=0.0)

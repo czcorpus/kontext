@@ -148,7 +148,7 @@ def require_existing_conc(corp: KCorpus, q: Tuple[str, ...]) -> manatee.Concorda
     subchash = getattr(corp, 'subchash', None)
     status = cache_map.get_calc_status(subchash, q)
     if status is None:
-        raise ConcNotFoundException('Concordance not found.')
+        raise ConcNotFoundException('Concordance not found: {}'.format(', '.join(q)))
     if status.finished and status.readable:
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned

@@ -26,6 +26,7 @@ from .errors import PqueryResultNotFound, PqueryArgumentError
 from typing import Tuple
 from argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
+import logging
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -40,7 +41,9 @@ def _create_cache_path(pquery: PqueryFormArgs) -> str:
     position = pquery.position
     min_freq = pquery.min_freq
     conc_ids = ':'.join(sorted(pquery.conc_ids))
-    key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}'
+    subset_cond = ':'.join(pquery.conc_subset_complement_ids)
+    superset_cond = pquery.conc_superset_id
+    key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}:{subset_cond}:{superset_cond}'
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
 
@@ -104,8 +107,29 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
             raise PqueryArgumentError(f'Invalid sort argument: {sort}')
 
 
+def create_freq_calc_args(pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, str], subcpath: str,
+                          user_id: int, collator_locale: str) -> FreqCalsArgs:
+    args = FreqCalsArgs()
+    attr = pquery.attr
+    args.fcrit = [f'{attr} {pquery.position}']
+    args.corpname = pquery.corpname
+    args.subcname = pquery.usesubcorp
+    args.subcpath = subcpath
+    args.user_id = user_id
+    args.freq_sort = 'freq'
+    args.pagesize = 10000  # TODO
+    args.fmaxitems = 10000
+    args.samplesize = 0
+    args.flimit = pquery.min_freq
+    args.q = raw_queries[conc_id]
+    args.collator_locale = collator_locale
+    args.rel_mode = 0 if '.' in attr else 1
+    args.ftt_include_empty = False
+    return args
+
+
 @cached
-def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcpath: str, user_id: int,
+def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: str, user_id: int,
                       collator_locale: str):
     """
     Calculate paradigmatic query providing existing concordances.
@@ -117,33 +141,46 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, str], subcp
     collator_locale -- a locale used for collation within the current corpus
     """
     tasks = []
-    num_tasks = len(pquery.conc_ids)
     for conc_id in pquery.conc_ids:
-        args = FreqCalsArgs()
-        attr = pquery.attr
-        args.fcrit = [f'{attr} {pquery.position}']
-        args.corpname = pquery.corpname
-        args.subcname = pquery.usesubcorp
-        args.subcpath = subcpath
-        args.user_id = user_id
-        args.freq_sort = 'freq'
-        args.pagesize = 10000  # TODO
-        args.fmaxitems = 10000
-        args.samplesize = 0
-        args.flimit = pquery.min_freq
-        args.q = raw_queries[conc_id]
-        args.collator_locale = collator_locale
-        args.rel_mode = 0 if '.' in attr else 1
-        args.ftt_include_empty = False
-        tasks.append(args)
+        tasks.append(create_freq_calc_args(
+            pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
+            collator_locale=collator_locale))
+    with Pool(processes=len(tasks)) as pool:
+        specif_done = pool.map_async(calculate_freqs_bg, tasks)
+        if len(pquery.conc_subset_complement_ids) > 0:
+            cond1_tasks = []
+            for conc_id in pquery.conc_subset_complement_ids:
+                cond1_tasks.append(create_freq_calc_args(
+                    pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
+                    collator_locale=collator_locale))
+            cond1_done = pool.map_async(calculate_freqs_bg, cond1_tasks)
+        else:
+            cond1_done = None
+        if pquery.conc_superset_id:
+            args = create_freq_calc_args(
+                pquery=pquery, conc_id=pquery.conc_superset_id, raw_queries=raw_queries, subcpath=subcpath,
+                user_id=user_id, collator_locale=collator_locale)
+            cond2_done = pool.apply_async(calculate_freqs_bg, (args,))
+        else:
+            cond2_done = None
+        specif_data = specif_done.get(timeout=60)
+        merged = defaultdict(lambda: [])
+        for freq_table in specif_data[:len(pquery.conc_ids)]:
+            freq_info = _extract_freqs(freq_table)
+            for word, freq in freq_info:
+                merged[word].append(freq)
+        if cond1_done:
+            for cond1_item in cond1_done.get(timeout=30):
+                cond1_freqs = set(v for v, _ in _extract_freqs(cond1_item))
+                for k in list(merged.keys()):
+                    if k in cond1_freqs:
+                        del merged[k]
+        if cond2_done:
+            cond2_freqs = defaultdict(lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=30))))
+            for k in list(merged.keys()):
+                if cond2_freqs[k] > sum(merged[k]):
+                    logging.getLogger(__name__).warning(f'word {k} not fully specified - removing')
+                    del merged[k]
 
-    with Pool(processes=num_tasks) as pool:
-        done = pool.map(calculate_freqs_bg, tasks)
-
-    merged = defaultdict(lambda: [])
-    for freq_table in done:
-        freq_info = _extract_freqs(freq_table)
-        for word, freq in freq_info:
-            merged[word].append(freq)
-    items = list((w, ) + tuple(freq) for w, freq in merged.items() if len(freq) == num_tasks)
+    items = list((w, ) + tuple(freq) for w, freq in merged.items() if len(freq) == len(pquery.conc_ids))
     return [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))] + sorted(items, key=lambda v: sum(v[1:]), reverse=True)
