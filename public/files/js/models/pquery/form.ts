@@ -507,8 +507,38 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     }
                 }
             ),
+            concatMap(([concResponses, concSubsetResponses]) => {
+                if (Dict.some(v => v.expressionRole.type === PqueryExpressionRoles.SUPERSET, state.queries)) {
+                    const [sourceId, supersetQuery] = Dict.find(v => v.expressionRole.type === PqueryExpressionRoles.SUPERSET, state.queries);
+                    return forkJoin([
+                        of(concResponses),
+                        of(concSubsetResponses),
+                        this.layoutModel.ajax$<ConcQueryResponse>(
+                            HTTP.Method.POST,
+                            this.layoutModel.createActionUrl(
+                                'query_submit',
+                                [tuple('format', 'json')]
+                            ),
+                            this.createConcSubmitArgs(state, supersetQuery, false),
+                            {contentType: 'application/json'}
+                        )
+                    ]).pipe(
+                        tap(
+                            _ => {
+                                this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                    name: ActionName.ConcordanceReady,
+                                    payload: {sourceId}
+                                })
+                            }
+                        )
+                    )
+
+                } else {
+                    return of<[ConcQueryResponse[], ConcQueryResponse[], null]>([concResponses, concSubsetResponses, null])
+                }
+            }),
             concatMap(
-                ([concResponses, subset]) => this.submitFreqIntersection(
+                ([concResponses, subsetResponses, supersetResponse]) => this.submitFreqIntersection(
                     state,
                     List.map(
                         resp => resp.conc_persistence_op_id,
@@ -516,8 +546,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     ),
                     List.map(
                         resp => resp.conc_persistence_op_id,
-                        subset
-                    )
+                        subsetResponses
+                    ),
+                    supersetResponse ? supersetResponse.conc_persistence_op_id : null
                 )
             ),
             tap(
@@ -537,7 +568,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitFreqIntersection(
         state:PqueryFormModelState,
         concIds:Array<string>,
-        concSubsetComplementIds:Array<string>
+        concSubsetComplementIds:Array<string>,
+        concSupersetId:string|null
     ):Observable<FreqIntersectionResponse> {
 
         const args:FreqIntersectionArgs = {
@@ -545,6 +577,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             usesubcorp: state.usesubcorp,
             conc_ids: concIds,
             conc_subset_complement_ids: concSubsetComplementIds,
+            conc_superset_id: concSupersetId,
             min_freq: state.minFreq,
             attr: state.attr,
             pos_left: state.posLeft,
