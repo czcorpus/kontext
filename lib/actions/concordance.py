@@ -767,7 +767,7 @@ class Actions(Querying):
         else:
             wquery = ''
             self.args.q.append(
-                f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} 0~0>0 {query}')
+                f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
         self._status = 201
         try:
             return self.view(request)
