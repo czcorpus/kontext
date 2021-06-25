@@ -40,6 +40,7 @@ export interface FreqIntersectionArgs {
     usesubcorp:string;
     conc_ids:Array<string>;
     conc_subset_complement_ids:Array<string>;
+    conc_superset_id:string|null;
     min_freq:number;
     attr:string;
     pos_left:number;
