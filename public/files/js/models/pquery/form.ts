@@ -487,7 +487,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                                                 'filter',
                                                 [tuple('format', 'json')]
                                             ),
-                                            this.createPFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
+                                            this.createNFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
                                             {contentType: 'application/json'}
                                         )    
                                     )
@@ -604,7 +604,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private createPFilterSubmitArgs(state:PqueryFormModelState, query:ParadigmaticQuery, concId:string):FilterServerArgs {
+    private createNFilterSubmitArgs(state:PqueryFormModelState, query:ParadigmaticQuery, concId:string):FilterServerArgs {
         const currArgs = this.layoutModel.getConcArgs();
 
         return {
@@ -625,11 +625,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             default_attr: query.default_attr,
             qmcase: false,
             use_regexp: false,
-            pnfilter: 'p',
-            // position kwic as one word is handled as `first`
+            pnfilter: 'n',
+            // position `whole kwic as one word` is handled as `first`
             filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
             filfpos: '1',
-            filtpos: `${List.size(query.parsedAttrs)}`,
+            filtpos: `${1+List.size(query.parsedAttrs)}`,
             inclkwic: 1,
             within: false,
             format: 'json',
