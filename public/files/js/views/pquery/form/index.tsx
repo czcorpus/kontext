@@ -155,7 +155,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         expressionRole:ExpressionRoleType;
 
     }> = (props) => {
-        
+
         const handleExpressionRoleTypeChange = (evt) => {
             dispatcher.dispatch<Actions.SetExpressionRoleType>({
                 name: ActionName.SetExpressionRoleType,
@@ -177,11 +177,11 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                 <S.QueryRowDiv>
                     <S.ExpressionRoleFieldset>
                         <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
-                            <option value={PqueryExpressionRoles.SPECIFICATION}>{he.translate('pquery__expression_role_specification')}</option>
-                            <option value={PqueryExpressionRoles.SUBSET}>{he.translate('pquery__expression_role_never')}</option>
-                            <option value={PqueryExpressionRoles.SUPERSET}>{he.translate('pquery__expression_role_always')}</option>
+                            <option value="specification">{he.translate('pquery__expression_role_specification')}</option>
+                            <option value="subset">{he.translate('pquery__expression_role_never')}</option>
+                            <option value="superset">{he.translate('pquery__expression_role_always')}</option>
                         </select>
-                        {props.expressionRole.type===PqueryExpressionRoles.SPECIFICATION ? null :
+                        {props.expressionRole.type === 'specification' ? null :
                             <span>
                                 <S.VerticalSeparator/>
                                 <input id={`roleRatio-${props.sourceId}`} onChange={handleExpressionRoleRatioChange} value={props.expressionRole.maxNonMatchingRatio}/>

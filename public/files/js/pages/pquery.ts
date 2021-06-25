@@ -103,7 +103,6 @@ class ParadigmaticQueryPage {
                     storedQueryToModel(
                         pqForm,
                         importConcQueries(
-                            pqForm.conc_ids,
                             this.layoutModel.getConf<InvolvedConcFormArgs>('ConcForms')
                         ),
                         this.layoutModel.getConf('AttrList'),

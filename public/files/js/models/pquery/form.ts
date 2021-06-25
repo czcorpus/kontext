@@ -21,7 +21,7 @@
 
 import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
@@ -31,13 +31,15 @@ import { Actions as ACActions, ActionName as ACActionName } from '../../models/a
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
-import { concatMap, map, tap } from 'rxjs/operators';
+import { concatMap, map, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
-    PqueryFormModelState, 
+    PqueryFormModelState,
     PqueryAlignTypes,
     PqueryExpressionRoles,
-    ParadigmaticQuery} from './common';
+    ParadigmaticQuery,
+    SubsetComplementsAndRatio,
+    SupersetAndRatio} from './common';
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -217,7 +219,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         pcq_pos_neg: 'pos',
                         include_empty: false,
                         default_attr: null,
-                        expressionRole: {type: PqueryExpressionRoles.SPECIFICATION, maxNonMatchingRatio: 100}
+                        expressionRole: {type: 'specification', maxNonMatchingRatio: 100}
                     }
                 });
             }
@@ -352,7 +354,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.addActionHandler<Actions.SetExpressionRoleType>(
             ActionName.SetExpressionRoleType,
             action => {
-                if (action.payload.value !== PqueryExpressionRoles.SPECIFICATION && Dict.some((v, _) => v.expressionRole.type === action.payload.value, this.state.queries)) {
+                if (action.payload.value !== 'specification' &&
+                        Dict.some(
+                            (v, _) => v.expressionRole.type === action.payload.value, this.state.queries
+                        )) {
                     this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
 
                 } else {
@@ -368,7 +373,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             action => {
                 this.changeState(state => {
                     state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio = action.payload.value
-                });                
+                });
             }
         );
     }
@@ -444,111 +449,136 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private submitForm(state:PqueryFormModelState):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
-        return forkJoin(pipe(
-            state.queries,
-            Dict.toEntries(),
-            List.filter(([_, query]) => query.expressionRole.type === PqueryExpressionRoles.SPECIFICATION),
-            List.map(
-                ([sourceId, query]) => this.layoutModel.ajax$<ConcQueryResponse>(
+    private mkFilterStream(
+        state:PqueryFormModelState,
+        concResponse:ConcQueryResponse
+    ):Observable<[ConcQueryResponse, ConcQueryResponse, number]> {
+
+        if (Dict.some(v => v.expressionRole.type === 'subset', state.queries)) {
+            const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === 'subset', state.queries);
+            return this.layoutModel.ajax$<ConcQueryResponse>(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl(
+                        'filter',
+                        [tuple('format', 'json')]
+                    ),
+                    this.createNFilterSubmitArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
+                    {contentType: 'application/json'}
+            ).pipe(
+                tap( _ => {
+                    this.dispatchSideEffect<Actions.ConcordanceReady>({
+                        name: ActionName.ConcordanceReady,
+                        payload: {sourceId: subsetSourceId}
+                    })
+                }),
+                concatMap(
+                    concSubsetResponse => rxOf(tuple(
+                        concResponse,
+                        concSubsetResponse,
+                        state.queries[subsetSourceId].expressionRole.maxNonMatchingRatio
+                    ))
+                )
+            )
+
+        } else {
+            return rxOf(tuple(concResponse, null, 0))
+        }
+    }
+
+    private mkSupersetStream(state:PqueryFormModelState):Observable<[ConcQueryResponse, number]> {
+        if (Dict.some(v => v.expressionRole.type === 'superset', state.queries)) {
+            const [sourceId, supersetQuery] = Dict.find(v => v.expressionRole.type === 'superset', state.queries);
+            return this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'query_submit',
                         [tuple('format', 'json')]
                     ),
-                    this.createConcSubmitArgs(state, query, false),
+                    this.createConcSubmitArgs(state, supersetQuery, false),
                     {contentType: 'application/json'}
 
-                ).pipe(
-                    tap(
-                        _ => {
-                            this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                name: ActionName.ConcordanceReady,
-                                payload: {sourceId}
-                            })
-                        }
-                    )
-                )
-            )
-        )).pipe(
-            concatMap(
-                (concResponses) => {
-                    if (Dict.some(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries)) {
-                        const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === PqueryExpressionRoles.SUBSET, state.queries);
-                        return forkJoin([
-                            of(concResponses),
-                            forkJoin(
-                                pipe(
-                                    concResponses,
-                                    List.map(
-                                        concResp => this.layoutModel.ajax$<ConcQueryResponse>(
-                                            HTTP.Method.POST,
-                                            this.layoutModel.createActionUrl(
-                                                'filter',
-                                                [tuple('format', 'json')]
-                                            ),
-                                            this.createNFilterSubmitArgs(state, subsetQuery, concResp.conc_persistence_op_id),
-                                            {contentType: 'application/json'}
-                                        )    
-                                    )
-                                )
-                            )
-                        ]).pipe(
-                            tap( _ => {
-                                this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                    name: ActionName.ConcordanceReady,
-                                    payload: {sourceId: subsetSourceId}
-                                })
-                            })
-                        )
-
-                    } else {
-                        return of([concResponses, []])
+            ).pipe(
+                tap(
+                    _ => {
+                        this.dispatchSideEffect<Actions.ConcordanceReady>({
+                            name: ActionName.ConcordanceReady,
+                            payload: {sourceId}
+                        })
                     }
-                }
-            ),
-            concatMap(([concResponses, concSubsetResponses]) => {
-                if (Dict.some(v => v.expressionRole.type === PqueryExpressionRoles.SUPERSET, state.queries)) {
-                    const [sourceId, supersetQuery] = Dict.find(v => v.expressionRole.type === PqueryExpressionRoles.SUPERSET, state.queries);
-                    return forkJoin([
-                        of(concResponses),
-                        of(concSubsetResponses),
-                        this.layoutModel.ajax$<ConcQueryResponse>(
-                            HTTP.Method.POST,
-                            this.layoutModel.createActionUrl(
-                                'query_submit',
-                                [tuple('format', 'json')]
-                            ),
-                            this.createConcSubmitArgs(state, supersetQuery, false),
-                            {contentType: 'application/json'}
-                        )
-                    ]).pipe(
-                        tap(
-                            _ => {
-                                this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                    name: ActionName.ConcordanceReady,
-                                    payload: {sourceId}
-                                })
-                            }
+                ),
+                map(
+                    resp => tuple(resp, state.queries[sourceId].expressionRole.maxNonMatchingRatio)
+                )
+            );
+
+        } else {
+            return rxOf([null, 0]);
+        }
+    }
+
+    private submitForm(state:PqueryFormModelState):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
+        return forkJoin([
+            rxOf(...pipe(
+                state.queries,
+                Dict.toEntries(),
+                List.filter(([_, query]) => query.expressionRole.type === 'specification')
+
+            )).pipe(
+                concatMap(
+                    ([sourceId, specQuery]) => this.layoutModel.ajax$<ConcQueryResponse>(
+                        HTTP.Method.POST,
+                        this.layoutModel.createActionUrl(
+                            'query_submit',
+                            [tuple('format', 'json')]
+                        ),
+                        this.createConcSubmitArgs(state, specQuery, false),
+                        {contentType: 'application/json'}
+
+                    ).pipe(
+                        map(
+                            resp => tuple(sourceId, resp)
                         )
                     )
+                ),
+                tap(
+                    ([sourceId,]) => {
+                        this.dispatchSideEffect<Actions.ConcordanceReady>({
+                            name: ActionName.ConcordanceReady,
+                            payload: {sourceId}
+                        })
+                    }
+                ),
+                concatMap(
+                    ([,concResponse]) => this.mkFilterStream(state, concResponse)
+                ),
+                reduce(
+                    (acc, respTuple) => List.push(respTuple, acc),
+                    [] as Array<[ConcQueryResponse, ConcQueryResponse, number]>
+                )
+            ),
+            this.mkSupersetStream(state)
 
-                } else {
-                    return of<[ConcQueryResponse[], ConcQueryResponse[], null]>([concResponses, concSubsetResponses, null])
-                }
-            }),
+        ]).pipe(
             concatMap(
-                ([concResponses, subsetResponses, supersetResponse]) => this.submitFreqIntersection(
+                ([specAndSubsets, [supersetResponse, supersetsMNMRatio]]) => this.submitFreqIntersection(
                     state,
                     List.map(
-                        resp => resp.conc_persistence_op_id,
-                        concResponses
+                        ([spec,]) => spec.conc_persistence_op_id,
+                        specAndSubsets
                     ),
-                    List.map(
-                        resp => resp.conc_persistence_op_id,
-                        subsetResponses
-                    ),
-                    supersetResponse ? supersetResponse.conc_persistence_op_id : null
+                    {
+                        concIds: List.map(
+                            ([,subs,]) => subs ? subs.conc_persistence_op_id : null,
+                            specAndSubsets
+                        ),
+                        maxNonMatchingRatio: specAndSubsets[0][2]
+                    },
+                    supersetResponse ?
+                        {
+                            concId: supersetResponse.conc_persistence_op_id,
+                            maxNonMatchingRatio: supersetsMNMRatio
+                        } :
+                        null
                 )
             ),
             tap(
@@ -568,16 +598,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitFreqIntersection(
         state:PqueryFormModelState,
         concIds:Array<string>,
-        concSubsetComplementIds:Array<string>,
-        concSupersetId:string|null
+        concSubsetComplements:SubsetComplementsAndRatio,
+        concSuperset:SupersetAndRatio|null
     ):Observable<FreqIntersectionResponse> {
 
         const args:FreqIntersectionArgs = {
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             conc_ids: concIds,
-            conc_subset_complement_ids: concSubsetComplementIds,
-            conc_superset_id: concSupersetId,
+            conc_subset_complements: concSubsetComplements,
+            conc_superset: concSuperset,
             min_freq: state.minFreq,
             attr: state.attr,
             pos_left: state.posLeft,

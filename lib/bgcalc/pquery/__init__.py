@@ -41,8 +41,8 @@ def _create_cache_path(pquery: PqueryFormArgs) -> str:
     position = pquery.position
     min_freq = pquery.min_freq
     conc_ids = ':'.join(sorted(pquery.conc_ids))
-    subset_cond = ':'.join(pquery.conc_subset_complement_ids)
-    superset_cond = pquery.conc_superset_id
+    subset_cond = ':'.join(pquery.conc_subset_complements.conc_ids) if pquery.conc_subset_complements is not None else '-'
+    superset_cond = pquery.conc_superset.conc_id if pquery.conc_superset is not None else '-'
     key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}:{subset_cond}:{superset_cond}'
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
@@ -147,18 +147,18 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             collator_locale=collator_locale))
     with Pool(processes=len(tasks)) as pool:
         specif_done = pool.map_async(calculate_freqs_bg, tasks)
-        if len(pquery.conc_subset_complement_ids) > 0:
+        if pquery.conc_subset_complements:
             cond1_tasks = []
-            for conc_id in pquery.conc_subset_complement_ids:
+            for conc_id in pquery.conc_subset_complements.conc_ids:
                 cond1_tasks.append(create_freq_calc_args(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
                     collator_locale=collator_locale))
             cond1_done = pool.map_async(calculate_freqs_bg, cond1_tasks)
         else:
             cond1_done = None
-        if pquery.conc_superset_id:
+        if pquery.conc_superset:
             args = create_freq_calc_args(
-                pquery=pquery, conc_id=pquery.conc_superset_id, raw_queries=raw_queries, subcpath=subcpath,
+                pquery=pquery, conc_id=pquery.conc_superset.conc_id, raw_queries=raw_queries, subcpath=subcpath,
                 user_id=user_id, collator_locale=collator_locale)
             cond2_done = pool.apply_async(calculate_freqs_bg, (args,))
         else:
