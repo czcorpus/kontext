@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: 0.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-04 12:38+0200\n"
-"PO-Revision-Date: 2017-12-14 17:15+0100\n"
+"PO-Revision-Date: 2021-06-27 17:15+0100\n"
 "Last-Translator: Tomaž Erjavec <tomaz.erjavec@ijs.si>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -227,20 +227,19 @@ msgstr "Seznam mojih podkorpusov"
 
 #: cmpltmpl/subcorp_list.py:150 cmpltmpl/document.py:1979
 msgid "My subcorpora"
-msgstr ""
+msgstr "Moji podkorpusi"
 
 msgid "Last name not valid"
-msgstr "Last name not valid UNTRANSLATED"
+msgstr "Priimek ni veljaven"
 
 msgid "General view options"
 msgstr "General view options UNTRANSLATED"
 
 msgid "The application is under maintenance. Sorry for inconvenience."
-msgstr ""
-"The application is under maintenance. Sorry for inconvenience. UNTRANSLATED"
+msgstr "The application is under maintenance. Sorry for inconvenience. UNTRANSLATED"
 
 msgid "Shuffle"
-msgstr "Shuffle UNTRANSLATED"
+msgstr "Premešaj"
 
 msgid "Failed to sign up user"
 msgstr "Failed to sign up user UNTRANSLATED"
@@ -265,7 +264,7 @@ msgstr ""
 "browser in 2015. UNTRANSLATED"
 
 msgid "version"
-msgstr "version UNTRANSLATED"
+msgstr "različica"
 
 msgid "Attribute not found."
 msgstr "Attribute not found. UNTRANSLATED"
@@ -634,7 +633,7 @@ msgid "View"
 msgstr "View UNTRANSLATED"
 
 msgid "Random sample"
-msgstr "Random sample UNTRANSLATED"
+msgstr "Naključni vzorec"
 
 msgid ""
 "Failed to evaluate the query. Please check the syntax and used attributes."
@@ -643,10 +642,10 @@ msgstr ""
 "UNTRANSLATED"
 
 msgid "Create new subcorpus"
-msgstr "Create new subcorpus UNTRANSLATED"
+msgstr "Ustvari nov podkorpus"
 
 msgid "Enter new query"
-msgstr "Enter new query UNTRANSLATED"
+msgstr "Vnesite novo poizvedbo"
 
 msgid "Subcorpus \"%s\" not found"
 msgstr "Subcorpus \"%s\" not found UNTRANSLATED"
