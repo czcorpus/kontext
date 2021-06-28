@@ -100,6 +100,7 @@ class ParadigmaticQuery(Kontext):
                 s_forms, _ = _load_conc_queries(
                     self._plugin_ctx, [self._curr_pquery_args.conc_superset.conc_id],
                     self.args.corpname, 'query')
+                result['conc_forms'].update(s_forms)
         else:
             result['pquery_form'] = None
             result['conc_forms'] = {}

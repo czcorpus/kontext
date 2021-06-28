@@ -163,25 +163,34 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             cond2_done = pool.apply_async(calculate_freqs_bg, (args,))
         else:
             cond2_done = None
-        specif_data = specif_done.get(timeout=60)
+        specif_data = specif_done.get(timeout=90)
         merged = defaultdict(lambda: [])
         for freq_table in specif_data[:len(pquery.conc_ids)]:
             freq_info = _extract_freqs(freq_table)
             for word, freq in freq_info:
                 merged[word].append(freq)
         if cond1_done:
-            for cond1_item in cond1_done.get(timeout=30):
+            to_remove = defaultdict(lambda: 0)
+            for cond1_item in cond1_done.get(timeout=90):
                 cond1_freqs = set(v for v, _ in _extract_freqs(cond1_item))
-                for k in list(merged.keys()):
+                for k in merged.keys():
                     if k in cond1_freqs:
-                        del merged[k]
-        if cond2_done:
-            cond2_freqs = defaultdict(lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=30))))
-            for k in list(merged.keys()):
-                if cond2_freqs[k] > sum(merged[k]):
-                    logging.getLogger(__name__).warning(f'word {k} not fully specified - removing')
+                        to_remove[k] += 1
+            for k in to_remove.keys():
+                if to_remove[k] / sum(merged[k]) * 100 > pquery.conc_subset_complements.max_non_matching_ratio:
                     del merged[k]
-
-    items = list((w, ) + tuple(freq) for w, freq in merged.items() if len(freq) == len(pquery.conc_ids))
+        for w in list(merged.keys()):
+            if len(merged[w]) < len(pquery.conc_ids):
+                del merged[w]
+        if cond2_done:
+            to_remove = defaultdict(lambda: 0)
+            cond2_freqs = defaultdict(lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=90))))
+            for k in merged.keys():
+                if cond2_freqs[k] > sum(merged[k]):
+                    to_remove[k] = 100 - sum(merged[k]) / cond2_freqs[k] * 100
+            for k, v in to_remove.items():
+                if v > pquery.conc_superset.max_non_matching_ratio:
+                    del merged[k]
+    items = list((w, ) + tuple(freq) for w, freq in merged.items())
     total_row = [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))]
     return total_row + sorted(items, key=lambda v: sum(v[1:]), reverse=True)
