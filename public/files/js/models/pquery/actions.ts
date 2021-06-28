@@ -227,7 +227,7 @@ export namespace Actions {
 
     export interface SetExpressionRoleRatio extends Action<{
         sourceId:string;
-        value:number;
+        value:string;
     }> {
         name: ActionName.SetExpressionRoleRatio;
     }

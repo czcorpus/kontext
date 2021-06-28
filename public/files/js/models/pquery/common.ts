@@ -38,7 +38,11 @@ export type PqueryResult = Array<[string, ...number[]]>;
 export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
 
 
-export type ExpressionRoleType = {type:PqueryExpressionRoles, maxNonMatchingRatio:number};
+export interface ExpressionRoleType {
+    type:PqueryExpressionRoles;
+    maxNonMatchingRatio:Kontext.FormValue<string>;
+
+};
 
 
 export interface SubsetComplementsAndRatio {
@@ -117,7 +121,7 @@ export interface PqueryFormModelState {
     useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
-    minFreq:number;
+    minFreq:Kontext.FormValue<string>;
     posLeft:number;
     posRight:number;
     posAlign:AlignTypes|PqueryAlignTypes;
@@ -167,7 +171,10 @@ export function newModelState(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
-                        expressionRole: {type: 'specification', maxNonMatchingRatio: 100}
+                        expressionRole: {
+                            type: 'specification',
+                            maxNonMatchingRatio: Kontext.newFormValue('100', true)
+                        }
                     }
                 ),
                 2
@@ -188,7 +195,7 @@ export function newModelState(
             Dict.fromEntries()
         ),
         task: undefined,
-        minFreq: 5,
+        minFreq: Kontext.newFormValue('5', true),
         posLeft: 0,
         posRight: 0,
         posAlign: AlignTypes.LEFT,
@@ -219,7 +226,8 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
 
     const allConcIds = [...pqueryForm.conc_ids];
     if (pqueryForm.conc_subset_complements) {
-        allConcIds.push(...pqueryForm.conc_subset_complements.conc_ids);
+        // we need just the first query item as all the filters contain the same CQL
+        allConcIds.push(pqueryForm.conc_subset_complements.conc_ids[0]);
     }
     if (pqueryForm.conc_superset) {
         allConcIds.push(pqueryForm.conc_superset.conc_id);
@@ -254,7 +262,7 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                         default_attr: query.default_attr,
                         expressionRole: {
                             type: qRole,
-                            maxNonMatchingRatio
+                            maxNonMatchingRatio: Kontext.newFormValue('' + maxNonMatchingRatio, true)
                         }
                     }
                 )
@@ -296,7 +304,7 @@ export function storedQueryToModel(
             Dict.fromEntries()
         ),
         task: undefined,
-        minFreq: sq.min_freq,
+        minFreq: Kontext.newFormValue('' + sq.min_freq, true),
         posLeft: sq.pos_left,
         posRight: sq.pos_right,
         posAlign: sq.pos_align,

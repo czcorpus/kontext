@@ -183,4 +183,5 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
                     del merged[k]
 
     items = list((w, ) + tuple(freq) for w, freq in merged.items() if len(freq) == len(pquery.conc_ids))
-    return [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))] + sorted(items, key=lambda v: sum(v[1:]), reverse=True)
+    total_row = [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))]
+    return total_row + sorted(items, key=lambda v: sum(v[1:]), reverse=True)

@@ -107,6 +107,10 @@ export const MinFreqField = styled(ParameterField)`
     input {
         width: 3em;
     }
+
+    input.error {
+        background-color: ${theme.colorLightPink};
+    }
 `;
 
 // ---------------- <BorderlessFieldset /> -------------
@@ -140,8 +144,12 @@ export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
     margin: 2px 0px;
 
     input {
-        width: 5em;
+        width: 3em;
         margin-right: 0.5em;
+    }
+
+    input.error {
+        background-color: ${theme.colorLightPink};
     }
 `;
 

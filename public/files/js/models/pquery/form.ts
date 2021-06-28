@@ -48,7 +48,7 @@ import { MultiDict } from '../../multidict';
 
 interface PqueryFormModelSwitchPreserve {
     queries:string;
-    minFreq:number;
+    minFreq:Kontext.FormValue<string>;
     attr:string;
     posLeft:number;
     posRight:number;
@@ -219,7 +219,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         pcq_pos_neg: 'pos',
                         include_empty: false,
                         default_attr: null,
-                        expressionRole: {type: 'specification', maxNonMatchingRatio: 100}
+                        expressionRole: {
+                            type: 'specification',
+                            maxNonMatchingRatio: Kontext.newFormValue('0', true)
+                        }
                     }
                 });
             }
@@ -239,7 +242,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ActionName.FreqChange,
             action => {
                 this.changeState(state => {
-                    state.minFreq = parseInt(action.payload.value) || state.minFreq;
+                    state.minFreq.value = action.payload.value;
+                    const tst = new Number(state.minFreq.value);
+                    state.minFreq.isInvalid = isNaN(tst.valueOf()) || tst.valueOf() !== parseInt(state.minFreq.value);
                 });
             }
         );
@@ -372,7 +377,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ActionName.SetExpressionRoleRatio,
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio = action.payload.value
+                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.value = action.payload.value;
+                    const tst = new Number(action.payload.value);
+                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.isInvalid = isNaN(tst.valueOf());
                 });
             }
         );
@@ -462,7 +469,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         'filter',
                         [tuple('format', 'json')]
                     ),
-                    this.createNFilterSubmitArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
+                    this.createSubsetCompletentFilterArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
                     {contentType: 'application/json'}
             ).pipe(
                 tap( _ => {
@@ -475,7 +482,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     concSubsetResponse => rxOf(tuple(
                         concResponse,
                         concSubsetResponse,
-                        state.queries[subsetSourceId].expressionRole.maxNonMatchingRatio
+                        parseFloat(state.queries[subsetSourceId].expressionRole.maxNonMatchingRatio.value)
                     ))
                 )
             )
@@ -507,7 +514,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     }
                 ),
                 map(
-                    resp => tuple(resp, state.queries[sourceId].expressionRole.maxNonMatchingRatio)
+                    resp => tuple(
+                        resp,
+                        parseFloat(state.queries[sourceId].expressionRole.maxNonMatchingRatio.value)
+                    )
                 )
             );
 
@@ -566,17 +576,19 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         ([spec,]) => spec.conc_persistence_op_id,
                         specAndSubsets
                     ),
-                    {
-                        concIds: List.map(
-                            ([,subs,]) => subs ? subs.conc_persistence_op_id : null,
-                            specAndSubsets
-                        ),
-                        maxNonMatchingRatio: specAndSubsets[0][2]
-                    },
+                    List.every(([,v,]) => v !== null, specAndSubsets) ?
+                        {
+                            conc_ids: List.map(
+                                ([,subs,]) => subs ? subs.conc_persistence_op_id : null,
+                                specAndSubsets
+                            ),
+                            max_non_matching_ratio: specAndSubsets[0][2]
+                        } :
+                        null,
                     supersetResponse ?
                         {
-                            concId: supersetResponse.conc_persistence_op_id,
-                            maxNonMatchingRatio: supersetsMNMRatio
+                            conc_id: supersetResponse.conc_persistence_op_id,
+                            max_non_matching_ratio: supersetsMNMRatio
                         } :
                         null
                 )
@@ -598,7 +610,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     private submitFreqIntersection(
         state:PqueryFormModelState,
         concIds:Array<string>,
-        concSubsetComplements:SubsetComplementsAndRatio,
+        concSubsetComplements:SubsetComplementsAndRatio|null,
         concSuperset:SupersetAndRatio|null
     ):Observable<FreqIntersectionResponse> {
 
@@ -608,7 +620,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             conc_ids: concIds,
             conc_subset_complements: concSubsetComplements,
             conc_superset: concSuperset,
-            min_freq: state.minFreq,
+            min_freq: parseInt(state.minFreq.value),
             attr: state.attr,
             pos_left: state.posLeft,
             pos_right: state.posRight,
@@ -667,7 +679,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private createNFilterSubmitArgs(state:PqueryFormModelState, query:ParadigmaticQuery, concId:string):FilterServerArgs {
+    private createSubsetCompletentFilterArgs(
+        state:PqueryFormModelState,
+        query:ParadigmaticQuery,
+        concId:string
+    ):FilterServerArgs {
+
         const currArgs = this.layoutModel.getConcArgs();
 
         return {
@@ -688,7 +705,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             default_attr: query.default_attr,
             qmcase: false,
             use_regexp: false,
-            pnfilter: 'n',
+            pnfilter: 'p',
             // position `whole kwic as one word` is handled as `first`
             filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
             filfpos: '1',

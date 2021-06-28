@@ -166,7 +166,10 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         const handleExpressionRoleRatioChange = (evt) => {
             dispatcher.dispatch<Actions.SetExpressionRoleRatio>({
                 name: ActionName.SetExpressionRoleRatio,
-                payload: {sourceId: props.sourceId, value: parseInt(evt.target.value)}
+                payload: {
+                    sourceId: props.sourceId,
+                    value: evt.target.value
+                }
             });
         };
 
@@ -184,8 +187,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         {props.expressionRole.type === 'specification' ? null :
                             <span>
                                 <S.VerticalSeparator/>
-                                <input id={`roleRatio-${props.sourceId}`} onChange={handleExpressionRoleRatioChange} value={props.expressionRole.maxNonMatchingRatio}/>
-                                <label htmlFor={`roleRatio-${props.sourceId}`}>% {he.translate('pquery__expression_role_ratio')}</label>
+                                <label htmlFor={`roleRatio-${props.sourceId}`}>{he.translate('pquery__expression_role_ratio')}</label>:{'\u00a0'}
+                                <input id={`roleRatio-${props.sourceId}`}
+                                        onChange={handleExpressionRoleRatioChange}
+                                        value={props.expressionRole.maxNonMatchingRatio.value}
+                                        className={props.expressionRole.maxNonMatchingRatio.isInvalid ? 'error' : null} />
+                                {'\u00a0%'}
                             </span>
                         }
                     </S.ExpressionRoleFieldset>
@@ -326,7 +333,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         </S.ParameterField>
                         <S.MinFreqField>
                             <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
-                            <input id="freq" onChange={handleFreqChange} value={props.minFreq}/>
+                                <input id="freq" onChange={handleFreqChange} value={props.minFreq.value}
+                                    className={props.minFreq.isInvalid ? 'error' : null} />
                         </S.MinFreqField>
                     </S.ParametersFieldset>
                     <S.ParametersFieldset>

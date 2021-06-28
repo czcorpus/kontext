@@ -63,12 +63,12 @@ class PqueryFormArgs:
         c_tmp = data['conc_subset_complements']
         if c_tmp:
             self.conc_subset_complements = SubsetComplementsAndRatio(
-                data['conc_subset_complements']['concIds'],
-                data['conc_subset_complements']['maxNonMatchingRatio'])
+                data['conc_subset_complements']['conc_ids'],
+                data['conc_subset_complements']['max_non_matching_ratio'])
         if data['conc_superset']:
             self.conc_superset = SupersetAndRatio(
-                data['conc_superset']['concId'],
-                data['conc_superset']['maxNonMatchingRatio'])
+                data['conc_superset']['conc_id'],
+                data['conc_superset']['max_non_matching_ratio'])
         self.attr = data['attr']
         self.conc_ids = data['conc_ids']
 
