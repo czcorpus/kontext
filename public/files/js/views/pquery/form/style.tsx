@@ -107,6 +107,10 @@ export const MinFreqField = styled(ParameterField)`
     input {
         width: 3em;
     }
+
+    input.error {
+        background-color: ${theme.colorLightPink};
+    }
 `;
 
 // ---------------- <BorderlessFieldset /> -------------
@@ -132,4 +136,28 @@ export const StylelessFieldset = styled(BorderlessFieldset)`
     > *:not(:first-child) {
         margin-top: 1em;
     }
+`;
+
+// ---------------- <ExpressionRoleFieldset /> -------------
+
+export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
+    margin: 2px 0px;
+
+    input {
+        width: 3em;
+        margin-right: 0.5em;
+    }
+
+    input.error {
+        background-color: ${theme.colorLightPink};
+    }
+`;
+
+// ---------------- <VerticalSeparator /> -------------
+
+export const VerticalSeparator = styled.span`
+    margin: 0 1em;
+    border-style: solid;
+    border-color: ${theme.colorLogoBlue};
+    border-width: 0 1px 0 0;
 `;

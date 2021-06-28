@@ -810,8 +810,8 @@
         "pquery__no_form_data_to_restore": "Žádný výsledek - URL adresa odkazuje na neplatná vstupní data.",
         "pquery__add_btn": "Přidat dotaz",
         "pquery__remove_btn": "Odstranit dotaz",
-        "pquery__attr_input": "Atribut",
-        "pquery__min_fq_input": "Min. fq.",
+        "pquery__attr_input": "Atribut (rovina zobecnění)",
+        "pquery__min_fq_input": "Min. frekvence realizace",
         "pquery__pos_input": "Pozice",
         "pquery__query_form_hd": "Dotaz",
         "pquery__node_start_at": "(Node) začít od",
@@ -821,6 +821,10 @@
         "pquery_overview_title": "Paradigmatický dotaz",
         "pquery__save_form_label": "Uložit výsledky paradigmatického dotazu",
         "pquery__parameters_form": "Parametry paradigmatického dotazu",
-        "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo"
+        "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo",
+        "pquery__expression_role_specification": "Realizace typu",
+        "pquery__expression_role_never": "Vyloučit případy vyhovující dotazu",
+        "pquery__expression_role_always": "V této konkordanci nepřipustit žádné další realizace",
+        "pquery__expression_role_ratio": "max. poměr výjimek"
     }
 }

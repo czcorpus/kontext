@@ -21,7 +21,7 @@ from typing import Optional, Callable, List, Dict, Any, Tuple
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
-from argmapping.query import QueryFormArgs
+from argmapping.query import QueryFormArgs, FilterFormArgs
 from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
@@ -45,9 +45,12 @@ This module contains HTTP actions for the "Paradigmatic query" functionality
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: str,
+                       form_type: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Load both conc. query forms and respective raw Manatee queries
+
+    form_type is either 'query' or 'filter'
     """
     forms = {}
     raw_queries = {}
@@ -57,10 +60,14 @@ def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: st
             if data is None:
                 raise UserActionException(
                     'Source concordance query does not exist: {}'.format(conc_id))
-            if qs.stored_query_type(data) != 'query':
+            if qs.stored_query_type(data) != form_type:
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
-            args = QueryFormArgs(
-                plugin_ctx=plugin_ctx, corpora=[corpus_id], persist=True).updated(data['lastop_form'], conc_id)
+            if form_type == 'query':
+                args = QueryFormArgs(
+                    plugin_ctx=plugin_ctx, corpora=[corpus_id], persist=True).updated(data['lastop_form'], conc_id)
+            elif form_type == 'filter':
+                args = FilterFormArgs(
+                    plugin_ctx=plugin_ctx, maincorp=corpus_id, persist=True).updated(data['lastop_form'], conc_id)
             forms[args.op_key] = args.to_dict()
             raw_queries[args.op_key] = data['q']
     return forms, raw_queries
@@ -83,7 +90,17 @@ class ParadigmaticQuery(Kontext):
         if self._curr_pquery_args:
             result['pquery_form'] = self._curr_pquery_args.to_dict()
             result['conc_forms'], _ = _load_conc_queries(
-                self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
+                self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname, 'query')
+            if self._curr_pquery_args.conc_subset_complements:
+                s_forms, _ = _load_conc_queries(
+                    self._plugin_ctx, self._curr_pquery_args.conc_subset_complements.conc_ids,
+                    self.args.corpname, 'filter')
+                result['conc_forms'].update(s_forms)
+            if self._curr_pquery_args.conc_superset:
+                s_forms, _ = _load_conc_queries(
+                    self._plugin_ctx, [self._curr_pquery_args.conc_superset.conc_id],
+                    self.args.corpname, 'query')
+                result['conc_forms'].update(s_forms)
         else:
             result['pquery_form'] = None
             result['conc_forms'] = {}
@@ -102,8 +119,12 @@ class ParadigmaticQuery(Kontext):
         ans = super().pre_dispatch(action_name, action_metadata)
         if self._prev_q_data is not None:
             if self._prev_q_data.get('form', {}).get('form_type') != 'pquery':
-                raise UserActionException('Invalid search session for word-list')
-            self._curr_pquery_args = PqueryFormArgs()
+                raise UserActionException('Invalid search session for a paradimatic query')
+            self._curr_pquery_args = PqueryFormArgs(
+                corpname=self.corp.corpname,
+                attr=self._get_default_attr(),
+                position='0<0~0>0'
+            )
             self._curr_pquery_args.from_dict(self._prev_q_data['form'])
 
         return ans
@@ -123,6 +144,9 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(template='pquery/index.html', http_method='GET', page_model='pquery')
     def index(self, request):
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sent-switch'))
         ans = {
             'corpname': self.args.corpname,
             'tagsets': self._get_tagsets(),
@@ -174,10 +198,22 @@ class ParadigmaticQuery(Kontext):
         app = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
 
-        self._curr_pquery_args = PqueryFormArgs()
+        self._curr_pquery_args = PqueryFormArgs(
+            corpname=self.corp.corpname,
+            attr=self._get_default_attr(),
+            position='0<0~0>0')
         self._curr_pquery_args.update_by_user_query(request.json)
         conc_forms, raw_queries = _load_conc_queries(
-            self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname)
+            self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname, 'query')
+        if self._curr_pquery_args.conc_subset_complements:
+            conc_forms2, raw_queries2 = _load_conc_queries(
+                self._plugin_ctx, self._curr_pquery_args.conc_subset_complements.conc_ids, self.args.corpname, 'filter')
+            raw_queries.update(raw_queries2)
+        if self._curr_pquery_args.conc_superset:
+            conc_forms3, raw_queries3 = _load_conc_queries(
+                self._plugin_ctx, [self._curr_pquery_args.conc_superset.conc_id], self.args.corpname, 'query')
+            raw_queries.update(raw_queries3)
+
         calc_args = (
             self._curr_pquery_args,
             raw_queries,

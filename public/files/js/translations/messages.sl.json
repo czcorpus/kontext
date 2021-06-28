@@ -810,8 +810,8 @@
         "pquery__no_form_data_to_restore": "No result - the URL address refers to invalid input data. UNTRANSLATED",
         "pquery__add_btn": "Add query UNTRANSLATED",
         "pquery__remove_btn": "Remove query UNTRANSLATED",
-        "pquery__attr_input": "Attribute UNTRANSLATED",
-        "pquery__min_fq_input": "Min. fq. UNTRANSLATED",
+        "pquery__attr_input": "Attribute (generalization level) UNTRANSLATED",
+        "pquery__min_fq_input": "Realization min. frequency UNTRANSLATED",
         "pquery__pos_input": "Position UNTRANSLATED",
         "pquery__query_form_hd": "Query UNTRANSLATED",
         "pquery__node_start_at": "(Node) start at UNTRANSLATED",
@@ -821,6 +821,10 @@
         "pquery_overview_title": "Paradigmatic query UNTRANSLATED",
         "pquery__save_form_label": "Save paradigmatic query results UNTRANSLATED",
         "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED",
-        "pquery__align_type_whole_kwic": "whole KWIC as one word UNTRANSLATED"
+        "pquery__align_type_whole_kwic": "whole KWIC as one word UNTRANSLATED",
+        "pquery__expression_role_specification": "Type realization UNTRANSLATED",
+        "pquery__expression_role_never": "Exclude cases matching the query UNTRANSLATED",
+        "pquery__expression_role_always": "In this concordance, no other realizations should be found UNTRANSLATED",
+        "pquery__expression_role_ratio": "max. ratio of exceptions UNTRANSLATED"
     }
 }

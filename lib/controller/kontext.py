@@ -107,7 +107,7 @@ class Kontext(Controller):
                                  MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
     CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
-                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sentence'),
+                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch'),
                            MainMenu.CORPORA('create-subcorpus'))
 
     GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
@@ -379,7 +379,8 @@ class Kontext(Controller):
     def _save_query_to_history(self, query_id, conc_data):
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                qh.store(user_id=self.session_get('user', 'id'), query_id=query_id, q_supertype='conc')
+                qh.store(user_id=self.session_get('user', 'id'),
+                         query_id=query_id, q_supertype='conc')
 
     def _clear_prev_conc_params(self):
         self._prev_q_data = None
@@ -439,7 +440,8 @@ class Kontext(Controller):
         """
         with plugins.runtime.AUTH as auth:
             if not action_metadata['skip_corpus_init']:
-                is_api = action_metadata['return_type'] == 'json' or form.getvalue('format') == 'json'
+                is_api = action_metadata['return_type'] == 'json' or form.getvalue(
+                    'format') == 'json'
                 corpname, redirect = self._determine_curr_corpus(form, is_api)
                 has_access, variant = auth.validate_access(corpname, self.session_get('user'))
                 if has_access and redirect:
@@ -510,7 +512,8 @@ class Kontext(Controller):
             # now we can apply also corpus-dependent settings
             # because the corpus name is already known
             if corpname is None:
-                req_args.set_forced_arg('corpname', '')  # make sure no unwanted corpname arg is used
+                # make sure no unwanted corpname arg is used
+                req_args.set_forced_arg('corpname', '')
             else:
                 corpus_options = {}
                 corpus_options.update(self.get_corpus_info(corpname).default_view_opts)
@@ -957,7 +960,8 @@ class Kontext(Controller):
             'HTTP_USER_AGENT', '').lower()
         if 'popup_server_messages' not in result:
             result['popup_server_messages'] = True
-        result['job_status_service_url'] = os.environ.get('STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
+        result['job_status_service_url'] = os.environ.get(
+            'STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
         return result
 
     def _human_readable_corpname(self):
@@ -994,7 +998,8 @@ class Kontext(Controller):
     def _get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_ctx, self.args.corpname):
-            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self.args.corpname)
+            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+                self._plugin_ctx, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in tt_data:
                 bib_mapping = dict(
@@ -1029,7 +1034,8 @@ class Kontext(Controller):
                 subcorp_list.insert(0, dict(v=self.corp.orig_subcname, n=self.corp.orig_subcname,
                                             pub=self.corp.subcname, foreign=True))
         if len(subcorp_list) > 0:
-            subcorp_list = [{'n': '--{}--'.format(translate('whole corpus')), 'v': ''}] + subcorp_list
+            subcorp_list = [
+                {'n': '--{}--'.format(translate('whole corpus')), 'v': ''}] + subcorp_list
 
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []

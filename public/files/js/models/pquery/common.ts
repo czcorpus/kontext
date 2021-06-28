@@ -21,10 +21,11 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
-import { highlightSyntaxStatic } from '../query/cqleditor/parser';
+import { highlightSyntaxStatic, ParsedAttr } from '../query/cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { AjaxResponse } from '../../types/ajaxResponses';
+import { ConnectableObservable } from 'rxjs';
 
 
 /**
@@ -34,11 +35,34 @@ import { AjaxResponse } from '../../types/ajaxResponses';
  */
 export type PqueryResult = Array<[string, ...number[]]>;
 
+export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
+
+
+export interface ExpressionRoleType {
+    type:PqueryExpressionRoles;
+    maxNonMatchingRatio:Kontext.FormValue<string>;
+
+};
+
+
+export interface SubsetComplementsAndRatio {
+    max_non_matching_ratio:number;
+    conc_ids:Array<string>;
+}
+
+
+export interface SupersetAndRatio {
+    max_non_matching_ratio:number;
+    conc_id:string;
+}
+
 
 export interface FreqIntersectionArgs {
     corpname:string;
     usesubcorp:string;
     conc_ids:Array<string>;
+    conc_subset_complements:SubsetComplementsAndRatio|null;
+    conc_superset:SupersetAndRatio|null;
     min_freq:number;
     attr:string;
     pos_left:number;
@@ -51,7 +75,7 @@ export interface StoredAdvancedQuery extends AdvancedQuerySubmit {
     conc_id:string;
 }
 
-export type ConcQueries = Array<StoredAdvancedQuery>;
+export type ConcQueries = {[concId:string]:StoredAdvancedQuery};
 
 export interface AsyncTaskArgs {
     query_id:string;
@@ -76,10 +100,14 @@ export interface HistoryArgs {
     page:number;
 }
 
-export type InvolvedConcFormArgs = {[queryId:string]:AjaxResponse.QueryFormArgs};
+export type InvolvedConcFormArgs = {[queryId:string]:AjaxResponse.QueryFormArgs|AjaxResponse.FilterFormArgs};
 
 export const enum PqueryAlignTypes {
     WHOLE_KWIC = 'whole'
+}
+
+export interface ParadigmaticQuery extends AdvancedQuery {
+    expressionRole:ExpressionRoleType;
 }
 
 export interface PqueryFormModelState {
@@ -87,13 +115,13 @@ export interface PqueryFormModelState {
     modalVisible:boolean;
     corpname:string;
     usesubcorp:string;
-    queries:{[sourceId:string]:AdvancedQuery}; // pquery block -> query
+    queries:{[sourceId:string]:ParadigmaticQuery}; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:string};
     useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
-    minFreq:number;
+    minFreq:Kontext.FormValue<string>;
     posLeft:number;
     posRight:number;
     posAlign:AlignTypes|PqueryAlignTypes;
@@ -128,7 +156,7 @@ export function newModelState(
         corpname,
         usesubcorp,
         queries: pipe(
-            List.repeat<[string, AdvancedQuery]>(
+            List.repeat<[string, ParadigmaticQuery]>(
                 idx => tuple(
                     createSourceId(idx),
                     {
@@ -143,6 +171,10 @@ export function newModelState(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
+                        expressionRole: {
+                            type: 'specification',
+                            maxNonMatchingRatio: Kontext.newFormValue('100', true)
+                        }
                     }
                 ),
                 2
@@ -163,7 +195,7 @@ export function newModelState(
             Dict.fromEntries()
         ),
         task: undefined,
-        minFreq: 5,
+        minFreq: Kontext.newFormValue('5', true),
         posLeft: 0,
         posRight: 0,
         posAlign: AlignTypes.LEFT,
@@ -174,6 +206,71 @@ export function newModelState(
     };
 }
 
+function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries) {
+
+    function findQuery(concId:string):[PqueryExpressionRoles, number]  {
+        const srch1 = List.find(v => v === concId, pqueryForm.conc_ids);
+        if (srch1) {
+            return tuple('specification', 0);
+        }
+        const srch2 = pqueryForm.conc_subset_complements ?
+            List.find(v => v === concId, pqueryForm.conc_subset_complements.conc_ids) : undefined;
+        if (srch2) {
+            return tuple('subset', pqueryForm.conc_subset_complements.max_non_matching_ratio);
+        }
+        if (pqueryForm.conc_superset && pqueryForm.conc_superset.conc_id === concId) {
+            return tuple('superset', pqueryForm.conc_superset.max_non_matching_ratio);
+        }
+        throw new Error('Unknown query role');
+    }
+
+    const allConcIds = [...pqueryForm.conc_ids];
+    if (pqueryForm.conc_subset_complements) {
+        // we need just the first query item as all the filters contain the same CQL
+        allConcIds.push(pqueryForm.conc_subset_complements.conc_ids[0]);
+    }
+    if (pqueryForm.conc_superset) {
+        allConcIds.push(pqueryForm.conc_superset.conc_id);
+    }
+
+    return pipe(
+        allConcIds,
+        List.map(concId => concQueries[concId]),
+        List.map<StoredAdvancedQuery, [string, ParadigmaticQuery]>(
+            (query, i) => {
+                const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
+                    query.query,
+                    'advanced',
+                    {
+                        translate: (s:string, values?:any) => s
+                    }
+                );
+                const [qRole, maxNonMatchingRatio] = findQuery(query.conc_id);
+                return tuple(
+                    createSourceId(i),
+                    {
+                        corpname: query.corpname,
+                        qtype: 'advanced',
+                        query: query.query,
+                        parsedAttrs: parsedAttrs,
+                        focusedAttr: null,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        queryHtml,
+                        pcq_pos_neg: 'pos',
+                        include_empty: query.include_empty,
+                        default_attr: query.default_attr,
+                        expressionRole: {
+                            type: qRole,
+                            maxNonMatchingRatio: Kontext.newFormValue('' + maxNonMatchingRatio, true)
+                        }
+                    }
+                )
+            }
+        )
+    );
+}
+
 export function storedQueryToModel(
     sq:FreqIntersectionArgs,
     concQueries:ConcQueries,
@@ -181,64 +278,33 @@ export function storedQueryToModel(
     structAttrs:Array<Kontext.AttrItem>,
     useRichQueryEditor:boolean
 ):PqueryFormModelState {
-
+    const queries = importQueries(sq, concQueries);
     return {
         isBusy: false,
         modalVisible: false,
         corpname: sq.corpname,
         usesubcorp: sq.usesubcorp,
-        queries: pipe(
-            concQueries,
-            List.map<AdvancedQuerySubmit, [string, AdvancedQuery]>(
-                (query, i) => {
-                    const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
-                        query.query,
-                        'advanced',
-                        {
-                            translate: (s:string, values?:any) => s
-                        }
-                    );
-
-                    return tuple(
-                        createSourceId(i),
-                        {
-                            corpname: query.corpname,
-                            qtype: 'advanced',
-                            query: query.query,
-                            parsedAttrs: parsedAttrs,
-                            focusedAttr: null,
-                            rawAnchorIdx: 0,
-                            rawFocusIdx: 0,
-                            queryHtml,
-                            pcq_pos_neg: 'pos',
-                            include_empty: query.include_empty,
-                            default_attr: query.default_attr
-                        }
-                    )
-                }
-            ),
-            Dict.fromEntries()
-        ),
+        queries: Dict.fromEntries(queries),
         downArrowTriggersHistory: pipe(
-            concQueries,
+            queries,
             List.map((q, i) => tuple(createSourceId(i), false)),
             Dict.fromEntries()
         ),
         cqlEditorMessages: pipe(
-            concQueries,
+            queries,
             List.map((q, i) => tuple(createSourceId(i), '')),
             Dict.fromEntries()
         ),
         useRichQueryEditor,
         concWait: pipe(
-            concQueries,
-            List.map<AdvancedQuerySubmit, [string, ConcStatus]>(
+            queries,
+            List.map<[string, ParadigmaticQuery], [string, ConcStatus]>(
                 (v, i) => tuple(createSourceId(i), 'none')
             ),
             Dict.fromEntries()
         ),
         task: undefined,
-        minFreq: sq.min_freq,
+        minFreq: Kontext.newFormValue('' + sq.min_freq, true),
         posLeft: sq.pos_left,
         posRight: sq.pos_right,
         posAlign: sq.pos_align,
@@ -250,29 +316,42 @@ export function storedQueryToModel(
 }
 
 export function importConcQueries(
-    queryIds:Array<string>,
     args:InvolvedConcFormArgs
+):ConcQueries {
 
-):Array<StoredAdvancedQuery> {
+    function extractQuery(q:AjaxResponse.QueryFormArgs|AjaxResponse.FilterFormArgs):[{[k:string]:string}, {[k:string]:string}] {
+        if (AjaxResponse.isQueryFormArgs(q)) {
+            return tuple(q.curr_queries, q.curr_default_attr_values);
+        }
+        return tuple({[q.maincorp]: q.query}, {[q.maincorp]: q.default_attr});
+    }
+
     return pipe(
-        queryIds,
-        List.map(qId => tuple(qId, args[qId])), // order is important (so no Dict.keys() here)
+        args,
+        Dict.toEntries(),
         List.flatMap(
-            ([conc_id, formArgs]) => pipe(
-                formArgs.curr_queries,
-                Dict.toEntries(),
-                List.map(
-                    ([corpname, query]) => ({
-                        corpname,
-                        qtype: 'advanced',
-                        query,
-                        pcq_pos_neg: 'pos',
-                        include_empty: false,
-                        default_attr:  formArgs.curr_default_attr_values[corpname],
-                        conc_id
-                    })
-                )
-            )
-        )
+            ([conc_id, formArgs]) => {
+                const [queries, defaultAttrs] = extractQuery(formArgs);
+                return pipe(
+                    queries,
+                    Dict.toEntries(),
+                    List.map(
+                        ([corpname, query]) => tuple(
+                            conc_id,
+                            ({
+                                corpname,
+                                qtype: 'advanced' as 'advanced',
+                                query,
+                                pcq_pos_neg: 'pos' as 'pos'|'neg',
+                                include_empty: false,
+                                default_attr:  defaultAttrs[corpname],
+                                conc_id
+                            })
+                        )
+                    )
+                );
+            }
+        ),
+        Dict.fromEntries()
     );
 }

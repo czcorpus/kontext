@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common';
+import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes, PqueryExpressionRoles } from './common';
 import { SortColumn } from './result';
 import {SaveData} from '../../app/navigation';
 
@@ -53,7 +53,9 @@ export enum ActionName {
     ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
     ParamsToggleForm = 'PQUERY_PARAMS_TOGGLE_FORM',
     ResultApplyQuickFilter = 'PQUERY_RESULT_APPLY_QUICK_FILTER',
-    ResultApplyQuickFilterArgsReady = 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY'
+    ResultApplyQuickFilterArgsReady = 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY',
+    SetExpressionRoleType = 'PQUERY_SET_EXPRESSION_ROLE_TYPE',
+    SetExpressionRoleRatio = 'PQUERY_SET_EXPRESSION_ROLE_RATIO',
 }
 
 
@@ -214,6 +216,20 @@ export namespace Actions {
         posSpec:string; // the Manatee format (e.g. 0<0)
     }> {
         name: ActionName.ResultApplyQuickFilterArgsReady;
+    }
+
+    export interface SetExpressionRoleType extends Action<{
+        sourceId:string;
+        value:PqueryExpressionRoles;
+    }> {
+        name: ActionName.SetExpressionRoleType;
+    }
+
+    export interface SetExpressionRoleRatio extends Action<{
+        sourceId:string;
+        value:string;
+    }> {
+        name: ActionName.SetExpressionRoleRatio;
     }
 
     export function isResultApplyQuickFilterArgsReady(a:Action):a is ResultApplyQuickFilterArgsReady {

@@ -139,7 +139,7 @@ class Wordlist(Kontext):
     def result(self, request):
         """
         """
-        self.disabled_menu_items = (MainMenu.VIEW('kwic-sentence', 'structs-attrs'),
+        self.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
