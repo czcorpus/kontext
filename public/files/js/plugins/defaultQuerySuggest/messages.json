@@ -21,10 +21,10 @@
         "defaultTD__shortened_notice": "The list is shortened due to large number of variants"
     },
     "sl-SI": {
-        "defaultTD__unsupported_renderer": "Required renderer module not found UNTRANSLATED",
-        "defaultTD__original_data": "Data UNTRANSLATED",
-        "defaultTD__failed_to_fetch_external_information": "Failed to load an information from a third party source UNTRANSLATED",
-        "defaultTD__plug_in_error_symbol_alt": "Plug-in error UNTRANSLATED",
-        "defaultTD__shortened_notice": "The list is shortened due to large number of variants UNTRANSLATED"
+        "defaultTD__unsupported_renderer": "Zahtevanega modula upodabljalnika ni bilo mogoče najti",
+        "defaultTD__original_data": "Podatki",
+        "defaultTD__failed_to_fetch_external_information": "Podatkov iz tujega vira ni bilo mogoče naložiti",
+        "defaultTD__plug_in_error_symbol_alt": "Napaka vtičnika",
+        "defaultTD__shortened_notice": "Seznam je skrajšan zaradi velikega števila različic"
     }
 }
