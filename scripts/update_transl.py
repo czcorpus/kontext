@@ -34,54 +34,83 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Translation updater')
     parser.add_argument('updated_file', type=str,
                         help='a path to updated translations json/po file')
-    parser.add_argument('template_file', type=str,
-                        help='a path to translations template json/po file')
     parser.add_argument('--dry-run', dest='dry_run', action='store_true',
                         default=False, help='print differences, no editting')
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--template-file', type=str,
+                       help='a path to translations template json/po file')
+    group.add_argument('--languages', nargs=2, type=str,
+                       help='updated and template language in update file')
     args = parser.parse_args()
 
-    if args.updated_file.endswith('.json') and args.template_file.endswith('.json'):
-        with open(args.updated_file) as f1, open(args.template_file) as f2:
-            updated = json.load(f1)
-            template = json.load(f2)
+    if args.template_file:
+        if args.updated_file.endswith('.json') and args.template_file.endswith('.json'):
+            with open(args.updated_file) as f1, open(args.template_file) as f2:
+                updated = json.load(f1)
+                template = json.load(f2)
 
-        if len(updated.keys()) == 1 and len(template.keys()) == 1:
-            updated_lang, updated_data = list(updated.items())[0]
-            template_lang, template_data = list(template.items())[0]
+            if len(updated.keys()) == 1 and len(template.keys()) == 1:
+                updated_lang, updated_data = list(updated.items())[0]
+                template_lang, template_data = list(template.items())[0]
+            else:
+                raise Exception(
+                    'Unclear language codes, every file has to contain only one language section')
+
+            updated_data, _, _ = process_data(updated_data, template_data, args.dry_run)
+
+            with open(args.updated_file, 'w') as f:
+                json.dump({updated_lang: updated_data}, f, indent=4, ensure_ascii=False)
+            print('Done')
+
+        elif args.updated_file.endswith('.po') and args.template_file.endswith('.po'):
+            try:
+                import polib
+            except:
+                print('Missing `polib` package. Please install it.')
+                sys.exit(1)
+
+            updated_file = polib.pofile(args.updated_file)
+            template_file = polib.pofile(args.template_file)
+
+            updated_data = {item.msgid: item.msgstr for item in updated_file}
+            template_data = {item.msgid: item.msgstr for item in template_file}
+
+            _, missing_keys, excessive_keys = process_data(
+                updated_data, template_data, args.dry_run)
+            for exc in excessive_keys:
+                updated_file.remove(updated_file.find(exc))
+            for miss in missing_keys:
+                updated_file.append(polib.POEntry(
+                    msgid=miss,
+                    msgstr=f'{miss} {UNTRANSLATED_SUFFIX}'
+                ))
+            updated_file.save(args.updated_file)
+            print('Done')
+
         else:
-            raise Exception(
-                'Unclear language codes, every file has to contain only one language section')
-
-        updated_data, _, _ = process_data(updated_data, template_data, args.dry_run)
-
-        with open(args.updated_file, 'w') as f:
-            json.dump({updated_lang: updated_data}, f, indent=4, ensure_ascii=False)
-        print('Done')
-
-    elif args.updated_file.endswith('.po') and args.template_file.endswith('.po'):
-        try:
-            import polib
-        except:
-            print('Missing `polib` package. Please install it.')
+            print('Unknown translation files. Both have to be `.json` or `.po`.')
             sys.exit(1)
 
-        updated_file = polib.pofile(args.updated_file)
-        template_file = polib.pofile(args.template_file)
-
-        updated_data = {item.msgid: item.msgstr for item in updated_file}
-        template_data = {item.msgid: item.msgstr for item in template_file}
-
-        _, missing_keys, excessive_keys = process_data(updated_data, template_data, args.dry_run)
-        for exc in excessive_keys:
-            updated_file.remove(updated_file.find(exc))
-        for miss in missing_keys:
-            updated_file.append(polib.POEntry(
-                msgid=miss,
-                msgstr=f'{miss} {UNTRANSLATED_SUFFIX}'
-            ))
-        updated_file.save(args.updated_file)
-        print('Done')
-
     else:
-        print('Unknown translation files. Both have to be `.json` or `.po`.')
-        sys.exit(1)
+        update_lang, template_lang = args.languages
+        with open(args.updated_file) as f:
+            file_data = json.load(f)
+
+        try:
+            source = file_data[template_lang]
+        except KeyError:
+            raise RuntimeError(f'Template language key `{template_lang}` not found')
+
+        try:
+            destination = file_data[update_lang]
+        except KeyError:
+            raise RuntimeError(f'Update language key `{update_lang}` not found')
+
+        for k, v in source.items():
+            if k not in destination:
+                destination[k] = f'{v} UNTRANSLATED'
+
+        with open(args.updated_file, 'w') as f:
+            json.dump(file_data, f, indent=4, ensure_ascii=False)
+        print('Done')
