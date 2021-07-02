@@ -33,6 +33,7 @@ element syntax_viewer {
 }
 """
 
+import logging
 import plugins
 import plugins.default_syntax_viewer as dsv
 import plugins.default_syntax_viewer.manatee_backend as mbk
@@ -99,7 +100,13 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         return template.export(), mbk.TreeNodeEncoder
 
 
-@plugins.inject(plugins.runtime.AUTH)
-def create_instance(conf, auth):
-    corpora_conf = dsv.load_plugin_conf(conf)
+@plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, auth, integ_db):
+    plugin_conf = conf.get('plugins', 'syntax_viewer')
+    if integ_db.is_active and 'config_path' not in plugin_conf:
+        logging.getLogger(__name__).info(
+            f'default_syntax_viewer uses integration_db[{integ_db.info}]')
+        corpora_conf = dsv.load_plugin_conf_from_db(integ_db)
+    else:
+        corpora_conf = dsv.load_plugin_conf_from_file(conf)
     return dsv.SyntaxDataProvider(corpora_conf, UcnkManateeBackend(corpora_conf), auth)
