@@ -33,14 +33,14 @@
       "taghelper__features_label": "Features"
   },
   "sl-SI": {
-    "taghelper__create_tag_heading": "Ustvari / uredi tag",
-    "taghelper__insert_btn": "Vstavi"
-    "taghelper__unfulfilled": "Nedoločeno"
-    "taghelper__reset": "Ponastavi"
-    "taghelper__undo": "Razveljavi"
-    "taghelper__cannot_parse": "Regularni izrazi, ki vsebujejo izmenjave (npr. \"N.M|N.F\") niso podprti",
-    "taghelper__selected_features_label": "Izbrane funkcije",
-    "taghelper__part_of_speech_label": "Oblikoskladenjske oznake",
-    "taghelper__features_label": "Funkcije"
+      "taghelper__create_tag_heading": "Ustvari / uredi tag",
+      "taghelper__insert_btn": "Vstavi",
+      "taghelper__unfulfilled": "Nedoločeno",
+      "taghelper__reset": "Ponastavi",
+      "taghelper__undo": "Razveljavi",
+      "taghelper__cannot_parse": "Regularni izrazi, ki vsebujejo disjunkcije (npr. \"N.M|N.F\") niso podprti",
+      "taghelper__selected_features_label": "Izbrane funkcije",
+      "taghelper__part_of_speech_label": "Oblikoskladenjske oznake",
+      "taghelper__features_label": "Funkcije"
   }
 }
