@@ -57,6 +57,7 @@ CREATE TABLE kontext_corpus (
   description_en text,
   default_virt_keyboard varchar(255),
   default_view_opts text,
+  syntax_viewer_conf_json text,
   UNIQUE KEY corpora_name_uniq (name),
   KEY corpora_requestable_idx (requestable),
   CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),

@@ -1,4 +1,6 @@
-ALTER TABLE kontext_corpus ADD column default_view_opts TEXT;
+ALTER TABLE kontext_corpus
+ADD column default_view_opts TEXT,
+ADD syntax_viewer_conf_json TEXT;
 
 CREATE TABLE kontext_interval_attr (
     corpus_name TEXT NOT NULL,
