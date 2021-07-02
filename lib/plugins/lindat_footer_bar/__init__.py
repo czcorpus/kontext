@@ -55,6 +55,7 @@ def create_instance(settings):
     plugin_conf = settings.get('plugins', 'footer_bar')
     templates = {
         'cs_CZ': plugin_conf['lindat:template_cs'],
-        'en_US': plugin_conf['lindat:template_en']
+        'en_US': plugin_conf['lindat:template_en'],
+        'sl_SI': plugin_conf['lindat:template_sl']
     }
     return FootBar(templates=templates)
