@@ -26,12 +26,13 @@ from .errors import PqueryResultNotFound, PqueryArgumentError
 from typing import Tuple
 from argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
-import logging
 
 """
 This module contains function for calculating Paradigmatic queries
 out of existing concordances.
 """
+
+SUBTASK_TIMEOUT_SECS = 120  # please note that this may collide with config.xml's calc_backend.task_time_limit
 
 
 def _create_cache_path(pquery: PqueryFormArgs) -> str:
@@ -41,9 +42,12 @@ def _create_cache_path(pquery: PqueryFormArgs) -> str:
     position = pquery.position
     min_freq = pquery.min_freq
     conc_ids = ':'.join(sorted(pquery.conc_ids))
-    subset_cond = ':'.join(pquery.conc_subset_complements.conc_ids) if pquery.conc_subset_complements is not None else '-'
-    superset_cond = pquery.conc_superset.conc_id if pquery.conc_superset is not None else '-'
-    key = f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}:{subset_cond}:{superset_cond}'
+    subset_cond = ':'.join(pquery.conc_subset_complements.conc_ids) if pquery.conc_subset_complements else '-'
+    subset_limit = pquery.conc_subset_complements.max_non_matching_ratio if pquery.conc_subset_complements else '-'
+    superset_cond = pquery.conc_superset.conc_id if pquery.conc_superset else '-'
+    superset_limit = pquery.conc_superset.max_non_matching_ratio if pquery.conc_superset else '-'
+    key = (f'{corpname}:{subcname}:{conc_ids}:{position}:{attr}:{min_freq}:{subset_cond}:{subset_limit}:'
+           f'{superset_cond}:{superset_limit}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'pquery_{result_id}.csv')
 
@@ -102,7 +106,7 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
             conc_idx = pquery.conc_ids.index(sort[len('freq-'):])
             total, rows = load_cached_full(path)
             return (total,
-                    sorted(rows, key=lambda x: x[conc_idx+1], reverse=reverse))[offset:offset+limit]
+                    sorted(rows, key=lambda x: x[conc_idx+1], reverse=reverse)[offset:offset+limit])
         else:
             raise PqueryArgumentError(f'Invalid sort argument: {sort}')
 
@@ -146,7 +150,9 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
             collator_locale=collator_locale))
     with Pool(processes=len(tasks)) as pool:
+        # calculate realizations' frequencies
         specif_done = pool.map_async(calculate_freqs_bg, tasks)
+        # calculate auxiliary data for the "(almost) never" condition
         if pquery.conc_subset_complements:
             cond1_tasks = []
             for conc_id in pquery.conc_subset_complements.conc_ids:
@@ -156,6 +162,7 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             cond1_done = pool.map_async(calculate_freqs_bg, cond1_tasks)
         else:
             cond1_done = None
+        # calculate auxiliary data (the superset here) for the "(almost) always" condition
         if pquery.conc_superset:
             args = create_freq_calc_args(
                 pquery=pquery, conc_id=pquery.conc_superset.conc_id, raw_queries=raw_queries, subcpath=subcpath,
@@ -163,34 +170,39 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             cond2_done = pool.apply_async(calculate_freqs_bg, (args,))
         else:
             cond2_done = None
-        specif_data = specif_done.get(timeout=90)
+
+        # merge frequencies of individual realizations
+        realizations = specif_done.get(timeout=SUBTASK_TIMEOUT_SECS)
         merged = defaultdict(lambda: [])
-        for freq_table in specif_data[:len(pquery.conc_ids)]:
+        for freq_table in realizations[:len(pquery.conc_ids)]:
             freq_info = _extract_freqs(freq_table)
             for word, freq in freq_info:
                 merged[word].append(freq)
-        if cond1_done:
-            to_remove = defaultdict(lambda: 0)
-            for cond1_item in cond1_done.get(timeout=90):
-                cond1_freqs = set(v for v, _ in _extract_freqs(cond1_item))
-                for k in merged.keys():
-                    if k in cond1_freqs:
-                        to_remove[k] += 1
-            for k in to_remove.keys():
-                if to_remove[k] / sum(merged[k]) * 100 > pquery.conc_subset_complements.max_non_matching_ratio:
-                    del merged[k]
         for w in list(merged.keys()):
-            if len(merged[w]) < len(pquery.conc_ids):
+            if len(merged[w]) < len(pquery.conc_ids):  # all the realizations must be present
                 del merged[w]
-        if cond2_done:
-            to_remove = defaultdict(lambda: 0)
-            cond2_freqs = defaultdict(lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=90))))
-            for k in merged.keys():
-                if cond2_freqs[k] > sum(merged[k]):
-                    to_remove[k] = 100 - sum(merged[k]) / cond2_freqs[k] * 100
-            for k, v in to_remove.items():
-                if v > pquery.conc_superset.max_non_matching_ratio:
+        if cond1_done:
+            # ask for the results of the "(almost) never"
+            # and filter out values with too high ratio of "opposite examples"
+            complements = defaultdict(lambda: 0)
+            for cond1_item in cond1_done.get(timeout=SUBTASK_TIMEOUT_SECS):
+                for v, freq in _extract_freqs(cond1_item):
+                    complements[v] += freq
+            for k in [k2 for k2 in merged.keys() if k2 in complements]:
+                ratio = complements[k] / (sum(merged[k]) + complements[k])
+                if ratio * 100 > pquery.conc_subset_complements.max_non_matching_ratio:
                     del merged[k]
+        if cond2_done:
+            # ask for the results of the "(almost) always"
+            # and filter out values found as extra instances too many times in the superset
+            cond2_freqs = defaultdict(
+                lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=SUBTASK_TIMEOUT_SECS))))
+            for k in list(merged.keys()):
+                if cond2_freqs[k] > sum(merged[k]):  # if there are extra instances in the superset
+                    ratio = 100 - sum(merged[k]) / cond2_freqs[k] * 100
+                    if ratio > pquery.conc_superset.max_non_matching_ratio:
+                        del merged[k]
+
     items = list((w, ) + tuple(freq) for w, freq in merged.items())
     total_row = [('total', len(items)) + tuple(None for _ in range(len(pquery.conc_ids) - 1))]
     return total_row + sorted(items, key=lambda v: sum(v[1:]), reverse=True)
