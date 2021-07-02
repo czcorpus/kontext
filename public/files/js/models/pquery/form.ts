@@ -708,8 +708,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             pnfilter: 'p',
             // position `whole kwic as one word` is handled as `first`
             filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
-            filfpos: '1',
-            filtpos: `${1+List.size(query.parsedAttrs)}`,
+            filfpos: '0',
+            filtpos: `${List.size(query.parsedAttrs) - 1}`,
             inclkwic: 1,
             within: false,
             format: 'json',
