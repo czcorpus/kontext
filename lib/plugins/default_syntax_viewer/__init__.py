@@ -46,6 +46,7 @@ Configuration JSON:
 
 import json
 import os
+import logging
 
 import plugins
 from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
@@ -101,8 +102,8 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
                                                                             plugin_api.current_corpus))
 
 
-def load_plugin_conf(conf):
-    conf_path = conf.get('plugins', 'syntax_viewer', {}).get('default:config_path')
+def load_plugin_conf_from_file(conf):
+    conf_path = conf.get('default:config_path')
     if not conf_path or not os.path.isfile(conf_path):
         raise SyntaxDataProviderError('Plug-in configuration file [%s] not found. Please check default:config_path.' %
                                       (conf_path,))
@@ -111,7 +112,20 @@ def load_plugin_conf(conf):
         return conf_data.get('corpora', {})
 
 
-@plugins.inject(plugins.runtime.AUTH)
-def create_instance(conf, auth):
-    corpora_conf = load_plugin_conf(conf)
+def load_plugin_conf_from_db(db):
+    cursor = db.cursor()
+    cursor.execute(f"SELECT name, syntax_viewer_conf_json FROM kontext_corpus WHERE syntax_viewer_conf_json > ''")
+    return {row['name']: json.loads(row['syntax_viewer_conf_json']) for row in cursor}
+
+
+@plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
+def create_instance(conf, auth, integ_db):
+    plugin_conf = conf.get('plugins', 'syntax_viewer', {})
+    if integ_db.is_active and 'default:config_path' not in plugin_conf:
+        logging.getLogger(__name__).info(
+            f'default_syntax_viewer uses integration_db[{integ_db.info}]')
+        corpora_conf = load_plugin_conf_from_db(integ_db)
+    else:
+        logging.getLogger(__name__).info(f'default_syntax_viewer uses config_path configuration')
+        corpora_conf = load_plugin_conf_from_file(plugin_conf)
     return SyntaxDataProvider(corpora_conf, ManateeBackend(corpora_conf), auth)
