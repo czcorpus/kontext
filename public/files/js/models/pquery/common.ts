@@ -173,7 +173,7 @@ export function newModelState(
                         default_attr: null,
                         expressionRole: {
                             type: 'specification',
-                            maxNonMatchingRatio: Kontext.newFormValue('100', true)
+                            maxNonMatchingRatio: Kontext.newFormValue('0', true)
                         }
                     }
                 ),
