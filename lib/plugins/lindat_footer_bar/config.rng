@@ -29,6 +29,17 @@
                     </attribute>
                     <text />
                 </element>
+                <optional>
+                    <element name="template_sl">
+                        <a:documentation>
+                            Path to a Slovenian version of the footer
+                        </a:documentation>
+                        <attribute name="extension-by">
+                            <value>lindat</value>
+                        </attribute>
+                        <text />
+                    </element>
+                </optional>
             </interleave>
         </element>
     </start>
