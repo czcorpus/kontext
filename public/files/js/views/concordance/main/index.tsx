@@ -103,9 +103,17 @@ function secs2hms(v:number) {
 
 
 export function init({
-    dispatcher, he, lineSelectionModel, lineViewModel,
-    concDetailModel, refsDetailModel, usageTipsModel,
-    concSummaryModel: ipmModel, ttDistModel, dashboardModel, syntaxViewModel
+    dispatcher,
+    he,
+    lineSelectionModel,
+    lineViewModel,
+    concDetailModel,
+    refsDetailModel,
+    usageTipsModel,
+    concSummaryModel,
+    ttDistModel,
+    dashboardModel,
+    syntaxViewModel
 }:MainModuleArgs):MainViews {
 
     const layoutViews = he.getLayoutViews();
@@ -400,7 +408,7 @@ export function init({
         );
     }
 
-    const BoundConcSummary = Bound<ConcSummaryModelState>(ConcSummary, ipmModel)
+    const BoundConcSummary = Bound<ConcSummaryModelState>(ConcSummary, concSummaryModel)
 
     // ------------------------- <ConcOptions /> ---------------------------
 

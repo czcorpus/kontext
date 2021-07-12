@@ -79,8 +79,8 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                         )
                     )
 
-                ).subscribe(
-                    ipm => {
+                ).subscribe({
+                    next: ipm => {
                         dispatch<Actions.CalculateIpmForAdHocSubcDone>({
                             name: ActionName.CalculateIpmForAdHocSubcDone,
                             payload: {
@@ -88,7 +88,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                             }
                         });
                     },
-                    error => {
+                    error: error => {
                         console.error(error);
                         this.layoutModel.showMessage(
                             'error',
@@ -99,7 +99,18 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                             error
                         });
                     }
-                );
+                });
+            }
+        );
+
+        this.addActionHandler<Actions.AddedNewOperation>(
+            ActionName.AddedNewOperation,
+            (state, action) => {
+                state.arf = action.payload.data.result_arf;
+                state.concSize = action.payload.data.concsize;
+                state.fullSize = action.payload.data.fullsize;
+                state.ipm = null;
+                state.corpusIpm = action.payload.data.result_relative_freq;
             }
         );
 
@@ -114,7 +125,6 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         this.addActionHandler<Actions.AsyncCalculationUpdated>(
             ActionName.AsyncCalculationUpdated,
             (state, action) => {
-                const prevConcSize = state.concSize;
                 state.isUnfinishedConc = !action.payload.finished;
                 state.concSize = action.payload.concsize;
                 state.fullSize = action.payload.fullsize;
@@ -167,7 +177,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
 
         ).pipe(
             map(
-                data => state.baseCorpusSize / data.total * 1e6
+                data => state.concSize / data.total * 1e6
             )
         );
     }
