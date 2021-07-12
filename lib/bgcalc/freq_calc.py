@@ -177,14 +177,14 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> List[AsyncTaskSt
         if curr_status < 100:
             return curr_status
 
-    app = bgcalc.calc_backend_client(settings)
+    worker = bgcalc.calc_backend_client(settings)
     tasks = []
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
-        res = app.send_task(f'compile_{m}',
-                            (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
-                            time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task(f'compile_{m}',
+                               (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
+                               time_limit=TASK_TIME_LIMIT)
         logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
         async_task = AsyncTaskStatus(status=res.status, ident=res.id,
                                      category=AsyncTaskStatus.CATEGORY_FREQ_PRECALC,
@@ -273,9 +273,9 @@ def calculate_freqs(args: FreqCalsArgs):
 
     if calc_result is None:
         args.cache_path = cache_path
-        app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('calculate_freqs', args=(args.to_dict(),),
-                            time_limit=TASK_TIME_LIMIT)
+        worker = bgcalc.calc_backend_client(settings)
+        res = worker.send_task('calculate_freqs', args=(args.to_dict(),),
+                               time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
 
@@ -428,12 +428,12 @@ def calculate_freqs_ct(args):
     note: this is called by webserver
     """
     try:
-        app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('calculate_freqs_ct', args=(args.to_dict(),),
-                            time_limit=TASK_TIME_LIMIT)
+        worker = bgcalc.calc_backend_client(settings)
+        res = worker.send_task('calculate_freqs_ct', args=(args.to_dict(),),
+                               time_limit=TASK_TIME_LIMIT)
         calc_result = res.get()
     except Exception as ex:
-        if app.is_wrapped_user_error(ex):
+        if worker.is_wrapped_user_error(ex):
             raise UserActionException(str(ex)) from ex
         else:
             raise ex

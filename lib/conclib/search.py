@@ -48,10 +48,10 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     status = cache_map.get_calc_status(subchash, q)
     if not status or status.error:
-        app = bgcalc.calc_backend_client(settings)
-        ans = app.send_task('conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                                              subchash, q, samplesize, TASK_TIME_LIMIT),
-                            time_limit=CONC_REGISTER_TASK_LIMIT)
+        worker = bgcalc.calc_backend_client(settings)
+        ans = worker.send_task('conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
+                                                 subchash, q, samplesize, TASK_TIME_LIMIT),
+                               time_limit=CONC_REGISTER_TASK_LIMIT)
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
@@ -75,13 +75,15 @@ def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Opti
     if calc_from < len(q):
         for i in range(calc_from, len(q)):
             status = cache_map.add_to_map(subchash, q[:i + 1], ConcCacheStatus(), overwrite=True)
-            if os.path.isfile(status.cachefile):  # the file cannot be valid as otherwise, calc_from would be higher
+            # the file cannot be valid as otherwise, calc_from would be higher
+            if os.path.isfile(status.cachefile):
                 del_silent(status.cachefile)
-                logging.getLogger(__name__).warning(f'Removed unbound conc. cache file {status.cachefile}')
-        app = bgcalc.calc_backend_client(settings)
-        app.send_task('conc_sync_calculate',
-                      (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
-                      time_limit=TASK_TIME_LIMIT)
+                logging.getLogger(__name__).warning(
+                    f'Removed unbound conc. cache file {status.cachefile}')
+        worker = bgcalc.calc_backend_client(settings)
+        worker.send_task('conc_sync_calculate',
+                         (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
+                         time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
@@ -105,7 +107,8 @@ def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
         if os.getuid() == os.stat(status.cachefile).st_uid:
             os.chmod(status.cachefile, 0o664)
         # update size in map file
-        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size(), readable=True, finished=True)
+        cache_map.update_calc_status(
+            subchash, q[:1], concsize=conc.size(), readable=True, finished=True)
     return conc
 
 

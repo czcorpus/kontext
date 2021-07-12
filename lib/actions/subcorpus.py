@@ -185,11 +185,11 @@ class Subcorpus(Querying):
                 corplib.mk_publish_links(path, publish_path, self.session_get(
                     'user', 'fullname'), data.description)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
-            app = bgcalc.calc_backend_client(settings)
-            res = app.send_task('create_subcorpus',
-                                (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                 tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
-                                time_limit=TASK_TIME_LIMIT)
+            worker = bgcalc.calc_backend_client(settings)
+            res = worker.send_task('create_subcorpus',
+                                   (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
+                                    tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
+                                   time_limit=TASK_TIME_LIMIT)
             self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                    category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                    label=f'{self.args.corpname}/{data.subcname}',
@@ -375,7 +375,8 @@ class Subcorpus(Querying):
 
         if plugins.runtime.SUBC_RESTORE.exists:
             with plugins.runtime.SUBC_RESTORE as sr:
-                tmp = sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.corp.subcname)
+                tmp = sr.get_info(self.session_get('user', 'id'),
+                                  self.args.corpname, self.corp.subcname)
                 if tmp:
                     ans['extended_info'].update(tmp)
         return ans

@@ -75,8 +75,8 @@ def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: T
     if status:
         try:
             if status.task_id:
-                app = bgcalc.calc_backend_client(settings)
-                app.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
+                worker = bgcalc.calc_backend_client(settings)
+                worker.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
         except (IOError, CalcTaskNotFoundError):
             pass
     cache_map.del_entry(subchash, q)
@@ -159,7 +159,8 @@ def require_existing_conc(corp: KCorpus, q: Tuple[str, ...]) -> manatee.Concorda
             return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
         except manatee.FileAccessError as ex:
             raise ConcNotFoundException(ex)
-    raise BrokenConcordanceException('Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
+    raise BrokenConcordanceException(
+        'Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
 def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, ...],
@@ -225,7 +226,8 @@ def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, 
                             break
                     conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
-                logging.getLogger(__name__).error(f'Failed to use cached concordance for {q[:i]}: {ex}')
+                logging.getLogger(__name__).error(
+                    f'Failed to use cached concordance for {q[:i]}: {ex}')
                 cancel_conc_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)

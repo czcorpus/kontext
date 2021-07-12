@@ -1142,11 +1142,11 @@ class Kontext(Controller):
     def check_tasks_status(self, request: Request) -> Dict[str, Any]:
         backend = settings.get('calc_backend', 'type')
         if backend in ('celery', 'rq'):
-            app = bgcalc.calc_backend_client(settings)
+            worker = bgcalc.calc_backend_client(settings)
             at_list = self.get_async_tasks()
             upd_list = []
             for at in at_list:
-                r = app.AsyncResult(at.ident)
+                r = worker.AsyncResult(at.ident)
                 if r:
                     at.status = r.status
                     if at.status == 'FAILURE':
@@ -1166,8 +1166,8 @@ class Kontext(Controller):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def get_task_result(self, request):
-        app = bgcalc.calc_backend_client(settings)
-        result = app.AsyncResult(request.args.get('task_id'))
+        worker = bgcalc.calc_backend_client(settings)
+        result = worker.AsyncResult(request.args.get('task_id'))
         return dict(result=result.get())
 
     @exposed(return_type='json', skip_corpus_init=True, http_method='DELETE')

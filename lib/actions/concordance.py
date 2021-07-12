@@ -429,8 +429,8 @@ class Actions(Querying):
             elif not cache_status.finished and cache_status.task_id:
                 # we must also test directly a respective task as might have been killed
                 # and thus failed to store info to cache metadata
-                app = calc_backend_client(settings)
-                err = app.get_task_error(cache_status.task_id)
+                worker = calc_backend_client(settings)
+                err = worker.get_task_error(cache_status.task_id)
                 if err is not None:
                     raise err
             return dict(

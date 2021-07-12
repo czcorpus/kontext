@@ -195,7 +195,7 @@ class ParadigmaticQuery(Kontext):
 
         submitted JSON structure - see models.pquery.common.FreqIntersectionArgs
         """
-        app = bgcalc.calc_backend_client(settings)
+        worker = bgcalc.calc_backend_client(settings)
         corp_info = self.get_corpus_info(self.args.corpname)
 
         self._curr_pquery_args = PqueryFormArgs(
@@ -220,8 +220,8 @@ class ParadigmaticQuery(Kontext):
             self.subcpath,
             self.session_get('user', 'id'),
             corp_info.collator_locale if corp_info.collator_locale else 'en_US')
-        task_status = app.send_task('calc_merged_freqs', args=calc_args,
-                                    time_limit=TASK_TIME_LIMIT)
+        task_status = worker.send_task('calc_merged_freqs', args=calc_args,
+                                       time_limit=TASK_TIME_LIMIT)
 
         sq_items = []
         for conc_id in self._curr_pquery_args.conc_ids:
