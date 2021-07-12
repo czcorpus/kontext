@@ -36,7 +36,6 @@ import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/comm
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState,
     PqueryAlignTypes,
-    PqueryExpressionRoles,
     ParadigmaticQuery,
     SubsetComplementsAndRatio,
     SupersetAndRatio} from './common';
@@ -381,6 +380,23 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     const tst = new Number(action.payload.value);
                     state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.isInvalid = isNaN(tst.valueOf());
                 });
+            }
+        );
+
+        this.addActionHandler<Actions.ResultApplyQuickFilter>(
+            ActionName.ResultApplyQuickFilter,
+            action => {
+                action.payload.concId
+                this.state.queries
+                this.dispatchSideEffect<Actions.ResultApplyQuickFilterArgsReady>({
+                    name: ActionName.ResultApplyQuickFilterArgsReady,
+                    payload: {
+                        attr: this.state.attr,
+                        posAlign: this.state.posAlign,
+                        posLeft: this.state.posLeft,
+                        posRight: this.state.posRight,
+                    }
+                })
             }
         );
     }

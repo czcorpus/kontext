@@ -213,7 +213,8 @@ export namespace Actions {
     export interface ResultApplyQuickFilterArgsReady extends Action<{
         attr:string;
         posAlign:AlignTypes|PqueryAlignTypes;
-        posSpec:string; // the Manatee format (e.g. 0<0)
+        posLeft:number;
+        posRight:number;
     }> {
         name: ActionName.ResultApplyQuickFilterArgsReady;
     }
