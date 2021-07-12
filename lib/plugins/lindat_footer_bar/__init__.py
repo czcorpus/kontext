@@ -17,13 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-Required plug-in configuration:
-
-element footer_bar {
-  element module { "lindat_footer_bar" }
-  element js_module { "lindatFooterBar" }
-  element template_cs {
-}
+Required plug-in configuration: please see config.rng schema
 """
 import logging
 import os
