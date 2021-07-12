@@ -110,10 +110,10 @@ class Wordlist(Kontext):
     def submit(self, request):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
-        app = calc_backend_client(settings)
+        worker = calc_backend_client(settings)
         ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
                    freq_files_avail=True, subtasks=[])
-        async_res = app.send_task(
+        async_res = worker.send_task(
             'get_wordlist',
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
         bg_result = async_res.get()
@@ -285,9 +285,9 @@ class Wordlist(Kontext):
         backend = settings.get('calc_backend', 'type')
         if worker_tasks and backend in ('celery', 'rq'):
             import bgcalc
-            app = bgcalc.calc_backend_client(settings)
+            worker = bgcalc.calc_backend_client(settings)
             for t in worker_tasks:
-                tr = app.AsyncResult(t)
+                tr = worker.AsyncResult(t)
                 if tr.status == 'FAILURE':
                     raise CalcBackendError(f'Task {t} failed')
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}

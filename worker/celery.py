@@ -45,7 +45,7 @@ if settings.get('global', 'manatee_path', None):
 from worker import general
 import bgcalc
 
-app = bgcalc.calc_backend_server(settings, '').app_impl
+worker = bgcalc.calc_backend_server(settings, '').worker_impl
 
 
 class CustomTasks(object):
@@ -65,35 +65,35 @@ class CustomTasks(object):
             if callable(getattr(p.instance, 'export_tasks', None)):
                 for tsk in p.instance.export_tasks():
                     setattr(self, '%s_%s' % (p.name, tsk.__name__,),
-                            app.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
+                            worker.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
 
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-@app.task(bind=True, name='conc_register')
+@worker.task(bind=True, name='conc_register')
 def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
     return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, app)
 
 
-@app.task(bind=True, name='conc_calculate')
+@worker.task(bind=True, name='conc_calculate')
 def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
-@app.task(bind=True, name='conc_sync_calculate')
+@worker.task(bind=True, name='conc_sync_calculate')
 def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
-@app.task(name='calculate_colls')
+@worker.task(name='calculate_colls')
 def calculate_colls(coll_args):
     return general.calculate_colls(coll_args)
 
 
-@app.task(name='clean_colls_cache')
+@worker.task(name='clean_colls_cache')
 def clean_colls_cache():
     return general.clean_colls_cache()
 
@@ -101,7 +101,7 @@ def clean_colls_cache():
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-class FreqsTask(app.Task):
+class FreqsTask(worker.Task):
 
     cache_data = None
     cache_path = None
@@ -113,53 +113,53 @@ class FreqsTask(app.Task):
                 self.cache_data = None
 
 
-@app.task(base=FreqsTask, name='calculate_freqs')
+@worker.task(base=FreqsTask, name='calculate_freqs')
 def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
-@app.task(name='calculate_freqs_ct')
+@worker.task(name='calculate_freqs_ct')
 def calculate_freqs_ct(args):
     return general.calculate_freqs_ct(args)
 
 
-@app.task(name='clean_freqs_cache')
+@worker.task(name='clean_freqs_cache')
 def clean_freqs_cache():
     return general.clean_freqs_cache()
 
 
-@app.task(name='calc_merged_freqs')
+@worker.task(name='calc_merged_freqs')
 def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     return general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-@app.task(name='compile_frq')
+@worker.task(name='compile_frq')
 def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
-@app.task(name='compile_arf')
+@worker.task(name='compile_arf')
 def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
-@app.task(name='compile_docf')
+@worker.task(name='compile_docf')
 def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-@app.task(name='create_subcorpus')
+@worker.task(name='create_subcorpus')
 def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
 
 
 # ----------------------------- WORD LIST -------------------------------------
 
-@app.task(name='get_wordlist')
+@worker.task(name='get_wordlist')
 def get_wordlist(args, max_items, user_id):
     return general.get_wordlist(args, max_items, user_id)
 

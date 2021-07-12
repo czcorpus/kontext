@@ -53,7 +53,8 @@ class ResultWrapper:
                     cls = getattr(m, cls_name, None)
                     err = cls(srch.group(2)) if cls else Exception(srch.group(2))
                 except ModuleNotFoundError:
-                    logging.getLogger(__name__).warning('Failed to infer calc backend job error {}'.format(path))
+                    logging.getLogger(__name__).warning(
+                        'Failed to infer calc backend job error {}'.format(path))
                     err = Exception(f'Task failed: {job_id}')
             else:
                 cls = getattr(sys.modules['builtins'], path, None)
@@ -147,7 +148,7 @@ class RqClient:
         return None
 
     @property
-    def app_impl(self):
+    def worker_impl(self):
         return self.queue
 
     def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):

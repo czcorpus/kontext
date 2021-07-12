@@ -155,8 +155,8 @@ def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
                                     cminfreq=coll_args.cminfreq)
     if collocs is None:
         coll_args.cache_path = cache_path
-        app = bgcalc.calc_backend_client(settings)
-        res = app.send_task('calculate_colls', args=(coll_args,), time_limit=TASK_TIME_LIMIT)
+        worker = bgcalc.calc_backend_client(settings)
+        res = worker.send_task('calculate_colls', args=(coll_args,), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         ans = res.get()
     else:

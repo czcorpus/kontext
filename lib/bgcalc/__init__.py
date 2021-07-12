@@ -23,14 +23,14 @@ _backend_app = None
 
 
 def _init_backend_app(conf, fn_prefix):
-    app_type = conf.get('calc_backend', 'type')
-    app_conf = conf.get('calc_backend', 'conf')
-    if app_type == 'celery':
+    worker_type = conf.get('calc_backend', 'type')
+    worker_conf = conf.get('calc_backend', 'conf')
+    if worker_type == 'celery':
         from bgcalc.adapter.celery import Config, CeleryClient
         import celery
 
-        if app_conf:
-            cconf = SourceFileLoader('celeryconfig', app_conf).load_module()
+        if worker_conf:
+            cconf = SourceFileLoader('celeryconfig', worker_conf).load_module()
         else:
             cconf = Config()
             cconf.broker_url = conf.get('calc_backend', 'celery_broker_url')
@@ -39,10 +39,10 @@ def _init_backend_app(conf, fn_prefix):
             cconf.result_serializer = conf.get('calc_backend', 'celery_result_serializer')
             cconf.accept_content = conf.get('calc_backend', 'celery_accept_content')
             cconf.timezone = conf.get('calc_backend', 'celery_timezone')
-        app = celery.Celery('bgcalc')
-        app.config_from_object(cconf)
-        return CeleryClient(app)
-    elif app_type == 'rq':
+        worker = celery.Celery('bgcalc')
+        worker.config_from_object(cconf)
+        return CeleryClient(worker)
+    elif worker_type == 'rq':
         from bgcalc.adapter.rq import RqClient, RqConfig
         rqconf = RqConfig()
         rqconf.HOST = conf.get('calc_backend', 'rq_redis_host')
@@ -52,7 +52,7 @@ def _init_backend_app(conf, fn_prefix):
         return RqClient(rqconf, 'rqworker')
     else:
         raise CalcBackendInitError(
-            'Failed to init calc backend {0} (conf: {1})'.format(app_type, app_conf))
+            'Failed to init calc backend {0} (conf: {1})'.format(worker_type, worker_conf))
 
 
 def _calc_backend_app(conf, fn_prefix=''):
@@ -122,4 +122,3 @@ class AsyncTaskStatus(object):
         to serialize instances to session.
         """
         return self.__dict__
-

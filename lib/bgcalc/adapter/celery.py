@@ -26,25 +26,25 @@ class Config(object):
 
 class CeleryClient:
 
-    def __init__(self, app: Celery):
-        self._app = app
+    def __init__(self, worker: Celery):
+        self._worker = worker
 
     @property
-    def app_impl(self):
-        return self._app
+    def worker_impl(self):
+        return self._worker
 
     def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
-        return self._app.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
+        return self._worker.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
 
     def get_task_error(self, task_id):
         return None
 
     def AsyncResult(self, ident):
-        return self._app.AsyncResult(ident)
+        return self._worker.AsyncResult(ident)
 
     @property
     def control(self):
-        return self._app.control
+        return self._worker.control
 
     @staticmethod
     def _is_celery_error(err):

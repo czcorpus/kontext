@@ -37,7 +37,7 @@ import general
 import bgcalc
 import logging
 
-app = bgcalc.calc_backend_server(settings, 'rq')
+worker = bgcalc.calc_backend_server(settings, 'rq')
 
 
 class TaskWrapper:
@@ -153,6 +153,6 @@ if __name__ == "__main__":
         )
 
         qs = sys.argv[1:] or ['default']
-        app.init_scheduler()
+        worker.init_scheduler()
         w = Worker(qs)
         w.work()
