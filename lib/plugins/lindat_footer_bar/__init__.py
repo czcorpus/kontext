@@ -1,4 +1,6 @@
-# Copyright (c) 2016 Czech National Corpus
+# Copyright (c) 2016 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,7 +25,7 @@ element footer_bar {
   element template_cs {
 }
 """
-
+import logging
 import os
 
 from plugins.abstract.footer_bar import AbstractFootbar
@@ -53,8 +55,15 @@ class FootBar(AbstractFootbar):
 
 def create_instance(settings):
     plugin_conf = settings.get('plugins', 'footer_bar')
-    templates = {
-        'cs_CZ': plugin_conf['template_cs'],
-        'en_US': plugin_conf['template_en']
-    }
+    tpl_langs = {}
+    templates = {}
+    for k, v in plugin_conf.items():
+        if k.startswith('template_'):
+            tpl_langs[k[len('template_'):]] = v
+    for lang in settings.get('global', 'translations'):
+        code = lang.split('-')[0]
+        if code in tpl_langs:
+            templates[lang] = tpl_langs[code]
+        else:
+            logging.getLogger(__name__).warning(f'no configured footer template for "{lang}" language')
     return FootBar(templates=templates)
