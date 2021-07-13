@@ -183,10 +183,7 @@ def install_plugin(name: str, module, config) -> Any:
     returns:
         an initialized plug-in instance
     """
-    if isinstance(module.create_instance, _PluginFactory):
-        _plugins[name] = module.create_instance(*(config,))
-    else:  # modules without @inject will get just the configuration
-        _plugins[name] = module.create_instance(*(config,))
+    _plugins[name] = module.create_instance(*(config,))
     return _plugins[name]
 
 
@@ -216,7 +213,7 @@ def load_plugin_module(name: str) -> Optional[ModuleType]:
         module = getattr(_tmp, name)
     except AttributeError:
         logging.getLogger(__name__).error(
-            'Plugin %s configured but not installed (missing Python module?)' % name)
+            f'Plugin {name} configured but not installed (missing Python module?)')
         module = None
     return module
 
@@ -227,7 +224,7 @@ class _PluginFactory(object):
         self._args = args
 
     def __call__(self, conf: ModuleType('settings')):
-        return self._fn(*(conf,) + self._args)
+        return self._fn(*(conf,) + tuple(v.instance for v in self._args))
 
 
 def inject(*args: _ID) -> Callable[[Any], Any]:
@@ -244,6 +241,6 @@ def inject(*args: _ID) -> Callable[[Any], Any]:
     arguments:
     one or more plug-in names (see the example)
     """
-    def wrapper(func):
-        return _PluginFactory(func, *[p.instance for p in args])
-    return wrapper
+    def decorator(func):
+        return _PluginFactory(func, *args)
+    return decorator
