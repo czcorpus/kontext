@@ -19,67 +19,13 @@
 from typing import List, Any, Tuple, Dict, Optional
 from plugins.abstract.corparch.install import InstallJson
 import abc
-from collections import OrderedDict
 
 
-class DatabaseBackend(object):
+class DatabaseBackend:
     """
-    An abstract database backend for loading/storing corpus configuration
+    An abstract database backend for loading corpus configuration
     data.
     """
-
-    REG_COLS_MAP: Dict[str, str] = OrderedDict(
-        NAME='name',
-        PATH='path',
-        VERTICAL='vertical',
-        LANGUAGE='language',
-        LOCALE='locale',
-        ENCODING='rencoding',
-        INFO='info',
-        DOCSTRUCTURE='docstructure',
-        SHORTREF='shortref',
-        FREQTTATTRS='freqttattrs',
-        TAGSETDOC='tagsetdoc',
-        WPOSLIST='wposlist',
-        WSDEF='wsdef',
-        WSBASE='wsbase',
-        WSTHES='wsthes',
-        ALIGNSTRUCT='alignstruct',
-        ALIGNDEF='aligndef')
-
-    REG_VAR_COLS_MAP: Dict[str, str] = OrderedDict(
-        MAXCONTEXT='maxcontext',
-        MAXDETAIL='maxdetail',
-        MAXKWIC='maxkwic')
-
-    POS_COLS_MAP: Dict[str, str] = OrderedDict(
-        TYPE='type',
-        LABEL='label',
-        DYNAMIC='dynamic',
-        DYNLIB='dynlib',
-        ARG1='arg1',
-        ARG2='arg2',
-        FUNTYPE='funtype',
-        DYNTYPE='dyntype',
-        TRANSQUERY='transquery',
-        MULTIVALUE='multivalue',
-        MULTISEP='multisep')
-
-    SATTR_COLS_MAP: Dict[str, str] = OrderedDict(
-        TYPE='type',
-        LOCALE='locale',
-        MULTIVALUE='multivalue',
-        DEFAULTVALUE='defaultvalue',
-        MAXLISTSIZE='maxlistsize',
-        MULTISEP='multisep',
-        ATTRDOC='attrdoc',
-        ATTRDOCLABEL='attrdoclabel',
-        NUMERIC='rnumeric')
-
-    STRUCT_COLS_MAP: Dict[str, str] = OrderedDict(
-        TYPE='type',
-        DISPLAYTAG='displaytag',
-        DISPLAYBEGIN='displaybegin')
 
     @abc.abstractmethod
     def contains_corpus(self, corpus_id: str):
@@ -175,7 +121,7 @@ class DatabaseBackend(object):
         raise NotImplementedError()
 
 
-class DatabaseWritableBackend(DatabaseBackend):
+class DatabaseWriteBackend:
 
     @abc.abstractmethod
     def commit(self):

@@ -23,17 +23,19 @@ import logging
 from collections import defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.abstract.corparch.registry.parser import Tokenizer, Parser, infer_encoding
-from plugins.mysql_corparch.backendw import WritableBackend
+import plugins.abstract.corparch.registry.parser
+from plugins.abstract.corparch.registry.tokenizer import Tokenizer
+from plugins.abstract.corparch.registry.parser import Parser
+from plugins.mysql_corparch.backendw import WriteBackend, Backend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)
 
 
-def parse_registry(infile, variant, backend, encoding):
-    logging.getLogger(__name__).info('Parsing file {0}'.format(infile.name))
+def parse_registry(infile, variant, backend):
+    logging.getLogger(__name__).info(f'Parsing file {infile.name}')
     corpus_id = os.path.basename(infile.name)
-    tokenize = Tokenizer(infile, encoding)
+    tokenize = Tokenizer(infile)
     tokens = tokenize()
     parse = Parser(corpus_id, variant, tokens, backend)
     items = parse()
@@ -57,10 +59,9 @@ def process_directory(dir_path, variant, backend, auto_align, verbose):
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
         if os.path.isfile(fpath):
-            enc = infer_encoding(fpath)
             with open(fpath) as fr:
                 try:
-                    ans = parse_registry(fr, variant=variant, backend=backend, encoding=enc)
+                    ans = parse_registry(fr, variant=variant, backend=backend)
                     created_rt[ans['corpus_id']] = ans['created_rt']
                     if not auto_align:
                         aligned[ans['corpus_id']] = ans['aligned']
@@ -76,7 +77,7 @@ def process_directory(dir_path, variant, backend, auto_align, verbose):
         for k in ids:
             aligned_ids_map[k] = list(ids - set([k]))
     else:
-        for id, alig in list(aligned.items()):
+        for id, alig in aligned.items():
             for a in alig:
                 try:
                     aligned_ids_map[id].append(id_map[a])
@@ -93,8 +94,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Import a Manatee registry file(s)')
     parser.add_argument('rpath', metavar='REGISTRY_PATH', type=str)
-    parser.add_argument('dbpath', metavar='DB_PATH', type=str)
-    parser.add_argument('-e', '--encoding', metavar='ENCODING', type=str, default=None)
+    parser.add_argument('-c', '--conf', metavar='CONF_PATH', type=str,
+                        help='A custom path to KonText config.xml')
     parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
                         help='A subdirectory containing (restricted) variants of corpora')
     parser.add_argument('-l', '--auto-align', metavar='AUTO_ALIGN', action='store_const', const=True,
@@ -102,7 +103,19 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_const', const=True,
                         help='Provide more information during processing (especially errors)')
     args = parser.parse_args()
-    backend = WritableBackend(args.dbpath)
+
+    import initializer
+    import settings
+    conf_path = args.conf if args.conf else os.path.realpath(
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'conf', 'config.xml'))
+    settings.load(conf_path, defaultdict(lambda: None))
+    initializer.init_plugin('db')
+    initializer.init_plugin('integration_db')
+    initializer.init_plugin('user_items')
+    initializer.init_plugin('corparch')
+
+    ro_backend = Backend(plugins.runtime.INTEGRATION_DB.instance)
+    backend = WriteBackend(plugins.runtime.INTEGRATION_DB.instance, ro_backend)
 
     if os.path.isdir(args.rpath):
         process_directory(dir_path=args.rpath, variant=None, backend=backend,
@@ -112,7 +125,4 @@ if __name__ == '__main__':
                               auto_align=args.auto_align, verbose=args.verbose)
     else:
         with open(args.rpath) as fr:
-            parse_registry(fr,
-                           backend=backend,
-                           variant=args.variant,
-                           encoding=args.encoding if args.encoding else infer_encoding(args.rpath))
+            parse_registry(fr, backend=backend, variant=args.variant)

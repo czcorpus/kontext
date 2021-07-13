@@ -89,9 +89,9 @@ import manatee
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import settings
-from plugins.mysql_corparch.backendw import WritableBackend
+from plugins.mysql_corparch.backendw import WriteBackend
 from plugins.abstract.corparch.install import InstallJson
-from plugins.abstract.corparch.registry.parser import Tokenizer, Parser, infer_encoding
+from plugins.abstract.corparch.registry.parser import Tokenizer, Parser
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
@@ -113,11 +113,11 @@ class Config(object):
         return self.__dict__.__repr__()
 
 
-def parse_registry(infile, variant, backend, encoding):
+def parse_registry(infile, variant, backend):
     logging.getLogger(__name__).info(
         'Found registry. Parsing and importing file {0}'.format(infile.name))
     corpus_id = os.path.basename(infile.name)
-    tokenize = Tokenizer(infile, encoding)
+    tokenize = Tokenizer(infile)
     tokens = tokenize()
     parse = Parser(corpus_id, variant, tokens, backend)
     items = parse()
@@ -154,9 +154,8 @@ def process_corpora(conf_list, backend, reg_dir, variant, replace):
                 reg_path = os.path.join(reg_dir, conf.ident)
 
             if os.path.isfile(reg_path):
-                enc = infer_encoding(reg_path)
                 with open(reg_path) as fr2:
-                    parse_registry(fr2, variant=variant, backend=backend, encoding=enc)
+                    parse_registry(fr2, variant=variant, backend=backend)
 
 
 def get_conf_list(dir_path):
@@ -204,7 +203,7 @@ if __name__ == '__main__':
     jsonpath = args.jsonpath.rstrip('/')
     conf.update_missing(load_default_conf(jsonpath))
     db_path = find_db_reg_paths(conf.kontext_conf_path)
-    backend = WritableBackend(db_path)
+    backend = WriteBackend(db_path)
     if os.path.isfile(jsonpath):
         file_list = [jsonpath]
     elif os.path.isdir(jsonpath):
