@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP, List } from 'cnc-tskit';
+import { HTTP, List, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
@@ -126,9 +126,15 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                     next: (action2) => {
                         if (Actions.isResultApplyQuickFilterArgsReady(action2)) {
                             const alignIdx = action2.payload.posAlign === AlignTypes.LEFT ? '-1' : '1';
+                            const cqlList = pipe(
+                                action.payload.value.split(' '),
+                                List.filter(v => v.length > 0),
+                                List.map(s => `[${action2.payload.attr}="${s}"]`)
+                            )
+                            const posRight = action2.payload.posLeft + List.size(cqlList) - 1                            
                             const url = this.layoutModel.createActionUrl('quick_filter', [
                                 ['q', `~${action.payload.concId}`],
-                                ['q2', `p${action2.payload.posSpec} ${action2.payload.posSpec} ${alignIdx} [${action2.payload.attr}="${action.payload.value}"]`]
+                                ['q2', `p${action2.payload.posLeft} ${posRight} ${alignIdx} ${cqlList.join('')}`]
                             ]);
                             this.layoutModel.setLocationPost(url, [], action.payload.blankWindow);
                         }
