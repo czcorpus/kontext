@@ -28,18 +28,6 @@ class RegistrySyntaxError(Exception):
     pass
 
 
-def infer_encoding(file_path):
-    with open(file_path) as fr:
-        for line in fr:
-            if 'ENCODING' in line:
-                if 'utf8' in line.lower() or 'utf-8' in line.lower():
-                    return 'utf-8'
-                elif 'iso' in line.lower() and '8859-2' in line:
-                    return 'iso-8859-2'
-                break
-    return 'utf-8'
-
-
 def watchable(f):
 
     @wraps(f)
@@ -51,55 +39,7 @@ def watchable(f):
     return fn
 
 
-class Token(object):
-
-    def __init__(self, type, value=None):
-        self._type = type
-        self._value = value
-
-
-class Tokenizer(object):
-
-    def __init__(self, infile, encoding):
-        self._fr = infile
-        self._encoding = encoding
-
-    def __call__(self):
-        ans = []
-        for line in self._fr:
-            line = line.decode(self._encoding)
-            items = re.split(r'\s+', line)
-            line_ans = []
-            is_q = False
-            for item in items:
-                if item == '':
-                    continue
-                if item[0] == '"' and item[-1] == '"' and len(item) > 1:
-                    line_ans.append(item[1:-1])
-                elif item[0] == '"' and not is_q:
-                    line_ans.append([])
-                    is_q = True
-                    v = item[1:]
-                    line_ans[-1].append(v)
-                elif item[-1] == '"':
-                    is_q = False
-                    v = item[:-1]
-                    if type(line_ans[-1]) is list and line_ans[-1][0] == '"' and v == '"':
-                        line_ans[-1].append(' ')
-                    else:
-                        line_ans[-1].append(v)
-                else:
-                    if is_q:
-                        line_ans[-1].append(item)
-                    else:
-                        line_ans.append(item)
-            tmp = [' '.join(v) if type(v) is list else v for v in line_ans] + ['$']
-            if len(tmp) > 0:
-                ans.append(tmp)
-        return [v for subl in ans for v in subl]
-
-
-class Parser(object):
+class Parser:
 
     def __init__(self, corpus_id, variant, tokens, backend):
         self._tokens = tokens

@@ -17,11 +17,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A corparch database backend for MySQL/MariaDB.
-
---------
+A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 from plugins.abstract.corparch.backend import DatabaseBackend
+from plugins.abstract.corparch.backend.regkeys import (
+    REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
 
 
 class MySQLConfException(Exception):
@@ -243,8 +243,8 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def load_registry_table(self, corpus_id, variant):
-        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(self.REG_COLS_MAP.items())] +
-                ['rv.{0} AS {1}'.format(v, k) for k, v in list(self.REG_VAR_COLS_MAP.items())])
+        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(REG_COLS_MAP.items())] +
+                ['rv.{0} AS {1}'.format(v, k) for k, v in list(REG_VAR_COLS_MAP.items())])
         if variant:
             sql = (
                 'SELECT {0} FROM registry_conf AS rc '
@@ -263,7 +263,7 @@ class Backend(DatabaseBackend):
 
     def load_corpus_posattrs(self, corpus_id):
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
-            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(self.POS_COLS_MAP.items())]))
+            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(POS_COLS_MAP.items())]))
         cursor = self._db.cursor()
         cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
@@ -287,7 +287,7 @@ class Backend(DatabaseBackend):
 
     def load_corpus_structures(self, corpus_id):
         cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
-                           for k, v in list(self.STRUCT_COLS_MAP.items())]
+                           for k, v in list(STRUCT_COLS_MAP.items())]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
         cursor = self._db.cursor()
         cursor.execute(sql, (corpus_id,))
@@ -296,7 +296,7 @@ class Backend(DatabaseBackend):
     def load_corpus_structattrs(self, corpus_id, structure_id):
         cursor = self._db.cursor()
         sql = 'SELECT {0} FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s'.format(
-            ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(self.SATTR_COLS_MAP.items())]))
+            ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
         cursor.execute(sql, (corpus_id, structure_id))
         return cursor.fetchall()
 

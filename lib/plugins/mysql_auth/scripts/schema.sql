@@ -7,7 +7,7 @@ CREATE TABLE kontext_user (
     email varchar(255) NOT NULL,
     affiliation TEXT,
     group_access int(11)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE kontext_user_access (
   user_id int NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE kontext_user_access (
   PRIMARY KEY (user_id, corpus_name),
   CONSTRAINT kontext_user_access_user_id_fk FOREIGN KEY (user_id) REFERENCES kontext_user(id),
   CONSTRAINT kontext_user_access_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE kontext_group_access (
   corpus_name varchar(63) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE kontext_group_access (
   limited tinyint(1) NOT NULL,
   PRIMARY KEY (corpus_name, group_access),
   CONSTRAINT kontext_group_access_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE kontext_sign_up_token (
     id int(11) PRIMARY KEY AUTO_INCREMENT,
@@ -38,7 +38,7 @@ CREATE TABLE kontext_sign_up_token (
     lastname varchar(255) NOT NULL,
     email varchar(255) NOT NULL,
     affiliation TEXT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 INSERT INTO kontext_user (id, username, firstname, lastname, email, pwd_hash)
 VALUES (1, 'anonymous', 'anonymous', 'user', 'anonymous@localhost', '---');

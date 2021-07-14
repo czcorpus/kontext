@@ -79,6 +79,10 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
         return True
 
     @property
+    def is_autocommit(self):
+        return self._conn_args.get('autocommit', False)
+
+    @property
     def info(self):
         return f'{self.connection.server_host}/{self.connection.database}'
 

@@ -21,24 +21,34 @@ import datetime
 import pytz
 import logging
 import mysql.connector
+from plugins.abstract.corparch.backend import DatabaseWriteBackend
 from plugins.mysql_corparch.backend import (
-    Backend, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE, DFLT_USER_ACC_CORP_ATTR,
+    Backend,
+    DFLT_USER_TABLE, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE, DFLT_USER_ACC_CORP_ATTR,
     DFLT_GROUP_ACC_CORP_ATTR, DFLT_GROUP_ACC_GROUP_ATTR)
+from plugins.abstract.corparch.backend.regkeys import (
+    REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
 
 
-class WritableBackend(Backend):
+class WriteBackend(DatabaseWriteBackend):
     """
     This is an extended version of mysql backend used by ucnk scripts
     to import existing corpora.xml/registry files etc.
     """
 
-    def __init__(self, db, corp_table: str = DFLT_CORP_TABLE, group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-                 user_acc_table: str = DFLT_USER_ACC_TABLE, user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
-                 group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+    def __init__(self, db, ro_backend: Backend, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+                 group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
+                 user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
                  group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
-        super().__init__(db, corp_table, group_acc_table, user_acc_table, user_acc_corp_attr, group_acc_corp_attr,
-                         group_acc_group_attr)
-        self.autocommit = False
+        self._db = db
+        self._ro_backend = ro_backend
+        self._user_table = user_table
+        self._corp_table = corp_table
+        self._group_acc_table = group_acc_table
+        self._user_acc_table = user_acc_table
+        self._user_acc_corp_attr = user_acc_corp_attr
+        self._group_acc_corp_attr = group_acc_corp_attr
+        self._group_acc_group_attr = group_acc_group_attr
 
     def commit(self):
         """
@@ -54,10 +64,11 @@ class WritableBackend(Backend):
         cursor = self._db.cursor()
 
         # articles
-        cursor.execute('SELECT a.id '
-                       'FROM kontext_article AS a '
-                       'LEFT JOIN kontext_corpus_article AS ca ON a.id = ca.article_id '
-                       'WHERE ca.corpus_name IS NULL')
+        cursor.execute(
+            'SELECT a.id '
+            'FROM kontext_article AS a '
+            'LEFT JOIN kontext_corpus_article AS ca ON a.id = ca.article_id '
+            'WHERE ca.corpus_name IS NULL')
         for row3 in cursor.fetchall():
             cursor.execute('DELETE FROM kontext_article WHERE id = %s', (row3['id'],))
 
@@ -138,7 +149,7 @@ class WritableBackend(Backend):
                 cursor.execute('INSERT INTO corpus_structure (corpus_name, name) VALUES (%s, %s)',
                                (corpus_id, name))
 
-    def save_corpus_config(self, install_json, registry_dir, corp_size):
+    def save_corpus_config(self, install_json, corp_size):
         t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
                                    ).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
@@ -151,15 +162,15 @@ class WritableBackend(Backend):
             t1,
             1,
             install_json.web,
-            install_json.tagset,
             install_json.collator_locale,
             install_json.use_safe_font,
             corp_size
         )
-        cursor.execute('INSERT INTO kontext_corpus (name, group_name, version, created, updated, active, web, '
-                       'tagset, collator_locale, use_safe_font, size) '
-                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                       vals1)
+        cursor.execute(
+            f'INSERT INTO {self._corp_table} (name, group_name, version, created, updated, active, web, '
+            'collator_locale, use_safe_font, size) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            vals1)
         # articles
         articles = []
         def_art_id = None
@@ -187,7 +198,7 @@ class WritableBackend(Backend):
                 self.attach_corpus_article(install_json.ident, article_id, art_type)
 
         # keywords
-        avail_keywords = set(x['id'] for x in self.load_all_keywords())
+        avail_keywords = set(x['id'] for x in self._ro_backend.load_all_keywords())
         for k in install_json.metadata.keywords:
             if k in avail_keywords:
                 vals4 = (install_json.ident, k)
@@ -198,15 +209,17 @@ class WritableBackend(Backend):
                     'Ignoring metadata label "{0}" - not supported'.format(k))
 
         # TC/KC providers
-        for p in install_json.token_connect:
-            vals5 = (install_json.ident, p, 'tc')
+        for i, p in enumerate(install_json.token_connect):
+            vals5 = (install_json.ident, p, 'tc', i, False)
             cursor.execute(
-                'INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (%s, %s, %s)', vals5)
+                'INSERT INTO tckc_corpus (corpus_id, provider, type, display_order, is_kwic_view) '
+                'VALUES (%s, %s, %s, %s, %s)', vals5)
 
         for p in install_json.kwic_connect:
-            vals6 = (install_json.ident, p, 'kc')
+            vals6 = (install_json.ident, p, 'kc', i, False)
             cursor.execute(
-                'INSERT INTO tckc_corpus (corpus_id, provider, type) VALUES (%s, %s, %s)', vals6)
+                'INSERT INTO tckc_corpus (corpus_id, provider, type, display_order, is_kwic_view) '
+                'VALUES (%s, %s, %s, %s, %s)', vals6)
 
         # Dependent stuctures, structural attributes
         self._create_struct_if_none(install_json.ident, install_json.sentence_struct)
@@ -220,17 +233,18 @@ class WritableBackend(Backend):
             install_json.ident, install_json.metadata.label_attr)
         bli_struct, bli_attr = self._create_structattr_if_none(
             install_json.ident, install_json.metadata.id_attr)
-        cursor.execute(f'UPDATE {self._corp_table} SET sentence_struct = %s, '
-                       'speech_segment_struct = %s, speech_segment_attr = %s, '
-                       'speaker_id_struct = %s, speaker_id_attr = %s, '
-                       'speech_overlap_struct = %s, speech_overlap_attr = %s, '
-                       'bib_label_struct = %s, bib_label_attr = %s, '
-                       'bib_id_struct = %s, bib_id_attr = %s, '
-                       'text_types_db = %s, featured = %s, '
-                       'WHERE name = %s',
-                       (install_json.sentence_struct, sseg_struct, sseg_attr, spk_struct, spk_attr, spe_struct,
-                        spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
-                        int(install_json.metadata.featured), install_json.ident))
+        cursor.execute(
+            f'UPDATE {self._corp_table} SET sentence_struct = %s, '
+            'speech_segment_struct = %s, speech_segment_attr = %s, '
+            'speaker_id_struct = %s, speaker_id_attr = %s, '
+            'speech_overlap_struct = %s, speech_overlap_attr = %s, '
+            'bib_label_struct = %s, bib_label_attr = %s, '
+            'bib_id_struct = %s, bib_id_attr = %s, '
+            'text_types_db = %s, featured = %s '
+            'WHERE name = %s',
+            (install_json.sentence_struct, sseg_struct, sseg_attr, spk_struct, spk_attr, spe_struct,
+            spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
+            int(install_json.metadata.featured), install_json.ident))
 
     def save_corpus_article(self, text):
         cursor = self._db.cursor()
@@ -271,10 +285,10 @@ class WritableBackend(Backend):
         else:
             t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
                                        ).strftime("%Y-%m-%dT%H:%M:%S%z")
-            cols = ['corpus_name', 'created', 'updated'] + [self.REG_COLS_MAP[k]
-                                                            for k, v in list(values.items()) if k in self.REG_COLS_MAP]
+            cols = ['corpus_name', 'created', 'updated'] + [REG_COLS_MAP[k]
+                                                            for k, v in list(values.items()) if k in REG_COLS_MAP]
             vals = [corpus_id, t1, t1] + \
-                [v for k, v in list(values.items()) if k in self.REG_COLS_MAP]
+                [v for k, v in list(values.items()) if k in REG_COLS_MAP]
             sql = 'INSERT INTO registry_conf ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(len(cols) * ['%s']))
             cursor.execute(sql, vals)
@@ -287,10 +301,9 @@ class WritableBackend(Backend):
             else:
                 cursor.execute('DELETE FROM registry_variable WHERE corpus_name = %s AND variant IS NULL',
                                (corpus_id,))
-        cols = ['corpus_name', 'variant'] + [self.REG_VAR_COLS_MAP[k] for k, v in list(values.items())
-                                             if k in self.REG_VAR_COLS_MAP]
-        vals = [corpus_id, variant] + \
-            [v for k, v in list(values.items()) if k in self.REG_VAR_COLS_MAP]
+        cols = ['corpus_name', 'variant'] + [REG_VAR_COLS_MAP[k] for k, v in list(values.items())
+                                             if k in REG_VAR_COLS_MAP]
+        vals = [corpus_id, variant] + [v for k, v in list(values.items()) if k in REG_VAR_COLS_MAP]
         sql = 'INSERT INTO registry_variable ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(len(cols) * ['%s']))
         cursor.execute(sql, vals)
@@ -299,9 +312,9 @@ class WritableBackend(Backend):
     def save_corpus_posattr(self, corpus_id, name, position, values):
         """
         """
-        cols = ['corpus_name', 'name', 'position'] + [self.POS_COLS_MAP[k]
-                                                      for k, v in values if k in self.POS_COLS_MAP]
-        vals = [corpus_id, name, position] + [v for k, v in values if k in self.POS_COLS_MAP]
+        cols = ['corpus_name', 'name', 'position'] + [POS_COLS_MAP[k]
+                                                      for k, v in values if k in POS_COLS_MAP]
+        vals = [corpus_id, name, position] + [v for k, v in values if k in POS_COLS_MAP]
         sql = 'INSERT INTO corpus_posattr ({0}) VALUES ({1})'.format(
             ', '.join(cols), ', '.join(['%s'] * len(vals)))
         cursor = self._db.cursor()
@@ -336,8 +349,8 @@ class WritableBackend(Backend):
                 raise ex
 
     def save_corpus_structure(self, corpus_id, name, values):
-        base_cols = [self.STRUCT_COLS_MAP[k] for k, v in values if k in self.STRUCT_COLS_MAP]
-        base_vals = [v for k, v in values if k in self.STRUCT_COLS_MAP]
+        base_cols = [STRUCT_COLS_MAP[k] for k, v in values if k in STRUCT_COLS_MAP]
+        base_vals = [v for k, v in values if k in STRUCT_COLS_MAP]
         cursor = self._db.cursor()
 
         cursor.execute('SELECT COUNT(*) AS cnt FROM corpus_structure '
@@ -369,10 +382,9 @@ class WritableBackend(Backend):
         """
         """
         if self._structattr_exists(corpus_id, struct_id, name):
-            cols = [self.SATTR_COLS_MAP[k] for k, v in values if k in self.SATTR_COLS_MAP]
+            cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP]
             if len(cols) > 0:
-                vals = [v for k, v in values if k in self.SATTR_COLS_MAP] + \
-                    [corpus_id, struct_id, name]
+                vals = [v for k, v in values if k in SATTR_COLS_MAP] + [corpus_id, struct_id, name]
                 sql = ('UPDATE corpus_structattr '
                        'SET {0} '
                        'WHERE corpus_name = %s AND structure_name = %s AND name = %s').format(
@@ -380,9 +392,9 @@ class WritableBackend(Backend):
             else:
                 sql = None
         else:
-            cols = ['corpus_name', 'structure_name', 'name'] + [self.SATTR_COLS_MAP[k]
-                                                                for k, v in values if k in self.SATTR_COLS_MAP]
-            vals = [corpus_id, struct_id, name] + [v for k, v in values if k in self.SATTR_COLS_MAP]
+            cols = ['corpus_name', 'structure_name', 'name'] + [SATTR_COLS_MAP[k]
+                                                                for k, v in values if k in SATTR_COLS_MAP]
+            vals = [corpus_id, struct_id, name] + [v for k, v in values if k in SATTR_COLS_MAP]
             sql = 'INSERT INTO corpus_structattr ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(['%s'] * len(vals)))
         cursor = self._db.cursor()

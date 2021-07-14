@@ -53,6 +53,14 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
 
     @property
     @abc.abstractmethod
+    def is_autocommit(self):
+        """
+        Return True if autocommit is enabled for the connection; else False
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
     def info(self) -> str:
         """
         Provide a brief info about the database. This is mainly for administrators

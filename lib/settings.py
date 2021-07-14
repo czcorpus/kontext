@@ -19,11 +19,14 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union, DefaultDict
 
 import os
 from lxml import etree
 import json
+
+
+TypeAliasTable = Union[Dict[str, Union[str, None]], DefaultDict[str, Union[str, None]]]
 
 
 class ConfState(object):
@@ -216,7 +219,14 @@ def parse_config_section(section):
     return ans, meta
 
 
-def parse_config(path):
+def _update_path_with_alias(alias_table: TypeAliasTable, path: str) -> Optional[str]:
+    try:
+        return alias_table[path]
+    except KeyError:
+        return path
+
+
+def _parse_config(path, plg_conf_aliases: TypeAliasTable):
     """
     Parses application configuration XML file. A two-level structure is expected where
     first level represents sections and second level key->value pairs. It is also possible
@@ -224,6 +234,9 @@ def parse_config(path):
 
     arguments:
     path -- a file system path to the configuration file
+    plg_conf_aliases -- individual plug-in JSON config paths can be remapped
+                        via this argument; the JSON config loading can be disabled
+                        by providing None as alias
     """
     xml = etree.parse(open(path))
     root = xml.getroot()
@@ -238,15 +251,17 @@ def parse_config(path):
                 _conf[section_id], _meta[section_id] = parse_config_section(section)
             else:
                 for item in section:
-                    _conf['plugins'][item.tag], _meta['plugins'][item.tag] = parse_config_section(
-                        item)
-                    if 'conf_path' in _conf['plugins'][item.tag]:
-                        with open(_conf['plugins'][item.tag]['conf_path']) as fr:
-                            _conf['plugins'][item.tag]['__conf__'] = json.load(fr)
+                    plg_conf, _meta['plugins'][item.tag] = parse_config_section(item)
+                    _conf['plugins'][item.tag] = plg_conf
+                    if 'conf_path' in plg_conf:
+                        plg_subconf = _update_path_with_alias(plg_conf_aliases, plg_conf['conf_path'])
+                        if plg_subconf:
+                            with open(plg_subconf) as fr:
+                                _conf['plugins'][item.tag]['__conf__'] = json.load(fr)
 
 
-def _load_help_links():
-    hlpath = get('global', 'help_links_path', None)
+def _load_help_links(path_aliases: TypeAliasTable):
+    hlpath = _update_path_with_alias(path_aliases, get('global', 'help_links_path', None))
     if hlpath is not None:
         with open(hlpath, 'rb') as fr:
             _help_links.update(json.load(fr))
@@ -256,7 +271,7 @@ def get_help_links(lang_id):
     return dict((k, v.get(lang_id, None)) for k, v in list(_help_links.items()))
 
 
-def load(path):
+def load(path, path_aliases: Optional[TypeAliasTable] = None):
     """
     Loads application's configuration from a provided file
 
@@ -264,9 +279,11 @@ def load(path):
       conf_path -- path to a configuration XML file
     """
     _state.conf_path = path
-    parse_config(_state.conf_path)
+    if path_aliases is None:
+        path_aliases = {}
+    _parse_config(_state.conf_path, path_aliases)
     _load_version()
-    _load_help_links()
+    _load_help_links(path_aliases)
 
 
 def conf_path():
