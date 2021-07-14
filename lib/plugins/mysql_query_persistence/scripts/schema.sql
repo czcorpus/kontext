@@ -6,4 +6,4 @@ CREATE TABLE kontext_conc_persistence (
     created TIMESTAMP NOT NULL,
     num_access INT NOT NULL DEFAULT 0,
     last_access TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

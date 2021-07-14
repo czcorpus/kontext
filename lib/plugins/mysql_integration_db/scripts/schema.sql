@@ -10,6 +10,6 @@
 --
 CREATE TABLE kontext_integration_env (
     deployment_date TIMESTAMP PRIMARY KEY
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 INSERT INTO kontext_integration_env VALUES (NOW());
