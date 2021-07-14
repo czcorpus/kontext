@@ -73,7 +73,7 @@ class CustomTasks(object):
 
 @worker.task(bind=True, name='conc_register')
 def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
-    return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, app)
+    return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
 
 
 @worker.task(bind=True, name='conc_calculate')
