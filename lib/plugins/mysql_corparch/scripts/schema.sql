@@ -211,6 +211,12 @@ CREATE TABLE tagset (
   PRIMARY KEY (name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+
+INSERT INTO tagset (name, full_name, tagset_type, doc_url_local, doc_url_en) VALUES
+('cs_cnc2000',	'Prague positional tagset',	'positional', NULL, NULL),
+('cs_cnc2000_spk',	'Prague positional tagset - spoken corpus variant',	'positional', NULL, NULL),
+('cs_cnc2020',	'Prague positional tagset, version 2020', 'positional',	NULL, NULL);
+
 CREATE TABLE corpus_tagset (
   corpus_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
   tagset_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
@@ -226,6 +232,41 @@ CREATE TABLE corpus_tagset (
   CONSTRAINT corpus_tagset_ibfk_3 FOREIGN KEY (tagset_name) REFERENCES tagset (name) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT corpus_tagset_ibfk_4 FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE tagset_pos_category (
+  tagset_name varchar(50) NOT NULL,
+  position int(11) NOT NULL,
+  pos varchar(64) NOT NULL,
+  tag_search_pattern varchar(32) NOT NULL,
+  PRIMARY KEY (tagset_name, pos),
+  CONSTRAINT tagset_pos_category_fk_tagset_name FOREIGN KEY (tagset_name) REFERENCES tagset (name) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+INSERT INTO tagset_pos_category (tagset_name, position, pos, tag_search_pattern) VALUES
+('cs_cnc2000', 2, 'adjective', 'A.*'),
+('cs_cnc2000', 6, 'adverb', 'D.*'),
+('cs_cnc2000', 8, 'conjunction', 'J.*'),
+('cs_cnc2000', 10, 'interjection', 'I.*'),
+('cs_cnc2000', 1, 'noun', 'N.*'),
+('cs_cnc2000', 4, 'numeral', 'C.*'),
+('cs_cnc2000', 9, 'particle', 'T.*'),
+('cs_cnc2000', 7, 'preposition', 'R.*'),
+('cs_cnc2000', 3, 'pronoun', 'P.*'),
+('cs_cnc2000', 11, 'punctuation', 'Z.*'),
+('cs_cnc2000', 12, 'unknown', 'X.*'),
+('cs_cnc2000', 5, 'verb', 'V.*'),
+('cs_cnc2020', 2, 'adjective', 'A.*'),
+('cs_cnc2020', 6, 'adverb', 'D.*'),
+('cs_cnc2020', 8, 'conjunction', 'J.*'),
+('cs_cnc2020', 10, 'interjection', 'I.*'),
+('cs_cnc2020', 1, 'noun', 'N.*'),
+('cs_cnc2020', 4, 'numeral', 'C.*'),
+('cs_cnc2020', 9, 'particle', 'T.*'),
+('cs_cnc2020', 7, 'preposition', 'R.*'),
+('cs_cnc2020', 3, 'pronoun', 'P.*'),
+('cs_cnc2020', 11, 'punctuation', 'Z.*'),
+('cs_cnc2020', 12, 'unknown', 'X.*'),
+('cs_cnc2020', 5, 'verb', 'V.*');
 
 -- --------------- interval attributes for text type selection -------------
 
@@ -253,32 +294,37 @@ CREATE TABLE kontext_conc_persistence (
 
 CREATE TABLE registry_conf (
   corpus_name varchar(63) NOT NULL,
-  name varchar(255),
-  created varchar(25),
-  updated varchar(25),
-  path varchar(255) NOT NULL,
-  vertical varchar(255),
-  language varchar(255),
-  locale varchar(255),
+  name varchar(255) DEFAULT NULL,
+  created varchar(25) DEFAULT NULL,
+  updated varchar(25) DEFAULT NULL,
+  path varchar(255) DEFAULT NULL,
+  vertical varchar(255) DEFAULT NULL,
+  language varchar(255) DEFAULT NULL,
+  locale varchar(255) DEFAULT NULL,
   rencoding varchar(255) NOT NULL,
   info text,
-  shortref varchar(255),
+  shortref varchar(255) DEFAULT NULL,
+  subcorpattrs text,
   freqttattrs text,
-  tagsetdoc varchar(255),
+  tagsetdoc varchar(255) DEFAULT NULL,
   wposlist text,
-  docstructure varchar(63),
+  docstructure varchar(63) DEFAULT NULL,
   wsdef text,
-  wsattr varchar(63),
+  wsattr varchar(63) DEFAULT NULL,
   wsbase text,
   wsthes text,
   alignstruct text,
   aligndef text,
+  use_sketches tinyint(4) DEFAULT '0',
+  subdir varchar(255) DEFAULT NULL,
   PRIMARY KEY (corpus_name),
+  KEY registry_conf_docstructure_fkey (corpus_name,docstructure),
+  KEY registry_conf_wsattr_id_fkey (corpus_name,wsattr),
   KEY registry_conf_info_idx (info(255)),
-  CONSTRAINT registry_conf_corpus_name_fkey FOREIGN KEY (corpus_name) REFERENCES corpora (name),
-  CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure (corpus_name, name),
+  CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure (corpus_name, name) ON UPDATE CASCADE,
+  CONSTRAINT registry_conf_ibfk_1 FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON UPDATE CASCADE,
   CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_name, wsattr) REFERENCES corpus_posattr (corpus_name, name)
-) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+) ENGINE=InnoDB CHARACTER SET 'utf8' COLLATE 'utf8_general_ci';
 
 -- -------------------- susanne corpus
 

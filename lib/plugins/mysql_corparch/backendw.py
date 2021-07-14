@@ -149,7 +149,7 @@ class WriteBackend(DatabaseWriteBackend):
                 cursor.execute('INSERT INTO corpus_structure (corpus_name, name) VALUES (%s, %s)',
                                (corpus_id, name))
 
-    def save_corpus_config(self, install_json, registry_dir, corp_size):
+    def save_corpus_config(self, install_json, corp_size):
         t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
                                    ).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
@@ -162,15 +162,14 @@ class WriteBackend(DatabaseWriteBackend):
             t1,
             1,
             install_json.web,
-            install_json.tagset,
             install_json.collator_locale,
             install_json.use_safe_font,
             corp_size
         )
         cursor.execute(
             f'INSERT INTO {self._corp_table} (name, group_name, version, created, updated, active, web, '
-            'tagset, collator_locale, use_safe_font, size) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            'collator_locale, use_safe_font, size) '
+            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             vals1)
         # articles
         articles = []
@@ -241,7 +240,7 @@ class WriteBackend(DatabaseWriteBackend):
             'speech_overlap_struct = %s, speech_overlap_attr = %s, '
             'bib_label_struct = %s, bib_label_attr = %s, '
             'bib_id_struct = %s, bib_id_attr = %s, '
-            'text_types_db = %s, featured = %s, '
+            'text_types_db = %s, featured = %s '
             'WHERE name = %s',
             (install_json.sentence_struct, sseg_struct, sseg_attr, spk_struct, spk_attr, spe_struct,
             spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,

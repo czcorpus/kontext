@@ -132,7 +132,7 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_config(self, install_json: InstallJson, registry_dir: str, corp_size: int):
+    def save_corpus_config(self, install_json: InstallJson, corp_size: int):
         pass
 
     @abc.abstractmethod

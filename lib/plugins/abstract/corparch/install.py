@@ -21,6 +21,7 @@ import manatee
 import json
 import re
 import os
+from dataclasses import dataclass, field
 
 
 class _InstallJsonMetadata(object):
@@ -55,7 +56,8 @@ class _InstallJsonReference(object):
         self.other_bibliography = data.get('other_bibliography', None)
 
 
-class InstallJson(object):
+@dataclass
+class InstallJson:
     """
     InstallJson represents a model for
     a corpus installation JSON file used
@@ -63,22 +65,20 @@ class InstallJson(object):
     to KonText. It is basically derived
     from default_corparch XML schema.
     """
-
-    def __init__(self) -> None:
-        self.ident: Optional[str] = None
-        self.sentence_struct: Optional[str] = None
-        self.tagset: Optional[str] = None
-        self.web: Optional[str] = None
-        self.collator_locale: Optional[str] = None
-        self.speech_segment: Optional[str] = None
-        self.speaker_id_attr: Optional[str] = None
-        self.speech_overlap_attr: Optional[str] = None
-        self.speech_overlap_val: Optional[str] = None
-        self.use_safe_font: bool = False
-        self.metadata: _InstallJsonMetadata = _InstallJsonMetadata()
-        self.reference: _InstallJsonReference = _InstallJsonReference()
-        self.token_connect: List[str] = []
-        self.kwic_connect: List[str] = []
+    ident: Optional[str] = None
+    sentence_struct: Optional[str] = None
+    tagset: Optional[str] = None
+    web: Optional[str] = None
+    collator_locale: Optional[str] = None
+    speech_segment: Optional[str] = None
+    speaker_id_attr: Optional[str] = None
+    speech_overlap_attr: Optional[str] = None
+    speech_overlap_val: Optional[str] = None
+    use_safe_font: bool = False
+    metadata: _InstallJsonMetadata = _InstallJsonMetadata()
+    reference: _InstallJsonReference = _InstallJsonReference()
+    token_connect: List[str] = field(default_factory=list)
+    kwic_connect: List[str] = field(default_factory=list)
 
     @staticmethod
     def create_sorting_values(ident: str) -> Tuple[str, int]:
