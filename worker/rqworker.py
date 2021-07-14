@@ -50,7 +50,7 @@ class TaskWrapper:
 
 
 def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
-    return general.conc_register(TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, app)
+    return general.conc_register(TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
 
 
 def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
