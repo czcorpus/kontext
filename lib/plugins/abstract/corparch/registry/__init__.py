@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Optional
 import re
 from functools import cmp_to_key
 
@@ -46,11 +47,8 @@ class SimpleAttr(object):
         self.name = name
         self.value = value
 
-    def __unicode__(self):
-        return '({0} => {1})'.format(self.name, self.value)
-
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return '({0} => {1})'.format(self.name, self.value)
 
 
 class Attribute(object):
@@ -63,11 +61,8 @@ class Attribute(object):
         self.name = name
         self.attrs = attrs if attrs else []
 
-    def __unicode__(self):
-        return 'Attr({0} -> {1})'.format(self.name, ', '.join(x.__unicode__() for x in self.attrs))
-
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return 'Attr({0} -> {1})'.format(self.name, ', '.join(x.__repr__() for x in self.attrs))
 
     @property
     def last_item(self):
@@ -87,12 +82,12 @@ class PosAttribute(Attribute):
         super(PosAttribute, self).__init__(name, attrs)
         self.position = position
 
-    def __unicode__(self):
+    def __repr__(self):
         return 'PosAttr[{0}]({1} -> {2})'.format(self.position, self.name,
                                                  ', '.join(x.__unicode__() for x in self.attrs))
 
 
-class Struct(object):
+class Struct:
     """
     A structure prescription which
     contains either simple config values
@@ -103,11 +98,8 @@ class Struct(object):
         self.name = name
         self.attrs = attrs if attrs else []
 
-    def __unicode__(self):
-        return 'Struct({0} -> {1})'.format(self.name, self.attrs)
-
     def __repr__(self):
-        return self.__unicode__().encode('utf-8')
+        return 'Struct({0} -> {1})'.format(self.name, self.attrs)
 
     @property
     def last_item(self):
@@ -145,6 +137,12 @@ class RegistryConf(object):
     @property
     def simple_items(self):
         return (x for x in self._items if isinstance(x, SimpleAttr))
+
+    def get_simple_attr(self, name) -> Optional[str]:
+        for item in self._items:
+            if isinstance(item, SimpleAttr) and item.name == name:
+                return item.value
+        return None
 
     @property
     def posattrs(self):

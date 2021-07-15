@@ -18,6 +18,7 @@
 
 from typing import List, Any, Tuple, Dict, Optional
 from plugins.abstract.corparch.install import InstallJson
+from plugins.abstract.corparch.registry import RegistryConf
 import abc
 
 
@@ -132,7 +133,16 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_config(self, install_json: InstallJson, corp_size: int):
+    def save_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
+        pass
+
+    @abc.abstractmethod
+    def update_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
+        """
+        Update corpus configuration but do not rewrite existing non-empty values in database.
+        When dealing with attributes and structures, make sure new values are inserted and
+        no more valid items are removed from db.
+        """
         pass
 
     @abc.abstractmethod
