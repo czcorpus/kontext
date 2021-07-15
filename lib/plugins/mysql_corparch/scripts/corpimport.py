@@ -157,4 +157,4 @@ if __name__ == '__main__':
         db.rollback()
         if args.verbose:
             import traceback
-            traceback.print_exc(ex)
+            traceback.print_exc()
