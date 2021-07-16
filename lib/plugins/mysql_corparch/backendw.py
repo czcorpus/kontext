@@ -149,9 +149,9 @@ class WriteBackend(DatabaseWriteBackend):
                 cursor.execute('INSERT INTO corpus_structure (corpus_name, name) VALUES (%s, %s)',
                                (corpus_id, name))
 
-    def save_corpus_config(self, install_json, corp_size):
-        t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
-                                   ).strftime("%Y-%m-%dT%H:%M:%S%z")
+    def save_corpus_config(self, install_json, registry_conf, corp_size):
+        t1 = datetime.datetime.now(
+            tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
 
         vals1 = (
@@ -164,8 +164,7 @@ class WriteBackend(DatabaseWriteBackend):
             install_json.web,
             install_json.collator_locale,
             install_json.use_safe_font,
-            corp_size
-        )
+            corp_size)
         cursor.execute(
             f'INSERT INTO {self._corp_table} (name, group_name, version, created, updated, active, web, '
             'collator_locale, use_safe_font, size) '
@@ -221,6 +220,9 @@ class WriteBackend(DatabaseWriteBackend):
                 'INSERT INTO tckc_corpus (corpus_id, provider, type, display_order, is_kwic_view) '
                 'VALUES (%s, %s, %s, %s, %s)', vals6)
 
+        # reg-based structures, structural attributes
+        # TODO !!!
+
         # Dependent stuctures, structural attributes
         self._create_struct_if_none(install_json.ident, install_json.sentence_struct)
         sseg_struct, sseg_attr = self._create_structattr_if_none(
@@ -245,6 +247,90 @@ class WriteBackend(DatabaseWriteBackend):
             (install_json.sentence_struct, sseg_struct, sseg_attr, spk_struct, spk_attr, spe_struct,
             spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
             int(install_json.metadata.featured), install_json.ident))
+
+    def update_corpus_config(self, install_json, registry_conf, corp_size):
+        t1 = datetime.datetime.now(
+            tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # simple type properties
+        cursor = self._db.cursor()
+        vals1 = (
+            install_json.get_group_name(),
+            install_json.get_version(),
+            t1,
+            1,
+            install_json.web,
+            install_json.collator_locale,
+            install_json.use_safe_font,
+            registry_conf.get_simple_attr('INFO'),
+            corp_size,
+            install_json.ident)
+        cursor.execute(
+            f'UPDATE {self._corp_table} SET '
+            'group_name = IF(group_name IS NULL, %s, group_name), '
+            'version = IF(version IS NULL, %s, version), '
+            'updated = %s, '
+            'active = IF(active IS NULL, %s, active), '
+            'web = IF(web IS NULL, %s, web), '
+            'collator_locale = IF(collator_locale IS NULL, %s, collator_locale), '
+            'use_safe_font = IF(use_safe_font IS NULL, %s, use_safe_font), '
+            'description_cs = IF(description_cs is NULL, %s, description_cs), '
+            'size = %s '
+            'WHERE name = %s',
+            vals1)
+
+        # structural attributes
+        cursor.execute(
+            'SELECT CONCAT(structure_name, ".", name) AS name '
+            'FROM corpus_structattr '
+            'WHERE corpus_name = %s', (install_json.ident,))
+        curr_structattrs = set(row['name'] for row in cursor.fetchall())
+        new_structattrs = {}
+        for new_structattr in registry_conf.structs:
+            for x in new_structattr.attributes:
+                new_structattrs[f'{new_structattr.name}.{x.name}'] = x
+        added_structattrs = set(new_structattrs.keys()) - curr_structattrs
+        # we must wait with adding of structattrs for structures to be ready
+        removed_structattrs = curr_structattrs - set(new_structattrs.keys())
+
+        # clear references to structural attributes to be removed
+        for prop, structattr in self._find_structattr_use(install_json.ident).items():
+            if structattr in removed_structattrs:
+                cursor.execute(
+                    f'UPDATE {self._corp_table} SET {prop} = NULL WHERE name = %s', (install_json.ident,))
+
+        # structures
+        cursor.execute('SELECT name FROM corpus_structure WHERE corpus_name = %s', (install_json.ident,))
+        curr_structs = set(row['name'] for row in cursor.fetchall())
+        new_structs = {}
+        for struct in registry_conf.structs:
+            new_structs[struct.name] = struct
+        for struct in set(new_structs.keys()) - curr_structs:
+            self.save_corpus_structure(
+                install_json.ident, struct, [(a.name, a.value) for a in new_structs[struct].simple_items])
+        removed_structures = curr_structs - set(new_structs.keys())
+
+        # clear references to structures to be removed
+        for prop, struct in self._find_structures_use(install_json.ident).items():
+            if struct in removed_structures:
+                cursor.execute(
+                    f'UPDATE {self._corp_table} SET {prop} = NULL WHERE name = %s', (install_json.ident,))
+
+        # add new structural attributes (depended on structures)
+        for item in added_structattrs:
+            s, a = item.split('.')
+            props = [(x.name, x.value) for x in new_structattrs[item].attrs]
+            self.save_corpus_structattr(install_json.ident, s, a, props)
+
+        for structattr in removed_structattrs:
+            struct, attr = structattr.split('.')
+            cursor.execute(
+                f'DELETE FROM corpus_structattr WHERE name = %s AND structure_name = %s AND corpus_name = %s',
+                (attr, struct, install_json.ident))
+        for struct in removed_structures:
+            cursor.execute(
+                f'DELETE FROM corpus_structure WHERE name = %s AND corpus_name = %s',
+                (struct, install_json.ident))
 
     def save_corpus_article(self, text):
         cursor = self._db.cursor()
@@ -353,8 +439,9 @@ class WriteBackend(DatabaseWriteBackend):
         base_vals = [v for k, v in values if k in STRUCT_COLS_MAP]
         cursor = self._db.cursor()
 
-        cursor.execute('SELECT COUNT(*) AS cnt FROM corpus_structure '
-                       'WHERE corpus_name = %s AND name = %s LIMIT 1', (corpus_id, name))
+        cursor.execute(
+            'SELECT COUNT(*) AS cnt FROM corpus_structure '
+            'WHERE corpus_name = %s AND name = %s LIMIT 1', (corpus_id, name))
         row = cursor.fetchone()
         if row and row['cnt'] == 1:
             if len(base_vals) > 0:
@@ -417,3 +504,25 @@ class WriteBackend(DatabaseWriteBackend):
         cursor.execute(
             'UPDATE corpus_structattr SET freqttattrs_idx = %s '
             'WHERE corpus_name = %s AND structure_name = %s AND name = %s', (idx, corpus_id, struct_name, attr_name))
+
+    def _find_structures_use(self, corp_id: str):
+        cursor = self._db.cursor()
+        cursor.execute(
+            'SELECT sentence_struct, speech_segment_struct, speaker_id_struct, speech_overlap_struct,'
+            f'bib_label_struct, bib_id_struct FROM {self._corp_table} WHERE name = %s', (corp_id,)
+        )
+        row = cursor.fetchone()
+        return {} if row is None else row
+
+    def _find_structattr_use(self, corp_id: str):
+        cursor = self._db.cursor()
+        cursor.execute(
+            'SELECT '
+            'CONCAT(speech_segment_attr, ".", speech_segment_struct) AS speech_segment_attr, '
+            'CONCAT(speaker_id_struct, ".", speaker_id_attr) AS speaker_id_attr, '
+            'CONCAT(speech_overlap_struct, ".", speech_overlap_attr) AS speech_overlap_attr, '
+            'CONCAT(bib_label_struct, ".", bib_label_attr) AS bib_label_attr, '
+            'CONCAT(bib_id_struct, ".", bib_id_attr) AS bib_id_attr '
+            f'FROM {self._corp_table} WHERE name = %s', (corp_id,))
+        row = cursor.fetchone()
+        return {} if row is None else row

@@ -42,18 +42,29 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y
                     level=logging.INFO)
 
 
-def parse_registry(infile: io.StringIO, collator_locale: str, variant: str, backend: WriteBackend,
-                   corp_factory: Callable):
+def parse_registry(
+        infile: io.StringIO, collator_locale: str, variant: str, rbackend: Backend,
+        wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
     logging.getLogger(__name__).info(f'Parsing file {infile.name}')
     corpus_id = os.path.basename(infile.name)
     tokenize = Tokenizer(infile)
     tokens = tokenize()
-    parse = Parser(corpus_id, variant, tokens, backend)
-    items = parse()
+    parse = Parser(corpus_id, variant, tokens, wbackend)
+    registry_conf = parse()
     corp = corp_factory(infile.name)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
-    backend.save_corpus_config(iconf, corp.size())
-    return items.save()
+
+    tst = rbackend.load_corpus(corpus_id)
+    if tst is None:
+        wbackend.save_corpus_config(iconf, registry_conf, corp.size())
+    elif update_if_exists:
+        logging.getLogger(__file__).warning(
+            f'Corpus {corpus_id} already in database - registry-related data will be updated based '
+            'on the provided registry file')
+        wbackend.update_corpus_config(iconf, registry_conf, corp.size())
+    else:
+        raise Exception(f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
+    return registry_conf.save()
 
 
 def remove_comments(infile):
@@ -64,8 +75,9 @@ def remove_comments(infile):
     return ''.join(ans)
 
 
-def process_directory(dir_path: str, variant: Optional[str], backend: WriteBackend, corp_factory: Callable,
-                      collator_locale: str, auto_align):
+def process_directory(
+        dir_path: str, variant: Optional[str], rbackend: Backend, wbackend: WriteBackend,
+        corp_factory: Callable, collator_locale: str, auto_align: bool, update_if_exists: bool):
     if variant:
         dir_path = os.path.join(dir_path, variant)
     aligned = {}
@@ -75,8 +87,9 @@ def process_directory(dir_path: str, variant: Optional[str], backend: WriteBacke
         fpath = os.path.join(dir_path, item)
         if os.path.isfile(fpath):
             with open(fpath) as fr:
-                ans = parse_registry(infile=fr, variant=variant, backend=backend, corp_factory=corp_factory,
-                                     collator_locale=collator_locale)
+                ans = parse_registry(
+                    infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
+                    corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
                 created_rt[ans['corpus_id']] = ans['created_rt']
                 if not auto_align:
                     aligned[ans['corpus_id']] = ans['aligned']
@@ -98,23 +111,32 @@ def process_directory(dir_path: str, variant: Optional[str], backend: WriteBacke
 
     for corpus_id, aligned_ids in list(aligned_ids_map.items()):
         if created_rt.get(corpus_id, False):
-            backend.save_corpus_alignments(corpus_id, aligned_ids)
+            wbackend.save_corpus_alignments(corpus_id, aligned_ids)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Import a Manatee registry file(s)')
-    parser.add_argument('rpath', metavar='REGISTRY_PATH', type=str)
-    parser.add_argument('-c', '--conf', metavar='CONF_PATH', type=str,
-                        help='A custom path to KonText config.xml')
-    parser.add_argument('-o', '--collator-locale', metavar='COLLATOR_LOCALE', type=str, default='en_US',
-                        help='collator locale (e.g. en_US, cs_CZ) applied for one or more processed corpora; default is en_US')
-    parser.add_argument('-a', '--variant', metavar='VARIANT', type=str,
-                        help='A subdirectory containing (restricted) variants of corpora')
-    parser.add_argument('-l', '--auto-align', metavar='AUTO_ALIGN', action='store_const', const=True,
-                        help='Align all the corpus in a directory automatically')
-    parser.add_argument('-v', '--verbose', action='store_const', const=True,
-                        help='Provide more information during processing (especially errors)')
+        description='Import corpora to KonText with mysql_integration_db from Manatee registry file(s)')
+    parser.add_argument(
+        'rpath', metavar='REGISTRY_PATH', type=str)
+    parser.add_argument(
+        '-c', '--conf', metavar='CONF_PATH', type=str,
+        help='A custom path to KonText config.xml')
+    parser.add_argument(
+        '-u', '--update', action='store_true', default=False,
+        help='If set then the script will try to update existing records (instead of reporting an error)')
+    parser.add_argument(
+        '-o', '--collator-locale', metavar='COLLATOR_LOCALE', type=str, default='en_US',
+        help='collator locale (e.g. en_US, cs_CZ) applied for one or more processed corpora; default is en_US')
+    parser.add_argument(
+        '-a', '--variant', metavar='VARIANT', type=str,
+        help='A subdirectory containing (restricted) variants of corpora')
+    parser.add_argument(
+        '-l', '--auto-align', metavar='AUTO_ALIGN', action='store_const', const=True,
+        help='Align all the corpus in a directory automatically')
+    parser.add_argument(
+        '-v', '--verbose', action='store_const', const=True,
+        help='Provide more information during processing (especially errors)')
     args = parser.parse_args()
     import manatee
     import initializer
@@ -128,8 +150,8 @@ if __name__ == '__main__':
     initializer.init_plugin('corparch')
 
     db = plugins.runtime.INTEGRATION_DB.instance
-    ro_backend = Backend(db)
-    backend = WriteBackend(db, ro_backend)
+    rbackend = Backend(db)
+    wbackend = WriteBackend(db, rbackend)
 
     def corp_factory(reg_path):
         return manatee.Corpus(reg_path)
@@ -139,17 +161,20 @@ if __name__ == '__main__':
     db.start_transaction()
     try:
         if os.path.isdir(args.rpath):
-            process_directory(dir_path=args.rpath, variant=None, backend=backend,
-                              auto_align=args.auto_align, collator_locale=args.collator_locale,
-                              corp_factory=corp_factory)
+            process_directory(
+                dir_path=args.rpath, variant=None, rbackend=rbackend, wbackend=wbackend, auto_align=args.auto_align,
+                collator_locale=args.collator_locale, corp_factory=corp_factory, update_if_exists=args.update)
             if args.variant:
-                process_directory(dir_path=args.rpath, variant=args.variant, backend=backend,
-                                  auto_align=args.auto_align, collator_locale=args.collator_locale,
-                                  corp_factory=corp_factory)
+                process_directory(
+                    dir_path=args.rpath, variant=args.variant, wbackend=wbackend, rbackend=rbackend,
+                    auto_align=args.auto_align, collator_locale=args.collator_locale, corp_factory=corp_factory,
+                    update_if_exists=args.update)
         else:
             with open(args.rpath) as fr:
-                parse_registry(infile=fr, backend=backend, variant=args.variant, corp_factory=corp_factory,
-                               collator_locale=args.collator_locale)
+                parse_registry(
+                    infile=fr, wbackend=wbackend, rbackend=rbackend, variant=args.variant,
+                    corp_factory=corp_factory, collator_locale=args.collator_locale,
+                    update_if_exists=args.update)
         db.commit()
     except Exception as ex:
         print(ex)
@@ -157,4 +182,4 @@ if __name__ == '__main__':
         db.rollback()
         if args.verbose:
             import traceback
-            traceback.print_exc(ex)
+            traceback.print_exc()
