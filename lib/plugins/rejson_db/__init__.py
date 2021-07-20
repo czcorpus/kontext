@@ -1,7 +1,6 @@
-# Copyright (c) 2017 Charles University, Faculty of Arts,
+# Copyright (c) 2021 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
-# Copyright (c) 2017 Petr Duda <petrduda@seznam.cz>
+# Copyright (c) 2021 Martin Zimandl <martin.zimandlk@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,7 +26,9 @@ required XML: please see config.rng
 """
 
 from rejson import Path, Client
+from redis import ResponseError
 from plugins.abstract.general_storage import KeyValueStorage
+import logging
 
 
 class RejsonDb(KeyValueStorage):
@@ -42,6 +43,14 @@ class RejsonDb(KeyValueStorage):
         self.redis = Client(host=self._host, port=self._port,
                             db=self._db, decode_responses=True)
         self._scan_chunk_size = 50
+
+        try:
+            self.redis.jsonget('-')
+        except ResponseError as e:
+            if 'unknown command' in str(e):
+                logging.fatal("Rejson DB Plug-in requires Redis with RedisJSON module enabled")
+            else:
+                raise e
 
     def rename(self, key, new_key):
         return self.redis.rename(key, new_key)
