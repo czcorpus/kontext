@@ -26,8 +26,7 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see config.rng
 """
 
-import json
-import rejson
+from rejson import Path, Client
 from plugins.abstract.general_storage import KeyValueStorage
 
 
@@ -40,8 +39,8 @@ class RejsonDb(KeyValueStorage):
         self._host = conf['host']
         self._port = int(conf['port'])
         self._db = int(conf['id'])
-        self.redis = rejson.Client(host=self._host, port=self._port,
-                                   db=self._db, decode_responses=True)
+        self.redis = Client(host=self._host, port=self._port,
+                            db=self._db, decode_responses=True)
         self._scan_chunk_size = 50
 
     def rename(self, key, new_key):
@@ -58,7 +57,7 @@ class RejsonDb(KeyValueStorage):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        return [json.loads(s) for s in self.redis.lrange(key, from_idx, to_idx)]
+        return self.redis.jsonget(key)[from_idx:to_idx]
 
     def list_append(self, key, value):
         """
@@ -68,7 +67,7 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         value -- value to be pushed
         """
-        self.redis.rpush(key, json.dumps(value))
+        self.redis.jsonarrappend(key, Path.rootPath(), value)
 
     def list_pop(self, key):
         """
@@ -77,8 +76,7 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- list access key
         """
-        tmp = self.redis.lpop(key)
-        return json.loads(tmp) if tmp is not None else None
+        return self.redis.jsonarrpop(key)
 
     def list_len(self, key):
         """
@@ -88,7 +86,7 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        return self.redis.llen(key)
+        return self.redis.jsonarrlen(key)
 
     def list_set(self, key, idx, value):
         """
@@ -99,7 +97,7 @@ class RejsonDb(KeyValueStorage):
         idx -- a zero based index where the set should be performed
         value -- a JSON-serializable value to be inserted
         """
-        return self.redis.lset(key, idx, json.dumps(value))
+        return self.redis.jsonarrinsert(key, Path.rootPath(), idx, value)
 
     def list_trim(self, key, keep_left, keep_right):
         """
@@ -111,7 +109,7 @@ class RejsonDb(KeyValueStorage):
         keep_left -- the first value to be kept
         keep_right -- the last value to be kept
         """
-        self.redis.ltrim(key, keep_left, keep_right)
+        self.redis.jsonarrtrim(key, Path.rootPath(), keep_left, keep_right)
 
     def hash_get(self, key, field):
         """
@@ -121,7 +119,7 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        return self.redis.jsonget(key, rejson.Path(f'.{field}'))
+        return self.redis.jsonget(key, Path(f'.{field}'))
 
     def hash_set(self, key, field, value):
         """
@@ -132,7 +130,7 @@ class RejsonDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        self.redis.jsonset(key, rejson.Path(f'.{field}'), value)
+        self.redis.jsonset(key, Path(f'.{field}'), value)
 
     def hash_del(self, key, field):
         """
@@ -142,7 +140,7 @@ class RejsonDb(KeyValueStorage):
         key -- hash item access key
         field -- the field to be deleted
         """
-        self.redis.jsondel(key, rejson.Path(f'.{field}'))
+        self.redis.jsondel(key, Path(f'.{field}'))
 
     def hash_get_all(self, key):
         """
@@ -152,7 +150,7 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        return self.redis.jsonget(key, rejson.Path.rootPath())
+        return self.get(key)
 
     def get(self, key, default=None):
         """
@@ -162,9 +160,9 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        data = self.redis.get(key)
+        data = self.redis.jsonget(key)
         if data:
-            return json.loads(data)
+            return data
         return default
 
     def set(self, key, data):
@@ -175,7 +173,7 @@ class RejsonDb(KeyValueStorage):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        self.redis.set(key, json.dumps(data))
+        self.redis.jsonset(key, Path.rootPath(), data)
 
     def set_ttl(self, key, ttl):
         """
@@ -201,7 +199,7 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- key of the data to be removed
         """
-        self.redis.delete(key)
+        self.redis.jsondel(key)
 
     def exists(self, key):
         """
@@ -223,7 +221,7 @@ class RejsonDb(KeyValueStorage):
         1 if the key was set
         0 if the key was not set
         """
-        return self.redis.setnx(key, value)
+        return self.redis.jsonset(key, Path.rootPath, value, nx=True)
 
     def getset(self, key, value):
         """
@@ -233,14 +231,18 @@ class RejsonDb(KeyValueStorage):
         returns:
         previous key if any or None
         """
-        return self.redis.getset(key, value)
+        data = self.get(key)
+        self.set(key, value)
+        return data
 
     def incr(self, key, amount=1):
         """
         Increments the value of 'key' by 'amount'.  If no key exists,
         the value will be initialized as 'amount'
         """
-        return self.redis.incr(key, amount)
+        if not self.exists(key):
+            self.set(key, 0)
+        return self.redis.jsonnumincrby(key, Path.rootPath(), amount)
 
     def hash_set_map(self, key, mapping):
         """
@@ -248,10 +250,7 @@ class RejsonDb(KeyValueStorage):
         key and value from the 'mapping' dict.
         Before setting, the values are json-serialized
         """
-        new_mapping = {}
-        for name in mapping:
-            new_mapping[name] = json.dumps(mapping[name])
-        return self.redis.hmset(key, new_mapping)
+        return self.set(key, mapping)
 
 
 def create_instance(conf):
