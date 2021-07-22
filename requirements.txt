@@ -11,6 +11,7 @@ lxml >= 3.4
 Markdown >= 2.5
 openpyxl >= 2.1
 redis >= 2.10
+rejson >= 0.5.3
 PyICU >= 1.5
 attrs >= 19.3.0
 babel >= 2.8.0
