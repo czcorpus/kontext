@@ -324,7 +324,7 @@ CREATE TABLE registry_conf (
   CONSTRAINT registry_conf_docstructure_fkey FOREIGN KEY (corpus_name, docstructure) REFERENCES corpus_structure (corpus_name, name) ON UPDATE CASCADE,
   CONSTRAINT registry_conf_ibfk_1 FOREIGN KEY (corpus_name) REFERENCES kontext_corpus (name) ON UPDATE CASCADE,
   CONSTRAINT registry_conf_wsattr_id_fkey FOREIGN KEY (corpus_name, wsattr) REFERENCES corpus_posattr (corpus_name, name)
-) ENGINE=InnoDB CHARACTER SET 'utf8' COLLATE 'utf8_general_ci';
+) ENGINE=InnoDB CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
 
 -- -------------------- susanne corpus
 
