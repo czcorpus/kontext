@@ -66,7 +66,12 @@ class RejsonDb(KeyValueStorage):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        return self.redis.jsonget(key)[from_idx:to_idx]
+        data = self.get(key)
+        if data is None:
+            raise RuntimeError(f'Object does not exist: {key}')
+        elif isinstance(data, list):
+            return data[from_idx:to_idx]
+        raise TypeError('Object is not a list')
 
     def list_append(self, key, value):
         """
@@ -128,7 +133,7 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        return self.redis.jsonget(key, Path(f'.{field}'))
+        return self.redis.jsonget(key, Path(f'["{field}"]'))
 
     def hash_set(self, key, field, value):
         """
@@ -139,7 +144,9 @@ class RejsonDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        self.redis.jsonset(key, Path(f'.{field}'), value)
+        if not self.exists(key):
+            self.set(key, {})
+        self.redis.jsonset(key, Path(f'["{field}"]'), value)
 
     def hash_del(self, key, field):
         """
@@ -149,7 +156,7 @@ class RejsonDb(KeyValueStorage):
         key -- hash item access key
         field -- the field to be deleted
         """
-        self.redis.jsondel(key, Path(f'.{field}'))
+        self.redis.jsondel(key, Path(f'["{field}"]'))
 
     def hash_get_all(self, key):
         """
@@ -170,9 +177,9 @@ class RejsonDb(KeyValueStorage):
         default -- a value to be returned in case there is no such key
         """
         data = self.redis.jsonget(key)
-        if data:
-            return data
-        return default
+        if data is None:
+            return default
+        return data
 
     def set(self, key, data):
         """
@@ -230,7 +237,7 @@ class RejsonDb(KeyValueStorage):
         1 if the key was set
         0 if the key was not set
         """
-        return self.redis.jsonset(key, Path.rootPath, value, nx=True)
+        return self.redis.jsonset(key, Path.rootPath(), value, nx=True)
 
     def getset(self, key, value):
         """
