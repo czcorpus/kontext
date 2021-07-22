@@ -135,8 +135,8 @@ CREATE TABLE kontext_tckc_corpus (
 -- ------------------------- default attributes for single conc. query ---------------------
 
 CREATE TABLE kontext_simple_query_default_attrs (
-  corpus_name varchar(63) CHARACTER SET utf8 NOT NULL,
-  pos_attr varchar(63) CHARACTER SET utf8 NOT NULL,
+  corpus_name varchar(63) NOT NULL,
+  pos_attr varchar(63) NOT NULL,
   PRIMARY KEY (corpus_name, pos_attr),
   CONSTRAINT kontext_simple_query_attr_seq_corpus_fkey FOREIGN KEY (corpus_name, pos_attr) REFERENCES corpus_posattr (corpus_name, name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -218,10 +218,10 @@ INSERT INTO tagset (name, full_name, tagset_type, doc_url_local, doc_url_en) VAL
 ('cs_cnc2020',	'Prague positional tagset, version 2020', 'positional',	NULL, NULL);
 
 CREATE TABLE corpus_tagset (
-  corpus_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
-  tagset_name varchar(63) CHARACTER SET utf8 DEFAULT NULL,
-  pos_attr varchar(63) CHARACTER SET utf8 DEFAULT NULL,
-  feat_attr varchar(63) CHARACTER SET utf8 NOT NULL,
+  corpus_name varchar(63) DEFAULT NULL,
+  tagset_name varchar(63) DEFAULT NULL,
+  pos_attr varchar(63) DEFAULT NULL,
+  feat_attr varchar(63) NOT NULL,
   kontext_widget_enabled tinyint(4) NOT NULL DEFAULT 0,
   KEY corpus_tagset_ibfk_1 (corpus_name,feat_attr),
   KEY corpus_tagset_ibfk_2 (corpus_name,pos_attr),
