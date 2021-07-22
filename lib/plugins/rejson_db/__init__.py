@@ -66,10 +66,8 @@ class RejsonDb(KeyValueStorage):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        data = self.get(key)
-        if data is None:
-            raise RuntimeError(f'Object does not exist: {key}')
-        elif isinstance(data, list):
+        data = self.get(key, [])
+        if isinstance(data, list):
             return data[from_idx:to_idx]
         raise TypeError('Object is not a list')
 
@@ -133,6 +131,8 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
+        if self.redis.jsontype(key, Path(f'["{field}"]')) is None:
+            return None
         return self.redis.jsonget(key, Path(f'["{field}"]'))
 
     def hash_set(self, key, field, value):
