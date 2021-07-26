@@ -79,6 +79,8 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         value -- value to be pushed
         """
+        if not self.exists(key):
+            self.set(key, [])
         self.redis.jsonarrappend(key, Path.rootPath(), value)
 
     def list_pop(self, key):
