@@ -241,7 +241,7 @@ means names matching respective Manatee registry file names for your corpora).
 Once the list of new users is ready, run:
 
 ```bash
-python lib/plugins/default_auth/scripts/install.py /path/to/your/users.json
+python3 lib/plugins/default_auth/scripts/install.py /path/to/your/users.json
 ```
 
 ## Managing corpora
@@ -293,7 +293,7 @@ After a configuration change, it is always a good idea to validate your setup:
 python3 scripts/validate_setup.py conf/config.xml
 ```
 
-The script tests not just XML configuration validity but also actual existence 
+The script tests not just XML configuration validity but also actual existence
 of essential files/dirs and services.
 
 ### Check application logs

@@ -53,8 +53,8 @@ def replace_string_in_file(path: str, old: str, new: str):
 
 
 def generate_random_password() -> Tuple[str, str]:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/default_auth'))
-    from plugins.abstract.auth.hash import mk_pwd_hash_default
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lib/plugins/abstract/auth'))
+    from hash import mk_pwd_hash_default
 
     password = ''.join(random.choice(string.ascii_letters + string.digits) for n in range(8))
     return password, mk_pwd_hash_default(password)

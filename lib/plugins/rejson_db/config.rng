@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <element name="db">
+            <element name="module">
+                <value>redis_json_db</value>
+            </element>
+            <element name="host">
+                <text />
+            </element>
+            <element name="port">
+                <data type="integer" />
+            </element>
+             <element name="id">
+                 <data type="integer" />
+             </element>
+        </element>
+    </start>
+</grammar>
