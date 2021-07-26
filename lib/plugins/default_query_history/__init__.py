@@ -28,7 +28,6 @@ from plugins import inject
 import plugins
 from manatee import Corpus
 from corplib.fallback import EmptyCorpus
-import strings
 
 
 class CorpusCache:
