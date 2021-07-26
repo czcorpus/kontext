@@ -100,6 +100,8 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
+        if not self.exists(key):
+            return 0
         return self.redis.jsonarrlen(key)
 
     def list_set(self, key, idx, value):
@@ -135,7 +137,7 @@ class RejsonDb(KeyValueStorage):
         """
         if self.redis.jsontype(key, Path(f'["{field}"]')) is None:
             return None
-        return self.redis.jsonget(key, Path(f'["{field}"]'))
+        return self.redis.jsonget(key, Path(f'["{field}"]'), no_escape=True)
 
     def hash_set(self, key, field, value):
         """
@@ -178,7 +180,7 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        data = self.redis.jsonget(key)
+        data = self.redis.jsonget(key, Path.rootPath(), no_escape=True)
         if data is None:
             return default
         return data
