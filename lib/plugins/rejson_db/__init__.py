@@ -66,7 +66,7 @@ class RejsonDb(KeyValueStorage):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        data = self.get(key)
+        data = self.get(key, [])
         if isinstance(data, list):
             if to_idx == -1:
                 return data[from_idx:]
