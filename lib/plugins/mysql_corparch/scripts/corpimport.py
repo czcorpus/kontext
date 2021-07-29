@@ -137,6 +137,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '-v', '--verbose', action='store_const', const=True,
         help='Provide more information during processing (especially errors)')
+    parser.add_argument(
+        '-k', '--ucnk', action='store_const', const=True,
+        help='Customize the script for use with UCNK (CNC) database')
+
     args = parser.parse_args()
     import manatee
     import initializer
@@ -150,8 +154,18 @@ if __name__ == '__main__':
     initializer.init_plugin('corparch')
 
     db = plugins.runtime.INTEGRATION_DB.instance
-    rbackend = Backend(db)
-    wbackend = WriteBackend(db, rbackend)
+    if args.ucnk:
+        rbackend = Backend(
+            db, user_table='user', corp_table='corpora', group_acc_table='relation',
+            user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpora',
+            group_acc_group_attr='corplist')
+        wbackend = WriteBackend(
+            db, rbackend, user_table='user', corp_table='corpora', group_acc_table='relation',
+            user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpora',
+            group_acc_group_attr='corplist')
+    else:
+        rbackend = Backend(db)
+        wbackend = WriteBackend(db, rbackend)
 
     def corp_factory(reg_path):
         return manatee.Corpus(reg_path)

@@ -247,7 +247,7 @@ class RegistryConf(object):
                     corpus_id=self._corpus_id, name=struct.name, values=[
                         (x.name, x.value) for x in struct.simple_items])
 
-                for structattr in struct.attrs:
+                for structattr in struct.attributes:
                     self._backend.save_corpus_structattr(self._corpus_id, struct.name, structattr.name,
                                                          [(x.name, x.value) for x in structattr.attrs])
 
