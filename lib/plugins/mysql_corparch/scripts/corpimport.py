@@ -86,14 +86,17 @@ def process_directory(
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
         if os.path.isfile(fpath):
-            with open(fpath) as fr:
-                ans = parse_registry(
-                    infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
-                    corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
-                created_rt[ans['corpus_id']] = ans['created_rt']
-                if not auto_align:
-                    aligned[ans['corpus_id']] = ans['aligned']
-                id_map[ans['corpus_id']] = ans['corpus_id']
+            try:
+                with open(fpath) as fr:
+                    ans = parse_registry(
+                        infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
+                        corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
+                    created_rt[ans['corpus_id']] = ans['created_rt']
+                    if not auto_align:
+                        aligned[ans['corpus_id']] = ans['aligned']
+                    id_map[ans['corpus_id']] = ans['corpus_id']
+            except Exception as ex:
+                print(f'Failed to process corpus {item} due to: {ex}')
 
     aligned_ids_map = defaultdict(lambda: [])
     if auto_align:
