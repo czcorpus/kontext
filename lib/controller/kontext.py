@@ -560,9 +560,10 @@ class Kontext(Controller):
         super(Kontext, self).post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
 
         with plugins.runtime.ACTION_LOG as alog:
-            alog.log_action(self._request, action_metadata.get('action_log_mapper'),
-                            f'{self.get_mapping_url_prefix()[1:]}{methodname}',
-                            err_desc=err_desc, proc_time=self._proc_time)
+            alog.log_action(
+                self._request, self.args, action_metadata.get('action_log_mapper'),
+                f'{self.get_mapping_url_prefix()[1:]}{methodname}',
+                err_desc=err_desc, proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.post_dispatch(self._plugin_ctx, methodname, action_metadata)
 

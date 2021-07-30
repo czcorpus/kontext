@@ -45,14 +45,16 @@ class DefaultActionLog(AbstractActionLog):
         else:
             return e[0].__class__.__name__, str(e[0]), e[1]
 
-    def collect_args(self, request, action_log_mapper, full_action_name, err_desc, proc_time):
-        log_data = {}
+    def collect_args(self, request, args_map, action_log_mapper, full_action_name, err_desc, proc_time):
+        log_data = {'args': {}}
         if action_log_mapper:
             try:
                 log_data['args'] = action_log_mapper(request)
             except Exception as ex:
-                log_data['args'] = {}
                 logging.getLogger(__name__).error('Failed to map request info to log: {}'.format(ex))
+        corpora = log_data['args'].get('corpora', [])
+        if len(corpora) == 0:
+            log_data['args']['corpora'] = [args_map.corpname] + args_map.align
         if self.is_error(err_desc):
             err_name, err_msg, err_anchor = self.expand_error_desc(err_desc)
             log_data['error'] = dict(name=err_name, message=err_msg, anchor=err_anchor)
