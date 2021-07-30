@@ -15,6 +15,7 @@
 from typing import Callable, Any, Tuple, Optional, Dict
 from werkzeug import Request
 import abc
+from argmapping import Args
 
 
 class AbstractActionLog:
@@ -26,13 +27,16 @@ class AbstractActionLog:
     a dict (with possibly nested values).
     """
 
-    def log_action(self, request: Request, action_log_mapper: Callable[[None], Any], full_action_name: str,
-                   err_desc: Optional[Tuple[Exception, Optional[str]]], proc_time: Optional[float]) -> str:
-        self.write_action(self.collect_args(request, action_log_mapper, full_action_name, err_desc, proc_time))
+    def log_action(
+            self, request: Request, args_map: Args, action_log_mapper: Callable[[None], Any],
+            full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]],
+            proc_time: Optional[float]) -> str:
+        self.write_action(
+            self.collect_args(request, args_map, action_log_mapper, full_action_name, err_desc, proc_time))
 
     @abc.abstractmethod
-    def collect_args(self, request: Request, action_log_mapper: Callable[[None], Any], full_action_name: str,
-                     err_desc: Optional[Tuple[Exception, Optional[str]]],
+    def collect_args(self, request: Request, args_map: Args, action_log_mapper: Callable[[None], Any],
+                     full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]],
                      proc_time: Optional[float]) -> Dict[str, Any]:
         """
         A custom implementation transforming passed arguments into a dictionary with possibly nested values.
@@ -41,6 +45,7 @@ class AbstractActionLog:
 
         params:
             request -- a HTTP request leading to the logged action
+            args_map -- normalized (mostly) concordance-related arg mapping
             action_log_mapper -- a function which fetches some arguments out of a query, this can be
                                  used for more detailed and action-specific logging
             full_action_name -- full name of the called method - i.e. including controller prefix separated
