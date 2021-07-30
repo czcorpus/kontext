@@ -191,11 +191,8 @@ class CorpusListItem(DictLike):
         self.found_in = []
         self.keywords = [] if keywords is None else keywords
 
-    def __unicode__(self):
-        return 'CorpusListItem({0})'.format(self.__dict__)
-
     def __repr__(self):
-        return self.__unicode__()
+        return 'CorpusListItem({0})'.format(self.__dict__)
 
 
 class CorpusInfo(DictLike):

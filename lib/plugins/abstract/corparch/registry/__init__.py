@@ -84,7 +84,7 @@ class PosAttribute(Attribute):
 
     def __repr__(self):
         return 'PosAttr[{0}]({1} -> {2})'.format(self.position, self.name,
-                                                 ', '.join(x.__unicode__() for x in self.attrs))
+                                                 ', '.join(x.__repr__() for x in self.attrs))
 
 
 class Struct:
