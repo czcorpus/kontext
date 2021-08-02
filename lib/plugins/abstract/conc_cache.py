@@ -31,6 +31,8 @@ import logging
 import abc
 from typing import Dict, Any, Optional, Union, Tuple, List
 from corplib.corpus import KCorpus
+from dataclasses import dataclass, field, asdict
+
 
 QueryType = Tuple[str, ...]
 
@@ -43,26 +45,22 @@ class UnrecognizedSerializedException(ConcCacheStatusException):
     pass
 
 
+@dataclass
 class ConcCacheStatus(object):
 
-    def __init__(self, task_id: Optional[str] = None, pid: Optional[int] = None, created: Optional[int] = None,
-                 last_upd: Optional[int] = None, concsize: Optional[int] = 0, fullsize: Optional[int] = 0,
-                 relconcsize: Optional[int] = 0, arf: Optional[float] = 0,
-                 error: Union[str, Exception, None] = None, finished: Optional[bool] = False,
-                 q0hash: str = None, cachefile: str = None, readable: bool = False) -> None:
-        self.task_id: Optional[str] = task_id
-        self.pid = pid if pid else os.getpid()
-        self.created = created if created else int(time.time())
-        self.last_upd = last_upd if last_upd else self.created
-        self.concsize = concsize
-        self.fullsize = fullsize
-        self.relconcsize = relconcsize
-        self.arf = arf
-        self.error = ConcCacheStatus.normalize_error(error)
-        self.finished = finished
-        self.q0hash = q0hash
-        self.cachefile = cachefile
-        self.readable = readable
+    task_id: Optional[str] = field(default=None)
+    concsize: int = field(default=0)
+    fullsize: int = field(default=-0)
+    relconcsize: float = field(default=0)
+    arf: float = field(default=0)
+    error: Union[Exception, str, None] = field(default=None)
+    finished: bool = field(default=False)
+    q0hash: Optional[str] = field(default=None)
+    cachefile: Optional[str] = field(default=None)
+    readable: bool = field(default=False)
+    pid: int = field(default_factory=lambda: os.getpid())
+    created: int = field(default_factory=lambda: int(time.time()))
+    last_upd: int = field(default_factory=lambda: int(time.time()))
 
     @staticmethod
     def from_storage(
@@ -76,9 +74,13 @@ class ConcCacheStatus(object):
             relconcsize=relconcsize, arf=arf, error=ConcCacheStatus.deserialize_error(error),
             finished=finished, q0hash=q0hash, cachefile=cachefile, readable=readable)
 
+    @property
+    def normalized_error(self):
+        return ConcCacheStatus.normalize_error(self.error)
+
     def to_dict(self) -> Dict[str, Any]:
-        ans = dict(self.__dict__)
-        ans['error'] = ConcCacheStatus.serialize_error(self.error)
+        ans = asdict(self)
+        ans['error'] = ConcCacheStatus.serialize_error(self.normalized_error)
         return ans
 
     def check_for_errors(self, time_limit: int):
@@ -87,7 +89,7 @@ class ConcCacheStatus(object):
         during calc. process - typically a timeout error. It also tries
         to keep the status consistent (e.g. self.error => self.finished == True)
         """
-        if self.error is not None and not self.finished:
+        if self.normalized_error is not None and not self.finished:
             logging.getLogger(__name__).warning(
                 'ConcCacheStatus.test_error - self.error set but self.finished is False - fixing')
         t1 = time.time()
@@ -101,14 +103,18 @@ class ConcCacheStatus(object):
         return self.finished or (self.readable and self.concsize >= minsize)
 
     def update(self, **kw) -> 'ConcCacheStatus':
-        for k, v in kw.items():
-            if hasattr(self, k):
-                if k == 'error':
-                    self.error = ConcCacheStatus.normalize_error(v)
-                else:
-                    setattr(self, k, str(v))
-            else:
-                raise AssertionError(f'Unknown {self.__class__.__name__}  attribute: {k}')
+        self.task_id = kw.get('task_id', self.task_id)
+        self.concsize = kw.get('concsize', self.concsize)
+        self.fullsize = kw.get('fullsize', self.fullsize)
+        self.relconcsize = kw.get('relconcsize', self.relconcsize)
+        self.arf = kw.get('arf', self.arf)
+        self.error = kw.get('error', self.error)
+        self.finished = kw.get('finished', self.finished)
+        self.q0hash = kw.get('q0hash', self.q0hash)
+        self.cachefile = kw.get('cachefile', self.cachefile)
+        self.readable = kw.get('readable', self.readable)
+        self.pid = kw.get('pid', self.pid)
+        self.created = kw.get('created', self.created)
         self.last_upd = int(time.time())
         return self
 
@@ -136,7 +142,7 @@ class ConcCacheStatus(object):
         elif type(err) is str:
             return 'Exception', err
         else:
-            m = err.__module__
+            m = err.__class__.__module__
             if m == 'builtins':
                 return err.__class__.__qualname__, str(err)
             else:
