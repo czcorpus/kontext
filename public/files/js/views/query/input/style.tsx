@@ -147,26 +147,6 @@ export const AdvancedFormFieldset = styled.section`
             letter-spacing: 0.06em;
         }
 
-        .pos-filter {
-            margin-top: 3em;
-
-            .pos-list {
-                ul {
-                    padding-left: 0em;
-                    list-style-type: none;
-
-                    li {
-                        margin: 0.4em 0;
-                    }
-                }
-            }
-
-            .ToggleSwitch {
-                font-size: 1.3em;
-                margin-right: 0.4em;
-            }
-        }
-
         dl.form {
             margin-bottom: 2.5em;
 
