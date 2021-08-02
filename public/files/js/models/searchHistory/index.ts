@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { tap, concatMap, map, timestamp } from 'rxjs/operators';
+import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
