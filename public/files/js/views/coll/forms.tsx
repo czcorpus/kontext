@@ -41,7 +41,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <AttrSelection /> --------------------------------------------
 
-    const AttrSelection:React.SFC<{
+    const AttrSelection:React.FC<{
         cattr:string;
         attrList:Array<Kontext.AttrItem>;
 
@@ -67,7 +67,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <WindowSpanInput /> --------------------------------------------
 
-    const WindowSpanInput:React.SFC<{
+    const WindowSpanInput:React.FC<{
         cfromw:Kontext.FormValue<string>;
         ctow:Kontext.FormValue<string>;
 
@@ -108,7 +108,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <MinCollFreqCorpInput /> --------------------------------------------
 
-    const MinCollFreqCorpInput:React.SFC<{
+    const MinCollFreqCorpInput:React.FC<{
         cminfreq:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -132,7 +132,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // -------------------- <MinCollFreqSpanInput /> --------------------------------------------
 
-    const MinCollFreqSpanInput:React.SFC<{
+    const MinCollFreqSpanInput:React.FC<{
         cminbgr:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -155,15 +155,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     };
 
-    //
+    // -------------------- <CollMetricsTermTh /> -----------------------------------
 
-    const CollMetricsTermTh:React.SFC<{
+    const CollMetricsTermTh:React.FC<{
         value:string;
         code:string;
 
     }> = (props) => {
         const term = he.getHelpLink('term_coll_' + props.code);
-        return <th className="row-hd">
+        return <S.CollMetricsTermTh>
             {
                 term ?
                 <layoutViews.Abbreviation
@@ -171,13 +171,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     desc={he.translate(`coll__form_help_term_${props.code}`)} /> :
                 props.value
             }
-            </th>;
+            </S.CollMetricsTermTh>;
     }
 
 
-    // -------------------- <CollMetricsSelection /> --------------------------------------------
+    // -------------------- <CollMetricsSelection /> -----------------------------------
 
-    const CollMetricsSelection:React.SFC<{
+    const CollMetricsSelection:React.FC<{
         availCbgrfns:Array<[string, string]>;
         cbgrfns:{[key:string]:true};
         csortfn:string;
