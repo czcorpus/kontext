@@ -71,11 +71,6 @@ export const CollMetricsSelection = styled.table`
         text-align: center;
     }
 
-    th.row-hd {
-        text-align: left;
-        font-weight: normal;
-    }
-
     td.select-whole-col {
         padding-top: 0.4em;
         vertical-align: middle;
@@ -83,5 +78,16 @@ export const CollMetricsSelection = styled.table`
         input[type="checkbox"] {
             vertical-align: middle;
         }
+    }
+`;
+
+// ------------------- <CollMetricsTermTh /> ----------------------
+
+export const CollMetricsTermTh = styled.th`
+
+    && {
+        padding: 0.1em 0.3em;
+        text-align: left;
+        font-weight: 400;
     }
 `;
