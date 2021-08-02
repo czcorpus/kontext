@@ -25,7 +25,6 @@ import { highlightSyntaxStatic, ParsedAttr } from '../query/cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { ConnectableObservable } from 'rxjs';
 
 
 /**
