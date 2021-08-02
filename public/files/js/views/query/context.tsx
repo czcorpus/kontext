@@ -30,6 +30,7 @@ import { QueryContextModel, QueryContextModelState } from '../../models/query/co
 import { Actions, ActionName } from '../../models/query/actions';
 import { CtxLemwordType } from '../../models/query/common';
 import { List, tuple } from 'cnc-tskit';
+import * as S from './style';
 
 
 export interface SpecifyContextFormProps {
@@ -172,7 +173,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <div className="pos-filter">
+            <S.PoSFilter>
                 <h3>
                     {he.translate('query__pos_filter_hd')}
                 </h3>
@@ -194,9 +195,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <ul>
                                 {List.map((item, i) =>
                                     <li key={i}>
-                                        <layoutModels.ToggleSwitch id={item.n}
+                                        <input type="checkbox" id={item.n}
                                                 checked={props.fc_pos.includes(item.n)}
-                                                onChange={checked => handleSelectChange(checked, item.n)} />
+                                                onChange={() => handleSelectChange(!props.fc_pos.includes(item.n), item.n)} />
                                         <label htmlFor={item.n}>{item.n}</label>
                                     </li>,
                                     props.wPoSList
@@ -208,7 +209,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </div>
                     </dd>
                 </dl>
-            </div>
+            </S.PoSFilter>
         );
     };
 

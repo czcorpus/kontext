@@ -64,7 +64,6 @@ export const SaveHintParagraph = styled.p`
     }
 `;
 
-
 // ---------------- <PersistentConcordanceForm /> -----------------------
 
 export const PersistentConcordanceForm = styled.form`
@@ -80,6 +79,37 @@ export const PersistentConcordanceForm = styled.form`
 
     input.archived {
         color: ${theme.colorDefaultText};
+    }
+
+`;
+
+// ---------------- <PoSFilter /> ----------------------------------------
+
+export const PoSFilter = styled.div`
+
+    margin-top: 3em;
+
+    .pos-list {
+        ul {
+            padding-left: 0em;
+            list-style-type: none;
+
+            li {
+                margin: 0.4em 0;
+
+                display: flex;
+                align-items: center;
+
+                input[type=checkbox] {
+                    margin-right: 0.5em;
+                }
+            }
+        }
+    }
+
+    .ToggleSwitch {
+        font-size: 1.3em;
+        margin-right: 0.4em;
     }
 
 `;
