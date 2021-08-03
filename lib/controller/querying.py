@@ -90,7 +90,9 @@ class Querying(Kontext):
         use_history = True
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             data.update(lastop_form=self._curr_conc_form_args.serialize())
-            if isinstance(self._curr_conc_form_args, QueryFormArgs):
+            if (
+                    isinstance(self._curr_conc_form_args, QueryFormArgs) or
+                    isinstance(self._curr_conc_form_args, FilterFormArgs)):
                 use_history = not self._curr_conc_form_args.no_query_history
         return use_history, data
 

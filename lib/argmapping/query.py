@@ -260,6 +260,7 @@ class FilterFormArgs(ConcFormArgs):
         self.has_lemma: bool = False
         self.tagsets: List[TagsetInfo] = []
         self.within: bool = False
+        self.no_query_history = False
         self._add_corpus_metadata()
 
     def update_by_user_query(self, data):
@@ -276,6 +277,7 @@ class FilterFormArgs(ConcFormArgs):
         self.within = data['within']
         self.default_attr = data['default_attr']
         self.use_regexp = data.get('use_regexp', False)
+        self.no_query_history = data.get('no_query_history', False)
 
     def _add_corpus_metadata(self):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:

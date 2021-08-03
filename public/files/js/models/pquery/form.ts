@@ -729,7 +729,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             inclkwic: 1,
             within: false,
             format: 'json',
-            q: '~' + concId
+            q: '~' + concId,
+            no_query_history: true
         }
     }
 

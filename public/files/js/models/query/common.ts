@@ -108,6 +108,7 @@ export interface FilterServerArgs extends ConcServerArgs {
     within:boolean;
     default_attr:string|Array<string>;
     use_regexp:boolean;
+    no_query_history?:boolean;
     type:'filterQueryArgs';
 }
 
