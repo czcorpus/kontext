@@ -708,7 +708,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             tap(() => {
                 this.pluginApi.showMessage(
                     'info',
-                    this.pluginApi.translate('defaultCorparch__item_removed_from_fav')
+                    this.pluginApi.translate('lindatCorparch2__item_removed_from_fav')
                 )
             }),
             map(_ => true)
@@ -881,7 +881,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
     ):Observable<FavitemsList> {
 
         const message = showMessage ?
-                this.pluginApi.translate('defaultCorparch__item_added_to_fav') :
+                this.pluginApi.translate('lindatCorparch2__item_added_to_fav') :
                 null;
         const newItem = this.getFullCorpusSelection(state);
         return this.reloadItems(this.pluginApi.ajax$(
