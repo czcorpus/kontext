@@ -87,9 +87,9 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         return (
             <tr>
-                <th>{he.translate('defaultCorparch__corpus_name')}</th>
-                <th>{he.translate('defaultCorparch__size_in_positions')}</th>
-                <th>{he.translate('defaultCorparch__corpus_labels')}</th>
+                <th>{he.translate('lindatCorparch2__corpus_name')}</th>
+                <th>{he.translate('lindatCorparch2__size_in_positions')}</th>
+                <th>{he.translate('lindatCorparch2__corpus_labels')}</th>
                 <th></th>
                 <th></th>
             </tr>
@@ -195,7 +195,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 <td>
                     <p className="desc" style={{display: 'none'}}></p>
                     <a className="detail" onClick={handleDetailClick.bind(null, props.row.id)}>
-                        {he.translate('defaultCorparch__corpus_details')}
+                        {he.translate('lindatCorparch2__corpus_details')}
                     </a>
                 </td>
             </tr>
@@ -571,20 +571,20 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             return (
                 <div className="advanced-filter">
                     <layoutViews.ExpandButton isExpanded={this.state.expanded} onClick={this._handleLegendClick}/>
-                    <a onClick={this._handleLegendClick}>{he.translate('defaultCorparch__advanced_filters')}</a>
+                    <a onClick={this._handleLegendClick}>{he.translate('lindatCorparch2__advanced_filters')}</a>
                     {
                         this.state.expanded ?
                         <fieldset>
-                            <span>{he.translate('defaultCorparch__size_from')}: </span>
+                            <span>{he.translate('lindatCorparch2__size_from')}: </span>
                             <MinSizeInput value={this.props.filters.minSize}  />
-                            <span className="inline-label">{he.translate('defaultCorparch__size_to')}: </span>
+                            <span className="inline-label">{he.translate('lindatCorparch2__size_to')}: </span>
                             <MaxSizeInput value={this.props.filters.maxSize}  />
                             <div className="hint">
-                                {'(' + he.translate('defaultCorparch__you_can_use_suffixes_size') + ')'}
+                                {'(' + he.translate('lindatCorparch2__you_can_use_suffixes_size') + ')'}
                             </div>
                             <p>
                                 <span>
-                                {he.translate('defaultCorparch__corpus_name_input_label')}: </span>
+                                {he.translate('lindatCorparch2__corpus_name_input_label')}: </span>
                                 <NameSearchInput value={this.props.filters.name} />
                             </p>
                             <p>
@@ -623,7 +623,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                     </div>
                     <KeywordsField
                         keywords={this.props.keywords}
-                        label={he.translate('defaultCorparch__keywords_field_label')} />
+                        label={he.translate('lindatCorparch2__keywords_field_label')} />
                     <FilterInputFieldset
                         filters={this.props.filters} />
                 </section>
