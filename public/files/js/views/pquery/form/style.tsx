@@ -22,6 +22,19 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+// ---------------- <PqueryInputTypeSpan /> ---------------
+
+export const PqueryInputTypeSpan = styled.span`
+    display: inline-block;
+    font-weight: bold;
+    font-family: ${theme.monospaceFontFamily};
+    padding: 0.1em 0.2em;
+    margin-right: 0.3em;
+    margin-left: 0.1em;
+    background-color: ${theme.colorLogoBlue};
+    color: #FFFFFF;
+    border-radius: ${theme.inputBorderRadius};
+`;
 
 // ---------------- <PqueryFormSection /> -------------
 
@@ -141,6 +154,8 @@ export const StylelessFieldset = styled(BorderlessFieldset)`
 // ---------------- <ExpressionRoleFieldset /> -------------
 
 export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
+    display: flex;
+    align-items: center;
     margin: 2px 0px;
 
     input {

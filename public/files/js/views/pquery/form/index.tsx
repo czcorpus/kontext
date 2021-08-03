@@ -56,8 +56,26 @@ export interface PqueryViews {
 }
 
 export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):PqueryViews {
+
     const layoutViews = he.getLayoutViews();
     const cqlEditorViews = cqlEditoInit(dispatcher, he, model);
+
+    // ------------------- <PqueryInputTypeSymbol /> --------------------------------
+
+    const PqueryInputTypeSymbol:React.FC<{
+        roleType:PqueryExpressionRoles;
+    }> = (props) => {
+        switch (props.roleType) {
+            case 'specification':
+                return <S.PqueryInputTypeSpan title={he.translate('pquery__expression_role_specification')}>{'{\u2026}'}</S.PqueryInputTypeSpan>;
+            case 'subset':
+                return <S.PqueryInputTypeSpan title={he.translate('pquery__expression_role_never')}>{'!{\u2026}'}</S.PqueryInputTypeSpan>;
+            case 'superset':
+                return <S.PqueryInputTypeSpan title={he.translate('pquery__expression_role_always')}>{'?{\u2026}'}</S.PqueryInputTypeSpan>;
+            default:
+                return <span>??</span>;
+        }
+    };
 
     // ------------------- <AdvancedFormFieldsetDesc /> -----------------------------
 
@@ -179,6 +197,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <QS.QueryArea>
                 <S.QueryRowDiv>
                     <S.ExpressionRoleFieldset>
+                        <PqueryInputTypeSymbol roleType={props.expressionRole.type} />
                         <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
                             <option value="specification">{he.translate('pquery__expression_role_specification')}</option>
                             <option value="subset">{he.translate('pquery__expression_role_never')}</option>
