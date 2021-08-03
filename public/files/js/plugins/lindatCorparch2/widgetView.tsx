@@ -67,11 +67,11 @@ export function init({
             <a onClick={handleRemoveClick}>
                 {props.trashTTL === null ?
                     <img className="starred" src={util.createStaticUrl('img/starred.svg')}
-                            alt={util.translate('defaultCorparch__click_to_remove_item_from_fav')}
-                            title={util.translate('defaultCorparch__click_to_remove_item_from_fav')} /> :
+                            alt={util.translate('lindatCorparch2__click_to_remove_item_from_fav')}
+                            title={util.translate('lindatCorparch2__click_to_remove_item_from_fav')} /> :
                     <img className="starred" src={util.createStaticUrl('img/starred_grey.svg')}
-                            alt={util.translate('defaultCorparch__not_in_fav')}
-                            title={util.translate('defaultCorparch__not_in_fav')} />
+                            alt={util.translate('lindatCorparch2__not_in_fav')}
+                            title={util.translate('lindatCorparch2__not_in_fav')} />
                 }
             </a>
         );
@@ -108,7 +108,7 @@ export function init({
                     <a className="corplist-item"
                             title={props.data.trashTTL === null ?
                                         props.data.description :
-                                        util.translate('defaultCorparch__item_will_be_removed')}
+                                        util.translate('lindatCorparch2__item_will_be_removed')}
                             onClick={handleItemClick}>
                         {props.data.name}
                     </a>
@@ -137,14 +137,14 @@ export function init({
                 <tbody>
                     <tr>
                         <th>
-                            {util.translate('defaultCorparch__fav_items')}
+                            {util.translate('lindatCorparch2__fav_items')}
                         </th>
                         <th />
                         <th />
                     </tr>
                     {props.anonymousUser ?
                         <tr>
-                            <td colSpan={3}>{util.translate('defaultCorparch__please_log_in_to_see_fav')}</td>
+                            <td colSpan={3}>{util.translate('lindatCorparch2__please_log_in_to_see_fav')}</td>
                         </tr> :
                         List.map((item, i) =>
                             <TRFavoriteItem key={item.id} data={item} isActive={i === props.activeIdx} />,
@@ -201,7 +201,7 @@ export function init({
                 <tbody>
                     <tr>
                         <th colSpan={2}>
-                            {util.translate('defaultCorparch__featured_corpora')}
+                            {util.translate('lindatCorparch2__featured_corpora')}
                         </th>
                     </tr>
                     {List.map((item, i) =>
@@ -224,8 +224,8 @@ export function init({
             const style = {width: '1.6em'};
             if (props.currFavitemId) {
                 return <img src={util.createStaticUrl('img/starred.svg')}
-                        title={util.translate('defaultCorparch__in_fav')}
-                        alt={util.translate('defaultCorparch__in_fav')}
+                        title={util.translate('lindatCorparch2__in_fav')}
+                        alt={util.translate('lindatCorparch2__in_fav')}
                         style={style} />;
 
             } else {
@@ -273,12 +273,12 @@ export function init({
                 <span>
                     <a data-func="my-corpora" className={props.activeTab === 0 ? 'current' : null}
                             onClick={clickHandler(0)}>
-                        {util.translate('defaultCorparch__my_list')}
+                        {util.translate('lindatCorparch2__my_list')}
                     </a>
                     {'\u00a0|\u00a0'}
                     <a data-func="search" className={props.activeTab === 1 ? 'current' : null}
                             onClick={clickHandler(1)}>
-                        {util.translate('defaultCorparch__other_corpora')}
+                        {util.translate('lindatCorparch2__other_corpora')}
                     </a>
                 </span>
             </div>
@@ -388,7 +388,7 @@ export function init({
         return (
             <a className="keyword reset" onClick={handleClick}>
                 <span className="overlay">
-                    {util.translate('defaultCorparch__no_keyword')}
+                    {util.translate('lindatCorparch2__no_keyword')}
                 </span>
             </a>
         );
@@ -444,7 +444,7 @@ export function init({
                     onChange={handleInput}
                     onKeyDown={handleKeyDown}
                     value={props.value}
-                    placeholder={util.translate('defaultCorparch__name_or_description')}
+                    placeholder={util.translate('lindatCorparch2__name_or_description')}
                     ref={item => item ? item.focus() : null} />;
     };
 
@@ -524,7 +524,7 @@ export function init({
                     {List.map(item => <SearchKeyword key={item.id} {...item} />, props.availSearchKeywords)}
                     {props.hasSelectedKeywords ? <ResetKeyword /> : null}
                     <div className="labels-hint">
-                        {util.translate('defaultCorparch__hold_ctrl_for_multiple')}
+                        {util.translate('lindatCorparch2__hold_ctrl_for_multiple')}
                     </div>
                 </div>
                 <div className="autocomplete-wrapper">
@@ -708,8 +708,8 @@ export function init({
                     <div className="footer">
                         <span>
                             {this.props.activeTab === 0 ?
-                                util.translate('defaultCorparch__hit_tab_to_see_other') :
-                                util.translate('defaultCorparch__hit_tab_to_see_fav')}
+                                util.translate('lindatCorparch2__hit_tab_to_see_other') :
+                                util.translate('lindatCorparch2__hit_tab_to_see_fav')}
                         </span>
                     </div>
                 </layoutViews.PopupBox>
