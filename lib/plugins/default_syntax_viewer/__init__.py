@@ -46,6 +46,7 @@ Configuration JSON:
 import json
 import logging
 import os
+from typing import Dict
 
 import plugins
 from plugins.abstract.integration_db import IntegrationDatabase
@@ -112,9 +113,12 @@ def load_plugin_conf_from_file(plugin_conf):
         return conf_data.get('corpora', {})
 
 
-def load_plugin_conf_from_db(db: IntegrationDatabase):
+def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus') -> Dict[str, str]:
     cursor = db.cursor()
-    cursor.execute(f"SELECT name, syntax_viewer_conf_json FROM kontext_corpus WHERE syntax_viewer_conf_json > ''")
+    cursor.execute(
+        'SELECT name, syntax_viewer_conf_json '
+        f'FROM {corp_table} '
+        'WHERE syntax_viewer_conf_json IS NOT NULL')
     return {row['name']: json.loads(row['syntax_viewer_conf_json']) for row in cursor}
 
 
