@@ -32,7 +32,7 @@
         "global__operation": "Operacija",
         "global__view_result": "Prikaži rezultat",
         "global__failed_to_contact_server": "Povezave s strežnikom ni bilo mogoče vzpostaviti. Poskusite kasneje.",
-        "global__anonymous_user_warning": "KonText se izvaja v anonimnem načinu. Za dostop do vseh funkcij se <a class=\"fast-login\" href=\"{login_url}\">prijavite</a>. ",
+        "global__anonymous_user_warning": "KonText se izvaja v anonimnem načinu. Za dostop do vseh funkcij se morate prijaviti.",
         "global__click_to_hide": "Kliknite, da skrijete",
         "global__click_to_expand": "Kliknite, da razširite",
         "global__cancel": "Prekliči",
