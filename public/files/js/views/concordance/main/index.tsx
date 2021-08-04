@@ -612,7 +612,7 @@ export function init({
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
                                 viewMode={this.props.attrViewMode}
                                 onChartFrameReady={this.props.onLineSelChartFrameReady} />
-                        {this.props.showAnonymousUserWarn ?
+                        {this.props.showAnonymousUserWarn && this.props.anonymousUserConcLoginPrompt ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </S.ConcTopBar>
                     <S.ConclinesWrapper>
