@@ -18,10 +18,10 @@
             baseUrl : './',
             paths: {
                 'vendor/d3': '../../vendor/d3.min',
-                'ucnkTreeView': './dist/ucnkTreeView'
+                'treeView2': './dist/treeView2'
             },
         });
-        require(['ucnkTreeView', './test/data2'], function (ucnkTreeView, data) {
+        require(['treeView', './test/data2'], function (treeView2, data) {
             var opts = {
                 width: 1300,
                 height: null, //600,
@@ -31,7 +31,7 @@
                 paddingRight: 20,
                 edgeWidth: 1.5
             };
-            ucnkTreeView.generate(
+            treeView2.generate(
                 data,
                 'cs',
                 'default',

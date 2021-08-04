@@ -472,7 +472,7 @@ class TreeGenerator {
         const div = body
             .append('xhtml:div')
             .classed('token-node', true)
-            .attr('title', d => `${d.value} (${this.componentHelpers.translate('ucnkSyntaxViewer__click_to_see_details')})`)
+            .attr('title', d => `${d.value} (${this.componentHelpers.translate('syntaxViewer2__click_to_see_details')})`)
             .html(d => generateNodeHtml(d, nodeMap[d.id].labels));
 
         div.each((d, i, items) => {

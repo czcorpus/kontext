@@ -22,7 +22,7 @@ import { IFullActionControl, StatefulModel, IModel } from 'kombo';
 import { HTTP } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { createGenerator, SourceData, DetailAttrOrders } from './ucnkTreeView';
+import { createGenerator, SourceData, DetailAttrOrders } from './treeView';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
 
 
@@ -153,14 +153,14 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 kwic_len: state.kwicLength
             }
 
-        ).subscribe(
-            (data) => {
+        ).subscribe({
+            next: data => {
                 this.changeState(state => {
                     state.data = data;
                     state.isBusy = false;
                 });
             },
-            (error) => {
+            error: error => {
                 this.changeState(state => {
                     state.isBusy = false;
                 });
@@ -170,7 +170,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                     this.errorHandler(error);
                 }
             },
-            () => {
+            complete: () => {
                 window.addEventListener('resize', this.onPageResize);
                 const target = document.getElementById(state.targetHTMLElementID);
                 this.renderTree(target);
@@ -178,7 +178,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                     state.isBusy = false;
                 });
             }
-        );
+        });
     }
 }
 

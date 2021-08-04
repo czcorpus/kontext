@@ -5,10 +5,10 @@
     <start>
         <element name="syntax_viewer">
             <element name="module">
-                <value>ucnk_syntax_viewer</value>
+                <value>syntax_viewer2</value>
             </element>
             <element name="js_module">
-                <value>ucnkSyntaxViewer</value>
+                <value>syntaxViewer2</value>
             </element>
             <optional>
                 <element name="config_path">

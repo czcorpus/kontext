@@ -18,17 +18,13 @@
 # 02110-1301, USA.
 
 """
-A customized version of syntax_viewer2 as used by the CNC
-(no new features here)
-
-Please note that for the client-side, the configuration should
-be: <js_module>syntaxViewer2</js_module>
+An improved default_syntax viewer with rewritten tree rendering
 """
 
 import logging
 import plugins
 import plugins.default_syntax_viewer as dsv
-from plugins.syntax_viewer2.backend.manatee import ManateeBackend2
+from .backend.manatee import ManateeBackend2
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
@@ -36,8 +32,8 @@ def create_instance(conf, auth, integ_db):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(
-            f'ucnk_syntax_viewer uses integration_db[{integ_db.info}]')
-        corpora_conf = dsv.load_plugin_conf_from_db(integ_db, corp_table='corpora')
+            f'syntax_viewer2 uses integration_db[{integ_db.info}]')
+        corpora_conf = dsv.load_plugin_conf_from_db(integ_db)
     else:
         corpora_conf = dsv.load_plugin_conf_from_file(plugin_conf)
     return dsv.SyntaxDataProvider(corpora_conf, ManateeBackend2(corpora_conf), auth)

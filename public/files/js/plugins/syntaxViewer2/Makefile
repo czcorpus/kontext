@@ -5,4 +5,4 @@ UGLIFYJS=$(BASE)node_modules/uglify-js/bin/uglifyjs
 
 build:
 	$(TSC)
-	$(UGLIFYJS) dist/ucnkTreeView.js -o dist/ucnkTreeView.min.js
+	$(UGLIFYJS) dist/treeView2.js -o dist/treeView2.min.js
