@@ -112,10 +112,21 @@ def load_plugin_conf_from_file(conf):
         return conf_data.get('corpora', {})
 
 
-def load_plugin_conf_from_db(db):
+def load_plugin_conf_from_db(db, corp_table='kontext_corpus'):
+
+    def parse_conf(corp, src):
+        try:
+            return json.loads(src)
+        except Exception as ex:
+            logging.getLogger(__name__).warning(f'Failed to load syntax viewer conf for {corp}: {ex}')
+            return None
+
     cursor = db.cursor()
-    cursor.execute(f"SELECT name, syntax_viewer_conf_json FROM kontext_corpus WHERE syntax_viewer_conf_json > ''")
-    return {row['name']: json.loads(row['syntax_viewer_conf_json']) for row in cursor}
+    cursor.execute(
+        'SELECT name, syntax_viewer_conf_json '
+        f'FROM {corp_table} '
+        'WHERE syntax_viewer_conf_json IS NOT NULL')
+    return {row['name']: parse_conf(row['name'], row['syntax_viewer_conf_json']) for row in cursor}
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
