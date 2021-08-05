@@ -317,7 +317,7 @@ export class QueryPage {
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
-            const queryFormArgs = <AjaxResponse.QueryFormArgs>concFormsArgs['__new__'];
+            const queryFormArgs = concFormsArgs['__new__'] as AjaxResponse.QueryFormArgs;
             this.queryContextModel = new QueryContextModel(
                 this.layoutModel.dispatcher,
                 queryFormArgs

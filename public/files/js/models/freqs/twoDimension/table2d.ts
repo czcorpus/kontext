@@ -800,9 +800,9 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         const fetchVals:(c:CTFreqCell)=>ConfIntervalItem = (() => {
             switch (this.state.displayQuantity) {
                 case FreqQuantities.ABS:
-                return (c:CTFreqCell) => <ConfIntervalItem>[c.absConfInterval[0], c.abs, c.absConfInterval[1], c.bgColor];
+                return (c:CTFreqCell) => [c.absConfInterval[0], c.abs, c.absConfInterval[1], c.bgColor] as ConfIntervalItem;
                 case FreqQuantities.IPM:
-                return (c:CTFreqCell) => <ConfIntervalItem>[c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1], c.bgColor];
+                return (c:CTFreqCell) => [c.ipmConfInterval[0], c.ipm, c.ipmConfInterval[1], c.bgColor] as ConfIntervalItem;
                 default:
                 throw new Error('Unknown display quantity');
             }

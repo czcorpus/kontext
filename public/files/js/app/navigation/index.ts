@@ -344,7 +344,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         ).pipe(
             tap((data) => {
                 const objectURL = window.URL.createObjectURL(data);
-                const link = <HTMLAnchorElement>document.getElementById('download-link');
+                const link = document.getElementById('download-link') as HTMLAnchorElement;
                 link.href = objectURL;
                 link.download = filename;
                 link.click();

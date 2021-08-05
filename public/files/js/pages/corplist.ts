@@ -31,7 +31,7 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
             layoutModel.pluginApi()).initCorplistPageComponents(corplistData);
         layoutModel.renderReactComponent(
             pagePlugin.getForm(),
-            <HTMLElement>document.getElementById('content').querySelector('form.filter'),
+            document.getElementById('content').querySelector('form.filter') as HTMLElement,
             {}
         );
 

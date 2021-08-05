@@ -106,7 +106,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 paddingRight: 20,
                 onOverflow: (width:number, height:number) => {
                     const mo = document.getElementById('modal-overlay');
-                    const box = <HTMLElement>mo.querySelector('div.syntax-tree');
+                    const box = mo.querySelector('div.syntax-tree') as HTMLElement;
                     box.style['top'] = '0';
                     box.style['left'] = '50%';
                     box.style['transform'] = 'translate(-50%, 0%)';

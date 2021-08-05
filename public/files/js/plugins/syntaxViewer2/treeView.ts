@@ -526,7 +526,7 @@ class TreeGenerator {
                             .text(k + ':');
                         const td = tr.append('td')
                         if (value !== null && typeof value === 'object') {
-                            (<ReferencedValues>value).forEach((item, i) => {
+                            (value as ReferencedValues).forEach((item, i) => {
                                 const refData = group.filter((_, j) => j === item[0]).datum();
                                 if (refData) {
                                     if (i > 0) {
@@ -548,7 +548,7 @@ class TreeGenerator {
                             });
 
                         } else if (typeof value === 'string') {
-                            td.text(<string>value);
+                            td.text(value);
                         }
                     });
                     this.detailedId = datum.id;

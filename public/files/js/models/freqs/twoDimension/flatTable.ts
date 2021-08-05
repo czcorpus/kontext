@@ -159,9 +159,9 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
                     val1: cell.val1,
                     val2: cell.val2,
                     ipm: cell.ipm,
-                    ipmConfInterval: <[number, number]>[confInt[0] * 1e6, confInt[1] * 1e6],
+                    ipmConfInterval: tuple(confInt[0] * 1e6, confInt[1] * 1e6),
                     abs: cell.abs,
-                    absConfInterval: <[number, number]>[confInt[0] * cell.domainSize, confInt[1] * cell.domainSize],
+                    absConfInterval: tuple(confInt[0] * cell.domainSize, confInt[1] * cell.domainSize),
                     domainSize: cell.domainSize,
                     pfilter: cell.pfilter,
                     bgColor: cell.bgColor
