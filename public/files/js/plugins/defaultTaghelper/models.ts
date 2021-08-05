@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 export interface TabFrameModelState {
     activeTabs:{[sourceId:string]:string};
@@ -30,8 +30,8 @@ export class TabFrameModel extends StatefulModel<TabFrameModelState> {
     constructor(dispatcher:IFullActionControl, initState:TabFrameModelState) {
         super(dispatcher, initState);
 
-        this.addActionHandler<Actions.SetActiveTag>(
-            ActionName.SetActiveTag,
+        this.addActionHandler<typeof Actions.SetActiveTag>(
+            Actions.SetActiveTag.name,
             action => {
                 this.changeState(state => {
                     state.activeTabs[action.payload.sourceId] = action.payload.tagsetId;

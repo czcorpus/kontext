@@ -24,7 +24,7 @@ import { Action, StatefulModel, IFullActionControl } from 'kombo';
 
 import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { Kontext } from '../../../types/common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
 
@@ -156,8 +156,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
         this.pluginApi = pluginApi;
         this.tagsetId = tagsetId;
 
-        this.addActionSubtypeHandler<Actions.KVSelectCategory>(
-            ActionName.KVSelectCategory,
+        this.addActionSubtypeHandler<typeof Actions.KVSelectCategory>(
+            Actions.KVSelectCategory.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -166,8 +166,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.GetInitialData>(
-            ActionName.GetInitialData,
+        this.addActionSubtypeHandler<typeof Actions.GetInitialData>(
+            Actions.GetInitialData.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -178,15 +178,15 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     }
                 });
                 if (this.state.data[action.payload.sourceId].filterFeaturesHistory.length === 1) {
-                    this.getFilteredFeatures<Actions.KVGetInitialDataDone['payload']>(
+                    this.getFilteredFeatures<typeof Actions.KVGetInitialDataDone['payload']>(
                         (data, err) => err ?
                         {
-                            name: ActionName.KVGetInitialDataDone,
+                            name: Actions.KVGetInitialDataDone.name,
                             error: err
 
                         } :
                         {
-                            name: ActionName.KVGetInitialDataDone,
+                            name: Actions.KVGetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -198,8 +198,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     );
 
                 } else {
-                    this.dispatchSideEffect<Actions.KVGetInitialDataNOP>({
-                        name: ActionName.KVGetInitialDataNOP,
+                    this.dispatchSideEffect<typeof Actions.KVGetInitialDataNOP>({
+                        name: Actions.KVGetInitialDataNOP.name,
                         payload: {
                             tagsetId: action.payload.tagsetId
                         }
@@ -208,8 +208,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.KVGetInitialDataDone>(
-            ActionName.KVGetInitialDataDone,
+        this.addActionSubtypeHandler<typeof Actions.KVGetInitialDataDone>(
+            Actions.KVGetInitialDataDone.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -231,8 +231,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.KVGetInitialDataNOP>(
-            ActionName.KVGetInitialDataNOP,
+        this.addActionSubtypeHandler<typeof Actions.KVGetInitialDataNOP>(
+            Actions.KVGetInitialDataNOP.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -241,8 +241,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.KVGetFilteredDataDone>(
-            ActionName.KVGetFilteredDataDone,
+        this.addActionSubtypeHandler<typeof Actions.KVGetFilteredDataDone>(
+            Actions.KVGetFilteredDataDone.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -262,8 +262,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.KVAddFilter>(
-            ActionName.KVAddFilter,
+        this.addActionSubtypeHandler<typeof Actions.KVAddFilter>(
+            Actions.KVAddFilter.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -285,8 +285,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.KVRemoveFilter>(
-            ActionName.KVRemoveFilter,
+        this.addActionSubtypeHandler<typeof Actions.KVRemoveFilter>(
+            Actions.KVRemoveFilter.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 const filter = new FilterRecord(
@@ -309,8 +309,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.Undo>(
-            ActionName.Undo,
+        this.addActionSubtypeHandler<typeof Actions.Undo>(
+            Actions.Undo.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -326,8 +326,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.Reset>(
-            ActionName.Reset,
+        this.addActionSubtypeHandler<typeof Actions.Reset>(
+            Actions.Reset.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -340,8 +340,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.SetActiveTag>(
-            ActionName.SetActiveTag,
+        this.addActionSubtypeHandler<typeof Actions.SetActiveTag>(
+            Actions.SetActiveTag.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -352,15 +352,15 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     }
                 });
                 if (this.state.data[action.payload.sourceId].filterFeaturesHistory.length === 1) {
-                    this.getFilteredFeatures<Actions.KVGetInitialDataDone['payload']>(
+                    this.getFilteredFeatures<typeof Actions.KVGetInitialDataDone['payload']>(
                         (data, err) => err ?
                         {
-                            name: ActionName.KVGetInitialDataDone,
+                            name: Actions.KVGetInitialDataDone.name,
                             error: err
 
                         } :
                         {
-                            name: ActionName.KVGetInitialDataDone,
+                            name: Actions.KVGetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -372,8 +372,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
                     );
 
                 } else {
-                    this.dispatchSideEffect<Actions.KVGetInitialDataNOP>({
-                        name: ActionName.KVGetInitialDataNOP,
+                    this.dispatchSideEffect<typeof Actions.KVGetInitialDataNOP>({
+                        name: Actions.KVGetInitialDataNOP.name,
                         payload: {
                             tagsetId: action.payload.tagsetId
                         }
@@ -431,15 +431,15 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
     }
 
     private updateFeatures(sourceId:string):void {
-        this.getFilteredFeatures<Actions.KVGetFilteredDataDone['payload']>(
+        this.getFilteredFeatures<typeof Actions.KVGetFilteredDataDone['payload']>(
             (data, err) => err ?
                 {
-                    name: ActionName.KVGetFilteredDataDone,
+                    name: Actions.KVGetFilteredDataDone.name,
                     error: err
 
                 } :
                 {
-                    name: ActionName.KVGetFilteredDataDone,
+                    name: Actions.KVGetFilteredDataDone.name,
                     payload: {
                         tagsetId: this.tagsetId,
                         sourceId,
