@@ -22,25 +22,19 @@ import { Action } from 'kombo';
 import { ProviderWordMatch, FreqDistType } from './model';
 
 
-export enum ActionName {
-    FetchInfoDone = 'KWIC_CONNECT_FETCH_INFO_DONE',
-    FetchPartialInfoDone = 'KWIC_CONNECT_FETCH_PARTIAL_INFO_DONE'
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface FetchInfoDone extends Action<{
+    static FetchInfoDone:Action<{
         data:Array<ProviderWordMatch>;
         freqType:FreqDistType;
-    }> {
-        name:ActionName.FetchInfoDone;
-    }
+    }> = {
+        name: 'KWIC_CONNECT_FETCH_INFO_DONE'
+    };
 
-    export interface FetchPartialInfoDone extends Action<{
+    static FetchPartialInfoDone:Action<{
         data:Array<ProviderWordMatch>;
-    }> {
-        name:ActionName.FetchPartialInfoDone;
+    }> = {
+        name: 'KWIC_CONNECT_FETCH_PARTIAL_INFO_DONE'
     }
 
 }

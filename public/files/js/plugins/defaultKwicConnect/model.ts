@@ -28,7 +28,7 @@ import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
 import { HTTP, List } from 'cnc-tskit';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 
 
 export enum KnownRenderers {
@@ -179,8 +179,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             }
         );
 
-        this.addActionHandler<Actions.FetchPartialInfoDone>(
-            ActionName.FetchPartialInfoDone,
+        this.addActionHandler<typeof Actions.FetchPartialInfoDone>(
+            Actions.FetchPartialInfoDone.name,
             action => {
                 this.changeState(state => {
                     this.mergeDataOfProviders(state, action.payload.data);
@@ -188,8 +188,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             }
         );
 
-        this.addActionHandler<Actions.FetchInfoDone>(
-            ActionName.FetchInfoDone,
+        this.addActionHandler<typeof Actions.FetchInfoDone>(
+            Actions.FetchInfoDone.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = false;
@@ -233,8 +233,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         const freqType = this.selectFreqType();
         this.fetchResponses(freqType, flimit).subscribe(
             (data) => {
-                this.dispatchSideEffect<Actions.FetchInfoDone>({
-                    name: ActionName.FetchInfoDone,
+                this.dispatchSideEffect<typeof Actions.FetchInfoDone>({
+                    name: Actions.FetchInfoDone.name,
                     payload: {
                         data,
                         freqType
@@ -243,8 +243,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             },
             (err) => {
                 this.pluginApi.showMessage('error', err);
-                this.dispatchSideEffect<Actions.FetchInfoDone>({
-                    name: ActionName.FetchInfoDone,
+                this.dispatchSideEffect<typeof Actions.FetchInfoDone>({
+                    name: Actions.FetchInfoDone.name,
                     payload: {
                         data: [],
                         freqType: null
@@ -275,8 +275,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
                                 concatMap(
                                     (data) => {
                                         if (data !== null) {
-                                            this.dispatchSideEffect<Actions.FetchPartialInfoDone>({
-                                                name: ActionName.FetchPartialInfoDone,
+                                            this.dispatchSideEffect<typeof Actions.FetchPartialInfoDone>({
+                                                name: Actions.FetchPartialInfoDone.name,
                                                 payload: {
                                                     data
                                                 }
