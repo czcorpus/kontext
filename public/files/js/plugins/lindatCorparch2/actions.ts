@@ -25,261 +25,215 @@ import { ServerFavlistItem } from './common';
 import { SearchResultRow } from './search';
 
 
-export enum ActionName {
-    LoadDataDone = 'LOAD_DATA_DONE',
-    LoadExpansionDataDone = 'LOAD_EXPANSION_DATA_DONE',
-    KeywordClicked = 'KEYWORD_CLICKED',
-    KeywordResetClicked = 'KEYWORD_RESET_CLICKED',
-    ExpansionClicked = 'EXPANSION_CLICKED',
-    FilterChanged = 'FILTER_CHANGED',
-    ListStarClicked = 'LIST_STAR_CLICKED',
-    ListStarClickedDone = 'LIST_STAR_CLICKED_DONE',
-    CorpusInfoRequired = 'CORPARCH_CORPUS_INFO_REQUIRED',
-    CorpusInfoLoaded = 'CORPARCH_CORPUS_INFO_LOADED',
-    CorpusInfoClosed = 'CORPARCH_CORPUS_INFO_CLOSED',
-    WidgetShow = 'DEFAULT_CORPARCH_WIDGET_SHOW',
-    WidgetHide = 'DEFAULT_CORPARCH_WIDGET_HIDE',
-    WidgetSetActiveTab = 'DEFAULT_CORPARCH_SET_ACTIVE_TAB',
-    WidgetUpdateList = 'DEFAULT_CORPARCH_UPDATE_LIST',
-    WidgetFavItemClick = 'DEFAULT_CORPARCH_FAV_ITEM_CLICK',
-    WidgetFavItemClickDone = 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE',
-    WidgetFeatItemClick = 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK',
-    WidgetFeatItemClickDone = 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE',
-    WidgetSearchResultClick = 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED',
-    WidgetSearchResultClickDone = 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE',
-    WidgetFavItemAdd = 'DEFAULT_CORPARCH_FAV_ITEM_ADD',
-    WidgetFavItemAddDone = 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE',
-    WidgetFavItemRemove = 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE',
-    WidgetFavItemRemoveDone = 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE',
-    WidgetCheckTrashedItems = 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS',
-    WidgetStarIconClick = 'DEFAULT_CORPARCH_STAR_ICON_CLICK',
-    WidgetStarIconClickDone = 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE',
-    WidgetKeywordResetClick = 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED',
-    WidgetKeywordClick = 'LINDAT_CORPARCH_KEYWORD_CLICKED',
-    WidgetSearchDone = 'DEFAULT_CORPARCH_SEARCH_DONE',
-    WidgetSearchInputChanged = 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED',
-    WidgetFocusSearchRow = 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW',
-    WidgetFocusedItemSelect = 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT',
-    WidgetMoveFocusToNextItem = 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM',
-    WidgetEnterOnActiveItem = 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM',
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface LoadDataDone extends Action<{
+    static LoadDataDone:Action<{
         data:CorplistDataResponse;
-    }> {
-        name:ActionName.LoadDataDone;
-    }
+    }> = {
+        name: 'LOAD_DATA_DONE'
+    };
 
-    export interface LoadExpansionDataDone extends Action<{
+    static LoadExpansionDataDone:Action<{
         data:CorplistDataResponse;
-    }> {
-        name:ActionName.LoadExpansionDataDone;
-    }
+    }> = {
+        name: 'LOAD_EXPANSION_DATA_DONE'
+    };
 
-    export interface KeywordClicked extends Action<{
+    static KeywordClicked:Action<{
         ctrlKey:boolean;
         keyword:string;
         status:boolean;
-    }> {
-        name:ActionName.KeywordClicked;
-    }
+    }> = {
+        name: 'KEYWORD_CLICKED'
+    };
 
-    export interface KeywordResetClicked extends Action<{
-    }> {
-        name:ActionName.KeywordResetClicked;
-    }
+    static KeywordResetClicked:Action<{
+    }> = {
+        name: 'KEYWORD_RESET_CLICKED'
+    };
 
-    export interface ExpansionClicked extends Action<{
+    static ExpansionClicked:Action<{
         offset:number;
-    }> {
-        name:ActionName.ExpansionClicked;
-    }
+    }> = {
+        name: 'EXPANSION_CLICKED'
+    };
 
-    export interface FilterChanged extends Action<Filters> {
-        name:ActionName.FilterChanged;
-    }
+    static FilterChanged:Action<Filters> = {
+        name: 'FILTER_CHANGED'
+    };
 
-    export interface ListStarClicked extends Action<{
+    static ListStarClicked:Action<{
         corpusId:string;
         favId:string;
-    }> {
-        name:ActionName.ListStarClicked;
-    }
+    }> = {
+        name: 'LIST_STAR_CLICKED'
+    };
 
-    export interface ListStarClickedDone extends Action<{
+    static ListStarClickedDone:Action<{
         corpusId:string;
         newId:string|null;
         action:'add'|'remove';
-    }> {
-        name:ActionName.ListStarClickedDone;
-    }
+    }> = {
+        name: 'LIST_STAR_CLICKED_DONE'
+    };
 
-    export interface CorpusInfoRequired extends Action<{
+    static CorpusInfoRequired:Action<{
         corpusId:string;
-    }> {
-        name:ActionName.CorpusInfoRequired;
-    }
+    }> = {
+        name: 'CORPARCH_CORPUS_INFO_REQUIRED'
+    };
 
-    export interface CorpusInfoLoaded extends Action<CorpusInfo> {
-        name:ActionName.CorpusInfoLoaded;
-    }
+    static CorpusInfoLoaded:Action<CorpusInfo> = {
+        name: 'CORPARCH_CORPUS_INFO_LOADED'
+    };
 
-    export interface CorpusInfoClosed extends Action<{
-    }> {
-        name:ActionName.CorpusInfoClosed;
-    }
+    static CorpusInfoClosed:Action<{
+    }> = {
+        name: 'CORPARCH_CORPUS_INFO_CLOSED'
+    };
 
-    export interface LoadDataDone extends Action<{
-        data:CorplistDataResponse;
-    }> {
-        name:ActionName.LoadDataDone;
-    }
+    static WidgetShow:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_SHOW'
+    };
 
-    export interface WidgetShow extends Action<{
-    }> {
-        name:ActionName.WidgetShow;
-    }
+    static WidgetHide:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_WIDGET_HIDE'
+    };
 
-    export interface WidgetHide extends Action<{
-    }> {
-        name:ActionName.WidgetHide;
-    }
-
-    export interface WidgetSetActiveTab extends Action<{
+    static WidgetSetActiveTab:Action<{
         value:number;
-    }> {
-        name:ActionName.WidgetSetActiveTab;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_SET_ACTIVE_TAB'
+    };
 
-    export interface WidgetUpdateList extends Action<{
+    static WidgetUpdateList:Action<{
         data:Array<ServerFavlistItem>;
-    }> {
-        name:ActionName.WidgetUpdateList;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_UPDATE_LIST'
+    };
 
-    export interface WidgetFavItemClick extends Action<{
+    static WidgetFavItemClick:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetFavItemClick;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK'
+    };
 
-    export interface WidgetFavItemClickDone extends Action<{
-    }> {
-        name:ActionName.WidgetFavItemClickDone;
-    }
+    static WidgetFavItemClickDone:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_CLICK_DONE'
+    };
 
-    export interface WidgetFeatItemClick extends Action<{
+    static WidgetFeatItemClick:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetFeatItemClick;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK'
+    };
 
-    export interface WidgetFeatItemClickDone extends Action<{
-    }> {
-        name:ActionName.WidgetFeatItemClickDone;
-    }
+    static WidgetFeatItemClickDone:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_FEAT_ITEM_CLICK_DONE'
+    };
 
-    export interface WidgetSearchResultClick extends Action<{
+    static WidgetSearchResultClick:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetSearchResultClick;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED'
+    };
 
-    export interface WidgetSearchResultClickDone extends Action<{
-    }> {
-        name:ActionName.WidgetSearchResultClickDone;
-    }
+    static WidgetSearchResultClickDone:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_SEARCH_RESULT_ITEM_CLICKED_DONE'
+    };
 
-    export interface WidgetFavItemAdd extends Action<{
+    static WidgetFavItemAdd:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetFavItemAdd;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD'
+    };
 
-    export interface WidgetFavItemAddDone extends Action<{
+    static WidgetFavItemAddDone:Action<{
         trashedItemId:string;
         rescuedItem:ServerFavlistItem
-    }> {
-        name:ActionName.WidgetFavItemAddDone;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_ADD_DONE'
+    };
 
-    export interface WidgetFavItemRemove extends Action<{
+    static WidgetFavItemRemove:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetFavItemRemove;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE'
+    };
 
-    export interface WidgetFavItemRemoveDone extends Action<{
+    static WidgetFavItemRemoveDone:Action<{
         itemId:string;
-    }> {
-        name:ActionName.WidgetFavItemRemoveDone;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FAV_ITEM_REMOVE_DONE'
+    };
 
-    export interface WidgetCheckTrashedItems extends Action<{
-    }> {
-        name:ActionName.WidgetCheckTrashedItems;
-    }
+    static WidgetCheckTrashedItems:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_CHECK_TRASHED_ITEMS'
+    };
 
-    export interface WidgetStarIconClick extends Action<{
+    static WidgetStarIconClick:Action<{
         status:boolean;
         itemId:string
-    }> {
-        name:ActionName.WidgetStarIconClick;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK'
+    };
 
-    export interface WidgetStarIconClickDone extends Action<{
+    static WidgetStarIconClickDone:Action<{
         data:Array<ServerFavlistItem>;
-    }> {
-        name:ActionName.WidgetStarIconClickDone;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_STAR_ICON_CLICK_DONE'
+    };
 
-    export interface WidgetKeywordResetClick extends Action<{
-    }> {
-        name:ActionName.WidgetKeywordResetClick;
-    }
+    static WidgetKeywordResetClick:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_KEYWORD_RESET_CLICKED'
+    };
 
-    export interface WidgetKeywordClick extends Action<{
+    static WidgetKeywordClick:Action<{
         keywordId:string;
         status:boolean;
         exclusive:boolean;
-    }> {
-        name:ActionName.WidgetKeywordClick;
-    }
+    }> = {
+        name: 'LINDAT_CORPARCH_KEYWORD_CLICKED'
+    };
 
-    export interface WidgetSearchDone extends Action<{
+    static WidgetSearchDone:Action<{
         data:Array<SearchResultRow>;
-    }> {
-        name:ActionName.WidgetSearchDone;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_SEARCH_DONE'
+    };
 
-    export interface WidgetSearchInputChanged extends Action<{
+    static WidgetSearchInputChanged:Action<{
         value:string;
-    }> {
-        name:ActionName.WidgetSearchInputChanged;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_SEARCH_INPUT_CHANGED'
+    };
 
-    export interface WidgetFocusSearchRow extends Action<{
+    static WidgetFocusSearchRow:Action<{
         inc:number;
-    }> {
-        name:ActionName.WidgetFocusSearchRow;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_FOCUS_SEARCH_ROW'
+    };
 
-    export interface WidgetFocusedItemSelect extends Action<{
-    }> {
-        name:ActionName.WidgetFocusedItemSelect;
-    }
+    static WidgetFocusedItemSelect:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_FOCUSED_ITEM_SELECT'
+    };
 
-    export interface WidgetMoveFocusToNextItem extends Action<{
+    static WidgetMoveFocusToNextItem:Action<{
         change:[number, number];
-    }> {
-        name:ActionName.WidgetMoveFocusToNextItem;
-    }
+    }> = {
+        name: 'DEFAULT_CORPARCH_MOVE_FOCUS_TO_NEXT_LISTITEM'
+    };
 
-    export interface WidgetEnterOnActiveItem extends Action<{
-    }> {
-        name:ActionName.WidgetEnterOnActiveItem;
-    }
+    static WidgetEnterOnActiveItem:Action<{
+    }> = {
+        name: 'DEFAULT_CORPARCH_ENTER_ON_ACTIVE_LISTITEM'
+    };
 }

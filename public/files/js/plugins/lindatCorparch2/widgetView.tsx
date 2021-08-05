@@ -23,7 +23,7 @@ import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './wi
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
@@ -55,10 +55,10 @@ export function init({
     }> = (props) => {
 
         const handleRemoveClick = () => {
-            dispatcher.dispatch<Actions.WidgetFavItemAdd|Actions.WidgetFavItemRemove>({
+            dispatcher.dispatch<typeof Actions.WidgetFavItemAdd|typeof Actions.WidgetFavItemRemove>({
                 name: props.trashTTL === null ?
-                        ActionName.WidgetFavItemRemove :
-                        ActionName.WidgetFavItemAdd,
+                        Actions.WidgetFavItemRemove.name :
+                        Actions.WidgetFavItemAdd.name,
                 payload: {
                     itemId: props.ident
                 }
@@ -88,8 +88,8 @@ export function init({
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<Actions.WidgetFavItemClick>({
-                name: ActionName.WidgetFavItemClick,
+            dispatcher.dispatch<typeof Actions.WidgetFavItemClick>({
+                name: Actions.WidgetFavItemClick.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -167,8 +167,8 @@ export function init({
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<Actions.WidgetFeatItemClick>({
-                name: ActionName.WidgetFeatItemClick,
+            dispatcher.dispatch<typeof Actions.WidgetFeatItemClick>({
+                name: Actions.WidgetFeatItemClick.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -239,8 +239,8 @@ export function init({
         };
 
         const handleStarClick = () => {
-            dispatcher.dispatch<Actions.WidgetStarIconClick>({
-                name: ActionName.WidgetStarIconClick,
+            dispatcher.dispatch<typeof Actions.WidgetStarIconClick>({
+                name: Actions.WidgetStarIconClick.name,
                 payload: {
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
@@ -305,8 +305,8 @@ export function init({
                 [Keyboard.Value.RIGHT_ARROW]: [1, 0]
             };
             if (Keyboard.isArrowKey(evt.keyCode)) {
-                dispatcher.dispatch<Actions.WidgetMoveFocusToNextItem>({
-                    name: ActionName.WidgetMoveFocusToNextItem,
+                dispatcher.dispatch<typeof Actions.WidgetMoveFocusToNextItem>({
+                    name: Actions.WidgetMoveFocusToNextItem.name,
                     payload: {
                         change: argMap[evt.key]
                     }
@@ -315,8 +315,8 @@ export function init({
                 evt.stopPropagation();
 
             } else if (evt.key === Keyboard.Value.ENTER) {
-                dispatcher.dispatch<Actions.WidgetEnterOnActiveItem>({
-                    name: ActionName.WidgetEnterOnActiveItem,
+                dispatcher.dispatch<typeof Actions.WidgetEnterOnActiveItem>({
+                    name: Actions.WidgetEnterOnActiveItem.name,
                     payload: {}
                 });
                 evt.preventDefault();
@@ -348,8 +348,8 @@ export function init({
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.WidgetKeywordClick>({
-                name: ActionName.WidgetKeywordClick,
+            dispatcher.dispatch<typeof Actions.WidgetKeywordClick>({
+                name: Actions.WidgetKeywordClick.name,
                 payload: {
                     keywordId: props.id,
                     status: !props.selected,
@@ -381,8 +381,8 @@ export function init({
     const ResetKeyword:React.FC<{}> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.WidgetKeywordResetClick>({
-                name: ActionName.WidgetKeywordResetClick,
+            dispatcher.dispatch<typeof Actions.WidgetKeywordResetClick>({
+                name: Actions.WidgetKeywordResetClick.name,
                 payload: {}
             });
         };
@@ -405,8 +405,8 @@ export function init({
     }> = (props) => {
 
         const handleInput = (evt) => {
-            dispatcher.dispatch<Actions.WidgetSearchInputChanged>({
-                name: ActionName.WidgetSearchInputChanged,
+            dispatcher.dispatch<typeof Actions.WidgetSearchInputChanged>({
+                name: Actions.WidgetSearchInputChanged.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -418,8 +418,8 @@ export function init({
             switch (evt.keyC) {
                 case Keyboard.Value.DOWN_ARROW:
                 case Keyboard.Value.UP_ARROW:
-                    dispatcher.dispatch<Actions.WidgetFocusSearchRow>({
-                        name: ActionName.WidgetFocusSearchRow,
+                    dispatcher.dispatch<typeof Actions.WidgetFocusSearchRow>({
+                        name: Actions.WidgetFocusSearchRow.name,
                         payload: {
                             inc: evt.key === Keyboard.Value.DOWN_ARROW ? 1 : -1
                         }
@@ -428,8 +428,8 @@ export function init({
                     evt.preventDefault();
                 break;
                 case Keyboard.Value.ENTER:
-                    dispatcher.dispatch<Actions.WidgetFocusedItemSelect>({
-                        name: ActionName.WidgetFocusedItemSelect,
+                    dispatcher.dispatch<typeof Actions.WidgetFocusedItemSelect>({
+                        name: Actions.WidgetFocusedItemSelect.name,
                         payload: {}
                     });
                     evt.stopPropagation();
@@ -459,8 +459,8 @@ export function init({
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.WidgetSearchResultClick>({
-                name: ActionName.WidgetSearchResultClick,
+            dispatcher.dispatch<typeof Actions.WidgetSearchResultClick>({
+                name: Actions.WidgetSearchResultClick.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -647,15 +647,15 @@ export function init({
         }
 
         _handleOnShow() {
-            dispatcher.dispatch<Actions.WidgetShow>({
-                name: ActionName.WidgetShow,
+            dispatcher.dispatch<typeof Actions.WidgetShow>({
+                name: Actions.WidgetShow.name,
                 payload: {}
             });
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<Actions.WidgetHide>({
-                name: ActionName.WidgetHide,
+            dispatcher.dispatch<typeof Actions.WidgetHide>({
+                name: Actions.WidgetHide.name,
                 payload: {}
             });
         }
@@ -670,8 +670,8 @@ export function init({
         }
 
         _handleTabSwitch(v) {
-            dispatcher.dispatch<Actions.WidgetSetActiveTab>({
-                name: ActionName.WidgetSetActiveTab,
+            dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
+                name: Actions.WidgetSetActiveTab.name,
                 payload: {
                     value: v
                 }
@@ -679,8 +679,8 @@ export function init({
         }
 
         _handleAreaClick() {
-            dispatcher.dispatch<Actions.WidgetSetActiveTab>({
-                name: ActionName.WidgetSetActiveTab,
+            dispatcher.dispatch<typeof Actions.WidgetSetActiveTab>({
+                name: Actions.WidgetSetActiveTab.name,
                 payload: {
                     value: this.props.activeTab
                 }
