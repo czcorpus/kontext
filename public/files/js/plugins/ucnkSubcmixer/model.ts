@@ -25,7 +25,7 @@ import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
 import { Kontext, TextTypes } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
 import { validateSubcProps } from '../../models/subcorp/form';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
@@ -128,24 +128,24 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowWidget>(
-            ActionName.ShowWidget,
+        this.addActionHandler<typeof Actions.ShowWidget>(
+            Actions.ShowWidget.name,
             (state, action) => {
                 state.isVisible = true;
                 this.refreshData(state);
             }
         );
 
-        this.addActionHandler<Actions.HideWidget>(
-            ActionName.HideWidget,
+        this.addActionHandler<typeof Actions.HideWidget>(
+            Actions.HideWidget.name,
             (state, action) => {
                 state.isVisible = false;
                 state.currentResult = null;
             }
         );
 
-        this.addActionHandler<Actions.SetRatio>(
-            ActionName.SetRatio,
+        this.addActionHandler<typeof Actions.SetRatio>(
+            Actions.SetRatio.name,
             (state, action) => {
                 this.updateRatio(
                     state,
@@ -158,8 +158,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 const err = this.validateRatio(action.payload.ratio);
                 if (err !== null) {
                     this.pluginApi.showMessage('error', err);
-                    dispatch<Actions.SetRatioValidate>({
-                        name: ActionName.SetRatioValidate,
+                    dispatch<typeof Actions.SetRatioValidate>({
+                        name: Actions.SetRatioValidate.name,
                         payload: {
                             attrName: action.payload.attrName,
                             attrValue: action.payload.attrValue,
@@ -170,8 +170,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SetRatioValidate>(
-            ActionName.SetRatioValidate,
+        this.addActionHandler<typeof Actions.SetRatioValidate>(
+            Actions.SetRatioValidate.name,
             (state, action) => {
                 const val = this.getRatio(state, action.payload.attrName, action.payload.attrValue);
                 if (val) {
@@ -185,8 +185,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitTask>(
-            ActionName.SubmitTask,
+        this.addActionHandler<typeof Actions.SubmitTask>(
+            Actions.SubmitTask.name,
             (state, action) => {
                 state.isBusy = true;
                 state.numOfErrors = 0;
@@ -198,15 +198,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                             const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
                             this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
                             const err = new Error(msgText);
-                            dispatch<Actions.SubmitTaskDone>({
-                                name: ActionName.SubmitTaskDone,
+                            dispatch<typeof Actions.SubmitTaskDone>({
+                                name: Actions.SubmitTaskDone.name,
                                 error: err
                             });
                             this.pluginApi.showMessage('error', err);
 
                         } else {
-                            dispatch<Actions.SubmitTaskDone>({
-                                name: ActionName.SubmitTaskDone,
+                            dispatch<typeof Actions.SubmitTaskDone>({
+                                name: Actions.SubmitTaskDone.name,
                                 payload: {
                                     result: {
                                         attrs: this.importResults(state.shares, state.ratioLimit, data.attrs),
@@ -220,8 +220,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch<Actions.SubmitTaskDone>({
-                            name: ActionName.SubmitTaskDone,
+                        dispatch<typeof Actions.SubmitTaskDone>({
+                            name: Actions.SubmitTaskDone.name,
                             error: err
                         });
                     }
@@ -229,8 +229,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitTaskDone>(
-            ActionName.SubmitTaskDone,
+        this.addActionHandler<typeof Actions.SubmitTaskDone>(
+            Actions.SubmitTaskDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -245,8 +245,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitCreateSubcorpus>(
-            ActionName.SubmitCreateSubcorpus,
+        this.addActionHandler<typeof Actions.SubmitCreateSubcorpus>(
+            Actions.SubmitCreateSubcorpus.name,
             (state, action) => {
                 state.isBusy = true;
                 validateSubcProps(
@@ -260,14 +260,14 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 this.submitCreateSubcorpus(state).subscribe(
                     (resp) => {
                         window.location.href = this.pluginApi.createActionUrl('subcorpus/list');
-                        dispatch<Actions.CreateSubcorpusDone>({
-                            name: ActionName.CreateSubcorpusDone
+                        dispatch<typeof Actions.CreateSubcorpusDone>({
+                            name: Actions.CreateSubcorpusDone.name
                         });
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch<Actions.CreateSubcorpusDone>({
-                            name: ActionName.CreateSubcorpusDone,
+                        dispatch<typeof Actions.CreateSubcorpusDone>({
+                            name: Actions.CreateSubcorpusDone.name,
                             error: err
                         });
                     }
@@ -275,8 +275,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<Actions.CreateSubcorpusDone>(
-            ActionName.CreateSubcorpusDone,
+        this.addActionHandler<typeof Actions.CreateSubcorpusDone>(
+            Actions.CreateSubcorpusDone.name,
             null,
             (state, action, dispatch) => {
                 state.isBusy = false;

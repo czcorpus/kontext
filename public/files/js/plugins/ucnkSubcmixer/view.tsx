@@ -26,7 +26,7 @@ import { Kontext } from '../../types/common';
 import { SubcMixerModel, SubcMixerModelState } from './model';
 import { init as subcorpViewsInit } from '../../views/subcorp/forms';
 import { CalculationResults, SubcMixerExpression } from './common';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 
 import * as S from './style';
@@ -77,8 +77,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleRatioValueChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.SetRatio>({
-                name: ActionName.SetRatio,
+            dispatcher.dispatch<typeof Actions.SetRatio>({
+                name: Actions.SetRatio.name,
                 payload: {
                     attrName: props.attrName,
                     attrValue: props.attrValue,
@@ -180,8 +180,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleUpdateParamsButton = () => {
-            dispatcher.dispatch<Actions.ClearResult>({
-                name: ActionName.ClearResult
+            dispatcher.dispatch<typeof Actions.ClearResult>({
+                name: Actions.ClearResult.name
             });
         };
 
@@ -207,8 +207,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCreateSubcorpClick = () => {
-            dispatcher.dispatch<Actions.SubmitCreateSubcorpus>({
-                name: ActionName.SubmitCreateSubcorpus
+            dispatcher.dispatch<typeof Actions.SubmitCreateSubcorpus>({
+                name: Actions.SubmitCreateSubcorpus.name
             });
         };
 
@@ -320,8 +320,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCalculateCategoriesClick = () => {
-            dispatcher.dispatch<Actions.SubmitTask>({
-                name: ActionName.SubmitTask
+            dispatcher.dispatch<typeof Actions.SubmitTask>({
+                name: Actions.SubmitTask.name
             });
         };
 
@@ -425,14 +425,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const Widget:React.SFC<WidgetProps & SubcMixerModelState> = (props) => {
 
         const handleCloseWidget = () => {
-            dispatcher.dispatch<Actions.HideWidget>({
-                name: ActionName.HideWidget
+            dispatcher.dispatch<typeof Actions.HideWidget>({
+                name: Actions.HideWidget.name
             });
         };
 
         const handleActivationButton = () => {
-            dispatcher.dispatch<Actions.ShowWidget>({
-                name: ActionName.ShowWidget
+            dispatcher.dispatch<typeof Actions.ShowWidget>({
+                name: Actions.ShowWidget.name
             });
         }
 
