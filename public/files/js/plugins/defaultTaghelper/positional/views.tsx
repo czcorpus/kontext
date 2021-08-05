@@ -24,7 +24,7 @@ import { List } from 'cnc-tskit';
 
 import {PositionValue, PositionOptions, PosTagModelState} from './models';
 import { Kontext } from '../../../types/common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 
 import * as S from '../style';
 
@@ -170,8 +170,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     }> = (props) => {
 
         const lineClickHandler = (idx) => () => {
-            dispatcher.dispatch<Actions.ToggleActivePosition>({
-                name: ActionName.ToggleActivePosition,
+            dispatcher.dispatch<typeof Actions.ToggleActivePosition>({
+                name: Actions.ToggleActivePosition.name,
                 payload: {
                     idx: idx,
                     tagsetId: props.tagsetId,
@@ -195,8 +195,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
     const TagBuilder:React.FC<PosTagModelState & {sourceId:string}> = (props) => {
 
         const checkboxHandler = (lineIdx:number, value:string, checked:boolean) => {
-            dispatcher.dispatch<Actions.CheckboxChanged>({
-                name: ActionName.CheckboxChanged,
+            dispatcher.dispatch<typeof Actions.CheckboxChanged>({
+                name: Actions.CheckboxChanged.name,
                 payload: {
                     tagsetId: props.tagsetInfo.ident,
                     sourceId: props.sourceId,

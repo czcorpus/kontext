@@ -21,25 +21,19 @@
 import { Action } from 'kombo';
 
 
-export enum ActionName {
-    CorpusAccessReqSubmitted = 'CORPUS_ACCESS_REQ_SUBMITTED',
-    CorpusAccessReqSubmittedDone = 'CORPUS_ACCESS_REQ_SUBMITTED_DONE'
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface CorpusAccessReqSubmitted extends Action<{
+    static CorpusAccessReqSubmitted:Action<{
         corpusId:string;
         corpusName:string;
         customMessage:string;
-    }> {
-        name:ActionName.CorpusAccessReqSubmitted;
-    }
+    }> = {
+        name: 'CORPUS_ACCESS_REQ_SUBMITTED'
+    };
 
-    export interface CorpusAccessReqSubmittedDone extends Action<{
-    }> {
-        name:ActionName.CorpusAccessReqSubmittedDone;
-    }
+    static CorpusAccessReqSubmittedDone:Action<{
+    }> = {
+        name: 'CORPUS_ACCESS_REQ_SUBMITTED_DONE'
+    };
 
 }

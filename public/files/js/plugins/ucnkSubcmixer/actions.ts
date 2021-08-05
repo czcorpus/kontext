@@ -21,71 +21,58 @@
 import { Action } from 'kombo';
 import { CalculationResults } from './common';
 
-export enum ActionName {
 
-    ShowWidget = 'UCNK_SUBCMIXER_SHOW_WIDGET',
-    HideWidget = 'UCNK_SUBCMIXER_HIDE_WIDGET',
-    SetRatio = 'UCNK_SUBCMIXER_SET_RATIO',
-    SetRatioValidate = 'UCNK_SUBCMIXER_SET_RATIO_VALIDATE',
-    SubmitTask = 'UCNK_SUBCMIXER_SUBMIT_TASK',
-    SubmitTaskDone = 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE',
-    SubmitCreateSubcorpus = 'UCNK_SUBCMIXER_CREATE_SUBCORPUS',
-    CreateSubcorpusDone = 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE',
-    ClearResult = 'UCNK_SUBCMIXER_CLEAR_RESULT'
+export class Actions {
 
-}
+    static ShowWidget:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_SHOW_WIDGET'
+    };
 
-export namespace Actions {
+    static HideWidget:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_HIDE_WIDGET'
+    };
 
-    export interface ShowWidget extends Action<{
-    }> {
-        name: ActionName.ShowWidget;
-    }
-
-    export interface HideWidget extends Action<{
-    }> {
-        name: ActionName.HideWidget;
-    }
-
-    export interface SetRatio extends Action<{
+    static SetRatio:Action<{
         attrName:string;
         attrValue:string;
         ratio:string;
-    }> {
-        name: ActionName.SetRatio;
-    }
+    }> = {
+        name: 'UCNK_SUBCMIXER_SET_RATIO'
+    };
 
-    export interface SetRatioValidate extends Action<{
+    static SetRatioValidate:Action<{
         attrName:string;
         attrValue:string;
         isInvalid:boolean;
-    }> {
-        name: ActionName.SetRatioValidate;
-    }
+    }> = {
+        name: 'UCNK_SUBCMIXER_SET_RATIO_VALIDATE'
+    };
 
-    export interface SubmitTask extends Action<{
-    }> {
-        name: ActionName.SubmitTask;
-    }
+    static SubmitTask:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_SUBMIT_TASK'
+    };
 
-    export interface SubmitTaskDone extends Action<{
+    static SubmitTaskDone:Action<{
         result:CalculationResults;
-    }> {
-        name: ActionName.SubmitTaskDone;
-    }
+    }> = {
+        name: 'UCNK_SUBCMIXER_SUBMIT_TASK_DONE'
+    };
 
-    export interface SubmitCreateSubcorpus extends Action<{
-    }> {
-        name: ActionName.SubmitCreateSubcorpus;
-    }
+    static SubmitCreateSubcorpus:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS'
+    };
 
-    export interface CreateSubcorpusDone extends Action<{
-    }> {
-        name: ActionName.CreateSubcorpusDone;
-    }
+    static CreateSubcorpusDone:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_CREATE_SUBCORPUS_DONE'
+    };
 
-    export interface ClearResult extends Action<{
-    }> {
-        name: ActionName.ClearResult;
-    }
+    static ClearResult:Action<{
+    }> = {
+        name: 'UCNK_SUBCMIXER_CLEAR_RESULT'
+    };
 }

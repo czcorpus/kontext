@@ -20,141 +20,124 @@
 
 import { Action } from 'kombo';
 
-export const enum ActionName {
-    GetInitialData = 'TAGHELPER_GET_INITIAL_DATA',
-    GetInitialDataDone = 'TAGHELPER_GET_INITIAL_DATA_DONE',
-    CheckboxChanged = 'TAGHELPER_CHECKBOX_CHANGED',
-    LoadFilteredDataDone = 'TAGHELPER_LOAD_FILTERED_DATA_DONE',
-    Undo = 'TAGHELPER_UNDO',
-    Reset = 'TAGHELPER_RESET',
-    ToggleActivePosition = 'TAGHELPER_TOGGLE_ACTIVE_POSITION',
-    SetActiveTag = 'TAGHELPER_SET_ACTIVE_TAG',
-    KVSelectCategory = 'TAGHELPER_SELECT_CATEGORY',
-    KVAddFilter = 'TAGHELPER_ADD_FILTER',
-    KVRemoveFilter = 'TAGHELPER_REMOVE_FILTER',
-    KVGetInitialDataDone = 'TAGHELPER_KV_GET_INITIAL_DATA_DONE',
-    KVGetInitialDataNOP = 'TAGHELPER_KV_GET_INITIAL_DATA_NOP',
-    KVGetFilteredDataDone = 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
-}
+export class Actions {
 
-export namespace Actions {
-
-    export interface GetInitialData extends Action<{
+    static GetInitialData:Action<{
         sourceId:string;
         tagsetId:string;
         corpname:string;
-    }> {
-        name:ActionName.GetInitialData;
-    }
+    }> = {
+        name: 'TAGHELPER_GET_INITIAL_DATA'
+    };
 
-    export interface GetInitialDataDone extends Action<{
+    static GetInitialDataDone:Action<{
         tagsetId:string;
         sourceId:string;
         tags:Array<Array<[string, string]>>;
         labels:Array<string>;
-    }> {
-        name:ActionName.GetInitialDataDone;
-    }
+    }> = {
+        name: 'TAGHELPER_GET_INITIAL_DATA_DONE'
+    };
 
-    export interface CheckboxChanged extends Action<{
+    static CheckboxChanged:Action<{
         tagsetId:string;
         sourceId:string;
         position:number;
         value:string;
         checked:boolean;
-    }> {
-        name:ActionName.CheckboxChanged;
-    }
+    }> = {
+        name: 'TAGHELPER_CHECKBOX_CHANGED'
+    };
 
-    export interface LoadFilteredDataDone extends Action<{
+    static LoadFilteredDataDone:Action<{
         tagsetId:string;
         sourceId:string;
         tags:Array<Array<[string, string]>>;
         triggerRow:number;
-    }> {
-        name:ActionName.LoadFilteredDataDone;
-    }
+    }> = {
+        name: 'TAGHELPER_LOAD_FILTERED_DATA_DONE'
+    };
 
-    export interface Undo extends Action<{
+    static Undo:Action<{
         tagsetId:string;
         sourceId:string;
-    }> {
-        name:ActionName.Undo;
-    }
+    }> = {
+        name: 'TAGHELPER_UNDO'
+    };
 
-    export interface Reset extends Action<{
+    static Reset:Action<{
         tagsetId:string;
         sourceId:string;
-    }> {
-        name:ActionName.Reset;
-    }
+    }> = {
+        name: 'TAGHELPER_RESET'
+    };
 
-    export interface ToggleActivePosition extends Action<{
+    static ToggleActivePosition:Action<{
         tagsetId:string;
         sourceId:string;
         idx:number;
-    }> {
-        name:ActionName.ToggleActivePosition;
-    }
+    }> = {
+        name: 'TAGHELPER_TOGGLE_ACTIVE_POSITION'
+    };
 
-    export interface SetActiveTag extends Action<{
+    static SetActiveTag:Action<{
         tagsetId:string;
         sourceId:string;
         corpname:string;
-    }> {
-        name:ActionName.SetActiveTag;
-    }
+    }> = {
+        name: 'TAGHELPER_SET_ACTIVE_TAG'
+    };
 
-    export interface KVSelectCategory extends Action<{
+    static KVSelectCategory:Action<{
         tagsetId:string;
         sourceId:string;
         value:string;
-    }> {
-        name:ActionName.KVSelectCategory;
-    }
+    }> = {
+        name: 'TAGHELPER_SELECT_CATEGORY'
+    };
 
-    export interface KVAddFilter extends Action<{
+    static KVAddFilter:Action<{
         tagsetId:string;
         sourceId:string;
         name:string;
         value:string;
-    }> {
-        name:ActionName.KVAddFilter;
-    }
+    }> = {
+        name: 'TAGHELPER_ADD_FILTER'
+    };
 
-    export interface KVRemoveFilter extends Action<{
+    static KVRemoveFilter:Action<{
         tagsetId:string;
         sourceId:string;
         name:string;
         value:string;
-    }> {
-        name:ActionName.KVRemoveFilter;
-    }
+    }> = {
+        name: 'TAGHELPER_REMOVE_FILTER'
+    };
 
-    export interface KVGetInitialDataDone extends Action<{
+    static KVGetInitialDataDone:Action<{
         tagsetId:string;
         sourceId:string;
         result:{[key:string]:Array<string>};
-    }> {
-        name:ActionName.KVGetInitialDataDone;
-    }
+    }> = {
+        name: 'TAGHELPER_KV_GET_INITIAL_DATA_DONE'
+    };
 
-    export interface KVGetInitialDataNOP extends Action<{
+    static KVGetInitialDataNOP:Action<{
         tagsetId:string;
-    }> {
-        name: ActionName.KVGetInitialDataNOP;
-    }
+    }> = {
+        name: 'TAGHELPER_KV_GET_INITIAL_DATA_NOP'
+    };
 
-    export interface KVGetFilteredDataDone extends Action<{
+    static KVGetFilteredDataDone:Action<{
         tagsetId:string;
         sourceId:string;
         result:{[key:string]:Array<string>};
-    }> {
-        name:ActionName.KVGetFilteredDataDone;
-    }
+    }> = {
+        name: 'TAGHELPER_KV_GET_FILTERED_DATA_DONE'
+    };
 }
 
 
-export function isSetActiveTagAction(a:Action):a is Actions.SetActiveTag {
-    return a.name === ActionName.SetActiveTag;
+export function isSetActiveTagAction(a:Action):a is typeof Actions.SetActiveTag {
+    return a.name === Actions.SetActiveTag.name;
 }

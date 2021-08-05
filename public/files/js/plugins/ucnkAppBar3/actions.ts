@@ -21,17 +21,11 @@
 import { Action } from 'kombo';
 
 
-export enum ActionName {
-
-    ShowLoginDialog = 'USER_SHOW_LOGIN_DIALOG'
-}
+export class Actions {
 
 
-export namespace Actions {
-
-
-    export interface ShowLoginDialog extends Action<{}> {
-        name:ActionName.ShowLoginDialog;
-    }
+    static ShowLoginDialog:Action<{}> = {
+        name: 'USER_SHOW_LOGIN_DIALOG'
+    };
 
 }

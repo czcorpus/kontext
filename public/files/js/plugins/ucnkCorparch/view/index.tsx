@@ -23,8 +23,8 @@ import { corplistItemIsUcnk } from '../common';
 import { CorplistTableModel, CorplistTableModelState } from '../corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { CorplistItem } from '../../defaultCorparch/common';
-import { Actions as DefaultActions, ActionName as DefaultActionName } from '../../defaultCorparch/actions';
-import { Actions, ActionName } from '../actions';
+import { Actions as DefaultActions} from '../../defaultCorparch/actions';
+import { Actions } from '../actions';
 import * as S from './style';
 
 export interface ViewModuleArgs {
@@ -73,8 +73,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _submitHandler() {
-            dispatcher.dispatch<Actions.CorpusAccessReqSubmitted>({
-                name: ActionName.CorpusAccessReqSubmitted,
+            dispatcher.dispatch<typeof Actions.CorpusAccessReqSubmitted>({
+                name: Actions.CorpusAccessReqSubmitted.name,
                 payload: {
                     corpusId: this.props.corpusId,
                     corpusName: this.props.corpusName,
@@ -302,8 +302,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch<DefaultActions.CorpusInfoRequired>({
-                name: DefaultActionName.CorpusInfoRequired,
+            dispatcher.dispatch<typeof DefaultActions.CorpusInfoRequired>({
+                name: DefaultActions.CorpusInfoRequired.name,
                 payload: {
                     corpusId: corpusId
                 }
@@ -311,8 +311,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch<DefaultActions.CorpusInfoClosed>({
-                name: DefaultActionName.CorpusInfoClosed,
+            dispatcher.dispatch<typeof DefaultActions.CorpusInfoClosed>({
+                name: DefaultActions.CorpusInfoClosed.name,
                 payload: {}
             });
         }
@@ -380,8 +380,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch<DefaultActions.ExpansionClicked>({
-                name: DefaultActionName.ExpansionClicked,
+            dispatcher.dispatch<typeof DefaultActions.ExpansionClicked>({
+                name: DefaultActions.ExpansionClicked.name,
                 payload: {
                     offset: props.offset
                 }

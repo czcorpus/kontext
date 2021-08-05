@@ -25,7 +25,7 @@ import { Kontext } from '../../../types/common';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget';
 import { CorplistItem } from '../common';
 import { SearchKeyword, SearchResultRow } from '../search';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
@@ -64,16 +64,16 @@ export function init({
 
         const handleRemoveClick = () => {
             if (props.trashTTL === null) {
-                dispatcher.dispatch<Actions.FavItemRemove>({
-                    name: ActionName.FavItemRemove,
+                dispatcher.dispatch<typeof Actions.FavItemRemove>({
+                    name: Actions.FavItemRemove.name,
                     payload: {
                         itemId: props.ident
                     }
                 });
 
             } else {
-                dispatcher.dispatch<Actions.FavItemAdd>({
-                    name: ActionName.FavItemAdd,
+                dispatcher.dispatch<typeof Actions.FavItemAdd>({
+                    name: Actions.FavItemAdd.name,
                     payload: {
                         itemId: props.ident
                     }
@@ -104,8 +104,8 @@ export function init({
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<Actions.FavItemClick>({
-                name: ActionName.FavItemClick,
+            dispatcher.dispatch<typeof Actions.FavItemClick>({
+                name: Actions.FavItemClick.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -192,8 +192,8 @@ export function init({
     }> = (props) => {
 
         const handleItemClick = () => {
-            dispatcher.dispatch<Actions.FeatItemClick>({
-                name: ActionName.FeatItemClick,
+            dispatcher.dispatch<typeof Actions.FeatItemClick>({
+                name: Actions.FeatItemClick.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -263,8 +263,8 @@ export function init({
         };
 
         const handleStarClick = () => {
-            dispatcher.dispatch<Actions.StarIconClick>({
-                name: ActionName.StarIconClick,
+            dispatcher.dispatch<typeof Actions.StarIconClick>({
+                name: Actions.StarIconClick.name,
                 payload: {
                     status: props.currFavitemId ? false : true,
                     itemId: props.currFavitemId
@@ -333,8 +333,8 @@ export function init({
                 case Keyboard.Value.UP_ARROW:
                 case Keyboard.Value.LEFT_ARROW:
                 case Keyboard.Value.RIGHT_ARROW:
-                    dispatcher.dispatch<Actions.MoveFocusToNextListItem>({
-                        name: ActionName.MoveFocusToNextListItem,
+                    dispatcher.dispatch<typeof Actions.MoveFocusToNextListItem>({
+                        name: Actions.MoveFocusToNextListItem.name,
                         payload: {
                             change: argMap[evt.key]
                         }
@@ -343,8 +343,8 @@ export function init({
                     evt.stopPropagation();
                 break;
                 case Keyboard.Value.ENTER:
-                    dispatcher.dispatch<Actions.EnterOnActiveListItem>({
-                        name: ActionName.EnterOnActiveListItem
+                    dispatcher.dispatch<typeof Actions.EnterOnActiveListItem>({
+                        name: Actions.EnterOnActiveListItem.name
                     });
                     evt.preventDefault();
                     evt.stopPropagation();
@@ -378,8 +378,8 @@ export function init({
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.KeywordClicked>({
-                name: ActionName.KeywordClicked,
+            dispatcher.dispatch<typeof Actions.KeywordClicked>({
+                name: Actions.KeywordClicked.name,
                 payload: {
                     keywordId: props.id,
                     status: !props.selected,
@@ -407,8 +407,8 @@ export function init({
     const ResetKeyword:React.FC<{}> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.KeywordResetClicked>({
-                name: ActionName.KeywordResetClicked
+            dispatcher.dispatch<typeof Actions.KeywordResetClicked>({
+                name: Actions.KeywordResetClicked.name
             });
         };
 
@@ -430,8 +430,8 @@ export function init({
     }> = (props) => {
 
         const handleInput = (evt) => {
-            dispatcher.dispatch<Actions.SearchInputChanged>({
-                name: ActionName.SearchInputChanged,
+            dispatcher.dispatch<typeof Actions.SearchInputChanged>({
+                name: Actions.SearchInputChanged.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -443,8 +443,8 @@ export function init({
             switch (evt.key) {
                 case Keyboard.Value.DOWN_ARROW:
                 case Keyboard.Value.UP_ARROW:
-                    dispatcher.dispatch<Actions.FocusSearchRow>({
-                        name: ActionName.FocusSearchRow,
+                    dispatcher.dispatch<typeof Actions.FocusSearchRow>({
+                        name: Actions.FocusSearchRow.name,
                         payload: {
                             inc: evt.key === Keyboard.Value.DOWN_ARROW ? 1 : -1
                         }
@@ -453,8 +453,8 @@ export function init({
                     evt.preventDefault();
                 break;
                 case Keyboard.Value.ENTER:
-                    dispatcher.dispatch<Actions.FocusedItemSelect>({
-                        name: ActionName.FocusedItemSelect
+                    dispatcher.dispatch<typeof Actions.FocusedItemSelect>({
+                        name: Actions.FocusedItemSelect.name
                     });
                     evt.stopPropagation();
                     evt.preventDefault();
@@ -483,8 +483,8 @@ export function init({
     }> = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.SearchResultItemClicked>({
-                name: ActionName.SearchResultItemClicked,
+            dispatcher.dispatch<typeof Actions.SearchResultItemClicked>({
+                name: Actions.SearchResultItemClicked.name,
                 payload: {
                     itemId: props.data.id
                 }
@@ -679,14 +679,14 @@ export function init({
         }
 
         _handleOnShow() {
-            dispatcher.dispatch<Actions.WidgetShow>({
-                name: ActionName.WidgetShow
+            dispatcher.dispatch<typeof Actions.WidgetShow>({
+                name: Actions.WidgetShow.name
             });
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<Actions.WidgetHide>({
-                name: ActionName.WidgetHide
+            dispatcher.dispatch<typeof Actions.WidgetHide>({
+                name: Actions.WidgetHide.name
             });
         }
 
@@ -700,8 +700,8 @@ export function init({
         }
 
         _handleTabSwitch(v:number) {
-            dispatcher.dispatch<Actions.SetActiveTab>({
-                name: ActionName.SetActiveTab,
+            dispatcher.dispatch<typeof Actions.SetActiveTab>({
+                name: Actions.SetActiveTab.name,
                 payload: {
                     value: v
                 }
@@ -709,8 +709,8 @@ export function init({
         }
 
         _handleAreaClick() {
-            dispatcher.dispatch<Actions.SetActiveTab>({
-                name: ActionName.SetActiveTab,
+            dispatcher.dispatch<typeof Actions.SetActiveTab>({
+                name: Actions.SetActiveTab.name,
                 payload: {
                     value: this.props.activeTab
                 }

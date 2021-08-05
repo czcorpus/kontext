@@ -24,7 +24,7 @@ import { StatefulModel, IFullActionControl } from 'kombo';
 
 import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { Actions as QueryActions,
     ActionName as QueryActionName } from '../../../models/query/actions';
 
@@ -172,8 +172,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.GetInitialData>(
-            ActionName.GetInitialData,
+        this.addActionSubtypeHandler<typeof Actions.GetInitialData>(
+            Actions.GetInitialData.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -191,8 +191,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
                     })
                 ).subscribe(
                     (data) => {
-                        this.dispatchSideEffect<Actions.GetInitialDataDone>({
-                            name: ActionName.GetInitialDataDone,
+                        this.dispatchSideEffect<typeof Actions.GetInitialDataDone>({
+                            name: Actions.GetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -203,8 +203,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
 
                     },
                     (err) => {
-                        this.dispatchSideEffect<Actions.GetInitialDataDone>({
-                            name: ActionName.GetInitialDataDone,
+                        this.dispatchSideEffect<typeof Actions.GetInitialDataDone>({
+                            name: Actions.GetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -218,8 +218,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.GetInitialDataDone>(
-            ActionName.GetInitialDataDone,
+        this.addActionSubtypeHandler<typeof Actions.GetInitialDataDone>(
+            Actions.GetInitialDataDone.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -246,8 +246,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.CheckboxChanged>(
-            ActionName.CheckboxChanged,
+        this.addActionSubtypeHandler<typeof Actions.CheckboxChanged>(
+            Actions.CheckboxChanged.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -262,8 +262,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
                 });
                 this.updateData(action.payload.sourceId).subscribe(
                     (data) => {
-                        this.dispatchSideEffect<Actions.LoadFilteredDataDone>({
-                            name: ActionName.LoadFilteredDataDone,
+                        this.dispatchSideEffect<typeof Actions.LoadFilteredDataDone>({
+                            name: Actions.LoadFilteredDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -273,8 +273,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
                         });
                     },
                     (err) => {
-                        this.dispatchSideEffect<Actions.LoadFilteredDataDone>({
-                            name: ActionName.LoadFilteredDataDone,
+                        this.dispatchSideEffect<typeof Actions.LoadFilteredDataDone>({
+                            name: Actions.LoadFilteredDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -288,8 +288,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.LoadFilteredDataDone>(
-            ActionName.LoadFilteredDataDone,
+        this.addActionSubtypeHandler<typeof Actions.LoadFilteredDataDone>(
+            Actions.LoadFilteredDataDone.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -310,8 +310,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.Undo>(
-            ActionName.Undo,
+        this.addActionSubtypeHandler<typeof Actions.Undo>(
+            Actions.Undo.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -320,8 +320,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.Reset>(
-            ActionName.Reset,
+        this.addActionSubtypeHandler<typeof Actions.Reset>(
+            Actions.Reset.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -330,8 +330,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.ToggleActivePosition>(
-            ActionName.ToggleActivePosition,
+        this.addActionSubtypeHandler<typeof Actions.ToggleActivePosition>(
+            Actions.ToggleActivePosition.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -352,8 +352,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.SetActiveTag>(
-            ActionName.SetActiveTag,
+        this.addActionSubtypeHandler<typeof Actions.SetActiveTag>(
+            Actions.SetActiveTag.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -371,8 +371,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
                     })
                 ).subscribe(
                     (data) => {
-                        this.dispatchSideEffect<Actions.GetInitialDataDone>({
-                            name: ActionName.GetInitialDataDone,
+                        this.dispatchSideEffect<typeof Actions.GetInitialDataDone>({
+                            name: Actions.GetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,
@@ -383,8 +383,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
 
                     },
                     (err) => {
-                        this.dispatchSideEffect<Actions.GetInitialDataDone>({
-                            name: ActionName.GetInitialDataDone,
+                        this.dispatchSideEffect<typeof Actions.GetInitialDataDone>({
+                            name: Actions.GetInitialDataDone.name,
                             payload: {
                                 tagsetId: this.tagsetId,
                                 sourceId: action.payload.sourceId,

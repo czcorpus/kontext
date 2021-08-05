@@ -25,7 +25,7 @@ import { IFullActionControl, StatelessModel } from 'kombo';
 import { PluginInterfaces } from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import { PageModel } from '../../app/page';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 
@@ -37,8 +37,8 @@ export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {});
 
-        this.addActionHandler<Actions.ShowLoginDialog>(
-            ActionName.ShowLoginDialog,
+        this.addActionHandler<typeof Actions.ShowLoginDialog>(
+            Actions.ShowLoginDialog.name,
             null,
             (state, action, dispatch) => {
                 try {

@@ -4,7 +4,7 @@ import { List, pipe, Dict } from 'cnc-tskit';
 
 import { FilterRecord, UDTagBuilderModelState } from './models';
 import { Kontext } from '../../../types/common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 
 import * as S from '../style';
 
@@ -134,8 +134,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
 
         const handleCheckboxChange = (event) => {
             if (event.target.checked) {
-                dispatcher.dispatch<Actions.KVAddFilter>({
-                    name: ActionName.KVAddFilter,
+                dispatcher.dispatch<typeof Actions.KVAddFilter>({
+                    name: Actions.KVAddFilter.name,
                     payload: {
                         tagsetId: props.tagsetInfo.ident,
                         sourceId: props.sourceId,
@@ -150,8 +150,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         };
 
         const handleRemoveFilter = (event) => {
-            dispatcher.dispatch<Actions.KVRemoveFilter>({
-                name: ActionName.KVRemoveFilter,
+            dispatcher.dispatch<typeof Actions.KVRemoveFilter>({
+                name: Actions.KVRemoveFilter.name,
                 payload: {
                     tagsetId: props.tagsetInfo.ident,
                     sourceId: props.sourceId,
@@ -162,8 +162,8 @@ export function init(dispatcher:IActionDispatcher, ut:Kontext.ComponentHelpers):
         };
 
         const handleCategorySelect = (event) => {
-            dispatcher.dispatch<Actions.KVSelectCategory>({
-                name: ActionName.KVSelectCategory,
+            dispatcher.dispatch<typeof Actions.KVSelectCategory>({
+                name: Actions.KVSelectCategory.name,
                 payload: {
                     tagsetId: props.tagsetInfo.ident,
                     sourceId: props.sourceId,

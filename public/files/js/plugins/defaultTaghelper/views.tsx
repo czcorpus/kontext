@@ -25,7 +25,7 @@ import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { Actions as QueryActions, ActionName as QueryActionName,
         QueryFormType } from '../../models/query/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';
 import { PosTagModelState, PosTagModel } from './positional/models';
 import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models';
@@ -112,8 +112,8 @@ export function init(
 
         const buttonClick = (evt) => {
             if (evt.target.value === 'reset') {
-                dispatcher.dispatch<Actions.Reset>({
-                    name: ActionName.Reset,
+                dispatcher.dispatch<typeof Actions.Reset>({
+                    name: Actions.Reset.name,
                     payload: {
                         tagsetId: props.tagsetId,
                         sourceId: props.sourceId
@@ -121,8 +121,8 @@ export function init(
                 });
 
             } else if (evt.target.value === 'undo') {
-                dispatcher.dispatch<Actions.Undo>({
-                    name: ActionName.Undo,
+                dispatcher.dispatch<typeof Actions.Undo>({
+                    name: Actions.Undo.name,
                     payload: {
                         tagsetId: props.tagsetId,
                         sourceId: props.sourceId
@@ -145,8 +145,8 @@ export function init(
                         rawFocusIdx: null
                     }
                 });
-                dispatcher.dispatch<Actions.Reset>({
-                    name: ActionName.Reset,
+                dispatcher.dispatch<typeof Actions.Reset>({
+                    name: Actions.Reset.name,
                     payload: {
                         tagsetId: props.tagsetId,
                         sourceId: props.sourceId
@@ -239,8 +239,8 @@ export function init(
     const ActiveTagBuilder:React.FC<PluginInterfaces.TagHelper.ViewProps & TabFrameModelState> = (props) => {
 
         const handleTabSelection = (tagsetId:string) => {
-            dispatcher.dispatch<Actions.SetActiveTag>({
-                name: ActionName.SetActiveTag,
+            dispatcher.dispatch<typeof Actions.SetActiveTag>({
+                name: Actions.SetActiveTag.name,
                 payload: {
                     sourceId: props.sourceId,
                     tagsetId,
@@ -253,8 +253,8 @@ export function init(
 
         React.useEffect(
             () => {
-                dispatcher.dispatch<Actions.GetInitialData>({
-                    name: ActionName.GetInitialData,
+                dispatcher.dispatch<typeof Actions.GetInitialData>({
+                    name: Actions.GetInitialData.name,
                     payload: {
                         tagsetId: initialTagsetId,
                         sourceId: props.sourceId,

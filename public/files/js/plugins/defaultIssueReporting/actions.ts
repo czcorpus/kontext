@@ -21,35 +21,27 @@
 import { Action } from 'kombo';
 
 
-export enum ActionName {
-    SetVisibility = 'ISSUE_REPORTING_SET_VISIBILITY',
-    UpdateIssueBody = 'ISSUE_REPORTING_UPDATE_ISSUE_BODY',
-    SubmitIssue = 'ISSUE_REPORTING_SUBMIT_ISSUE',
-    SubmitIssueDone = 'ISSUE_REPORTING_SUBMIT_ISSUE_DONE',
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface SetVisibility extends Action<{
+    static SetVisibility:Action<{
         value:boolean;
-    }> {
-        name:ActionName.SetVisibility;
-    }
+    }> = {
+        name: 'ISSUE_REPORTING_SET_VISIBILITY'
+    };
 
-    export interface UpdateIssueBody extends Action<{
+    static UpdateIssueBody:Action<{
         value:string;
-    }> {
-        name:ActionName.UpdateIssueBody;
-    }
+    }> = {
+        name: 'ISSUE_REPORTING_UPDATE_ISSUE_BODY'
+    };
 
-    export interface SubmitIssue extends Action<{
-    }> {
-        name:ActionName.SubmitIssue;
-    }
+    static SubmitIssue:Action<{
+    }> = {
+        name: 'ISSUE_REPORTING_SUBMIT_ISSUE'
+    };
 
-    export interface SubmitIssueDone extends Action<{
-    }> {
-        name:ActionName.SubmitIssueDone;
-    }
+    static SubmitIssueDone:Action<{
+    }> = {
+        name: 'ISSUE_REPORTING_SUBMIT_ISSUE_DONE'
+    };
 }

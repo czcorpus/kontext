@@ -21,7 +21,7 @@
 import {PluginInterfaces, IPluginApi} from '../../types/plugins';
 import {init as viewInit} from './view';
 import { StatelessModel } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 
 
@@ -46,18 +46,18 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<Actions.SetVisibility>(
-            ActionName.SetVisibility,
+        this.addActionHandler<typeof Actions.SetVisibility>(
+            Actions.SetVisibility.name,
             (state, action) => {state.isActive = action.payload.value}
         );
 
-        this.addActionHandler<Actions.UpdateIssueBody>(
-            ActionName.UpdateIssueBody,
+        this.addActionHandler<typeof Actions.UpdateIssueBody>(
+            Actions.UpdateIssueBody.name,
             (state, action) => {state.issueBody = action.payload.value}
         );
 
-        this.addActionHandler<Actions.SubmitIssue>(
-            ActionName.SubmitIssue,
+        this.addActionHandler<typeof Actions.SubmitIssue>(
+            Actions.SubmitIssue.name,
             (state, action) => {state.isBusy = true},
             (state, action, dispatch) => {
                 this.pluginApi.ajax$(
@@ -69,11 +69,11 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
                     }
                 ).subscribe(
                     (data) => {
-                        dispatch<Actions.SubmitIssueDone>({name: ActionName.SubmitIssueDone});
+                        dispatch<typeof Actions.SubmitIssueDone>({name: Actions.SubmitIssueDone.name});
                     },
                     (err) => {
-                        dispatch<Actions.SubmitIssueDone>({
-                            name: ActionName.SubmitIssueDone,
+                        dispatch<typeof Actions.SubmitIssueDone>({
+                            name: Actions.SubmitIssueDone.name,
                             error: err
                         });
                     }
@@ -81,8 +81,8 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
             }
         );
 
-        this.addActionHandler<Actions.SubmitIssueDone>(
-            ActionName.SubmitIssueDone,
+        this.addActionHandler<typeof Actions.SubmitIssueDone>(
+            Actions.SubmitIssueDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
