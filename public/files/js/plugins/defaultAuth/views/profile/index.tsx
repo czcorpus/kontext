@@ -24,7 +24,7 @@ import { Subscription } from 'rxjs';
 
 import { Kontext } from '../../../../types/common';
 import { UserProfileModel, UserProfileState } from '../../profile';
-import { Actions, ActionName } from '../../actions';
+import { Actions } from '../../actions';
 import * as S from './style';
 
 
@@ -75,8 +75,8 @@ export function init(
     const TRCurrPasswdInput = (props:{value:Kontext.FormValue<string>}) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.SetCurrPassword>({
-                name: ActionName.SetCurrPassword,
+            dispatcher.dispatch<typeof Actions.SetCurrPassword>({
+                name: Actions.SetCurrPassword.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -105,8 +105,8 @@ export function init(
     const TRNewPasswdInput:UserProfileViews['TRNewPasswdInput'] = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.SetNewPasswd>({
-                name: ActionName.SetNewPasswd,
+            dispatcher.dispatch<typeof Actions.SetNewPasswd>({
+                name: Actions.SetNewPasswd.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -134,8 +134,8 @@ export function init(
     const TRNewPasswdInput2:UserProfileViews['TRNewPasswdInput2'] = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.SetNewPasswd2>({
-                name: ActionName.SetNewPasswd2,
+            dispatcher.dispatch<typeof Actions.SetNewPasswd2>({
+                name: Actions.SetNewPasswd2.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -164,8 +164,8 @@ export function init(
     }) => {
 
         const handleSubmitClick = (props) => {
-            dispatcher.dispatch<Actions.SubmitNewPassword>({
-                name: ActionName.SubmitNewPassword
+            dispatcher.dispatch<typeof Actions.SubmitNewPassword>({
+                name: Actions.SubmitNewPassword.name
             });
         };
 

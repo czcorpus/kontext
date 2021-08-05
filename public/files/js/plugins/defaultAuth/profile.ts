@@ -26,7 +26,7 @@ import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 import {Kontext} from '../../types/common';
 import {IPluginApi} from '../../types/plugins';
 import {MultiDict} from '../../multidict';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { UsernameTestResponse, validationStatusHasErrors, SignUpResponse, ValidationStatus,
     PasswordSetResponse, newValidationStatus, SubmitFormErrors } from './common';
 
@@ -81,16 +81,16 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<Actions.SetCurrPassword>(
-            ActionName.SetCurrPassword,
+        this.addActionHandler<typeof Actions.SetCurrPassword>(
+            Actions.SetCurrPassword.name,
             (state, action) => {
                 state.currPasswd = Kontext.updateFormValue(
                     state.currPasswd, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetNewPasswd>(
-            ActionName.SetNewPasswd,
+        this.addActionHandler<typeof Actions.SetNewPasswd>(
+            Actions.SetNewPasswd.name,
             (state, action) => {
                 state.newPasswd = Kontext.updateFormValue(
                     state.newPasswd, {value: action.payload.value});
@@ -98,56 +98,56 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
         );
 
 
-        this.addActionHandler<Actions.SetNewPasswd2>(
-            ActionName.SetNewPasswd2,
+        this.addActionHandler<typeof Actions.SetNewPasswd2>(
+            Actions.SetNewPasswd2.name,
             (state, action) => {
                 state.newPasswd2 = Kontext.updateFormValue(
                     state.newPasswd2, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetUsername>(
-            ActionName.SetUsername,
+        this.addActionHandler<typeof Actions.SetUsername>(
+            Actions.SetUsername.name,
             (state, action) => {
                 state.username = Kontext.updateFormValue(
                     state.username, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetFirstname>(
-            ActionName.SetFirstname,
+        this.addActionHandler<typeof Actions.SetFirstname>(
+            Actions.SetFirstname.name,
             (state, action) => {
                 state.firstName = Kontext.updateFormValue(
                     state.firstName, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetLastname>(
-            ActionName.SetLastname,
+        this.addActionHandler<typeof Actions.SetLastname>(
+            Actions.SetLastname.name,
             (state, action) => {
                 state.lastName = Kontext.updateFormValue(
                     state.lastName, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetAffiliation>(
-            ActionName.SetAffiliation,
+        this.addActionHandler<typeof Actions.SetAffiliation>(
+            Actions.SetAffiliation.name,
             (state, action) => {
                 state.affiliation = Kontext.updateFormValue(
                     state.affiliation, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SetEmail>(
-            ActionName.SetEmail,
+        this.addActionHandler<typeof Actions.SetEmail>(
+            Actions.SetEmail.name,
             (state, action) => {
                 state.email = Kontext.updateFormValue(
                     state.email, {value: action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SubmitNewPasswordDone>(
-            ActionName.SubmitNewPasswordDone,
+        this.addActionHandler<typeof Actions.SubmitNewPasswordDone>(
+            Actions.SubmitNewPasswordDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -182,8 +182,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitNewPassword>(
-            ActionName.SubmitNewPassword,
+        this.addActionHandler<typeof Actions.SubmitNewPassword>(
+            Actions.SubmitNewPassword.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -191,8 +191,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                 this.submitNewPassword(state).subscribe(
                     (validationStatus) => {
                         if (validationStatusHasErrors(validationStatus)) {
-                            dispatch<Actions.SubmitNewPasswordDone>({
-                                name: ActionName.SubmitNewPasswordDone,
+                            dispatch<typeof Actions.SubmitNewPasswordDone>({
+                                name: Actions.SubmitNewPasswordDone.name,
                                 payload: {
                                     validationStatus
                                 },
@@ -202,8 +202,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                                     msg => this.pluginApi.showMessage('error', msg));
 
                         } else {
-                            dispatch<Actions.SubmitNewPasswordDone>({
-                                name: ActionName.SubmitNewPasswordDone,
+                            dispatch<typeof Actions.SubmitNewPasswordDone>({
+                                name: Actions.SubmitNewPasswordDone.name,
                                 payload: {
                                     validationStatus
                                 }
@@ -215,8 +215,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     (err) => {
                         this.pluginApi.showMessage('error', err);
                         console.error(err);
-                        dispatch<Actions.SubmitNewPasswordDone>({
-                            name: ActionName.SubmitNewPasswordDone,
+                        dispatch<typeof Actions.SubmitNewPasswordDone>({
+                            name: Actions.SubmitNewPasswordDone.name,
                             payload: {
                                 validationStatus: {
                                     currPasswd: false,
@@ -232,8 +232,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.CheckUsername>(
-            ActionName.CheckUsername,
+        this.addActionHandler<typeof Actions.CheckUsername>(
+            Actions.CheckUsername.name,
             (state, action) => {
                 state.usernameAvailBusy = true;
             },
@@ -246,8 +246,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     }
                 ).subscribe(
                     (resp) => {
-                        dispatch<Actions.CheckUsernameDone>({
-                            name: ActionName.CheckUsernameDone,
+                        dispatch<typeof Actions.CheckUsernameDone>({
+                            name: Actions.CheckUsernameDone.name,
                             payload: {
                                 available: resp.available,
                                 valid: resp.valid
@@ -255,8 +255,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                         });
                     },
                     (err) => {
-                        dispatch<Actions.CheckUsernameDone>({
-                            name: ActionName.CheckUsernameDone,
+                        dispatch<typeof Actions.CheckUsernameDone>({
+                            name: Actions.CheckUsernameDone.name,
                             error: err
                         });
                     }
@@ -264,8 +264,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.CheckUsernameDone>(
-            ActionName.CheckUsernameDone,
+        this.addActionHandler<typeof Actions.CheckUsernameDone>(
+            Actions.CheckUsernameDone.name,
             (state, action) => {
                 state.usernameAvail = action.payload.available;
                 state.username.isInvalid = !action.payload.valid;
@@ -273,8 +273,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitSignUp>(
-            ActionName.SubmitSignUp,
+        this.addActionHandler<typeof Actions.SubmitSignUp>(
+            Actions.SubmitSignUp.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -293,14 +293,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
                     }
                 ).subscribe(
                     (resp) => {
-                        dispatch<Actions.SubmitSignUpDone>({
-                            name: ActionName.SubmitSignUpDone,
+                        dispatch<typeof Actions.SubmitSignUpDone>({
+                            name: Actions.SubmitSignUpDone.name,
                             payload: {errors: {}}
                         });
                     },
                     (err) => {
-                        dispatch<Actions.SubmitSignUpDone>({
-                            name: ActionName.SubmitSignUpDone,
+                        dispatch<typeof Actions.SubmitSignUpDone>({
+                            name: Actions.SubmitSignUpDone.name,
                             payload: {
                                 errors: err.response['error_args'] as SubmitFormErrors
                             },
@@ -320,8 +320,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.SubmitSignUpDone>(
-            ActionName.SubmitSignUpDone,
+        this.addActionHandler<typeof Actions.SubmitSignUpDone>(
+            Actions.SubmitSignUpDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -353,8 +353,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.NewRegistration>(
-            ActionName.NewRegistration,
+        this.addActionHandler<typeof Actions.NewRegistration>(
+            Actions.NewRegistration.name,
             (state, action) => {
                 state.isFinished = false;
                 state.username = Kontext.resetFormValue(state.username, '');
@@ -367,8 +367,8 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
             }
         );
 
-        this.addActionHandler<Actions.GoToMainPage>(
-            ActionName.GoToMainPage,
+        this.addActionHandler<typeof Actions.GoToMainPage>(
+            Actions.GoToMainPage.name,
             null,
             (state, action, dispatch) => {
                 window.location.href = this.pluginApi.createActionUrl('query');

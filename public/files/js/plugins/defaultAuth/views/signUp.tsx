@@ -26,7 +26,7 @@ import { debounceTime } from 'rxjs/operators'
 import { Kontext } from '../../../types/common';
 import { UserProfileModel, UserProfileState } from './../profile';
 import { UserProfileViews } from './profile';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 
 import * as S from './style';
 
@@ -90,16 +90,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             this.writingThrottle = this.writingStream.pipe(debounceTime(TrUsernameInput.USERNAME_WRITING_THROTTLE_INTERVAL));
             this.writingThrottle.subscribe({
                 next: (v:string) => {
-                    dispatcher.dispatch<Actions.CheckUsername>({
-                        name: ActionName.CheckUsername
+                    dispatcher.dispatch<typeof Actions.CheckUsername>({
+                        name: Actions.CheckUsername.name
                     });
                 }
             });
         }
 
         private handleUsernameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch<Actions.SetUsername>({
-                name: ActionName.SetUsername,
+            dispatcher.dispatch<typeof Actions.SetUsername>({
+                name: Actions.SetUsername.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -143,8 +143,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleFirstNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch<Actions.SetFirstname>({
-                name: ActionName.SetFirstname,
+            dispatcher.dispatch<typeof Actions.SetFirstname>({
+                name: Actions.SetFirstname.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -152,8 +152,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleLastNameChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch<Actions.SetLastname>({
-                name: ActionName.SetLastname,
+            dispatcher.dispatch<typeof Actions.SetLastname>({
+                name: Actions.SetLastname.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -161,8 +161,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleAffiliationChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch<Actions.SetAffiliation>({
-                name: ActionName.SetAffiliation,
+            dispatcher.dispatch<typeof Actions.SetAffiliation>({
+                name: Actions.SetAffiliation.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -170,8 +170,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleEmailChange(evt:React.ChangeEvent<HTMLInputElement>):void {
-            dispatcher.dispatch<Actions.SetEmail>({
-                name: ActionName.SetEmail,
+            dispatcher.dispatch<typeof Actions.SetEmail>({
+                name: Actions.SetEmail.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -179,22 +179,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         private handleSignUpButton(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch<Actions.SubmitSignUp>({
-                name: ActionName.SubmitSignUp,
+            dispatcher.dispatch<typeof Actions.SubmitSignUp>({
+                name: Actions.SubmitSignUp.name,
                 payload: {}
             });
         }
 
         private handleNewRegistration(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch<Actions.NewRegistration>({
-                name: ActionName.NewRegistration,
+            dispatcher.dispatch<typeof Actions.NewRegistration>({
+                name: Actions.NewRegistration.name,
                 payload: {}
             });
         }
 
         private handleGoToMainpage(evt:React.MouseEvent<HTMLButtonElement>):void {
-            dispatcher.dispatch<Actions.GoToMainPage>({
-                name: ActionName.GoToMainPage,
+            dispatcher.dispatch<typeof Actions.GoToMainPage>({
+                name: Actions.GoToMainPage.name,
                 payload: {}
             });
         }
