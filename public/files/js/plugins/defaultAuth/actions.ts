@@ -22,119 +22,98 @@ import { Action } from 'kombo';
 
 import { SubmitFormErrors, ValidationStatus } from './common';
 
+export class Actions {
 
-export enum ActionName {
-    SetCurrPassword = 'USER_PROFILE_SET_CURR_PASSWD',
-    SetNewPasswd = 'USER_PROFILE_SET_NEW_PASSWD',
-    SetNewPasswd2 = 'USER_PROFILE_SET_NEW_PASSWD2',
-    SubmitNewPassword = 'USER_PROFILE_SUBMIT_NEW_PASSWORD',
-    SubmitNewPasswordDone = 'USER_PROFILE_SUBMIT_NEW_PASSWORD_DONE',
-    SetUsername = 'USER_PROFILE_SET_USERNAME',
-    CheckUsername = 'USER_PROFILE_CHECK_USERNAME',
-    CheckUsernameDone = 'USER_PROFILE_CHECK_USERNAME_DONE',
-    SetFirstname = 'USER_PROFILE_SET_FIRSTNAME',
-    SetLastname = 'USER_PROFILE_SET_LASTNAME',
-    SetAffiliation = 'USER_PROFILE_SET_AFFILIATION',
-    SetEmail = 'USER_PROFILE_SET_EMAIL',
-    SubmitSignUp = 'USER_PROFILE_SUBMIT_SIGN_UP',
-    SubmitSignUpDone = 'USER_PROFILE_SUBMIT_SIGN_UP_DONE',
-    NewRegistration = 'USER_PROFILE_NEW_REGISTRATION',
-    GoToMainPage = 'USER_PROFILE_GO_TO_MAIN_PAGE'
-}
-
-
-export namespace Actions {
-
-    export interface SetCurrPassword extends Action<{
+    static SetCurrPassword:Action<{
         value:string;
-    }> {
-        name:ActionName.SetCurrPassword;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_CURR_PASSWD'
+    };
 
-    export interface SetNewPasswd extends Action<{
+    static SetNewPasswd:Action<{
         value:string;
-    }> {
-        name:ActionName.SetNewPasswd;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_NEW_PASSWD'
+    };
 
-    export interface SetNewPasswd2 extends Action<{
+    static SetNewPasswd2:Action<{
         value:string;
-    }> {
-        name:ActionName.SetNewPasswd2;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_NEW_PASSWD2'
+    };
 
-    export interface SubmitNewPassword extends Action<{
-    }> {
-        name:ActionName.SubmitNewPassword;
-    }
+    static SubmitNewPassword:Action<{
+    }> = {
+        name: 'USER_PROFILE_SUBMIT_NEW_PASSWORD'
+    };
 
-    export interface SubmitNewPasswordDone extends Action<{
+    static SubmitNewPasswordDone:Action<{
         validationStatus:ValidationStatus;
-    }> {
-        name:ActionName.SubmitNewPasswordDone;
-    }
+    }> = {
+        name: 'USER_PROFILE_SUBMIT_NEW_PASSWORD_DONE'
+    };
 
-    export interface SetUsername extends Action<{
+    static SetUsername:Action<{
         value:string;
-    }> {
-        name:ActionName.SetUsername;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_USERNAME'
+    };
 
-    export interface CheckUsername extends Action<{
-    }> {
-        name:ActionName.CheckUsername;
-    }
+    static CheckUsername:Action<{
+    }> = {
+        name: 'USER_PROFILE_CHECK_USERNAME'
+    };
 
-    export interface CheckUsernameDone extends Action<{
+    static CheckUsernameDone:Action<{
         available:boolean;
         valid:boolean;
-    }> {
-        name:ActionName.CheckUsernameDone;
-    }
+    }> = {
+        name: 'USER_PROFILE_CHECK_USERNAME_DONE'
+    };
 
-    export interface SetFirstname extends Action<{
+    static SetFirstname:Action<{
         value:string;
-    }> {
-        name:ActionName.SetFirstname;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_FIRSTNAME'
+    };
 
-    export interface SetLastname extends Action<{
+    static SetLastname:Action<{
         value:string;
-    }> {
-        name:ActionName.SetLastname;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_LASTNAME'
+    };
 
-    export interface SetAffiliation extends Action<{
+    static SetAffiliation:Action<{
         value: string;
-    }> {
-        name: ActionName.SetAffiliation;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_AFFILIATION'
+    };
 
-    export interface SetEmail extends Action<{
+    static SetEmail:Action<{
         value:string;
-    }> {
-        name:ActionName.SetEmail;
-    }
+    }> = {
+        name: 'USER_PROFILE_SET_EMAIL'
+    };
 
-    export interface SubmitSignUp extends Action<{
-    }> {
-        name:ActionName.SubmitSignUp;
-    }
+    static SubmitSignUp:Action<{
+    }> = {
+        name: 'USER_PROFILE_SUBMIT_SIGN_UP'
+    };
 
-    export interface SubmitSignUpDone extends Action<{
+    static SubmitSignUpDone:Action<{
        errors:SubmitFormErrors;
-    }> {
-        name:ActionName.SubmitSignUpDone;
-    }
+    }> = {
+        name: 'USER_PROFILE_SUBMIT_SIGN_UP_DONE'
+    };
 
-    export interface NewRegistration extends Action<{
-    }> {
-        name:ActionName.NewRegistration;
-    }
+    static NewRegistration:Action<{
+    }> = {
+        name: 'USER_PROFILE_NEW_REGISTRATION'
+    };
 
-    export interface GoToMainPage extends Action<{
-    }> {
-        name:ActionName.GoToMainPage;
-    }
+    static GoToMainPage:Action<{
+    }> = {
+        name: 'USER_PROFILE_GO_TO_MAIN_PAGE'
+    };
 
 }
