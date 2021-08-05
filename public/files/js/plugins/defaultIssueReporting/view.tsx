@@ -22,7 +22,7 @@ import * as React from 'react';
 import {Kontext} from '../../types/common';
 import { IssueReportingModel, IssueReportingModelState } from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 export interface IssueReportingWidgetProps {
@@ -48,8 +48,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.SubmitIssue>({
-                name: ActionName.SubmitIssue,
+            dispatcher.dispatch<typeof Actions.SubmitIssue>({
+                name: Actions.SubmitIssue.name,
                 payload: {}
             });
         };
@@ -78,8 +78,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleTextareaChange = (evt) => {
-            dispatcher.dispatch<Actions.UpdateIssueBody>({
-                name: ActionName.UpdateIssueBody,
+            dispatcher.dispatch<typeof Actions.UpdateIssueBody>({
+                name: Actions.UpdateIssueBody.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -112,15 +112,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
 
         _handleLinkClick() {
-            dispatcher.dispatch<Actions.SetVisibility>({
-                name: ActionName.SetVisibility,
+            dispatcher.dispatch<typeof Actions.SetVisibility>({
+                name: Actions.SetVisibility.name,
                 payload: {value: true}
             });
         }
 
         _closeClickHandler() {
-            dispatcher.dispatch<Actions.SetVisibility>({
-                name: ActionName.SetVisibility,
+            dispatcher.dispatch<typeof Actions.SetVisibility>({
+                name: Actions.SetVisibility.name,
                 payload: {value: false}
             });
         }
