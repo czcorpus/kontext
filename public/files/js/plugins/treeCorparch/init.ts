@@ -22,7 +22,7 @@ import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { init as viewInit, Views as TreeCorparchViews } from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
 import { map } from 'rxjs/operators';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { List, HTTP } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
@@ -70,26 +70,26 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
         this.pluginApi = pluginApi;
         this.corpusClickHandler = corpusClickHandler;
 
-        this.addActionHandler<Actions.SetNodeStatus>(
-            ActionName.SetNodeStatus,
+        this.addActionHandler<typeof Actions.SetNodeStatus>(
+            Actions.SetNodeStatus.name,
             (state, action) => {
                 state.nodeActive[action.payload.nodeId] = !state.nodeActive[action.payload.nodeId];
             }
         );
 
-        this.addActionHandler<Actions.Deactivate>(
-            ActionName.Deactivate,
+        this.addActionHandler<typeof Actions.Deactivate>(
+            Actions.Deactivate.name,
             (state, action) => {state.active = false;},
         );
 
-        this.addActionHandler<Actions.GetData>(
-            ActionName.GetData,
+        this.addActionHandler<typeof Actions.GetData>(
+            Actions.GetData.name,
             (state, action) => {},
             (state, action, dispatch) => this.loadData(state, dispatch)
         );
 
-        this.addActionHandler<Actions.GetDataDone>(
-            ActionName.GetDataDone,
+        this.addActionHandler<typeof Actions.GetDataDone>(
+            Actions.GetDataDone.name,
             (state, action) => {
                 state.active = true;
                 state.data = action.payload.node;
@@ -97,8 +97,8 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
             }
         );
 
-        this.addActionHandler<Actions.LeafNodeClicked>(
-            ActionName.LeafNodeClicked,
+        this.addActionHandler<typeof Actions.LeafNodeClicked>(
+            Actions.LeafNodeClicked.name,
             (state, action) => {
                 this.corpusClickHandler(
                     [action.payload.ident],
@@ -173,8 +173,8 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
                 }
             })
         ).subscribe(
-            next => dispatch<Actions.GetDataDone>({
-                name: ActionName.GetDataDone,
+            next => dispatch<typeof Actions.GetDataDone>({
+                name: Actions.GetDataDone.name,
                 payload: next
             }),
             err => this.pluginApi.showMessage('error', err)

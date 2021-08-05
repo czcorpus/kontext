@@ -22,44 +22,35 @@ import { Action } from 'kombo';
 import { Node } from './init';
 
 
-export enum ActionName {
-    SetNodeStatus = 'TREE_CORPARCH_SET_NODE_STATUS',
-    Deactivate = 'TREE_CORPARCH_DEACTIVATE',
-    GetData = 'TREE_CORPARCH_GET_DATA',
-    GetDataDone = 'TREE_CORPARCH_GET_DATA_DONE',
-    LeafNodeClicked = 'TREE_CORPARCH_LEAF_NODE_CLICKED',
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface SetNodeStatus extends Action<{
+    static SetNodeStatus:Action<{
         nodeId:string;
-    }> {
-        name:ActionName.SetNodeStatus;
-    }
+    }> = {
+        name: 'TREE_CORPARCH_SET_NODE_STATUS'
+    };
 
-    export interface Deactivate extends Action<{
-    }> {
-        name:ActionName.Deactivate;
-    }
+    static Deactivate:Action<{
+    }> = {
+        name: 'TREE_CORPARCH_DEACTIVATE'
+    };
 
-    export interface GetData extends Action<{
-    }> {
-        name:ActionName.GetData;
-    }
+    static GetData:Action<{
+    }> = {
+        name: 'TREE_CORPARCH_GET_DATA'
+    };
 
-    export interface GetDataDone extends Action<{
+    static GetDataDone:Action<{
         node:Node;
         nodeActive:{[key:string]:boolean};
-    }> {
-        name:ActionName.GetDataDone;
-    }
+    }> = {
+        name: 'TREE_CORPARCH_GET_DATA_DONE'
+    };
 
-    export interface LeafNodeClicked extends Action<{
+    static LeafNodeClicked:Action<{
         ident:string;
-    }> {
-        name:ActionName.LeafNodeClicked;
-    }
+    }> = {
+        name: 'TREE_CORPARCH_LEAF_NODE_CLICKED'
+    };
 
 }

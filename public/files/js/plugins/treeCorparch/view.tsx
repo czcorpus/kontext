@@ -20,7 +20,7 @@ import * as React from 'react';
 import {Kontext} from '../../types/common';
 import {TreeWidgetModel, Node, TreeWidgetModelState} from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
@@ -56,8 +56,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch<Actions.SetNodeStatus>({
-                name: ActionName.SetNodeStatus,
+            dispatcher.dispatch<typeof Actions.SetNodeStatus>({
+                name: Actions.SetNodeStatus.name,
                 payload: {
                     nodeId: props.ident
                 }
@@ -90,8 +90,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch<Actions.LeafNodeClicked>({
-                name: ActionName.LeafNodeClicked,
+            dispatcher.dispatch<typeof Actions.LeafNodeClicked>({
+                name: Actions.LeafNodeClicked.name,
                 payload: {
                     ident: props.ident
                 }
@@ -148,10 +148,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _buttonClickHandler() {
             if (!this.props.active) {
-                dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
+                dispatcher.dispatch<typeof Actions.GetData>({name: Actions.GetData.name});
 
             } else {
-                dispatcher.dispatch<Actions.Deactivate>({name: ActionName.Deactivate});
+                dispatcher.dispatch<typeof Actions.Deactivate>({name: Actions.Deactivate.name});
             }
         }
 
@@ -174,7 +174,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     class CorptreePageComponent extends React.Component<CorptreePageComponentProps & TreeWidgetModelState> {
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.GetData>({name: ActionName.GetData});
+            dispatcher.dispatch<typeof Actions.GetData>({name: Actions.GetData.name});
         }
 
         render() {
