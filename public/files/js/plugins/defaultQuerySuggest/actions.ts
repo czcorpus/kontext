@@ -21,13 +21,10 @@
 import { Action } from 'kombo';
 import { PluginInterfaces } from '../../types/plugins';
 
-export enum ActionName {
-    CacheData = 'DEFAULT_QS_CACHE_DATA'
-}
 
-export namespace Actions {
+export class Actions {
 
-    export interface CacheData extends Action<PluginInterfaces.QuerySuggest.SuggestionReturn> {
-        name: ActionName.CacheData
+    static CacheData:Action<PluginInterfaces.QuerySuggest.SuggestionReturn> = {
+        name: 'DEFAULT_QS_CACHE_DATA'
     }
 }

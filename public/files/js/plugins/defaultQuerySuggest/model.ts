@@ -30,7 +30,7 @@ import { Actions as QueryActions, ActionName as QueryActionName } from '../../mo
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
     isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
 
 
@@ -187,8 +187,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<Actions.CacheData>(
-            ActionName.CacheData,
+        this.addActionHandler<typeof Actions.CacheData>(
+            Actions.CacheData.name,
             (state, action) => {
                 const [cached, cacheIdx] = this.fetchFromCache(
                     state, action.payload, action.payload.parsedWord);
@@ -433,8 +433,8 @@ export class Model extends StatelessModel<ModelState> {
             ),
             tap(
                 data => {
-                    dispatch<Actions.CacheData>({
-                        name: ActionName.CacheData,
+                    dispatch<typeof Actions.CacheData>({
+                        name: Actions.CacheData.name,
                         payload: {
                             ...suggArgs,
                             ...data
