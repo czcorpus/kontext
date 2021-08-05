@@ -690,6 +690,3 @@ export namespace TextTypes {
     export type ExtendedInfo = Array<[string, string]>|{__message__:string};
 
 }
-
-
-export const typedProps = <T>(props) => <T>props;

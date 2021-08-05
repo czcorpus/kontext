@@ -323,10 +323,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 const lang = linkSrch[i].getAttribute('data-lang');
                 const form = document.getElementById('language-switch-form');
                 form.addEventListener('click', () => {
-                    (<HTMLInputElement>form.querySelector('input.language')).value = lang;
-                    (<HTMLInputElement>form.querySelector('input.continue')).value =
+                    (form.querySelector('input.language') as HTMLInputElement).value = lang;
+                    (form.querySelector('input.continue') as HTMLInputElement).value =
                         window.location.href;
-                    (<HTMLFormElement>form).submit();
+                    (form as HTMLFormElement).submit();
                 });
             }
         }
@@ -354,7 +354,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         if (this.getConf<boolean>('popupServerMessages')) {
             this.renderReactComponent(
                 this.layoutViews.Messages,
-                <HTMLElement>document.querySelector('#content .messages-mount'),
+                document.querySelector('#content .messages-mount') as HTMLElement,
                 undefined,
                 () => this.dispatchServerMessages()
             );

@@ -99,7 +99,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     })();
 
     if (k !== null) {
-        return <AjaxResponse.QueryFormArgsResponse>data[k];
+        return data[k] as AjaxResponse.QueryFormArgsResponse;
 
     } else {
         return {

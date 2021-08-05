@@ -43,7 +43,7 @@ export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFor
     const ans = [];
     for (let formId in args) {
         if (args.hasOwnProperty(formId) && args[formId].form_type === 'sample') {
-            ans.push([formId, key(<AjaxResponse.SampleFormArgs>args[formId])]);
+            ans.push([formId, key(args[formId] as AjaxResponse.SampleFormArgs)]);
         }
     }
     return ans;

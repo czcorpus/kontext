@@ -65,20 +65,20 @@ export interface InitialMenuData {
  * This defines a TS type guard for DynamicSubmenuItem
  */
 export function isDynamicItem(item:Kontext.SubmenuItem): item is DynamicSubmenuItem {
-    return (<DynamicSubmenuItem>item).boundAction !== undefined;
+    return (item as DynamicSubmenuItem).boundAction !== undefined;
 }
 
 /**
  * This defines a TS type guard for StaticSubmenuItem
  */
 export function isStaticItem(item:Kontext.SubmenuItem): item is StaticSubmenuItem {
-    return (<StaticSubmenuItem>item).args !== undefined &&
+    return (item as StaticSubmenuItem).args !== undefined &&
                 !item.hasOwnProperty('message');
 }
 
 export function isEventTriggeringItem(item:Kontext.SubmenuItem):
         item is Kontext.EventTriggeringSubmenuItem {
-    return (<Kontext.EventTriggeringSubmenuItem>item).message !== undefined;
+    return (item as Kontext.EventTriggeringSubmenuItem).message !== undefined;
 }
 
 function importMenuData(data:Array<InitialMenuEntry>):Array<Kontext.MenuEntry> {

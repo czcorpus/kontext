@@ -78,7 +78,7 @@ export class ComponentTools {
 
     cloneState<T extends {[key:string]:any}>(obj:T):T {
         if (Object.assign) {
-            return <T>Object.assign({}, obj);
+            return Object.assign({}, obj) as T;
 
         } else {
             const ans:{[key:string]:any} = {};
@@ -87,7 +87,7 @@ export class ComponentTools {
                     ans[p] = obj[p];
                 }
             }
-            return <T>ans;
+            return ans as T;
         }
     }
 

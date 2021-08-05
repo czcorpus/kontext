@@ -88,7 +88,7 @@ export function fetchFilterFormArgs<T extends
     return pipe(
         args,
         Dict.filter((v, _) => v.form_type === Kontext.ConcFormTypes.FILTER),
-        Dict.map((args, _) => key(<AjaxResponse.FilterFormArgs>args)),
+        Dict.map((args, _) => key(args as AjaxResponse.FilterFormArgs)),
         (data) => ({...data, '__new__': key(initialArgs)})
     );
 }

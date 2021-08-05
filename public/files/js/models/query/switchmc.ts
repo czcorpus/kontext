@@ -44,7 +44,7 @@ export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:AjaxResponse
     const ans = [];
     for (let formId in args) {
         if (args.hasOwnProperty(formId) && args[formId].form_type === 'sample') {
-            ans.push([formId, key(<AjaxResponse.SwitchMainCorpArgs>args[formId])]);
+            ans.push([formId, key(args[formId] as AjaxResponse.SwitchMainCorpArgs)]);
         }
     }
     return ans;

@@ -325,7 +325,7 @@ export const QueryToolbox = styled.div`
         }
 
         a.highlighted::after {
-            content: " \25C0 ";
+            content: " \u25C0 ";
         }
     }
 `;

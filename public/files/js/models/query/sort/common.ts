@@ -88,7 +88,7 @@ export function fetchSortFormArgs<T extends AjaxResponse.SortFormArgs[keyof Ajax
         args,
         Dict.toEntries(),
         List.filter(([, v]) => v.form_type === 'sort'),
-        List.map(([formId, args]) => tuple(formId, asArr(key(<AjaxResponse.SortFormArgs>args)))),
+        List.map(([formId, args]) => tuple(formId, asArr(key(args as AjaxResponse.SortFormArgs)))),
         List.concat([tuple('__new__', asArr(key(initialArgs)))])
     );
 }
