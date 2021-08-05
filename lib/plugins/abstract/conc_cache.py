@@ -155,7 +155,7 @@ class ConcCacheStatus(object):
         """
         if type(err) is tuple or type(err) is list:
             try:
-                mname, cname = err[0].rsplit('.', 1)
+                mname, cname = err[0].rsplit('.', 1) if '.' in err[0] else ('builtins', err[0])
                 mod = importlib.import_module(mname)
                 clazz = getattr(mod, cname)
                 return clazz(err[1])
