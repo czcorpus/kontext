@@ -203,27 +203,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.addActionHandler<Actions.AddQueryItem>(
             ActionName.AddQueryItem,
             action => {
-                this.changeState(state => {
-                    const size = Dict.size(state.queries);
-                    state.concWait[createSourceId(size)] = 'none';
-                    state.queries[createSourceId(size)] = {
-                        corpname: state.corpname,
-                        qtype: 'advanced',
-                        query: '',
-                        queryHtml: '',
-                        rawAnchorIdx: 0,
-                        rawFocusIdx: 0,
-                        parsedAttrs: [],
-                        focusedAttr: undefined,
-                        pcq_pos_neg: 'pos',
-                        include_empty: false,
-                        default_attr: null,
-                        expressionRole: {
-                            type: 'specification',
-                            maxNonMatchingRatio: Kontext.newFormValue('0', true)
-                        }
-                    }
-                });
+                this.changeState(state => this.addSpecificationQueryItem(state));
             }
         );
 
@@ -233,6 +213,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.queries = this.removeItem(state.queries, action.payload.sourceId);
                     state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
+                    if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                        this.addSpecificationQueryItem(state);
+                    }
                 });
             }
         );
@@ -367,6 +350,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 } else {
                     this.changeState(state => {
                         state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
+                        if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                            this.addSpecificationQueryItem(state);
+                        }
                     });
                 }
             }
@@ -852,6 +838,28 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             },
             window.document.title
         )
+    }
+
+    private addSpecificationQueryItem(state:PqueryFormModelState) {
+        const size = Dict.size(state.queries);
+        state.concWait[createSourceId(size)] = 'none';
+        state.queries[createSourceId(size)] = {
+            corpname: state.corpname,
+            qtype: 'advanced',
+            query: '',
+            queryHtml: '',
+            rawAnchorIdx: 0,
+            rawFocusIdx: 0,
+            parsedAttrs: [],
+            focusedAttr: undefined,
+            pcq_pos_neg: 'pos',
+            include_empty: false,
+            default_attr: null,
+            expressionRole: {
+                type: 'specification',
+                maxNonMatchingRatio: Kontext.newFormValue('0', true)
+            }
+        }
     }
 
 }
