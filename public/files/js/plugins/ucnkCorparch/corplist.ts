@@ -22,7 +22,7 @@ import { Kontext } from '../../types/common';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
-import { Actions, ActionName} from './actions';
+import { Actions} from './actions';
 import { HTTP } from 'cnc-tskit';
 
 
@@ -58,8 +58,8 @@ export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> 
         super(dispatcher, {isBusy: false});
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<Actions.CorpusAccessReqSubmitted>(
-            ActionName.CorpusAccessReqSubmitted,
+        this.addActionHandler<typeof Actions.CorpusAccessReqSubmitted>(
+            Actions.CorpusAccessReqSubmitted.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -73,24 +73,24 @@ export class CorpusAccessRequestModel extends StatelessModel<{isBusy:boolean;}> 
                     null,
                     (error) => {
                         this.pluginApi.showMessage('error', error);
-                        dispatch<Actions.CorpusAccessReqSubmittedDone>({
-                            name: ActionName.CorpusAccessReqSubmittedDone
+                        dispatch<typeof Actions.CorpusAccessReqSubmittedDone>({
+                            name: Actions.CorpusAccessReqSubmittedDone.name
                         });
                     },
                     () => {
                         this.pluginApi.showMessage('info',
                             this.pluginApi.translate('ucnkCorparch__your_message_sent')
                         );
-                        dispatch<Actions.CorpusAccessReqSubmittedDone>({
-                            name: ActionName.CorpusAccessReqSubmittedDone
+                        dispatch<typeof Actions.CorpusAccessReqSubmittedDone>({
+                            name: Actions.CorpusAccessReqSubmittedDone.name
                         });
                     },
                 );
             }
         );
 
-        this.addActionHandler<Actions.CorpusAccessReqSubmittedDone>(
-            ActionName.CorpusAccessReqSubmittedDone,
+        this.addActionHandler<typeof Actions.CorpusAccessReqSubmittedDone>(
+            Actions.CorpusAccessReqSubmittedDone.name,
             (state, action) => {
                 state.isBusy = false;
             }

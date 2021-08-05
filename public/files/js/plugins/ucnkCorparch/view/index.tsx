@@ -24,7 +24,7 @@ import { CorplistTableModel, CorplistTableModelState } from '../corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { CorplistItem } from '../../defaultCorparch/common';
 import { Actions as DefaultActions} from '../../defaultCorparch/actions';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import * as S from './style';
 
 export interface ViewModuleArgs {
@@ -73,8 +73,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _submitHandler() {
-            dispatcher.dispatch<Actions.CorpusAccessReqSubmitted>({
-                name: ActionName.CorpusAccessReqSubmitted,
+            dispatcher.dispatch<typeof Actions.CorpusAccessReqSubmitted>({
+                name: Actions.CorpusAccessReqSubmitted.name,
                 payload: {
                     corpusId: this.props.corpusId,
                     corpusName: this.props.corpusName,
