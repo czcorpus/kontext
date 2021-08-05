@@ -18,7 +18,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { pipe, List } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
@@ -89,8 +89,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     const FavStar:CorplistViews['FavStar'] = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.ListStarClicked>({
-                name: ActionName.ListStarClicked,
+            dispatcher.dispatch<typeof Actions.ListStarClicked>({
+                name: Actions.ListStarClicked.name,
                 payload: {
                     corpusId: props.corpusId,
                     favId: props.favId
@@ -173,8 +173,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const linkClickHandler = () => {
-            dispatcher.dispatch<Actions.ExpansionClicked>({
-                name: ActionName.ExpansionClicked,
+            dispatcher.dispatch<typeof Actions.ExpansionClicked>({
+                name: Actions.ExpansionClicked.name,
                 payload: {
                     offset: props.offset
                 }
@@ -200,8 +200,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailClickHandler(corpusId) {
-            dispatcher.dispatch<Actions.CorpusInfoRequired>({
-                name: ActionName.CorpusInfoRequired,
+            dispatcher.dispatch<typeof Actions.CorpusInfoRequired>({
+                name: Actions.CorpusInfoRequired.name,
                 payload: {
                     corpusId: corpusId
                 }
@@ -209,8 +209,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _detailCloseHandler() {
-            dispatcher.dispatch<Actions.CorpusInfoClosed>({
-                name: ActionName.CorpusInfoClosed
+            dispatcher.dispatch<typeof Actions.CorpusInfoClosed>({
+                name: Actions.CorpusInfoClosed.name
             });
         }
 
@@ -266,8 +266,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch<Actions.KeywordClicked>({
-                name: ActionName.KeywordClicked,
+            dispatcher.dispatch<typeof Actions.KeywordClicked>({
+                name: Actions.KeywordClicked.name,
                 payload: {
                     keywordId: props.keyword,
                     status: true,
@@ -300,8 +300,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClickFn = (active) => (e) => {
             e.preventDefault();
-            dispatcher.dispatch<Actions.KeywordClicked>({
-                name: ActionName.KeywordClicked,
+            dispatcher.dispatch<typeof Actions.KeywordClicked>({
+                name: Actions.KeywordClicked.name,
                 payload: {
                     keywordId: props.keyword.ident,
                     status: active,
@@ -347,8 +347,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const handleClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch<Actions.KeywordResetClicked>({
-                name: ActionName.KeywordResetClicked
+            dispatcher.dispatch<typeof Actions.KeywordResetClicked>({
+                name: Actions.KeywordResetClicked.name
             });
         };
 
@@ -420,8 +420,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch<Actions.FilterChanged>({
-                name: ActionName.FilterChanged,
+            dispatcher.dispatch<typeof Actions.FilterChanged>({
+                name: Actions.FilterChanged.name,
                 payload: {...props.currFilter, minSize: e.target.value}
             });
         };
@@ -443,8 +443,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch<Actions.FilterChanged>({
-                name: ActionName.FilterChanged,
+            dispatcher.dispatch<typeof Actions.FilterChanged>({
+                name: Actions.FilterChanged.name,
                 payload: {
                     ...props.currFilter,
                     maxSize: e.target.value
@@ -478,8 +478,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 window.clearTimeout(this._timer);
             }
             this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch<Actions.FilterChanged>({
-                    name: ActionName.FilterChanged,
+                dispatcher.dispatch<typeof Actions.FilterChanged>({
+                    name: Actions.FilterChanged.name,
                     payload: {
                         ...this.props.currFilter,
                         corpusName: value

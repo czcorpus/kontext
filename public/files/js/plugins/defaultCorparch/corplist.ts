@@ -25,7 +25,7 @@ import { Kontext } from '../../types/common';
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { CorplistItem, Filters, CorplistDataResponse } from './common';
 
 
@@ -120,8 +120,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         // TODO type safety
         this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
 
-        this.addActionHandler<Actions.LoadDataDone>(
-            ActionName.LoadDataDone,
+        this.addActionHandler<typeof Actions.LoadDataDone>(
+            Actions.LoadDataDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -133,8 +133,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.LoadExpansionDataDone>(
-            ActionName.LoadExpansionDataDone,
+        this.addActionHandler<typeof Actions.LoadExpansionDataDone>(
+            Actions.LoadExpansionDataDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -148,8 +148,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.KeywordClicked>(
-            ActionName.KeywordClicked,
+        this.addActionHandler<typeof Actions.KeywordClicked>(
+            Actions.KeywordClicked.name,
             (state, action) => {
                 state.offset = 0;
                 if (!action.payload.attachToCurrent) {
@@ -178,26 +178,26 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
                         state.offset, undefined, state.favouritesOnly).subscribe(
                     (data) => {
-                        dispatch<Actions.LoadDataDone>({
-                            name: ActionName.LoadDataDone,
+                        dispatch<typeof Actions.LoadDataDone>({
+                            name: Actions.LoadDataDone.name,
                             payload: {data}
                         });
                     },
                     (err) => {
-                        dispatch<Actions.LoadDataDone>({
-                            name: ActionName.LoadDataDone,
+                        dispatch<typeof Actions.LoadDataDone>({
+                            name: Actions.LoadDataDone.name,
                             error: err
                         });
                     }
                 );
             }
         ).sideEffectAlsoOn(
-            ActionName.KeywordResetClicked,
-            ActionName.FilterChanged
+            Actions.KeywordResetClicked.name,
+            Actions.FilterChanged.name
         );
 
-        this.addActionHandler<Actions.KeywordResetClicked>(
-            ActionName.KeywordResetClicked,
+        this.addActionHandler<typeof Actions.KeywordResetClicked>(
+            Actions.KeywordResetClicked.name,
             (state, action) => {
                 state.offset = 0;
                 state.favouritesOnly = false;
@@ -209,8 +209,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.ExpansionClicked>(
-            ActionName.ExpansionClicked,
+        this.addActionHandler<typeof Actions.ExpansionClicked>(
+            Actions.ExpansionClicked.name,
             (state, action) => {
                 if (action.payload.offset) {
                     state.offset = action.payload.offset;
@@ -221,14 +221,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 this.loadData(this.exportQuery(state), this.exportFilter(state),
                 state.offset, undefined, state.favouritesOnly).subscribe(
                     (data) => {
-                        dispatch<Actions.LoadExpansionDataDone>({
-                            name: ActionName.LoadExpansionDataDone,
+                        dispatch<typeof Actions.LoadExpansionDataDone>({
+                            name: Actions.LoadExpansionDataDone.name,
                             payload: {data}
                         });
                     },
                     (err) => {
-                        dispatch<Actions.LoadExpansionDataDone>({
-                            name: ActionName.LoadExpansionDataDone,
+                        dispatch<typeof Actions.LoadExpansionDataDone>({
+                            name: Actions.LoadExpansionDataDone.name,
                             error: err
                         });
                     }
@@ -236,8 +236,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FilterChanged>(
-            ActionName.FilterChanged,
+        this.addActionHandler<typeof Actions.FilterChanged>(
+            Actions.FilterChanged.name,
             (state, action) => {
                 state.offset = 0;
                 if (action.payload.corpusName) {
@@ -248,8 +248,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.ListStarClicked>(
-            ActionName.ListStarClicked,
+        this.addActionHandler<typeof Actions.ListStarClicked>(
+            Actions.ListStarClicked.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -264,8 +264,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                             this.pluginApi.showMessage('info',
                             this.pluginApi.translate('defaultCorparch__item_removed_from_fav'));
                         }
-                        dispatch<Actions.ListStarClickedDone>({
-                            name: ActionName.ListStarClickedDone,
+                        dispatch<typeof Actions.ListStarClickedDone>({
+                            name: Actions.ListStarClickedDone.name,
                             payload: {
                                 corpusId: action.payload.corpusId,
                                 newId: itemId,
@@ -275,8 +275,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch<Actions.ListStarClickedDone>({
-                            name: ActionName.ListStarClickedDone,
+                        dispatch<typeof Actions.ListStarClickedDone>({
+                            name: Actions.ListStarClickedDone.name,
                             error: err
                         });
                     }
@@ -284,8 +284,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.ListStarClickedDone>(
-            ActionName.ListStarClickedDone,
+        this.addActionHandler<typeof Actions.ListStarClickedDone>(
+            Actions.ListStarClickedDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -315,8 +315,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.CorpusInfoRequired>(
-            ActionName.CorpusInfoRequired,
+        this.addActionHandler<typeof Actions.CorpusInfoRequired>(
+            Actions.CorpusInfoRequired.name,
             (state, action) => {
                 state.isBusy = true;
                 state.detailData = this.createEmptyDetail(); // to force view to show detail box
@@ -324,14 +324,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             (state, action, dispatch) => {
                 this.loadCorpusInfo(action.payload.corpusId).subscribe(
                     (data) => {
-                        dispatch<Actions.CorpusInfoLoaded>({
-                            name: ActionName.CorpusInfoLoaded,
+                        dispatch<typeof Actions.CorpusInfoLoaded>({
+                            name: Actions.CorpusInfoLoaded.name,
                             payload: {data: {...data, type: CorpusInfoType.CORPUS}}
                         });
                     },
                     (err) => {
-                        dispatch<Actions.CorpusInfoLoaded>({
-                            name: ActionName.CorpusInfoLoaded,
+                        dispatch<typeof Actions.CorpusInfoLoaded>({
+                            name: Actions.CorpusInfoLoaded.name,
                             error: err
                         });
                     }
@@ -339,8 +339,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.CorpusInfoLoaded>(
-            ActionName.CorpusInfoLoaded,
+        this.addActionHandler<typeof Actions.CorpusInfoLoaded>(
+            Actions.CorpusInfoLoaded.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -354,8 +354,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.CorpusInfoClosed>(
-            ActionName.CorpusInfoClosed,
+        this.addActionHandler<typeof Actions.CorpusInfoClosed>(
+            Actions.CorpusInfoClosed.name,
             (state, action) => {
                 state.detailData = null;
             }
