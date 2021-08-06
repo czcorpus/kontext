@@ -33,7 +33,7 @@ import { SwitchMainCorpModel } from '../switchmc';
 import { TextTypesModel } from '../../textTypes/main';
 import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { Actions as ConcActions } from '../../concordance/actions';
 import { ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse, QueryPipelineResponseItem } from './common';
 import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
@@ -219,16 +219,16 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.EditQueryOperation>(
-            ActionName.EditQueryOperation,
+        this.addActionHandler<typeof Actions.EditQueryOperation>(
+            Actions.EditQueryOperation.name,
             (state, action) => {
                 state.editedOperationIdx = action.payload.operationIdx;
             },
             (state, action, dispatch) => {
                 this.syncFormData(state, action.payload.operationIdx).subscribe(
                     ([data, sourceId]) => {
-                        dispatch<Actions.EditQueryOperationDone>({
-                            name: ActionName.EditQueryOperationDone,
+                        dispatch<typeof Actions.EditQueryOperationDone>({
+                            name: Actions.EditQueryOperationDone.name,
                             payload: {
                                 operationIdx: action.payload.operationIdx,
                                 sourceId,
@@ -237,8 +237,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         });
                     },
                     (err) => {
-                        dispatch<Actions.EditQueryOperationDone>({
-                            name: ActionName.EditQueryOperationDone,
+                        dispatch<typeof Actions.EditQueryOperationDone>({
+                            name: Actions.EditQueryOperationDone.name,
                             error: err
                         });
                         this.pageModel.showMessage('error', err);
@@ -248,16 +248,16 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         );
 
 
-        this.addActionHandler<Actions.EditLastQueryOperation>(
-            ActionName.EditLastQueryOperation,
+        this.addActionHandler<typeof Actions.EditLastQueryOperation>(
+            Actions.EditLastQueryOperation.name,
             (state, action) => {
                 state.editedOperationIdx = state.currEncodedOperations.length - 1;
             },
             (state, action, dispatch) => {
                 this.syncFormData(state, state.currEncodedOperations.length - 1).subscribe(
                     ([data, sourceId]) => {
-                        dispatch<Actions.EditQueryOperationDone>({
-                            name: ActionName.EditQueryOperationDone,
+                        dispatch<typeof Actions.EditQueryOperationDone>({
+                            name: Actions.EditQueryOperationDone.name,
                             payload: {
                                 operationIdx: state.currEncodedOperations.length - 1,
                                 sourceId,
@@ -266,8 +266,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         });
                     },
                     (err) => {
-                        dispatch<Actions.EditQueryOperationDone>({
-                            name: ActionName.EditQueryOperationDone,
+                        dispatch<typeof Actions.EditQueryOperationDone>({
+                            name: Actions.EditQueryOperationDone.name,
                             error: err
                         });
                         this.pageModel.showMessage('error', err);
@@ -276,8 +276,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.EditQueryOperationDone>(
-            ActionName.EditQueryOperationDone,
+        this.addActionHandler<typeof Actions.EditQueryOperationDone>(
+            Actions.EditQueryOperationDone.name,
             (state, action) => {
                 if (action.error) {
                     state.editedOperationIdx = null;
@@ -290,22 +290,22 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.BranchQuery>(
-            ActionName.BranchQuery,
+        this.addActionHandler<typeof Actions.BranchQuery>(
+            Actions.BranchQuery.name,
             (state, action) => {
                 state.editedOperationIdx = null;
                 state.branchReplayIsRunning = true;
             },
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
+                    return action.name === Actions.QueryContextFormPrepareArgsDone.name ?
                         null : syncData;
 
                 }).pipe(
                     concatMap(
                         (wAction) => this.branchQuery(
                             state,
-                            (wAction as Actions.QueryContextFormPrepareArgsDone).payload.data,
+                            (wAction as typeof Actions.QueryContextFormPrepareArgsDone).payload.data,
                             action.payload.operationIdx,
                             dispatch
                         )
@@ -332,8 +332,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.TrimQuery>(
-            ActionName.TrimQuery,
+        this.addActionHandler<typeof Actions.TrimQuery>(
+            Actions.TrimQuery.name,
             (state, action) => {
                 state.branchReplayIsRunning = true;
             },
@@ -364,14 +364,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                 ).subscribe(
                     data => {
-                        dispatch<Actions.QueryOverviewEditorClose>({
-                            name: ActionName.QueryOverviewEditorClose
+                        dispatch<typeof Actions.QueryOverviewEditorClose>({
+                            name: Actions.QueryOverviewEditorClose.name
                         });
                     },
                     err => {
                         this.pageModel.showMessage('error', err);
-                        dispatch<Actions.QueryOverviewEditorClose>({
-                            name: ActionName.QueryOverviewEditorClose,
+                        dispatch<typeof Actions.QueryOverviewEditorClose>({
+                            name: Actions.QueryOverviewEditorClose.name,
                             error: err
                         });
                     }
@@ -379,8 +379,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SliceQueryChain>(
-            ActionName.SliceQueryChain,
+        this.addActionHandler<typeof Actions.SliceQueryChain>(
+            Actions.SliceQueryChain.name,
             (state, action) => {
                 state.currEncodedOperations = state.currEncodedOperations.slice(0, action.payload.operationIdx + 1);
                 state.replayOperations = state.replayOperations.slice(0, action.payload.operationIdx + 1);
@@ -388,15 +388,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<Actions.QuerySetStopAfterIdx>(
-            ActionName.QuerySetStopAfterIdx,
+        this.addActionHandler<typeof Actions.QuerySetStopAfterIdx>(
+            Actions.QuerySetStopAfterIdx.name,
             (state, action) => {
                 state.stopAfterOpIdx = action.payload.value
             }
         );
 
-        this.addActionHandler<Actions.QueryOverviewEditorClose>(
-            ActionName.QueryOverviewEditorClose,
+        this.addActionHandler<typeof Actions.QueryOverviewEditorClose>(
+            Actions.QueryOverviewEditorClose.name,
             (state, action) => {
                 state.editedOperationIdx = null;
                 state.branchReplayIsRunning = false;
@@ -424,8 +424,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 List.findIndex(([op,]) => op.id === action.payload.concId)
                             ); // TODO kind of a weak mapping here
                             if (operationIdx < state.currEncodedOperations.length - 1) {
-                                dispatch<Actions.SliceQueryChain>({
-                                    name: ActionName.SliceQueryChain,
+                                dispatch<typeof Actions.SliceQueryChain>({
+                                    name: Actions.SliceQueryChain.name,
                                     payload: {
                                         operationIdx,
                                         concId: action.payload.concId

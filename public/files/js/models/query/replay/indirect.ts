@@ -23,7 +23,7 @@ import { ExtendedQueryOperation, importEncodedOperation } from './common';
 import { Kontext } from '../../../types/common';
 import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { List } from 'cnc-tskit';
 
 
@@ -52,8 +52,8 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
         });
 
 
-        this.addActionHandler<Actions.RedirectToEditQueryOperation>(
-            ActionName.RedirectToEditQueryOperation,
+        this.addActionHandler<typeof Actions.RedirectToEditQueryOperation>(
+            Actions.RedirectToEditQueryOperation.name,
             null,
             (state, action, dispatch) => {
                 window.location.replace(

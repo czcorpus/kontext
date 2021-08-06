@@ -23,8 +23,7 @@ import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
-import { Actions, ActionName } from '../../models/textTypes/actions';
-import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
+import { Actions } from '../../models/textTypes/actions';
 
 import * as S from './style';
 
@@ -174,8 +173,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             setState({...newState});
 
             if (newState.fromDate !== null && newState.toDate !== null) {
-                dispatcher.dispatch<Actions.AttributeTextInputChanged>({
-                    name: ActionName.AttributeTextInputChanged,
+                dispatcher.dispatch<typeof Actions.AttributeTextInputChanged>({
+                    name: Actions.AttributeTextInputChanged.name,
                     payload: {
                         attrName: props.attrObj.name,
                         type: props.attrObj.type,
@@ -184,8 +183,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                     }
                 });
 
-                dispatcher.dispatch<TTActions.SelectionChanged>({
-                    name: TTActionName.SelectionChanged,
+                dispatcher.dispatch<typeof Actions.SelectionChanged>({
+                    name: Actions.SelectionChanged.name,
                     payload: {
                         hasSelectedItems: true,
                         attributes: []

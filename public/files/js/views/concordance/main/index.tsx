@@ -44,7 +44,7 @@ import { UsageTipsModel } from '../../../models/usageTips';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import { Actions } from '../../../models/concordance/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
-import { Actions as UserActions, ActionName as UserActionName } from '../../../models/user/actions';
+import { Actions as UserActions } from '../../../models/user/actions';
 import * as S2 from '../style';
 import * as S from './style';
 
@@ -488,8 +488,8 @@ export function init({
     }> = (props) => {
 
         const handleLoginClick = (evt) => {
-            dispatcher.dispatch<UserActions.UserShowLoginDialog>({
-                name: UserActionName.UserShowLoginDialog,
+            dispatcher.dispatch<typeof UserActions.UserShowLoginDialog>({
+                name: UserActions.UserShowLoginDialog.name,
                 payload: {
                     returnUrl: window.location.href
                 }

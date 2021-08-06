@@ -22,7 +22,7 @@ import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
 import { Kontext } from '../types/common';
 import { PageModel } from '../app/page';
-import { Actions as QueryActions, ActionName as QueryActionName } from './query/actions';
+import { Actions as QueryActions } from './query/actions';
 
 
 
@@ -63,8 +63,8 @@ export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSe
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             action => {
                 this.changeState(state => {
                     if (action.payload.pubName) {

@@ -47,7 +47,7 @@ import { AppNavigation } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../models/mainMenu/actions';
-import { Actions as ATActions, ActionName as ATActionName } from '../models/asyncTask/actions';
+import { Actions as ATActions } from '../models/asyncTask/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import { Actions, ActionName } from '../models/common/actions';
 import applicationBar from 'plugins/applicationBar/init';
@@ -274,8 +274,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             return HTTP.Method.GET;
         };
 
-        this.dispatcher.dispatch<ATActions.InboxAddAsyncTask>({
-            name: ATActionName.InboxAddAsyncTask,
+        this.dispatcher.dispatch<typeof ATActions.InboxAddAsyncTask>({
+            name: ATActions.InboxAddAsyncTask.name,
             payload: {
                 ident: taskId,
                 label: filename,
@@ -290,8 +290,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             args
         }).subscribe(
             () => {
-                this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
-                    name: ATActionName.InboxUpdateAsyncTask,
+                this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
+                    name: ATActions.InboxUpdateAsyncTask.name,
                     payload: {
                         ident: taskId,
                         status: 'SUCCESS'
@@ -299,8 +299,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 });
             },
             error => {
-                this.dispatcher.dispatch<ATActions.InboxUpdateAsyncTask>({
-                    name: ATActionName.InboxUpdateAsyncTask,
+                this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
+                    name: ATActions.InboxUpdateAsyncTask.name,
                     payload: {
                         ident: taskId,
                         status: 'FAILURE'

@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../types/common';
-import { Actions, ActionName } from '../../models/textTypes/actions';
+import { Actions } from '../../models/textTypes/actions';
 
 export interface ExtendedInfoButtonProps {
     attrName:string;
@@ -55,8 +55,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _handleClick(evt) {
-            dispatcher.dispatch<Actions.ExtendedInformationRequest>({
-                name: ActionName.ExtendedInformationRequest,
+            dispatcher.dispatch<typeof Actions.ExtendedInformationRequest>({
+                name: Actions.ExtendedInformationRequest.name,
                 payload: {
                     attrName: this.props.attrName,
                     ident: this.props.ident
@@ -86,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
 
             const clickHandler = () => {
-                dispatcher.dispatch<Actions.ValueCheckboxClicked>({
-                    name: ActionName.ValueCheckboxClicked,
+                dispatcher.dispatch<typeof Actions.ValueCheckboxClicked>({
+                    name: Actions.ValueCheckboxClicked.name,
                     payload: {
                         attrName: props.itemName,
                         itemIdx: props.itemIdx

@@ -25,7 +25,7 @@ import { IActionDispatcher } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { InputModuleViews } from '../input';
 import { PluginInterfaces } from '../../../types/plugins';
-import { Actions, ActionName } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
 import { AnyQuery } from '../../../models/query/query';
 import * as S from './style';
@@ -103,8 +103,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         }
 
         handleCloseClick() {
-            dispatcher.dispatch<Actions.QueryInputRemoveAlignedCorpus>({
-                name: ActionName.QueryInputRemoveAlignedCorpus,
+            dispatcher.dispatch<typeof Actions.QueryInputRemoveAlignedCorpus>({
+                name: Actions.QueryInputRemoveAlignedCorpus.name,
                 payload: {
                     corpname: this.props.corpname
                 }
@@ -170,8 +170,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.FC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputAddAlignedCorpus>({
-                name: ActionName.QueryInputAddAlignedCorpus,
+            dispatcher.dispatch<typeof Actions.QueryInputAddAlignedCorpus>({
+                name: Actions.QueryInputAddAlignedCorpus.name,
                 payload: {
                     corpname: evt.target.value
                 }
@@ -179,8 +179,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         };
 
         const handleVisibilityChange = () => {
-            dispatcher.dispatch<Actions.QueryToggleAlignedCorpora>({
-                name: ActionName.QueryToggleAlignedCorpora
+            dispatcher.dispatch<typeof Actions.QueryToggleAlignedCorpora>({
+                name: Actions.QueryToggleAlignedCorpora.name
             });
         };
 

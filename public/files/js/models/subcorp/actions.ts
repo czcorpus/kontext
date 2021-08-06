@@ -25,228 +25,193 @@ import { TextTypes } from '../../types/common';
 import { LoadDataResponse } from './listPublic';
 
 
-export enum ActionName {
+export class Actions {
 
-    SortLines = 'SUBCORP_LIST_SORT_LINES',
-    DeleteSubcorpus = 'SUBCORP_LIST_DELETE_SUBCORPUS',
-    UpdateFilter = 'SUBCORP_LIST_UPDATE_FILTER',
-    ShowActionWindow = 'SUBCORP_LIST_SHOW_ACTION_WINDOW',
-    HideActionWindow = 'SUBCORP_LIST_HIDE_ACTION_WINDOW',
-    SetActionBoxType = 'SUBCORP_LIST_SET_ACTION_BOX_TYPE',
-    WipeSubcorpus = 'SUBCORP_LIST_WIPE_SUBCORPUS',
-    RestoreSubcorpus = 'SUBCORP_LIST_RESTORE_SUBCORPUS',
-    ReuseQuery = 'SUBCORP_LIST_REUSE_QUERY',
-    PublishSubcorpus = 'SUBCORP_LIST_PUBLISH_SUBCORPUS',
-    UpdatePublicDescription = 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION',
-    SubmitPublicDescription = 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT',
-    PublishItem = 'SUBCORP_LIST_PUBLISH_ITEM',
-    FormSetInputMode = 'SUBCORP_FORM_SET_INPUT_MODE',
-    FormSetSubcName = 'SUBCORP_FORM_SET_SUBCNAME',
-    FormSetSubcAsPublic = 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC',
-    FormSetDescription = 'SUBCORP_FORM_SET_DESCRIPTION',
-    FormSubmit = 'SUBCORP_FORM_SUBMIT',
-    FormSetAlignedCorpora = 'SUBCORP_FORM_SET_ALIGNED_CORPORA',
-    SetSearchQuery = 'PUBSUBC_SET_SEARCH_QUERY',
-    SubmitSearchQuery = 'PUBSUBC_SUBMIT_SEARCH_QUERY',
-    DataLoadDone = 'PUBSUBC_DATA_LOAD_DONE',
-    UseInQuery = 'PUBSUBC_USE_IN_QUERY',
-    FormWithinLineAdded = 'SUBCORP_FORM_WITHIN_LINE_ADDED',
-    FormWithinLineSetType = 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE',
-    FormWithinLineSetStruct = 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT',
-    FormWithinLineSetCQL = 'SUBCORP_FORM_WITHIN_LINE_SET_CQL',
-    FormWithinLineRemoved = 'SUBCORP_FORM_WITHIN_LINE_REMOVED',
-    FormShowRawWithinHint = 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT',
-    FormHideRawWithinHint = 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT',
-
-}
-
-export namespace Actions {
-
-    export interface SortLines extends Action<{
+    static SortLines:Action<{
         colName:string;
         reverse:boolean;
-    }> {
-        name:ActionName.SortLines
-    }
+    }> = {
+        name: 'SUBCORP_LIST_SORT_LINES'
+    };
 
-    export interface DeleteSubcorpus extends Action<{
+    static DeleteSubcorpus:Action<{
         rowIdx:number;
-    }> {
-        name:ActionName.DeleteSubcorpus
-    }
+    }> = {
+        name: 'SUBCORP_LIST_DELETE_SUBCORPUS'
+    };
 
-    export interface UpdateFilter extends Action<SubcListFilter> {
-        name:ActionName.UpdateFilter
-    }
+    static UpdateFilter:Action<SubcListFilter> = {
+        name: 'SUBCORP_LIST_UPDATE_FILTER'
+    };
 
-    export interface ShowActionWindow extends Action<{
+    static ShowActionWindow:Action<{
         value:number;
         action:string;
-    }> {
-        name:ActionName.ShowActionWindow
-    }
+    }> = {
+        name: 'SUBCORP_LIST_SHOW_ACTION_WINDOW'
+    };
 
-    export interface HideActionWindow extends Action<{
-    }> {
-        name:ActionName.HideActionWindow
-    }
+    static HideActionWindow:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_HIDE_ACTION_WINDOW'
+    };
 
-    export interface SetActionBoxType extends Action<{
+    static SetActionBoxType:Action<{
         value:string;
         row:number;
-    }> {
-        name:ActionName.SetActionBoxType
-    }
+    }> = {
+        name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE'
+    };
 
-    export interface WipeSubcorpus extends Action<{
+    static WipeSubcorpus:Action<{
         idx:number;
-    }> {
-        name:ActionName.WipeSubcorpus
-    }
+    }> = {
+        name: 'SUBCORP_LIST_WIPE_SUBCORPUS'
+    };
 
-    export interface RestoreSubcorpus extends Action<{
+    static RestoreSubcorpus:Action<{
         idx:number;
-    }> {
-        name:ActionName.RestoreSubcorpus
-    }
+    }> = {
+        name: 'SUBCORP_LIST_RESTORE_SUBCORPUS'
+    };
 
-    export interface ReuseQuery extends Action<{
+    static ReuseQuery:Action<{
         idx:number;
         newName:string;
         newCql:string;
-    }> {
-        name:ActionName.ReuseQuery;
-    }
+    }> = {
+        name: 'SUBCORP_LIST_REUSE_QUERY'
+    };
 
-    export interface PublishSubcorpus extends Action<{
+    static PublishSubcorpus:Action<{
         rowIdx:number;
         description:string;
-    }> {
-        name:ActionName.PublishSubcorpus;
-    }
+    }> = {
+        name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS'
+    };
 
-    export interface UpdatePublicDescription extends Action<{
+    static UpdatePublicDescription:Action<{
         rowIdx:number;
         description:string;
-    }> {
-        name:ActionName.UpdatePublicDescription;
-    }
+    }> = {
+        name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION'
+    };
 
-    export interface SubmitPublicDescription extends Action<{
+    static SubmitPublicDescription:Action<{
         rowIdx:number;
-    }> {
-        name:ActionName.SubmitPublicDescription;
-    }
+    }> = {
+        name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT'
+    };
 
-    export interface PublishItem extends Action<{
+    static PublishItem:Action<{
         corpname:string;
         subcname:string;
-    }> {
-        name:ActionName.PublishItem;
-    }
+    }> = {
+        name: 'SUBCORP_LIST_PUBLISH_ITEM'
+    };
 
-    export interface FormSetSubcName extends Action<{
+    static FormSetSubcName:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetSubcName;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_SET_SUBCNAME'
+    };
 
-    export interface FormSetInputMode extends Action<{
+    static FormSetInputMode:Action<{
         value:InputMode;
-    }> {
-        name:ActionName.FormSetInputMode;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_SET_INPUT_MODE'
+    };
 
-    export interface FormSetSubcAsPublic extends Action<{
+    static FormSetSubcAsPublic:Action<{
         value:boolean;
-    }> {
-        name:ActionName.FormSetSubcAsPublic;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC'
+    };
 
-    export interface FormSetDescription extends Action<{
+    static FormSetDescription:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetDescription;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_SET_DESCRIPTION'
+    };
 
-    export interface FormSubmit extends Action<{
-    }> {
-        name:ActionName.FormSubmit;
-    }
+    static FormSubmit:Action<{
+    }> = {
+        name: 'SUBCORP_FORM_SUBMIT'
+    };
 
-    export interface FormSetAlignedCorpora extends Action<{
+    static FormSetAlignedCorpora:Action<{
         alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
-    }> {
-        name:ActionName.FormSetAlignedCorpora;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_SET_ALIGNED_CORPORA'
+    };
 
-    export interface SetSearchQuery extends Action<{
+    static SetSearchQuery:Action<{
         value:string;
-    }> {
-        name:ActionName.SetSearchQuery;
-    }
+    }> = {
+        name: 'PUBSUBC_SET_SEARCH_QUERY'
+    };
 
-    export interface SubmitSearchQuery extends Action<{
+    static SubmitSearchQuery:Action<{
         query:string;
-    }> {
-        name:ActionName.SubmitSearchQuery;
-    }
+    }> = {
+        name: 'PUBSUBC_SUBMIT_SEARCH_QUERY'
+    };
 
-    export interface DataLoadDone extends Action<{
+    static DataLoadDone:Action<{
         data:LoadDataResponse;
-    }> {
-        name:ActionName.DataLoadDone;
-    }
+    }> = {
+        name: 'PUBSUBC_DATA_LOAD_DONE'
+    };
 
-    export interface UseInQuery extends Action<{
+    static UseInQuery:Action<{
         corpname:string;
         id:string;
-    }> {
-        name:ActionName.UseInQuery;
-    }
+    }> = {
+        name: 'PUBSUBC_USE_IN_QUERY'
+    };
 
-    export interface FormWithinLineAdded extends Action<{
+    static FormWithinLineAdded:Action<{
         structureName:string;
         negated:boolean;
         attributeCql:string;
-    }> {
-        name:ActionName.FormWithinLineAdded;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_LINE_ADDED'
+    };
 
-    export interface FormWithinLineSetType extends Action<{
+    static FormWithinLineSetType:Action<{
         rowIdx:number;
         value:boolean;
-    }> {
-        name:ActionName.FormWithinLineSetType;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_LINE_SET_WITHIN_TYPE'
+    };
 
-    export interface FormWithinLineSetStruct extends Action<{
+    static FormWithinLineSetStruct:Action<{
         rowIdx:number;
         value:string;
-    }> {
-        name:ActionName.FormWithinLineSetStruct;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_LINE_SET_STRUCT'
+    };
 
-    export interface FormWithinLineSetCQL extends Action<{
+    static FormWithinLineSetCQL:Action<{
         rowIdx:number;
         value:string;
-    }> {
-        name:ActionName.FormWithinLineSetCQL;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_LINE_SET_CQL'
+    };
 
-    export interface FormWithinLineRemoved extends Action<{
+    static FormWithinLineRemoved:Action<{
         rowIdx:number;
-    }> {
-        name:ActionName.FormWithinLineRemoved;
-    }
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED'
+    };
 
-    export interface FormShowRawWithinHint extends Action<{
-    }> {
-        name:ActionName.FormShowRawWithinHint;
-    }
+    static FormShowRawWithinHint:Action<{
+    }> = {
+        name: 'SUBCORP_FORM_SHOW_RAW_WITHIN_HINT'
+    };
 
-    export interface FormHideRawWithinHint extends Action<{
-    }> {
-        name:ActionName.FormHideRawWithinHint;
-    }
+    static FormHideRawWithinHint:Action<{
+    }> = {
+        name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT'
+    };
 }

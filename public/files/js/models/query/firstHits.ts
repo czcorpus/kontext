@@ -27,7 +27,7 @@ import { PageModel } from '../../app/page';
 import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
 import { HTTP } from 'cnc-tskit';
@@ -68,8 +68,8 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterFirstHitsSubmit>(
-            ActionName.FilterFirstHitsSubmit,
+        this.addActionHandler<typeof Actions.FilterFirstHitsSubmit>(
+            Actions.FilterFirstHitsSubmit.name,
             action => {
                 const concId = this.layoutModel.getConcArgs().q.substr(1);
                 this.submitForm(action.payload.opKey, concId)

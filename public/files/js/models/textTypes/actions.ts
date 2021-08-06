@@ -23,196 +23,169 @@ import { TextTypes } from '../../types/common';
 import { SelectionFilterMap } from './common';
 
 
-export enum ActionName {
-    SelectionChanged = 'TT_SELECTION_CHANGED',
-    ValueCheckboxClicked = 'TT_VALUE_CHECKBOX_CLICKED',
-    SelectAllClicked = 'TT_SELECT_ALL_CHECKBOX_CLICKED',
-    RangeButtonClicked = 'TT_RANGE_BUTTON_CLICKED',
-    ToggleRangeMode = 'TT_TOGGLE_RANGE_MODE',
-    ExtendedInformationRequest = 'TT_EXTENDED_INFORMATION_REQUEST',
-    ExtendedInformationRequestDone = 'TT_EXTENDED_INFORMATION_REQUEST_DONE',
-    ExtendedInformationRemoveRequest = 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST',
-    AttributeAutoCompleteHintClicked = 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED',
-    AttributeTextInputChanged = 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED',
-    AttributeAutoCompleteReset = 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET',
-    AttributeTextInputAutocompleteRequest = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST',
-    AttributeTextInputAutocompleteReady = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_READY',
-    AttributeTextInputAutocompleteRequestDone = 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE',
-    MinimizeAll = 'TT_MINIMIZE_ALL',
-    MaximizeAll = 'TT_MAXIMIZE_ALL',
-    ToggleMinimizeItem = 'TT_TOGGLE_MINIMIZE_ITEM',
-    UndoState = 'TT_UNDO_STATE',
-    ResetState = 'TT_RESET_STATE',
-    LockSelected = 'TT_LOCK_SELECTED',
-    FilterWholeSelection = 'TT_FILTER_WHOLE_SELECTION',
-    SetAttrSummary = 'TT_SET_ATTR_SUMMARY',
-    ToggleMetaInfoView = 'TT_TOGGLE_META_INFO_VIEW'
-}
+export class Actions {
 
-export namespace Actions {
-
-    export interface SelectionChanged extends Action<{
+    static SelectionChanged:Action<{
         hasSelectedItems:boolean;
         attributes:Array<TextTypes.AnyTTSelection>;
-    }> {
-        name:ActionName.SelectionChanged;
+    }> = {
+        name: 'TT_SELECTION_CHANGED'
     };
 
-    export interface ValueCheckboxClicked extends Action<{
+    static ValueCheckboxClicked:Action<{
         attrName:string;
         itemIdx:number;
-    }> {
-        name:ActionName.ValueCheckboxClicked;
+    }> = {
+        name: 'TT_VALUE_CHECKBOX_CLICKED'
     };
 
-    export interface SelectAllClicked extends Action<{
+    static SelectAllClicked:Action<{
         attrName:string;
-    }> {
-        name:ActionName.SelectAllClicked;
+    }> = {
+        name: 'TT_SELECT_ALL_CHECKBOX_CLICKED'
     };
 
-    export interface RangeButtonClicked extends Action<{
+    static RangeButtonClicked:Action<{
         attrName:string;
         fromVal:number;
         toVal:number;
         strictInterval:boolean;
         keepCurrent:boolean;
-    }> {
-        name:ActionName.RangeButtonClicked;
+    }> = {
+        name: 'TT_RANGE_BUTTON_CLICKED'
     };
 
-    export interface ToggleRangeMode extends Action<{
+    static ToggleRangeMode:Action<{
         attrName:string;
-    }> {
-        name:ActionName.ToggleRangeMode;
+    }> = {
+        name: 'TT_TOGGLE_RANGE_MODE'
     };
 
-    export interface ExtendedInformationRequest extends Action<{
+    static ExtendedInformationRequest:Action<{
         attrName:string;
         ident:string;
-    }> {
-        name:ActionName.ExtendedInformationRequest;
+    }> = {
+        name: 'TT_EXTENDED_INFORMATION_REQUEST'
     };
 
-    export interface ExtendedInformationRequestDone extends Action<{
+    static ExtendedInformationRequestDone:Action<{
         attrName:string;
         ident:string;
         data:any; // TODO !!!
-    }> {
-        name:ActionName.ExtendedInformationRequestDone;
+    }> = {
+        name: 'TT_EXTENDED_INFORMATION_REQUEST_DONE'
     };
 
-    export interface ExtendedInformationRemoveRequest extends Action<{
+    static ExtendedInformationRemoveRequest:Action<{
         attrName:string;
         ident:string;
-    }> {
-        name:ActionName.ExtendedInformationRemoveRequest;
+    }> = {
+        name: 'TT_EXTENDED_INFORMATION_REMOVE_REQUEST'
     };
 
-    export interface AttributeAutoCompleteHintClicked extends Action<{
+    static AttributeAutoCompleteHintClicked:Action<{
         attrName:string;
         ident:string;
         label:string;
         append:boolean;
-    }> {
-        name:ActionName.AttributeAutoCompleteHintClicked;
+    }> = {
+        name: 'TT_ATTRIBUTE_AUTO_COMPLETE_HINT_CLICKED'
     };
 
-    export interface AttributeTextInputChanged extends Action<{
+    static AttributeTextInputChanged:Action<{
         attrName:string;
         value:string;
         type:TextTypes.TTSelectionTypes;
         decodedValue?:string; // human readable alternative (if necessary)
-    }> {
-        name:ActionName.AttributeTextInputChanged;
+    }> = {
+        name: 'TT_ATTRIBUTE_TEXT_INPUT_CHANGED'
     };
 
-    export interface AttributeAutoCompleteReset extends Action<{
+    static AttributeAutoCompleteReset:Action<{
         attrName:string;
-    }> {
-        name:ActionName.AttributeAutoCompleteReset;
+    }> = {
+        name: 'TT_ATTRIBUTE_AUTO_COMPLETE_RESET'
     };
 
-    export interface AttributeTextInputAutocompleteRequest extends Action<{
+    static AttributeTextInputAutocompleteRequest:Action<{
         attrName:string;
         value:string;
-    }> {
-        name:ActionName.AttributeTextInputAutocompleteRequest;
+    }> = {
+        name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST'
     };
 
 
-    export interface AttributeTextInputAutocompleteReady extends Action<{
+    static AttributeTextInputAutocompleteReady:Action<{
         attrName:string;
         value:string;
         selections:TextTypes.ExportedSelection;
-    }> {
-        name:ActionName.AttributeTextInputAutocompleteReady;
+    }> = {
+        name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_READY'
     };
 
-    export function isAttributeTextInputAutocompleteReady(action:Action<{}>):action is AttributeTextInputAutocompleteReady {
-        return action.name === ActionName.AttributeTextInputAutocompleteReady;
+    static isAttributeTextInputAutocompleteReady(action:Action<{}>):action is typeof Actions.AttributeTextInputAutocompleteReady {
+        return action.name === Actions.AttributeTextInputAutocompleteReady.name;
     }
 
 
-    export interface AttributeTextInputAutocompleteRequestDone extends Action<{
+    static AttributeTextInputAutocompleteRequestDone:Action<{
         attrName:string;
         autoCompleteData:Array<TextTypes.AutoCompleteItem>;
         filterData:SelectionFilterMap;
-    }> {
-        name:ActionName.AttributeTextInputAutocompleteRequestDone;
+    }> = {
+        name: 'TT_ATTRIBUTE_TEXT_INPUT_AUTOCOMPLETE_REQUEST_DONE'
     };
 
-    export interface MinimizeAll extends Action<{
-    }> {
-        name:ActionName.MinimizeAll;
+    static MinimizeAll:Action<{
+    }> = {
+        name: 'TT_MINIMIZE_ALL'
     };
 
-    export interface MaximizeAll extends Action<{
-    }> {
-        name:ActionName.MaximizeAll;
+    static MaximizeAll:Action<{
+    }> = {
+        name: 'TT_MAXIMIZE_ALL'
     };
 
 
-    export interface ToggleMinimizeItem extends Action<{
+    static ToggleMinimizeItem:Action<{
         ident:string;
-    }> {
-        name:ActionName.ToggleMinimizeItem;
+    }> = {
+        name: 'TT_TOGGLE_MINIMIZE_ITEM'
     };
 
-    export interface UndoState extends Action<{
-    }> {
-        name:ActionName.UndoState;
+    static UndoState:Action<{
+    }> = {
+        name: 'TT_UNDO_STATE'
     };
 
-    export interface ResetState extends Action<{
-    }> {
-        name:ActionName.ResetState;
+    static ResetState:Action<{
+    }> = {
+        name: 'TT_RESET_STATE'
     };
 
-    export interface LockSelected extends Action<{
-    }> {
-        name:ActionName.LockSelected;
+    static LockSelected:Action<{
+    }> = {
+        name: 'TT_LOCK_SELECTED'
     };
 
-    export interface FilterWholeSelection extends Action<{
+    static FilterWholeSelection:Action<{
         poscount:number;
         filterData:SelectionFilterMap;
         selectedTypes:TextTypes.ExportedSelection;
         bibAttrValsAreListed:boolean;
-    }> {
-        name:ActionName.FilterWholeSelection;
+    }> = {
+        name: 'TT_FILTER_WHOLE_SELECTION'
     };
 
-    export interface SetAttrSummary extends Action<{
+    static SetAttrSummary:Action<{
         attrName:string;
         value:TextTypes.AttrSummary;
-    }> {
-        name:ActionName.SetAttrSummary;
+    }> = {
+        name: 'TT_SET_ATTR_SUMMARY'
     };
 
-    export interface ToggleMetaInfoView extends Action<{
-
-    }>{
-        name:ActionName.ToggleMetaInfoView;
-    }
+    static ToggleMetaInfoView:Action<{
+    }> = {
+        name: 'TT_TOGGLE_META_INFO_VIEW'
+    };
 }

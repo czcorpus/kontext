@@ -30,7 +30,7 @@ import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, Aj
     LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs
 } from './common';
 import { Actions } from './actions';
-import { Actions as UserInfoActions, ActionName as UserInfoActionName } from '../user/actions';
+import { Actions as UserActions } from '../user/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { MultiDict } from '../../multidict';
 import { IPageLeaveVoter } from '../common/pageLeave';
@@ -453,8 +453,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             }
         );
 
-        this.addActionHandler<UserInfoActions.UserInfoLoaded>(
-            UserInfoActionName.UserInfoLoaded,
+        this.addActionHandler<typeof UserActions.UserInfoLoaded>(
+            UserActions.UserInfoLoaded.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = false;
@@ -463,8 +463,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             }
         );
 
-        this.addActionHandler<UserInfoActions.UserInfoRequested>(
-            UserInfoActionName.UserInfoRequested,
+        this.addActionHandler<typeof UserActions.UserInfoRequested>(
+            UserActions.UserInfoRequested.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;

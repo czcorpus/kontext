@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem, SubcorpListModelState} from '../../models/subcorp/list';
 import { CoreViews } from '../../types/coreViews';
 import { List } from 'cnc-tskit';
-import { Actions, ActionName } from '../../models/subcorp/actions';
+import { Actions } from '../../models/subcorp/actions';
 
 import * as S from './style';
 
@@ -89,8 +89,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         const handleSubmit = () => {
             if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
-                dispatcher.dispatch<Actions.DeleteSubcorpus>({
-                    name: ActionName.DeleteSubcorpus,
+                dispatcher.dispatch<typeof Actions.DeleteSubcorpus>({
+                    name: Actions.DeleteSubcorpus.name,
                     payload: {
                         rowIdx: props.rowIdx
                     }
@@ -190,8 +190,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSortClick = () => {
-            dispatcher.dispatch<Actions.SortLines>({
-                name: ActionName.SortLines,
+            dispatcher.dispatch<typeof Actions.SortLines>({
+                name: Actions.SortLines.name,
                 payload: {
                     colName: props.ident,
                     reverse: props.sortKey ? !props.sortKey.reverse : false
@@ -239,8 +239,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handlePublishCheckbox(corpname:string, subcname:string):void {
             if (window.confirm(he.translate('subclist__publish_warning'))) {
-                dispatcher.dispatch<Actions.PublishItem>({
-                    name: ActionName.PublishItem,
+                dispatcher.dispatch<typeof Actions.PublishItem>({
+                    name: Actions.PublishItem.name,
                     payload: {
                         corpname: corpname,
                         subcname: subcname
@@ -283,8 +283,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleShowDeleted = () => {
-            dispatcher.dispatch<Actions.UpdateFilter>({
-                name: ActionName.UpdateFilter,
+            dispatcher.dispatch<typeof Actions.UpdateFilter>({
+                name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: props.filter.corpname,
                     show_deleted: !props.filter.show_deleted
@@ -293,8 +293,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleCorpusSelection = (evt) => {
-            dispatcher.dispatch<Actions.UpdateFilter>({
-                name: ActionName.UpdateFilter,
+            dispatcher.dispatch<typeof Actions.UpdateFilter>({
+                name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: evt.target.value,
                     show_deleted: props.filter.show_deleted
@@ -367,8 +367,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleSubmit() {
-            dispatcher.dispatch<Actions.ReuseQuery>({
-                name: ActionName.ReuseQuery,
+            dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                name: Actions.ReuseQuery.name,
                 payload: {
                     idx: this.props.idx,
                     newName: this.state.newName,
@@ -427,8 +427,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch<Actions.WipeSubcorpus>({
-                name: ActionName.WipeSubcorpus,
+            dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
+                name: Actions.WipeSubcorpus.name,
                 payload: {
                     idx: props.idx
                 }
@@ -455,8 +455,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch<Actions.RestoreSubcorpus>({
-                name: ActionName.RestoreSubcorpus,
+            dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
+                name: Actions.RestoreSubcorpus.name,
                 payload: {
                     idx: props.idx
                 }
@@ -509,8 +509,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitPublish() {
-            dispatcher.dispatch<Actions.PublishSubcorpus>({
-                name: ActionName.PublishSubcorpus,
+            dispatcher.dispatch<typeof Actions.PublishSubcorpus>({
+                name: Actions.PublishSubcorpus.name,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: this.props.description
@@ -519,8 +519,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleSubmitUpdateDesc() {
-            dispatcher.dispatch<Actions.SubmitPublicDescription>({
-                name: ActionName.SubmitPublicDescription,
+            dispatcher.dispatch<typeof Actions.SubmitPublicDescription>({
+                name: Actions.SubmitPublicDescription.name,
                 payload: {
                     rowIdx: this.props.rowIdx
                 }
@@ -528,8 +528,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch<Actions.UpdatePublicDescription>({
-                name: ActionName.UpdatePublicDescription,
+            dispatcher.dispatch<typeof Actions.UpdatePublicDescription>({
+                name: Actions.UpdatePublicDescription.name,
                 payload: {
                     rowIdx: this.props.rowIdx,
                     description: evt.target.value
@@ -591,8 +591,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleActionSelect(action) {
-            dispatcher.dispatch<Actions.SetActionBoxType>({
-                name: ActionName.SetActionBoxType,
+            dispatcher.dispatch<typeof Actions.SetActionBoxType>({
+                name: Actions.SetActionBoxType.name,
                 payload: {value: action, row: this.props.idx}
             });
         }
@@ -653,8 +653,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleActionButton(action:string, idx:number) {
-            dispatcher.dispatch<Actions.ShowActionWindow>({
-                name: ActionName.ShowActionWindow,
+            dispatcher.dispatch<typeof Actions.ShowActionWindow>({
+                name: Actions.ShowActionWindow.name,
                 payload: {
                     value: idx,
                     action: action
@@ -663,8 +663,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleActionsClose() {
-            dispatcher.dispatch<Actions.HideActionWindow>({
-                name: ActionName.HideActionWindow,
+            dispatcher.dispatch<typeof Actions.HideActionWindow>({
+                name: Actions.HideActionWindow.name,
                 payload: {}
             });
         }

@@ -28,7 +28,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
 
@@ -82,8 +82,8 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SampleFormSetRlines>(
-            ActionName.SampleFormSetRlines,
+        this.addActionHandler<typeof Actions.SampleFormSetRlines>(
+            Actions.SampleFormSetRlines.name,
             action => {
                 const v = action.payload.value;
                 if (/^([1-9]\d*)?$/.exec(v)) {
@@ -97,8 +97,8 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SampleFormSubmit>(
-            ActionName.SampleFormSubmit,
+        this.addActionHandler<typeof Actions.SampleFormSubmit>(
+            Actions.SampleFormSubmit.name,
             action => {
                 this.submitQuery(
                     action.payload.sampleId,

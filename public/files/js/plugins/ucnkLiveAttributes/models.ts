@@ -26,9 +26,9 @@ import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 import { TextTypes, Kontext } from '../../types/common';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SelectionFilterMap } from '../../models/textTypes/common';
-import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as TTActions } from '../../models/textTypes/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
+import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 
@@ -123,18 +123,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                dispatch<TTActions.LockSelected>({
-                    name: TTActionName.LockSelected
+                dispatch<typeof TTActions.LockSelected>({
+                    name: TTActions.LockSelected.name
                 });
 
                 this.suspend({}, (action, syncData) => {
-                    return action.name === PluginInterfaces.LiveAttributes.ActionName.RefineReady ?
+                    return action.name === PluginInterfaces.LiveAttributes.Actions.RefineReady.name ?
                         null : syncData;
 
                 }).pipe(
@@ -151,8 +151,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 ).subscribe(
                     ([selections, data]) => {
                         const filterData = this.importFilter(data.attr_values, dispatch);
-                        dispatch<TTActions.FilterWholeSelection>({
-                            name: TTActionName.FilterWholeSelection,
+                        dispatch<typeof TTActions.FilterWholeSelection>({
+                            name: TTActions.FilterWholeSelection.name,
                             payload: {
                                 poscount: data.poscount,
                                 filterData: filterData,
@@ -163,8 +163,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     },
                     (err) => {
                         this.pluginApi.showMessage('error', err);
-                        dispatch<TTActions.FilterWholeSelection>({
-                            name: TTActionName.FilterWholeSelection,
+                        dispatch<typeof TTActions.FilterWholeSelection>({
+                            name: TTActions.FilterWholeSelection.name,
                             error: err
                         });
                     }
@@ -172,8 +172,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<TTActions.FilterWholeSelection>(
-            TTActionName.FilterWholeSelection,
+        this.addActionHandler<typeof TTActions.FilterWholeSelection>(
+            TTActions.FilterWholeSelection.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -193,8 +193,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.ResetClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
+            PluginInterfaces.LiveAttributes.Actions.ResetClicked.name,
             (state, action) => {
                 state.resetConfirmed = window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'));
                 if (state.resetConfirmed) {
@@ -203,51 +203,51 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             },
             (state, action, dispatch) => {
                 if (state.resetConfirmed) {
-                    dispatch<TTActions.ResetState>({
-                        name: TTActionName.ResetState
+                    dispatch<typeof TTActions.ResetState>({
+                        name: TTActions.ResetState.name
                     });
                 }
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.UndoClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
+            PluginInterfaces.LiveAttributes.Actions.UndoClicked.name,
             (state, action) => {
                 state.lastRemovedStep = List.last(state.selectionSteps);
                 state.selectionSteps.pop();
             },
             (state, action, dispatch) => {
                 if (!isAlignedSelectionStep(state.lastRemovedStep)) {
-                    dispatch<TTActions.UndoState>({
-                        name: TTActionName.UndoState
+                    dispatch<typeof TTActions.UndoState>({
+                        name: TTActions.UndoState.name
                     });
                 }
             }
         );
 
-        this.addActionHandler<TTActions.MinimizeAll>(
-            TTActionName.MinimizeAll,
+        this.addActionHandler<typeof TTActions.MinimizeAll>(
+            TTActions.MinimizeAll.name,
             (state, action) => {
                 state.isTTListMinimized = true;
             }
         );
 
-        this.addActionHandler<TTActions.MaximizeAll>(
-            TTActionName.MaximizeAll,
+        this.addActionHandler<typeof TTActions.MaximizeAll>(
+            TTActions.MaximizeAll.name,
             (state, action) => {
                 state.isTTListMinimized = false;
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
-            PluginInterfaces.LiveAttributes.ActionName.ToggleMinimizeAlignedLangList,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
+            PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList.name,
             (state, action) => {
                 state.isTTListMinimized = !state.isTTListMinimized;
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
             (state, action) => {
                 const item = state.alignedCorpora[action.payload.idx];
                 if (item) {
@@ -263,8 +263,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(
@@ -280,8 +280,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(
@@ -297,16 +297,16 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<TTActions.SelectionChanged>(
-            TTActionName.SelectionChanged,
+        this.addActionHandler<typeof TTActions.SelectionChanged>(
+            TTActions.SelectionChanged.name,
             (state, action) => {
                 state.controlsEnabled = action.payload.hasSelectedItems ||
                         List.some(v => v.selected, state.alignedCorpora);
             }
         );
 
-        this.addActionHandler<TTActions.AttributeTextInputChanged>(
-            TTActionName.AttributeTextInputChanged,
+        this.addActionHandler<typeof TTActions.AttributeTextInputChanged>(
+            TTActions.AttributeTextInputChanged.name,
             (state, action) => {
                 // we must gather information about selection types involved in refined selection
                 // to be able to present properly rendered selection steps (if some attributes
@@ -318,12 +318,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<TTActions.AttributeTextInputAutocompleteRequest>(
-            TTActionName.AttributeTextInputAutocompleteRequest,
+        this.addActionHandler<typeof TTActions.AttributeTextInputAutocompleteRequest>(
+            TTActions.AttributeTextInputAutocompleteRequest.name,
             null,
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
-                    if (action.name === TTActionName.AttributeTextInputAutocompleteReady) {
+                    if (action.name === TTActions.AttributeTextInputAutocompleteReady.name) {
                         return null;
                     }
                     return syncData;
@@ -348,8 +348,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         const filterData = this.importFilter(resp.attr_values, dispatch);
                         const values = resp.attr_values[action.payload.attrName];
                         if (Array.isArray(values)) {
-                            dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
-                                name: TTActionName.AttributeTextInputAutocompleteRequestDone,
+                            dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
+                                name: TTActions.AttributeTextInputAutocompleteRequestDone.name,
                                 payload: {
                                     attrName: action.payload.attrName,
                                     filterData: filterData,
@@ -361,8 +361,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             });
 
                         } else {
-                            dispatch<TTActions.AttributeTextInputAutocompleteRequestDone>({
-                                name: TTActionName.AttributeTextInputAutocompleteRequestDone,
+                            dispatch<typeof TTActions.AttributeTextInputAutocompleteRequestDone>({
+                                name: TTActions.AttributeTextInputAutocompleteRequestDone.name,
                                 error: new Error('Did not recieve list of items but a summary instead')
                             });
                         }
@@ -375,16 +375,16 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<TTActions.ExtendedInformationRequest>(
-            TTActionName.ExtendedInformationRequest,
+        this.addActionHandler<typeof TTActions.ExtendedInformationRequest>(
+            TTActions.ExtendedInformationRequest.name,
             null,
             (state, action, dispatch) => {
                 const ident:string = action.payload.ident;
                 if (List.some(v => v === ident, state.bibliographyIds)) {
                     this.loadBibInfo(ident).subscribe(
                         (serverData) => {
-                            dispatch<TTActions.ExtendedInformationRequestDone>({
-                                name: TTActionName.ExtendedInformationRequestDone,
+                            dispatch<typeof TTActions.ExtendedInformationRequestDone>({
+                                name: TTActions.ExtendedInformationRequestDone.name,
                                 payload: {
                                     attrName: state.bibliographyAttribute,
                                     ident: ident,
@@ -394,8 +394,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         },
                         (err:Error) => {
                             this.pluginApi.showMessage('error', err);
-                            dispatch<TTActions.ExtendedInformationRequestDone>({
-                                name: TTActionName.ExtendedInformationRequestDone,
+                            dispatch<typeof TTActions.ExtendedInformationRequestDone>({
+                                name: TTActions.ExtendedInformationRequestDone.name,
                                 error: err
                             });
 
@@ -408,12 +408,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
             null,
             (state, action, dispatch) => {
-                dispatch<SubcActions.FormSetAlignedCorpora>({
-                    name: SubcActionName.FormSetAlignedCorpora,
+                dispatch<typeof SubcActions.FormSetAlignedCorpora>({
+                    name: SubcActions.FormSetAlignedCorpora.name,
                     payload: {
                         alignedCorpora: state.alignedCorpora.filter(v => v.selected)
                     }
@@ -421,8 +421,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<TTActions.AttributeTextInputAutocompleteRequestDone>(
-            TTActionName.AttributeTextInputAutocompleteRequestDone,
+        this.addActionHandler<typeof TTActions.AttributeTextInputAutocompleteRequestDone>(
+            TTActions.AttributeTextInputAutocompleteRequestDone.name,
             (state, action) => {
                 if (Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
                     this.attachBibData(state, action.payload.filterData);
@@ -580,8 +580,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private setAttrSummary(attrName:string, value:TextTypes.AttrSummary, dispatch:SEDispatcher):void {
-        dispatch<TTActions.SetAttrSummary>({
-            name: TTActionName.SetAttrSummary,
+        dispatch<typeof TTActions.SetAttrSummary>({
+            name: TTActions.SetAttrSummary.name,
             payload: {
                 attrName: attrName,
                 value: value

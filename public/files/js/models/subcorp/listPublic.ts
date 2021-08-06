@@ -23,7 +23,7 @@ import { MultiDict } from '../../multidict';
 import { Kontext } from '../../types/common';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, Subject } from 'rxjs';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { debounceTime } from 'rxjs/operators';
 
@@ -79,8 +79,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
         ).subscribe(
             query => {
-                dispatcher.dispatch<Actions.SubmitSearchQuery>({
-                    name: ActionName.SubmitSearchQuery,
+                dispatcher.dispatch<typeof Actions.SubmitSearchQuery>({
+                    name: Actions.SubmitSearchQuery.name,
                     payload: {
                         query
                     }
@@ -88,8 +88,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             },
             (err) => {
                 this.pageModel.showMessage('error', err);
-                dispatcher.dispatch<Actions.SubmitSearchQuery>({
-                    name: ActionName.SubmitSearchQuery,
+                dispatcher.dispatch<typeof Actions.SubmitSearchQuery>({
+                    name: Actions.SubmitSearchQuery.name,
                     error: err
                 });
             }
@@ -97,16 +97,16 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.SetSearchQuery>(
-            ActionName.SetSearchQuery,
+        this.addActionHandler<typeof Actions.SetSearchQuery>(
+            Actions.SetSearchQuery.name,
             (state, action) => {
                 state.searchQuery = action.payload.value;
                 this.autoSubmitTrigger.next(state.searchQuery);
             }
         );
 
-        this.addActionHandler<Actions.SubmitSearchQuery>(
-            ActionName.SubmitSearchQuery,
+        this.addActionHandler<typeof Actions.SubmitSearchQuery>(
+            Actions.SubmitSearchQuery.name,
             (state, action) => {
                 if (action.payload.query.length >= state.minQuerySize) {
                     state.isBusy = true;
@@ -116,8 +116,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                 if (action.payload.query.length >= state.minQuerySize) {
                     this.loadData(state).subscribe(
                         (data) => {
-                            dispatch<Actions.DataLoadDone>({
-                                name: ActionName.DataLoadDone,
+                            dispatch<typeof Actions.DataLoadDone>({
+                                name: Actions.DataLoadDone.name,
                                 payload: {
                                     data
                                 }
@@ -125,8 +125,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                         },
                         (err) => {
                             this.pageModel.showMessage('error', err);
-                            dispatch<Actions.DataLoadDone>({
-                                name: ActionName.DataLoadDone,
+                            dispatch<typeof Actions.DataLoadDone>({
+                                name: Actions.DataLoadDone.name,
                                 error: err
                             });
                         }
@@ -135,8 +135,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             }
         );
 
-        this.addActionHandler<Actions.DataLoadDone>(
-            ActionName.DataLoadDone,
+        this.addActionHandler<typeof Actions.DataLoadDone>(
+            Actions.DataLoadDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -148,8 +148,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             }
         );
 
-        this.addActionHandler<Actions.UseInQuery>(
-            ActionName.UseInQuery,
+        this.addActionHandler<typeof Actions.UseInQuery>(
+            Actions.UseInQuery.name,
             null,
             (state, action, dispatch) => {
                 const args = new MultiDict();

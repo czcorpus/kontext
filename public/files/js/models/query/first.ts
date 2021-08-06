@@ -32,7 +32,7 @@ import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -391,8 +391,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isLocalUiLang: props.isLocalUiLang
         });
 
-        this.addActionHandler<Actions.QueryInputSelectSubcorp>(
-            ActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof Actions.QueryInputSelectSubcorp>(
+            Actions.QueryInputSelectSubcorp.name,
             action => {
                 this.changeState(state => {
                     if (action.payload.pubName) {
@@ -421,8 +421,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubtypeHandler<Actions.QueryInputSetLpos>(
-            ActionName.QueryInputSetLpos,
+        this.addActionSubtypeHandler<typeof Actions.QueryInputSetLpos>(
+            Actions.QueryInputSetLpos.name,
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
@@ -431,8 +431,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryToggleAlignedCorpora>(
-            ActionName.QueryToggleAlignedCorpora,
+        this.addActionHandler<typeof Actions.QueryToggleAlignedCorpora>(
+            Actions.QueryToggleAlignedCorpora.name,
             action => {
                 this.changeState(state => {
                     state.alignedCorporaVisible = !state.alignedCorporaVisible;
@@ -440,8 +440,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputAddAlignedCorpus>(
-            ActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof Actions.QueryInputAddAlignedCorpus>(
+            Actions.QueryInputAddAlignedCorpus.name,
             action => {
                 this.changeState(state => {
                     this.addAlignedCorpus(state, action.payload.corpname);
@@ -449,8 +449,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputRemoveAlignedCorpus>(
-            ActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof Actions.QueryInputRemoveAlignedCorpus>(
+            Actions.QueryInputRemoveAlignedCorpus.name,
             action => {
                 this.changeState(state => {
                     this.removeAlignedCorpus(state, action.payload.corpname);
@@ -458,8 +458,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetIncludeEmpty>(
-            ActionName.QueryInputSetIncludeEmpty,
+        this.addActionHandler<typeof Actions.QueryInputSetIncludeEmpty>(
+            Actions.QueryInputSetIncludeEmpty.name,
             action => {
                 this.changeState(state => {
                     state.queries[action.payload.corpname].include_empty = action.payload.value;
@@ -467,14 +467,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QuerySubmit>(
-            ActionName.QuerySubmit,
+        this.addActionHandler<typeof Actions.QuerySubmit>(
+            Actions.QuerySubmit.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
                 });
                 this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.QueryContextFormPrepareArgsDone ?
+                    return action.name === Actions.QueryContextFormPrepareArgsDone.name ?
                         null : syncData;
 
                 }).pipe(
@@ -490,7 +490,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                                 throw err;
                             }
                             return this.submitQuery(
-                                (wAction as Actions.QueryContextFormPrepareArgsDone).payload.data,
+                                (wAction as typeof Actions.QueryContextFormPrepareArgsDone).payload.data,
                                 true
                             );
                         }
@@ -575,8 +575,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryContextToggleForm>(
-            ActionName.QueryContextToggleForm,
+        this.addActionHandler<typeof Actions.QueryContextToggleForm>(
+            Actions.QueryContextToggleForm.name,
             action => {
                 this.changeState(state => {
                     state.contextFormVisible = !state.contextFormVisible;
@@ -584,8 +584,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryTextTypesToggleForm>(
-            ActionName.QueryTextTypesToggleForm,
+        this.addActionHandler<typeof Actions.QueryTextTypesToggleForm>(
+            Actions.QueryTextTypesToggleForm.name,
             action => {
                 this.changeState(state => {
                     state.textTypesFormVisible = !state.textTypesFormVisible;
@@ -602,8 +602,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetPCQPosNeg>(
-            ActionName.QueryInputSetPCQPosNeg,
+        this.addActionHandler<typeof Actions.QueryInputSetPCQPosNeg>(
+            Actions.QueryInputSetPCQPosNeg.name,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];

@@ -23,116 +23,96 @@ import { Kontext } from '../../types/common';
 import { QueryFormType } from '../query/actions';
 
 
-export enum ActionName {
+export class Actions {
 
-    HistorySetQuerySupertype = 'QUERY_HISTORY_SET_QUERY_SUPERTYPE',
-    HistorySetCurrentCorpusOnly = 'QUERY_HISTORY_SET_CURRENT_CORPUS_ONLY',
-    HistorySetArchivedOnly = 'QUERY_HISTORY_SET_ARCHIVED_ONLY',
-    HistorySetEditedItem = 'QUERY_HISTORY_SET_EDITED_ITEM',
-    HistoryDoNotArchive = 'QUERY_HISTORY_DO_NOT_ARCHIVE',
-    HistoryEditorSetName = 'QUERY_HISTORY_EDITOR_SET_NAME',
-    HistoryEditorClickSave = 'QUERY_HISTORY_EDITOR_CLICK_SAVE',
-    HistoryCloseEditedItem = 'QUERY_HISTORY_CLOSE_EDITED_ITEM',
-    HistoryOpenQueryForm = 'QUERY_HISTORY_OPEN_QUERY_FORM',
-    HistoryLoadMore = 'QUERY_HISTORY_LOAD_MORE',
-    SelectItem = 'QUERY_HISTORY_SELECT_CURRENT_ITEM',
-    ToggleQueryHistoryWidget = 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET',
-    ToggleRowToolbar = 'QUERY_HISTORY_TOGGLE_ROW_TOOLBAR',
-    RemoveItemFromList = 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST',
-    RemoveItemFromListDone = 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
-}
-
-
-export namespace Actions {
-
-    export interface HistorySetQuerySupertype extends Action<{
+    static HistorySetQuerySupertype:Action<{
         value:Kontext.QuerySupertype;
-    }> {
-        name:ActionName.HistorySetQuerySupertype;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_SET_QUERY_SUPERTYPE'
+    };
 
-    export interface HistorySetCurrentCorpusOnly extends Action<{
+    static HistorySetCurrentCorpusOnly:Action<{
         value:boolean;
-    }> {
-        name:ActionName.HistorySetCurrentCorpusOnly;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_SET_CURRENT_CORPUS_ONLY'
+    };
 
-    export interface HistorySetArchivedOnly extends Action<{
+    static HistorySetArchivedOnly:Action<{
         value:boolean;
-    }> {
-        name:ActionName.HistorySetArchivedOnly;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_SET_ARCHIVED_ONLY'
+    };
 
-    export interface HistorySetEditedItem extends Action<{
+    static HistorySetEditedItem:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.HistorySetEditedItem;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_SET_EDITED_ITEM'
+    };
 
-    export interface HistoryDoNotArchive extends Action<{
+    static HistoryDoNotArchive:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.HistoryDoNotArchive;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_DO_NOT_ARCHIVE'
+    };
 
-    export interface HistoryEditorSetName extends Action<{
+    static HistoryEditorSetName:Action<{
         itemIdx:number;
         value:string;
-    }> {
-        name:ActionName.HistoryEditorSetName;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_EDITOR_SET_NAME'
+    };
 
-    export interface HistoryEditorClickSave extends Action<{
+    static HistoryEditorClickSave:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.HistoryEditorClickSave;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_EDITOR_CLICK_SAVE'
+    };
 
-    export interface HistoryCloseEditedItem extends Action<{
+    static HistoryCloseEditedItem:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.HistoryCloseEditedItem;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_CLOSE_EDITED_ITEM'
+    };
 
-    export interface HistoryOpenQueryForm extends Action<{
+    static HistoryOpenQueryForm:Action<{
         idx:number;
-    }> {
-        name:ActionName.HistoryOpenQueryForm;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_OPEN_QUERY_FORM'
+    };
 
-    export interface HistoryLoadMore extends Action<{
-    }> {
-        name:ActionName.HistoryLoadMore;
-    }
+    static HistoryLoadMore:Action<{
+    }> = {
+        name: 'QUERY_HISTORY_LOAD_MORE'
+    };
 
-    export interface SelectItem extends Action<{
+    static SelectItem:Action<{
         value:number;
-    }> {
-        name:ActionName.SelectItem;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_SELECT_CURRENT_ITEM'
+    };
 
-    export interface ToggleQueryHistoryWidget extends Action<{
+    static ToggleQueryHistoryWidget:Action<{
         formType:QueryFormType;
         sourceId:string;
-    }> {
-        name:ActionName.ToggleQueryHistoryWidget;
-    }
+    }> = {
+        name: 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET'
+    };
 
-    export interface ToggleRowToolbar extends Action<{
+    static ToggleRowToolbar:Action<{
         rowIdx:number;
-    }> {
-        name:ActionName.ToggleRowToolbar;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_TOGGLE_ROW_TOOLBAR'
+    };
 
-    export interface RemoveItemFromList extends Action<{
+    static RemoveItemFromList:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.RemoveItemFromList;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST'
+    };
 
-    export interface RemoveItemFromListDone extends Action<{
+    static RemoveItemFromListDone:Action<{
         itemIdx:number;
-    }> {
-        name:ActionName.RemoveItemFromListDone;
-    }
+    }> = {
+        name: 'QUERY_HISTORY_REMOVE_ITEM_FROM_LIST_DONE'
+    };
 }

@@ -24,8 +24,8 @@ import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
 import { SearchHistoryModel, InputBoxHistoryItem } from '../../../models/searchHistory';
-import { Actions, ActionName } from '../../../models/searchHistory/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
+import { Actions } from '../../../models/searchHistory/actions';
+import { Actions as QueryActions } from '../../../models/query/actions';
 
 import * as S from './style';
 import { QueryFormType } from '../../../models/query/actions';
@@ -83,23 +83,23 @@ export function init(
             }[evt.key]);
             const modulo = data.length > 0 ? data.length : 1;
             if (!isNaN(inc)) {
-                dispatcher.dispatch<Actions.SelectItem>({
-                    name: ActionName.SelectItem,
+                dispatcher.dispatch<typeof Actions.SelectItem>({
+                    name: Actions.SelectItem.name,
                     payload: {value: (this.props.currentItem + inc) % modulo}
                 });
 
             } else if (evt.key === Keyboard.Value.ENTER) {
                 const historyItem = data[this.props.currentItem];
-                dispatcher.dispatch<QueryActions.QueryInputSetQType>({
-                    name: QueryActionName.QueryInputSetQType,
+                dispatcher.dispatch<typeof QueryActions.QueryInputSetQType>({
+                    name: QueryActions.QueryInputSetQType.name,
                     payload: {
                         sourceId: this.props.sourceId, // either corpname or filterId
                         queryType: historyItem.query_type,
                         formType: this.props.formType
                     }
                 });
-                dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                    name: QueryActionName.QueryInputSetQuery,
+                dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
+                    name: QueryActions.QueryInputSetQuery.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -120,16 +120,16 @@ export function init(
 
         _handleClickSelection(itemNum, data) {
             const historyItem = data[itemNum];
-            dispatcher.dispatch<QueryActions.QueryInputSetQType>({
-                name: QueryActionName.QueryInputSetQType,
+            dispatcher.dispatch<typeof QueryActions.QueryInputSetQType>({
+                name: QueryActions.QueryInputSetQType.name,
                 payload: {
                     sourceId: this.props.sourceId,
                     queryType: historyItem.query_type,
                     formType: this.props.formType
                 }
             });
-            dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                name: QueryActionName.QueryInputSetQuery,
+            dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
+                name: QueryActions.QueryInputSetQuery.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,

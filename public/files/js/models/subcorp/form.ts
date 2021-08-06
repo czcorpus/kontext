@@ -26,7 +26,7 @@ import { InputMode, BaseSubcorFormState, CreateSubcorpusArgs } from './common';
 import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { List, HTTP } from 'cnc-tskit';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 
@@ -111,26 +111,26 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
 
-        this.addActionHandler<Actions.FormSetInputMode>(
-            ActionName.FormSetInputMode,
+        this.addActionHandler<typeof Actions.FormSetInputMode>(
+            Actions.FormSetInputMode.name,
             action => this.changeState(state => {state.inputMode = action.payload.value})
         );
 
-        this.addActionHandler<Actions.FormSetSubcAsPublic>(
-            ActionName.FormSetSubcAsPublic,
+        this.addActionHandler<typeof Actions.FormSetSubcAsPublic>(
+            Actions.FormSetSubcAsPublic.name,
             action => this.changeState(state => {state.isPublic = action.payload.value})
         );
 
-        this.addActionHandler<Actions.FormSetDescription>(
-            ActionName.FormSetDescription,
+        this.addActionHandler<typeof Actions.FormSetDescription>(
+            Actions.FormSetDescription.name,
             action => this.changeState(state => {
                 state.description = Kontext.updateFormValue(
                     this.state.description, {value: action.payload.value})
             })
         );
 
-        this.addActionHandler<Actions.FormSubmit>(
-            ActionName.FormSubmit,
+        this.addActionHandler<typeof Actions.FormSubmit>(
+            Actions.FormSubmit.name,
             action => {
                 if (this.state.inputMode === 'gui') {
                     this.changeState(state => {state.isBusy = true});
@@ -157,15 +157,15 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
             }
         );
 
-        this.addActionHandler<Actions.FormSetSubcName>(
-            ActionName.FormSetSubcName,
+        this.addActionHandler<typeof Actions.FormSetSubcName>(
+            Actions.FormSetSubcName.name,
             (action) => {
                 this.changeState(state => {state.subcname.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.FormSetAlignedCorpora>(
-            ActionName.FormSetAlignedCorpora,
+        this.addActionHandler<typeof Actions.FormSetAlignedCorpora>(
+            Actions.FormSetAlignedCorpora.name,
             action => this.changeState(state => {
                 state.alignedCorpora = action.payload.alignedCorpora
             })

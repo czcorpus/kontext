@@ -28,8 +28,7 @@ import {IPluginApi, PluginInterfaces} from '../../types/plugins';
 import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Actions } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName
-    } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as CommonActions, ActionName as CommonActionName
     } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
@@ -524,8 +523,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             (state, action) => {
                 if (action.payload.pubName) {
                     state.currSubcorpus = action.payload.pubName;
@@ -542,8 +541,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             (state, action) => {
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,
@@ -552,8 +551,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             (state, action) => {
                 state.currFavitemId = findCurrFavitemId(
                     state.dataFav,

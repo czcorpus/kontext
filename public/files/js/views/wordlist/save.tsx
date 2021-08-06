@@ -24,7 +24,7 @@ import {SaveData} from '../../app/navigation';
 import {IActionDispatcher, Bound} from 'kombo';
 import { WordlistSaveModel, WordlistSaveModelState } from '../../models/wordlist/save';
 import {CommonViews} from '../common';
-import { Actions, ActionName } from '../../models/wordlist/actions';
+import { Actions } from '../../models/wordlist/actions';
 
 
 export interface WordlistSaveViews {
@@ -52,8 +52,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch<Actions.WordlistSaveSetIncludeColHeaders>({
-                name: ActionName.WordlistSaveSetIncludeColHeaders,
+            dispatcher.dispatch<typeof Actions.WordlistSaveSetIncludeColHeaders>({
+                name: Actions.WordlistSaveSetIncludeColHeaders.name,
                 payload: {
                     value: !props.value
                 }
@@ -84,8 +84,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch<Actions.WordlistSaveSetIncludeHeading>({
-                name: ActionName.WordlistSaveSetIncludeHeading,
+            dispatcher.dispatch<typeof Actions.WordlistSaveSetIncludeHeading>({
+                name: Actions.WordlistSaveSetIncludeHeading.name,
                 payload: {
                     value: !props.value
                 }
@@ -131,8 +131,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistSaveFormSetMaxLine>({
-                name: ActionName.WordlistSaveFormSetMaxLine,
+            dispatcher.dispatch<typeof Actions.WordlistSaveFormSetMaxLine>({
+                name: Actions.WordlistSaveFormSetMaxLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -160,8 +160,8 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     }> = (props) => {
 
         const handleSaveFormatSelect = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch<Actions.WordlistSaveFormSetFormat>({
-                name: ActionName.WordlistSaveFormSetFormat,
+            dispatcher.dispatch<typeof Actions.WordlistSaveFormSetFormat>({
+                name: Actions.WordlistSaveFormSetFormat.name,
                 payload: {
                     value: evt.target.value as SaveData.Format
                 }
@@ -186,14 +186,14 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
     const WordlistSaveForm:React.SFC<WordlistSaveModelState> = (props) => {
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<Actions.WordlistSaveFormHide>({
-                name: ActionName.WordlistSaveFormHide
+            dispatcher.dispatch<typeof Actions.WordlistSaveFormHide>({
+                name: Actions.WordlistSaveFormHide.name
             });
         };
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.WordlistSaveFormSubmit>({
-                name: ActionName.WordlistSaveFormSubmit
+            dispatcher.dispatch<typeof Actions.WordlistSaveFormSubmit>({
+                name: Actions.WordlistSaveFormSubmit.name
             });
         }
 

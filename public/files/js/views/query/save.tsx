@@ -23,7 +23,7 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {Keyboard} from 'cnc-tskit';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
-import { Actions, ActionName } from '../../models/query/actions';
+import { Actions } from '../../models/query/actions';
 import { Actions as MainMenuActions,
     ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 import * as S from './style';
@@ -53,8 +53,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.SaveAsFormSetName>({
-                name: ActionName.SaveAsFormSetName,
+            dispatcher.dispatch<typeof Actions.SaveAsFormSetName>({
+                name: Actions.SaveAsFormSetName.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -129,8 +129,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private submit() {
-            dispatcher.dispatch<Actions.SaveAsFormSubmit>({
-                name: ActionName.SaveAsFormSubmit
+            dispatcher.dispatch<typeof Actions.SaveAsFormSubmit>({
+                name: Actions.SaveAsFormSubmit.name
             });
         }
 

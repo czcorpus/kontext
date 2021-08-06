@@ -27,7 +27,7 @@ import { Kontext, TextTypes } from '../../types/common';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { CoreViews } from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
-import { Actions, ActionName } from '../../models/textTypes/actions';
+import { Actions } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';
 import { init as listSelectorInit } from './list';
 import { init as rawInputMultiValSelectorInit } from './input';
@@ -72,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const clickCloseHandler = () => {
-            dispatcher.dispatch<Actions.ExtendedInformationRemoveRequest>({
-                name: ActionName.ExtendedInformationRemoveRequest,
+            dispatcher.dispatch<typeof Actions.ExtendedInformationRemoveRequest>({
+                name: Actions.ExtendedInformationRemoveRequest.name,
                 payload: {
                     attrName: props.attrName,
                     ident: props.ident
@@ -201,8 +201,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         );
 
         const selectAllHandler = () => {
-            dispatcher.dispatch<Actions.SelectAllClicked>({
-                name: ActionName.SelectAllClicked,
+            dispatcher.dispatch<typeof Actions.SelectAllClicked>({
+                name: Actions.SelectAllClicked.name,
                 payload: {
                     attrName: props.attrObj.name
                 }
@@ -210,8 +210,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const intervalModeSwitchHandler = () => {
-            dispatcher.dispatch<Actions.ToggleRangeMode>({
-                name: ActionName.ToggleRangeMode,
+            dispatcher.dispatch<typeof Actions.ToggleRangeMode>({
+                name: Actions.ToggleRangeMode.name,
                 payload: {
                     attrName: props.attrObj.name
                 }
@@ -241,14 +241,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         const metaInfoHelpClickHandler = () => {
-            dispatcher.dispatch<Actions.ToggleMetaInfoView>({
-                name: ActionName.ToggleMetaInfoView
+            dispatcher.dispatch<typeof Actions.ToggleMetaInfoView>({
+                name: Actions.ToggleMetaInfoView.name
             });
         }
 
         const helpCloseHandler = () => {
-            dispatcher.dispatch<Actions.ToggleMetaInfoView>({
-                name: ActionName.ToggleMetaInfoView
+            dispatcher.dispatch<typeof Actions.ToggleMetaInfoView>({
+                name: Actions.ToggleMetaInfoView.name
             });
         }
 
@@ -308,8 +308,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         const handleMinimizeIconFn = (ident:string):()=>void => {
             return () => {
-                dispatcher.dispatch<Actions.ToggleMinimizeItem>({
-                    name: ActionName.ToggleMinimizeItem,
+                dispatcher.dispatch<typeof Actions.ToggleMinimizeItem>({
+                    name: Actions.ToggleMinimizeItem.name,
                     payload: {
                         ident: ident
                     }
@@ -370,13 +370,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         const handleClick = () => {
             if (props.hasSomeMaximized) {
-                dispatcher.dispatch<Actions.MinimizeAll>({
-                    name: ActionName.MinimizeAll
+                dispatcher.dispatch<typeof Actions.MinimizeAll>({
+                    name: Actions.MinimizeAll.name
                 });
 
             } else {
-                dispatcher.dispatch<Actions.MaximizeAll>({
-                    name: ActionName.MaximizeAll
+                dispatcher.dispatch<typeof Actions.MaximizeAll>({
+                    name: Actions.MaximizeAll.name
                 });
             }
         };

@@ -21,9 +21,9 @@
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../multidict';
 import { Kontext } from '../../types/common';
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { HTTP, tuple } from 'cnc-tskit';
 
 
@@ -77,15 +77,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.SaveAsFormSetName>(
-            ActionName.SaveAsFormSetName,
+        this.addActionHandler<typeof Actions.SaveAsFormSetName>(
+            Actions.SaveAsFormSetName.name,
             (state, action) => {
                 state.name = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SaveAsFormSubmit>(
-            ActionName.SaveAsFormSubmit,
+        this.addActionHandler<typeof Actions.SaveAsFormSubmit>(
+            Actions.SaveAsFormSubmit.name,
             (state, action) => {
                 if (state.name) {
                     state.isValidated = true;
@@ -104,14 +104,14 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     this.submit(state).subscribe(
                         () => {
                             this.layoutModel.resetMenuActiveItemAndNotify();
-                            dispatch<Actions.SaveAsFormSubmitDone>({
-                                name: ActionName.SaveAsFormSubmitDone
+                            dispatch<typeof Actions.SaveAsFormSubmitDone>({
+                                name: Actions.SaveAsFormSubmitDone.name
                             });
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
-                            dispatch<Actions.SaveAsFormSubmitDone>({
-                                name: ActionName.SaveAsFormSubmitDone
+                            dispatch<typeof Actions.SaveAsFormSubmitDone>({
+                                name: Actions.SaveAsFormSubmitDone.name
                             });
                         }
                     );
@@ -119,8 +119,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<Actions.SaveAsFormSubmitDone>(
-            ActionName.SaveAsFormSubmitDone,
+        this.addActionHandler<typeof Actions.SaveAsFormSubmitDone>(
+            Actions.SaveAsFormSubmitDone.name,
             (state, action) => {
                 state.isBusy = false;
                 // TODO these are side-effects actually
@@ -134,8 +134,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<Actions.GetConcArchivedStatus>(
-            ActionName.GetConcArchivedStatus,
+        this.addActionHandler<typeof Actions.GetConcArchivedStatus>(
+            Actions.GetConcArchivedStatus.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -147,8 +147,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
                 ).subscribe(
                     (data) => {
-                        dispatch<Actions.GetConcArchivedStatusDone>({
-                            name: ActionName.GetConcArchivedStatusDone,
+                        dispatch<typeof Actions.GetConcArchivedStatusDone>({
+                            name: Actions.GetConcArchivedStatusDone.name,
                             payload: {
                                 willBeArchived: data.will_be_archived,
                                 isArchived: data.is_archived
@@ -157,8 +157,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
                     },
                     (err) => {
-                        dispatch<Actions.GetConcArchivedStatusDone>({
-                            name: ActionName.GetConcArchivedStatusDone,
+                        dispatch<typeof Actions.GetConcArchivedStatusDone>({
+                            name: Actions.GetConcArchivedStatusDone.name,
                             error: err
                         });
                     }
@@ -166,8 +166,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<Actions.GetConcArchivedStatusDone>(
-            ActionName.GetConcArchivedStatusDone,
+        this.addActionHandler<typeof Actions.GetConcArchivedStatusDone>(
+            Actions.GetConcArchivedStatusDone.name,
             (state, action) => {
                 state.isBusy = false;
                 state.concIsArchived = action.payload.isArchived;
@@ -175,8 +175,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<Actions.MakeConcordancePermanent>(
-            ActionName.MakeConcordancePermanent,
+        this.addActionHandler<typeof Actions.MakeConcordancePermanent>(
+            Actions.MakeConcordancePermanent.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -194,15 +194,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
 
                 ).subscribe(
                     (data) => {
-                        dispatch<Actions.MakeConcordancePermanentDone>({
-                            name: ActionName.MakeConcordancePermanentDone,
+                        dispatch<typeof Actions.MakeConcordancePermanentDone>({
+                            name: Actions.MakeConcordancePermanentDone.name,
                             payload: {revoked: data.revoked}
                         });
 
                     },
                     (err) => {
-                        dispatch<Actions.MakeConcordancePermanentDone>({
-                            name: ActionName.MakeConcordancePermanentDone,
+                        dispatch<typeof Actions.MakeConcordancePermanentDone>({
+                            name: Actions.MakeConcordancePermanentDone.name,
                             error: err
                         });
                     }
@@ -210,8 +210,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
             }
         );
 
-        this.addActionHandler<Actions.MakeConcordancePermanentDone>(
-            ActionName.MakeConcordancePermanentDone,
+        this.addActionHandler<typeof Actions.MakeConcordancePermanentDone>(
+            Actions.MakeConcordancePermanentDone.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {

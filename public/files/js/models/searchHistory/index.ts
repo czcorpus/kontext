@@ -26,7 +26,7 @@ import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { List, HTTP, tuple } from 'cnc-tskit';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
@@ -79,13 +79,13 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.SelectItem>(
-            ActionName.SelectItem,
+        this.addActionHandler<typeof Actions.SelectItem>(
+            Actions.SelectItem.name,
             action => {this.changeState(state => {state.currentItem = action.payload.value})}
         );
 
-        this.addActionHandler<Actions.HistorySetCurrentCorpusOnly>(
-            ActionName.HistorySetCurrentCorpusOnly,
+        this.addActionHandler<typeof Actions.HistorySetCurrentCorpusOnly>(
+            Actions.HistorySetCurrentCorpusOnly.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -95,8 +95,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistorySetQuerySupertype>(
-            ActionName.HistorySetQuerySupertype,
+        this.addActionHandler<typeof Actions.HistorySetQuerySupertype>(
+            Actions.HistorySetQuerySupertype.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -106,8 +106,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistorySetArchivedOnly>(
-            ActionName.HistorySetArchivedOnly,
+        this.addActionHandler<typeof Actions.HistorySetArchivedOnly>(
+            Actions.HistorySetArchivedOnly.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -117,8 +117,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistoryLoadMore>(
-            ActionName.HistoryLoadMore,
+        this.addActionHandler<typeof Actions.HistoryLoadMore>(
+            Actions.HistoryLoadMore.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -128,26 +128,26 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
-            [ActionName.ToggleQueryHistoryWidget, MainMenuActionName.ShowQueryHistory],
+        this.addActionHandler<typeof Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
+            [Actions.ToggleQueryHistoryWidget.name, MainMenuActionName.ShowQueryHistory],
             action => {
                 this.changeState(state => {
                     state.isBusy = true
                 });
-                this.performLoadAction(action.name === ActionName.ToggleQueryHistoryWidget);
+                this.performLoadAction(action.name === Actions.ToggleQueryHistoryWidget.name);
             }
         );
 
-        this.addActionHandler<Actions.HistoryOpenQueryForm>(
-            ActionName.HistoryOpenQueryForm,
+        this.addActionHandler<typeof Actions.HistoryOpenQueryForm>(
+            Actions.HistoryOpenQueryForm.name,
             action => {
                 this.openQueryForm(action.payload.idx);
                 // page leaves here
             }
         );
 
-        this.addActionHandler<Actions.HistorySetEditedItem>(
-            ActionName.HistorySetEditedItem,
+        this.addActionHandler<typeof Actions.HistorySetEditedItem>(
+            Actions.HistorySetEditedItem.name,
             action => {
                 this.changeState(state => {
                     state.itemsToolbars[action.payload.itemIdx] = tuple(true, true);
@@ -158,8 +158,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistoryCloseEditedItem>(
-            ActionName.HistoryCloseEditedItem,
+        this.addActionHandler<typeof Actions.HistoryCloseEditedItem>(
+            Actions.HistoryCloseEditedItem.name,
             action => {
                 this.changeState(state => {
                     state.itemsToolbars[action.payload.itemIdx] = tuple(true, false);
@@ -167,8 +167,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistoryEditorSetName>(
-            ActionName.HistoryEditorSetName,
+        this.addActionHandler<typeof Actions.HistoryEditorSetName>(
+            Actions.HistoryEditorSetName.name,
             action => {
                 this.changeState(state => {
                     state.data[action.payload.itemIdx].name = action.payload.value;
@@ -176,8 +176,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistoryDoNotArchive>(
-            ActionName.HistoryDoNotArchive,
+        this.addActionHandler<typeof Actions.HistoryDoNotArchive>(
+            Actions.HistoryDoNotArchive.name,
             action => {
                 this.changeState(state => {
                     state.data[action.payload.itemIdx].name = null;
@@ -199,8 +199,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HistoryEditorClickSave>(
-            ActionName.HistoryEditorClickSave,
+        this.addActionHandler<typeof Actions.HistoryEditorClickSave>(
+            Actions.HistoryEditorClickSave.name,
             action => {
                 const item = this.state.data[action.payload.itemIdx];
                 if (!item.name) {
@@ -223,8 +223,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ToggleRowToolbar>(
-            ActionName.ToggleRowToolbar,
+        this.addActionHandler<typeof Actions.ToggleRowToolbar>(
+            Actions.ToggleRowToolbar.name,
             action => {
                 this.changeState(state => {
                     const [status,] = state.itemsToolbars[action.payload.rowIdx];
@@ -238,8 +238,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.RemoveItemFromList>(
-            ActionName.RemoveItemFromList,
+        this.addActionHandler<typeof Actions.RemoveItemFromList>(
+            Actions.RemoveItemFromList.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;

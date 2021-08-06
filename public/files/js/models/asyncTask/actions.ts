@@ -22,33 +22,24 @@ import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 
 
-export enum ActionName {
-    InboxToggleOverviewVisibility = 'INBOX_TOGGLE_OVERVIEW_VISIBILITY',
-    InboxToggleRemoveFinishedOnSubmit = 'INBOX_TOGGLE_REMOVE_FINISHED_ON_SUBMIT',
-    InboxCloseTaskOverview = 'INBOX_CLOSE_TASK_OVERVIEW',
-    InboxAddAsyncTask = 'INBOX_ADD_ASYNC_TASK',
-    InboxUpdateAsyncTask = 'INBOX_UPDATE_ASYNC_TASK',
-    AsyncTasksChecked = 'ASYNC_TASKS_CHECKED'
-}
+export class Actions {
 
-export namespace Actions {
+    static InboxToggleOverviewVisibility:Action<{
+    }> = {
+        name: 'INBOX_TOGGLE_OVERVIEW_VISIBILITY'
+    };
 
-    export interface InboxToggleOverviewVisibility extends Action<{
-    }> {
-        name: ActionName.InboxToggleOverviewVisibility;
-    }
+    static InboxToggleRemoveFinishedOnSubmit:Action<{
+    }> = {
+        name: 'INBOX_TOGGLE_REMOVE_FINISHED_ON_SUBMIT'
+    };
 
-    export interface InboxToggleRemoveFinishedOnSubmit extends Action<{
-    }> {
-        name: ActionName.InboxToggleRemoveFinishedOnSubmit;
-    }
+    static InboxCloseTaskOverview:Action<{
+    }> = {
+        name: 'INBOX_CLOSE_TASK_OVERVIEW'
+    };
 
-    export interface InboxCloseTaskOverview extends Action<{
-    }> {
-        name: ActionName.InboxCloseTaskOverview;
-    }
-
-    export interface InboxAddAsyncTask extends Action<{
+    static InboxAddAsyncTask:Action<{
         ident:string;
         label:string;
         category:string;
@@ -57,26 +48,26 @@ export namespace Actions {
         args?:unknown;
         error?:string;
         url?:string;
-    }> {
-        name: ActionName.InboxAddAsyncTask;
-    }
+    }> = {
+        name: 'INBOX_ADD_ASYNC_TASK'
+    };
 
     /**
      * Update externally a task. This can be used to unify some
      * async operation with the ones handled naturally by the AsyncTaskModel
      */
-    export interface InboxUpdateAsyncTask extends Action<{
+    static InboxUpdateAsyncTask:Action<{
         ident:string;
         status:Kontext.AsyncTaskInfo['status'];
-    }> {
-        name: ActionName.InboxUpdateAsyncTask;
-    }
+    }> = {
+        name: 'INBOX_UPDATE_ASYNC_TASK'
+    };
 
 
-    export interface AsyncTasksChecked extends Action<{
+    static AsyncTasksChecked:Action<{
         tasks:Array<Kontext.AsyncTaskInfo<unknown>>;
-    }> {
-        name: ActionName.AsyncTasksChecked
-    }
+    }> = {
+        name: 'ASYNC_TASKS_CHECKED'
+    };
 
 }

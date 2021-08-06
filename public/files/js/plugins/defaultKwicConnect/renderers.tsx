@@ -22,7 +22,7 @@ import { Kontext } from '../../types/common';
 import { MultiDict } from '../../multidict';
 import { IActionDispatcher } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
-import { ActionName as QueryActionName, Actions as QueryActions } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 
 
 export interface Views {
@@ -119,8 +119,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
     const TreqRenderer:Views['TreqRenderer'] = (props) => {
         const handleClick = (word) => () => {
-            dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                name: QueryActionName.QueryInputSetQuery,
+            dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
+                name: QueryActions.QueryInputSetQuery.name,
                 payload: {
                     formType: Kontext.ConcFormTypes.QUERY,
                     insertRange: null,
@@ -130,8 +130,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                     sourceId: props.data.contents.translat_corp
                 }
             });
-            dispatcher.dispatch<QueryActions.QuerySubmit>({
-                name: QueryActionName.QuerySubmit
+            dispatcher.dispatch<typeof QueryActions.QuerySubmit>({
+                name: QueryActions.QuerySubmit.name
             });
         }
 

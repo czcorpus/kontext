@@ -298,54 +298,43 @@ export namespace PluginInterfaces {
 
         export type CustomAttribute = React.ComponentClass|React.FC;
 
+        export class Actions {
 
-        export enum ActionName {
-            RefineClicked = 'LIVE_ATTRIBUTES_REFINE_CLICKED',
-            RefineReady = 'LIVE_ATTRIBUTES_REFINE_READY',
-            ResetClicked = 'LIVE_ATTRIBUTES_RESET_CLICKED',
-            UndoClicked = 'LIVE_ATTRIBUTES_UNDO_CLICKED',
-            ToggleMinimizeAlignedLangList = 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST',
-            AlignedCorpChanged = 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED',
+            static RefineClicked:Action<{
+            }> = {
+                name: 'LIVE_ATTRIBUTES_REFINE_CLICKED'
+            };
 
-        }
-
-        export namespace Actions {
-
-            export interface RefineClicked extends Action<{
-            }> {
-                name:ActionName.RefineClicked;
-            }
-
-            export interface RefineReady extends Action<{
+            static RefineReady:Action<{
                 selections:TextTypes.ExportedSelection;
-            }> {
-                name:ActionName.RefineReady;
+            }> = {
+                name: 'LIVE_ATTRIBUTES_REFINE_READY'
+            };
+
+            static isRefineReady(a:Action<{}>):a is typeof Actions.RefineReady {
+                return a.name === Actions.RefineReady.name;
             }
 
-            export function isRefineReady(a:Action<{}>):a is RefineReady {
-                return a.name === ActionName.RefineReady;
-            }
+            static ResetClicked:Action<{
+            }> = {
+                name: 'LIVE_ATTRIBUTES_RESET_CLICKED'
+            };
 
-            export interface ResetClicked extends Action<{
-            }> {
-                name:ActionName.ResetClicked;
-            }
+            static UndoClicked:Action<{
+            }> = {
+                name: 'LIVE_ATTRIBUTES_UNDO_CLICKED'
+            };
 
-            export interface UndoClicked extends Action<{
-            }> {
-                name:ActionName.UndoClicked;
-            }
+            static ToggleMinimizeAlignedLangList:Action<{
+            }> = {
+                name: 'LIVE_ATTRIBUTES_TOGGLE_MINIMIZE_ALIGNED_LANG_LIST'
+            };
 
-            export interface ToggleMinimizeAlignedLangList extends Action<{
-            }> {
-                name:ActionName.ToggleMinimizeAlignedLangList;
-            }
-
-            export interface AlignedCorpChanged extends Action<{
+            static AlignedCorpChanged:Action<{
                 idx:number;
-            }> {
-                name:ActionName.AlignedCorpChanged;
-            }
+            }> = {
+                name: 'LIVE_ATTRIBUTES_ALIGNED_CORP_CHANGED'
+            };
         }
 
         export interface Views {
@@ -521,14 +510,6 @@ export namespace PluginInterfaces {
             applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void;
         }
 
-        export enum ActionName {
-            AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
-            ClearSuggestions = 'QUERY_SUGGEST_CLEAR_SUGGESTIONS',
-            SuggestionsRequested = 'QUERY_SUGGEST_SUGGESTIONS_REQUESTED',
-            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED',
-            ItemClicked = 'QUERY_SUGGEST_ITEM_CLICKED'
-        }
-
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
 
         /**
@@ -568,34 +549,34 @@ export namespace PluginInterfaces {
 
         export type SuggestionReturn = SuggestionArgs & SuggestionAnswer;
 
-        export namespace Actions {
+        export class Actions {
 
-            export interface AskSuggestions extends Action<SuggestionArgs> {
-                name: ActionName.AskSuggestions
+            static AskSuggestions:Action<SuggestionArgs> = {
+                name: 'QUERY_SUGGEST_ASK_SUGGESTIONS'
             }
 
-            export interface ClearSuggestions extends Action<{
+            static ClearSuggestions:Action<{
                 formType:QueryFormType;
-            }> {
-                name: ActionName.ClearSuggestions
+            }> = {
+                name: 'QUERY_SUGGEST_CLEAR_SUGGESTIONS'
             }
 
-            export interface SuggestionsRequested extends Action<SuggestionArgs> {
-                name: ActionName.SuggestionsRequested
+            static SuggestionsRequested:Action<SuggestionArgs> = {
+                name: 'QUERY_SUGGEST_SUGGESTIONS_REQUESTED'
             }
 
-            export interface SuggestionsReceived extends Action<SuggestionReturn> {
-                name: ActionName.SuggestionsReceived
+            static SuggestionsReceived:Action<SuggestionReturn> = {
+                name: 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
             }
 
-            export interface ItemClicked extends Action<{
+            static ItemClicked:Action<{
                 value:unknown;
                 tokenIdx:number;
                 sourceId:string;
                 providerId:string;
                 formType:string;
-            }> {
-                name: ActionName.ItemClicked
+            }> = {
+                name: 'QUERY_SUGGEST_ITEM_CLICKED'
             }
 
         }

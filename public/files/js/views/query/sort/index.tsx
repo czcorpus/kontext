@@ -23,7 +23,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { ConcSortModel, ConcSortModelState } from '../../../models/query/sort/single';
-import { Actions, ActionName } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import { List } from 'cnc-tskit';
 import { MultiLevelConcSortModel, MultiLevelConcSortModelState } from '../../../models/query/sort/multi';
 import * as S from './style';
@@ -100,8 +100,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         const handleSelectFn = (value) => {
             return () => {
-                dispatcher.dispatch<Actions.SortFormSetSkey>({
-                    name: ActionName.SortFormSetSkey,
+                dispatcher.dispatch<typeof Actions.SortFormSetSkey>({
+                    name: Actions.SortFormSetSkey.name,
                     payload: {
                         sortId: props.sortId,
                         value: value
@@ -148,8 +148,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleAttrSelect(value) {
-            dispatcher.dispatch<Actions.SortFormSetSattr>({
-                name: ActionName.SortFormSetSattr,
+            dispatcher.dispatch<typeof Actions.SortFormSetSattr>({
+                name: Actions.SortFormSetSattr.name,
                 payload: {
                     sortId: this.props.sortId,
                     value: value
@@ -158,8 +158,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSicaseCheck(evt) {
-            dispatcher.dispatch<Actions.SortFormSetSicase>({
-                name: ActionName.SortFormSetSicase,
+            dispatcher.dispatch<typeof Actions.SortFormSetSicase>({
+                name: Actions.SortFormSetSicase.name,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'i' : ''
@@ -168,8 +168,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSbwardCheck(evt) {
-            dispatcher.dispatch<Actions.SortFormSetSbward>({
-                name: ActionName.SortFormSetSbward,
+            dispatcher.dispatch<typeof Actions.SortFormSetSbward>({
+                name: Actions.SortFormSetSbward.name,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.checked ? 'r' : ''
@@ -178,8 +178,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSposChange(evt) {
-            dispatcher.dispatch<Actions.SortFormSetSpos>({
-                name: ActionName.SortFormSetSpos,
+            dispatcher.dispatch<typeof Actions.SortFormSetSpos>({
+                name: Actions.SortFormSetSpos.name,
                 payload: {
                     sortId: this.props.sortId,
                     value: evt.target.value
@@ -262,8 +262,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         const setValFn = (idx) => {
             return () => {
-                dispatcher.dispatch<Actions.MLSortFormSetCtx>({
-                    name: ActionName.MLSortFormSetCtx,
+                dispatcher.dispatch<typeof Actions.MLSortFormSetCtx>({
+                    name: Actions.MLSortFormSetCtx.name,
                     payload: {
                         sortId: props.sortId,
                         levelIdx: props.level,
@@ -331,8 +331,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleAttrSelect(value) {
-            dispatcher.dispatch<Actions.MLSortFormSetSattr>({
-                name: ActionName.MLSortFormSetSattr,
+            dispatcher.dispatch<typeof Actions.MLSortFormSetSattr>({
+                name: Actions.MLSortFormSetSattr.name,
                 payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
@@ -342,8 +342,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSicaseCheck(evt) {
-            dispatcher.dispatch<Actions.MLSortFormSetSicase>({
-                name: ActionName.MLSortFormSetSicase,
+            dispatcher.dispatch<typeof Actions.MLSortFormSetSicase>({
+                name: Actions.MLSortFormSetSicase.name,
                 payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
@@ -353,8 +353,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleSbwardCheck(evt) {
-            dispatcher.dispatch<Actions.MLSortFormSetSbward>({
-                name: ActionName.MLSortFormSetSbward,
+            dispatcher.dispatch<typeof Actions.MLSortFormSetSbward>({
+                name: Actions.MLSortFormSetSbward.name,
                 payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
@@ -364,8 +364,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _handleCtxAlignChange(evt) {
-            dispatcher.dispatch<Actions.MLSortFormSetCtxAlign>({
-                name: ActionName.MLSortFormSetCtxAlign,
+            dispatcher.dispatch<typeof Actions.MLSortFormSetCtxAlign>({
+                name: Actions.MLSortFormSetCtxAlign.name,
                 payload: {
                     sortId: this.props.sortId,
                     levelIdx: this.props.level,
@@ -483,8 +483,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         }
 
         _addLevel() {
-            dispatcher.dispatch<Actions.MLSortFormAddLevel>({
-                name: ActionName.MLSortFormAddLevel,
+            dispatcher.dispatch<typeof Actions.MLSortFormAddLevel>({
+                name: Actions.MLSortFormAddLevel.name,
                 payload: {
                     sortId: this.props.sortId
                 }
@@ -493,8 +493,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
 
         _removeLevelFn(levelIdx) {
             return () => {
-                dispatcher.dispatch<Actions.MLSortFormRemoveLevel>({
-                    name: ActionName.MLSortFormRemoveLevel,
+                dispatcher.dispatch<typeof Actions.MLSortFormRemoveLevel>({
+                    name: Actions.MLSortFormRemoveLevel.name,
                     payload: {
                         sortId: this.props.sortId,
                         levelIdx: levelIdx
@@ -567,8 +567,8 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
         }
 
         _handleSortTypeChange(formType) {
-            dispatcher.dispatch<Actions.SortSetActiveModel>({
-                name: ActionName.SortSetActiveModel,
+            dispatcher.dispatch<typeof Actions.SortSetActiveModel>({
+                name: Actions.SortSetActiveModel.name,
                 payload: {
                     sortId: this.props.sortId,
                     formAction: formType
@@ -581,14 +581,14 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
 
         _handleFormSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch<Actions.BranchQuery>({
-                    name: ActionName.BranchQuery,
+                dispatcher.dispatch<typeof Actions.BranchQuery>({
+                    name: Actions.BranchQuery.name,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
-                dispatcher.dispatch<Actions.SortFormSubmit|Actions.MLSortFormSubmit>({
-                    name: this.state.sortType === 'sortx' ? ActionName.SortFormSubmit : ActionName.MLSortFormSubmit,
+                dispatcher.dispatch<typeof Actions.SortFormSubmit|typeof Actions.MLSortFormSubmit>({
+                    name: this.state.sortType === 'sortx' ? Actions.SortFormSubmit.name : Actions.MLSortFormSubmit.name,
                     payload: {
                         sortId: this.props.sortId
                     }

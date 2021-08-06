@@ -23,7 +23,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
 import { Actions } from '../../../models/concordance/actions';
-import { ActionName as UserActionName, Actions as UserActions } from '../../../models/user/actions';
+import { Actions as UserActions } from '../../../models/user/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
 import * as S from './style';
 
@@ -406,8 +406,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleDialogShowClick(evt:React.MouseEvent<{}>) {
-            dispatcher.dispatch<UserActions.UserInfoRequested>({
-                name: UserActionName.UserInfoRequested
+            dispatcher.dispatch<typeof UserActions.UserInfoRequested>({
+                name: UserActions.UserInfoRequested.name
             });
         }
 

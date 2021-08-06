@@ -24,7 +24,7 @@ import { Keyboard } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { WordlistResultModel, WordlistResultModelState } from '../../../models/wordlist/main';
 import { WordlistSaveViews } from '../save';
-import { ActionName, Actions } from '../../../models/wordlist/actions';
+import { Actions } from '../../../models/wordlist/actions';
 import { List } from 'cnc-tskit';
 import { WordlistFormState } from '../../../models/wordlist/form';
 import * as S from './style';
@@ -62,8 +62,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.WordlistResultSetSortColumn>({
-                name: ActionName.WordlistResultSetSortColumn,
+            dispatcher.dispatch<typeof Actions.WordlistResultSetSortColumn>({
+                name: Actions.WordlistResultSetSortColumn.name,
                 payload: {
                     sortKey: props.sortKey,
                     reverse: props.isActive ? !props.reversed : false
@@ -101,8 +101,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
     }> = (props) => {
 
         const handleViewConcClick = () => {
-            dispatcher.dispatch<Actions.WordlistResultViewConc>({
-                name: ActionName.WordlistResultViewConc,
+            dispatcher.dispatch<typeof Actions.WordlistResultViewConc>({
+                name: Actions.WordlistResultViewConc.name,
                 payload: {
                     word: props.word
                 }
@@ -158,8 +158,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
      }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistResultSetPage>({
-                name: ActionName.WordlistResultSetPage,
+            dispatcher.dispatch<typeof Actions.WordlistResultSetPage>({
+                name: Actions.WordlistResultSetPage.name,
                 payload: {
                     page: evt.target.value
                 }
@@ -183,14 +183,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const PaginatorLeftArrows:React.FC<{}> = (props) => {
 
         const handlePrevPageClick = () => {
-            dispatcher.dispatch<Actions.WordlistResultPrevPage>({
-                name: ActionName.WordlistResultPrevPage
+            dispatcher.dispatch<typeof Actions.WordlistResultPrevPage>({
+                name: Actions.WordlistResultPrevPage.name
             });
         };
 
         const handleFirstPageClick = () => {
-            dispatcher.dispatch<Actions.WordlistGoToFirstPage>({
-                name: ActionName.WordlistGoToFirstPage,
+            dispatcher.dispatch<typeof Actions.WordlistGoToFirstPage>({
+                name: Actions.WordlistGoToFirstPage.name,
                 payload: {}
             });
         };
@@ -212,14 +212,14 @@ export function init({dispatcher, utils, wordlistSaveViews,
     const PaginatorRightArrows:React.FC<{}> = (props) => {
 
         const handleNextPageClick = () => {
-            dispatcher.dispatch<Actions.WordlistResultNextPage>({
-                name: ActionName.WordlistResultNextPage
+            dispatcher.dispatch<typeof Actions.WordlistResultNextPage>({
+                name: Actions.WordlistResultNextPage.name
             });
         };
 
         const handleLastPageClick = () => {
-            dispatcher.dispatch<Actions.WordlistGoToLastPage>({
-                name: ActionName.WordlistGoToLastPage,
+            dispatcher.dispatch<typeof Actions.WordlistGoToLastPage>({
+                name: Actions.WordlistGoToLastPage.name,
                 payload: {}
             });
         };
@@ -251,8 +251,8 @@ export function init({dispatcher, utils, wordlistSaveViews,
             if (evt.key === Keyboard.Value.ENTER) {
                 evt.preventDefault();
                 evt.stopPropagation();
-                dispatcher.dispatch<Actions.WordlistResultConfirmPage>({
-                    name: ActionName.WordlistResultConfirmPage,
+                dispatcher.dispatch<typeof Actions.WordlistResultConfirmPage>({
+                    name: Actions.WordlistResultConfirmPage.name,
                     payload: {
                         page: props.currPageInput
                     }

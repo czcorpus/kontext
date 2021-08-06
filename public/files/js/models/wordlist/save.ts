@@ -24,10 +24,9 @@ import { Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
 import { PageModel } from '../../app/page';
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { Actions, ActionName } from '../wordlist/actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
-import { tuple } from 'cnc-tskit';
 
 
 export interface WordlistSaveModelArgs {
@@ -79,43 +78,43 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveFormHide>(
-            ActionName.WordlistSaveFormHide,
+        this.addActionHandler<typeof Actions.WordlistSaveFormHide>(
+            Actions.WordlistSaveFormHide.name,
             (state, action) => {
                 state.formIsActive = false;
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveFormSetMaxLine>(
-            ActionName.WordlistSaveFormSetMaxLine,
+        this.addActionHandler<typeof Actions.WordlistSaveFormSetMaxLine>(
+            Actions.WordlistSaveFormSetMaxLine.name,
             (state, action) => {
                 state.toLine.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveFormSetFormat>(
-            ActionName.WordlistSaveFormSetFormat,
+        this.addActionHandler<typeof Actions.WordlistSaveFormSetFormat>(
+            Actions.WordlistSaveFormSetFormat.name,
             (state, action) => {
                 state.saveFormat = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveSetIncludeHeading>(
-            ActionName.WordlistSaveSetIncludeHeading,
+        this.addActionHandler<typeof Actions.WordlistSaveSetIncludeHeading>(
+            Actions.WordlistSaveSetIncludeHeading.name,
             (state, action) => {
                 state.includeHeading = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveSetIncludeColHeaders>(
-            ActionName.WordlistSaveSetIncludeColHeaders,
+        this.addActionHandler<typeof Actions.WordlistSaveSetIncludeColHeaders>(
+            Actions.WordlistSaveSetIncludeColHeaders.name,
             (state, action) => {
                 state.includeColHeaders = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.WordlistSaveFormSubmit>(
-            ActionName.WordlistSaveFormSubmit,
+        this.addActionHandler<typeof Actions.WordlistSaveFormSubmit>(
+            Actions.WordlistSaveFormSubmit.name,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {
@@ -124,14 +123,14 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             },
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
-                    if (action.name === ActionName.WordlistFormSubmitReady) {
+                    if (action.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }
                     return syncData;
                 }).pipe(
                     concatMap(
                         action => {
-                            const payload = (action as Actions.WordlistFormSubmitReady).payload;
+                            const payload = (action as typeof Actions.WordlistFormSubmitReady).payload;
                             return this.submit(state, payload.args, state.queryId);
                         }
                     )
@@ -147,8 +146,8 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
         );
 
 
-        this.addActionHandler<Actions.WordlistSaveFormSubmitDone>(
-            ActionName.WordlistSaveFormSubmitDone,
+        this.addActionHandler<typeof Actions.WordlistSaveFormSubmitDone>(
+            Actions.WordlistSaveFormSubmitDone.name,
             (state, action) => {
                 state.formIsActive = false;
             },
@@ -168,14 +167,14 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             },
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
-                    if (action.name === ActionName.WordlistFormSubmitReady) {
+                    if (action.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }
                     return syncData;
                 }).pipe(
                     concatMap(
                         wAction => {
-                            const payload = (wAction as Actions.WordlistFormSubmitReady).payload;
+                            const payload = (wAction as typeof Actions.WordlistFormSubmitReady).payload;
                             if (window.confirm(this.layoutModel.translate(
                                     'global__quicksave_limit_warning_{format}{lines}',
                                     {format: action.payload.saveformat, lines: state.quickSaveRowLimit}))) {

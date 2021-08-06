@@ -24,7 +24,7 @@ import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';
 import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../models/common/corpusSwitch';
 
 import * as S from './style';
@@ -586,8 +586,8 @@ export function init({
     }> = (props) => {
 
         const handleSubcorpChange = (evt) => {
-            dispatcher.dispatch<QueryActions.QueryInputSelectSubcorp>({
-                name: QueryActionName.QueryInputSelectSubcorp,
+            dispatcher.dispatch<typeof QueryActions.QueryInputSelectSubcorp>({
+                name: QueryActions.QueryInputSelectSubcorp.name,
                 payload: {
                     subcorp: props.availSubcorpora[evt.target.value].v,
                     pubName: props.availSubcorpora[evt.target.value].pub,

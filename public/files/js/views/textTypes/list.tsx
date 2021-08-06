@@ -24,7 +24,7 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
 import { CoreViews } from '../../types/coreViews';
-import { Actions, ActionName } from '../../models/textTypes/actions';
+import { Actions } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';
 import { init as commonViewInit } from './common';
 
@@ -74,8 +74,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _confirmClickHandler() {
-            dispatcher.dispatch<Actions.RangeButtonClicked>({
-                name: ActionName.RangeButtonClicked,
+            dispatcher.dispatch<typeof Actions.RangeButtonClicked>({
+                name: Actions.RangeButtonClicked.name,
                 payload: {
                     attrName: this.props.attrName,
                     fromVal: this.state.fromValue ? parseFloat(this.state.fromValue) : null,

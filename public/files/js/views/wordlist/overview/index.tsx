@@ -24,7 +24,7 @@ import { Kontext } from '../../../types/common';
 import { init as basicOverviewViewsInit } from '../../query/basicOverview';
 import { init as formInit } from '../form';
 import * as React from 'react';
-import { ActionName, Actions } from '../../../models/wordlist/actions';
+import { Actions } from '../../../models/wordlist/actions';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
 import { PluginInterfaces } from '../../../types/plugins';
@@ -53,8 +53,8 @@ export function init(
     const Overview:React.FC<WordlistFormState & OverviewProps> = (props) => {
 
         const handleQueryClick = () => {
-            dispatcher.dispatch<Actions.ToggleModalForm>({
-                name: ActionName.ToggleModalForm,
+            dispatcher.dispatch<typeof Actions.ToggleModalForm>({
+                name: Actions.ToggleModalForm.name,
                 payload: {
                     visible: true
                 }
@@ -62,8 +62,8 @@ export function init(
         };
 
         const handleModalClose = () => {
-            dispatcher.dispatch<Actions.ToggleModalForm>({
-                name: ActionName.ToggleModalForm,
+            dispatcher.dispatch<typeof Actions.ToggleModalForm>({
+                name: Actions.ToggleModalForm.name,
                 payload: {
                     visible: false
                 }

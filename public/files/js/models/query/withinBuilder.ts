@@ -22,7 +22,7 @@ import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { HTTP, List, Dict, pipe, tuple } from 'cnc-tskit';
 import { WithinBuilderData } from './common';
 import { IUnregistrable } from '../common/common';
@@ -56,8 +56,8 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.LoadWithinBuilderDataDone>(
-            ActionName.LoadWithinBuilderDataDone,
+        this.addActionHandler<typeof Actions.LoadWithinBuilderDataDone>(
+            Actions.LoadWithinBuilderDataDone.name,
             (state, action) => {
                 state.data = pipe(
                     action.payload.data.structattrs,
@@ -68,8 +68,8 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
             }
         );
 
-        this.addActionHandler<Actions.LoadWithinBuilderData>(
-            ActionName.LoadWithinBuilderData,
+        this.addActionHandler<typeof Actions.LoadWithinBuilderData>(
+            Actions.LoadWithinBuilderData.name,
             (state, action) => {
                 state.isBusy = true;
                 state.data = [];
@@ -78,8 +78,8 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
             (state, action, dispatch) => {
                 this.loadAttrs().subscribe(
                     (data) => {
-                        dispatch<Actions.LoadWithinBuilderDataDone>({
-                            name: ActionName.LoadWithinBuilderDataDone,
+                        dispatch<typeof Actions.LoadWithinBuilderDataDone>({
+                            name: Actions.LoadWithinBuilderDataDone.name,
                             payload: {
                                 data: data
                             }
@@ -87,8 +87,8 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
                     },
                     (err) => {
                         this.pageModel.showMessage('error', err);
-                        dispatch<Actions.LoadWithinBuilderDataDone>({
-                            name: ActionName.LoadWithinBuilderDataDone,
+                        dispatch<typeof Actions.LoadWithinBuilderDataDone>({
+                            name: Actions.LoadWithinBuilderDataDone.name,
                             error: err
                         });
                     }
@@ -96,15 +96,15 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
             }
         );
 
-        this.addActionHandler<Actions.SetWithinValue>(
-            ActionName.SetWithinValue,
+        this.addActionHandler<typeof Actions.SetWithinValue>(
+            Actions.SetWithinValue.name,
             (state, action) => {
                 state.query = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SetWithinAttr>(
-            ActionName.SetWithinAttr,
+        this.addActionHandler<typeof Actions.SetWithinAttr>(
+            Actions.SetWithinAttr.name,
             (state, action) => {
                 if (action.payload.idx < state.data.length) {
                     state.currAttrIdx = action.payload.idx;

@@ -28,8 +28,7 @@ import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/d
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
 import { PluginInterfaces } from '../../../types/plugins';
 import { Actions } from '../../../models/concordance/actions';
-import { Actions as HintActions, ActionName as HintActionName }
-        from '../../../models/usageTips/actions';
+import { Actions as HintActions } from '../../../models/usageTips/actions';
 import * as S2 from '../style';
 import * as S from './style';
 
@@ -102,8 +101,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
         }
 
         handleNextClick(e:React.MouseEvent<HTMLAnchorElement>) {
-            dispatcher.dispatch<HintActions.NextConcHint>({
-                name: HintActionName.NextConcHint
+            dispatcher.dispatch<typeof HintActions.NextConcHint>({
+                name: HintActions.NextConcHint.name
             });
         }
 

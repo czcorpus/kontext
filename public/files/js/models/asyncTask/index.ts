@@ -24,8 +24,8 @@ import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { concatMap, filter, map, takeWhile, tap } from 'rxjs/operators';
-import { Actions, ActionName } from './actions';
+import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
+import { Actions } from './actions';
 import { taskCheckTimer } from './common';
 import { DownloadType, PageModel } from '../../app/page';
 
@@ -96,8 +96,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 })
             );
             if (!List.empty(tasks)) {
-                dispatcher.dispatch<Actions.AsyncTasksChecked>({
-                    name: ActionName.AsyncTasksChecked,
+                dispatcher.dispatch<typeof Actions.AsyncTasksChecked>({
+                    name: Actions.AsyncTasksChecked.name,
                     payload: {
                         tasks
                     }
@@ -105,8 +105,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         };
 
-        this.addActionHandler<Actions.AsyncTasksChecked>(
-            ActionName.AsyncTasksChecked,
+        this.addActionHandler<typeof Actions.AsyncTasksChecked>(
+            Actions.AsyncTasksChecked.name,
             action => {
                 const updatedList:Array<Kontext.AsyncTaskInfo> = [];
                 List.forEach(
@@ -122,8 +122,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<Actions.InboxToggleOverviewVisibility>(
-            ActionName.InboxToggleOverviewVisibility,
+        this.addActionHandler<typeof Actions.InboxToggleOverviewVisibility>(
+            Actions.InboxToggleOverviewVisibility.name,
             action => {
                 this.changeState(state => {
                     state.overviewVisible = !state.overviewVisible
@@ -131,8 +131,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<Actions.InboxToggleRemoveFinishedOnSubmit>(
-            ActionName.InboxToggleRemoveFinishedOnSubmit,
+        this.addActionHandler<typeof Actions.InboxToggleRemoveFinishedOnSubmit>(
+            Actions.InboxToggleRemoveFinishedOnSubmit.name,
             action => {
                 this.changeState(state => {
                     state.removeFinishedOnSubmit = !state.removeFinishedOnSubmit;
@@ -140,8 +140,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<Actions.InboxCloseTaskOverview>(
-            ActionName.InboxCloseTaskOverview,
+        this.addActionHandler<typeof Actions.InboxCloseTaskOverview>(
+            Actions.InboxCloseTaskOverview.name,
             action => {
                 (this.state.removeFinishedOnSubmit ?
                     this.deleteFinishedTaskInfo() :
@@ -164,8 +164,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<Actions.InboxAddAsyncTask>(
-            ActionName.InboxAddAsyncTask,
+        this.addActionHandler<typeof Actions.InboxAddAsyncTask>(
+            Actions.InboxAddAsyncTask.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -188,8 +188,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<Actions.InboxUpdateAsyncTask>(
-            ActionName.InboxUpdateAsyncTask,
+        this.addActionHandler<typeof Actions.InboxUpdateAsyncTask>(
+            Actions.InboxUpdateAsyncTask.name,
             action => {
                 this.changeState(state => {
                     const srchIdx = List.findIndex(
@@ -322,8 +322,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                                 item(finished);
                             });
                         }
-                        this.dispatchSideEffect<Actions.AsyncTasksChecked>({
-                            name: ActionName.AsyncTasksChecked,
+                        this.dispatchSideEffect<typeof Actions.AsyncTasksChecked>({
+                            name: Actions.AsyncTasksChecked.name,
                             payload: {
                                 tasks: state.asyncTasks
                             }

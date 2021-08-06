@@ -24,7 +24,7 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext, TextTypes } from '../../types/common';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { Actions, ActionName } from '../../models/textTypes/actions';
+import { Actions } from '../../models/textTypes/actions';
 import { init as commonViewInit } from './common';
 
 import * as S from './style';
@@ -68,8 +68,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                 this.props.customAutoCompleteHintClickHandler(item);
 
             } else {
-                dispatcher.dispatch<Actions.AttributeAutoCompleteHintClicked>({
-                    name: ActionName.AttributeAutoCompleteHintClicked,
+                dispatcher.dispatch<typeof Actions.AttributeAutoCompleteHintClicked>({
+                    name: Actions.AttributeAutoCompleteHintClicked.name,
                     payload: {
                         attrName: this.props.attrObj.name,
                         ident: item.ident,
@@ -86,8 +86,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
             } else if (event.eventPhase === Event.BUBBLING_PHASE) {
                 if (this._outsideClick) {
-                    dispatcher.dispatch<Actions.AttributeAutoCompleteReset>({
-                        name: ActionName.AttributeAutoCompleteReset,
+                    dispatcher.dispatch<typeof Actions.AttributeAutoCompleteReset>({
+                        name: Actions.AttributeAutoCompleteReset.name,
                         payload: {
                             attrName: this.props.attrObj.name
                         }
@@ -155,8 +155,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         _inputChangeHandler(evt) {
             const v = evt.target.value;
 
-            dispatcher.dispatch<Actions.AttributeTextInputChanged>({
-                name: ActionName.AttributeTextInputChanged,
+            dispatcher.dispatch<typeof Actions.AttributeTextInputChanged>({
+                name: Actions.AttributeTextInputChanged.name,
                 payload: {
                     attrName: this.props.attrObj.name,
                     type: this.props.attrObj.type,
@@ -169,8 +169,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             }
             if (this.props.isAutoCompleteActive) {
                 this.throttlingTimer = window.setTimeout(() => {
-                    dispatcher.dispatch<Actions.AttributeTextInputAutocompleteRequest>({
-                        name: ActionName.AttributeTextInputAutocompleteRequest,
+                    dispatcher.dispatch<typeof Actions.AttributeTextInputAutocompleteRequest>({
+                        name: Actions.AttributeTextInputAutocompleteRequest.name,
                         payload: {
                             attrName: this.props.attrObj.name,
                             value: v
@@ -217,8 +217,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const RawInputMultiValueContainer:React.FC<RawInputMultiValueContainerProps> = (props) => {
 
         const handleAutoCompleteHintClick = (item:TextTypes.AutoCompleteItem) => {
-            dispatcher.dispatch<Actions.AttributeAutoCompleteHintClicked>({
-                name: ActionName.AttributeAutoCompleteHintClicked,
+            dispatcher.dispatch<typeof Actions.AttributeAutoCompleteHintClicked>({
+                name: Actions.AttributeAutoCompleteHintClicked.name,
                 payload: {
                     attrName: props.attrObj.name,
                     ident: item.ident,

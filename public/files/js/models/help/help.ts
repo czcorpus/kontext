@@ -22,7 +22,7 @@ import { HTTP } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 
@@ -42,8 +42,8 @@ export class HtmlHelpModel<T extends HtmlHelpModelState=HtmlHelpModelState> exte
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.HelpRequested>(
-            ActionName.HelpRequested,
+        this.addActionHandler<typeof Actions.HelpRequested>(
+            Actions.HelpRequested.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;

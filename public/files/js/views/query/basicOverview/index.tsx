@@ -22,7 +22,7 @@ import * as React from 'react';
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 
 import { Kontext } from '../../../types/common';
-import { ActionName, Actions } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import * as S from './style';
 import { MainMenuModelState } from '../../../models/mainMenu';
 
@@ -72,14 +72,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const QueryOverviewTable:React.FC<QueryOverviewTableProps> = (props) => {
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<Actions.ClearQueryOverviewData>({
-                name: ActionName.ClearQueryOverviewData
+            dispatcher.dispatch<typeof Actions.ClearQueryOverviewData>({
+                name: Actions.ClearQueryOverviewData.name
             });
         };
 
         const handleEditClickFn = (idx:number) => () => {
-            dispatcher.dispatch<Actions.ClearQueryOverviewData>({
-                name: ActionName.ClearQueryOverviewData
+            dispatcher.dispatch<typeof Actions.ClearQueryOverviewData>({
+                name: Actions.ClearQueryOverviewData.name
             });
             props.onEditClick(idx);
         };

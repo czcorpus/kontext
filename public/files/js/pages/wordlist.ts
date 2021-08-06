@@ -29,7 +29,7 @@ import { init as queryOverviewInit } from '../views/wordlist/overview';
 import { KontextPage } from '../app/main';
 import { WordlistResultModel } from '../models/wordlist/main';
 import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common';
-import { Actions, ActionName } from '../models/wordlist/actions';
+import { Actions } from '../models/wordlist/actions';
 
 
 interface AsyncProcessResponse {
@@ -179,8 +179,8 @@ export class WordlistPage {
 
             this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
                 if (evt.state['pagination']) {
-                    this.layoutModel.dispatcher.dispatch<Actions.WordlistHistoryPopState>({
-                        name: ActionName.WordlistHistoryPopState,
+                    this.layoutModel.dispatcher.dispatch<typeof Actions.WordlistHistoryPopState>({
+                        name: Actions.WordlistHistoryPopState.name,
                         payload: {
                             currPageInput: evt.state['page']
                         }

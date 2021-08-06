@@ -26,7 +26,7 @@ import * as GS from './global-style';
 import flagSI from './flag-si.svg';
 import flagCS from './flag-cs.svg';
 import flagUK from './flag-uk.svg';
-import { ActionName, Actions, ClarinSiAppBarModel } from './model';
+import { Actions, ClarinSiAppBarModel } from './model';
 
 
 export function init(
@@ -35,8 +35,8 @@ export function init(
     toolbarModel:ClarinSiAppBarModel) {
 
     const handleLangClick = (value:string) => () => {
-        dispatcher.dispatch<Actions.SetLanguage>({
-            name: ActionName.SetLanguage,
+        dispatcher.dispatch<typeof Actions.SetLanguage>({
+            name: Actions.SetLanguage.name,
             payload: {
                 value
             }
@@ -44,8 +44,8 @@ export function init(
     };
 
     const handleMenuToggleClick = () => {
-        dispatcher.dispatch<Actions.ToggleMenu>({
-            name: ActionName.ToggleMenu
+        dispatcher.dispatch<typeof Actions.ToggleMenu>({
+            name: Actions.ToggleMenu.name
         });
     };
 

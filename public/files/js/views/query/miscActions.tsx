@@ -25,7 +25,7 @@ import { Kontext } from '../../types/common';
 import { Keyboard } from 'cnc-tskit';
 import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc';
-import { ActionName, Actions } from '../../models/query/actions';
+import { Actions } from '../../models/query/actions';
 
 
 export interface SampleFormViews {
@@ -81,8 +81,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleInputChange(evt) {
-            dispatcher.dispatch<Actions.SampleFormSetRlines>({
-                name: ActionName.SampleFormSetRlines,
+            dispatcher.dispatch<typeof Actions.SampleFormSetRlines>({
+                name: Actions.SampleFormSetRlines.name,
                 payload: {
                     sampleId: this.props.sampleId,
                     value: evt.target.value
@@ -93,14 +93,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleSubmitEvent(evt) {
             if (evt.key === undefined || evt.key === Keyboard.Value.ENTER) {
                 if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch<Actions.BranchQuery>({
-                        name: ActionName.BranchQuery,
+                    dispatcher.dispatch<typeof Actions.BranchQuery>({
+                        name: Actions.BranchQuery.name,
                         payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
-                    dispatcher.dispatch<Actions.SampleFormSubmit>({
-                        name: ActionName.SampleFormSubmit,
+                    dispatcher.dispatch<typeof Actions.SampleFormSubmit>({
+                        name: Actions.SampleFormSubmit.name,
                         payload: {sampleId: this.props.sampleId}
                     });
                 }
@@ -219,14 +219,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _handleSubmitEvent(evt) {
             if (evt.key === undefined || evt.key === Keyboard.Value.ENTER) {
                 if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch<Actions.BranchQuery>({
-                        name: ActionName.BranchQuery,
+                    dispatcher.dispatch<typeof Actions.BranchQuery>({
+                        name: Actions.BranchQuery.name,
                         payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
-                    dispatcher.dispatch<Actions.SwitchMcFormSubmit>({
-                        name: ActionName.SwitchMcFormSubmit,
+                    dispatcher.dispatch<typeof Actions.SwitchMcFormSubmit>({
+                        name: Actions.SwitchMcFormSubmit.name,
                         payload: {
                             operationId: this.props.opKey
                         }

@@ -27,7 +27,7 @@ import { SubcMixerModel, SubcMixerModelState } from './model';
 import { init as subcorpViewsInit } from '../../views/subcorp/forms';
 import { CalculationResults, SubcMixerExpression } from './common';
 import { Actions } from './actions';
-import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as SubcActions } from '../../models/subcorp/actions';
 
 import * as S from './style';
 
@@ -213,8 +213,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSubcnameInputChange = (evt) => {
-            dispatcher.dispatch<SubcActions.FormSetSubcName>({
-                name: SubcActionName.FormSetSubcName,
+            dispatcher.dispatch<typeof SubcActions.FormSetSubcName>({
+                name: SubcActions.FormSetSubcName.name,
                 payload: {
                     value: evt.target.value
                 }

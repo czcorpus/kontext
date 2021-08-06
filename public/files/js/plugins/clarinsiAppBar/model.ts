@@ -23,24 +23,20 @@ import { StatelessModel, IFullActionControl, Action } from 'kombo';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { IPluginApi } from '../../types/plugins';
 
-export enum ActionName {
-    SetLanguage = 'CLARINSI_APPBAR_SET_LANGUAGE',
-    ToggleMenu = 'CLARINSI_APPBAR_TOGGLE_MENU',
-}
 
-export namespace Actions {
+export class Actions {
 
-    export interface SetLanguage extends Action<{
+    static SetLanguage:Action<{
         value:string;
-    }> {
-        name: ActionName.SetLanguage;
-    }
+    }> = {
+        name: 'CLARINSI_APPBAR_SET_LANGUAGE'
+    };
 
-    export interface ToggleMenu extends Action<{
+    static ToggleMenu:Action<{
 
-    }> {
-        name: ActionName.ToggleMenu;
-    }
+    }> = {
+        name: 'CLARINSI_APPBAR_TOGGLE_MENU'
+    };
 }
 
 
@@ -67,15 +63,15 @@ export class ClarinSiAppBarModel extends StatelessModel<{menuVisible:boolean}> {
             }
         );
 
-        this.addActionHandler<Actions.ToggleMenu>(
-            ActionName.ToggleMenu,
+        this.addActionHandler<typeof Actions.ToggleMenu>(
+            Actions.ToggleMenu.name,
             (state, action) => {
                 state.menuVisible = !state.menuVisible;
             }
         );
 
-        this.addActionHandler<Actions.SetLanguage>(
-            ActionName.SetLanguage,
+        this.addActionHandler<typeof Actions.SetLanguage>(
+            Actions.SetLanguage.name,
             null,
             (state, action, dispatch) => {
                 this.pluginCtx.setLocationPost(

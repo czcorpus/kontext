@@ -27,7 +27,7 @@ import { Kontext, ViewOptions } from '../../types/common';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
 import { ConcQueryArgs } from '../query/common';
 import { ConcQueryResponse } from '../concordance/common';
@@ -143,12 +143,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         this.layoutModel = layoutModel;
 
 
-        this.addActionHandler<Actions.WordlistResultViewConc>(
-            ActionName.WordlistResultViewConc,
+        this.addActionHandler<typeof Actions.WordlistResultViewConc>(
+            Actions.WordlistResultViewConc.name,
             null,
             (state, action, dispatch) => {
                 this.suspend({}, (otherAction, syncData) => {
-                    if (otherAction.name === ActionName.WordlistFormSubmitReady) {
+                    if (otherAction.name === Actions.WordlistFormSubmitReady.name) {
                         return null;
                     }
                     return {};
@@ -156,7 +156,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 }).pipe(
                     concatMap(
                         otherAction => {
-                            const formArgs = (otherAction as Actions.WordlistFormSubmitReady
+                            const formArgs = (otherAction as typeof Actions.WordlistFormSubmitReady
                                 ).payload.args;
                             return this.layoutModel.ajax$<ConcQueryResponse>(
                                 HTTP.Method.POST,
@@ -189,8 +189,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistPageLoadDone>(
-            ActionName.WordlistPageLoadDone,
+        this.addActionHandler<typeof Actions.WordlistPageLoadDone>(
+            Actions.WordlistPageLoadDone.name,
             (state, action) => {
                 if (!action.error) {
                     state.currPage = action.payload.page;
@@ -201,16 +201,16 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultReload>(
-            ActionName.WordlistResultReload,
+        this.addActionHandler<typeof Actions.WordlistResultReload>(
+            Actions.WordlistResultReload.name,
             null,
             (state, action, dispatch) => {
                 this.processPageLoad(state, state.currPage, dispatch);
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultNextPage>(
-            ActionName.WordlistResultNextPage,
+        this.addActionHandler<typeof Actions.WordlistResultNextPage>(
+            Actions.WordlistResultNextPage.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -219,8 +219,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultPrevPage>(
-            ActionName.WordlistResultPrevPage,
+        this.addActionHandler<typeof Actions.WordlistResultPrevPage>(
+            Actions.WordlistResultPrevPage.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -229,8 +229,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultSetPage>(
-            ActionName.WordlistResultSetPage,
+        this.addActionHandler<typeof Actions.WordlistResultSetPage>(
+            Actions.WordlistResultSetPage.name,
             (state, action) => {
                 if (validateGzNumber(action.payload.page)) {
                     state.currPageInput = action.payload.page;
@@ -244,8 +244,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultConfirmPage>(
-            ActionName.WordlistResultConfirmPage,
+        this.addActionHandler<typeof Actions.WordlistResultConfirmPage>(
+            Actions.WordlistResultConfirmPage.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -255,8 +255,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistGoToLastPage>(
-            ActionName.WordlistGoToLastPage,
+        this.addActionHandler<typeof Actions.WordlistGoToLastPage>(
+            Actions.WordlistGoToLastPage.name,
             (state, action) => {
                 state.isBusy = true;
                 state.currPage = state.numPages;
@@ -271,8 +271,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistGoToFirstPage>(
-            ActionName.WordlistGoToFirstPage,
+        this.addActionHandler<typeof Actions.WordlistGoToFirstPage>(
+            Actions.WordlistGoToFirstPage.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -281,8 +281,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistIntermediateBgCalcUpdated>(
-            ActionName.WordlistIntermediateBgCalcUpdated,
+        this.addActionHandler<typeof Actions.WordlistIntermediateBgCalcUpdated>(
+            Actions.WordlistIntermediateBgCalcUpdated.name,
             (state, action) => {
                 state.bgCalcStatus = action.payload.status;
                 if (action.error) {
@@ -291,8 +291,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistHistoryPopState>(
-            ActionName.WordlistHistoryPopState,
+        this.addActionHandler<typeof Actions.WordlistHistoryPopState>(
+            Actions.WordlistHistoryPopState.name,
             (state, action) => {
                 state.currPageInput = action.payload.currPageInput;
                 state.currPage = parseInt(state.currPageInput);
@@ -302,8 +302,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             }
         );
 
-        this.addActionHandler<Actions.WordlistResultSetSortColumn>(
-            ActionName.WordlistResultSetSortColumn,
+        this.addActionHandler<typeof Actions.WordlistResultSetSortColumn>(
+            Actions.WordlistResultSetSortColumn.name,
             (state, action) => {
                 state.wlsort = action.payload.sortKey;
                 state.reversed = action.payload.reverse;
@@ -334,8 +334,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
     ):void {
         this.pageLoad(state, newPage, skipHistory).subscribe(
             ([data, total]) => {
-                dispatch<Actions.WordlistPageLoadDone>({
-                    name: ActionName.WordlistPageLoadDone,
+                dispatch<typeof Actions.WordlistPageLoadDone>({
+                    name: Actions.WordlistPageLoadDone.name,
                     payload: {
                         page: newPage,
                         data
@@ -344,8 +344,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);
-                dispatch<Actions.WordlistPageLoadDone>({
-                    name: ActionName.WordlistPageLoadDone,
+                dispatch<typeof Actions.WordlistPageLoadDone>({
+                    name: Actions.WordlistPageLoadDone.name,
                     error: err
                 });
             }

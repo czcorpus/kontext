@@ -26,7 +26,7 @@ import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions } from '../actions';
 import { Kontext } from '../../../types/common';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
+import { Actions as QueryActions } from '../../../models/query/actions';
 
 
 interface DataResponse extends Kontext.AjaxResponse {
@@ -382,8 +382,8 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.SetActiveInputWidget>(
-            QueryActionName.SetActiveInputWidget,
+        this.addActionHandler<typeof QueryActions.SetActiveInputWidget>(
+            QueryActions.SetActiveInputWidget.name,
             action => {
                 this.changeState(state => {
                     if (!Dict.hasKey(action.payload.sourceId, state.data)) {

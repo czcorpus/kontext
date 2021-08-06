@@ -30,7 +30,7 @@ import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { FirstHitsModel } from '../../../models/query/firstHits';
 import { PluginInterfaces } from '../../../types/plugins';
 import { UsageTipsModel } from '../../../models/usageTips';
-import { ActionName, Actions } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';
 import * as QS from '../first/style';
 import * as S from './style';
@@ -123,8 +123,8 @@ export function init({
 
     }> = (props) => {
         const handleSelTokenSelect = (evt) => {
-            dispatcher.dispatch<Actions.FilterInputSetFilfl>({
-                name: ActionName.FilterInputSetFilfl,
+            dispatcher.dispatch<typeof Actions.FilterInputSetFilfl>({
+                name: Actions.FilterInputSetFilfl.name,
                 payload: {
                     filterId: props.filterId,
                     value: evt.target.value
@@ -155,8 +155,8 @@ export function init({
     }> = (props) => {
 
         const handleCheckbox = (evt) => {
-            dispatcher.dispatch<Actions.FilterInputSetInclKwic>({
-                name: ActionName.FilterInputSetInclKwic,
+            dispatcher.dispatch<typeof Actions.FilterInputSetInclKwic>({
+                name: Actions.FilterInputSetInclKwic.name,
                 payload: {
                     filterId: props.filterId,
                     value: !props.value
@@ -185,8 +185,8 @@ export function init({
     }> = (props) => {
 
         const handleToFromRangeValChange = (pos) => (evt) => {
-            dispatcher.dispatch<Actions.FilterInputSetRange>({
-                name: ActionName.FilterInputSetRange,
+            dispatcher.dispatch<typeof Actions.FilterInputSetRange>({
+                name: Actions.FilterInputSetRange.name,
                 payload: {
                     filterId: props.filterId,
                     rangeId: ({from: 'filfpos', to: 'filtpos'})[pos],
@@ -228,8 +228,8 @@ export function init({
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
-            dispatcher.dispatch<Actions.FilterInputSetFilterType>({
-                name: ActionName.FilterInputSetFilterType,
+            dispatcher.dispatch<typeof Actions.FilterInputSetFilterType>({
+                name: Actions.FilterInputSetFilterType.name,
                 payload: {
                     filterId: props.sourceId,
                     value: evt.target.value as 'p'|'n'
@@ -260,14 +260,14 @@ export function init({
         _keyEventHandler(evt) {
             if (evt.key === Keyboard.Value.ENTER && !evt.ctrlKey && !evt.shiftKey) {
                 if (this.props.operationIdx !== undefined) {
-                    dispatcher.dispatch<Actions.BranchQuery>({
-                        name: ActionName.BranchQuery,
+                    dispatcher.dispatch<typeof Actions.BranchQuery>({
+                        name: Actions.BranchQuery.name,
                         payload: {operationIdx: this.props.operationIdx}
                     });
 
                 } else {
-                    dispatcher.dispatch<Actions.ApplyFilter>({
-                        name: ActionName.ApplyFilter,
+                    dispatcher.dispatch<typeof Actions.ApplyFilter>({
+                        name: Actions.ApplyFilter.name,
                         payload: {
                             filterId: this.props.filterId
                         }
@@ -280,14 +280,14 @@ export function init({
 
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch<Actions.BranchQuery>({
-                    name: ActionName.BranchQuery,
+                dispatcher.dispatch<typeof Actions.BranchQuery>({
+                    name: Actions.BranchQuery.name,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
-                dispatcher.dispatch<Actions.ApplyFilter>({
-                    name: ActionName.ApplyFilter,
+                dispatcher.dispatch<typeof Actions.ApplyFilter>({
+                    name: Actions.ApplyFilter.name,
                     payload: {
                         filterId: this.props.filterId
                     }
@@ -500,14 +500,14 @@ export function init({
 
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch<Actions.BranchQuery>({
-                    name: ActionName.BranchQuery,
+                dispatcher.dispatch<typeof Actions.BranchQuery>({
+                    name: Actions.BranchQuery.name,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
-                dispatcher.dispatch<Actions.FilterFirstHitsSubmit>({
-                    name: ActionName.FilterFirstHitsSubmit,
+                dispatcher.dispatch<typeof Actions.FilterFirstHitsSubmit>({
+                    name: Actions.FilterFirstHitsSubmit.name,
                     payload: {
                         opKey: this.props.opKey
                     }

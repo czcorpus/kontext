@@ -22,31 +22,24 @@ import { Action } from 'kombo';
 import { ForcedTip } from '.';
 
 
-export enum ActionName {
-    NextQueryHint = 'QUERY_HINTS_NEXT_QUERY_HINT',
-    NextCqlQueryHint = 'QUERY_HINTS_NEXT_CQL_QUERY_HINT',
-    NextConcHint = 'QUERY_HINTS_NEXT_CONC_HINT',
-    ForceHint = 'QUERY_HINTS_FORCE_HINT',
-}
+export class Actions {
 
-export namespace Actions {
+    static NextQueryHint:Action<{
+    }> = {
+        name: 'QUERY_HINTS_NEXT_QUERY_HINT'
+    };
 
-    export interface NextQueryHint extends Action<{
-    }> {
-        name: ActionName.NextQueryHint;
-    }
+    static NextCqlQueryHint:Action<{
+    }> = {
+        name: 'QUERY_HINTS_NEXT_CQL_QUERY_HINT'
+    };
 
-    export interface NextCqlQueryHint extends Action<{
-    }> {
-        name: ActionName.NextCqlQueryHint;
-    }
+    static NextConcHint:Action<{
+    }> = {
+        name: 'QUERY_HINTS_NEXT_CONC_HINT'
+    };
 
-    export interface NextConcHint extends Action<{
-    }> {
-        name: ActionName.NextConcHint;
-    }
-
-    export interface ForceHint extends Action<ForcedTip> {
-        name: ActionName.ForceHint;
-    }
+    static ForceHint:Action<ForcedTip> = {
+        name: 'QUERY_HINTS_FORCE_HINT'
+    };
 }
