@@ -26,7 +26,7 @@ import { init as generalViewsInit } from '../general';
 import { init as structsAttrsViewsInit } from '../structsAttrs';
 import { CorpusViewOptionsModel } from '../../../models/options/structsAttrs';
 import { MainMenuModelState } from '../../../models/mainMenu';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { GeneralViewOptionsModelState } from '../../../models/options/general';
 import * as S from './style';
 
@@ -65,21 +65,21 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         }
 
         _isActive() {
-            return this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)
-                || this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions);
+            return this._isActiveItem(MainMenuActions.ShowAttrsViewOptions.name)
+                || this._isActiveItem(MainMenuActions.ShowGeneralViewOptions.name);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-                name: MainMenuActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         }
 
         _renderForm() {
-            if (this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)) {
+            if (this._isActiveItem(MainMenuActions.ShowAttrsViewOptions.name)) {
                 return <structsAttrsOptionsViews.StructAttrsViewOptions />;
 
-            } else if (this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions)) {
+            } else if (this._isActiveItem(MainMenuActions.ShowGeneralViewOptions.name)) {
                 return <generalOptionsViews.GeneralOptions />;
 
             } else {
@@ -88,10 +88,10 @@ export function init({dispatcher, helpers, generalOptionsModel, viewOptionsModel
         }
 
         _renderTitle() {
-            if (this._isActiveItem(MainMenuActionName.ShowAttrsViewOptions)) {
+            if (this._isActiveItem(MainMenuActions.ShowAttrsViewOptions.name)) {
                 return helpers.translate('options__settings_apply_only_for_{corpname}', {corpname: this.props.corpusIdent.name})
 
-            } else if (this._isActiveItem(MainMenuActionName.ShowGeneralViewOptions)) {
+            } else if (this._isActiveItem(MainMenuActions.ShowGeneralViewOptions.name)) {
                 return helpers.translate('options__general_options_heading');
 
             } else {

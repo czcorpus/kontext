@@ -23,7 +23,7 @@ import { SaveData } from '../../app/navigation';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 
 
@@ -73,8 +73,8 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.formIsActive = true;
@@ -83,8 +83,8 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
             }
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',

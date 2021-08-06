@@ -26,7 +26,7 @@ import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
 import { MultiDict } from '../../multidict';
 
@@ -112,8 +112,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<MainMenuActions.ShowAttrsViewOptions>(
-            MainMenuActionName.ShowAttrsViewOptions,
+        this.addActionHandler<typeof MainMenuActions.ShowAttrsViewOptions>(
+            MainMenuActions.ShowAttrsViewOptions.name,
             (state, action) => {
                 state.isBusy = true;
             },

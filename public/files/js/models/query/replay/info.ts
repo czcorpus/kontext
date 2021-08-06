@@ -26,7 +26,7 @@ import { map } from 'rxjs/operators';
 import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';
-import { ActionName as MMActionName, Actions as MMActions } from '../../mainMenu/actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { QueryOverviewResponseRow } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
 
@@ -65,23 +65,23 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
             }
         );
 
-        this.addActionHandler<MMActions.OverviewShowQueryInfoDone>(
-            MMActionName.OverviewShowQueryInfoDone,
+        this.addActionHandler<typeof MainMenuActions.OverviewShowQueryInfoDone>(
+            MainMenuActions.OverviewShowQueryInfoDone.name,
             (state, action) => {
                 state.currentQueryOverview = action.payload.Desc
             }
         )
 
-        this.addActionHandler<MMActions.OverviewShowQueryInfo>(
-            MMActionName.OverviewShowQueryInfo,
+        this.addActionHandler<typeof MainMenuActions.OverviewShowQueryInfo>(
+            MainMenuActions.OverviewShowQueryInfo.name,
             (state, action) => {
 
             },
             (state, action, dispatch) => {
                 this.loadQueryOverview().subscribe(
                     (data) => {
-                        dispatch<MMActions.OverviewShowQueryInfoDone>({
-                            name: MMActionName.OverviewShowQueryInfoDone,
+                        dispatch<typeof MainMenuActions.OverviewShowQueryInfoDone>({
+                            name: MainMenuActions.OverviewShowQueryInfoDone.name,
                             payload: {
                                 Desc: data
                             }

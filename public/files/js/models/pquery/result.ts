@@ -23,9 +23,8 @@ import { HTTP, List, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PqueryResult } from './common';
-import { Actions as MMActions, ActionName as MMActionName } from '../mainMenu/actions';
 import { AlignTypes } from '../freqs/twoDimension/common';
 
 
@@ -96,8 +95,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.saveFormActive = true;
@@ -110,8 +109,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             action => {this.sendSaveArgs(dispatcher)}
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {this.sendSaveArgs(dispatcher)}
         );
 
@@ -163,8 +162,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
         ).subscribe(
             resp => {
-                this.dispatchSideEffect<MMActions.ToggleDisabled>({
-                    name: MMActionName.ToggleDisabled,
+                this.dispatchSideEffect<typeof MainMenuActions.ToggleDisabled>({
+                    name: MainMenuActions.ToggleDisabled.name,
                     payload: {
                         menuId: 'menu-save',
                         disabled: List.empty(resp.rows)

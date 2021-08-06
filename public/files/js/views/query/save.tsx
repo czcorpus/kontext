@@ -24,8 +24,7 @@ import {Kontext} from '../../types/common';
 import {Keyboard} from 'cnc-tskit';
 import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
 import { Actions } from '../../models/query/actions';
-import { Actions as MainMenuActions,
-    ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import * as S from './style';
 
 
@@ -115,8 +114,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleCloseEvent() {
-            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-                name: MainMenuActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         }
 

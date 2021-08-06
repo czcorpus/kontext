@@ -26,7 +26,7 @@ import { Kontext } from '../../../types/common';
 import { SortFormProperties, importMultiLevelArg } from './common';
 import { PageModel } from '../../../app/page';
 import { AjaxResponse } from '../../../types/ajaxResponses';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions } from '../actions';
 import { tap, map } from 'rxjs/operators';
 import { MLSortServerArgs } from '../common';
@@ -100,8 +100,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<MainMenuActions.ShowSort>(
-            MainMenuActionName.ShowSort,
+        this.addActionHandler<typeof MainMenuActions.ShowSort>(
+            MainMenuActions.ShowSort.name,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
             }

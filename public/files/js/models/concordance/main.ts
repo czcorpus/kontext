@@ -37,7 +37,7 @@ import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
 
 /**
@@ -639,12 +639,12 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm, typeof Actions.ResultCloseSaveForm>(
-            [MainMenuActionName.ShowSaveForm, Actions.ResultCloseSaveForm.name],
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm, typeof Actions.ResultCloseSaveForm>(
+            [MainMenuActions.ShowSaveForm.name, Actions.ResultCloseSaveForm.name],
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
-                    state.saveFormVisible = action.name === MainMenuActionName.ShowSaveForm
+                    state.saveFormVisible = action.name === MainMenuActions.ShowSaveForm.name
                 });
             }
         );

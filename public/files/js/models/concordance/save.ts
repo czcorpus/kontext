@@ -25,8 +25,7 @@ import { SaveData } from '../../app/navigation';
 import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { Actions as ConcActions } from '../concordance/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { MultiDict } from '../../multidict';
 import { ConcSaveServerArgs } from './common';
 
@@ -79,15 +78,15 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
         this.saveLinkFn = saveLinkFn;
         this.quickSaveRowLimit = quickSaveRowLimit;
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {state.formIsActive = true});
             }
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',

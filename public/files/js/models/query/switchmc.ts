@@ -28,8 +28,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName }
-    from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
 
 
@@ -77,8 +76,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<MainMenuActions.ShowSwitchMc>(
-            MainMenuActionName.ShowSwitchMc,
+        this.addActionHandler<typeof MainMenuActions.ShowSwitchMc>(
+            MainMenuActions.ShowSwitchMc.name,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: err => {

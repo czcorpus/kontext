@@ -28,7 +28,7 @@ import { Kontext } from '../../types/common';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
@@ -226,7 +226,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         ).sideEffectAlsoOn(
             Actions.WordlistSaveFormSubmit.name,
             Actions.WordlistResultViewConc.name,
-            MainMenuActionName.DirectSave
+            MainMenuActions.DirectSave.name
         );
 
         this.addActionHandler<typeof Actions.WordlistFormSelectAttr>(

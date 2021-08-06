@@ -74,7 +74,7 @@ import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
 import { Actions } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { ConcSortModel } from '../models/query/sort/single';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
@@ -186,23 +186,23 @@ export class ViewPage {
         switch (actionName) {
             case 'filter':
                 return {
-                    name: MMActionName.ShowFilter,
+                    name: MainMenuActions.ShowFilter.name,
                     payload: args.toDict()
                 };
             case 'sort':
             case 'sortx':
                 return {
-                    name: MMActionName.ShowSort,
+                    name: MainMenuActions.ShowSort.name,
                     payload: args.toDict()
                 };
             case 'sample':
                 return {
-                    name: MMActionName.ShowSample,
+                    name: MainMenuActions.ShowSample.name,
                     payload: args.toDict()
                 };
             case 'shuffle':
                 return {
-                    name: MMActionName.ApplyShuffle,
+                    name: MainMenuActions.ApplyShuffle.name,
                     payload: args.toDict()
                 };
             case 'edit_op':

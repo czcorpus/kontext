@@ -31,7 +31,7 @@ import { FreqFilterQuantities, Dimensions, FreqQuantities } from '../../../../mo
 import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { DataPoint } from '../../../../charts/confIntervals';
 import { Actions, ActionName } from '../../../../models/freqs/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions';
 import * as S from './style';
 
 
@@ -630,8 +630,8 @@ export function init(
     const THRowColLabels = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<MainMenuActions.ShowFreqForm>({
-                name: MainMenuActionName.ShowFreqForm
+            dispatcher.dispatch<typeof MainMenuActions.ShowFreqForm>({
+                name: MainMenuActions.ShowFreqForm.name
             });
         };
 

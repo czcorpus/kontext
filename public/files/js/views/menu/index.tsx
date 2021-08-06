@@ -25,7 +25,7 @@ import { IActionDispatcher, IModel, Bound } from 'kombo';
 import { Kontext } from '../../types/common';
 import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu';
-import { Actions, ActionName } from '../../models/mainMenu/actions';
+import { Actions } from '../../models/mainMenu/actions';
 import { AsyncTaskCheckerState, AsyncTaskChecker } from '../../models/asyncTask';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { ConcServerArgs } from '../../models/concordance/common';
@@ -445,22 +445,22 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
 
         _handleHoverChange(ident, enable) {
             if (!enable) {
-                dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
-                    name: ActionName.ClearVisibleSubmenu,
+                dispatcher.dispatch<typeof Actions.ClearVisibleSubmenu>({
+                    name: Actions.ClearVisibleSubmenu.name,
                     payload: {value: ident}
                 });
 
             } else {
-                dispatcher.dispatch<Actions.SetVisibleSubmenu>({
-                    name: ActionName.SetVisibleSubmenu,
+                dispatcher.dispatch<typeof Actions.SetVisibleSubmenu>({
+                    name: Actions.SetVisibleSubmenu.name,
                     payload: {value: ident}
                 });
             }
         }
 
         _closeActiveSubmenu() {
-            dispatcher.dispatch<Actions.ClearVisibleSubmenu>({
-                name: ActionName.ClearVisibleSubmenu
+            dispatcher.dispatch<typeof Actions.ClearVisibleSubmenu>({
+                name: Actions.ClearVisibleSubmenu.name
             });
         }
 

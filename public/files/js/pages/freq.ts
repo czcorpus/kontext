@@ -46,7 +46,7 @@ import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, Dict } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
-import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { ActionName } from '../models/freqs/actions';
 
 
@@ -408,7 +408,7 @@ class FreqPage {
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
                     switch (action.name) {
-                        case MMActionName.ShowFilter:
+                        case MainMenuActions.ShowFilter.name:
                             const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
@@ -417,19 +417,19 @@ class FreqPage {
                                 ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
-                        case MMActionName.ShowSort:
+                        case MainMenuActions.ShowSort.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()
                             ) + '#sort');
                         break;
-                        case MMActionName.ShowSample:
+                        case MainMenuActions.ShowSample.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()
                             ) + '#sample');
                         break;
-                        case MMActionName.ApplyShuffle:
+                        case MainMenuActions.ApplyShuffle.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()

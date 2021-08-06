@@ -26,7 +26,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
@@ -55,8 +55,8 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<MainMenuActions.FilterApplyFirstOccurrences>(
-            MainMenuActionName.FilterApplyFirstOccurrences,
+        this.addActionHandler<typeof MainMenuActions.FilterApplyFirstOccurrences>(
+            MainMenuActions.FilterApplyFirstOccurrences.name,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: err => {

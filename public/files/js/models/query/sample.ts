@@ -27,7 +27,7 @@ import { PageModel } from '../../app/page';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
@@ -70,8 +70,8 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<MainMenuActions.ShowSample>(
-            MainMenuActionName.ShowSample,
+        this.addActionHandler<typeof MainMenuActions.ShowSample>(
+            MainMenuActions.ShowSample.name,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: err => {

@@ -30,7 +30,7 @@ import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/r
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
 import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
 import { Actions } from '../../../models/query/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions } from '../../../models/concordance/actions';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions';
 import { QueryFormLiteProps, QueryFormProps } from '../first';
@@ -631,31 +631,31 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const AppendOperationOverlay:React.FC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
     > = (props) => {
         const handleCloseClick = () => {
-            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-                name: MainMenuActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         };
 
         const createActionBasedForm = () => {
             switch (props.menuActiveItem.actionName) {
-                case MainMenuActionName.ShowFilter:
+                case MainMenuActions.ShowFilter.name:
                     return <viewDeps.FilterFormView {...props.filterFormProps} filterId="__new__" />;
-                case MainMenuActionName.ShowSort:
+                case MainMenuActions.ShowSort.name:
                     return <viewDeps.SortFormView sortId="__new__" formType={Kontext.ConcFormTypes.SORT} />;
-                case MainMenuActionName.ShowSample:
+                case MainMenuActions.ShowSample.name:
                     return <viewDeps.SampleForm sampleId="__new__" formType={Kontext.ConcFormTypes.SAMPLE} />;
-                case MainMenuActionName.ApplyShuffle:
+                case MainMenuActions.ApplyShuffle.name:
                     return <viewDeps.ShuffleForm {...props.shuffleFormProps}
                                 lastOpSize={props.currEncodedOperations.length > 0 ?
                                     props.currEncodedOperations[props.currEncodedOperations.length - 1].size : 0}
                                 formType={Kontext.ConcFormTypes.SHUFFLE} />;
-                case MainMenuActionName.FilterApplySubhitsRemove:
+                case MainMenuActions.FilterApplySubhitsRemove.name:
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
                                     opKey="__new__" />;
-                case MainMenuActionName.FilterApplyFirstOccurrences:
+                case MainMenuActions.FilterApplyFirstOccurrences.name:
                     return <viewDeps.FirstHitsForm {...props.filterFirstDocHitsFormProps}
                                     opKey="__new__" />;
-                case MainMenuActionName.ShowSwitchMc:
+                case MainMenuActions.ShowSwitchMc.name:
                     return <viewDeps.SwitchMainCorpForm {...props.switchMcFormProps}
                                             formType={Kontext.ConcFormTypes.SWITCHMC} />;
                 default:
@@ -665,13 +665,13 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const createTitle = () => {
             const m = {
-                [MainMenuActionName.ShowFilter]: (args:{}) => tuple(Kontext.ConcFormTypes.FILTER, args['pnfilter']),
-                [MainMenuActionName.ShowSort]: () => tuple(Kontext.ConcFormTypes.SORT, null),
-                [MainMenuActionName.ShowSample]: () => tuple(Kontext.ConcFormTypes.SAMPLE, null),
-                [MainMenuActionName.ApplyShuffle]: () => tuple(Kontext.ConcFormTypes.SHUFFLE, null),
-                [MainMenuActionName.ShowSwitchMc]: () => tuple(Kontext.ConcFormTypes.SWITCHMC, null),
-                [MainMenuActionName.FilterApplySubhitsRemove]: () => tuple(Kontext.ConcFormTypes.SUBHITS, null),
-                [MainMenuActionName.FilterApplyFirstOccurrences]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null)
+                [MainMenuActions.ShowFilter.name]: (args:{}) => tuple(Kontext.ConcFormTypes.FILTER, args['pnfilter']),
+                [MainMenuActions.ShowSort.name]: () => tuple(Kontext.ConcFormTypes.SORT, null),
+                [MainMenuActions.ShowSample.name]: () => tuple(Kontext.ConcFormTypes.SAMPLE, null),
+                [MainMenuActions.ApplyShuffle.name]: () => tuple(Kontext.ConcFormTypes.SHUFFLE, null),
+                [MainMenuActions.ShowSwitchMc.name]: () => tuple(Kontext.ConcFormTypes.SWITCHMC, null),
+                [MainMenuActions.FilterApplySubhitsRemove.name]: () => tuple(Kontext.ConcFormTypes.SUBHITS, null),
+                [MainMenuActions.FilterApplyFirstOccurrences.name]: () => tuple(Kontext.ConcFormTypes.FIRSTHITS, null)
             };
             const [ident, subtype] = m[props.menuActiveItem.actionName](props.menuActiveItem.actionArgs);
             const opname = formTypeToTitle(ident, subtype);
@@ -706,8 +706,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         private handleCloseEvent() {
-            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-                name: MainMenuActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         }
 
@@ -792,12 +792,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         _renderOperationForm() {
             const actions = [
-                MainMenuActionName.ShowSort,
-                MainMenuActionName.ApplyShuffle,
-                MainMenuActionName.ShowSample,
-                MainMenuActionName.ShowFilter,
-                MainMenuActionName.FilterApplySubhitsRemove,
-                MainMenuActionName.FilterApplyFirstOccurrences
+                MainMenuActions.ShowSort.name,
+                MainMenuActions.ApplyShuffle.name,
+                MainMenuActions.ShowSample.name,
+                MainMenuActions.ShowFilter.name,
+                MainMenuActions.FilterApplySubhitsRemove.name,
+                MainMenuActions.FilterApplyFirstOccurrences.name
             ];
             if (this.props.activeItem !== null &&
                     List.findIndex(v => v === this.props.activeItem.actionName, actions) > -1) {
@@ -812,9 +812,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         _renderSaveForm() {
             if (this.props.activeItem) {
                 switch (this.props.activeItem.actionName) {
-                    case MainMenuActionName.ShowSaveQueryAsForm:
+                    case MainMenuActions.ShowSaveQueryAsForm.name:
                         return <saveViews.QuerySaveAsForm />;
-                    case MainMenuActionName.MakeConcLinkPersistent:
+                    case MainMenuActions.MakeConcLinkPersistent.name:
                         return <BoundPersistentConcordanceForm />;
                 }
             }

@@ -26,7 +26,7 @@ import { Kontext } from '../../../types/common';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { PageModel } from '../../../app/page';
 import { SortServerArgs } from '../common';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions } from '../actions';
 import { Dict, HTTP, List } from 'cnc-tskit';
 import { SortFormProperties } from './common';
@@ -79,8 +79,8 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
         this.pageModel = pageModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<MainMenuActions.ShowSort>(
-            MainMenuActionName.ShowSort,
+        this.addActionHandler<typeof MainMenuActions.ShowSort>(
+            MainMenuActions.ShowSort.name,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload}));
             }
