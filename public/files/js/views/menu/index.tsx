@@ -27,8 +27,7 @@ import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu';
 import { Actions, ActionName } from '../../models/mainMenu/actions';
 import { AsyncTaskCheckerState, AsyncTaskChecker } from '../../models/asyncTask';
-import { Actions as ATActions, ActionName as ATActionName }
-    from '../../models/asyncTask/actions';
+import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { ConcServerArgs } from '../../models/concordance/common';
 import * as S from './style';
 
@@ -341,8 +340,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
-                name: ATActionName.InboxCloseTaskOverview,
+            dispatcher.dispatch<typeof ATActions.InboxCloseTaskOverview>({
+                name: ATActions.InboxCloseTaskOverview.name,
                 payload: {
                     preventListClear: true
                 }
@@ -350,8 +349,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleOkButtonClick(evt) {
-            dispatcher.dispatch<ATActions.InboxCloseTaskOverview>({
-                name: ATActionName.InboxCloseTaskOverview,
+            dispatcher.dispatch<typeof ATActions.InboxCloseTaskOverview>({
+                name: ATActions.InboxCloseTaskOverview.name,
                 payload: {
                     preventListClear: false
                 }
@@ -359,14 +358,14 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         }
 
         _handleClearOnCloseCheckbox() {
-            dispatcher.dispatch<ATActions.InboxToggleRemoveFinishedOnSubmit>({
-                name: ATActionName.InboxToggleRemoveFinishedOnSubmit
+            dispatcher.dispatch<typeof ATActions.InboxToggleRemoveFinishedOnSubmit>({
+                name: ATActions.InboxToggleRemoveFinishedOnSubmit.name
             });
         }
 
         _handleViewListClick() {
-            dispatcher.dispatch<ATActions.InboxToggleOverviewVisibility>({
-                name: ATActionName.InboxToggleOverviewVisibility
+            dispatcher.dispatch<typeof ATActions.InboxToggleOverviewVisibility>({
+                name: ATActions.InboxToggleOverviewVisibility.name
             });
         }
 

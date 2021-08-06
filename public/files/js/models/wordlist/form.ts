@@ -31,7 +31,7 @@ import { ActionName, Actions } from './actions';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
+import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { ConcFreqRedirectResponse, FileTarget, isConcFreqRedirectResponse, splitFilterWords, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
 import { MultiDict } from '../../multidict';
@@ -529,8 +529,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<ACActions.AsyncTasksChecked>(
-            ACActionName.AsyncTasksChecked,
+        this.addActionHandler<typeof ATActions.AsyncTasksChecked>(
+            ATActions.AsyncTasksChecked.name,
             (state, action) => {
                 if (!List.empty(state.precalcTasks)) {
                     const updated:Array<Kontext.AsyncTaskInfo<{}>> = [];
@@ -589,8 +589,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                         if (!List.empty(resp.subtasks)) {
                             List.forEach(
                                 payload => {
-                                    dispatch<ACActions.InboxAddAsyncTask>({
-                                        name: ACActionName.InboxAddAsyncTask,
+                                    dispatch<typeof ATActions.InboxAddAsyncTask>({
+                                        name: ATActions.InboxAddAsyncTask.name,
                                         payload
                                     })
                                 },

@@ -27,7 +27,7 @@ import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
-import { Actions as ACActions, ActionName as ACActionName } from '../../models/asyncTask/actions';
+import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
@@ -308,8 +308,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<ACActions.AsyncTasksChecked>(
-            ACActionName.AsyncTasksChecked,
+        this.addActionHandler<typeof ATActions.AsyncTasksChecked>(
+            ATActions.AsyncTasksChecked.name,
             action => {
                 if (this.state.task) {
                     const task = List.find(
@@ -611,8 +611,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ),
             tap(
                 (fiResponse) => {
-                    this.dispatchSideEffect<ACActions.InboxAddAsyncTask>({
-                        name: ACActionName.InboxAddAsyncTask,
+                    this.dispatchSideEffect<typeof ATActions.InboxAddAsyncTask>({
+                        name: ATActions.InboxAddAsyncTask.name,
                         payload: fiResponse.task
                     })
                 }
