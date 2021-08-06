@@ -32,7 +32,7 @@ import { Kontext } from '../../../types/common';
 import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../../../models/query/common';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
 import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
-import { Actions, ActionName, QueryFormType } from '../../../models/query/actions';
+import { Actions, QueryFormType } from '../../../models/query/actions';
 import { Actions as HintActions } from '../../../models/usageTips/actions';
 import { Actions as HistoryActions } from '../../../models/searchHistory/actions';
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
@@ -241,8 +241,8 @@ export function init({
     const TRQueryTypeField:React.FC<TRQueryTypeFieldProps> = (props) => {
 
         const handleSelection = (checked) => {
-            dispatcher.dispatch<Actions.QueryInputSetQType>({
-                name: ActionName.QueryInputSetQType,
+            dispatcher.dispatch<typeof Actions.QueryInputSetQType>({
+                name: Actions.QueryInputSetQType.name,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
@@ -267,8 +267,8 @@ export function init({
     const TRPcqPosNegField:React.FC<TRPcqPosNegFieldProps> = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSetPCQPosNeg>({
-                name: ActionName.QueryInputSetPCQPosNeg,
+            dispatcher.dispatch<typeof Actions.QueryInputSetPCQPosNeg>({
+                name: Actions.QueryInputSetPCQPosNeg.name,
                 payload: {
                     sourceId: props.sourceId,
                     formType: props.formType,
@@ -293,8 +293,8 @@ export function init({
     const TRIncludeEmptySelector:React.FC<TRIncludeEmptySelectorProps> = (props) => {
 
         const handleCheckbox = () => {
-            dispatcher.dispatch<Actions.QueryInputSetIncludeEmpty>({
-                name: ActionName.QueryInputSetIncludeEmpty,
+            dispatcher.dispatch<typeof Actions.QueryInputSetIncludeEmpty>({
+                name: Actions.QueryInputSetIncludeEmpty.name,
                 payload: {
                     corpname: props.corpname,
                     value: !props.value
@@ -360,8 +360,8 @@ export function init({
         }
 
         _handleInputChange(evt) {
-            dispatcher.dispatch<Actions.SetWithinValue>({
-                name: ActionName.SetWithinValue,
+            dispatcher.dispatch<typeof Actions.SetWithinValue>({
+                name: Actions.SetWithinValue.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -377,8 +377,8 @@ export function init({
         }
 
         _handleAttrChange(evt) {
-            dispatcher.dispatch<Actions.SetWithinAttr>({
-                name: ActionName.SetWithinAttr,
+            dispatcher.dispatch<typeof Actions.SetWithinAttr>({
+                name: Actions.SetWithinAttr.name,
                 payload: {
                     idx: evt.target.value
                 }
@@ -386,8 +386,8 @@ export function init({
         }
 
         _handleInsert() {
-            dispatcher.dispatch<Actions.QueryInputAppendQuery>({
-                name: ActionName.QueryInputAppendQuery,
+            dispatcher.dispatch<typeof Actions.QueryInputAppendQuery>({
+                name: Actions.QueryInputAppendQuery.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
@@ -399,8 +399,8 @@ export function init({
         }
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.LoadWithinBuilderData>({
-                name: ActionName.LoadWithinBuilderData,
+            dispatcher.dispatch<typeof Actions.LoadWithinBuilderData>({
+                name: Actions.LoadWithinBuilderData.name,
                 payload: {
                     sourceId: this.props.sourceId
                 }
@@ -491,8 +491,8 @@ export function init({
 
         const handleKey = (e:React.KeyboardEvent) => {
             if (e.key === Keyboard.Value.ESC) {
-                dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                    name: ActionName.ToggleQuerySuggestionWidget,
+                dispatcher.dispatch<typeof Actions.ToggleQuerySuggestionWidget>({
+                    name: Actions.ToggleQuerySuggestionWidget.name,
                     payload: {
                         formType: props.formType,
                         sourceId: props.sourceId,
@@ -503,8 +503,8 @@ export function init({
         };
 
         const handleBlur = () => {
-            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                name: ActionName.ToggleQuerySuggestionWidget,
+            dispatcher.dispatch<typeof Actions.ToggleQuerySuggestionWidget>({
+                name: Actions.ToggleQuerySuggestionWidget.name,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
@@ -548,8 +548,8 @@ export function init({
     }> = (props) => {
 
         const keyHandler = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardKey>({
-                name: ActionName.QueryInputHitVirtualKeyboardKey,
+            dispatcher.dispatch<typeof Actions.QueryInputHitVirtualKeyboardKey>({
+                name: Actions.QueryInputHitVirtualKeyboardKey.name,
                 payload: {
                     keyCode: evt.keyCode
                 }
@@ -606,8 +606,8 @@ export function init({
         }
 
         _handleWidgetTrigger(name) {
-            dispatcher.dispatch<Actions.SetActiveInputWidget>({
-                name: ActionName.SetActiveInputWidget,
+            dispatcher.dispatch<typeof Actions.SetActiveInputWidget>({
+                name: Actions.SetActiveInputWidget.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
@@ -629,8 +629,8 @@ export function init({
         }
 
         _handleCloseWidget() {
-            dispatcher.dispatch<Actions.SetActiveInputWidget>({
-                name: ActionName.SetActiveInputWidget,
+            dispatcher.dispatch<typeof Actions.SetActiveInputWidget>({
+                name: Actions.SetActiveInputWidget.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
@@ -711,8 +711,8 @@ export function init({
     }> = (props) => {
 
         const handleCheckbox = (checked) => {
-            dispatcher.dispatch<Actions.QueryInputSetMatchCase>({
-                name: ActionName.QueryInputSetMatchCase,
+            dispatcher.dispatch<typeof Actions.QueryInputSetMatchCase>({
+                name: Actions.QueryInputSetMatchCase.name,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
@@ -793,8 +793,8 @@ export function init({
     }> = (props) => {
 
         const handleClick = (checked) => {
-            dispatcher.dispatch<Actions.QueryInputToggleAllowRegexp>({
-                name: ActionName.QueryInputToggleAllowRegexp,
+            dispatcher.dispatch<typeof Actions.QueryInputToggleAllowRegexp>({
+                name: Actions.QueryInputToggleAllowRegexp.name,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
@@ -827,8 +827,8 @@ export function init({
     }> = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryInputSetDefaultAttr>({
-                name: ActionName.QueryInputSetDefaultAttr,
+            dispatcher.dispatch<typeof Actions.QueryInputSetDefaultAttr>({
+                name: Actions.QueryInputSetDefaultAttr.name,
                 payload: {
                     formType: props.formType,
                     sourceId: props.sourceId,
@@ -887,8 +887,8 @@ export function init({
 
         _handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement|HTMLInputElement|HTMLPreElement>) {
             if (evt.target instanceof HTMLTextAreaElement || evt.target instanceof HTMLInputElement) {
-                dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                    name: ActionName.QueryInputSetQuery,
+                dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                    name: Actions.QueryInputSetQuery.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -916,8 +916,8 @@ export function init({
 
         _toggleStructureWidget() {
             const query = this.props.queries[this.props.sourceId];
-            dispatcher.dispatch<Actions.ShowQueryStructureWidget>({
-                name: ActionName.ShowQueryStructureWidget,
+            dispatcher.dispatch<typeof Actions.ShowQueryStructureWidget>({
+                name: Actions.ShowQueryStructureWidget.name,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType
@@ -926,8 +926,8 @@ export function init({
         }
 
         private handleQueryOptsClick() {
-            dispatcher.dispatch<Actions.QueryOptionsToggleForm>({
-                name: ActionName.QueryOptionsToggleForm,
+            dispatcher.dispatch<typeof Actions.QueryOptionsToggleForm>({
+                name: Actions.QueryOptionsToggleForm.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId
@@ -953,8 +953,8 @@ export function init({
         }
 
         handleInputEscKeyDown():void {
-            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                name: ActionName.ToggleQuerySuggestionWidget,
+            dispatcher.dispatch<typeof Actions.ToggleQuerySuggestionWidget>({
+                name: Actions.ToggleQuerySuggestionWidget.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,

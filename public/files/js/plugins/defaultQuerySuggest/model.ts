@@ -26,7 +26,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap, scan, catchError } from 'rxjs/operators';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
     isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
@@ -112,8 +112,8 @@ export class Model extends StatelessModel<ModelState> {
         super(dispatcher, state);
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             (state, action) => {
                 state.suggestionArgs = Dict.map(
                     v => ({...v, subcorpus: action.payload.subcorp}),
@@ -131,8 +131,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSetQType>(
-            QueryActionName.QueryInputSetQType,
+        this.addActionHandler<typeof QueryActions.QueryInputSetQType>(
+            QueryActions.QueryInputSetQType.name,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
@@ -147,8 +147,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputToggleAllowRegexp>(
-            QueryActionName.QueryInputToggleAllowRegexp,
+        this.addActionHandler<typeof QueryActions.QueryInputToggleAllowRegexp>(
+            QueryActions.QueryInputToggleAllowRegexp.name,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {
@@ -157,8 +157,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSetMatchCase>(
-            QueryActionName.QueryInputSetMatchCase,
+        this.addActionHandler<typeof QueryActions.QueryInputSetMatchCase>(
+            QueryActions.QueryInputSetMatchCase.name,
             (state, action) => {
                 const currArgs = state.suggestionArgs[action.payload.sourceId];
                 if (currArgs) {

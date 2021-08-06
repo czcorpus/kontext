@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -58,8 +58,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         });
 
-        this.addActionHandler<Actions.QueryContextSetLemwordWsize>(
-            ActionName.QueryContextSetLemwordWsize,
+        this.addActionHandler<typeof Actions.QueryContextSetLemwordWsize>(
+            Actions.QueryContextSetLemwordWsize.name,
             action => {
                 this.changeState(state => {
                     state.formData.fc_lemword_wsize = action.payload.value;
@@ -67,8 +67,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QueryContextSetLemword>(
-            ActionName.QueryContextSetLemword,
+        this.addActionHandler<typeof Actions.QueryContextSetLemword>(
+            Actions.QueryContextSetLemword.name,
             action => {
                 this.changeState(state => {
                     state.formData.fc_lemword = action.payload.value;
@@ -76,8 +76,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QueryContextSetLemwordType>(
-            ActionName.QueryContextSetLemwordType,
+        this.addActionHandler<typeof Actions.QueryContextSetLemwordType>(
+            Actions.QueryContextSetLemwordType.name,
             action => {
                 this.changeState(state => {
                     state.formData.fc_lemword_type = action.payload.value;
@@ -85,8 +85,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QueryContextSetPosWsize>(
-            ActionName.QueryContextSetPosWsize,
+        this.addActionHandler<typeof Actions.QueryContextSetPosWsize>(
+            Actions.QueryContextSetPosWsize.name,
             action => {
                 this.changeState(state => {
                     state.formData.fc_pos_wsize = action.payload.value;
@@ -94,8 +94,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QueryContextSetPos>(
-            ActionName.QueryContextSetPos,
+        this.addActionHandler<typeof Actions.QueryContextSetPos>(
+            Actions.QueryContextSetPos.name,
             action => {
                 this.changeState(state => {
                     console.log('action.payload.checked: ', action.payload.checked)
@@ -109,8 +109,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QueryContextSetPosType>(
-            ActionName.QueryContextSetPosType,
+        this.addActionHandler<typeof Actions.QueryContextSetPosType>(
+            Actions.QueryContextSetPosType.name,
             action => {
                 this.changeState(state => {
                     state.formData.fc_pos_type = action.payload.value;
@@ -118,15 +118,15 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<Actions.QuerySubmit>(
-            ActionName.QuerySubmit,
+        this.addActionHandler<typeof Actions.QuerySubmit>(
+            Actions.QuerySubmit.name,
             action => {
                 this.dispatchSubmitReady();
             }
         );
 
-        this.addActionHandler<Actions.BranchQuery>(
-            ActionName.BranchQuery,
+        this.addActionHandler<typeof Actions.BranchQuery>(
+            Actions.BranchQuery.name,
             action => {
                 this.dispatchSubmitReady();
             }
@@ -147,8 +147,8 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
     }
 
     private dispatchSubmitReady():void {
-        this.dispatchSideEffect<Actions.QueryContextFormPrepareArgsDone>({
-            name: ActionName.QueryContextFormPrepareArgsDone,
+        this.dispatchSideEffect<typeof Actions.QueryContextFormPrepareArgsDone>({
+            name: Actions.QueryContextFormPrepareArgsDone.name,
             payload: {
                 data: {
                     fc_lemword_wsize: this.state.formData.fc_lemword_wsize,

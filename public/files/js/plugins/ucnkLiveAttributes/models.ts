@@ -27,7 +27,7 @@ import { TextTypes, Kontext } from '../../types/common';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
@@ -263,8 +263,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(
@@ -280,8 +280,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(

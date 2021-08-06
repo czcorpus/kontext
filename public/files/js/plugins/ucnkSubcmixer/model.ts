@@ -27,7 +27,7 @@ import { IPluginApi } from '../../types/plugins';
 import { validateSubcProps } from '../../models/subcorp/form';
 import { Actions } from './actions';
 import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
+import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
@@ -65,15 +65,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             (state, action) => {
                 // TODO
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             (state, action) => {
                 // TODO
             }

@@ -27,7 +27,7 @@ import { AjaxResponse } from '../../../types/ajaxResponses';
 import { PageModel } from '../../../app/page';
 import { SortServerArgs } from '../common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { Dict, HTTP, List } from 'cnc-tskit';
 import { SortFormProperties } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
@@ -86,15 +86,15 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SortSetActiveModel>(
-            ActionName.SortSetActiveModel,
+        this.addActionHandler<typeof Actions.SortSetActiveModel>(
+            Actions.SortSetActiveModel.name,
             action => {this.changeState(state => {
                 state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'sortx';
             })}
         );
 
-        this.addActionHandler<Actions.SortFormSubmit>(
-            ActionName.SortFormSubmit,
+        this.addActionHandler<typeof Actions.SortFormSubmit>(
+            Actions.SortFormSubmit.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -129,36 +129,36 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SortFormSetSattr>(
-            ActionName.SortFormSetSattr,
+        this.addActionHandler<typeof Actions.SortFormSetSattr>(
+            Actions.SortFormSetSattr.name,
             action => {this.changeState(state => {
                 state.sattrValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.SortFormSetSkey>(
-            ActionName.SortFormSetSkey,
+        this.addActionHandler<typeof Actions.SortFormSetSkey>(
+            Actions.SortFormSetSkey.name,
             action => {this.changeState(state => {
                 state.skeyValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.SortFormSetSbward>(
-            ActionName.SortFormSetSbward,
+        this.addActionHandler<typeof Actions.SortFormSetSbward>(
+            Actions.SortFormSetSbward.name,
             action => {this.changeState(state => {
                 state.sbwardValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.SortFormSetSicase>(
-            ActionName.SortFormSetSicase,
+        this.addActionHandler<typeof Actions.SortFormSetSicase>(
+            Actions.SortFormSetSicase.name,
             action => {this.changeState(state => {
                 state.sicaseValues[action.payload.sortId] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.SortFormSetSpos>(
-            ActionName.SortFormSetSpos,
+        this.addActionHandler<typeof Actions.SortFormSetSpos>(
+            Actions.SortFormSetSpos.name,
             action => {
                 if (/^([1-9]\d*)*$/.exec(action.payload.value)) {
                     this.changeState(state => {

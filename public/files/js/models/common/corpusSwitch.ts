@@ -23,7 +23,7 @@ import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { Actions, ActionName } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
@@ -75,8 +75,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
         this.history = history;
         this.registrations = [];
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             action => {
                 const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
                 List.addUnique(action.payload.corpname, [...currAligned]);
@@ -88,8 +88,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             action => {
                 const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
                 const srchIdx = List.findIndex(v => v === action.payload.corpname, currAligned);

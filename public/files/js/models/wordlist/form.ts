@@ -29,7 +29,7 @@ import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { ConcFreqRedirectResponse, FileTarget, isConcFreqRedirectResponse, splitFilterWords, SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
@@ -182,8 +182,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             (state, action) => {
                 if (action.payload.pubName) {
                     state.currentSubcorpus = action.payload.pubName;

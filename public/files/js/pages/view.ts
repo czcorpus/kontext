@@ -39,7 +39,7 @@ import { QueryFormProperties, FirstQueryFormModel, fetchQueryFormArgs }
     from '../models/query/first';
 import { UsageTipsModel } from '../models/usageTips';
 import { QueryReplayModel, LocalQueryFormData } from '../models/query/replay';
-import { ActionName as QueryActionName } from '../models/query/actions';
+import { Actions as QueryActions } from '../models/query/actions';
 import { FilterFormModel, FilterFormProperties, fetchFilterFormArgs } from '../models/query/filter';
 import { ConcSampleModel, SampleFormProperties, fetchSampleFormArgs } from '../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpFormProperties, fetchSwitchMainCorpFormArgs }
@@ -207,7 +207,7 @@ export class ViewPage {
                 };
             case 'edit_op':
                 return {
-                    name: QueryActionName.EditQueryOperation,
+                    name: QueryActions.EditQueryOperation.name,
                     payload: {operationIdx: Number(args.head('operationIdx'))}
                 };
             default:
@@ -267,7 +267,7 @@ export class ViewPage {
                     this.layoutModel.exportConcArgs(),
                     {
                         onPopStateAction: {
-                            name: QueryActionName.EditLastQueryOperation,
+                            name: QueryActions.EditLastQueryOperation.name,
                             payload: {
                                 sourceId: this.layoutModel.exportConcArgs().head('q')
                             }

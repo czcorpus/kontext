@@ -24,7 +24,7 @@ import {IActionDispatcher, BoundWithProps} from 'kombo';
 import { Kontext } from '../../../types/common';
 import {QueryFormModel, QueryFormModelState} from '../../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../../models/query/virtualKeyboard';
-import { ActionName, Actions, QueryFormType } from '../../../models/query/actions';
+import { Actions, QueryFormType } from '../../../models/query/actions';
 import * as S from './style';
 
 
@@ -328,23 +328,23 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
             }
 
             if (deadKeys && deadKeyIndex >= 0 && this.props.activeDeadKeyIndex !== deadKeyIndex) {
-                dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardDeadKey>({
-                    name: ActionName.QueryInputHitVirtualKeyboardDeadKey,
+                dispatcher.dispatch<typeof Actions.QueryInputHitVirtualKeyboardDeadKey>({
+                    name: Actions.QueryInputHitVirtualKeyboardDeadKey.name,
                     payload: {
                         deadKeyIndex: deadKeyIndex,
                     }
                 });
 
             } else {
-                dispatcher.dispatch<Actions.QueryInputHitVirtualKeyboardDeadKey>({
-                    name: ActionName.QueryInputHitVirtualKeyboardDeadKey,
+                dispatcher.dispatch<typeof Actions.QueryInputHitVirtualKeyboardDeadKey>({
+                    name: Actions.QueryInputHitVirtualKeyboardDeadKey.name,
                     payload: {
                         deadKeyIndex: null,
                     }
                 });
 
-                dispatcher.dispatch<Actions.QueryInputInsertAtCursor>({
-                    name: ActionName.QueryInputInsertAtCursor,
+                dispatcher.dispatch<typeof Actions.QueryInputInsertAtCursor>({
+                    name: Actions.QueryInputInsertAtCursor.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -353,47 +353,47 @@ export function init({dispatcher, he, virtualKeyboardModel}:VirtualKeyboardModul
                 });
             }
 
-            dispatcher.dispatch<Actions.QueryInputUnhitVirtualKeyboardShift>({
-                name: ActionName.QueryInputUnhitVirtualKeyboardShift
+            dispatcher.dispatch<typeof Actions.QueryInputUnhitVirtualKeyboardShift>({
+                name: Actions.QueryInputUnhitVirtualKeyboardShift.name
             });
         }
 
         _handleShift() {
-            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardShift>({
-                name: ActionName.QueryInputToggleVirtualKeyboardShift
+            dispatcher.dispatch<typeof Actions.QueryInputToggleVirtualKeyboardShift>({
+                name: Actions.QueryInputToggleVirtualKeyboardShift.name
             });
         }
 
         _handleCaps() {
-            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardCaps>({
-                name: ActionName.QueryInputToggleVirtualKeyboardCaps
+            dispatcher.dispatch<typeof Actions.QueryInputToggleVirtualKeyboardCaps>({
+                name: Actions.QueryInputToggleVirtualKeyboardCaps.name
             });
         }
 
         _handleBackspace() {
-            dispatcher.dispatch<Actions.QueryInputRemoveLastChar>({
-                name: ActionName.QueryInputRemoveLastChar,
+            dispatcher.dispatch<typeof Actions.QueryInputRemoveLastChar>({
+                name: Actions.QueryInputRemoveLastChar.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId
                 }
             });
 
-            dispatcher.dispatch<Actions.QueryInputUnhitVirtualKeyboardShift>({
-                name: ActionName.QueryInputUnhitVirtualKeyboardShift
+            dispatcher.dispatch<typeof Actions.QueryInputUnhitVirtualKeyboardShift>({
+                name: Actions.QueryInputUnhitVirtualKeyboardShift.name
             });
         }
 
         _handleLayoutChange(evt) {
-            dispatcher.dispatch<Actions.QueryInputSetVirtualKeyboardLayout>({
-                name: ActionName.QueryInputSetVirtualKeyboardLayout,
+            dispatcher.dispatch<typeof Actions.QueryInputSetVirtualKeyboardLayout>({
+                name: Actions.QueryInputSetVirtualKeyboardLayout.name,
                 payload: {idx: evt.target.value}
             });
         }
 
         _handleAltGr() {
-            dispatcher.dispatch<Actions.QueryInputToggleVirtualKeyboardAltGr>({
-                name: ActionName.QueryInputToggleVirtualKeyboardAltGr
+            dispatcher.dispatch<typeof Actions.QueryInputToggleVirtualKeyboardAltGr>({
+                name: Actions.QueryInputToggleVirtualKeyboardAltGr.name
             });
         }
 

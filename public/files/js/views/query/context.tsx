@@ -27,7 +27,7 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { QueryContextModel, QueryContextModelState } from '../../models/query/context';
-import { Actions, ActionName } from '../../models/query/actions';
+import { Actions } from '../../models/query/actions';
 import { CtxLemwordType } from '../../models/query/common';
 import { List, tuple } from 'cnc-tskit';
 import * as S from './style';
@@ -79,8 +79,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryContextSetLemword>({
-                name: ActionName.QueryContextSetLemword,
+            dispatcher.dispatch<typeof Actions.QueryContextSetLemword>({
+                name: Actions.QueryContextSetLemword.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -88,8 +88,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryContextSetLemwordWsize>({
-                name: ActionName.QueryContextSetLemwordWsize,
+            dispatcher.dispatch<typeof Actions.QueryContextSetLemwordWsize>({
+                name: Actions.QueryContextSetLemwordWsize.name,
                 payload: {
                     value: tuple(lft, rgt)
                 }
@@ -97,8 +97,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryContextSetLemwordType>({
-                name: ActionName.QueryContextSetLemwordType,
+            dispatcher.dispatch<typeof Actions.QueryContextSetLemwordType>({
+                name: Actions.QueryContextSetLemwordType.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -145,8 +145,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSelectChange = (checked, pos) => {
-            dispatcher.dispatch<Actions.QueryContextSetPos>({
-                name: ActionName.QueryContextSetPos,
+            dispatcher.dispatch<typeof Actions.QueryContextSetPos>({
+                name: Actions.QueryContextSetPos.name,
                 payload: {
                     checked: checked,
                     value: pos
@@ -155,8 +155,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleRangeChange = (lft:number, rgt:number) => {
-            dispatcher.dispatch<Actions.QueryContextSetPosWsize>({
-                name: ActionName.QueryContextSetPosWsize,
+            dispatcher.dispatch<typeof Actions.QueryContextSetPosWsize>({
+                name: Actions.QueryContextSetPosWsize.name,
                 payload: {
                     value: tuple(lft, rgt)
                 }
@@ -164,8 +164,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.QueryContextSetPosType>({
-                name: ActionName.QueryContextSetPosType,
+            dispatcher.dispatch<typeof Actions.QueryContextSetPosType>({
+                name: Actions.QueryContextSetPosType.name,
                 payload: {
                     value: evt.target.value
                 }

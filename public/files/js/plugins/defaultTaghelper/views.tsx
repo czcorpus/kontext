@@ -23,8 +23,7 @@ import { List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PluginInterfaces } from '../../types/plugins';
-import { Actions as QueryActions, ActionName as QueryActionName,
-        QueryFormType } from '../../models/query/actions';
+import { Actions as QueryActions, QueryFormType } from '../../models/query/actions';
 import { Actions } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';
 import { PosTagModelState, PosTagModel } from './positional/models';
@@ -134,8 +133,8 @@ export function init(
                         `[${props.generatedQuery}]` :
                         `"${props.rawPattern}"` ;
 
-                dispatcher.dispatch<QueryActions.QueryInputSetQuery>({
-                    name: QueryActionName.QueryInputSetQuery,
+                dispatcher.dispatch<typeof QueryActions.QueryInputSetQuery>({
+                    name: QueryActions.QueryInputSetQuery.name,
                     payload: {
                         formType: props.formType,
                         sourceId: props.sourceId,

@@ -25,8 +25,7 @@ import { StatefulModel, IFullActionControl } from 'kombo';
 import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions } from '../actions';
-import { Actions as QueryActions,
-    ActionName as QueryActionName } from '../../../models/query/actions';
+import { Actions as QueryActions } from '../../../models/query/actions';
 
 
 type RawTagValues = Array<Array<[string, string]>>;
@@ -159,8 +158,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
         this.pluginApi = pluginApi;
         this.tagsetId = tagsetId;
 
-        this.addActionSubtypeHandler<QueryActions.QueryTaghelperPresetPattern>(
-            QueryActionName.QueryTaghelperPresetPattern,
+        this.addActionSubtypeHandler<typeof QueryActions.QueryTaghelperPresetPattern>(
+            QueryActions.QueryTaghelperPresetPattern.name,
             action => action.payload.tagsetId === this.tagsetId,
             action => {
                 this.changeState(state => {
@@ -398,8 +397,8 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.SetActiveInputWidget>(
-            QueryActionName.SetActiveInputWidget,
+        this.addActionHandler<typeof QueryActions.SetActiveInputWidget>(
+            QueryActions.SetActiveInputWidget.name,
             action => {
                 this.changeState(state => {
                     if (!Dict.hasKey(action.payload.sourceId, state.data)) {

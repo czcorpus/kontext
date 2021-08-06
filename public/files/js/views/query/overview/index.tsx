@@ -29,7 +29,7 @@ import { ExtendedQueryOperation } from '../../../models/query/replay/common';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
 import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
-import { Actions, ActionName } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../models/mainMenu/actions';
 import { Actions as ConcActions, ActionName as ConcActionName } from '../../../models/concordance/actions';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions';
@@ -183,8 +183,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     }> = (props) => {
 
         const handleRadioInputChange = (evt) => {
-            dispatcher.dispatch<Actions.QuerySetStopAfterIdx>({
-                name: ActionName.QuerySetStopAfterIdx,
+            dispatcher.dispatch<typeof Actions.QuerySetStopAfterIdx>({
+                name: Actions.QuerySetStopAfterIdx.name,
                 payload: {
                     value: evt.target.value === 'continue' ? null : props.operationIdx
                 }
@@ -238,8 +238,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     }> = (props) => {
 
         const handleTrimClick = () => {
-            dispatcher.dispatch<Actions.TrimQuery>({
-                name: ActionName.TrimQuery,
+            dispatcher.dispatch<typeof Actions.TrimQuery>({
+                name: Actions.TrimQuery.name,
                 payload: {
                     operationIdx: props.operationIdx
                 }
@@ -426,8 +426,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
 
         const handleEditClick = (idx:number, opId:string) => () => {
-            dispatcher.dispatch<Actions.EditQueryOperation>({
-                name: ActionName.EditQueryOperation,
+            dispatcher.dispatch<typeof Actions.EditQueryOperation>({
+                name: Actions.EditQueryOperation.name,
                 payload: {
                     operationIdx: idx,
                     sourceId: getSourceId(idx, opId)
@@ -465,8 +465,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     lastOpSize: null,
                     operationIdx: opIdx,
                     shuffleSubmitFn: () => {
-                        dispatcher.dispatch<Actions.BranchQuery>({
-                            name: ActionName.BranchQuery,
+                        dispatcher.dispatch<typeof Actions.BranchQuery>({
+                            name: Actions.BranchQuery.name,
                             payload: {
                                 operationIdx: opIdx
                             }
@@ -486,8 +486,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     operationIdx: opIdx,
                     opKey: null,
                     submitFn: () => {
-                        dispatcher.dispatch<Actions.BranchQuery>({
-                            name: ActionName.BranchQuery,
+                        dispatcher.dispatch<typeof Actions.BranchQuery>({
+                            name: Actions.BranchQuery.name,
                             payload: {
                                 operationIdx: opIdx
                             }
@@ -507,8 +507,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         };
 
         const handleEditorClose = () => {
-            dispatcher.dispatch<Actions.QueryOverviewEditorClose>({
-                name:  ActionName.QueryOverviewEditorClose
+            dispatcher.dispatch<typeof Actions.QueryOverviewEditorClose>({
+                name:  Actions.QueryOverviewEditorClose.name
             });
         };
 
@@ -571,8 +571,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         const handleEditClickFn = (opIdx) => {
             return () => {
-                dispatcher.dispatch<Actions.RedirectToEditQueryOperation>({
-                    name: ActionName.RedirectToEditQueryOperation,
+                dispatcher.dispatch<typeof Actions.RedirectToEditQueryOperation>({
+                    name: Actions.RedirectToEditQueryOperation.name,
                     payload: {
                         operationIdx: opIdx
                     }

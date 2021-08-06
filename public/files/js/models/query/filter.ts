@@ -30,7 +30,7 @@ import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
@@ -396,8 +396,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.QueryInputSetLpos>(
-            ActionName.QueryInputSetLpos,
+        this.addActionSubtypeHandler<typeof Actions.QueryInputSetLpos>(
+            Actions.QueryInputSetLpos.name,
             action => action.payload.formType === 'filter',
             action => {
                 this.changeState(state => {
@@ -406,8 +406,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetFilfl>(
-            ActionName.FilterInputSetFilfl,
+        this.addActionHandler<typeof Actions.FilterInputSetFilfl>(
+            Actions.FilterInputSetFilfl.name,
             action => {
                 this.changeState(state => {
                     state.filflValues[action.payload.filterId] = action.payload.value;
@@ -415,8 +415,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetRange>(
-            ActionName.FilterInputSetRange,
+        this.addActionHandler<typeof Actions.FilterInputSetRange>(
+            Actions.FilterInputSetRange.name,
             action => {
                 this.changeState(state => {
                     this.setFilPosValue(
@@ -429,8 +429,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetInclKwic>(
-            ActionName.FilterInputSetInclKwic,
+        this.addActionHandler<typeof Actions.FilterInputSetInclKwic>(
+            Actions.FilterInputSetInclKwic.name,
             action => {
                 this.changeState(state => {
                     state.inclkwicValues[action.payload.filterId] = action.payload.value;
@@ -438,8 +438,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ApplyFilter>(
-            ActionName.ApplyFilter,
+        this.addActionHandler<typeof Actions.ApplyFilter>(
+            Actions.ApplyFilter.name,
             action => {
                 let err:Error;
                 this.changeState(state => {
@@ -495,8 +495,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.QueryContextToggleForm>(
-            ActionName.QueryContextToggleForm,
+        this.addActionHandler<typeof Actions.QueryContextToggleForm>(
+            Actions.QueryContextToggleForm.name,
             action => {
                 this.changeState(state => {
                     state.contextFormVisible = !state.contextFormVisible;
@@ -504,8 +504,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.QueryTextTypesToggleForm>(
-            ActionName.QueryTextTypesToggleForm,
+        this.addActionHandler<typeof Actions.QueryTextTypesToggleForm>(
+            Actions.QueryTextTypesToggleForm.name,
             action => {
                 this.changeState(state => {
                     state.textTypesFormVisible = !state.textTypesFormVisible;
@@ -513,8 +513,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FilterInputSetFilterType>(
-            ActionName.FilterInputSetFilterType,
+        this.addActionHandler<typeof Actions.FilterInputSetFilterType>(
+            Actions.FilterInputSetFilterType.name,
             action => {
                 this.changeState(state => {
                       state.pnFilterValues[action.payload.filterId] = action.payload.value;

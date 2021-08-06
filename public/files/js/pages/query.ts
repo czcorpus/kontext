@@ -36,7 +36,7 @@ import { PluginInterfaces } from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
 import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../models/query/actions';
+import { Actions as QueryActions } from '../models/query/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
@@ -56,8 +56,8 @@ class ConfigWrapper extends StatelessModel<{}> {
         super(dispatcher, {});
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             null,
             (state, action, dispatch) => {
                 const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
@@ -68,8 +68,8 @@ class ConfigWrapper extends StatelessModel<{}> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             null,
             (state, action, dispatch) => {
                 const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');

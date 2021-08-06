@@ -25,11 +25,10 @@ import { Keyboard, tuple } from 'cnc-tskit';
 
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
-import { Actions, ActionName, QueryFormType } from '../../models/query/actions';
+import { Actions, QueryFormType } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';
 import { AdvancedQuery, findTokenIdxByFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../../models/query/query';
 import { PqueryFormModel } from '../../models/pquery/form';
-import { PqueryFormModelState } from '../../models/pquery/common';
 
 
 export interface CQLEditorProps {
@@ -85,8 +84,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         private inputKeyUpHandler(evt) {
             if (Keyboard.isArrowKey(evt.keyCode) || evt.key === Keyboard.Value.HOME ||
                     evt.key === Keyboard.Value.END) {
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
+                dispatcher.dispatch<typeof Actions.QueryInputMoveCursor>({
+                    name: Actions.QueryInputMoveCursor.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -110,8 +109,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleInputChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                name: ActionName.QueryInputSetQuery,
+            dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                name: Actions.QueryInputSetQuery.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
@@ -154,8 +153,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
             const query = this.contentEditable.extractText();
 
-            dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                name: ActionName.QueryInputSetQuery,
+            dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                name: Actions.QueryInputSetQuery.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
@@ -187,8 +186,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const rightIdx = parseInt(a.getAttribute('data-rightIdx'));
                         const tagsetId = a.getAttribute('data-tagsetId');
 
-                        dispatcher.dispatch<Actions.SetActiveInputWidget>({
-                            name: ActionName.SetActiveInputWidget,
+                        dispatcher.dispatch<typeof Actions.SetActiveInputWidget>({
+                            name: Actions.SetActiveInputWidget.name,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
@@ -199,8 +198,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 )
                             }
                         });
-                        dispatcher.dispatch<Actions.QueryTaghelperPresetPattern>({
-                            name: ActionName.QueryTaghelperPresetPattern,
+                        dispatcher.dispatch<typeof Actions.QueryTaghelperPresetPattern>({
+                            name: Actions.QueryTaghelperPresetPattern.name,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
@@ -215,8 +214,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         const queryObj = this.props.queries[this.props.sourceId];
                         if (queryObj.qtype === 'advanced') {
                             const tokenIdx = findTokenIdxByFocusIdx(queryObj, leftIdx);
-                            dispatcher.dispatch<Actions.ToggleQuerySuggestionWidget>({
-                                name: ActionName.ToggleQuerySuggestionWidget,
+                            dispatcher.dispatch<typeof Actions.ToggleQuerySuggestionWidget>({
+                                name: Actions.ToggleQuerySuggestionWidget.name,
                                 payload: {
                                     formType: this.props.formType,
                                     sourceId: this.props.sourceId,
@@ -230,8 +229,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
             } else {
                 const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
+                dispatcher.dispatch<typeof Actions.QueryInputMoveCursor>({
+                    name: Actions.QueryInputMoveCursor.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -246,8 +245,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (Keyboard.isArrowKey(evt.keyCode) || evt.key === Keyboard.Value.HOME ||
                     evt.key === Keyboard.Value.END) {
                 const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
-                dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                    name: ActionName.QueryInputMoveCursor,
+                dispatcher.dispatch<typeof Actions.QueryInputMoveCursor>({
+                    name: Actions.QueryInputMoveCursor.name,
                     payload: {
                         formType: this.props.formType,
                         sourceId: this.props.sourceId,
@@ -275,8 +274,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 evt,
                 (query, rawAnchorIdx, rawFocusIdx, insertRange) => {
 
-                    dispatcher.dispatch<Actions.QueryInputSetQuery>({
-                        name: ActionName.QueryInputSetQuery,
+                    dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                        name: Actions.QueryInputSetQuery.name,
                         payload: {
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
@@ -288,8 +287,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     });
                 },
                 (rawAnchorIdx, rawFocusIdx) => {
-                    dispatcher.dispatch<Actions.QueryInputMoveCursor>({
-                        name: ActionName.QueryInputMoveCursor,
+                    dispatcher.dispatch<typeof Actions.QueryInputMoveCursor>({
+                        name: Actions.QueryInputMoveCursor.name,
                         payload: {
                             formType: this.props.formType,
                             sourceId: this.props.sourceId,
@@ -299,8 +298,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     });
                 },
                 (anchorIdx, focusIdx) => {
-                    dispatcher.dispatch<Actions.QueryInputSelectText>({
-                        name: ActionName.QueryInputSelectText,
+                    dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
+                        name: Actions.QueryInputSelectText.name,
                         payload: {
                             sourceId: this.props.sourceId,
                             formType: this.props.formType,
@@ -314,8 +313,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         private handleSelect() {
             const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
-            dispatcher.dispatch<Actions.QueryInputSelectText>({
-                name: ActionName.QueryInputSelectText,
+            dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
+                name: Actions.QueryInputSelectText.name,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType,

@@ -21,7 +21,7 @@
 import { List, pipe } from 'cnc-tskit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { ActionName, Actions, QueryFormType } from '../../../models/query/actions';
+import { Actions, QueryFormType } from '../../../models/query/actions';
 import { QueryFormModel, QueryFormModelState } from '../../../models/query/common';
 import { ParsedSimpleQueryToken } from '../../../models/query/query';
 import { Kontext } from '../../../types/common';
@@ -96,8 +96,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
     const QueryStructureWidget:React.FC<QueryStructureWidgetProps & QueryFormModelState> = (props) => {
 
         const handleClose = () => {
-            dispatcher.dispatch<Actions.HideQueryStructureWidget>({
-                name: ActionName.HideQueryStructureWidget,
+            dispatcher.dispatch<typeof Actions.HideQueryStructureWidget>({
+                name: Actions.HideQueryStructureWidget.name,
                 payload: {
                     sourceId: props.sourceId,
                     formType: props.formType
@@ -106,8 +106,8 @@ export function init({dispatcher, he, queryModel}:InputModuleArgs) {
         };
 
         const handleReset = () => {
-            dispatcher.dispatch<Actions.QueryInputResetQueryExpansion>({
-                name: ActionName.QueryInputResetQueryExpansion,
+            dispatcher.dispatch<typeof Actions.QueryInputResetQueryExpansion>({
+                name: Actions.QueryInputResetQueryExpansion.name,
                 payload: {
                     sourceId: props.sourceId,
                     formType: props.formType

@@ -30,7 +30,7 @@ import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../../models/mainMenu/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 
@@ -89,8 +89,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
             }
         );
 
-        this.addActionHandler<Actions.SwitchMcFormSubmit>(
-            ActionName.SwitchMcFormSubmit,
+        this.addActionHandler<typeof Actions.SwitchMcFormSubmit>(
+            Actions.SwitchMcFormSubmit.name,
             action => {
                 window.location.href = this.getSubmitUrl(
                     action.payload.operationId,

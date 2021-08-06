@@ -35,7 +35,7 @@ import { TextTypesModel, TextTypesModelState } from '../../../models/textTypes/m
 import { WithinBuilderModel } from '../../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../../models/query/context';
-import { ActionName, Actions } from '../../../models/query/actions';
+import { Actions } from '../../../models/query/actions';
 import { TTSelOps } from '../../../models/textTypes/selectionOps';
 import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
@@ -151,16 +151,16 @@ export function init({
         }
 
         _handleSubmit() {
-            dispatcher.dispatch<Actions.QuerySubmit>({
-                name: ActionName.QuerySubmit
+            dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                name: Actions.QuerySubmit.name
             });
         }
 
         _keyEventHandler(evt) {
             if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey && !evt.shiftKey) {
-                    dispatcher.dispatch<Actions.QuerySubmit>({
-                        name: ActionName.QuerySubmit
+                    dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                        name: Actions.QuerySubmit.name
                     });
                 }
                 evt.stopPropagation();
@@ -169,14 +169,14 @@ export function init({
         }
 
         _handleTextTypesFormVisibility() {
-            dispatcher.dispatch<Actions.QueryTextTypesToggleForm>({
-                name: ActionName.QueryTextTypesToggleForm
+            dispatcher.dispatch<typeof Actions.QueryTextTypesToggleForm>({
+                name: Actions.QueryTextTypesToggleForm.name
             });
         }
 
         _handleContextFormVisibility() {
-            dispatcher.dispatch<Actions.QueryContextToggleForm>({
-                name: ActionName.QueryContextToggleForm
+            dispatcher.dispatch<typeof Actions.QueryContextToggleForm>({
+                name: Actions.QueryContextToggleForm.name
             });
         }
 
@@ -372,14 +372,14 @@ export function init({
             if (evt.key === Keyboard.Value.ENTER && !evt.shiftKey) {
                 if (!evt.ctrlKey) {
                     if (this.props.operationIdx !== undefined) {
-                        dispatcher.dispatch<Actions.BranchQuery>({
-                            name: ActionName.BranchQuery,
+                        dispatcher.dispatch<typeof Actions.BranchQuery>({
+                            name: Actions.BranchQuery.name,
                             payload: {operationIdx: this.props.operationIdx}
                         });
 
                     } else {
-                        dispatcher.dispatch<Actions.QuerySubmit>({
-                            name: ActionName.QuerySubmit
+                        dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                            name: Actions.QuerySubmit.name
                         });
                     }
                 }
@@ -389,21 +389,21 @@ export function init({
         }
 
         _handleContextFormVisibility() {
-            dispatcher.dispatch<Actions.QueryContextToggleForm>({
-                name: ActionName.QueryContextToggleForm
+            dispatcher.dispatch<typeof Actions.QueryContextToggleForm>({
+                name: Actions.QueryContextToggleForm.name
             });
         }
 
         _handleSubmit() {
             if (this.props.operationIdx !== undefined) {
-                dispatcher.dispatch<Actions.BranchQuery>({
-                    name: ActionName.BranchQuery,
+                dispatcher.dispatch<typeof Actions.BranchQuery>({
+                    name: Actions.BranchQuery.name,
                     payload: {operationIdx: this.props.operationIdx}
                 });
 
             } else {
-                dispatcher.dispatch<Actions.QuerySubmit>({
-                    name: ActionName.QuerySubmit
+                dispatcher.dispatch<typeof Actions.QuerySubmit>({
+                    name: Actions.QuerySubmit.name
                 });
             }
         }

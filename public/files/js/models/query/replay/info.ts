@@ -25,7 +25,7 @@ import { map } from 'rxjs/operators';
 
 import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
-import { ActionName, Actions } from '../actions';
+import { Actions } from '../actions';
 import { ActionName as MMActionName, Actions as MMActions } from '../../mainMenu/actions';
 import { QueryOverviewResponseRow } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
@@ -58,8 +58,8 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         this.pageModel = pageModel;
 
 
-        this.addActionHandler<Actions.ClearQueryOverviewData>(
-            ActionName.ClearQueryOverviewData,
+        this.addActionHandler<typeof Actions.ClearQueryOverviewData>(
+            Actions.ClearQueryOverviewData.name,
             (state, action) => {
                 state.currentQueryOverview = null;
             }

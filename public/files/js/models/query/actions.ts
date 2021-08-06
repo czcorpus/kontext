@@ -25,692 +25,601 @@ import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
 import { QueryType } from './query';
 
 
-export enum ActionName {
+export type QueryFormType = Kontext.ConcFormTypes.QUERY | Kontext.ConcFormTypes.FILTER;
 
-    ClearQueryOverviewData = 'CLEAR_QUERY_OVERVIEW_DATA',
-    EditQueryOperation = 'EDIT_QUERY_OPERATION',
-    EditLastQueryOperation = 'EDIT_LAST_QUERY_OPERATION',
-    EditQueryOperationDone = 'EDIT_QUERY_OPERATION_DONE',
-    BranchQuery = 'BRANCH_QUERY',
-    TrimQuery = 'TRIM_QUERY',
-    SliceQueryChain = 'QUERY_REPLAY_SLICE_QUERY_CHAIN',
-    QuerySetStopAfterIdx = 'QUERY_SET_STOP_AFTER_IDX',
-    RedirectToEditQueryOperation = 'REDIRECT_TO_EDIT_QUERY_OPERATION',
-    QueryOverviewEditorClose = 'QUERY_OVERVIEW_EDITOR_CLOSE',
-    QueryInputUnhitVirtualKeyboardKey = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_KEY',
-    QueryInputHitVirtualKeyboardKey = 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY',
-    QueryInputSetVirtualKeyboardLayout = 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT',
-    QueryInputToggleVirtualKeyboardShift = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT',
-    QueryInputUnhitVirtualKeyboardShift = 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT',
-    QueryInputToggleVirtualKeyboardCaps = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS',
-    QueryInputToggleVirtualKeyboardAltGr = 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_ALTGR',
-    QueryInputHitVirtualKeyboardDeadKey = 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_DEAD_KEY',
-    QueryContextSetLemwordWsize = 'QUERY_CONTEXT_SET_LEMWORD_WSIZE',
-    QueryContextSetLemword = 'QUERY_CONTEXT_SET_LEMWORD',
-    QueryContextSetLemwordType = 'QUERY_CONTEXT_SET_LEMWORD_TYPE',
-    QueryContextSetPosWsize = 'QUERY_CONTEXT_SET_POS_WSIZE',
-    QueryContextSetPos = 'QUERY_CONTEXT_SET_POS',
-    QueryContextSetPosType = 'QUERY_CONTEXT_SET_POS_TYPE',
-    QueryContextFormPrepareArgsDone = 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE',
-    QueryContextToggleForm = 'QUERY_CONTEXT_TOGGLE_FORM',
-    QueryTextTypesToggleForm = 'QUERY_TEXT_TYPES_TOGGLE_FORM',
-    QueryOptionsToggleForm = 'QUERY_OPTIONS_TOGGLE_FORM',
-    LoadWithinBuilderData = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA',
-    LoadWithinBuilderDataDone = 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA_DONE',
-    SetWithinValue = 'QUERY_INPUT_SET_WITHIN_VALUE',
-    SetWithinAttr = 'QUERY_INPUT_SET_WITHIN_ATTR',
-    SetActiveInputWidget = 'QUERY_INPUT_SET_ACTIVE_WIDGET',
-    QueryInputSetQType = 'QUERY_INPUT_SELECT_TYPE',
-    QueryInputSelectSubcorp = 'QUERY_INPUT_SELECT_SUBCORP',
-    QueryInputMoveCursor = 'QUERY_INPUT_MOVE_CURSOR',
-    QueryInputResetQueryExpansion = 'QUERY_INPUT_RESET_QUERY_EXPANSION',
-    QueryInputSetQuery = 'QUERY_INPUT_SET_QUERY',
-    QueryInputAppendQuery = 'QUERY_INPUT_APPEND_QUERY',
-    QueryInputInsertAtCursor = 'QUERY_INPUT_INSERT_AT_CURSOR',
-    QueryInputRemoveLastChar = 'QUERY_INPUT_REMOVE_LAST_CHAR',
-    QueryInputSetLpos = 'QUERY_INPUT_SET_LPOS',
-    QueryInputSetMatchCase = 'QUERY_INPUT_SET_MATCH_CASE',
-    QueryInputSetDefaultAttr = 'QUERY_INPUT_SET_DEFAULT_ATTR',
-    QueryInputToggleAllowRegexp = 'QUERY_INPUT_TOGGLE_ALLOW_REGEXP',
-    QueryToggleAlignedCorpora = 'QUERY_TOGGLE_ALIGNED_CORPORA',
-    QueryInputAddAlignedCorpus = 'QUERY_INPUT_ADD_ALIGNED_CORPUS',
-    QueryInputRemoveAlignedCorpus = 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS',
-    QueryInputSetPCQPosNeg = 'QUERY_INPUT_SET_PCQ_POS_NEG',
-    QueryInputSelectText = 'QUERY_INPUT_SELECT_TEXT',
-    FilterInputSetFilfl = 'FILTER_QUERY_SET_FILFL',
-    FilterInputSetRange = 'FILTER_QUERY_SET_RANGE',
-    FilterInputSetInclKwic = 'FILTER_QUERY_SET_INCL_KWIC',
-    FilterInputSetFilterType = 'FILTER_INPUT_SET_FILTER_TYPE',
-    QueryInputSetIncludeEmpty = 'QUERY_INPUT_SET_INCLUDE_EMPTY',
-    QuerySubmit = 'QUERY_INPUT_SUBMIT',
-    ApplyFilter = 'FILTER_QUERY_APPLY_FILTER',
-    FilterFirstHitsSubmit = 'FILTER_FIRST_HITS_SUBMIT',
-    ToggleQuerySuggestionWidget = 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET',
-    ShowQueryStructureWidget = 'QUERY_INPUT_SHOW_QUERY_STRUCTURE_WIDGET',
-    HideQueryStructureWidget = 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET',
-    SampleFormSetRlines = 'SAMPLE_FORM_SET_RLINES',
-    SampleFormSubmit = 'SAMPLE_FORM_SUBMIT',
-    SwitchMcFormSubmit = 'SWITCH_MC_FORM_SUBMIT',
-    SortSetActiveModel = 'SORT_SET_ACTIVE_STORE',
-    SortFormSubmit = 'SORT_FORM_SUBMIT',
-    SortFormSetSattr = 'SORT_FORM_SET_SATTR',
-    SortFormSetSkey = 'SORT_FORM_SET_SKEY',
-    SortFormSetSbward = 'SORT_FORM_SET_SBWARD',
-    SortFormSetSicase = 'SORT_FORM_SET_SICASE',
-    SortFormSetSpos = 'SORT_FORM_SET_SPOS',
-    MLSortFormSubmit = 'ML_SORT_FORM_SUBMIT',
-    MLSortFormAddLevel = 'ML_SORT_FORM_ADD_LEVEL',
-    MLSortFormRemoveLevel = 'ML_SORT_FORM_REMOVE_LEVEL',
-    MLSortFormSetSattr = 'ML_SORT_FORM_SET_SATTR',
-    MLSortFormSetSicase = 'ML_SORT_FORM_SET_SICASE',
-    MLSortFormSetSbward = 'ML_SORT_FORM_SET_SBWARD',
-    MLSortFormSetCtx = 'ML_SORT_FORM_SET_CTX',
-    MLSortFormSetCtxAlign = 'ML_SORT_FORM_SET_CTX_ALIGN',
-    SaveAsFormSetName = 'QUERY_SAVE_AS_FORM_SET_NAME',
-    SaveAsFormSubmit = 'QUERY_SAVE_AS_FORM_SUBMIT',
-    SaveAsFormSubmitDone = 'QUERY_SAVE_AS_FORM_SUBMIT_DONE',
-    GetConcArchivedStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS',
-    GetConcArchivedStatusDone = 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE',
-    MakeConcordancePermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-    MakeConcordancePermanentDone = 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE',
-    QueryTaghelperPresetPattern = 'TAGHELPER_PRESET_PATTERN'
-}
+export class Actions {
 
-export type QueryFormType = Kontext.ConcFormTypes.QUERY|Kontext.ConcFormTypes.FILTER;
+    static ClearQueryOverviewData: Action<{
+    }> = {
+            name: 'CLEAR_QUERY_OVERVIEW_DATA'
+        };
 
-export namespace Actions {
+    static EditQueryOperation: Action<{
+        operationIdx: number;
+        sourceId: string;
+    }> = {
+            name: 'EDIT_QUERY_OPERATION'
+        };
 
-    export interface ClearQueryOverviewData extends Action<{
-    }> {
-        name:ActionName.ClearQueryOverviewData
-    }
+    static EditLastQueryOperation: Action<{
+        sourceId: string;
+    }> = {
+            name: 'EDIT_LAST_QUERY_OPERATION'
+        };
 
-    export interface EditQueryOperation extends Action<{
-        operationIdx:number;
-        sourceId:string;
-    }> {
-        name:ActionName.EditQueryOperation
-    }
+    static EditQueryOperationDone: Action<{
+        operationIdx: number;
+        sourceId: string;
+        data: AjaxResponse.ConcFormArgs;
+    }> = {
+            name: 'EDIT_QUERY_OPERATION_DONE'
+        };
 
-    export interface EditLastQueryOperation extends Action<{
-        sourceId:string;
-    }> {
-        name:ActionName.EditLastQueryOperation
-    }
+    static BranchQuery: Action<{
+        operationIdx: number;
+    }> = {
+            name: 'BRANCH_QUERY'
+        };
 
-    export interface EditQueryOperationDone extends Action<{
-        operationIdx:number;
-        sourceId:string;
-        data:AjaxResponse.ConcFormArgs;
-    }> {
-        name:ActionName.EditQueryOperationDone
-    }
-
-    export interface BranchQuery extends Action<{
-        operationIdx:number;
-    }> {
-        name:ActionName.BranchQuery
-    }
-
-    export interface TrimQuery extends Action<{
+    static TrimQuery: Action<{
         /*
          * an index of the last operation of the cut query chain
          */
-        operationIdx:number;
-    }> {
-        name:ActionName.TrimQuery;
-    }
+        operationIdx: number;
+    }> = {
+            name: 'TRIM_QUERY'
+        };
 
-    export interface SliceQueryChain extends Action<{
-        operationIdx:number;
-        concId:string;
-    }> {
-        name:ActionName.SliceQueryChain;
-    }
+    static SliceQueryChain: Action<{
+        operationIdx: number;
+        concId: string;
+    }> = {
+            name: 'QUERY_REPLAY_SLICE_QUERY_CHAIN'
+        };
 
-    export interface QuerySetStopAfterIdx extends Action<{
-        value:number;
-    }> {
-        name:ActionName.QuerySetStopAfterIdx;
-    }
+    static QuerySetStopAfterIdx: Action<{
+        value: number;
+    }> = {
+            name: 'QUERY_SET_STOP_AFTER_IDX'
+        };
 
-    export interface RedirectToEditQueryOperation extends Action<{
-        operationIdx:number;
-    }> {
-        name:ActionName.RedirectToEditQueryOperation;
-    }
+    static RedirectToEditQueryOperation: Action<{
+        operationIdx: number;
+    }> = {
+            name: 'REDIRECT_TO_EDIT_QUERY_OPERATION'
+        };
 
-    export interface QueryOverviewEditorClose extends Action<{
-    }> {
-        name:ActionName.QueryOverviewEditorClose;
-    }
+    static QueryOverviewEditorClose: Action<{
+    }> = {
+            name: 'QUERY_OVERVIEW_EDITOR_CLOSE'
+        };
 
-    export interface QueryInputUnhitVirtualKeyboardKey extends Action<{
-    }> {
-        name:ActionName.QueryInputUnhitVirtualKeyboardKey;
-    }
+    static QueryInputUnhitVirtualKeyboardKey: Action<{
+    }> = {
+            name: 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_KEY'
+        };
 
-    export interface QueryInputHitVirtualKeyboardKey extends Action<{
-        keyCode:number;
-    }> {
-        name:ActionName.QueryInputHitVirtualKeyboardKey;
-    }
+    static QueryInputHitVirtualKeyboardKey: Action<{
+        keyCode: number;
+    }> = {
+            name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY'
+        };
 
-    export interface QueryInputSetVirtualKeyboardLayout extends Action<{
-        idx:number;
-    }> {
-        name:ActionName.QueryInputSetVirtualKeyboardLayout;
-    }
+    static QueryInputSetVirtualKeyboardLayout: Action<{
+        idx: number;
+    }> = {
+            name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT'
+        };
 
-    export interface QueryInputToggleVirtualKeyboardShift extends Action<{
-    }> {
-        name:ActionName.QueryInputToggleVirtualKeyboardShift;
-    }
+    static QueryInputToggleVirtualKeyboardShift: Action<{
+    }> = {
+            name: 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_SHIFT'
+        };
 
-    export interface QueryInputUnhitVirtualKeyboardShift extends Action<{
-    }> {
-        name:ActionName.QueryInputUnhitVirtualKeyboardShift;
-    }
+    static QueryInputUnhitVirtualKeyboardShift: Action<{
+    }> = {
+            name: 'QUERY_INPUT_UNHIT_VIRTUAL_KEYBOARD_SHIFT'
+        };
 
-    export interface QueryInputToggleVirtualKeyboardCaps extends Action<{
-    }> {
-        name:ActionName.QueryInputToggleVirtualKeyboardCaps;
-    }
+    static QueryInputToggleVirtualKeyboardCaps: Action<{
+    }> = {
+            name: 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_CAPS'
+        };
 
-    export interface QueryInputToggleVirtualKeyboardAltGr extends Action<{
-    }> {
-        name:ActionName.QueryInputToggleVirtualKeyboardAltGr;
-    }
+    static QueryInputToggleVirtualKeyboardAltGr: Action<{
+    }> = {
+            name: 'QUERY_INPUT_TOGGLE_VIRTUAL_KEYBOARD_ALTGR'
+        };
 
-    export interface QueryInputHitVirtualKeyboardDeadKey extends Action<{
-        deadKeyIndex:number;
-    }> {
-        name:ActionName.QueryInputHitVirtualKeyboardDeadKey;
-    }
+    static QueryInputHitVirtualKeyboardDeadKey: Action<{
+        deadKeyIndex: number;
+    }> = {
+            name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_DEAD_KEY'
+        };
 
-    export interface QueryContextSetLemwordWsize extends Action<{
+    static QueryContextSetLemwordWsize: Action<{
         value: [number, number];
-    }> {
-        name: ActionName.QueryContextSetLemwordWsize;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_LEMWORD_WSIZE'
+        };
 
-    export interface QueryContextSetLemword extends Action<{
+    static QueryContextSetLemword: Action<{
         value: string;
-    }> {
-        name: ActionName.QueryContextSetLemword;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_LEMWORD'
+        };
 
-    export interface QueryContextSetLemwordType extends Action<{
+    static QueryContextSetLemwordType: Action<{
         value: CtxLemwordType;
-    }> {
-        name: ActionName.QueryContextSetLemwordType;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_LEMWORD_TYPE'
+        };
 
-    export interface QueryContextSetPosWsize extends Action<{
+    static QueryContextSetPosWsize: Action<{
         value: [number, number];
-    }> {
-        name: ActionName.QueryContextSetPosWsize;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_POS_WSIZE'
+        };
 
-    export interface QueryContextSetPos extends Action<{
+    static QueryContextSetPos: Action<{
         checked: boolean;
         value: string;
-    }> {
-        name: ActionName.QueryContextSetPos;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_POS'
+        };
 
-    export interface QueryContextSetPosType extends Action<{
+    static QueryContextSetPosType: Action<{
         value: CtxLemwordType;
-    }> {
-        name: ActionName.QueryContextSetPosType;
-    }
+    }> = {
+            name: 'QUERY_CONTEXT_SET_POS_TYPE'
+        };
 
-    export interface QueryContextFormPrepareArgsDone extends Action<{
-        data:QueryContextArgs;
-    }> {
-        name:ActionName.QueryContextFormPrepareArgsDone;
-    }
+    static QueryContextFormPrepareArgsDone: Action<{
+        data: QueryContextArgs;
+    }> = {
+            name: 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE'
+        };
 
-    export interface QueryContextToggleForm extends Action<{
-    }> {
-        name:ActionName.QueryContextToggleForm;
-    }
+    static QueryContextToggleForm: Action<{
+    }> = {
+            name: 'QUERY_CONTEXT_TOGGLE_FORM'
+        };
 
-    export interface QueryTextTypesToggleForm extends Action<{
-    }> {
-        name:ActionName.QueryTextTypesToggleForm;
-    }
+    static QueryTextTypesToggleForm: Action<{
+    }> = {
+            name: 'QUERY_TEXT_TYPES_TOGGLE_FORM'
+        };
 
-    export interface QueryOptionsToggleForm extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.QueryOptionsToggleForm;
-    }
+    static QueryOptionsToggleForm: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+    }> = {
+            name: 'QUERY_OPTIONS_TOGGLE_FORM'
+        };
 
-    export interface LoadWithinBuilderData extends Action<{
-        sourceId:string;
-    }> {
-        name:ActionName.LoadWithinBuilderData;
-    }
+    static LoadWithinBuilderData: Action<{
+        sourceId: string;
+    }> = {
+            name: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA'
+        };
 
-    export interface LoadWithinBuilderDataDone extends Action<{
-        data:WithinBuilderData;
-    }> {
-        name:ActionName.LoadWithinBuilderDataDone;
-    }
+    static LoadWithinBuilderDataDone: Action<{
+        data: WithinBuilderData;
+    }> = {
+            name: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA_DONE'
+        };
 
-    export interface SetWithinValue extends Action<{
-        value:string;
-    }> {
-        name:ActionName.SetWithinValue;
-    }
+    static SetWithinValue: Action<{
+        value: string;
+    }> = {
+            name: 'QUERY_INPUT_SET_WITHIN_VALUE'
+        };
 
-    export interface SetWithinAttr extends Action<{
-        idx:number;
-    }> {
-        name:ActionName.SetWithinAttr;
-    }
+    static SetWithinAttr: Action<{
+        idx: number;
+    }> = {
+            name: 'QUERY_INPUT_SET_WITHIN_ATTR'
+        };
 
-    export interface SetActiveInputWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        corpname:string;
-        value:string;
-        appliedQueryRange:[number, number];
-    }> {
-        name:ActionName.SetActiveInputWidget;
-    }
+    static SetActiveInputWidget: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        corpname: string;
+        value: string;
+        appliedQueryRange: [number, number];
+    }> = {
+            name: 'QUERY_INPUT_SET_ACTIVE_WIDGET'
+        };
 
-    export interface QueryInputSetQType extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        queryType:QueryType;
-    }> {
-        name:ActionName.QueryInputSetQType;
-    }
+    static QueryInputSetQType: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        queryType: QueryType;
+    }> = {
+            name: 'QUERY_INPUT_SELECT_TYPE'
+        };
 
-    export interface QueryInputSelectSubcorp extends Action<{
-        pubName:string;
-        subcorp:string;
-        foreign:boolean;
-    }> {
-        name:ActionName.QueryInputSelectSubcorp;
-    }
+    static QueryInputSelectSubcorp: Action<{
+        pubName: string;
+        subcorp: string;
+        foreign: boolean;
+    }> = {
+            name: 'QUERY_INPUT_SELECT_SUBCORP'
+        };
 
-    export interface QueryInputMoveCursor extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        rawAnchorIdx:number;
-        rawFocusIdx:number;
-    }> {
-        name:ActionName.QueryInputMoveCursor;
-    }
+    static QueryInputMoveCursor: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        rawAnchorIdx: number;
+        rawFocusIdx: number;
+    }> = {
+            name: 'QUERY_INPUT_MOVE_CURSOR'
+        };
 
-    export interface QueryInputResetQueryExpansion extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.QueryInputResetQueryExpansion;
-    }
+    static QueryInputResetQueryExpansion: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+    }> = {
+            name: 'QUERY_INPUT_RESET_QUERY_EXPANSION'
+        };
 
-    export interface QueryInputSetQuery extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        query:string;
-        insertRange:[number, number]|null;
-        rawAnchorIdx:number|null;
-        rawFocusIdx:number|null;
-    }> {
-        name:ActionName.QueryInputSetQuery;
-    }
+    static QueryInputSetQuery: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        query: string;
+        insertRange: [number, number] | null;
+        rawAnchorIdx: number | null;
+        rawFocusIdx: number | null;
+    }> = {
+            name: 'QUERY_INPUT_SET_QUERY'
+        };
 
-    export interface QueryInputAppendQuery extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        query:string;
-        prependSpace:boolean;
-        closeWhenDone:boolean;
-        triggeredKey?:[number, number];
-    }> {
-        name:ActionName.QueryInputAppendQuery;
-    }
+    static QueryInputAppendQuery: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        query: string;
+        prependSpace: boolean;
+        closeWhenDone: boolean;
+        triggeredKey?: [number, number];
+    }> = {
+            name: 'QUERY_INPUT_APPEND_QUERY'
+        };
 
-    export interface QueryInputInsertAtCursor extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        chunk:string;
-    }> {
-        name:ActionName.QueryInputInsertAtCursor;
-    }
+    static QueryInputInsertAtCursor: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        chunk: string;
+    }> = {
+            name: 'QUERY_INPUT_INSERT_AT_CURSOR'
+        };
 
-    export interface QueryInputRemoveLastChar extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.QueryInputRemoveLastChar;
-    }
+    static QueryInputRemoveLastChar: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+    }> = {
+            name: 'QUERY_INPUT_REMOVE_LAST_CHAR'
+        };
 
-    export interface QueryInputSetLpos extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        lpos:string;
-    }> {
-        name:ActionName.QueryInputSetLpos;
-    }
+    static QueryInputSetLpos: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        lpos: string;
+    }> = {
+            name: 'QUERY_INPUT_SET_LPOS'
+        };
 
-    export interface QueryInputSetMatchCase extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        value:boolean;
-    }> {
-        name:ActionName.QueryInputSetMatchCase;
-    }
+    static QueryInputSetMatchCase: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        value: boolean;
+    }> = {
+            name: 'QUERY_INPUT_SET_MATCH_CASE'
+        };
 
-    export interface QueryInputSetDefaultAttr extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        value:string;
-    }> {
-        name:ActionName.QueryInputSetDefaultAttr;
-    }
+    static QueryInputSetDefaultAttr: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        value: string;
+    }> = {
+            name: 'QUERY_INPUT_SET_DEFAULT_ATTR'
+        };
 
-    export interface QueryInputToggleAllowRegexp extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        value:boolean;
-    }> {
-        name:ActionName.QueryInputToggleAllowRegexp;
-    }
+    static QueryInputToggleAllowRegexp: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        value: boolean;
+    }> = {
+            name: 'QUERY_INPUT_TOGGLE_ALLOW_REGEXP'
+        };
 
-    export interface QueryToggleAlignedCorpora extends Action<{}> {
-        name:ActionName.QueryToggleAlignedCorpora;
-    }
+    static QueryToggleAlignedCorpora: Action<{}> = {
+        name: 'QUERY_TOGGLE_ALIGNED_CORPORA'
+    };
 
-    export interface QueryInputAddAlignedCorpus extends Action<{
-        corpname:string;
-    }> {
-        name:ActionName.QueryInputAddAlignedCorpus;
-    }
+    static QueryInputAddAlignedCorpus: Action<{
+        corpname: string;
+    }> = {
+            name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS'
+        };
 
-    export interface QueryInputRemoveAlignedCorpus extends Action<{
-        corpname:string;
-    }> {
-        name:ActionName.QueryInputRemoveAlignedCorpus;
-    }
+    static QueryInputRemoveAlignedCorpus: Action<{
+        corpname: string;
+    }> = {
+            name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS'
+        };
 
-    export interface QueryInputSetPCQPosNeg extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        value:'pos'|'neg';
-    }> {
-        name:ActionName.QueryInputSetPCQPosNeg;
-    }
+    static QueryInputSetPCQPosNeg: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        value: 'pos' | 'neg';
+    }> = {
+            name: 'QUERY_INPUT_SET_PCQ_POS_NEG'
+        };
 
-    export interface QueryInputSelectText extends Action<{
-        sourceId:string;
-        formType:QueryFormType;
-        anchorIdx:number;
-        focusIdx:number;
-    }> {
-        name:ActionName.QueryInputSelectText;
-    }
+    static QueryInputSelectText: Action<{
+        sourceId: string;
+        formType: QueryFormType;
+        anchorIdx: number;
+        focusIdx: number;
+    }> = {
+            name: 'QUERY_INPUT_SELECT_TEXT'
+        };
 
-    export interface FilterInputSetFilfl extends Action<{
-        filterId:string;
-        value:'f'|'l';
-    }> {
-        name:ActionName.FilterInputSetFilfl;
-    }
+    static FilterInputSetFilfl: Action<{
+        filterId: string;
+        value: 'f' | 'l';
+    }> = {
+            name: 'FILTER_QUERY_SET_FILFL'
+        };
 
-    export interface FilterInputSetRange extends Action<{
-        filterId:string;
-        value:string;
-        rangeId:string;
-    }> {
-        name:ActionName.FilterInputSetRange;
-    }
+    static FilterInputSetRange: Action<{
+        filterId: string;
+        value: string;
+        rangeId: string;
+    }> = {
+            name: 'FILTER_QUERY_SET_RANGE'
+        };
 
-    export interface FilterInputSetInclKwic extends Action<{
-        filterId:string;
-        value:boolean;
-    }> {
-        name:ActionName.FilterInputSetInclKwic;
-    }
+    static FilterInputSetInclKwic: Action<{
+        filterId: string;
+        value: boolean;
+    }> = {
+            name: 'FILTER_QUERY_SET_INCL_KWIC'
+        };
 
-    export interface FilterInputSetFilterType extends Action<{
-        filterId:string;
-        value:'p'|'n';
-    }> {
-        name: ActionName.FilterInputSetFilterType;
-    }
+    static FilterInputSetFilterType: Action<{
+        filterId: string;
+        value: 'p' | 'n';
+    }> = {
+            name: 'FILTER_INPUT_SET_FILTER_TYPE'
+        };
 
-    export interface ApplyFilter extends Action<{
-        filterId:string;
-    }> {
-        name:ActionName.ApplyFilter;
-    }
+    static ApplyFilter: Action<{
+        filterId: string;
+    }> = {
+            name: 'FILTER_QUERY_APPLY_FILTER'
+        };
 
-    export interface QueryInputSetIncludeEmpty extends Action<{
-        corpname:string;
-        value:boolean;
-    }> {
-        name:ActionName.QueryInputSetIncludeEmpty;
-    }
+    static QueryInputSetIncludeEmpty: Action<{
+        corpname: string;
+        value: boolean;
+    }> = {
+            name: 'QUERY_INPUT_SET_INCLUDE_EMPTY'
+        };
 
-    export interface QuerySubmit extends Action<{
-        noQueryHistory?:boolean;
-    }> {
-        name:ActionName.QuerySubmit;
-    }
+    static QuerySubmit: Action<{
+        noQueryHistory?: boolean;
+    }> = {
+            name: 'QUERY_INPUT_SUBMIT'
+        };
 
-    export interface FilterFirstHitsSubmit extends Action<{
-        opKey:string;
-    }> {
-        name:ActionName.FilterFirstHitsSubmit;
-    }
+    static FilterFirstHitsSubmit: Action<{
+        opKey: string;
+    }> = {
+            name: 'FILTER_FIRST_HITS_SUBMIT'
+        };
 
-    export interface ToggleQuerySuggestionWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-        tokenIdx:number|null;
-    }> {
-        name:ActionName.ToggleQuerySuggestionWidget;
-    }
+    static ToggleQuerySuggestionWidget: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+        tokenIdx: number | null;
+    }> = {
+            name: 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET'
+        };
 
-    export interface ShowQueryStructureWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.ShowQueryStructureWidget;
-    }
+    static ShowQueryStructureWidget: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+    }> = {
+            name: 'QUERY_INPUT_SHOW_QUERY_STRUCTURE_WIDGET'
+        };
 
-    export interface HideQueryStructureWidget extends Action<{
-        formType:QueryFormType;
-        sourceId:string;
-    }> {
-        name:ActionName.HideQueryStructureWidget;
-    }
+    static HideQueryStructureWidget: Action<{
+        formType: QueryFormType;
+        sourceId: string;
+    }> = {
+            name: 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET'
+        };
 
-    export interface SampleFormSetRlines extends Action<{
-        value:string;
-        sampleId:string;
-    }> {
-        name:ActionName.SampleFormSetRlines;
-    }
+    static SampleFormSetRlines: Action<{
+        value: string;
+        sampleId: string;
+    }> = {
+            name: 'SAMPLE_FORM_SET_RLINES'
+        };
 
-    export interface SampleFormSubmit extends Action<{
-        sampleId:string;
-    }> {
-        name:ActionName.SampleFormSubmit;
-    }
+    static SampleFormSubmit: Action<{
+        sampleId: string;
+    }> = {
+            name: 'SAMPLE_FORM_SUBMIT'
+        };
 
-    export interface SwitchMcFormSubmit extends Action<{
-        operationId:string;
-    }> {
-        name:ActionName.SwitchMcFormSubmit;
-    }
+    static SwitchMcFormSubmit: Action<{
+        operationId: string;
+    }> = {
+            name: 'SWITCH_MC_FORM_SUBMIT'
+        };
 
-    export interface SortSetActiveModel extends Action<{
-        sortId:string;
-        formAction:string;
-    }> {
-        name:ActionName.SortSetActiveModel;
-    }
+    static SortSetActiveModel: Action<{
+        sortId: string;
+        formAction: string;
+    }> = {
+            name: 'SORT_SET_ACTIVE_STORE'
+        };
 
-    export interface SortFormSubmit extends Action<{
-        sortId:string;
-    }> {
-        name:ActionName.SortFormSubmit;
-    }
+    static SortFormSubmit: Action<{
+        sortId: string;
+    }> = {
+            name: 'SORT_FORM_SUBMIT'
+        };
 
-    export interface SortFormSetSattr extends Action<{
-        sortId:string;
-        value:string;
-    }> {
-        name:ActionName.SortFormSetSattr;
-    }
+    static SortFormSetSattr: Action<{
+        sortId: string;
+        value: string;
+    }> = {
+            name: 'SORT_FORM_SET_SATTR'
+        };
 
-    export interface SortFormSetSkey extends Action<{
-        sortId:string;
-        value:string;
-    }> {
-        name:ActionName.SortFormSetSkey;
-    }
+    static SortFormSetSkey: Action<{
+        sortId: string;
+        value: string;
+    }> = {
+            name: 'SORT_FORM_SET_SKEY'
+        };
 
-    export interface SortFormSetSbward extends Action<{
-        sortId:string;
-        value:string;
-    }> {
-        name:ActionName.SortFormSetSbward;
-    }
+    static SortFormSetSbward: Action<{
+        sortId: string;
+        value: string;
+    }> = {
+            name: 'SORT_FORM_SET_SBWARD'
+        };
 
-    export interface SortFormSetSicase extends Action<{
-        sortId:string;
-        value:string;
-    }> {
-        name:ActionName.SortFormSetSicase;
-    }
+    static SortFormSetSicase: Action<{
+        sortId: string;
+        value: string;
+    }> = {
+            name: 'SORT_FORM_SET_SICASE'
+        };
 
-    export interface SortFormSetSpos extends Action<{
-        sortId:string;
-        value:string;
-    }> {
-        name:ActionName.SortFormSetSpos;
-    }
+    static SortFormSetSpos: Action<{
+        sortId: string;
+        value: string;
+    }> = {
+            name: 'SORT_FORM_SET_SPOS'
+        };
 
-    export interface MLSortFormSubmit extends Action<{
-        sortId:string;
-    }> {
-        name:ActionName.MLSortFormSubmit;
-    }
+    static MLSortFormSubmit: Action<{
+        sortId: string;
+    }> = {
+            name: 'ML_SORT_FORM_SUBMIT'
+        };
 
-    export interface MLSortFormAddLevel extends Action<{
-        sortId:string;
-    }> {
-        name:ActionName.MLSortFormAddLevel;
-    }
+    static MLSortFormAddLevel: Action<{
+        sortId: string;
+    }> = {
+            name: 'ML_SORT_FORM_ADD_LEVEL'
+        };
 
-    export interface MLSortFormRemoveLevel extends Action<{
-        sortId:string;
-        levelIdx:number;
-    }> {
-        name:ActionName.MLSortFormRemoveLevel;
-    }
+    static MLSortFormRemoveLevel: Action<{
+        sortId: string;
+        levelIdx: number;
+    }> = {
+            name: 'ML_SORT_FORM_REMOVE_LEVEL'
+        };
 
-    export interface MLSortFormSetSattr extends Action<{
-        sortId:string;
-        levelIdx:number;
-        value:string;
-    }> {
-        name:ActionName.MLSortFormSetSattr;
-    }
+    static MLSortFormSetSattr: Action<{
+        sortId: string;
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'ML_SORT_FORM_SET_SATTR'
+        };
 
-    export interface MLSortFormSetSicase extends Action<{
-        sortId:string;
-        levelIdx:number;
-        value:string;
-    }> {
-        name:ActionName.MLSortFormSetSicase;
-    }
+    static MLSortFormSetSicase: Action<{
+        sortId: string;
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'ML_SORT_FORM_SET_SICASE'
+        };
 
-    export interface MLSortFormSetSbward extends Action<{
-        sortId:string;
-        levelIdx:number;
-        value:string;
-    }> {
-        name:ActionName.MLSortFormSetSbward;
-    }
+    static MLSortFormSetSbward: Action<{
+        sortId: string;
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'ML_SORT_FORM_SET_SBWARD'
+        };
 
-    export interface MLSortFormSetCtxAlign extends Action<{
-        sortId:string;
-        levelIdx:number;
-        value:string;
-    }> {
-        name:ActionName.MLSortFormSetCtxAlign;
-    }
+    static MLSortFormSetCtxAlign: Action<{
+        sortId: string;
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'ML_SORT_FORM_SET_CTX_ALIGN'
+        };
 
-    export interface MLSortFormSetCtx extends Action<{
-        sortId:string;
-        levelIdx:number;
-        index:number;
-    }> {
-        name:ActionName.MLSortFormSetCtx;
-    }
+    static MLSortFormSetCtx: Action<{
+        sortId: string;
+        levelIdx: number;
+        index: number;
+    }> = {
+            name: 'ML_SORT_FORM_SET_CTX'
+        };
 
-    export interface SaveAsFormSetName extends Action<{
-        value:string;
-    }> {
-        name:ActionName.SaveAsFormSetName
-    }
+    static SaveAsFormSetName: Action<{
+        value: string;
+    }> = {
+            name: 'QUERY_SAVE_AS_FORM_SET_NAME'
+        };
 
-    export interface SaveAsFormSubmit extends Action<{
-    }> {
-        name:ActionName.SaveAsFormSubmit
-    }
+    static SaveAsFormSubmit: Action<{
+    }> = {
+            name: 'QUERY_SAVE_AS_FORM_SUBMIT'
+        };
 
-    export interface SaveAsFormSubmitDone extends Action<{
-    }> {
-        name:ActionName.SaveAsFormSubmitDone
-    }
+    static SaveAsFormSubmitDone: Action<{
+    }> = {
+            name: 'QUERY_SAVE_AS_FORM_SUBMIT_DONE'
+        };
 
-    export interface GetConcArchivedStatus extends Action<{
-    }> {
-        name:ActionName.GetConcArchivedStatus
-    }
+    static GetConcArchivedStatus: Action<{
+    }> = {
+            name: 'QUERY_GET_CONC_ARCHIVED_STATUS'
+        };
 
-    export interface GetConcArchivedStatusDone extends Action<{
-        isArchived:boolean;
-        willBeArchived:boolean;
-    }> {
-        name:ActionName.GetConcArchivedStatusDone
-    }
+    static GetConcArchivedStatusDone: Action<{
+        isArchived: boolean;
+        willBeArchived: boolean;
+    }> = {
+            name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE'
+        };
 
-    export interface MakeConcordancePermanent extends Action<{
-        revoke:boolean;
-    }> {
-        name:ActionName.MakeConcordancePermanent
-    }
+    static MakeConcordancePermanent: Action<{
+        revoke: boolean;
+    }> = {
+            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT'
+        };
 
-    export interface MakeConcordancePermanentDone extends Action<{
-        revoked:boolean;
-    }> {
-        name:ActionName.MakeConcordancePermanentDone
-    }
+    static MakeConcordancePermanentDone: Action<{
+        revoked: boolean;
+    }> = {
+            name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
+        };
 
     /**
      * This is an action a tag-helper plug-in should be able to respond to
      */
-    export interface QueryTaghelperPresetPattern extends Action<{
-        sourceId:string;
-        tagsetId:string;
-        formType:QueryFormType;
-        pattern:string;
-    }> {
-        name:ActionName.QueryTaghelperPresetPattern;
-    }
+    static QueryTaghelperPresetPattern: Action<{
+        sourceId: string;
+        tagsetId: string;
+        formType: QueryFormType;
+        pattern: string;
+    }> = {
+            name: 'TAGHELPER_PRESET_PATTERN'
+        };
 }
 
-export function isSetActiveInputWidgetAction(a:Action):a is Actions.SetActiveInputWidget {
-    return a.name === ActionName.SetActiveInputWidget;
+export function isSetActiveInputWidgetAction(a: Action): a is typeof Actions.SetActiveInputWidget {
+    return a.name === Actions.SetActiveInputWidget.name;
 }

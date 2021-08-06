@@ -24,7 +24,7 @@ import { IFullActionControl } from 'kombo';
 import { PageModel } from '../../app/page';
 import { PluginInterfaces } from '../../types/plugins';
 import { HtmlHelpModel } from './help';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 
 
 
@@ -45,8 +45,8 @@ export class QueryHelpModel extends HtmlHelpModel<QueryHelpModelState> {
     constructor(layoutModel:PageModel, dispatcher:IFullActionControl, initialState:QueryHelpModelState) {
         super(layoutModel, dispatcher, initialState);
 
-        this.addActionHandler<QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActionName.QueryInputAddAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
+            QueryActions.QueryInputAddAlignedCorpus.name,
             action => {
                 this.changeState(state => {
                     List.addUnique(action.payload.corpname, state.activeCorpora);
@@ -54,8 +54,8 @@ export class QueryHelpModel extends HtmlHelpModel<QueryHelpModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActionName.QueryInputRemoveAlignedCorpus,
+        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
+            QueryActions.QueryInputRemoveAlignedCorpus.name,
             action => {
                 this.changeState(state => {
                     List.removeValue(

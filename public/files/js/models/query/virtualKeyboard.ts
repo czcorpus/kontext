@@ -20,7 +20,7 @@
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { List } from 'cnc-tskit';
 import { IUnregistrable } from '../common/common';
@@ -71,45 +71,45 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
         });
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.QueryInputHitVirtualKeyboardDeadKey>(
-            ActionName.QueryInputHitVirtualKeyboardDeadKey,
+        this.addActionHandler<typeof Actions.QueryInputHitVirtualKeyboardDeadKey>(
+            Actions.QueryInputHitVirtualKeyboardDeadKey.name,
             (state, action) => {
                 state.activeDeadKeyIndex = action.payload.deadKeyIndex;
             }
         );
 
-        this.addActionHandler<Actions.QueryInputToggleVirtualKeyboardShift>(
-            ActionName.QueryInputToggleVirtualKeyboardShift,
+        this.addActionHandler<typeof Actions.QueryInputToggleVirtualKeyboardShift>(
+            Actions.QueryInputToggleVirtualKeyboardShift.name,
             (state, action) => {
                 state.shiftOn = !state.shiftOn;
                 state.capsOn = false;
             }
         );
 
-        this.addActionHandler<Actions.QueryInputUnhitVirtualKeyboardShift>(
-            ActionName.QueryInputUnhitVirtualKeyboardShift,
+        this.addActionHandler<typeof Actions.QueryInputUnhitVirtualKeyboardShift>(
+            Actions.QueryInputUnhitVirtualKeyboardShift.name,
             (state, action) => {
                 state.shiftOn = false;
             }
         );
 
-        this.addActionHandler<Actions.QueryInputToggleVirtualKeyboardCaps>(
-            ActionName.QueryInputToggleVirtualKeyboardCaps,
+        this.addActionHandler<typeof Actions.QueryInputToggleVirtualKeyboardCaps>(
+            Actions.QueryInputToggleVirtualKeyboardCaps.name,
             (state, action) => {
                 state.capsOn = !state.capsOn;
                 state.shiftOn = false;
             }
         );
 
-        this.addActionHandler<Actions.QueryInputUnhitVirtualKeyboardKey>(
-            ActionName.QueryInputUnhitVirtualKeyboardKey,
+        this.addActionHandler<typeof Actions.QueryInputUnhitVirtualKeyboardKey>(
+            Actions.QueryInputUnhitVirtualKeyboardKey.name,
             (state, action) => {
                 state.activeKey = null;
             }
         );
 
-        this.addActionHandler<Actions.QueryInputHitVirtualKeyboardKey>(
-            ActionName.QueryInputHitVirtualKeyboardKey,
+        this.addActionHandler<typeof Actions.QueryInputHitVirtualKeyboardKey>(
+            Actions.QueryInputHitVirtualKeyboardKey.name,
             (state, action) => {
                 state.activeKey = this.getActiveKey(action.payload.keyCode);
                 state.activeDeadKeyIndex = null;
@@ -117,8 +117,8 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             (state, action, dispatch) => {
                 let timeout;
                 const clickSim = () => {
-                    dispatch<Actions.QueryInputUnhitVirtualKeyboardKey>({
-                        name:ActionName.QueryInputUnhitVirtualKeyboardKey
+                    dispatch<typeof Actions.QueryInputUnhitVirtualKeyboardKey>({
+                        name:Actions.QueryInputUnhitVirtualKeyboardKey.name
                     });
                     window.clearTimeout(timeout);
                 };
@@ -126,8 +126,8 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             }
         );
 
-        this.addActionHandler<Actions.QueryInputSetVirtualKeyboardLayout>(
-            ActionName.QueryInputSetVirtualKeyboardLayout,
+        this.addActionHandler<typeof Actions.QueryInputSetVirtualKeyboardLayout>(
+            Actions.QueryInputSetVirtualKeyboardLayout.name,
             (state, action) => {
                 state.currentLayoutIdx = action.payload.idx;
             }

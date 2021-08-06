@@ -26,7 +26,7 @@ import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
@@ -156,8 +156,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             action => {
                 this.changeState(state => {
                     state.usesubcorp = action.payload.subcorp;
@@ -165,8 +165,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSetQuery>(
-            QueryActionName.QueryInputSetQuery,
+        this.addActionHandler<typeof QueryActions.QueryInputSetQuery>(
+            QueryActions.QueryInputSetQuery.name,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -189,8 +189,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputMoveCursor>(
-            QueryActionName.QueryInputMoveCursor,
+        this.addActionHandler<typeof QueryActions.QueryInputMoveCursor>(
+            QueryActions.QueryInputMoveCursor.name,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];

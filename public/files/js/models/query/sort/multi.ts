@@ -27,7 +27,7 @@ import { SortFormProperties, importMultiLevelArg } from './common';
 import { PageModel } from '../../../app/page';
 import { AjaxResponse } from '../../../types/ajaxResponses';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../mainMenu/actions';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { tap, map } from 'rxjs/operators';
 import { MLSortServerArgs } from '../common';
 import { AjaxConcResponse } from '../../concordance/common';
@@ -107,8 +107,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             }
         );
 
-        this.addActionHandler<Actions.MLSortFormSubmit>(
-            ActionName.MLSortFormSubmit,
+        this.addActionHandler<typeof Actions.MLSortFormSubmit>(
+            Actions.MLSortFormSubmit.name,
             action => {
                 this.submitQuery(
                     action.payload.sortId,
@@ -141,8 +141,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             }
         );
 
-        this.addActionHandler<Actions.MLSortFormAddLevel>(
-            ActionName.MLSortFormAddLevel,
+        this.addActionHandler<typeof Actions.MLSortFormAddLevel>(
+            Actions.MLSortFormAddLevel.name,
             action => {
                 this.changeState(state => {
                     this.addLevel(state, action.payload.sortId);
@@ -150,8 +150,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             }
         );
 
-        this.addActionHandler<Actions.MLSortFormRemoveLevel>(
-            ActionName.MLSortFormRemoveLevel,
+        this.addActionHandler<typeof Actions.MLSortFormRemoveLevel>(
+            Actions.MLSortFormRemoveLevel.name,
             action => {
                 this.changeState(state => {
                     this.removeLevel(state, action.payload.sortId, action.payload.levelIdx);
@@ -159,43 +159,43 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             }
         );
 
-        this.addActionHandler<Actions.SortSetActiveModel>(
-            ActionName.SortSetActiveModel,
+        this.addActionHandler<typeof Actions.SortSetActiveModel>(
+            Actions.SortSetActiveModel.name,
             action => {this.changeState(state => {
                 state.isActiveActionValues[action.payload.sortId] = action.payload.formAction === 'mlsortx';
             })}
         );
 
-        this.addActionHandler<Actions.MLSortFormSetSattr>(
-            ActionName.MLSortFormSetSattr,
+        this.addActionHandler<typeof Actions.MLSortFormSetSattr>(
+            Actions.MLSortFormSetSattr.name,
             action => {this.changeState(state => {
                 state.mlxattrValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.MLSortFormSetSicase>(
-            ActionName.MLSortFormSetSicase,
+        this.addActionHandler<typeof Actions.MLSortFormSetSicase>(
+            Actions.MLSortFormSetSicase.name,
             action => {this.changeState(state => {
                 state.mlxicaseValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.MLSortFormSetSbward>(
-            ActionName.MLSortFormSetSbward,
+        this.addActionHandler<typeof Actions.MLSortFormSetSbward>(
+            Actions.MLSortFormSetSbward.name,
             action => {this.changeState(state => {
                 state.mlxbwardValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
             })}
         );
 
-        this.addActionHandler<Actions.MLSortFormSetCtx>(
-            ActionName.MLSortFormSetCtx,
+        this.addActionHandler<typeof Actions.MLSortFormSetCtx>(
+            Actions.MLSortFormSetCtx.name,
             action => {this.changeState(state => {
                 state.ctxIndexValues[action.payload.sortId][action.payload.levelIdx] = action.payload.index;
             })}
         );
 
-        this.addActionHandler<Actions.MLSortFormSetCtxAlign>(
-            ActionName.MLSortFormSetCtxAlign,
+        this.addActionHandler<typeof Actions.MLSortFormSetCtxAlign>(
+            Actions.MLSortFormSetCtxAlign.name,
             action => {this.changeState(state => {
                 state.ctxAlignValues[action.payload.sortId][action.payload.levelIdx] = action.payload.value;
             })}

@@ -28,7 +28,7 @@ import { ActionName as ConcActionName } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { ConcServerArgs } from '../concordance/common';
 
 
@@ -293,8 +293,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSelectSubcorp>(
-            QueryActionName.QueryInputSelectSubcorp,
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
             (state, action) => {
                 state.usesubcorp = action.payload.pubName ? action.payload.pubName : action.payload.subcorp;
                 state.origSubcorpName = action.payload.pubName ? action.payload.subcorp : null;

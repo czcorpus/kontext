@@ -22,7 +22,7 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
 import { Actions } from './actions';
-import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 
@@ -136,8 +136,8 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
             }
         );
 
-        this.addActionHandler<QueryActions.QueryInputSetQType>(
-            QueryActionName.QueryInputSetQType,
+        this.addActionHandler<typeof QueryActions.QueryInputSetQType>(
+            QueryActions.QueryInputSetQType.name,
             (state, action) => {
                 state.forcedTip = null;
             }
