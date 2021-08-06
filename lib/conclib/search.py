@@ -28,7 +28,7 @@ from plugins.abstract.conc_cache import ConcCacheStatus
 from conclib.pyconc import PyConc
 from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
-from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent
+from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
 from conclib.errors import ConcCalculationStatusException
 from corplib.corpus import KCorpus
 import bgcalc
@@ -94,22 +94,32 @@ def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Opti
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_sync_conc(worker, corp, q, save, subchash, samplesize):
+def _get_sync_conc(worker, corp, q, subchash, samplesize):
     status = worker.create_new_calc_status()
-    conc = worker.compute_conc(corp, q, samplesize)
-    conc.sync()  # wait for the computation to finish
-    status.finished = True
-    status.concsize = conc.size()
-    if save:
-        cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    try:
+        conc = worker.compute_conc(corp, q, samplesize)
+        conc.sync()  # wait for the computation to finish
+        status.finished = True
+        status.concsize = conc.size()
         status = cache_map.add_to_map(subchash, q[:1], status)
         conc.save(status.cachefile)
+        cache_map.update_calc_status(subchash, q[:1], readable=True)
         if os.getuid() == os.stat(status.cachefile).st_uid:
             os.chmod(status.cachefile, 0o664)
         # update size in map file
-        cache_map.update_calc_status(
-            subchash, q[:1], concsize=conc.size(), readable=True, finished=True)
-    return conc
+        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
+        return conc
+    except Exception as e:
+        # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
+        # here as this is performed by _get_cached_conc()
+        # function in case it detects a problem.
+        manatee_err = extract_manatee_error(e)
+        status.finished = True
+        status.concsize = 0
+        status.error = manatee_err if manatee_err else e
+        status = cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
+        raise status.normalized_error
 
 
 def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> bool:
@@ -119,8 +129,9 @@ def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> boo
              or corp.size > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
 
 
-def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0, save=0, samplesize=0
-             ) -> Union[manatee.Concordance, InitialConc]:
+def get_conc(
+        corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
+        samplesize=0) -> Union[manatee.Concordance, InitialConc]:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -138,7 +149,6 @@ def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesiz
     pagesize -- a page size (in lines, related to 'fromp')
     asnc -- if 1 then KonText spawns an asynchronous process to calculate the concordance
             and will provide results as they are ready
-    save -- specifies whether to use a caching mechanism
     samplesize -- ?
     """
     if not q:
@@ -151,22 +161,14 @@ def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesiz
     else:
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
-    conc = InitialConc(corp=corp, finished=True)
     # try to locate concordance in cache
-    if save:
-        calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize)
-        if calc_from == len(q):
-            save = 0
-        if not conc and q[0][0] == 'R':  # online sample
-            q_copy = list(q)
-            q_copy[0] = q[0][1:]
-            q_copy = tuple(q_copy)
-            t, c = find_cached_conc_base(corp, subchash, q_copy, -1)
-            if c:
-                fullsize = c.fullsize()  # TODO fullsize ???
-    else:
-        calc_from = 1
-        asnc = 0
+    calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize)
+    if not conc and q[0][0] == 'R':  # online sample
+        q_copy = list(q)
+        q_copy[0] = q[0][1:]
+        q_copy = tuple(q_copy)
+        find_cached_conc_base(corp, subchash, q_copy, -1)
+        # TODO this branch has no use (unless we want to revive online sample func)
 
     # move mid-sized aligned corpora or large non-aligned corpora to background
     if _should_be_bg_query(corp, q, asnc):
@@ -184,31 +186,27 @@ def get_conc(corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesiz
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                conc = _get_sync_conc(worker=worker, corp=corp, q=q, save=save, subchash=subchash,
-                                      samplesize=samplesize)
+                conc = _get_sync_conc(worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]
             conc.exec_command(command, args)
-            if command in 'gae':  # user specific/volatile actions, cannot save
-                save = 0
-            if save:
-                cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-                curr_status = cache_map.get_calc_status(subchash, q[:act + 1])
-                if curr_status and not curr_status.finished:
-                    ready = wait_for_conc(cache_map=cache_map,
-                                          subchash=subchash, q=q[:act + 1], minsize=-1)
-                    if not ready:
-                        raise ConcCalculationStatusException(
-                            'Wait for concordance operation failed')
-                elif not curr_status:
-                    calc_status = worker.create_new_calc_status()
-                    calc_status.concsize = conc.size()
-                    calc_status = cache_map.add_to_map(subchash, q[:act + 1], calc_status)
-                    conc.save(calc_status.cachefile)
-                    if os.getuid() == os.stat(calc_status.cachefile).st_uid:
-                        os.chmod(calc_status.cachefile, 0o664)
-                    # TODO can we be sure here that conc is finished even if its not the first query op.?
-                    cache_map.update_calc_status(
-                        subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
+            cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+            curr_status = cache_map.get_calc_status(subchash, q[:act + 1])
+            if curr_status and not curr_status.finished:
+                ready = wait_for_conc(cache_map=cache_map,
+                                      subchash=subchash, q=q[:act + 1], minsize=-1)
+                if not ready:
+                    raise ConcCalculationStatusException(
+                        'Wait for concordance operation failed')
+            elif not curr_status:
+                calc_status = worker.create_new_calc_status()
+                calc_status.concsize = conc.size()
+                calc_status = cache_map.add_to_map(subchash, q[:act + 1], calc_status)
+                conc.save(calc_status.cachefile)
+                if os.getuid() == os.stat(calc_status.cachefile).st_uid:
+                    os.chmod(calc_status.cachefile, 0o664)
+                # TODO can we be sure here that conc is finished even if its not the first query op.?
+                cache_map.update_calc_status(
+                    subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
     return conc

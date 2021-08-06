@@ -42,7 +42,6 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         args.subcpath = ''  # TODO xx
         args.user_id = user_id
         args.pagesize = 100
-        args.save = False
         args.samplesize = 0
         args.flimit = 1
         args.fcrit = [fcrit]

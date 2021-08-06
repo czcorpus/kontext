@@ -25,19 +25,23 @@ class ConcordanceException(Exception):
     pass
 
 
-class ConcordanceQuerySyntaxError(ConcordanceException):
+class ConcordanceSpecificationError(ConcordanceException):
     pass
 
 
-class ConcordanceQueryParamsError(ConcordanceException):
+class ConcordanceQuerySyntaxError(ConcordanceSpecificationError):
     pass
 
 
-class EmptyParallelCorporaIntersection(ConcordanceException):
+class ConcordanceQueryParamsError(ConcordanceSpecificationError):
     pass
 
 
-class UnknownConcordanceAction(ConcordanceException):
+class EmptyParallelCorporaIntersection(ConcordanceSpecificationError):
+    pass
+
+
+class UnknownConcordanceAction(ConcordanceSpecificationError):
     pass
 
 
@@ -60,17 +64,24 @@ class BrokenConcordanceException(ConcordanceException):
     pass
 
 
-def extract_manatee_syntax_error(err: Exception) -> Optional[ConcordanceQuerySyntaxError]:
+def extract_manatee_error(err: Exception) -> Optional[ConcordanceException]:
     """
-    Test and extract Manatee syntax error. In case of a match,
-    a normalized er
+    Test and extract some of Manatee errors. If nothing known is found, None
+    is returned (In such case the caller should probably provide the original error).
     """
+    if isinstance(err, ConcordanceException):
+        return err
     msg = str(err)
-    if isinstance(err, RuntimeError) and ('syntax error' in msg or 'unexpected character' in msg):
-        srch = re.match(r'unexpected character(.*)at position (\d+)', msg)
-        if srch:
-            return ConcordanceQuerySyntaxError(
-                'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
-        else:
-            return ConcordanceQuerySyntaxError('Syntax error. Please check the query and its type')
-    return None
+    if isinstance(err, RuntimeError):
+        if 'syntax error' in msg or 'unexpected character' in msg:
+            srch = re.match(r'unexpected character(.*)at position (\d+)', msg)
+            if srch:
+                return ConcordanceQuerySyntaxError(
+                    'Syntax error at position {}. Please check the query and its type.'.format(srch.group(2)))
+            else:
+                return ConcordanceQuerySyntaxError('Syntax error. Please check the query and its type')
+        elif 'AttrNotFound' in msg:
+            srch = re.match(r'AttrNotFound \(([^)]+)\)', msg)
+            attr = srch.group(1) if srch else '??'
+            return ConcordanceQueryParamsError(f'Attribute not found: {attr}')
+        return None

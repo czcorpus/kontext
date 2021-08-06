@@ -43,7 +43,6 @@ class CollCalcArgs:
     corpus_encoding: str
     collpage: int
     citemsperpage: int
-    save: bool
     cattr: str
     csortfn: str
     cbgrfns: str
@@ -59,13 +58,12 @@ class CollCalcArgs:
 
 class CollCalcCache(object):
 
-    def __init__(self, corpname, subcname, subcpath, user_id, q, save=0, samplesize=0):
+    def __init__(self, corpname, subcname, subcpath, user_id, q, samplesize=0):
         self._corpname = corpname
         self._subcname = subcname
         self._subcpath = subcpath
         self._user_id = user_id
         self._q = q
-        self._save = save
         self._samplesize = samplesize
 
     def _cache_file_path(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
@@ -148,8 +146,7 @@ def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     collstart = (coll_args.collpage - 1) * coll_args.citemsperpage
     collend = collstart + coll_args.citemsperpage
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
-                          user_id=coll_args.user_id, q=coll_args.q, save=coll_args.save,
-                          samplesize=coll_args.samplesize)
+                          user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
     collocs, cache_path = cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                     cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
                                     cminfreq=coll_args.cminfreq)
