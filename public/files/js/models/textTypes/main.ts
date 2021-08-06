@@ -29,7 +29,7 @@ import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
 import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
     WidgetView } from './common';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
     from '../common/actions';
@@ -174,8 +174,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
 
         // kind of anti-pattern but for now we have no other choice
         this.notifySelectionChange = ():void => {
-            dispatcher.dispatch<Actions.SelectionChanged>({
-                name: ActionName.SelectionChanged,
+            dispatcher.dispatch<typeof Actions.SelectionChanged>({
+                name: Actions.SelectionChanged.name,
                 payload: {
                     attributes: this._getAttributes(this.state),
                     hasSelectedItems: this.findHasSelectedItems(this.state)
@@ -183,8 +183,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             });
         }
 
-        this.addActionSubtypeHandler<Actions.ValueCheckboxClicked>(
-            ActionName.ValueCheckboxClicked,
+        this.addActionSubtypeHandler<typeof Actions.ValueCheckboxClicked>(
+            Actions.ValueCheckboxClicked.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -198,8 +198,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.SelectAllClicked>(
-            ActionName.SelectAllClicked,
+        this.addActionSubtypeHandler<typeof Actions.SelectAllClicked>(
+            Actions.SelectAllClicked.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -209,8 +209,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.RangeButtonClicked>(
-            ActionName.RangeButtonClicked,
+        this.addActionSubtypeHandler<typeof Actions.RangeButtonClicked>(
+            Actions.RangeButtonClicked.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -227,8 +227,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.ToggleRangeMode>(
-            ActionName.ToggleRangeMode,
+        this.addActionSubtypeHandler<typeof Actions.ToggleRangeMode>(
+            Actions.ToggleRangeMode.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -238,8 +238,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ExtendedInformationRequest>(
-            ActionName.ExtendedInformationRequest,
+        this.addActionHandler<typeof Actions.ExtendedInformationRequest>(
+            Actions.ExtendedInformationRequest.name,
             action => {
                 this.changeState(state => {
                     state.busyAttribute = action.payload.attrName;
@@ -271,8 +271,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ExtendedInformationRequestDone>(
-            ActionName.ExtendedInformationRequestDone,
+        this.addActionHandler<typeof Actions.ExtendedInformationRequestDone>(
+            Actions.ExtendedInformationRequestDone.name,
             action => {
                 this.changeState(state => {
                     state.busyAttribute = undefined;
@@ -287,8 +287,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ExtendedInformationRemoveRequest>(
-            ActionName.ExtendedInformationRemoveRequest,
+        this.addActionHandler<typeof Actions.ExtendedInformationRemoveRequest>(
+            Actions.ExtendedInformationRemoveRequest.name,
             action => {
                 this.changeState(state => {
                     this.clearExtendedInfo(
@@ -300,8 +300,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AttributeAutoCompleteHintClicked>(
-            ActionName.AttributeAutoCompleteHintClicked,
+        this.addActionSubtypeHandler<typeof Actions.AttributeAutoCompleteHintClicked>(
+            Actions.AttributeAutoCompleteHintClicked.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -324,8 +324,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AttributeTextInputChanged>(
-            ActionName.AttributeTextInputChanged,
+        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputChanged>(
+            Actions.AttributeTextInputChanged.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -339,8 +339,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AttributeAutoCompleteReset>(
-            ActionName.AttributeAutoCompleteReset,
+        this.addActionSubtypeHandler<typeof Actions.AttributeAutoCompleteReset>(
+            Actions.AttributeAutoCompleteReset.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -349,16 +349,16 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AttributeTextInputAutocompleteRequest>(
-            ActionName.AttributeTextInputAutocompleteRequest,
+        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputAutocompleteRequest>(
+            Actions.AttributeTextInputAutocompleteRequest.name,
             _ => !this.readonlyMode,
             action => {
                 if (action.payload.value.length > 2) {
                     this.changeState(state => {
                         state.busyAttribute = action.payload.attrName;
                     });
-                    this.dispatchSideEffect<Actions.AttributeTextInputAutocompleteReady>({
-                        name: ActionName.AttributeTextInputAutocompleteReady,
+                    this.dispatchSideEffect<typeof Actions.AttributeTextInputAutocompleteReady>({
+                        name: Actions.AttributeTextInputAutocompleteReady.name,
                         payload: {
                             ...action.payload,
                             selections: this.exportSelections(false)
@@ -395,8 +395,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AttributeTextInputAutocompleteRequestDone>(
-            ActionName.AttributeTextInputAutocompleteRequestDone,
+        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputAutocompleteRequestDone>(
+            Actions.AttributeTextInputAutocompleteRequestDone.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -410,8 +410,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.MinimizeAll>(
-            ActionName.MinimizeAll,
+        this.addActionHandler<typeof Actions.MinimizeAll>(
+            Actions.MinimizeAll.name,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes = Dict.map(
@@ -422,8 +422,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.MaximizeAll>(
-            ActionName.MaximizeAll,
+        this.addActionHandler<typeof Actions.MaximizeAll>(
+            Actions.MaximizeAll.name,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes = Dict.map(
@@ -434,8 +434,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.ToggleMinimizeItem>(
-            ActionName.ToggleMinimizeItem,
+        this.addActionHandler<typeof Actions.ToggleMinimizeItem>(
+            Actions.ToggleMinimizeItem.name,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes[action.payload.ident] =
@@ -444,8 +444,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.UndoState>(
-            ActionName.UndoState,
+        this.addActionSubtypeHandler<typeof Actions.UndoState>(
+            Actions.UndoState.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -456,8 +456,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.ResetState>(
-            ActionName.ResetState,
+        this.addActionSubtypeHandler<typeof Actions.ResetState>(
+            Actions.ResetState.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -467,8 +467,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.LockSelected>(
-            ActionName.LockSelected,
+        this.addActionSubtypeHandler<typeof Actions.LockSelected>(
+            Actions.LockSelected.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -496,8 +496,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<Actions.FilterWholeSelection>(
-            ActionName.FilterWholeSelection,
+        this.addActionSubtypeHandler<typeof Actions.FilterWholeSelection>(
+            Actions.FilterWholeSelection.name,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -512,8 +512,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<Actions.SetAttrSummary>(
-            ActionName.SetAttrSummary,
+        this.addActionHandler<typeof Actions.SetAttrSummary>(
+            Actions.SetAttrSummary.name,
             action => {
                 this.changeState(state => {
                     state.metaInfo[action.payload.attrName] = action.payload.value;

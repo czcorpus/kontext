@@ -32,7 +32,6 @@ import {
     Actions as ConcActions } from '../../models/concordance/actions';
 import { SampleServerArgs } from '../query/common';
 import { FreqServerArgs } from '../freqs/common';
-import { Actions } from '../textTypes/actions';
 
 
 export type TTCrit = Array<[string, string]>;

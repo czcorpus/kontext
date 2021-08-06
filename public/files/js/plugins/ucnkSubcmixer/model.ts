@@ -28,7 +28,7 @@ import { validateSubcProps } from '../../models/subcorp/form';
 import { Actions } from './actions';
 import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions as TTActions, ActionName as TTActionName } from '../../models/textTypes/actions';
+import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { BaseSubcorFormState } from '../../models/subcorp/common';
@@ -79,8 +79,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<TTActions.SelectionChanged>(
-            TTActionName.SelectionChanged,
+        this.addActionHandler<typeof TTActions.SelectionChanged>(
+            TTActions.SelectionChanged.name,
             (state, action) => {
                 state.ttAttributes = action.payload.attributes;
             }
@@ -117,8 +117,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<TTActions.FilterWholeSelection>(
-            TTActionName.FilterWholeSelection,
+        this.addActionHandler<typeof TTActions.FilterWholeSelection>(
+            TTActions.FilterWholeSelection.name,
             (state, action) => {
                 const newSelections:TextTypes.ExportedSelection = action.payload.selectedTypes;
                 state.liveattrsSelections = {
