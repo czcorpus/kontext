@@ -25,7 +25,7 @@ import { Keyboard, List } from 'cnc-tskit';
 import { Kontext } from '../../../types/common';
 import { MultiposAttr, WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
 import { PluginInterfaces } from '../../../types/plugins';
-import { Actions, ActionName } from '../../../models/wordlist/actions';
+import { Actions } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';
 import * as SC from '../../query/style';
@@ -68,8 +68,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSelectAttr>({
-                name: ActionName.WordlistFormSelectAttr,
+            dispatcher.dispatch<typeof Actions.WordlistFormSelectAttr>({
+                name: Actions.WordlistFormSelectAttr.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -117,8 +117,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSetWlpat>({
-                name: ActionName.WordlistFormSetWlpat,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetWlpat>({
+                name: Actions.WordlistFormSetWlpat.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -147,8 +147,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleRadioChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSetWlnums>({
-                name: ActionName.WordlistFormSetWlnums,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetWlnums>({
+                name: Actions.WordlistFormSetWlnums.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -199,8 +199,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSelectWlposattr>({
-                name: ActionName.WordlistFormSelectWlposattr,
+            dispatcher.dispatch<typeof Actions.WordlistFormSelectWlposattr>({
+                name: Actions.WordlistFormSelectWlposattr.name,
                 payload: {
                     ident: props.value.inputId,
                     value: evt.target.value
@@ -230,14 +230,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleAddPosAttrLevelBtn = () => {
-            dispatcher.dispatch<Actions.WordlistFormAddPosattrLevel>({
-                name: ActionName.WordlistFormAddPosattrLevel
+            dispatcher.dispatch<typeof Actions.WordlistFormAddPosattrLevel>({
+                name: Actions.WordlistFormAddPosattrLevel.name
             });
         };
 
         const handleRemovePosAttrBtn = (ident:string) => () => {
-            dispatcher.dispatch<Actions.WordlistFormRemovePosattrLevel>({
-                name: ActionName.WordlistFormRemovePosattrLevel,
+            dispatcher.dispatch<typeof Actions.WordlistFormRemovePosattrLevel>({
+                name: Actions.WordlistFormRemovePosattrLevel.name,
                 payload: {
                     ident
                 }
@@ -292,8 +292,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleOutTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSetWltype>({
-                name: ActionName.WordlistFormSetWltype,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetWltype>({
+                name: Actions.WordlistFormSetWltype.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -424,8 +424,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormSetWlminfreq>({
-                name: ActionName.WordlistFormSetWlminfreq,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetWlminfreq>({
+                name: Actions.WordlistFormSetWlminfreq.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -457,8 +457,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<{}>) => {
-            dispatcher.dispatch<Actions.WordlistFormSetFilter>({
-                name: ActionName.WordlistFormSetFilter,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetFilter>({
+                name: Actions.WordlistFormSetFilter.name,
                 payload: {
                     value: evt.target['files'][0],
                     target: props.target
@@ -468,13 +468,13 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleNewFileClick = (evt) => {
             if (props.target === 'pfilter') {
-                dispatcher.dispatch<Actions.WordlistFormCreatePfilter>({
-                    name: ActionName.WordlistFormCreatePfilter
+                dispatcher.dispatch<typeof Actions.WordlistFormCreatePfilter>({
+                    name: Actions.WordlistFormCreatePfilter.name
                 });
 
             } else {
-                dispatcher.dispatch<Actions.WordlistFormCreateNfilter>({
-                    name: ActionName.WordlistFormCreateNfilter
+                dispatcher.dispatch<typeof Actions.WordlistFormCreateNfilter>({
+                    name: Actions.WordlistFormCreateNfilter.name
                 });
             }
         }
@@ -497,8 +497,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleRemoveClick = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormClearFilterFile>({
-                name: ActionName.WordlistFormClearFilterFile,
+            dispatcher.dispatch<typeof Actions.WordlistFormClearFilterFile>({
+                name: Actions.WordlistFormClearFilterFile.name,
                 payload: {
                     target: props.target
                 }
@@ -506,8 +506,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         };
 
         const handleEditorEnableClick = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormReopenEditor>({
-                name: ActionName.WordlistFormReopenEditor,
+            dispatcher.dispatch<typeof Actions.WordlistFormReopenEditor>({
+                name: Actions.WordlistFormReopenEditor.name,
                 payload: {
                     target: props.target
                 }
@@ -565,14 +565,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleClose = () => {
-            dispatcher.dispatch<Actions.WordlistFormCloseEditor>({
-                name: ActionName.WordlistFormCloseEditor
+            dispatcher.dispatch<typeof Actions.WordlistFormCloseEditor>({
+                name: Actions.WordlistFormCloseEditor.name
             });
         };
 
         const handleWriting = (evt) => {
-            dispatcher.dispatch<Actions.WordlistFormUpdateEditor>({
-                name: ActionName.WordlistFormUpdateEditor,
+            dispatcher.dispatch<typeof Actions.WordlistFormUpdateEditor>({
+                name: Actions.WordlistFormUpdateEditor.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -582,8 +582,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
             if (evt.key === Keyboard.Value.ENTER) {
                 if (evt.shiftKey) {
-                    dispatcher.dispatch<Actions.WordlistFormUpdateEditor>({
-                        name: ActionName.WordlistFormUpdateEditor,
+                    dispatcher.dispatch<typeof Actions.WordlistFormUpdateEditor>({
+                        name: Actions.WordlistFormUpdateEditor.name,
                         payload: {
                             value: props.data.data + '\n'
                         }
@@ -622,8 +622,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
     }> = (props) => {
 
         const handleChange = (value:boolean) => {
-            dispatcher.dispatch<Actions.WordlistFormSetIncludeNonwords>({
-                name: ActionName.WordlistFormSetIncludeNonwords,
+            dispatcher.dispatch<typeof Actions.WordlistFormSetIncludeNonwords>({
+                name: Actions.WordlistFormSetIncludeNonwords.name,
                 payload: {
                     value
                 }
@@ -699,8 +699,8 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<Actions.WordlistFormSubmit>({
-                name: ActionName.WordlistFormSubmit
+            dispatcher.dispatch<typeof Actions.WordlistFormSubmit>({
+                name: Actions.WordlistFormSubmit.name
             });
         }
 
@@ -713,14 +713,14 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         }
 
         _handleOptionsLegendClick() {
-            dispatcher.dispatch<Actions.ToggleOutputOptions>({
-                name: ActionName.ToggleOutputOptions
+            dispatcher.dispatch<typeof Actions.ToggleOutputOptions>({
+                name: Actions.ToggleOutputOptions.name
             });
         }
 
         _handleFiltersLegendClick() {
-            dispatcher.dispatch<Actions.ToggleFilterOptions>({
-                name: ActionName.ToggleFilterOptions
+            dispatcher.dispatch<typeof Actions.ToggleFilterOptions>({
+                name: Actions.ToggleFilterOptions.name
             });
         }
 

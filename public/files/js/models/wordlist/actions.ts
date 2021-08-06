@@ -25,299 +25,252 @@ import { FilterEditorData } from './form';
 import { Kontext } from '../../types/common';
 
 
-export enum ActionName {
-    WordlistResultViewConc = 'WORDLIST_RESULT_VIEW_CONC',
-    WordlistResultReload = 'WORDLIST_RESULT_RELOAD',
-    WordlistFormSubmitReady = 'WORDLIST_FORM_SUBMIT_READY',
-    WordlistFormSubmit = 'WORDLIST_FORM_SUBMIT',
-    WordlistFormSubmitCancelled = 'WORDLIST_FORM_SUBMIT_CANCELLED',
-    WordlistResultNextPage = 'WORDLIST_RESULT_NEXT_PAGE',
-    WordlistResultPrevPage = 'WORDLIST_RESULT_PREV_PAGE',
-    WordlistResultSetPage = 'WORDLIST_RESULT_SET_PAGE',
-    WordlistResultConfirmPage = 'WORDLIST_RESULT_CONFIRM_PAGE',
-    WordlistGoToFirstPage = 'WORDLIST_GO_TO_FIRST_PAGE',
-    WordlistPageLoadDone = 'WORDLIST_PAGE_LOAD_DONE',
-    WordlistGoToLastPage = 'WORDLIST_GO_TO_LAST_PAGE',
-    WordlistFormSelectAttr = 'WORDLIST_FORM_SELECT_ATTR',
-    WordlistFormSetWlpat = 'WORDLIST_FORM_SET_WLPAT',
-    WordlistFormSetWlnums = 'WORDLIST_FORM_SET_WLNUMS',
-    WordlistFormSelectWlposattr = 'WORDLIST_FORM_SELECT_WLPOSATTR',
-    WordlistFormSetWltype = 'WORDLIST_FORM_SET_WLTYPE',
-    WordlistFormSetWlminfreq = 'WORDLIST_FORM_SET_WLMINFREQ',
-    WordlistFormSetIncludeNonwords = 'WORDLIST_FORM_SET_INCLUDE_NONWORDS',
-    WordlistFormAddPosattrLevel = 'WORDLIST_FORM_ADD_POSATTR_LEVEL',
-    WordlistFormRemovePosattrLevel = 'WORDLIST_FORM_REMOVE_POSATTR_LEVEL',
-    WordlistFormCreatePfilter = 'WORDLIST_FORM_CREATE_PFILTER',
-    WordlistFormCreateNfilter = 'WORDLIST_FORM_CREATE_NFILTER',
-    WordlistFormSetFilter = 'WORDLIST_FORM_SET_FILTER_FILE',
-    WordlistFormSetFilterDone = 'WORDLIST_FORM_SET_FILTER_FILE_DONE',
-    WordlistFormUpdateEditor = 'WORDLIST_FORM_UPDATE_EDITOR',
-    WordlistFormReopenEditor = 'WORDLIST_FORM_REOPEN_EDITOR',
-    WordlistFormClearFilterFile = 'WORDLIST_FORM_CLEAR_FILTER_FILE',
-    WordlistFormCloseEditor = 'WORDLIST_FORM_CLOSE_EDITOR',
-    WordlistResultSetSortColumn = 'WORDLIST_RESULT_SET_SORT_COLUMN',
-    WordlistSaveFormHide = 'WORDLIST_SAVE_FORM_HIDE',
-    WordlistSaveFormSetMaxLine = 'WORDLIST_SAVE_FORM_SET_MAX_LINE',
-    WordlistSaveFormSetFormat = 'WORDLIST_SAVE_FORM_SET_FORMAT',
-    WordlistSaveSetIncludeHeading = 'WORDLIST_SAVE_SET_INCLUDE_HEADING',
-    WordlistSaveSetIncludeColHeaders = 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS',
-    WordlistSaveFormSubmit = 'WORDLIST_SAVE_FORM_SUBMIT',
-    WordlistSaveFormSubmitDone = 'WORDLIST_SAVE_FORM_SUBMIT_DONE',
-    WordlistHistoryPopState = 'WORDLIST_HISTORY_POP_STATE',
-    WordlistIntermediateBgCalcUpdated = 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED',
-    ToggleOutputOptions = 'WORDLIST_TOGGLE_OUTPUT_OPTIONS',
-    ToggleFilterOptions = 'WORDLIST_TOGGLE_FILTER_OPTIONS',
-    RegisterPrecalcTasks = 'WORDLIST_REGISTER_PRECALC_TASKS',
-    ToggleModalForm = 'WORDLIST_TOGGLE_MODAL_FORM'
-}
+export class Actions {
 
-
-export namespace Actions {
-
-    export interface WordlistResultViewConc extends Action<{
+    static WordlistResultViewConc:Action<{
         word:string;
-    }>{
-        name:ActionName.WordlistResultViewConc;
+    }> = {
+        name: 'WORDLIST_RESULT_VIEW_CONC'
     };
 
-    export interface WordlistResultReload extends Action<{
-    }>{
-        name:ActionName.WordlistResultReload;
+    static WordlistResultReload:Action<{
+    }> = {
+        name: 'WORDLIST_RESULT_RELOAD'
     };
 
-    export interface WordlistFormSubmitReady extends Action<{
+    static WordlistFormSubmitReady:Action<{
         args:WordlistSubmitArgs;
-    }> {
-        name:ActionName.WordlistFormSubmitReady;
-    }
-
-    export interface WordlistFormSubmit extends Action<{
-    }> {
-        name:ActionName.WordlistFormSubmit;
-    }
-
-    export interface WordlistFormSubmitCancelled extends Action<{
-    }> {
-        name:ActionName.WordlistFormSubmitCancelled;
-    }
-
-    export interface WordlistResultNextPage extends Action<{
-    }>{
-        name:ActionName.WordlistResultNextPage;
+    }> = {
+        name: 'WORDLIST_FORM_SUBMIT_READY'
     };
 
-    export interface WordlistResultPrevPage extends Action<{
-    }>{
-        name:ActionName.WordlistResultPrevPage;
+    static WordlistFormSubmit:Action<{
+    }> = {
+        name: 'WORDLIST_FORM_SUBMIT'
     };
 
-    export interface WordlistResultSetPage extends Action<{
+    static WordlistFormSubmitCancelled:Action<{
+    }> = {
+        name: 'WORDLIST_FORM_SUBMIT_CANCELLED'
+    };
+
+    static WordlistResultNextPage:Action<{
+    }> = {
+        name: 'WORDLIST_RESULT_NEXT_PAGE'
+    };
+
+    static WordlistResultPrevPage:Action<{
+    }> = {
+        name: 'WORDLIST_RESULT_PREV_PAGE'
+    };
+
+    static WordlistResultSetPage:Action<{
         page:string;
-    }>{
-        name:ActionName.WordlistResultSetPage;
+    }> = {
+        name: 'WORDLIST_RESULT_SET_PAGE'
     };
 
-    export interface WordlistResultConfirmPage extends Action<{
+    static WordlistResultConfirmPage:Action<{
         page:string;
-    }> {
-        name:ActionName.WordlistResultConfirmPage;
-    }
+    }> = {
+        name: 'WORDLIST_RESULT_CONFIRM_PAGE'
+    };
 
-    export interface WordlistGoToFirstPage extends Action<{
-    }> {
-        name:ActionName.WordlistGoToFirstPage;
-    }
+    static WordlistGoToFirstPage:Action<{
+    }> = {
+        name: 'WORDLIST_GO_TO_FIRST_PAGE'
+    };
 
-    export interface WordlistPageLoadDone extends Action<{
+    static WordlistPageLoadDone:Action<{
         page:number;
         data:Array<IndexedResultItem>;
-    }>{
-        name:ActionName.WordlistPageLoadDone;
+    }> = {
+        name: 'WORDLIST_PAGE_LOAD_DONE'
     };
 
-    export interface WordlistFormSelectAttr extends Action<{
+    static WordlistFormSelectAttr:Action<{
         value:string;
-    }>{
-        name:ActionName.WordlistFormSelectAttr;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SELECT_ATTR'
+    };
 
-    export interface WordlistFormSetWlpat extends Action<{
+    static WordlistFormSetWlpat:Action<{
         value:string;
-    }>{
-        name:ActionName.WordlistFormSetWlpat;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_WLPAT'
+    };
 
-    export interface WordlistFormSetWlnums extends Action<{
+    static WordlistFormSetWlnums:Action<{
         value:string;
-    }> {
-        name:ActionName.WordlistFormSetWlnums;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_WLNUMS'
+    };
 
-    export interface WordlistFormSelectWlposattr extends Action<{
+    static WordlistFormSelectWlposattr:Action<{
         ident:string;
         value:string;
-    }> {
-        name:ActionName.WordlistFormSelectWlposattr;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SELECT_WLPOSATTR'
+    };
 
-    export interface WordlistFormSetWltype extends Action<{
+    static WordlistFormSetWltype:Action<{
         value:WlTypes;
-    }> {
-        name:ActionName.WordlistFormSetWltype;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_WLTYPE'
+    };
 
-    export interface WordlistFormSetWlminfreq extends Action<{
+    static WordlistFormSetWlminfreq:Action<{
         value:string;
-    }> {
-        name:ActionName.WordlistFormSetWlminfreq;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_WLMINFREQ'
+    };
 
-    export interface WordlistFormSetIncludeNonwords extends Action<{
+    static WordlistFormSetIncludeNonwords:Action<{
         value:boolean;
-    }> {
-        name:ActionName.WordlistFormSetIncludeNonwords;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_INCLUDE_NONWORDS'
+    };
 
-    export interface WordlistFormAddPosattrLevel extends Action<{
-    }> {
-        name:ActionName.WordlistFormAddPosattrLevel;
-    }
+    static WordlistFormAddPosattrLevel:Action<{
+    }> = {
+        name: 'WORDLIST_FORM_ADD_POSATTR_LEVEL'
+    };
 
-    export interface WordlistFormRemovePosattrLevel extends Action<{
+    static WordlistFormRemovePosattrLevel:Action<{
         ident:string;
-    }> {
-        name:ActionName.WordlistFormRemovePosattrLevel;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_REMOVE_POSATTR_LEVEL'
+    };
 
-    export interface WordlistFormCreatePfilter extends Action<{
+    static WordlistFormCreatePfilter:Action<{
 
-    }> {
-        name:ActionName.WordlistFormCreatePfilter;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_CREATE_PFILTER'
+    };
 
-    export interface WordlistFormCreateNfilter extends Action<{
+    static WordlistFormCreateNfilter:Action<{
 
-    }> {
-        name:ActionName.WordlistFormCreateNfilter;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_CREATE_NFILTER'
+    };
 
-    export interface WordlistFormSetFilter extends Action<{
+    static WordlistFormSetFilter:Action<{
         value:File;
         target:FileTarget;
-    }> {
-        name:ActionName.WordlistFormSetFilter;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_FILTER_FILE'
+    };
 
-    export interface WordlistFormSetFilterDone extends Action<{
+    static WordlistFormSetFilterDone:Action<{
         data:FilterEditorData;
-    }> {
-        name:ActionName.WordlistFormSetFilterDone;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_SET_FILTER_FILE_DONE'
+    };
 
-    export interface WordlistFormUpdateEditor extends Action<{
+    static WordlistFormUpdateEditor:Action<{
         value:string;
-    }> {
-        name:ActionName.WordlistFormUpdateEditor;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_UPDATE_EDITOR'
+    };
 
-    export interface WordlistFormReopenEditor extends Action<{
+    static WordlistFormReopenEditor:Action<{
         target:FileTarget;
-    }> {
-        name:ActionName.WordlistFormReopenEditor;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_REOPEN_EDITOR'
+    };
 
-    export interface WordlistFormClearFilterFile extends Action<{
+    static WordlistFormClearFilterFile:Action<{
         target:FileTarget;
-    }> {
-        name:ActionName.WordlistFormClearFilterFile;
-    }
+    }> = {
+        name: 'WORDLIST_FORM_CLEAR_FILTER_FILE'
+    };
 
-    export interface WordlistFormCloseEditor extends Action<{
-    }> {
-        name:ActionName.WordlistFormCloseEditor;
-    }
+    static WordlistFormCloseEditor:Action<{
+    }> = {
+        name: 'WORDLIST_FORM_CLOSE_EDITOR'
+    };
 
-    export interface WordlistResultSetSortColumn extends Action<{
+    static WordlistResultSetSortColumn:Action<{
         sortKey:string;
         reverse:boolean;
-    }> {
-        name:ActionName.WordlistResultSetSortColumn;
-    }
+    }> = {
+        name: 'WORDLIST_RESULT_SET_SORT_COLUMN'
+    };
 
-    export interface WordlistGoToLastPage extends Action<{
-    }> {
-        name:ActionName.WordlistGoToLastPage;
-    }
+    static WordlistGoToLastPage:Action<{
+    }> = {
+        name: 'WORDLIST_FORM_SELECT_ATTR'
+    };
 
-    export interface WordlistSaveFormHide extends Action<{
-    }> {
-        name:ActionName.WordlistSaveFormHide;
-    }
+    static WordlistSaveFormHide:Action<{
+    }> = {
+        name: 'WORDLIST_SAVE_FORM_HIDE'
+    };
 
-    export interface WordlistSaveFormSetMaxLine extends Action<{
+    static WordlistSaveFormSetMaxLine:Action<{
         value:string;
-    }> {
-        name:ActionName.WordlistSaveFormSetMaxLine;
-    }
+    }> = {
+        name: 'WORDLIST_SAVE_FORM_SET_MAX_LINE'
+    };
 
-    export interface WordlistSaveFormSetFormat extends Action<{
+    static WordlistSaveFormSetFormat:Action<{
         value:SaveData.Format;
-    }> {
-        name:ActionName.WordlistSaveFormSetFormat;
-    }
+    }> = {
+        name: 'WORDLIST_SAVE_FORM_SET_FORMAT'
+    };
 
-    export interface WordlistSaveSetIncludeHeading extends Action<{
+    static WordlistSaveSetIncludeHeading:Action<{
         value:boolean;
-    }> {
-        name:ActionName.WordlistSaveSetIncludeHeading;
-    }
+    }> = {
+        name: 'WORDLIST_SAVE_SET_INCLUDE_HEADING'
+    };
 
-    export interface WordlistSaveSetIncludeColHeaders extends Action<{
+    static WordlistSaveSetIncludeColHeaders:Action<{
         value:boolean;
-    }> {
-        name:ActionName.WordlistSaveSetIncludeColHeaders;
-    }
+    }> = {
+        name: 'WORDLIST_SAVE_SET_INCLUDE_COL_HEADERS'
+    };
 
-    export interface WordlistSaveFormSubmit extends Action<{
-    }> {
-        name:ActionName.WordlistSaveFormSubmit;
-    }
+    static WordlistSaveFormSubmit:Action<{
+    }> = {
+        name: 'WORDLIST_SAVE_FORM_SUBMIT'
+    };
 
-    export interface WordlistSaveFormSubmitDone extends Action<{
-    }> {
-        name:ActionName.WordlistSaveFormSubmitDone;
-    }
+    static WordlistSaveFormSubmitDone:Action<{
+    }> = {
+        name: 'WORDLIST_SAVE_FORM_SUBMIT_DONE'
+    };
 
-    export interface WordlistHistoryPopState extends Action<{
+    static WordlistHistoryPopState:Action<{
         currPageInput:string;
-    }> {
-        name:ActionName.WordlistHistoryPopState;
-    }
+    }> = {
+        name: 'WORDLIST_HISTORY_POP_STATE'
+    };
 
-    export interface WordlistIntermediateBgCalcUpdated extends Action<{
+    static WordlistIntermediateBgCalcUpdated:Action<{
         status:number;
-    }> {
-        name:ActionName.WordlistIntermediateBgCalcUpdated;
-    }
+    }> = {
+        name: 'WORDLIST_INTERMEDIATE_BG_CALC_UPDATED'
+    };
 
-    export interface ToggleOutputOptions extends Action<{
-    }> {
-        name:ActionName.ToggleOutputOptions;
-    }
+    static ToggleOutputOptions:Action<{
+    }> = {
+        name: 'WORDLIST_TOGGLE_OUTPUT_OPTIONS'
+    };
 
-    export interface ToggleFilterOptions extends Action<{
-    }> {
-        name:ActionName.ToggleFilterOptions;
-    }
+    static ToggleFilterOptions:Action<{
+    }> = {
+        name: 'WORDLIST_TOGGLE_FILTER_OPTIONS'
+    };
 
-    export interface RegisterPrecalcTasks extends Action<{
+    static RegisterPrecalcTasks:Action<{
         tasks:Array<Kontext.AsyncTaskInfo<{}>>;
-    }> {
-        name:ActionName.RegisterPrecalcTasks;
-    }
+    }> = {
+        name: 'WORDLIST_REGISTER_PRECALC_TASKS'
+    };
 
-    export interface ToggleModalForm extends Action<{
-    }> {
-        name:ActionName.ToggleModalForm;
-    }
+    static ToggleModalForm:Action<{
+    }> = {
+        name: 'WORDLIST_TOGGLE_MODAL_FORM'
+    };
 }
