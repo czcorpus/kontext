@@ -34,8 +34,7 @@ import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../model
 import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../../models/query/actions';
 import { Actions as HintActions } from '../../../models/usageTips/actions';
-import { Actions as HistoryActions,
-    ActionName as HistoryActionName } from '../../../models/searchHistory/actions';
+import { Actions as HistoryActions } from '../../../models/searchHistory/actions';
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
 import { init as queryStructureInit } from '../structure';
 import { init as shViewInit } from '../../searchHistory/simple';
@@ -903,8 +902,8 @@ export function init({
         }
 
         _toggleHistoryWidget() {
-            dispatcher.dispatch<HistoryActions.ToggleQueryHistoryWidget>({
-                name: HistoryActionName.ToggleQueryHistoryWidget,
+            dispatcher.dispatch<typeof HistoryActions.ToggleQueryHistoryWidget>({
+                name: HistoryActions.ToggleQueryHistoryWidget.name,
                 payload: {
                     formType: this.props.formType,
                     sourceId: this.props.sourceId

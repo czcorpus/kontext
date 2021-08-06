@@ -23,7 +23,7 @@ import { Bound, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
-import { Actions, ActionName } from '../../../models/searchHistory/actions';
+import { Actions } from '../../../models/searchHistory/actions';
 import { QueryType } from '../../../models/query/query';
 
 import * as S from './style';
@@ -68,8 +68,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.HistorySetQuerySupertype>({
-                name: ActionName.HistorySetQuerySupertype,
+            dispatcher.dispatch<typeof Actions.HistorySetQuerySupertype>({
+                name: Actions.HistorySetQuerySupertype.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -97,8 +97,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.HistorySetCurrentCorpusOnly>({
-                name: ActionName.HistorySetCurrentCorpusOnly,
+            dispatcher.dispatch<typeof Actions.HistorySetCurrentCorpusOnly>({
+                name: Actions.HistorySetCurrentCorpusOnly.name,
                 payload: {
                     value: !props.value
                 }
@@ -115,8 +115,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
         const handleChange = () => {
-            dispatcher.dispatch<Actions.HistorySetArchivedOnly>({
-                name: ActionName.HistorySetArchivedOnly,
+            dispatcher.dispatch<typeof Actions.HistorySetArchivedOnly>({
+                name: Actions.HistorySetArchivedOnly.name,
                 payload: {
                     value: !props.value
                 }
@@ -250,8 +250,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleAreaClick = () => {
-            dispatcher.dispatch<Actions.HistoryOpenQueryForm>({
-                name: ActionName.HistoryOpenQueryForm,
+            dispatcher.dispatch<typeof Actions.HistoryOpenQueryForm>({
+                name: Actions.HistoryOpenQueryForm.name,
                 payload: {
                     idx: props.itemIdx
                 }
@@ -287,8 +287,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleEditClick = (evt) => {
-            dispatcher.dispatch<Actions.HistorySetEditedItem>({
-                name: ActionName.HistorySetEditedItem,
+            dispatcher.dispatch<typeof Actions.HistorySetEditedItem>({
+                name: Actions.HistorySetEditedItem.name,
                 payload: {
                     itemIdx: props.itemIdx
                 }
@@ -296,8 +296,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleDoNotSaveClick = () => {
-            dispatcher.dispatch<Actions.HistoryDoNotArchive>({
-                name: ActionName.HistoryDoNotArchive,
+            dispatcher.dispatch<typeof Actions.HistoryDoNotArchive>({
+                name: Actions.HistoryDoNotArchive.name,
                 payload: {
                     itemIdx: props.itemIdx
                 }
@@ -330,8 +330,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.HistoryEditorSetName>({
-                name: ActionName.HistoryEditorSetName,
+            dispatcher.dispatch<typeof Actions.HistoryEditorSetName>({
+                name: Actions.HistoryEditorSetName.name,
                 payload: {
                     itemIdx: props.itemIdx,
                     value: evt.target.value
@@ -340,8 +340,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.HistoryEditorClickSave>({
-                name: ActionName.HistoryEditorClickSave,
+            dispatcher.dispatch<typeof Actions.HistoryEditorClickSave>({
+                name: Actions.HistoryEditorClickSave.name,
                 payload: {
                     itemIdx: props.itemIdx
                 }
@@ -349,8 +349,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<Actions.HistoryCloseEditedItem>({
-                name: ActionName.HistoryCloseEditedItem,
+            dispatcher.dispatch<typeof Actions.HistoryCloseEditedItem>({
+                name: Actions.HistoryCloseEditedItem.name,
                 payload: {
                     itemIdx: props.itemIdx
                 }
@@ -399,8 +399,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.RemoveItemFromList>({
-                name: ActionName.RemoveItemFromList,
+            dispatcher.dispatch<typeof Actions.RemoveItemFromList>({
+                name: Actions.RemoveItemFromList.name,
                 payload: {
                     itemIdx: props.itemIdx
                 }
@@ -447,8 +447,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleRowToolbarClick = () => {
-            dispatcher.dispatch<Actions.ToggleRowToolbar>({
-                name: ActionName.ToggleRowToolbar,
+            dispatcher.dispatch<typeof Actions.ToggleRowToolbar>({
+                name: Actions.ToggleRowToolbar.name,
                 payload: {
                     rowIdx: props.data.idx
                 }
@@ -537,8 +537,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.HistoryLoadMore>({
-                name: ActionName.HistoryLoadMore
+            dispatcher.dispatch<typeof Actions.HistoryLoadMore>({
+                name: Actions.HistoryLoadMore.name
             });
         };
 

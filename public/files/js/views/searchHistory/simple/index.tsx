@@ -24,7 +24,7 @@ import { Keyboard, List, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
 import { SearchHistoryModel, InputBoxHistoryItem } from '../../../models/searchHistory';
-import { Actions, ActionName } from '../../../models/searchHistory/actions';
+import { Actions } from '../../../models/searchHistory/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../../models/query/actions';
 
 import * as S from './style';
@@ -83,8 +83,8 @@ export function init(
             }[evt.key]);
             const modulo = data.length > 0 ? data.length : 1;
             if (!isNaN(inc)) {
-                dispatcher.dispatch<Actions.SelectItem>({
-                    name: ActionName.SelectItem,
+                dispatcher.dispatch<typeof Actions.SelectItem>({
+                    name: Actions.SelectItem.name,
                     payload: {value: (this.props.currentItem + inc) % modulo}
                 });
 
