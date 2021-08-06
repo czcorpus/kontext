@@ -27,7 +27,7 @@ import { Actions, ActionName } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { ConcServerArgs } from '../concordance/common';
 
@@ -286,8 +286,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<GlobalActions.ConcArgsUpdated>(
-            GlobalActionName.ConcArgsUpdated,
+        this.addActionHandler<typeof GlobalActions.ConcArgsUpdated>(
+            GlobalActions.ConcArgsUpdated.name,
             (state, action) => {
                 state.concArgs = action.payload.args
             }

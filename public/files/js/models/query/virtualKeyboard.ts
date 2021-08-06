@@ -24,7 +24,7 @@ import { Actions } from './actions';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { List } from 'cnc-tskit';
 import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 
 
 declare var require:(ident:string)=>any; // Webpack
@@ -133,12 +133,12 @@ export class VirtualKeyboardModel extends StatelessModel<VirtualKeyboardState>
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

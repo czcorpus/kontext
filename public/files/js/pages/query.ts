@@ -37,7 +37,7 @@ import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
 import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
 import { Actions as QueryActions } from '../models/query/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { Actions as GlobalActions } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
@@ -125,8 +125,8 @@ export class QueryPage {
                 'query',
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                            name: GlobalActionName.SwitchCorpus,
+                        this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                            name: GlobalActions.SwitchCorpus.name,
                             payload: {
                                 corpora,
                                 subcorpus: subcorpId

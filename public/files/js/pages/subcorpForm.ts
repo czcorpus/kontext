@@ -35,7 +35,7 @@ import { KontextPage } from '../app/main';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { Actions as GlobalActions } from '../models/common/actions';
 
 
 interface TTProps {
@@ -231,8 +231,8 @@ export class SubcorpForm {
                 this.layoutModel.createActionUrl('subcorpus/subcorp_form'),
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                            name: GlobalActionName.SwitchCorpus,
+                        this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                            name: GlobalActions.SwitchCorpus.name,
                             payload: {
                                 corpora: corpora,
                                 subcorpus: subcorpId

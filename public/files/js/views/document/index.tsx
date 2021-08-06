@@ -26,7 +26,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { CoreViews } from '../../types/coreViews';
 import { MessageModel, MessageModelState } from '../../models/common/layout';
-import { Actions, ActionName } from '../../models/common/actions';
+import { Actions } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
 import { init as kwicRangeInit } from './kwicRange';
 import { init as toggleSwitchInit } from './toggle';
@@ -466,8 +466,8 @@ export function init(
 
         const handleCloseClick = (e) => {
             e.preventDefault();
-            dispatcher.dispatch<Actions.MessageClose>({
-                name: ActionName.MessageClose,
+            dispatcher.dispatch<typeof Actions.MessageClose>({
+                name: Actions.MessageClose.name,
                 payload: {
                     messageId: props.messageId
                 }
@@ -535,8 +535,8 @@ export function init(
     const CorpnameInfoTrigger:React.FC<CoreViews.CorpnameInfoTrigger.Props> = (props) => {
 
         const handleCorpnameClick = () => {
-            dispatcher.dispatch<Actions.OverviewCorpusInfoRequired>({
-                name: ActionName.OverviewCorpusInfoRequired,
+            dispatcher.dispatch<typeof Actions.OverviewCorpusInfoRequired>({
+                name: Actions.OverviewCorpusInfoRequired.name,
                 payload: {
                     corpusId: props.corpname
                 }
@@ -544,8 +544,8 @@ export function init(
         };
 
         const handleSubcnameClick = () => {
-            dispatcher.dispatch<Actions.OverviewShowSubcorpusInfo>({
-                name: ActionName.OverviewShowSubcorpusInfo,
+            dispatcher.dispatch<typeof Actions.OverviewShowSubcorpusInfo>({
+                name: Actions.OverviewShowSubcorpusInfo.name,
                 payload: {
                     corpusId: props.corpname,
                     subcorpusId: props.usesubcorp

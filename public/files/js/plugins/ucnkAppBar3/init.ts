@@ -27,7 +27,7 @@ import * as toolbar from 'plugins/applicationBar/toolbar';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { IUnregistrable } from '../../models/common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 
 
 export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
@@ -54,12 +54,12 @@ export class AppBarModel extends StatelessModel<{}> implements IUnregistrable {
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

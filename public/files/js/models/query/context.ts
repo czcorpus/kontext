@@ -22,7 +22,7 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions } from './actions';
 import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { List } from 'cnc-tskit';
 
@@ -132,11 +132,11 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             action => {
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

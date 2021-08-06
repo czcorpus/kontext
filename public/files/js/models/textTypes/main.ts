@@ -31,8 +31,7 @@ import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
     WidgetView } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName }
-    from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { PluginName } from '../../app/plugin';
 
@@ -521,11 +520,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             action => {
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

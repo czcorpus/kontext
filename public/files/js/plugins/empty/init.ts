@@ -21,7 +21,7 @@
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi, BasePlugin } from '../../types/plugins';
 import { IFullActionControl } from 'kombo';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 import { Observable } from 'rxjs';
 
 
@@ -43,9 +43,9 @@ export class EmptyPlugin implements IUnregistrable, BasePlugin {
 
     constructor(dispatcher:IFullActionControl) {
         dispatcher.registerActionListener((action, dispatch) => {
-            if (action.name === GlobalActionName.SwitchCorpus) {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name:GlobalActionName.SwitchCorpusReady,
+            if (action.name === GlobalActions.SwitchCorpus.name) {
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

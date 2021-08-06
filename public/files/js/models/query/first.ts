@@ -34,7 +34,7 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { Actions } from './actions';
 import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
@@ -537,8 +537,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActions.CorpusSwitchModelRestore.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -554,15 +554,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             action => {
                 if (this.qsSubscription) {
                     this.qsSubscription.unsubscribe();
                 }
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
-                        FirstQueryFormModelSwitchPreserve>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: this.serialize(

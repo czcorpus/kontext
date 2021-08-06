@@ -27,7 +27,7 @@ import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/for
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { WlnumsTypes } from '../models/wordlist/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { Actions as GlobalActions } from '../models/common/actions';
 import createCorparch from 'plugins/corparch/init';
 
 
@@ -58,8 +58,8 @@ class WordlistFormPage {
             'wordlist_form',
             {
                 itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                    this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                        name: GlobalActionName.SwitchCorpus,
+                    this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                        name: GlobalActions.SwitchCorpus.name,
                         payload: {
                             corpora: corpora,
                             subcorpus: subcorpId
@@ -111,7 +111,7 @@ class WordlistFormPage {
                     'SubcorpList'
                 )
             });
-            const wlForm = this.layoutModel.getConf<WordlistFormModelArgs["initialArgs"]>('FormData');            
+            const wlForm = this.layoutModel.getConf<WordlistFormModelArgs["initialArgs"]>('FormData');
             this.wordlistFormModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,

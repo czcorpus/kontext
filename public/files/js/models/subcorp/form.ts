@@ -27,7 +27,7 @@ import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 
 /**
@@ -171,11 +171,11 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
             })
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             action => {
-                this.dispatchSideEffect<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                this.dispatchSideEffect<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

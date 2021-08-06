@@ -23,110 +23,91 @@ import { Kontext } from '../../types/common';
 import { ConcServerArgs } from '../concordance/common';
 
 
-export enum ActionName {
-    MessageAdd = 'MESSAGE_ADD',
-    MessageDecreaseTTL = 'MESSAGE_DECREASE_TTL',
-    MessageClose = 'MESSAGE_CLOSED',
-    SwitchCorpus = 'SWITCH_CORPUS',
-    SwitchCorpusReady = 'SWITCH_CORPUS_READY',
-    SwitchCorpusDone = 'SWITCH_CORPUS_DONE',
-    CorpusSwitchModelRestore = 'CORPUS_SWITCH_MODEL_RESTORE',
-    OverviewClose = 'OVERVIEW_CLOSE',
-    OverviewCorpusInfoRequired = 'OVERVIEW_CORPUS_INFO_REQUIRED',
-    OverviewShowCitationInfo = 'OVERVIEW_SHOW_CITATION_INFO',
-    OverviewShowSubcorpusInfo = 'OVERVIEW_SHOW_SUBCORPUS_INFO',
-    OverviewShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
-    ConcArgsUpdated = 'CONC_ARGS_UPDATED'
-}
-
 export interface CorpusSwitchModelRestorePayload {
     data:{[key:string]:any};
     corpora:Array<[string, string]>;
     newPrimaryCorpus?:string;
 }
 
-export namespace Actions {
+export class Actions {
 
-    export interface MessageAdd extends Action<{
+    static MessageAdd:Action<{
         messageType:Kontext.UserMessageTypes;
         message:any; // any is here intentionally - we just try to convert anything to a message
-    }> {
-        name:ActionName.MessageAdd;
-    }
+    }> = {
+        name: 'MESSAGE_ADD'
+    };
 
-    export interface MessageDecreaseTTL extends Action<{
-    }> {
-        name:ActionName.MessageDecreaseTTL;
-    }
+    static MessageDecreaseTTL:Action<{
+    }> = {
+        name: 'MESSAGE_DECREASE_TTL'
+    };
 
-    export interface MessageClose extends Action<{
+    static MessageClose:Action<{
         messageId:string;
-    }> {
-        name:ActionName.MessageClose;
-    }
+    }> = {
+        name: 'MESSAGE_CLOSED'
+    };
 
-    export interface CorpusSwitchModelRestore extends
-            Action<CorpusSwitchModelRestorePayload> {
-        name:ActionName.CorpusSwitchModelRestore;
-    }
+    static CorpusSwitchModelRestore:Action<CorpusSwitchModelRestorePayload> = {
+        name: 'CORPUS_SWITCH_MODEL_RESTORE'
+    };
 
-    export interface SwitchCorpus extends Action<{
+    static SwitchCorpus:Action<{
         corpora:Array<string>;
         subcorpus:string;
         newPrimaryCorpus?:string;
-    }> {
-        name:ActionName.SwitchCorpus;
-    }
+    }> = {
+        name: 'SWITCH_CORPUS'
+    };
 
-    export interface SwitchCorpusDone extends Action<{
-    }> {
-        name:ActionName.SwitchCorpusDone;
-    }
+    static SwitchCorpusDone:Action<{}> = {
+        name: 'SWITCH_CORPUS_DONE'
+    };
 
-    export interface SwitchCorpusReady<T> extends Action<{
+    static SwitchCorpusReady:Action<{
         modelId:string;
-        data:T;
-    }> {
-        name:ActionName.SwitchCorpusReady;
-    }
+        data:unknown;
+    }> = {
+        name: 'SWITCH_CORPUS_READY'
+    };
 
-    export function isSwitchCorpusReady(a:Action):a is SwitchCorpusReady<{}> {
-        return a.name === ActionName.SwitchCorpusReady;
-    }
+    static isSwitchCorpusReady(a:Action):a is typeof Actions.SwitchCorpusReady {
+        return a.name === Actions.SwitchCorpusReady.name;
+    };
 
-    export interface OverviewClose extends Action<{
-    }> {
-        name:ActionName.OverviewClose;
-    }
+    static OverviewClose:Action<{}> = {
+        name: 'OVERVIEW_CLOSE'
+    };
 
-    export interface OverviewCorpusInfoRequired extends Action<{
+    static OverviewCorpusInfoRequired:Action<{
         corpusId:string;
-    }> {
-        name:ActionName.OverviewCorpusInfoRequired;
-    }
+    }> = {
+        name: 'OVERVIEW_CORPUS_INFO_REQUIRED'
+    };
 
-    export interface OverviewShoActionwCitationInfo extends Action<{
+    static OverviewShowActionCitationInfo:Action<{
         corpusId:string;
-    }> {
-        name:ActionName.OverviewShowCitationInfo;
-    }
+    }> = {
+        name: 'OVERVIEW_SHOW_CITATION_INFO'
+    };
 
-    export interface OverviewShowSubcorpusInfo extends Action<{
+    static OverviewShowSubcorpusInfo:Action<{
         corpusId:string;
         subcorpusId:string;
-    }> {
-        name:ActionName.OverviewShowSubcorpusInfo;
-    }
+    }> = {
+        name: 'OVERVIEW_SHOW_SUBCORPUS_INFO'
+    };
 
-    export interface OverviewShowKeyShortcuts extends Action<{
-    }> {
-        name:ActionName.OverviewShowKeyShortcuts;
-    }
+    static OverviewShowKeyShortcuts:Action<{
+    }> = {
+        name: 'OVERVIEW_SHOW_KEY_SHORTCUTS'
+    };
 
-    export interface ConcArgsUpdated extends Action<{
+    static ConcArgsUpdated:Action<{
         args:ConcServerArgs;
-    }> {
-        name:ActionName.ConcArgsUpdated;
-    }
+    }> = {
+        name: 'CONC_ARGS_UPDATED'
+    };
 
 }

@@ -26,7 +26,7 @@ import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } 
 
 import { Kontext } from '../../types/common';
 import { IPluginApi } from '../../types/plugins';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 export interface MessageModelState {
@@ -61,8 +61,8 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         this.pluginApi = pluginApi;
         this.autoRemoveMessages = autoRemoveMessages;
 
-        this.addActionHandler<Actions.MessageAdd>(
-            ActionName.MessageAdd,
+        this.addActionHandler<typeof Actions.MessageAdd>(
+            Actions.MessageAdd.name,
             (state, action) => {
                 this.addMessage(
                     state,
@@ -82,16 +82,16 @@ export class MessageModel extends StatelessModel<MessageModelState> {
                         take(ticksWait + ticksFadeOut)
                     );
                     this.timerSubsc = src.subscribe((x) => {
-                        dispatch<Actions.MessageDecreaseTTL>({
-                            name: ActionName.MessageDecreaseTTL
+                        dispatch<typeof Actions.MessageDecreaseTTL>({
+                            name: Actions.MessageDecreaseTTL.name
                         });
                     });
                 }
             }
         );
 
-        this.addActionHandler<Actions.MessageDecreaseTTL>(
-            ActionName.MessageDecreaseTTL,
+        this.addActionHandler<typeof Actions.MessageDecreaseTTL>(
+            Actions.MessageDecreaseTTL.name,
             (state, action) => {
                 state.messages = pipe(
                     state.messages,
@@ -106,8 +106,8 @@ export class MessageModel extends StatelessModel<MessageModelState> {
             }
         );
 
-        this.addActionHandler<Actions.MessageClose>(
-            ActionName.MessageClose,
+        this.addActionHandler<typeof Actions.MessageClose>(
+            Actions.MessageClose.name,
             (state, action) => {
                 this.removeMessage(state, action.payload.messageId);
             }
@@ -303,15 +303,15 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<Actions.OverviewClose>(
-            ActionName.OverviewClose,
+        this.addActionHandler<typeof Actions.OverviewClose>(
+            Actions.OverviewClose.name,
             action => {
                 this.changeState(state => {state.currentInfoType = null})
             }
         );
 
-        this.addActionHandler<Actions.OverviewCorpusInfoRequired>(
-            ActionName.OverviewCorpusInfoRequired,
+        this.addActionHandler<typeof Actions.OverviewCorpusInfoRequired>(
+            Actions.OverviewCorpusInfoRequired.name,
             action => {
                 this.changeState(state => {state.isWaiting = true})
                 this.emitChange();
@@ -332,43 +332,45 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
             }
         );
 
-        this.addActionHandler<Actions.OverviewShoActionwCitationInfo>(
-            ActionName.OverviewShowCitationInfo,
+        this.addActionHandler<typeof Actions.OverviewShowActionCitationInfo>(
+            Actions.OverviewShowActionCitationInfo.name,
             action => {
-                this.changeState(state => {state.isWaiting = true})
-                this.loadCorpusInfo(action.payload.corpusId).subscribe(
-                    null,
-                    (err) => {
+                this.changeState(
+                    state => {
+                        state.isWaiting = true;
+                    }
+                );
+                this.loadCorpusInfo(action.payload.corpusId).subscribe({
+                    error: err => {
                         this.changeState(state => {state.isWaiting = false});
                         this.emitChange();
                         this.pluginApi.showMessage('error', err);
                     },
-                    () => {
+                    complete: () => {
                         this.changeState(state => {
                             state.currentCorpus = action.payload.corpusId;
                             state.currentInfoType = CorpusInfoType.CITATION;
                             state.isWaiting = false;
                         });
                     },
-                )
+                });
             }
         );
 
-        this.addActionHandler<Actions.OverviewShowSubcorpusInfo>(
-            ActionName.OverviewShowSubcorpusInfo,
+        this.addActionHandler<typeof Actions.OverviewShowSubcorpusInfo>(
+            Actions.OverviewShowSubcorpusInfo.name,
             action => {
                 this.changeState(state => {state.isWaiting = true})
                 this.loadSubcorpusInfo(
                     action.payload.corpusId,
                     action.payload.subcorpusId
 
-                ).subscribe(
-                    null,
-                    (err) => {
+                ).subscribe({
+                    error: err => {
                         this.changeState(state => {state.isWaiting = false});
                         this.pluginApi.showMessage('error', err);
                     },
-                    () => {
+                    complete: () => {
                         this.changeState(state => {
                             state.currentCorpus = action.payload.corpusId;
                             state.currentSubcorpus = action.payload.subcorpusId;
@@ -376,14 +378,16 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                             state.isWaiting = false;
                         });
                     }
-                )
+                });
             }
         );
 
-        this.addActionHandler<Actions.OverviewShowKeyShortcuts>(
-            ActionName.OverviewShowKeyShortcuts,
+        this.addActionHandler<typeof Actions.OverviewShowKeyShortcuts>(
+            Actions.OverviewShowKeyShortcuts.name,
             action => {
-                this.changeState(state => {state.currentInfoType = CorpusInfoType.KEY_SHORTCUTS})
+                this.changeState(state => {
+                    state.currentInfoType = CorpusInfoType.KEY_SHORTCUTS
+                });
             }
         );
     }

@@ -49,7 +49,7 @@ import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../models/mainMenu/actions';
 import { Actions as ATActions } from '../models/asyncTask/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
-import { Actions, ActionName } from '../models/common/actions';
+import { Actions } from '../models/common/actions';
 import applicationBar from 'plugins/applicationBar/init';
 import footerBar from 'plugins/footerBar/init';
 import authPlugin from 'plugins/auth/init';
@@ -335,8 +335,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     dispatchServerMessages() {
         List.forEach(
             ([messageType, message]) => {
-                this.dispatcher.dispatch<Actions.MessageAdd>({
-                    name: ActionName.MessageAdd,
+                this.dispatcher.dispatch<typeof Actions.MessageAdd>({
+                    name: Actions.MessageAdd.name,
                     payload: {
                         messageType,
                         message
@@ -373,8 +373,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      *                  be used.
      */
     showMessage(msgType:Kontext.UserMessageTypes, message:any):void {
-        this.dispatcher.dispatch<Actions.MessageAdd>({
-            name: ActionName.MessageAdd,
+        this.dispatcher.dispatch<typeof Actions.MessageAdd>({
+            name: Actions.MessageAdd.name,
             payload: {
                 messageType: msgType,
                 message: message
@@ -552,8 +552,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             this.replaceConcArg('q', ['~' + value]);
             this.setConf<string>('concPersistenceOpId', value);
         }
-        this.dispatcher.dispatch<Actions.ConcArgsUpdated>({
-            name: ActionName.ConcArgsUpdated,
+        this.dispatcher.dispatch<typeof Actions.ConcArgsUpdated>({
+            name: Actions.ConcArgsUpdated.name,
             payload: {
                 args: this.getConcArgs()
             }
