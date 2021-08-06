@@ -38,7 +38,7 @@ import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
-import { ActionName } from '../models/coll/actions';
+import { Actions } from '../models/coll/actions';
 
 
 /**
@@ -311,7 +311,7 @@ export class CollPage {
             args,
             {
                 onPopStateAction: {
-                    name: ActionName.PopHistory,
+                    name: Actions.PopHistory.name,
                     payload: {
                         currPage: state.currPage,
                         currPageInput: state.currPageInput,

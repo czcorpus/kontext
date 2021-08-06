@@ -23,7 +23,7 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
 import { CollServerArgs } from './common';
 
@@ -99,43 +99,43 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.FormSetCattr>(
-            ActionName.FormSetCattr,
+        this.addActionHandler<typeof Actions.FormSetCattr>(
+            Actions.FormSetCattr.name,
             (state, action) => {
                 state.cattr = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormSetCfromw>(
-            ActionName.FormSetCfromw,
+        this.addActionHandler<typeof Actions.FormSetCfromw>(
+            Actions.FormSetCfromw.name,
             (state, action) => {
                 state.cfromw.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormSetCtow>(
-            ActionName.FormSetCtow,
+        this.addActionHandler<typeof Actions.FormSetCtow>(
+            Actions.FormSetCtow.name,
             (state, action) => {
                 state.ctow.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormSetCminFreq>(
-            ActionName.FormSetCminFreq,
+        this.addActionHandler<typeof Actions.FormSetCminFreq>(
+            Actions.FormSetCminFreq.name,
             (state, action) => {
                 state.cminfreq.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormSetCminbgr>(
-            ActionName.FormSetCminbgr,
+        this.addActionHandler<typeof Actions.FormSetCminbgr>(
+            Actions.FormSetCminbgr.name,
             (state, action) => {
                 state.cminbgr.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormSetCbgrfns>(
-            ActionName.FormSetCbgrfns,
+        this.addActionHandler<typeof Actions.FormSetCbgrfns>(
+            Actions.FormSetCbgrfns.name,
             (state, action) => {
                 if (Dict.hasKey(action.payload.value, state.cbgrfns)) {
                     if (state.csortfn !== action.payload.value) {
@@ -156,8 +156,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FormSetCsortfn>(
-            ActionName.FormSetCsortfn,
+        this.addActionHandler<typeof Actions.FormSetCsortfn>(
+            Actions.FormSetCsortfn.name,
             (state, action) => {
                 state.csortfn = action.payload.value;
                 if (!Dict.hasKey(state.csortfn, state.cbgrfns)) {
@@ -166,8 +166,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FormSubmit>(
-            ActionName.FormSubmit,
+        this.addActionHandler<typeof Actions.FormSubmit>(
+            Actions.FormSubmit.name,
             (state, action) => {
                 state.isBusy = true;
                 this.validateForm(state);
@@ -183,24 +183,24 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultGetNextPage>(
-            ActionName.ResultGetNextPage,
+        this.addActionHandler<typeof Actions.ResultGetNextPage>(
+            Actions.ResultGetNextPage.name,
             null,
             (state, action, dispatch) => {
-                dispatch<Actions.FormPrepareSubmitArgsDone>({
-                    name: ActionName.FormPrepareSubmitArgsDone,
+                dispatch<typeof Actions.FormPrepareSubmitArgsDone>({
+                    name: Actions.FormPrepareSubmitArgsDone.name,
                     payload: {
                         args: this.getSubmitArgs(state)
                     }
                 });
             }
         ).sideEffectAlsoOn(
-            ActionName.ResultGetPrevPage,
-            ActionName.ResultConfirmPageValue,
-            ActionName.SaveFormSubmit,
-            ActionName.ResultSortByColumn,
-            ActionName.PopHistory,
-            ActionName.ResultReload
+            Actions.ResultGetPrevPage.name,
+            Actions.ResultConfirmPageValue.name,
+            Actions.SaveFormSubmit.name,
+            Actions.ResultSortByColumn.name,
+            Actions.PopHistory.name,
+            Actions.ResultReload.name
         );
     }
 

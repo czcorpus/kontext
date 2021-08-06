@@ -22,7 +22,7 @@ import { KontextPage } from '../app/main';
 import { PageModel } from '../app/page';
 import { HitReloader } from '../models/concordance/concStatus';
 import { ConcRestoreModel } from '../models/concRestore';
-import { ActionName, Actions } from '../models/concRestore/actions';
+import { Actions } from '../models/concRestore/actions';
 import { Kontext } from '../types/common';
 import { init as viewInit } from '../views/restoreConc';
 
@@ -63,8 +63,8 @@ class ConcRestorePage {
 
             } else {
                 window.setTimeout(() => {
-                    this.layoutModel.dispatcher.dispatch<Actions.ConcRestored>({
-                        name: ActionName.ConcRestored
+                    this.layoutModel.dispatcher.dispatch<typeof Actions.ConcRestored>({
+                        name: Actions.ConcRestored.name
                     });
                 });
             }

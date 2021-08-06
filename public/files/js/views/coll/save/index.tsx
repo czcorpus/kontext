@@ -24,7 +24,7 @@ import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { SaveData } from '../../../app/navigation';
 import { CollResultsSaveModel, CollResultsSaveModelState } from '../../../models/coll/save';
-import { Actions, ActionName } from '../../../models/coll/actions';
+import { Actions } from '../../../models/coll/actions';
 import * as S from './style';
 
 
@@ -57,8 +57,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFormat>({
-                name: ActionName.SaveFormSetFormat,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFormat>({
+                name: Actions.SaveFormSetFormat.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -88,8 +88,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetIncludeHeading>({
-                name: ActionName.SaveFormSetIncludeHeading,
+            dispatcher.dispatch<typeof Actions.SaveFormSetIncludeHeading>({
+                name: Actions.SaveFormSetIncludeHeading.name,
                 payload: {
                     value: !props.value
                 }
@@ -114,8 +114,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetIncludeColHeaders>({
-                name: ActionName.SaveFormSetIncludeColHeaders,
+            dispatcher.dispatch<typeof Actions.SaveFormSetIncludeColHeaders>({
+                name: Actions.SaveFormSetIncludeColHeaders.name,
                 payload: {
                     value: !props.value
                 }
@@ -142,8 +142,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     }> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
-                name: ActionName.SaveFormSetFromLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({
+                name: Actions.SaveFormSetFromLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -151,8 +151,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetToLine>({
-                name: ActionName.SaveFormSetToLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetToLine>({
+                name: Actions.SaveFormSetToLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -189,8 +189,8 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
     const SaveCollForm:React.FC<SaveCollFormProps & CollResultsSaveModelState> = (props) => {
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.SaveFormSubmit>({
-                name: ActionName.SaveFormSubmit
+            dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
+                name: Actions.SaveFormSubmit.name
             });
         };
 
