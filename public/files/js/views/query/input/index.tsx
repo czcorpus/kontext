@@ -33,8 +33,7 @@ import { formEncodeDefaultAttr, QueryFormModel, QueryFormModelState } from '../.
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
 import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { Actions, ActionName, QueryFormType } from '../../../models/query/actions';
-import { Actions as HintActions,
-    ActionName as HintActionName } from '../../../models/usageTips/actions';
+import { Actions as HintActions } from '../../../models/usageTips/actions';
 import { Actions as HistoryActions,
     ActionName as HistoryActionName } from '../../../models/searchHistory/actions';
 import { QueryType, TokenSuggestions } from '../../../models/query/query';
@@ -204,8 +203,8 @@ export function init({
     const QueryHints:React.FC<{queryType:QueryType} & UsageTipsState> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch<HintActions.NextQueryHint|HintActions.NextCqlQueryHint>({
-                name: props.queryType === 'simple' ? HintActionName.NextQueryHint : HintActionName.NextCqlQueryHint
+            dispatcher.dispatch<typeof HintActions.NextQueryHint|typeof HintActions.NextCqlQueryHint>({
+                name: props.queryType === 'simple' ? HintActions.NextQueryHint.name : HintActions.NextCqlQueryHint.name
             });
         };
 

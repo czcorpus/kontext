@@ -21,7 +21,7 @@
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { tuple, List, pipe, Dict } from 'cnc-tskit';
 
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../query/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -99,22 +99,22 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
         );
         this.translatorFn = translatorFn;
 
-        this.addActionHandler<Actions.NextQueryHint>(
-            ActionName.NextQueryHint,
+        this.addActionHandler<typeof Actions.NextQueryHint>(
+            Actions.NextQueryHint.name,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.QUERY);
             }
         );
 
-        this.addActionHandler<Actions.NextCqlQueryHint>(
-            ActionName.NextCqlQueryHint,
+        this.addActionHandler<typeof Actions.NextCqlQueryHint>(
+            Actions.NextCqlQueryHint.name,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.CQL_QUERY);
             }
         );
 
-        this.addActionHandler<Actions.NextConcHint>(
-            ActionName.NextConcHint,
+        this.addActionHandler<typeof Actions.NextConcHint>(
+            Actions.NextConcHint.name,
             (state, action) => {
                 this.setNextHint(state, UsageTipCategory.CONCORDANCE);
             }
@@ -143,8 +143,8 @@ export class UsageTipsModel extends StatelessModel<UsageTipsState> implements IU
             }
         );
 
-        this.addActionHandler<Actions.ForceHint>(
-            ActionName.ForceHint,
+        this.addActionHandler<typeof Actions.ForceHint>(
+            Actions.ForceHint.name,
             (state, action) => {
                 if (state.forcedTip === null || state.forcedTip.priority < action.payload.priority) {
                     state.forcedTip = action.payload;

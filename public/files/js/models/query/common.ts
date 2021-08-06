@@ -37,7 +37,7 @@ import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTok
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery, TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
-import { Actions as QueryHintsActions, ActionName as QueryHintsActionName } from '../usageTips/actions';
+import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions, ActionName as HistoryActionName } from '../searchHistory/actions';
 import { AjaxResponse } from '../../types/ajaxResponses';
 
@@ -640,8 +640,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
                 const queryObject = this.state.queries[action.payload.sourceId];
                 if (queryObject.qtype === 'simple' && List.some(v => v.isExtended, queryObject.queryParsed)) {
-                    this.dispatchSideEffect<QueryHintsActions.ForceHint>({
-                        name: QueryHintsActionName.ForceHint,
+                    this.dispatchSideEffect<typeof QueryHintsActions.ForceHint>({
+                        name: QueryHintsActions.ForceHint.name,
                         payload: {
                             message: pageModel.translate('query__tip_08'),
                             priority: 2
@@ -709,8 +709,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         (queryObject.qtype === 'simple' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.queryParsed)) ||
                         (queryObject.qtype === 'advanced' && List.some(v => this.someSuggestionIsNonEmpty(v.suggestions), queryObject.parsedAttrs))
                      ) {
-                        this.dispatchSideEffect<QueryHintsActions.ForceHint>({
-                            name: QueryHintsActionName.ForceHint,
+                        this.dispatchSideEffect<typeof QueryHintsActions.ForceHint>({
+                            name: QueryHintsActions.ForceHint.name,
                             payload: {
                                 message: pageModel.translate('query__tip_06'),
                                 priority: 1
