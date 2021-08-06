@@ -22,9 +22,9 @@ import { StatefulModel, IFullActionControl } from 'kombo';
 import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
 import { AjaxResponse } from '../../types/ajaxResponses';
@@ -105,8 +105,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SwitchCorpus>(
-            ActionName.SwitchCorpus,
+        this.addActionHandler<typeof Actions.SwitchCorpus>(
+            Actions.SwitchCorpus.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -120,8 +120,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             Dict.fromEntries()
                         ),
                         (wAction, syncData) => {
-                            if (wAction.name === ActionName.SwitchCorpusReady) {
-                                syncData[(wAction as Actions.SwitchCorpusReady<{}>).payload.modelId] = true;
+                            if (wAction.name === Actions.SwitchCorpusReady.name) {
+                                syncData[(wAction as typeof Actions.SwitchCorpusReady).payload.modelId] = true;
                                 return Dict.hasValue(false, syncData) ? {...syncData} : null;
                             }
                             return syncData;
@@ -201,8 +201,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             state.prevCorpora = action.payload.corpora;
                             state.isBusy = false;
                         });
-                        this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
-                            name: ActionName.CorpusSwitchModelRestore,
+                        this._dispatcher.dispatch<typeof Actions.CorpusSwitchModelRestore>({
+                            name: Actions.CorpusSwitchModelRestore.name,
                             payload: {
                                 data: storedStates,
                                 corpora: List.zip(action.payload.corpora, prevCorpora),
@@ -214,15 +214,15 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
-                        this._dispatcher.dispatch<GlobalActions.MessageAdd>({
-                            name: GlobalActionName.MessageAdd,
+                        this._dispatcher.dispatch<typeof GlobalActions.MessageAdd>({
+                            name: GlobalActions.MessageAdd.name,
                             payload: {
                                 messageType: 'error',
                                 message: err
                             }
                         });
-                        this._dispatcher.dispatch<Actions.CorpusSwitchModelRestore>({
-                            name: ActionName.CorpusSwitchModelRestore,
+                        this._dispatcher.dispatch<typeof Actions.CorpusSwitchModelRestore>({
+                            name: Actions.CorpusSwitchModelRestore.name,
                             error: err
                         });
                     }

@@ -27,7 +27,7 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
 import { List, pipe, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 
 /**
@@ -189,12 +189,12 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

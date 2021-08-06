@@ -28,8 +28,7 @@ import * as common from './common';
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions } from './actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName }
-    from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
 
@@ -596,12 +595,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: this.serialize(state)
@@ -610,8 +609,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActions.CorpusSwitchModelRestore.name,
             (state, action) => {
                 if (!action.error) {
                     const storedData:CorplistWidgetModelCorpusSwitchPreserve = action.payload.data[

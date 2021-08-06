@@ -19,16 +19,16 @@
  */
 import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
 import { TextTypesModel } from '../../../models/textTypes/main';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
+import { Actions as GlobalActions } from '../../../models/common/actions';
 
 
 export class EmptyLiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
 
     constructor(pluginApi:IPluginApi) {
         pluginApi.dispatcher().registerActionListener((action) => {
-            if (action.name === GlobalActionName.SwitchCorpus) {
-                pluginApi.dispatcher().dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+            if (action.name === GlobalActions.SwitchCorpus.name) {
+                pluginApi.dispatcher().dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

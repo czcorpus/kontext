@@ -25,7 +25,7 @@ import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
@@ -122,8 +122,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
+            GlobalActions.CorpusSwitchModelRestore.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -138,12 +138,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             action => {
-                dispatcher.dispatch<GlobalActions.SwitchCorpusReady<
-                        PqueryFormModelSwitchPreserve>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: this.serialize(

@@ -26,7 +26,7 @@ import { init as formViewInit } from '../views/pquery/form';
 import { PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../models/common/actions';
+import { Actions as GlobalActions } from '../models/common/actions';
 import { tuple } from 'cnc-tskit';
 import { init as queryOverviewInit } from '../views/pquery/overview';
 import { FreqIntersectionArgs, importConcQueries, newModelState, InvolvedConcFormArgs,
@@ -55,8 +55,8 @@ class ParadigmaticQueryPage {
                 'query',
                 {
                     itemClickAction: (corpora:Array<string>, subcorpId:string) => {
-                        this.layoutModel.dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                            name: GlobalActionName.SwitchCorpus,
+                        this.layoutModel.dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                            name: GlobalActions.SwitchCorpus.name,
                             payload: {
                                 corpora,
                                 subcorpus: subcorpId

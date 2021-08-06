@@ -20,7 +20,7 @@
 
 import { tuple } from 'cnc-tskit';
 import { StatelessModel, IFullActionControl, Action } from 'kombo';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 import { IPluginApi } from '../../types/plugins';
 
 
@@ -49,12 +49,12 @@ export class ClarinSiAppBarModel extends StatelessModel<{menuVisible:boolean}> {
         super(dispatcher, {menuVisible: false});
         this.pluginCtx = pluginApi;
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

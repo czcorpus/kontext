@@ -29,7 +29,7 @@ import { SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 
 
@@ -430,12 +430,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

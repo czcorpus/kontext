@@ -19,7 +19,7 @@
 import { PluginInterfaces } from '../../types/plugins';
 import { init as localeInit } from './locale';
 import { StatelessModel, IFullActionControl } from 'kombo';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 
 declare var require:any;
 require('./style.css'); // webpack
@@ -30,12 +30,12 @@ class LindatAppBarModel extends StatelessModel<{}> {
     constructor(dispatcher:IFullActionControl) {
         super(dispatcher, {});
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

@@ -26,7 +26,7 @@ import { Actions } from './actions';
 import { HTTP, List, Dict, pipe, tuple } from 'cnc-tskit';
 import { WithinBuilderData } from './common';
 import { IUnregistrable } from '../common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 
 
 export interface WithinBuilderModelState {
@@ -112,12 +112,12 @@ export class WithinBuilderModel extends StatelessModel<WithinBuilderModelState>
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

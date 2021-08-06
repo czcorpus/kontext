@@ -24,7 +24,7 @@ import {Kontext} from '../../types/common';
 import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
     from '../../models/common/layout';
 import { Subscription } from 'rxjs';
-import { Actions, ActionName } from '../../models/common/actions';
+import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
 
@@ -436,8 +436,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<Actions.OverviewClose>({
-                name: ActionName.OverviewClose
+            dispatcher.dispatch<typeof Actions.OverviewClose>({
+                name: Actions.OverviewClose.name
             });
         }
 

@@ -26,7 +26,7 @@ import { Kontext } from '../../../types/common';
 import { InputModuleViews } from '../input';
 import { PluginInterfaces } from '../../../types/plugins';
 import { Actions } from '../../../models/query/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../../models/common/actions';
+import { Actions as GlobalActions } from '../../../models/common/actions';
 import { AnyQuery } from '../../../models/query/query';
 import * as S from './style';
 import * as SC from '../style';
@@ -198,8 +198,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             const chngPos = List.findIndex(v => v === corp, newAligned);
             if (chngPos > -1) {
                 newAligned[chngPos] = props.primaryCorpus;
-                dispatcher.dispatch<GlobalActions.SwitchCorpus>({
-                    name: GlobalActionName.SwitchCorpus,
+                dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                    name: GlobalActions.SwitchCorpus.name,
                     payload: {
                         corpora: List.unshift(corp, newAligned),
                         subcorpus: '',

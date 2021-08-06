@@ -25,8 +25,7 @@ import { map } from 'rxjs/operators';
 import { Actions } from './actions';
 import { List, HTTP } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
-import { Actions as GlobalActions, ActionName as GlobalActionName }
-    from '../../models/common/actions';
+import { Actions as GlobalActions } from '../../models/common/actions';
 
 
 export interface Node {
@@ -107,12 +106,12 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
             }
         );
 
-        this.addActionHandler<GlobalActions.SwitchCorpus>(
-            GlobalActionName.SwitchCorpus,
+        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+            GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<GlobalActions.SwitchCorpusReady<{}>>({
-                    name: GlobalActionName.SwitchCorpusReady,
+                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                    name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: {}

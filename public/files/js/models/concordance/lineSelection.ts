@@ -31,7 +31,7 @@ import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, Aj
 } from './common';
 import { Actions } from './actions';
 import { Actions as UserActions } from '../user/actions';
-import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
+import { Actions as GlobalActions } from '../common/actions';
 import { MultiDict } from '../../multidict';
 import { IPageLeaveVoter } from '../common/pageLeave';
 
@@ -512,8 +512,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             }
         );
 
-        this.addActionHandler<GlobalActions.ConcArgsUpdated>(
-            GlobalActionName.ConcArgsUpdated,
+        this.addActionHandler<typeof GlobalActions.ConcArgsUpdated>(
+            GlobalActions.ConcArgsUpdated.name,
             action => {
                 this.changeState(state => {
                     state.lastCheckpointUrl = layoutModel.createActionUrl(

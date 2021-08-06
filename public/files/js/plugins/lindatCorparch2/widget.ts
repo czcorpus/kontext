@@ -29,8 +29,7 @@ import {SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { IActionDispatcher, StatelessModel, Action, SEDispatcher } from 'kombo';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../../models/query/actions';
-import { Actions as CommonActions, ActionName as CommonActionName
-    } from '../../models/common/actions';
+import { Actions as CommonActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 
 /**
@@ -561,12 +560,12 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<CommonActions.SwitchCorpus>(
-            CommonActionName.SwitchCorpus,
+        this.addActionHandler<typeof CommonActions.SwitchCorpus>(
+            CommonActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<CommonActions.SwitchCorpusReady<CorplistWidgetModelCorpusSwitchPreserve>>({
-                    name: CommonActionName.SwitchCorpusReady,
+                dispatch<typeof CommonActions.SwitchCorpusReady>({
+                    name: CommonActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
                         data: this.serialize(state)
@@ -575,8 +574,8 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<CommonActions.CorpusSwitchModelRestore>(
-            CommonActionName.CorpusSwitchModelRestore,
+        this.addActionHandler<typeof CommonActions.CorpusSwitchModelRestore>(
+            CommonActions.CorpusSwitchModelRestore.name,
             (state, action) => {
                 if (!action.error) {
                     const storedData = action.payload.data[this.getRegistrationId()];
