@@ -26,7 +26,7 @@ import { validateGzNumber } from '../../models/base';
 import { PageModel } from '../../app/page';
 import { CollFormModel } from '../../models/coll/collForm';
 import { MultiDict } from '../../multidict';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { HTTP, List } from 'cnc-tskit';
 import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell,
@@ -100,8 +100,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
         this.calcWatchdog = new CalcWatchdog(layoutModel, (status, err) => {
             if (err === null) {
-                dispatcher.dispatch<Actions.ResultUpdateCalculation>({
-                    name: ActionName.ResultUpdateCalculation,
+                dispatcher.dispatch<typeof Actions.ResultUpdateCalculation>({
+                    name: Actions.ResultUpdateCalculation.name,
                     payload: {
                         calcStatus: status
                     }
@@ -109,15 +109,15 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
                 if (status >= 100) {
                     this.calcWatchdog.stopWatching();
-                    dispatcher.dispatch<Actions.ResultReload>({
-                        name: ActionName.ResultReload
+                    dispatcher.dispatch<typeof Actions.ResultReload>({
+                        name: Actions.ResultReload.name
                     });
                 }
 
             } else {
                 this.calcWatchdog.stopWatching();
-                dispatcher.dispatch<Actions.ResultUpdateCalculation>({
-                    name: ActionName.ResultUpdateCalculation,
+                dispatcher.dispatch<typeof Actions.ResultUpdateCalculation>({
+                    name: Actions.ResultUpdateCalculation.name,
                     payload: {
                         calcStatus: 1000
                     },
@@ -129,8 +129,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             this.calcWatchdog.startWatching();
         }
 
-        this.addActionHandler<Actions.ResultReload>(
-            ActionName.ResultReload,
+        this.addActionHandler<typeof Actions.ResultReload>(
+            Actions.ResultReload.name,
             (state, action) => {
                 state.isWaiting = true;
             },
@@ -143,8 +143,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         )
 
-        this.addActionHandler<Actions.ResultUpdateCalculation>(
-            ActionName.ResultUpdateCalculation,
+        this.addActionHandler<typeof Actions.ResultUpdateCalculation>(
+            Actions.ResultUpdateCalculation.name,
             (state, action) => {
                 state.calcStatus = action.payload.calcStatus;
             },
@@ -155,8 +155,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultSetPageInputVal>(
-            ActionName.ResultSetPageInputVal,
+        this.addActionHandler<typeof Actions.ResultSetPageInputVal>(
+            Actions.ResultSetPageInputVal.name,
             (state, action) => {
                 state.currPageInput = action.payload.value;
             },
@@ -167,8 +167,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultGetNextPage>(
-            ActionName.ResultGetNextPage,
+        this.addActionHandler<typeof Actions.ResultGetNextPage>(
+            Actions.ResultGetNextPage.name,
             (state, action) => {
                 state.isWaiting = true;
                 state.currPage += 1;
@@ -183,8 +183,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultGetPrevPage>(
-            ActionName.ResultGetPrevPage,
+        this.addActionHandler<typeof Actions.ResultGetPrevPage>(
+            Actions.ResultGetPrevPage.name,
             (state, action) => {
                 state.isWaiting = true;
                 state.currPage -= 1;
@@ -199,8 +199,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultConfirmPageValue>(
-            ActionName.ResultConfirmPageValue,
+        this.addActionHandler<typeof Actions.ResultConfirmPageValue>(
+            Actions.ResultConfirmPageValue.name,
             (state, action) => {
                 state.isWaiting = true;
                 state.currPage = parseInt(state.currPageInput);
@@ -214,8 +214,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultPageLoadDone>(
-            ActionName.ResultPageLoadDone,
+        this.addActionHandler<typeof Actions.ResultPageLoadDone>(
+            Actions.ResultPageLoadDone.name,
             (state, action) => {
                 state.isWaiting = false;
 
@@ -235,8 +235,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultSortByColumn>(
-            ActionName.ResultSortByColumn,
+        this.addActionHandler<typeof Actions.ResultSortByColumn>(
+            Actions.ResultSortByColumn.name,
             (state, action) => {
                 state.sortFn = action.payload.sortFn;
                 state.isWaiting = true;
@@ -250,8 +250,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
+            Actions.ResultApplyQuickFilter.name,
             (state, action) => {
 
             },
@@ -260,15 +260,15 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.StatePushToHistory>(
-            ActionName.StatePushToHistory,
+        this.addActionHandler<typeof Actions.StatePushToHistory>(
+            Actions.StatePushToHistory.name,
             (state, action) => {
                 this.pushStateToHistory(state, action.payload);
             }
         );
 
-        this.addActionHandler<Actions.PopHistory>(
-            ActionName.PopHistory,
+        this.addActionHandler<typeof Actions.PopHistory>(
+            Actions.PopHistory.name,
             (state, action) => {
                 state.currPage = action.payload.currPage;
                 state.currPageInput = `${action.payload.currPage}`
@@ -291,8 +291,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             (state, action) => {
                 state.saveFormVisible = false;
             }
@@ -308,7 +308,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, MultiDict<CollSaveServerArgs>]> {
         return this.suspend({}, (action, syncData) => {
-            if (action.name === ActionName.FormPrepareSubmitArgsDone) {
+            if (action.name === Actions.FormPrepareSubmitArgsDone.name) {
                 return null;
             }
             return syncData;
@@ -316,7 +316,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         }).pipe(
             concatMap(
                 action => {
-                    const payload = (action as Actions.FormPrepareSubmitArgsDone).payload;
+                    const payload = (action as typeof Actions.FormPrepareSubmitArgsDone).payload;
                     return forkJoin([this.loadData(state, payload.args), of(payload.args)]);
                 }
             )
@@ -334,22 +334,22 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                 if (data.Items.length === 0) {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
                 }
-                dispatch<Actions.ResultPageLoadDone>({
-                    name: ActionName.ResultPageLoadDone,
+                dispatch<typeof Actions.ResultPageLoadDone>({
+                    name: Actions.ResultPageLoadDone.name,
                     payload: {
                         response: data
                     }
                 });
                 if (pushHistory) {
-                    dispatch<Actions.StatePushToHistory>({
-                        name: ActionName.StatePushToHistory,
+                    dispatch<typeof Actions.StatePushToHistory>({
+                        name: Actions.StatePushToHistory.name,
                         payload: args
                     });
                 }
             },
             (err) => {
-                dispatch<Actions.ResultPageLoadDone>({
-                    name: ActionName.ResultPageLoadDone,
+                dispatch<typeof Actions.ResultPageLoadDone>({
+                    name: Actions.ResultPageLoadDone.name,
                     error: err
                 });
             }
@@ -363,7 +363,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
             formArgs,
             {
                 onPopStateAction: {
-                    name: ActionName.PopHistory,
+                    name: Actions.PopHistory.name,
                     payload: {
                         currPage: state.currPage,
                         currPageInput: state.currPageInput,

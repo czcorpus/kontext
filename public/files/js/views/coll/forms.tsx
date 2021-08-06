@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, Bound, ActionDispatcher } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
 
 import { Kontext } from '../../types/common';
 import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
 import { Dict, List } from 'cnc-tskit';
-import { Actions, ActionName } from '../../models/coll/actions';
+import { Actions } from '../../models/coll/actions';
 
 import * as S from './style';
 
@@ -35,7 +35,11 @@ export interface FormsViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, collFormModel:CollFormModel):FormsViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    collFormModel:CollFormModel
+):FormsViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -48,8 +52,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.FormSetCattr>({
-                name: ActionName.FormSetCattr,
+            dispatcher.dispatch<typeof Actions.FormSetCattr>({
+                name: Actions.FormSetCattr.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -74,8 +78,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleFromValChange = (evt) => {
-            dispatcher.dispatch<Actions.FormSetCfromw>({
-                name: ActionName.FormSetCfromw,
+            dispatcher.dispatch<typeof Actions.FormSetCfromw>({
+                name: Actions.FormSetCfromw.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -83,8 +87,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleToValChange = (evt) => {
-            dispatcher.dispatch<Actions.FormSetCtow>({
-                name: ActionName.FormSetCtow,
+            dispatcher.dispatch<typeof Actions.FormSetCtow>({
+                name: Actions.FormSetCtow.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -114,8 +118,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.FormSetCminFreq>({
-                name: ActionName.FormSetCminFreq,
+            dispatcher.dispatch<typeof Actions.FormSetCminFreq>({
+                name: Actions.FormSetCminFreq.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -138,8 +142,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.FormSetCminbgr>({
-                name: ActionName.FormSetCminbgr,
+            dispatcher.dispatch<typeof Actions.FormSetCminbgr>({
+                name: Actions.FormSetCminbgr.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -185,8 +189,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleDisplayCheckboxClick = (value:string) => (evt) => {
-            dispatcher.dispatch<Actions.FormSetCbgrfns>({
-                name: ActionName.FormSetCbgrfns,
+            dispatcher.dispatch<typeof Actions.FormSetCbgrfns>({
+                name: Actions.FormSetCbgrfns.name,
                 payload: {
                     value: value
                 }
@@ -195,8 +199,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleCheckboxClick = (value:string) => (evt) => {
-            dispatcher.dispatch<Actions.FormSetCsortfn>({
-                name: ActionName.FormSetCsortfn,
+            dispatcher.dispatch<typeof Actions.FormSetCsortfn>({
+                name: Actions.FormSetCsortfn.name,
                 payload: {
                     value: value
                 }
@@ -255,8 +259,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<Actions.FormSubmit>({
-                name: ActionName.FormSubmit
+            dispatcher.dispatch<typeof Actions.FormSubmit>({
+                name: Actions.FormSubmit.name
             });
         }
 

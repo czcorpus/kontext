@@ -26,7 +26,7 @@ import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from '../s
 import { CollResultModel, CollResultModelState } from '../../../models/coll/result';
 import { CollResultsSaveModel } from '../../../models/coll/save';
 import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common';
-import { Actions, ActionName } from '../../../models/coll/actions';
+import { Actions } from '../../../models/coll/actions';
 import * as S from './style';
 
 
@@ -40,7 +40,12 @@ export interface ResultViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelpers, collResultModel:CollResultModel, collSaveModel:CollResultsSaveModel):ResultViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    utils:Kontext.ComponentHelpers,
+    collResultModel:CollResultModel,
+    collSaveModel:CollResultsSaveModel
+):ResultViews {
 
     const saveViews = initSaveViews({
         dispatcher,
@@ -58,8 +63,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
         const handleClick = (args) => {
             return (e) => {
-                dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
-                    name: ActionName.ResultApplyQuickFilter,
+                dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
+                    name: Actions.ResultApplyQuickFilter.name,
                     payload: {
                         args: args,
                         blankWindow: e.ctrlKey
@@ -111,8 +116,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
     }> = (props) => {
         const handleClick = () => {
-            dispatcher.dispatch<Actions.ResultSortByColumn>({
-                name: ActionName.ResultSortByColumn,
+            dispatcher.dispatch<typeof Actions.ResultSortByColumn>({
+                name: Actions.ResultSortByColumn.name,
                 payload: {
                     sortFn: props.sortFn
                 }
@@ -188,8 +193,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.ResultSetPageInputVal>({
-                name: ActionName.ResultSetPageInputVal,
+            dispatcher.dispatch<typeof Actions.ResultSetPageInputVal>({
+                name: Actions.ResultSetPageInputVal.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -219,8 +224,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     const PrevPageLink:React.FC<{}> = (props) => {
 
         const handleClick = (props) => {
-            dispatcher.dispatch<Actions.ResultGetPrevPage>({
-                name: ActionName.ResultGetPrevPage
+            dispatcher.dispatch<typeof Actions.ResultGetPrevPage>({
+                name: Actions.ResultGetPrevPage.name
             });
         };
 
@@ -239,8 +244,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
     const NextPageLink:React.FC<{}> = (props) => {
 
         const handleClick = (props) => {
-            dispatcher.dispatch<Actions.ResultGetNextPage>({
-                name: ActionName.ResultGetNextPage
+            dispatcher.dispatch<typeof Actions.ResultGetNextPage>({
+                name: Actions.ResultGetNextPage.name
             });
         };
 
@@ -266,8 +271,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
 
         const handleKeyPress = (evt) => {
             if (evt.key === Keyboard.Value.ENTER) {
-                dispatcher.dispatch<Actions.ResultConfirmPageValue>({
-                    name: ActionName.ResultConfirmPageValue
+                dispatcher.dispatch<typeof Actions.ResultConfirmPageValue>({
+                    name: Actions.ResultConfirmPageValue.name
                 });
                 evt.preventDefault();
                 evt.stopPropagation();
@@ -320,8 +325,8 @@ export function init(dispatcher:IActionDispatcher, utils:Kontext.ComponentHelper
         }
 
         _handleSaveFormClose() {
-            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
-                name: ActionName.ResultCloseSaveForm
+            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
+                name: Actions.ResultCloseSaveForm.name
             });
         }
 

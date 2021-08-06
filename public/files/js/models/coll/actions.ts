@@ -23,197 +23,158 @@ import { MultiDict } from '../../multidict';
 import { AjaxResponse, CollSaveServerArgs, CollServerArgs, HistoryState } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 
-export enum ActionName {
-    ResultSetPageInputVal = 'COLL_RESULT_SET_PAGE_INPUT_VAL',
-    ResultGetNextPage = 'COLL_RESULT_GET_NEXT_PAGE',
-    ResultGetPrevPage = 'COLL_RESULT_GET_PREV_PAGE',
-    ResultConfirmPageValue = 'COLL_RESULT_CONFIRM_PAGE_VALUE',
-    ResultPageLoadDone = 'COLL_RESULT_PAGE_LOAD_DONE',
-    ResultSortByColumn = 'COLL_RESULT_SORT_BY_COLUMN',
-    ResultApplyQuickFilter = 'COLL_RESULT_APPLY_QUICK_FILTER',
-    ResultUpdateCalculation = 'COLL_RESULT_UPDATE_CALCULATION',
-    ResultCloseSaveForm = 'COLL_RESULT_CLOSE_SAVE_FORM',
-    ResultReload = 'COLL_RESULT_RELOAD',
-    FormSetCattr = 'COLL_FORM_SET_CATTR',
-    FormSetCfromw = 'COLL_FORM_SET_CFROMW',
-    FormSetCtow = 'COLL_FORM_SET_CTOW',
-    FormSetCminFreq = 'COLL_FORM_SET_CMINFREQ',
-    FormSetCminbgr = 'COLL_FORM_SET_CMINBGR',
-    FormSetCbgrfns = 'COLL_FORM_SET_CBGRFNS',
-    FormSetCsortfn = 'COLL_FORM_SET_CSORTFN',
-    FormPrepareSubmitArgsDone = 'COLL_FORM_PREPARE_SUBMIT_ARGS_DONE',
-    FormSubmit = 'COLL_FORM_SUBMIT',
-    SaveFormSetFormat = 'COLL_SAVE_FORM_SET_FORMAT',
-    SaveFormSetFromLine = 'COLL_SAVE_FORM_SET_FROM_LINE',
-    SaveFormSetToLine = 'COLL_SAVE_FORM_SET_TO_LINE',
-    SaveFormSetIncludeColHeaders = 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
-    SaveFormSetIncludeHeading = 'COLL_SAVE_FORM_SET_INCLUDE_HEADING',
-    SaveFormSubmit = 'COLL_SAVE_FORM_SUBMIT',
-    SaveFormSubmitDone = 'COLL_SAVE_FORM_SUBMIT_DONE',
-    StatePushToHistory = 'COLL_STATE_PUSH_TO_HISTORY',
-    PopHistory = 'COLL_POP_HISTORY',
-}
 
-export namespace Actions {
+export class Actions {
 
-    export interface ResultSetPageInputVal extends Action<{
+    static ResultSetPageInputVal:Action<{
         value:string;
-    }> {
-        name:ActionName.ResultSetPageInputVal;
-    }
+    }> = {
+        name: 'COLL_RESULT_SET_PAGE_INPUT_VAL'
+    };
 
-    export interface ResultGetNextPage extends Action<{
+    static ResultGetNextPage:Action<{}> = {
+        name: 'COLL_RESULT_GET_NEXT_PAGE'
+    };
 
-    }> {
-        name:ActionName.ResultGetNextPage;
-    }
+    static ResultGetPrevPage:Action<{}> = {
+        name: 'COLL_RESULT_GET_PREV_PAGE'
+    };
 
-    export interface ResultGetPrevPage extends Action<{
+    static ResultConfirmPageValue:Action<{}> = {
+        name: 'COLL_RESULT_CONFIRM_PAGE_VALUE'
+    };
 
-    }> {
-        name:ActionName.ResultGetPrevPage;
-    }
-
-    export interface ResultConfirmPageValue extends Action<{
-
-    }> {
-        name:ActionName.ResultConfirmPageValue;
-    }
-
-    export interface ResultPageLoadDone extends Action<{
+    static ResultPageLoadDone:Action<{
         response:AjaxResponse;
-    }> {
-        name:ActionName.ResultPageLoadDone;
-    }
+    }> = {
+        name: 'COLL_RESULT_PAGE_LOAD_DONE'
+    };
 
-    export interface ResultSortByColumn extends Action<{
+    static ResultSortByColumn:Action<{
         sortFn:string;
-    }> {
-        name:ActionName.ResultSortByColumn;
-    }
+    }> = {
+        name: 'COLL_RESULT_SORT_BY_COLUMN'
+    };
 
-    export interface ResultApplyQuickFilter extends Action<{
-        args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+    static ResultApplyQuickFilter:Action<{
+        args:Array<[
+            keyof ConcQuickFilterServerArgs,
+            ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]
+        ]>;
         blankWindow:boolean;
-    }> {
-        name:ActionName.ResultApplyQuickFilter;
-    }
+    }> = {
+        name: 'COLL_RESULT_APPLY_QUICK_FILTER'
+    };
 
-    export interface ResultUpdateCalculation extends Action<{
+    static ResultUpdateCalculation:Action<{
         calcStatus:number;
-    }> {
-        name:ActionName.ResultUpdateCalculation;
-    }
+    }> = {
+        name: 'COLL_RESULT_UPDATE_CALCULATION'
+    };
 
-    export interface ResultCloseSaveForm extends Action<{
-    }> {
-        name:ActionName.ResultCloseSaveForm;
-    }
+    static ResultCloseSaveForm:Action<{}> = {
+        name: 'COLL_RESULT_CLOSE_SAVE_FORM'
+    };
 
-    export interface ResultReload extends Action<{
-    }> {
-        name:ActionName.ResultReload;
-    }
+    static ResultReload:Action<{}> = {
+        name: 'COLL_RESULT_RELOAD'
+    };
 
-    export interface FormSetCattr extends Action<{
+    static FormSetCattr:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCattr;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CATTR'
+    };
 
-    export interface FormSetCfromw extends Action<{
+    static FormSetCfromw:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCfromw;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CFROMW'
+    };
 
-    export interface FormSetCtow extends Action<{
+    static FormSetCtow:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCtow;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CTOW'
+    };
 
-    export interface FormSetCminFreq extends Action<{
+    static FormSetCminFreq:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCminFreq;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CMINFREQ'
+    };
 
-    export interface FormSetCminbgr extends Action<{
+    static FormSetCminbgr:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCminbgr;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CMINBGR'
+    };
 
-    export interface FormSetCbgrfns extends Action<{
+    static FormSetCbgrfns:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCbgrfns;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CBGRFNS'
+    };
 
-    export interface FormSetCsortfn extends Action<{
+    static FormSetCsortfn:Action<{
         value:string;
-    }> {
-        name:ActionName.FormSetCsortfn;
-    }
+    }> = {
+        name: 'COLL_FORM_SET_CSORTFN'
+    };
 
-    export interface FormPrepareSubmitArgsDone extends Action<{
+    static FormPrepareSubmitArgsDone:Action<{
         args:MultiDict<CollSaveServerArgs>;
-    }> {
-        name:ActionName.FormPrepareSubmitArgsDone;
-    }
+    }> = {
+        name: 'COLL_FORM_PREPARE_SUBMIT_ARGS_DONE'
+    };
 
-    export interface FormSubmit extends Action<{
+    static FormSubmit:Action<{}> = {
+        name: 'COLL_FORM_SUBMIT'
+    };
 
-    }> {
-        name:ActionName.FormSubmit;
-    }
-
-    export interface SaveFormSetFormat extends Action<{
+    static SaveFormSetFormat:Action<{
         value:string;
-    }> {
-        name:ActionName.SaveFormSetFormat;
-    }
+    }> = {
+        name: 'COLL_SAVE_FORM_SET_FORMAT'
+    };
 
-    export interface SaveFormSetFromLine extends Action<{
+    static SaveFormSetFromLine:Action<{
         value:string;
-    }> {
-        name:ActionName.SaveFormSetFromLine;
-    }
+    }> = {
+        name: 'COLL_SAVE_FORM_SET_FROM_LINE'
+    };
 
-    export interface SaveFormSetToLine extends Action<{
+    static SaveFormSetToLine:Action<{
         value:string;
-    }> {
-        name:ActionName.SaveFormSetToLine;
-    }
+    }> = {
+        name: 'COLL_SAVE_FORM_SET_TO_LINE'
+    };
 
-    export interface SaveFormSetIncludeColHeaders extends Action<{
+    static SaveFormSetIncludeColHeaders:Action<{
         value:boolean;
-    }> {
-        name:ActionName.SaveFormSetIncludeColHeaders;
-    }
+    }> = {
+        name: 'COLL_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
+    };
 
-    export interface SaveFormSetIncludeHeading extends Action<{
+    static SaveFormSetIncludeHeading:Action<{
         value:boolean;
-    }> {
-        name:ActionName.SaveFormSetIncludeHeading;
-    }
+    }> = {
+        name: 'COLL_SAVE_FORM_SET_INCLUDE_HEADING'
+    };
 
-    export interface SaveFormSubmit extends Action<{
-    }> {
-        name: ActionName.SaveFormSubmit;
-    }
+    static SaveFormSubmit:Action<{}> = {
+        name: 'COLL_SAVE_FORM_SUBMIT'
+    };
 
-    export interface SaveFormSubmitDone extends Action<{
-    }> {
-        name: ActionName.SaveFormSubmitDone;
-    }
+    static SaveFormSubmitDone:Action<{}> = {
+        name: 'COLL_SAVE_FORM_SUBMIT_DONE'
+    };
 
-    export interface StatePushToHistory extends Action<MultiDict<CollServerArgs>> {
-        name: ActionName.StatePushToHistory;
-    }
+    static StatePushToHistory:Action<MultiDict<CollServerArgs>> = {
+        name: 'COLL_STATE_PUSH_TO_HISTORY'
+    };
 
-    export interface PopHistory extends Action<HistoryState> {
-        name: ActionName.PopHistory;
-    }
+    static PopHistory:Action<HistoryState> = {
+        name: 'COLL_POP_HISTORY'
+    };
 }

@@ -23,7 +23,7 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcServerArgs } from '../concordance/common';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 
 
@@ -76,8 +76,8 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ConcRestored>(
-            ActionName.ConcRestored,
+        this.addActionHandler<typeof Actions.ConcRestored>(
+            Actions.ConcRestored.name,
             (state, action) => {
                 state.isBusy = false;
                 this.generateNextLink(state);

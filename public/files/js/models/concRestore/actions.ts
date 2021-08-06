@@ -21,13 +21,9 @@
 import { Action } from 'kombo';
 
 
-export enum ActionName {
-    ConcRestored = 'CONC_RESTORE_CONC_RESTORED'
-}
+export class Actions {
 
-export namespace Actions {
-
-    export interface ConcRestored extends Action<{}> {
-        name: ActionName.ConcRestored
+    static ConcRestored:Action<{}> = {
+        name: 'CONC_RESTORE_CONC_RESTORED'
     }
 }

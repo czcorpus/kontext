@@ -22,7 +22,7 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { SaveData } from '../../app/navigation';
 import { Kontext } from '../../types/common';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 
 
@@ -97,50 +97,50 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             (state, action) => {
                 state.formIsActive = false;
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetFormat>(
-            ActionName.SaveFormSetFormat,
+        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
+            Actions.SaveFormSetFormat.name,
             (state, action) => {
                 state.saveformat = action.payload.value as SaveData.Format; // TODO type
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetFromLine>(
-            ActionName.SaveFormSetFromLine,
+        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
+            Actions.SaveFormSetFromLine.name,
             (state, action) => {
                 state.fromLine.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetToLine>(
-            ActionName.SaveFormSetToLine,
+        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
+            Actions.SaveFormSetToLine.name,
             (state, action) => {
                 state.toLine.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeColHeaders>(
-            ActionName.SaveFormSetIncludeColHeaders,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeColHeaders>(
+            Actions.SaveFormSetIncludeColHeaders.name,
             (state, action) => {
                 state.includeColHeaders = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeHeading>(
-            ActionName.SaveFormSetIncludeHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeHeading>(
+            Actions.SaveFormSetIncludeHeading.name,
             (state, action) => {
                 state.includeHeading = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -149,8 +149,8 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSubmitDone>(
-            ActionName.SaveFormSubmitDone,
+        this.addActionHandler<typeof Actions.SaveFormSubmitDone>(
+            Actions.SaveFormSubmitDone.name,
             (state, action) => {
                 state.isBusy = false;
                 state.formIsActive = false;
@@ -185,13 +185,13 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
 
     private submit(state:CollResultsSaveModelState):void {
         this.suspend({}, (action, syncData) => {
-            if (action.name === ActionName.FormPrepareSubmitArgsDone) {
+            if (action.name === Actions.FormPrepareSubmitArgsDone.name) {
                 return null;
             }
             return syncData;
         }).subscribe(
             action => {
-                const args = (action as Actions.FormPrepareSubmitArgsDone).payload.args;
+                const args = (action as typeof Actions.FormPrepareSubmitArgsDone).payload.args;
                 args.remove('format'); // cannot risk format=json and invalid http resp. headers
                 args.set('saveformat', state.saveformat);
                 args.set('colheaders', state.includeColHeaders ? '1' : '0');
