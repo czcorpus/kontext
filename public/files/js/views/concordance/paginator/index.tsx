@@ -23,8 +23,8 @@ import { IActionDispatcher } from 'kombo';
 import { Keyboard } from 'cnc-tskit';
 import { Subscription } from 'rxjs';
 
-import {ConcordanceModel} from '../../../models/concordance/main';
-import {Actions, ActionName} from '../../../models/concordance/actions'
+import { ConcordanceModel } from '../../../models/concordance/main';
+import { Actions } from '../../../models/concordance/actions'
 import { Kontext } from '../../../types/common';
 import { PaginationActions } from '../../../models/concordance/common';
 import * as S from './style';
@@ -70,8 +70,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler();
             }
-            dispatcher.dispatch<Actions.ChangePage>({
-                name: ActionName.ChangePage,
+            dispatcher.dispatch<typeof Actions.ChangePage>({
+                name: Actions.ChangePage.name,
                 payload: {
                     action: 'customPage',
                     pageNum: Number(event.currentTarget.value)
@@ -107,8 +107,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             if (typeof props.clickHandler === 'function') {
                 props.clickHandler(evt);
             }
-            dispatcher.dispatch<Actions.ChangePage>({
-                name: ActionName.ChangePage,
+            dispatcher.dispatch<typeof Actions.ChangePage>({
+                name: Actions.ChangePage.name,
                 payload: {
                     action: props.action,
                     pageNum: null
@@ -273,8 +273,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {
             if (evt.key === Keyboard.Value.ENTER) {
                 this._navigActionHandler();
-                dispatcher.dispatch<Actions.ChangePage>({
-                    name: ActionName.ChangePage,
+                dispatcher.dispatch<typeof Actions.ChangePage>({
+                    name: Actions.ChangePage.name,
                     payload: {
                         action: 'customPage',
                         pageNum: Number(this.state.currentPageInput)

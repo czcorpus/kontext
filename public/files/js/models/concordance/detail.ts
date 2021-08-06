@@ -29,7 +29,7 @@ import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { AudioPlayer, PlayerStatus } from './media';
 import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { AudioPlayerActions, DetailExpandPositions } from './common';
 
 /**
@@ -229,8 +229,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ExpandKwicDetail>(
-            ActionName.ExpandKwicDetail,
+        this.addActionHandler<typeof Actions.ExpandKwicDetail>(
+            Actions.ExpandKwicDetail.name,
             action => {
 
 
@@ -252,15 +252,15 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         [],
                         action.payload.position
                     )
-                ]).subscribe(
-                    () => {
+                ]).subscribe({
+                    next: () => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
                             state.expandingSide = null;
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
@@ -268,12 +268,12 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         });
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<Actions.ShowKwicDetail>(
-            ActionName.ShowKwicDetail,
+        this.addActionHandler<typeof Actions.ShowKwicDetail>(
+            Actions.ShowKwicDetail.name,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -305,26 +305,26 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         'reload'
                     )
 
-                ]).subscribe(
-                    () => {
+                ]).subscribe({
+                    next: () => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.changeState(state => {
                             state.isBusy = false;
                             state.tokenConnectIsBusy = false;
                         });
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<Actions.ShowTokenDetail>(
-            ActionName.ShowTokenDetail,
+        this.addActionHandler<typeof Actions.ShowTokenDetail>(
+            Actions.ShowTokenDetail.name,
             action => {
                 this.changeState(state => {
                     this.resetKwicDetail(state);
@@ -338,40 +338,39 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                     action.payload.lineIdx,
                     'reload'
 
-                ).subscribe(
-                    () => {
+                ).subscribe({
+                    next: () => {
                         this.changeState(state => {
                             state.tokenConnectIsBusy = false;
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.changeState(state => {
                             state.tokenConnectIsBusy = false;
                         });
                         this.layoutModel.showMessage('error', err);
                     }
-                );
-
+                });
             }
         );
 
 
-        this.addActionHandler<Actions.ShowWholeDocument>(
-            ActionName.ShowWholeDocument,
+        this.addActionHandler<typeof Actions.ShowWholeDocument>(
+            Actions.ShowWholeDocument.name,
             action => {
-                this.loadWholeDocument().subscribe(
-                    () => {
+                this.loadWholeDocument().subscribe({
+                    next: () => {
                         this.emitChange();
                     },
-                    (err) => {
+                    error: err => {
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<Actions.ShowSpeechDetail>(
-            ActionName.ShowSpeechDetail,
+        this.addActionHandler<typeof Actions.ShowSpeechDetail>(
+            Actions.ShowSpeechDetail.name,
             action => {
                 this.changeState(state => {
                     state.mode = 'speech';
@@ -382,24 +381,24 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                 });
                 this.loadSpeechDetail(this.state.expandLeftArgs.length > 1 &&
                             this.state.expandRightArgs.length > 1 ? 'reload' : null
-                ).subscribe(
-                    () => {
+                ).subscribe({
+                    next: () => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<Actions.ExpandSpeechDetail>(
-            ActionName.ExpandSpeechDetail,
+        this.addActionHandler<typeof Actions.ExpandSpeechDetail>(
+            Actions.ExpandSpeechDetail.name,
             action => {
                 this.changeState(state => {
                     state.expandingSide = action.payload.position;
@@ -421,8 +420,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.DetailSwitchMode>(
-            ActionName.DetailSwitchMode,
+        this.addActionHandler<typeof Actions.DetailSwitchMode>(
+            Actions.DetailSwitchMode.name,
             action => {
                 (() => {
                     if (action.payload.value === 'default') {
@@ -453,26 +452,26 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
                         });
                         return rxOf(null);
                     }
-                })().subscribe(
-                    () => {
+                })().subscribe({
+                    next: () => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                         this.layoutModel.showMessage('error', err);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<Actions.ResetDetail, Actions.ShowRefDetail>(
+        this.addActionHandler<typeof Actions.ResetDetail, typeof Actions.ShowRefDetail>(
             [
-                ActionName.ResetDetail,
-                ActionName.ShowRefDetail
+                Actions.ResetDetail.name,
+                Actions.ShowRefDetail.name
             ],
             action => {
                 this.changeState(state => {
@@ -482,8 +481,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.PlaySpeech>(
-            ActionName.PlaySpeech,
+        this.addActionHandler<typeof Actions.PlaySpeech>(
+            Actions.PlaySpeech.name,
             action => {
                 if (this.state.playingRowIdx > -1) {
                     this.changeState(state => {
@@ -517,16 +516,16 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AudioPlayerClickControl>(
-            ActionName.AudioPlayerClickControl,
+        this.addActionSubtypeHandler<typeof Actions.AudioPlayerClickControl>(
+            Actions.AudioPlayerClickControl.name,
             action => action.payload.playerId === ConcDetailModel.AUDIO_PLAYER_ID,
             action => {
                 this.handlePlayerControls(action.payload.action);
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AudioPlayerSetPosition>(
-            ActionName.AudioPlayerSetPosition,
+        this.addActionSubtypeHandler<typeof Actions.AudioPlayerSetPosition>(
+            Actions.AudioPlayerSetPosition.name,
             action => action.payload.playerId === ConcDetailModel.AUDIO_PLAYER_ID,
             action => {
                 this.audioPlayer.setPosition(action.payload.offset);
@@ -536,8 +535,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AudioPlayersStop>(
-            ActionName.AudioPlayersStop,
+        this.addActionHandler<typeof Actions.AudioPlayersStop>(
+            Actions.AudioPlayersStop.name,
             action => {
                 this.handlePlayerControls('stop');
             }

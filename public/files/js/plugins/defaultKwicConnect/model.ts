@@ -21,7 +21,7 @@
 import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { Kontext } from '../../types/common';
 import { Response as TTDistResponse } from '../../models/concordance/ttDistModel';
-import { ActionName as ConcActionName, Actions as ConcActions } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
@@ -199,8 +199,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
             }
         );
 
-        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
-            ConcActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
+            ConcActions.AsyncCalculationUpdated.name,
             action => {
                 const prevBlocked = this.state.blockedByAsyncConc;
                 this.changeState(state => {

@@ -28,7 +28,7 @@ import { ConcordanceModel, ConcordanceModelState } from '../../../models/concord
 import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../../models/concordance/detail';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName }
     from '../../../models/mainMenu/actions';
 import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../../models/concordance/common';
@@ -87,8 +87,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
     }> = (props) => {
 
         const handleChange = (_) => {
-            dispatcher.dispatch<Actions.ChangeLangVisibility>({
-                name: ActionName.ChangeLangVisibility,
+            dispatcher.dispatch<typeof Actions.ChangeLangVisibility>({
+                name: Actions.ChangeLangVisibility.name,
                 payload: {
                     corpusId: props.corpusId,
                     value: !props.isVisible
@@ -119,8 +119,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         const handleSetMainCorpClick = (corpusId) => {
             if (props.corpsWithKwic.indexOf(corpusId) > -1) {
-                dispatcher.dispatch<Actions.ChangeMainCorpus>({
-                    name: ActionName.ChangeMainCorpus,
+                dispatcher.dispatch<typeof Actions.ChangeMainCorpus>({
+                    name: Actions.ChangeMainCorpus.name,
                     payload: {
                         maincorp: corpusId
                     }
@@ -518,8 +518,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         _detailClickHandler(corpusId, tokenNumber, kwicLength, lineIdx) {
             if (this.props.viewMode === 'speech') {
-                dispatcher.dispatch<Actions.ShowSpeechDetail>({
-                    name: ActionName.ShowSpeechDetail,
+                dispatcher.dispatch<typeof Actions.ShowSpeechDetail>({
+                    name: Actions.ShowSpeechDetail.name,
                     payload: {
                         corpusId: corpusId,
                         tokenNumber: tokenNumber,
@@ -530,8 +530,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
             } else { // = default and custom modes
                 if (kwicLength > 0) {
-                    dispatcher.dispatch<Actions.ShowKwicDetail>({
-                        name: ActionName.ShowKwicDetail,
+                    dispatcher.dispatch<typeof Actions.ShowKwicDetail>({
+                        name: Actions.ShowKwicDetail.name,
                         payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
@@ -541,8 +541,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                     });
 
                 } else if (kwicLength === -1) { // non kwic search (e.g. aligned language)
-                    dispatcher.dispatch<Actions.ShowTokenDetail>({
-                        name: ActionName.ShowTokenDetail,
+                    dispatcher.dispatch<typeof Actions.ShowTokenDetail>({
+                        name: Actions.ShowTokenDetail.name,
                         payload: {
                             corpusId: corpusId,
                             tokenNumber: tokenNumber,
@@ -643,8 +643,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
 
         _refsDetailClickHandler(corpusId, tokenNumber, lineIdx) {
-            dispatcher.dispatch<Actions.ShowRefDetail>({
-                name: ActionName.ShowRefDetail,
+            dispatcher.dispatch<typeof Actions.ShowRefDetail>({
+                name: Actions.ShowRefDetail.name,
                 payload: {
                     corpusId: corpusId,
                     tokenNumber: tokenNumber,
@@ -727,8 +727,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
     class LinesWithSelection extends React.PureComponent<ConcordanceModelState & LineSelectionModelState> {
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.ApplyStoredLineSelections>({
-                name: ActionName.ApplyStoredLineSelections
+            dispatcher.dispatch<typeof Actions.ApplyStoredLineSelections>({
+                name: Actions.ApplyStoredLineSelections.name
             });
         }
 

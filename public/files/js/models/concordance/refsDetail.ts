@@ -21,11 +21,11 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { tuple, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { tap, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { RefsColumn } from './common';
 
 
@@ -54,8 +54,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.ShowRefDetail>(
-            ActionName.ShowRefDetail,
+        this.addActionHandler<typeof Actions.ShowRefDetail>(
+            Actions.ShowRefDetail.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -66,8 +66,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
 
                 ).subscribe(
                     (data) => {
-                        dispatch<Actions.ShowRefDetailDone>({
-                            name: ActionName.ShowRefDetailDone,
+                        dispatch<typeof Actions.ShowRefDetailDone>({
+                            name: Actions.ShowRefDetailDone.name,
                             payload: {
                                 data,
                                 lineIdx: action.payload.lineIdx
@@ -76,8 +76,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        dispatch<Actions.ShowRefDetailDone>({
-                            name: ActionName.ShowRefDetailDone,
+                        dispatch<typeof Actions.ShowRefDetailDone>({
+                            name: Actions.ShowRefDetailDone.name,
                             error: err
                         });
                     }
@@ -85,8 +85,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowRefDetailDone>(
-            ActionName.ShowRefDetailDone,
+        this.addActionHandler<typeof Actions.ShowRefDetailDone>(
+            Actions.ShowRefDetailDone.name,
             (state, action) => {
                 state.isBusy = false;
                 state.data = action.payload.data;
@@ -94,8 +94,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
             }
         );
 
-        this.addActionHandler<Actions.RefResetDetail>(
-            ActionName.RefResetDetail,
+        this.addActionHandler<typeof Actions.RefResetDetail>(
+            Actions.RefResetDetail.name,
             (state, action) => {
                 if (state.lineIdx !== null) {
                     state.lineIdx = null;
@@ -103,9 +103,9 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
                 }
             }
         ).reduceAlsoOn(
-            ActionName.ShowSpeechDetail,
-            ActionName.ShowKwicDetail,
-            ActionName.ShowTokenDetail
+            Actions.ShowSpeechDetail.name,
+            Actions.ShowKwicDetail.name,
+            Actions.ShowTokenDetail.name
         );
     }
 

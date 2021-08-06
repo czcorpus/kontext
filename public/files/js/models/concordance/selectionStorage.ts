@@ -16,14 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List, pipe, tuple, Ident } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 
 import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
 import { IActionDispatcher } from 'kombo';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 
@@ -61,8 +61,8 @@ export class ConcLinesStorage<T extends StorageUsingState> {
 
         ).subscribe(
             () => {
-                dispatcher.dispatch<Actions.SaveLineSelection>({
-                    name: ActionName.SaveLineSelection
+                dispatcher.dispatch<typeof Actions.SaveLineSelection>({
+                    name: Actions.SaveLineSelection.name
                 });
             }
         )

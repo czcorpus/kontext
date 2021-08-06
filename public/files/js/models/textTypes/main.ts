@@ -33,7 +33,7 @@ import { Actions, ActionName } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName }
     from '../common/actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../concordance/actions';
+import { Actions as ConcActions } from '../concordance/actions';
 import { PluginName } from '../../app/plugin';
 
 
@@ -368,11 +368,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<ConcActions.CalculateIpmForAdHocSubc>(
-            ConcActionName.CalculateIpmForAdHocSubc,
+        this.addActionHandler<typeof ConcActions.CalculateIpmForAdHocSubc>(
+            ConcActions.CalculateIpmForAdHocSubc.name,
             action => {
-                this.dispatchSideEffect<ConcActions.CalculateIpmForAdHocSubcReady>({
-                    name: ConcActionName.CalculateIpmForAdHocSubcReady,
+                this.dispatchSideEffect<typeof ConcActions.CalculateIpmForAdHocSubcReady>({
+                    name: ConcActions.CalculateIpmForAdHocSubcReady.name,
                     payload: {
                         ttSelection: this.exportSelections(false)
                     }

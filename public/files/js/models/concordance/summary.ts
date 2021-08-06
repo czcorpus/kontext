@@ -20,8 +20,7 @@
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { concatMap, map } from 'rxjs/operators';
-import { Actions, ActionName } from './actions';
-import { ActionName as ConcActionName } from '../concordance/actions';
+import { Actions } from './actions';
 import { PageModel } from '../../app/page';
 import { TextTypes } from '../../types/common';
 import { Observable } from 'rxjs';
@@ -60,29 +59,29 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.CalculateIpmForAdHocSubc>(
-            ActionName.CalculateIpmForAdHocSubc,
+        this.addActionHandler<typeof Actions.CalculateIpmForAdHocSubc>(
+            Actions.CalculateIpmForAdHocSubc.name,
             (state, action) => {
                 state.isBusy = true;
             },
 
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.CalculateIpmForAdHocSubcReady ?
+                    return action.name === Actions.CalculateIpmForAdHocSubcReady.name ?
                         null : syncData;
 
                 }).pipe(
                     concatMap(
                         action => this.calculateAdHocIpm(
                             state,
-                            (action as Actions.CalculateIpmForAdHocSubcReady).payload.ttSelection
+                            (action as typeof Actions.CalculateIpmForAdHocSubcReady).payload.ttSelection
                         )
                     )
 
                 ).subscribe({
                     next: ipm => {
-                        dispatch<Actions.CalculateIpmForAdHocSubcDone>({
-                            name: ActionName.CalculateIpmForAdHocSubcDone,
+                        dispatch<typeof Actions.CalculateIpmForAdHocSubcDone>({
+                            name: Actions.CalculateIpmForAdHocSubcDone.name,
                             payload: {
                                 ipm
                             }
@@ -94,8 +93,8 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                             'error',
                             this.layoutModel.translate('global__failed_to_calc_ipm')
                         );
-                        dispatch<Actions.CalculateIpmForAdHocSubcDone>({
-                            name: ActionName.CalculateIpmForAdHocSubcDone,
+                        dispatch<typeof Actions.CalculateIpmForAdHocSubcDone>({
+                            name: Actions.CalculateIpmForAdHocSubcDone.name,
                             error
                         });
                     }
@@ -103,8 +102,8 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AddedNewOperation>(
-            ActionName.AddedNewOperation,
+        this.addActionHandler<typeof Actions.AddedNewOperation>(
+            Actions.AddedNewOperation.name,
             (state, action) => {
                 state.arf = action.payload.data.result_arf;
                 state.concSize = action.payload.data.concsize;
@@ -114,16 +113,16 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
             }
         );
 
-        this.addActionHandler<Actions.CalculateIpmForAdHocSubcDone>(
-            ActionName.CalculateIpmForAdHocSubcDone,
+        this.addActionHandler<typeof Actions.CalculateIpmForAdHocSubcDone>(
+            Actions.CalculateIpmForAdHocSubcDone.name,
             (state, action) => {
                 state.isBusy = false;
                 state.ipm = action.payload.ipm;
             }
         );
 
-        this.addActionHandler<Actions.AsyncCalculationUpdated>(
-            ActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
+            Actions.AsyncCalculationUpdated.name,
             (state, action) => {
                 state.isUnfinishedConc = !action.payload.finished;
                 state.concSize = action.payload.concsize;
@@ -132,8 +131,8 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 state.arf = action.payload.arf;
             },
             (state, action, dispatch) => {
-                dispatch<Actions.ConcordanceRecalculationReady>({
-                    name: ActionName.ConcordanceRecalculationReady,
+                dispatch<typeof Actions.ConcordanceRecalculationReady>({
+                    name: Actions.ConcordanceRecalculationReady.name,
                     payload: {
                         concSize: action.payload.concsize,
                         overviewMinFreq: this.getRecommOverviewMinFreq(action.payload.concsize)
@@ -141,12 +140,12 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 })
             }
         ).sideEffectAlsoOn(
-            ConcActionName.LoadTTDictOverview,
+            Actions.LoadTTDictOverview.name,
             PluginInterfaces.KwicConnect.Actions.FetchInfo
         );
 
-        this.addActionHandler<Actions.AsyncCalculationFailed>(
-            ActionName.AsyncCalculationFailed,
+        this.addActionHandler<typeof Actions.AsyncCalculationFailed>(
+            Actions.AsyncCalculationFailed.name,
             (state, action) => {
                     state.isUnfinishedConc = false;
                     state.concSize = 0;

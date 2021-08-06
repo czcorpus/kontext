@@ -23,7 +23,7 @@ import { IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { PlayerStatus } from '../../../models/concordance/media';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import * as S from './style';
 import { List, Time } from 'cnc-tskit';
 
@@ -44,7 +44,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     // ------------------------- <ProgressBar /> ---------------------------
 
     const Waveform:React.FC<{data:Array<number>;}> = (props) => {
-        const canvasRef = React.useRef(null);    
+        const canvasRef = React.useRef(null);
         React.useEffect(() => {
             const context = canvasRef.current.getContext("2d");
             const slice = canvasRef.current.width/List.size(props.data);
@@ -60,7 +60,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             context.lineWidth = 2;
             context.stroke();
         }, [canvasRef, props.data]);
-      
+
         return <canvas className="waveform" ref={canvasRef} />;
     };
 
@@ -84,13 +84,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
             let position = props.status.duration*(e.nativeEvent.layerX - ref.current.clientLeft)/ref.current.offsetWidth;
             if (position < 0) {
                 position = 0;
-            
+
             } else if (position > props.status.duration) {
                 position = props.status.duration;
             }
-            
-            dispatcher.dispatch<Actions.AudioPlayerSetPosition>({
-                name: ActionName.AudioPlayerSetPosition,
+
+            dispatcher.dispatch<typeof Actions.AudioPlayerSetPosition>({
+                name: Actions.AudioPlayerSetPosition.name,
                 payload: {
                     playerId: props.playerId,
                     offset: position
@@ -119,8 +119,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     class AudioPlayer extends React.Component<AudioPlayerProps> {
 
         _handleControlClick(action) {
-            dispatcher.dispatch<Actions.AudioPlayerClickControl>({
-                name: ActionName.AudioPlayerClickControl,
+            dispatcher.dispatch<typeof Actions.AudioPlayerClickControl>({
+                name: Actions.AudioPlayerClickControl.name,
                 payload: {
                     playerId: this.props.playerId,
                     action: action

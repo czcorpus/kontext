@@ -27,12 +27,9 @@ import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcordanceModel } from './main';
-import {
-    ActionName as ConcActionName,
-    Actions as ConcActions } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 import { SampleServerArgs } from '../query/common';
 import { FreqServerArgs } from '../freqs/common';
-import { Actions } from '../textTypes/actions';
 
 
 export type TTCrit = Array<[string, string]>;
@@ -143,8 +140,8 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         this.layoutModel = layoutModel;
         this.concLineModel = concLineModel;
 
-        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
-            ConcActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
+            ConcActions.AsyncCalculationUpdated.name,
             action => {
                 this.state.blockedByAsyncConc = !action.payload.finished;
                 this.suspendWithTimeout(5000, {}, (action, syncData) => {
@@ -166,8 +163,8 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             }
         );
 
-        this.addActionHandler<ConcActions.LoadTTDictOverview>(
-            ConcActionName.LoadTTDictOverview,
+        this.addActionHandler<typeof ConcActions.LoadTTDictOverview>(
+            ConcActions.LoadTTDictOverview.name,
             action => {
                 if (this.state.blocks.length === 0) {
                     this.suspendWithTimeout(5000, {}, (action, syncData) => {
@@ -190,16 +187,16 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             }
         );
 
-        this.addActionHandler<ConcActions.RemoveChartItemsLimit>(
-            ConcActionName.RemoveChartItemsLimit,
+        this.addActionHandler<typeof ConcActions.RemoveChartItemsLimit>(
+            ConcActions.RemoveChartItemsLimit.name,
             action => {
                 this.state.maxBlockItems = -1;
                 this.emitChange();
             }
         );
 
-        this.addActionHandler<ConcActions.RestoreChartItemsLimit>(
-            ConcActionName.RestoreChartItemsLimit,
+        this.addActionHandler<typeof ConcActions.RestoreChartItemsLimit>(
+            ConcActions.RestoreChartItemsLimit.name,
             action => {
                 this.state.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
                 this.emitChange();
