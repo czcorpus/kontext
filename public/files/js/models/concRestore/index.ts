@@ -24,7 +24,7 @@ import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { ConcServerArgs } from '../concordance/common';
 import { ActionName, Actions } from './actions';
-import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
+import { Actions as ConcActions } from '../concordance/actions';
 
 
 export interface ConcRestoreModelState {
@@ -44,8 +44,8 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
         super(dispatcher, state);
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<ConcActions.AsyncCalculationUpdated>(
-            ConcActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
+            ConcActions.AsyncCalculationUpdated.name,
             (state, action) => {
                 if (action.error) {
                     state.isBusy = false;
@@ -66,8 +66,8 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
             }
         );
 
-        this.addActionHandler<ConcActions.AsyncCalculationFailed>(
-            ConcActionName.AsyncCalculationFailed,
+        this.addActionHandler<typeof ConcActions.AsyncCalculationFailed>(
+            ConcActions.AsyncCalculationFailed.name,
             (state, action) => {
                 state.isBusy = false;
             },

@@ -24,7 +24,7 @@ import { List, tuple, pipe } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions, ActionName } from './actions';
-import { ActionName as ConcActionName } from '../concordance/actions';
+import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
@@ -222,7 +222,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 state.activeItem = null;
             }
         ).reduceAlsoOn(
-            ConcActionName.AddedNewOperation
+            ConcActions.AddedNewOperation.name
         );
 
         this.addActionHandler<Actions.ShowSort>(
@@ -244,7 +244,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ActionName.FilterApplyFirstOccurrences,
             ActionName.ShowFreqForm,
             ActionName.ShowCollForm,
-            ConcActionName.SwitchKwicSentMode,
+            ConcActions.SwitchKwicSentMode.name,
             ActionName.ShowAttrsViewOptions,
             ActionName.ShowGeneralViewOptions,
             ActionName.ShowCitationInfo,

@@ -31,7 +31,7 @@ import { Actions, ActionName } from '../actions';
 import { tap, map } from 'rxjs/operators';
 import { MLSortServerArgs } from '../common';
 import { AjaxConcResponse } from '../../concordance/common';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
+import { Actions as ConcActions } from '../../concordance/actions';
 
 
  /**
@@ -125,8 +125,8 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                     )
                 ).subscribe(
                     (data) => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             payload: {
                                 concId: data.conc_persistence_op_id,
                                 data

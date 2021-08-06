@@ -34,7 +34,7 @@ import { TextTypesModel } from '../../textTypes/main';
 import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
 import { Actions, ActionName } from '../actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
+import { Actions as ConcActions } from '../../concordance/actions';
 import { ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse, QueryPipelineResponseItem } from './common';
 import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
@@ -192,8 +192,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
 
-        this.addActionHandler<ConcActions.AddedNewOperation>(
-            ConcActionName.AddedNewOperation,
+        this.addActionHandler<typeof ConcActions.AddedNewOperation>(
+            ConcActions.AddedNewOperation.name,
             (state, action) => {
                 state.branchReplayIsRunning = false;
                 if (!action.error) {
@@ -205,15 +205,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<ConcActions.MarkLinesDone>(
-            ConcActionName.MarkLinesDone,
+        this.addActionHandler<typeof ConcActions.MarkLinesDone>(
+            ConcActions.MarkLinesDone.name,
             (state, action) => {
                 state.editIsLocked = true;
             }
         );
 
-        this.addActionHandler<ConcActions.LineSelectionResetOnServerDone>(
-            ConcActionName.LineSelectionResetOnServerDone,
+        this.addActionHandler<typeof ConcActions.LineSelectionResetOnServerDone>(
+            ConcActions.LineSelectionResetOnServerDone.name,
             (state, action) => {
                 state.editIsLocked = false;
             }
@@ -313,8 +313,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
                 ).subscribe(
                     data => {
-                        dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             payload: {
                                 concId: data.conc_persistence_op_id,
                                 data: data
@@ -323,8 +323,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     },
                     err => {
                         this.pageModel.showMessage('error', err);
-                        dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             error: err
                         });
                     }
@@ -404,8 +404,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<ConcActions.ReloadConc>(
-            ConcActionName.ReloadConc,
+        this.addActionHandler<typeof ConcActions.ReloadConc>(
+            ConcActions.ReloadConc.name,
             null,
             (state, action, dispatch) => {
                 const args = this.pageModel.exportConcArgs();

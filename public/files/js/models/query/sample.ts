@@ -29,7 +29,7 @@ import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../models/mainMenu/actions';
 import { Actions, ActionName } from './actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
 
 
@@ -106,8 +106,8 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
 
                 ).subscribe(
                     data => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             payload: {
                                 concId: data.conc_persistence_op_id,
                                 data
@@ -115,8 +115,8 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
                         });
                     },
                     error => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             error
                         });
                     }

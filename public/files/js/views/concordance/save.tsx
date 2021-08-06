@@ -19,11 +19,11 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {ConcSaveModel, ConcSaveModelState} from '../../models/concordance/save';
-import {ActionName, Actions} from '../../models/concordance/actions';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Kontext } from '../../types/common';
+import { SaveData } from '../../app/navigation';
+import { ConcSaveModel, ConcSaveModelState } from '../../models/concordance/save';
+import { Actions } from '../../models/concordance/actions';
 
 
 export interface ConcSaveFormProps {
@@ -41,14 +41,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------ <TRFormatSelect /> --------------------
 
-    const TRFormatSelect:React.SFC<{
+    const TRFormatSelect:React.FC<{
         value:string;
 
     }> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFormat>({
-                name: ActionName.SaveFormSetFormat,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFormat>({
+                name: Actions.SaveFormSetFormat.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -74,14 +74,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ---------- <TRIncludeHeadingCheckbox /> ----------
 
-    const TRIncludeHeadingCheckbox:React.SFC<{
+    const TRIncludeHeadingCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetHeading>({
-                name: ActionName.SaveFormSetHeading,
+            dispatcher.dispatch<typeof Actions.SaveFormSetHeading>({
+                name: Actions.SaveFormSetHeading.name,
                 payload: {value: !props.value}
             });
         }
@@ -104,14 +104,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------- <TRIncludeLineNumbersCheckbox /> -------
 
-    const TRIncludeLineNumbersCheckbox:React.SFC<{
+    const TRIncludeLineNumbersCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetInclLineNumbers>({
-                name: ActionName.SaveFormSetInclLineNumbers,
+            dispatcher.dispatch<typeof Actions.SaveFormSetInclLineNumbers>({
+                name: Actions.SaveFormSetInclLineNumbers.name,
                 payload: {value: !props.value}
             });
         };
@@ -134,14 +134,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------- <TRAlignKwicCheckbox /> -------
 
-    const TRAlignKwicCheckbox:React.SFC<{
+    const TRAlignKwicCheckbox:React.FC<{
         value:boolean;
 
     }> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetAlignKwic>({
-                name: ActionName.SaveFormSetAlignKwic,
+            dispatcher.dispatch<typeof Actions.SaveFormSetAlignKwic>({
+                name: Actions.SaveFormSetAlignKwic.name,
                 payload: {value: !props.value}
             });
         };
@@ -164,15 +164,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------- <TRLineRangeInput /> -------
 
-    const TRLineRangeInput:React.SFC<{
+    const TRLineRangeInput:React.FC<{
         fromLine:Kontext.FormValue<string>;
         toLine:Kontext.FormValue<string>;
 
     }> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
-                name: ActionName.SaveFormSetFromLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({
+                name: Actions.SaveFormSetFromLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -180,8 +180,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetToLine>({
-                name: ActionName.SaveFormSetToLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetToLine>({
+                name: Actions.SaveFormSetToLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -222,8 +222,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
-                name: ActionName.ResultCloseSaveForm,
+            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
+                name: Actions.ResultCloseSaveForm.name,
                 payload: {}
             });
         }
@@ -245,8 +245,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<Actions.SaveFormSubmit>({
-                name: ActionName.SaveFormSubmit,
+            dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
+                name: Actions.SaveFormSubmit.name,
                 payload: {}
             });
         }

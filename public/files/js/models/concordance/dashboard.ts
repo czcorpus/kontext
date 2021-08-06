@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher } from 'kombo';
 
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 export interface ConcDashboardConf {
@@ -56,8 +56,8 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
             });
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.DashboardMinimizeExtInfo>(
-            ActionName.DashboardMinimizeExtInfo,
+        this.addActionHandler<typeof Actions.DashboardMinimizeExtInfo>(
+            Actions.DashboardMinimizeExtInfo.name,
             (state, action) => {
                 state.expanded = false;
             },
@@ -67,8 +67,8 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
             }
         );
 
-        this.addActionHandler<Actions.DashboardMaximizeExtInfo>(
-            ActionName.DashboardMaximizeExtInfo,
+        this.addActionHandler<typeof Actions.DashboardMaximizeExtInfo>(
+            Actions.DashboardMaximizeExtInfo.name,
             (state, action) => {
                 state.expanded = true;
             },
@@ -78,8 +78,8 @@ export class ConcDashboard extends StatelessModel<ConcDashboardState> {
             }
         );
 
-        this.addActionHandler<Actions.DashboardToggleExtInfo>(
-            ActionName.DashboardToggleExtInfo,
+        this.addActionHandler<typeof Actions.DashboardToggleExtInfo>(
+            Actions.DashboardToggleExtInfo.name,
             (state, action) => {
                 state.expanded = !state.expanded;
             }

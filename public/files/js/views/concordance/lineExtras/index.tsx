@@ -25,7 +25,7 @@ import { Kontext } from '../../../types/common';
 import { ConcordanceModel } from '../../../models/concordance/main';
 import { ConcLinesStorage } from '../../../models/concordance/selectionStorage';
 import { init as initMediaViews } from '../media';
-import { Actions, ActionName } from '../../../models/concordance/actions'
+import { Actions } from '../../../models/concordance/actions'
 import { LineSelectionModes, TextChunk } from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
@@ -82,11 +82,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.AudioPlayersStop>({
-                name: ActionName.AudioPlayersStop
+            dispatcher.dispatch<typeof Actions.AudioPlayersStop>({
+                name: Actions.AudioPlayersStop.name
             });
-            dispatcher.dispatch<Actions.PlayAudioSegment>({
-                name: ActionName.PlayAudioSegment,
+            dispatcher.dispatch<typeof Actions.PlayAudioSegment>({
+                name: Actions.PlayAudioSegment.name,
                 payload: {
                     chunksIds: props.chunks.map(v => v.id)
                 }
@@ -138,8 +138,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const checkboxChangeHandler = (event) => {
-            dispatcher.dispatch<Actions.SelectLines>({
-                name: ActionName.SelectLine,
+            dispatcher.dispatch<typeof Actions.SelectLine>({
+                name: Actions.SelectLine.name,
                 payload: {
                     value: event.currentTarget.checked ?
                         ConcLinesStorage.DEFAULT_GROUP_ID : undefined,
@@ -164,8 +164,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         const textChangeHandler = (event) => {
             const parsedValue = parseInt(event.currentTarget.value);
-            dispatcher.dispatch<Actions.SelectLines>({
-                name: ActionName.SelectLine,
+            dispatcher.dispatch<typeof Actions.SelectLine>({
+                name: Actions.SelectLine.name,
                 payload: {
                     value: event.currentTarget.value && !isNaN(parsedValue) ? parsedValue : undefined,
                     tokenNumber: props.tokenNumber,
@@ -217,8 +217,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const SyntaxTreeButton:LineExtrasViews['SyntaxTreeButton'] = (props) => {
 
         const handleSyntaxBoxClick = () => {
-            dispatcher.dispatch<Actions.ShowSyntaxView>({
-                name: ActionName.ShowSyntaxView,
+            dispatcher.dispatch<typeof Actions.ShowSyntaxView>({
+                name: Actions.ShowSyntaxView.name,
                 payload: {
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength,

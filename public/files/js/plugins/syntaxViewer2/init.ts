@@ -23,7 +23,7 @@ import { HTTP } from 'cnc-tskit';
 
 import { PluginInterfaces, IPluginApi } from '../../types/plugins';
 import { createGenerator, SourceData, DetailAttrOrders } from './treeView';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 
 
 declare var require:any;
@@ -64,8 +64,8 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<ConcActions.ShowSyntaxView>(
-            ConcActionName.ShowSyntaxView,
+        this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
+            ConcActions.ShowSyntaxView.name,
             action => {
                 this.changeState(state => {
                     state.tokenNumber = action.payload.tokenNumber;

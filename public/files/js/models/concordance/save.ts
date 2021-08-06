@@ -24,9 +24,9 @@ import { Kontext } from '../../types/common';
 import { SaveData } from '../../app/navigation';
 import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../concordance/actions';
+import { Actions as ConcActions } from '../concordance/actions';
 import { MultiDict } from '../../multidict';
 import { ConcSaveServerArgs } from './common';
 
@@ -104,57 +104,57 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             action => {
                 this.changeState(state => {state.formIsActive = false});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetFormat>(
-            ActionName.SaveFormSetFormat,
+        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
+            Actions.SaveFormSetFormat.name,
             action => {
                 this.changeState(state => {state.saveformat = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetFromLine>(
-            ActionName.SaveFormSetFromLine,
+        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
+            Actions.SaveFormSetFromLine.name,
             action => {
                 this.changeState(state => {state.fromLine.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetToLine>(
-            ActionName.SaveFormSetToLine,
+        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
+            Actions.SaveFormSetToLine.name,
             action => {
                 this.changeState(state => {state.toLine.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetAlignKwic>(
-            ActionName.SaveFormSetAlignKwic,
+        this.addActionHandler<typeof Actions.SaveFormSetAlignKwic>(
+            Actions.SaveFormSetAlignKwic.name,
             action => {
                 this.changeState(state => {state.alignKwic = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetInclLineNumbers>(
-            ActionName.SaveFormSetInclLineNumbers,
+        this.addActionHandler<typeof Actions.SaveFormSetInclLineNumbers>(
+            Actions.SaveFormSetInclLineNumbers.name,
             action => {
                 this.changeState(state => {state.includeLineNumbers = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSetHeading>(
-            ActionName.SaveFormSetHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetHeading>(
+            Actions.SaveFormSetHeading.name,
             action => {
                 this.changeState(state => {state.includeHeading = action.payload.value});
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             action => {
                 const err = this.validateForm();
                 if (err) {
@@ -168,8 +168,8 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AsyncCalculationUpdated>(
-            ConcActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
+            Actions.AsyncCalculationUpdated.name,
             action => {
                 this.changeState(state => {
                     state.toLine.value = `${action.payload.concsize}`;
