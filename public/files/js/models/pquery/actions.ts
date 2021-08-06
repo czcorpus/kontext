@@ -27,213 +27,177 @@ import { SortColumn } from './result';
 import {SaveData} from '../../app/navigation';
 
 
-export enum ActionName {
+export class Actions {
 
-    SubmitQuery = 'PQUERY_SUBMIT_QUERY',
-    SubmitQueryDone = 'PQUERY_SUBMIT_QUERY_DONE',
-    AddQueryItem = 'PQUERY_ADD_QUERY_ITEM',
-    RemoveQueryItem = 'PQUERY_REMOVE_QUERY_ITEM',
-    FreqChange = 'PQUERY_FREQ_CHANGE',
-    SetPositionIndex = 'PQUERY_SET_POSITION_IDX',
-    SetAlignType = 'PQUERY_SET_ALIGN_TYPE',
-    AttrChange = 'PQUERY_ATTR_CHANGE',
-    SortLines = 'PQUERY_RESULTS_SORT_LINES',
-    ConcordanceReady = 'PQUERY_ASYNC_CONC_READY',
-    StatePushToHistory = 'PQUERY_STATE_PUSH_TO_HISTORY',
-    PopHistory = 'PQUERY_POP_HISTORY',
-    SetPage = 'PQUERY_SET_PAGE',
-    ToggleModalForm = 'PQUERY_TOGGLE_MODAL_FORM',
-    SaveFormSetFormat = 'PQUERY_SAVE_FORM_SET_FORMAT',
-    SaveFormSetFromLine = 'PQUERY_SAVE_FORM_SET_FROM_LINE',
-    SaveFormSetToLine = 'PQUERY_SAVE_FORM_SET_TO_LINE',
-    SaveFormSetIncludeHeading = 'PQUERY_SAVE_FORM_SET_INCLUDE_HEADING',
-    SaveFormSetIncludeColHeading = 'PQUERY_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
-    SaveFormSubmit = 'PQUERY_SAVE_FORM_SUBMIT',
-    SaveFormPrepareSubmitArgsDone = 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE',
-    ResultCloseSaveForm = 'PQUERY_RESULT_CLOSE_SAVE_FORM',
-    ParamsToggleForm = 'PQUERY_PARAMS_TOGGLE_FORM',
-    ResultApplyQuickFilter = 'PQUERY_RESULT_APPLY_QUICK_FILTER',
-    ResultApplyQuickFilterArgsReady = 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY',
-    SetExpressionRoleType = 'PQUERY_SET_EXPRESSION_ROLE_TYPE',
-    SetExpressionRoleRatio = 'PQUERY_SET_EXPRESSION_ROLE_RATIO',
-}
+    static SubmitQuery:Action<{}> = {
+        name: 'PQUERY_SUBMIT_QUERY'
+    };
 
+    static SubmitQueryDone: Action<{
+        corpname: string;
+        usesubcorp: string;
+        task: Kontext.AsyncTaskInfo<AsyncTaskArgs>;
 
-export namespace Actions {
+    }> = {
+        name: 'PQUERY_SUBMIT_QUERY_DONE'
+    };
 
-    export interface SubmitQuery extends Action<{
-
-    }> {
-        name: ActionName.SubmitQuery;
+    static isSubmitQueryDone(a:Action):a is typeof Actions.SubmitQueryDone {
+        return a.name === Actions.SubmitQueryDone.name;
     }
 
-    export interface SubmitQueryDone extends Action<{
-        corpname:string;
-        usesubcorp:string;
-        task:Kontext.AsyncTaskInfo<AsyncTaskArgs>;
-
-    }> {
-        name: ActionName.SubmitQueryDone;
+    static AddQueryItem:Action<{}> = {
+        name: 'PQUERY_ADD_QUERY_ITEM'
     }
 
-    export function isSubmitQueryDone(a:Action):a is SubmitQueryDone {
-        return a.name === ActionName.SubmitQueryDone;
-    }
-
-    export interface AddQueryItem extends Action<{
-
-    }> {
-        name: ActionName.AddQueryItem;
-    }
-
-    export interface RemoveQueryItem extends Action<{
+    static RemoveQueryItem:Action<{
         sourceId: string;
-    }> {
-        name: ActionName.RemoveQueryItem;
+    }> = {
+        name: 'PQUERY_REMOVE_QUERY_ITEM'
     }
 
-    export interface FreqChange extends Action<{
+    static FreqChange:Action<{
         value: string;
-    }> {
-        name: ActionName.FreqChange;
+    }> = {
+        name: 'PQUERY_FREQ_CHANGE'
     }
 
-    export interface SetPositionIndex extends Action<{
+    static SetPositionIndex:Action<{
         valueLeft: number;
         valueRight: number;
-    }> {
-        name: ActionName.SetPositionIndex;
+    }> = {
+        name: 'PQUERY_SET_POSITION_IDX'
     }
 
-    export interface SetAlignType extends Action<{
+    static SetAlignType:Action<{
         value: AlignTypes|PqueryAlignTypes;
-    }> {
-        name: ActionName.SetAlignType;
+    }> = {
+        name: 'PQUERY_SET_ALIGN_TYPE'
     }
 
-    export interface AttrChange extends Action<{
+    static AttrChange:Action<{
         value: string;
-    }> {
-        name: ActionName.AttrChange;
+    }> = {
+        name: 'PQUERY_ATTR_CHANGE'
     }
 
-    export interface SortLines extends Action<SortColumn> {
-        name: ActionName.SortLines;
+    static SortLines:Action<SortColumn> = {
+        name: 'PQUERY_RESULTS_SORT_LINES'
     }
 
-    export interface ConcordanceReady extends Action<{
+    static ConcordanceReady:Action<{
         sourceId:string;
-    }> {
-        name: ActionName.ConcordanceReady
+    }> = {
+        name: 'PQUERY_ASYNC_CONC_READY'
     }
 
-    export interface StatePushToHistory extends Action<{
+    static StatePushToHistory:Action<{
         queryId:string;
-    }> {
-        name: ActionName.StatePushToHistory;
+    }> = {
+        name: 'PQUERY_STATE_PUSH_TO_HISTORY'
     }
 
-    export interface PopHistory extends Action<HistoryArgs> {
-        name: ActionName.PopHistory;
+    static PopHistory:Action<HistoryArgs> = {
+        name: 'PQUERY_POP_HISTORY'
     }
 
-    export interface SetPage extends Action<{
+    static SetPage:Action<{
         value: number;
-    }> {
-        name: ActionName.SetPage;
+    }> = {
+        name: 'PQUERY_SET_PAGE'
     }
 
-    export interface ToggleModalForm extends Action<{
+    static ToggleModalForm:Action<{
         visible:boolean;
-    }> {
-        name: ActionName.ToggleModalForm;
+    }> = {
+        name: 'PQUERY_TOGGLE_MODAL_FORM'
     }
 
-    export interface SaveFormSetFormat extends Action<{
+    static SaveFormSetFormat:Action<{
         value:SaveData.Format;
-    }> {
-        name: ActionName.SaveFormSetFormat;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SET_FORMAT'
     }
 
-    export interface SaveFormSetFromLine extends Action<{
+    static SaveFormSetFromLine:Action<{
         value:string;
-    }> {
-        name: ActionName.SaveFormSetFromLine;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SET_FROM_LINE'
     }
 
-    export interface SaveFormSetToLine extends Action<{
+    static SaveFormSetToLine:Action<{
         value:string;
-    }> {
-        name: ActionName.SaveFormSetToLine;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SET_TO_LINE'
     }
 
-    export interface SaveFormSetIncludeHeading extends Action<{
+    static SaveFormSetIncludeHeading:Action<{
         value:boolean;
-    }> {
-        name: ActionName.SaveFormSetIncludeHeading;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SET_INCLUDE_HEADING'
     }
 
-    export interface SaveFormSetIncludeColHeading extends Action<{
+    static SaveFormSetIncludeColHeading:Action<{
         value:boolean;
-    }> {
-        name: ActionName.SaveFormSetIncludeColHeading;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
     }
 
-    export interface SaveFormSubmit extends Action<{
-    }> {
-        name: ActionName.SaveFormSubmit;
+    static SaveFormSubmit:Action<{
+    }> = {
+        name: 'PQUERY_SAVE_FORM_SUBMIT'
     }
 
-    export interface SaveFormPrepareSubmitArgsDone extends Action<{
+    static SaveFormPrepareSubmitArgsDone:Action<{
         queryId:string;
         sort:string;
         reverse:number;
-    }> {
-        name:ActionName.SaveFormPrepareSubmitArgsDone;
+    }> = {
+        name: 'PQUERY_SAVE_FORM_PREPARE_SUBMIT_ARGS_DONE'
     }
 
-    export interface ResultCloseSaveForm extends Action<{
-    }> {
-        name: ActionName.ResultCloseSaveForm;
+    static ResultCloseSaveForm:Action<{
+    }> = {
+        name: 'PQUERY_RESULT_CLOSE_SAVE_FORM'
     }
 
-    export interface ParamsToggleForm extends Action<{
-    }> {
-        name: ActionName.ParamsToggleForm;
+    static ParamsToggleForm:Action<{
+    }> = {
+        name: 'PQUERY_PARAMS_TOGGLE_FORM'
     }
 
-    export interface ResultApplyQuickFilter extends Action<{
+    static ResultApplyQuickFilter:Action<{
         value:string;
         concId:string;
         blankWindow:boolean;
-    }> {
-        name: ActionName.ResultApplyQuickFilter;
+    }> = {
+        name: 'PQUERY_RESULT_APPLY_QUICK_FILTER'
     }
 
-    export interface ResultApplyQuickFilterArgsReady extends Action<{
+    static ResultApplyQuickFilterArgsReady:Action<{
         attr:string;
         posAlign:AlignTypes|PqueryAlignTypes;
         posLeft:number;
         posRight:number;
-    }> {
-        name: ActionName.ResultApplyQuickFilterArgsReady;
+    }> = {
+        name: 'PQUERY_RESULT_APPLY_QUICK_FILTER_ARGS_READY'
     }
 
-    export interface SetExpressionRoleType extends Action<{
+    static SetExpressionRoleType:Action<{
         sourceId:string;
         value:PqueryExpressionRoles;
-    }> {
-        name: ActionName.SetExpressionRoleType;
+    }> = {
+        name: 'PQUERY_SET_EXPRESSION_ROLE_TYPE'
     }
 
-    export interface SetExpressionRoleRatio extends Action<{
+    static SetExpressionRoleRatio:Action<{
         sourceId:string;
         value:string;
-    }> {
-        name: ActionName.SetExpressionRoleRatio;
+    }> = {
+        name: 'PQUERY_SET_EXPRESSION_ROLE_RATIO'
     }
 
-    export function isResultApplyQuickFilterArgsReady(a:Action):a is ResultApplyQuickFilterArgsReady {
-        return a.name === ActionName.ResultApplyQuickFilterArgsReady;
+    static isResultApplyQuickFilterArgsReady(a:Action):a is typeof Actions.ResultApplyQuickFilterArgsReady {
+        return a.name === Actions.ResultApplyQuickFilterArgsReady.name;
     }
 }

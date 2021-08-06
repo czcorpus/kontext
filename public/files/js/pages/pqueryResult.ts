@@ -24,7 +24,7 @@ import { KontextPage } from '../app/main';
 import { Kontext } from '../types/common';
 import { PqueryFormModel } from '../models/pquery/form';
 import { PluginInterfaces } from '../types/plugins';
-import { Actions, ActionName } from '../models/pquery/actions';
+import { Actions } from '../models/pquery/actions';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { init as queryOverviewInit } from '../views/pquery/overview';
@@ -177,8 +177,8 @@ class ParadigmaticQueryPage {
             // ---
             if (!this.layoutModel.getConf<boolean>('DataReady')) {
                 window.setTimeout(() => {
-                    this.layoutModel.dispatcher.dispatch<Actions.SubmitQuery>({
-                        name: ActionName.SubmitQuery
+                    this.layoutModel.dispatcher.dispatch<typeof Actions.SubmitQuery>({
+                        name: Actions.SubmitQuery.name
                     });
                 })
             }
