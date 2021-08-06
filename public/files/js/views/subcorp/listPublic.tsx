@@ -22,7 +22,7 @@ import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PublicSubcorpListState, PublicSubcorpListModel, DataItem} from '../../models/subcorp/listPublic';
-import {Actions, ActionName} from '../../models/subcorp/actions';
+import {Actions} from '../../models/subcorp/actions';
 import { List, tuple } from 'cnc-tskit';
 
 import * as S from './style';
@@ -58,8 +58,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         handleChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            dispatcher.dispatch<Actions.SetSearchQuery>({
-                name: ActionName.SetSearchQuery,
+            dispatcher.dispatch<typeof Actions.SetSearchQuery>({
+                name: Actions.SetSearchQuery.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -151,8 +151,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private _handleUseInQueryButton():void {
-            dispatcher.dispatch<Actions.UseInQuery>({
-                name: ActionName.UseInQuery,
+            dispatcher.dispatch<typeof Actions.UseInQuery>({
+                name: Actions.UseInQuery.name,
                 payload: {
                     corpname: this.props.item.corpname,
                     id: this.props.item.ident

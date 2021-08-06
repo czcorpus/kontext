@@ -29,7 +29,7 @@ import { Actions } from './actions';
 import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { BaseSubcorFormState } from '../../models/subcorp/common';
 
@@ -86,8 +86,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<SubcActions.FormSetSubcName>(
-            SubcActionName.FormSetSubcName,
+        this.addActionHandler<typeof SubcActions.FormSetSubcName>(
+            SubcActions.FormSetSubcName.name,
             (state, action) => {
                 state.subcname = Kontext.updateFormValue(
                     state.subcname,
@@ -98,15 +98,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<SubcActions.FormSetSubcAsPublic>(
-            SubcActionName.FormSetSubcAsPublic,
+        this.addActionHandler<typeof SubcActions.FormSetSubcAsPublic>(
+            SubcActions.FormSetSubcAsPublic.name,
             (state, action) => {
                 state.subcIsPublic = !!action.payload.value;
             }
         );
 
-        this.addActionHandler<SubcActions.FormSetDescription>(
-            SubcActionName.FormSetDescription,
+        this.addActionHandler<typeof SubcActions.FormSetDescription>(
+            SubcActions.FormSetDescription.name,
             (state, action) => {
                 state.description = Kontext.updateFormValue(
                     state.description,

@@ -26,7 +26,7 @@ import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
 import { List, pipe, HTTP } from 'cnc-tskit';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 
@@ -94,15 +94,15 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         this.pageModel = pageModel;
         this.subcFormModel = subcFormModel;
 
-        this.addActionHandler<Actions.FormSetInputMode>(
-            ActionName.FormSetInputMode,
+        this.addActionHandler<typeof Actions.FormSetInputMode>(
+            Actions.FormSetInputMode.name,
             (state, action) => {
                 state.inputMode = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FormWithinLineAdded>(
-            ActionName.FormWithinLineAdded,
+        this.addActionHandler<typeof Actions.FormWithinLineAdded>(
+            Actions.FormWithinLineAdded.name,
             (state, action) => {
                 this.addLine(
                     state,
@@ -113,50 +113,50 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             }
         );
 
-        this.addActionHandler<Actions.FormWithinLineSetType>(
-            ActionName.FormWithinLineSetType,
+        this.addActionHandler<typeof Actions.FormWithinLineSetType>(
+            Actions.FormWithinLineSetType.name,
             (state, action) => {
                 this.updateWithinType(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<Actions.FormWithinLineSetStruct>(
-            ActionName.FormWithinLineSetStruct,
+        this.addActionHandler<typeof Actions.FormWithinLineSetStruct>(
+            Actions.FormWithinLineSetStruct.name,
             (state, action) => {
                 this.updateStruct(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<Actions.FormWithinLineSetCQL>(
-            ActionName.FormWithinLineSetCQL,
+        this.addActionHandler<typeof Actions.FormWithinLineSetCQL>(
+            Actions.FormWithinLineSetCQL.name,
             (state, action) => {
                 this.updateCql(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<Actions.FormWithinLineRemoved>(
-            ActionName.FormWithinLineRemoved,
+        this.addActionHandler<typeof Actions.FormWithinLineRemoved>(
+            Actions.FormWithinLineRemoved.name,
             (state, action) => {
                 this.removeLine(state, action.payload.rowIdx);
             }
         );
 
-        this.addActionHandler<Actions.FormShowRawWithinHint>(
-            ActionName.FormShowRawWithinHint,
+        this.addActionHandler<typeof Actions.FormShowRawWithinHint>(
+            Actions.FormShowRawWithinHint.name,
             (state, action) => {
                 state.helpHintVisible = true;
             }
         );
 
-        this.addActionHandler<Actions.FormHideRawWithinHint>(
-            ActionName.FormHideRawWithinHint,
+        this.addActionHandler<typeof Actions.FormHideRawWithinHint>(
+            Actions.FormHideRawWithinHint.name,
             (state, action) => {
                 state.helpHintVisible = false;
             }
         );
 
-        this.addActionHandler<Actions.FormSubmit>(
-            ActionName.FormSubmit,
+        this.addActionHandler<typeof Actions.FormSubmit>(
+            Actions.FormSubmit.name,
             null,
             (state, action, dispatch) => {
                 if (state.inputMode === 'within') {

@@ -21,9 +21,9 @@ import {IActionDispatcher, Bound, BoundWithProps} from 'kombo';
 import {Kontext} from '../../types/common';
 import {PluginInterfaces} from '../../types/plugins';
 import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/form';
-import {SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine} from '../../models/subcorp/withinForm';
+import { SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine } from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
-import { ActionName, Actions } from '../../models/subcorp/actions';
+import { Actions } from '../../models/subcorp/actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
@@ -62,8 +62,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const changeHandler = (evt) => {
-            dispatcher.dispatch<Actions.FormWithinLineSetType>({
-                name: ActionName.FormWithinLineSetType,
+            dispatcher.dispatch<typeof Actions.FormWithinLineSetType>({
+                name: Actions.FormWithinLineSetType.name,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: ({'within': false, '!within': true})[evt.target.value]
@@ -149,8 +149,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const removeHandler = () => {
-            dispatcher.dispatch<Actions.FormWithinLineRemoved>({
-                name: ActionName.FormWithinLineRemoved,
+            dispatcher.dispatch<typeof Actions.FormWithinLineRemoved>({
+                name: Actions.FormWithinLineRemoved.name,
                 payload: {rowIdx: props.rowIdx}
             });
         };
@@ -160,8 +160,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleStructChange = (evt) => {
-            dispatcher.dispatch<Actions.FormWithinLineSetStruct>({
-                name: ActionName.FormWithinLineSetStruct,
+            dispatcher.dispatch<typeof Actions.FormWithinLineSetStruct>({
+                name: Actions.FormWithinLineSetStruct.name,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -170,8 +170,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         };
 
         const handleCqlChange = (evt) => {
-            dispatcher.dispatch<Actions.FormWithinLineSetCQL>({
-                name: ActionName.FormWithinLineSetCQL,
+            dispatcher.dispatch<typeof Actions.FormWithinLineSetCQL>({
+                name: Actions.FormWithinLineSetCQL.name,
                 payload: {
                     rowIdx: props.rowIdx,
                     value: evt.target.value
@@ -218,8 +218,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const addLineHandler = () => {
-            dispatcher.dispatch<Actions.FormWithinLineAdded>({
-                name: ActionName.FormWithinLineAdded,
+            dispatcher.dispatch<typeof Actions.FormWithinLineAdded>({
+                name: Actions.FormWithinLineAdded.name,
                 payload: {
                     negated: false,
                     structureName: Object.keys(props.structsAndAttrs).sort()[0],
@@ -267,15 +267,15 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleHelpClick() {
-            dispatcher.dispatch<Actions.FormShowRawWithinHint>({
-                name: ActionName.FormShowRawWithinHint,
+            dispatcher.dispatch<typeof Actions.FormShowRawWithinHint>({
+                name: Actions.FormShowRawWithinHint.name,
                 payload: {}
             });
         }
 
         _handleHelpCloseClick() {
-            dispatcher.dispatch<Actions.FormHideRawWithinHint>({
-                name: ActionName.FormHideRawWithinHint,
+            dispatcher.dispatch<typeof Actions.FormHideRawWithinHint>({
+                name: Actions.FormHideRawWithinHint.name,
                 payload: {}
             });
         }
@@ -311,8 +311,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.FormSetSubcName>({
-                name: ActionName.FormSetSubcName,
+            dispatcher.dispatch<typeof Actions.FormSetSubcName>({
+                name: Actions.FormSetSubcName.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -330,8 +330,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleCheckbox = (evt) => {
-            dispatcher.dispatch<Actions.FormSetSubcAsPublic>({
-                name: ActionName.FormSetSubcAsPublic,
+            dispatcher.dispatch<typeof Actions.FormSetSubcAsPublic>({
+                name: Actions.FormSetSubcAsPublic.name,
                 payload: {
                     value: !props.value
                 }
@@ -350,8 +350,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }> = (props) => {
 
         const handleChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
-            dispatcher.dispatch<Actions.FormSetDescription>({
-                name: ActionName.FormSetDescription,
+            dispatcher.dispatch<typeof Actions.FormSetDescription>({
+                name: Actions.FormSetDescription.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -414,8 +414,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleInputModeChange(v) {
-            dispatcher.dispatch<Actions.FormSetInputMode>({
-                name: ActionName.FormSetInputMode,
+            dispatcher.dispatch<typeof Actions.FormSetInputMode>({
+                name: Actions.FormSetInputMode.name,
                 payload: {
                     value: v
                 }
@@ -423,8 +423,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<Actions.FormSubmit>({
-                name: ActionName.FormSubmit,
+            dispatcher.dispatch<typeof Actions.FormSubmit>({
+                name: Actions.FormSubmit.name,
                 payload: {}
             });
         }

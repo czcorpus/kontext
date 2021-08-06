@@ -28,7 +28,7 @@ import { IPluginApi, PluginInterfaces } from '../../types/plugins';
 import { SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
-import { Actions as SubcActions, ActionName as SubcActionName } from '../../models/subcorp/actions';
+import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 
@@ -412,8 +412,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
             null,
             (state, action, dispatch) => {
-                dispatch<SubcActions.FormSetAlignedCorpora>({
-                    name: SubcActionName.FormSetAlignedCorpora,
+                dispatch<typeof SubcActions.FormSetAlignedCorpora>({
+                    name: SubcActions.FormSetAlignedCorpora.name,
                     payload: {
                         alignedCorpora: state.alignedCorpora.filter(v => v.selected)
                     }
