@@ -612,8 +612,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
-            PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
+            PluginInterfaces.QuerySuggest.Actions.ItemClicked.name,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -651,8 +651,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
-            PluginInterfaces.QuerySuggest.ActionName.SuggestionsRequested,
+        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
+            PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested.name,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -670,8 +670,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
-            PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
+            PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
             action => action.payload.formType === this.formType,
             action => {
                 if (action.error) {
@@ -721,8 +721,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
-            PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
+            PluginInterfaces.QuerySuggest.Actions.ClearSuggestions.name,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -863,8 +863,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     args => {
                         if (this.shouldAskForSuggestion(sourceId, args.value)) {
                             const defaultAttr = this.state.queries[sourceId].default_attr;
-                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+                            dispatcher.dispatch<typeof PluginInterfaces.QuerySuggest.Actions.AskSuggestions>({
+                                name: PluginInterfaces.QuerySuggest.Actions.AskSuggestions.name,
                                 payload: {
                                     ...args,
                                     timeReq: new Date().getTime(),
@@ -883,8 +883,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             });
 
                         } else {
-                            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
-                                name: PluginInterfaces.QuerySuggest.ActionName.ClearSuggestions,
+                            dispatcher.dispatch<typeof PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>({
+                                name: PluginInterfaces.QuerySuggest.Actions.ClearSuggestions.name,
                                 payload: {
                                     formType: this.formType
                                 }

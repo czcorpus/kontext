@@ -510,14 +510,6 @@ export namespace PluginInterfaces {
             applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void;
         }
 
-        export enum ActionName {
-            AskSuggestions = 'QUERY_SUGGEST_ASK_SUGGESTIONS',
-            ClearSuggestions = 'QUERY_SUGGEST_CLEAR_SUGGESTIONS',
-            SuggestionsRequested = 'QUERY_SUGGEST_SUGGESTIONS_REQUESTED',
-            SuggestionsReceived = 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED',
-            ItemClicked = 'QUERY_SUGGEST_ITEM_CLICKED'
-        }
-
         export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';
 
         /**
@@ -557,34 +549,34 @@ export namespace PluginInterfaces {
 
         export type SuggestionReturn = SuggestionArgs & SuggestionAnswer;
 
-        export namespace Actions {
+        export class Actions {
 
-            export interface AskSuggestions extends Action<SuggestionArgs> {
-                name: ActionName.AskSuggestions
+            static AskSuggestions:Action<SuggestionArgs> = {
+                name: 'QUERY_SUGGEST_ASK_SUGGESTIONS'
             }
 
-            export interface ClearSuggestions extends Action<{
+            static ClearSuggestions:Action<{
                 formType:QueryFormType;
-            }> {
-                name: ActionName.ClearSuggestions
+            }> = {
+                name: 'QUERY_SUGGEST_CLEAR_SUGGESTIONS'
             }
 
-            export interface SuggestionsRequested extends Action<SuggestionArgs> {
-                name: ActionName.SuggestionsRequested
+            static SuggestionsRequested:Action<SuggestionArgs> = {
+                name: 'QUERY_SUGGEST_SUGGESTIONS_REQUESTED'
             }
 
-            export interface SuggestionsReceived extends Action<SuggestionReturn> {
-                name: ActionName.SuggestionsReceived
+            static SuggestionsReceived:Action<SuggestionReturn> = {
+                name: 'QUERY_SUGGEST_SUGGESTIONS_RECEIVED'
             }
 
-            export interface ItemClicked extends Action<{
+            static ItemClicked:Action<{
                 value:unknown;
                 tokenIdx:number;
                 sourceId:string;
                 providerId:string;
                 formType:string;
-            }> {
-                name: ActionName.ItemClicked
+            }> = {
+                name: 'QUERY_SUGGEST_ITEM_CLICKED'
             }
 
         }

@@ -167,8 +167,8 @@ export class Model extends StatelessModel<ModelState> {
             }
         );
 
-        this.addActionHandler<PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
-            PluginInterfaces.QuerySuggest.ActionName.AskSuggestions,
+        this.addActionHandler<typeof PluginInterfaces.QuerySuggest.Actions.AskSuggestions>(
+            PluginInterfaces.QuerySuggest.Actions.AskSuggestions.name,
             (state, action) => {
                 if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
                     state.isBusy = true;
@@ -178,8 +178,8 @@ export class Model extends StatelessModel<ModelState> {
             },
             (state, action, dispatch) => {
                 if (isValidQuery(action.payload) && someSupportRequest(state.providers, action.payload)) {
-                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>({
-                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsRequested,
+                    dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>({
+                        name: PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested.name,
                         payload: {...action.payload}
                     });
                     this.loadSuggestions(state, action.payload, dispatch);
@@ -262,8 +262,8 @@ export class Model extends StatelessModel<ModelState> {
                 ),
                 tap(
                     data => {
-                        dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                            name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                        dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                            name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                             payload: {
                                 ...args,
                                 ...data
@@ -303,8 +303,8 @@ export class Model extends StatelessModel<ModelState> {
                 )
             ).subscribe(
                 data => {
-                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                    dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                        name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                         payload: {
                             ...args,
                             results: List.map(filterOutTrivialSuggestions, data.results),
@@ -314,8 +314,8 @@ export class Model extends StatelessModel<ModelState> {
                     });
                 },
                 error => {
-                    dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                        name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+                    dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                        name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                         payload: {
                             ...args,
                             results: [],
@@ -328,8 +328,8 @@ export class Model extends StatelessModel<ModelState> {
             );
 
         } else {
-            dispatch<PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
-                name: PluginInterfaces.QuerySuggest.ActionName.SuggestionsReceived,
+            dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
+                name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                 payload: {
                     ...args,
                     results: [],

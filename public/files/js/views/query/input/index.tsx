@@ -966,8 +966,8 @@ export function init({
         }
 
         handleSuggestionItemClick(providerId:string, value:unknown):void {
-            dispatcher.dispatch<PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
-                name: PluginInterfaces.QuerySuggest.ActionName.ItemClicked,
+            dispatcher.dispatch<typeof PluginInterfaces.QuerySuggest.Actions.ItemClicked>({
+                name: PluginInterfaces.QuerySuggest.Actions.ItemClicked.name,
                 payload: {
                     sourceId: this.props.sourceId,
                     formType: this.props.formType,
