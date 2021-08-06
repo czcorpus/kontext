@@ -26,7 +26,7 @@ import { init as userPaneViewsFactory, UserPaneViews} from './views/pane';
 import { init as userProfileViewsFactory, UserProfileViews} from './views/profile';
 import { init as userSignUpViewsFactory, UserSignUpViews} from './views/signUp';
 import { UserProfileModel } from './profile';
-import { Actions, ActionName } from '../../models/user/actions';
+import { Actions as UserActions } from '../../models/user/actions';
 
 
 export interface UsersStatusModelState {
@@ -54,8 +54,8 @@ export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<Actions.UserShowLoginDialog>(
-            ActionName.UserShowLoginDialog,
+        this.addActionHandler<typeof UserActions.UserShowLoginDialog>(
+            UserActions.UserShowLoginDialog.name,
             action => {
                 this.changeState(state => {
                     state.loginFormVisible = true;
@@ -64,8 +64,8 @@ export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
             }
         );
 
-        this.addActionHandler<Actions.UserHideLoginDialog>(
-            ActionName.UserHideLoginDialog,
+        this.addActionHandler<typeof UserActions.UserHideLoginDialog>(
+            UserActions.UserHideLoginDialog.name,
             action => {
                 this.changeState(state => {
                     state.loginFormVisible = false;
@@ -73,8 +73,8 @@ export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
             }
         );
 
-        this.addActionHandler<Actions.UserLogoutx>(
-            ActionName.UserLogoutx,
+        this.addActionHandler<typeof UserActions.UserLogoutx>(
+            UserActions.UserLogoutx.name,
             action => {
                 this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);
             }

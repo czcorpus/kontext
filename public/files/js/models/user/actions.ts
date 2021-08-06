@@ -21,41 +21,34 @@
 import { Action } from 'kombo';
 import { Kontext } from '../../types/common';
 
-export enum ActionName {
-    UserInfoRequested = 'USER_INFO_REQUESTED',
-    UserInfoLoaded = 'USER_INFO_LOADED',
-    UserShowLoginDialog = 'USER_SHOW_LOGIN_DIALOG',
-    UserHideLoginDialog = 'USER_HIDE_LOGIN_DIALOG',
-    UserLogoutx = 'USER_LOGOUTX'
-}
 
-export namespace Actions {
+export class Actions {
 
-    export interface UserInfoRequested extends Action<{
-    }> {
-        name:ActionName.UserInfoRequested;
-    }
+    static UserInfoRequested:Action<{
+    }> = {
+        name: 'USER_INFO_REQUESTED'
+    };
 
-    export interface UserInfoLoaded extends Action<{
+    static UserInfoLoaded:Action<{
         data:Kontext.UserCredentials
-    }> {
-        name:ActionName.UserInfoLoaded;
-    }
+    }> = {
+        name: 'USER_INFO_LOADED'
+    };
 
-    export interface UserShowLoginDialog extends Action<{
+    static UserShowLoginDialog:Action<{
         returnUrl:string;
-    }> {
-        name:ActionName.UserShowLoginDialog;
-    }
+    }> = {
+        name: 'USER_SHOW_LOGIN_DIALOG'
+    };
 
-    export interface UserHideLoginDialog extends Action<{
-    }> {
-        name:ActionName.UserHideLoginDialog;
-    }
+    static UserHideLoginDialog:Action<{
+    }> = {
+        name: 'USER_HIDE_LOGIN_DIALOG'
+    };
 
-    export interface UserLogoutx extends Action<{
-    }> {
-        name:ActionName.UserLogoutx;
-    }
+    static UserLogoutx:Action<{
+    }> = {
+        name: 'USER_LOGOUTX'
+    };
 
 }

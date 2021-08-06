@@ -23,7 +23,7 @@ import { Observable, of as rxOf } from 'rxjs';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from  './actions';
+import { Actions } from  './actions';
 import { HTTP } from 'cnc-tskit';
 
 export interface UserInfoModelState {
@@ -47,24 +47,24 @@ export class UserInfo extends StatelessModel<UserInfoModelState> {
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.UserInfoLoaded>(
-            ActionName.UserInfoLoaded,
+        this.addActionHandler<typeof Actions.UserInfoLoaded>(
+            Actions.UserInfoLoaded.name,
             (state, action) => {
                 state.isBusy = false;
                 state.userData = action.payload.data;
             }
         );
 
-        this.addActionHandler<Actions.UserInfoRequested>(
-            ActionName.UserInfoRequested,
+        this.addActionHandler<typeof Actions.UserInfoRequested>(
+            Actions.UserInfoRequested.name,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
                 this.loadUserInfo(state).subscribe(
                     (data) => {
-                        dispatch<Actions.UserInfoLoaded>({
-                            name: ActionName.UserInfoLoaded,
+                        dispatch<typeof Actions.UserInfoLoaded>({
+                            name: Actions.UserInfoLoaded.name,
                             payload: {
                                 data: data.user
                             }
@@ -72,8 +72,8 @@ export class UserInfo extends StatelessModel<UserInfoModelState> {
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        dispatch<Actions.UserInfoLoaded>({
-                            name: ActionName.UserInfoLoaded,
+                        dispatch<typeof Actions.UserInfoLoaded>({
+                            name: Actions.UserInfoLoaded.name,
                             error: err
                         });
                     }

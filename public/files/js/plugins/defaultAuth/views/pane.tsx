@@ -24,7 +24,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { MultiDict } from '../../../multidict';
 import { UserStatusModel, UsersStatusModelState } from '../init';
-import { Actions as UserActions, ActionName as UserActionName } from '../../../models/user/actions';
+import { Actions as UserActions } from '../../../models/user/actions';
 
 
 export interface UserPaneViews {
@@ -136,8 +136,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleLoginClick():void {
-            dispatcher.dispatch<UserActions.UserShowLoginDialog>({
-                name: UserActionName.UserShowLoginDialog,
+            dispatcher.dispatch<typeof UserActions.UserShowLoginDialog>({
+                name: UserActions.UserShowLoginDialog.name,
                 payload: {
                     returnUrl: window.location.href
                 }
@@ -145,14 +145,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         private handleFormClose():void {
-            dispatcher.dispatch<UserActions.UserHideLoginDialog>({
-                name: UserActionName.UserHideLoginDialog
+            dispatcher.dispatch<typeof UserActions.UserHideLoginDialog>({
+                name: UserActions.UserHideLoginDialog.name
             });
         }
 
         private handleLogoutClick():void {
-            dispatcher.dispatch<UserActions.UserLogoutx>({
-                name: UserActionName.UserLogoutx
+            dispatcher.dispatch<typeof UserActions.UserLogoutx>({
+                name: UserActions.UserLogoutx.name
             });
         }
 
