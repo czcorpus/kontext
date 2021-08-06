@@ -123,8 +123,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -134,7 +134,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 });
 
                 this.suspend({}, (action, syncData) => {
-                    return action.name === PluginInterfaces.LiveAttributes.ActionName.RefineReady ?
+                    return action.name === PluginInterfaces.LiveAttributes.Actions.RefineReady.name ?
                         null : syncData;
 
                 }).pipe(
@@ -193,8 +193,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.ResetClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
+            PluginInterfaces.LiveAttributes.Actions.ResetClicked.name,
             (state, action) => {
                 state.resetConfirmed = window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'));
                 if (state.resetConfirmed) {
@@ -210,8 +210,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.UndoClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
+            PluginInterfaces.LiveAttributes.Actions.UndoClicked.name,
             (state, action) => {
                 state.lastRemovedStep = List.last(state.selectionSteps);
                 state.selectionSteps.pop();
@@ -239,15 +239,15 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
-            PluginInterfaces.LiveAttributes.ActionName.ToggleMinimizeAlignedLangList,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
+            PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList.name,
             (state, action) => {
                 state.isTTListMinimized = !state.isTTListMinimized;
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
             (state, action) => {
                 const item = state.alignedCorpora[action.payload.idx];
                 if (item) {
@@ -408,8 +408,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
             null,
             (state, action, dispatch) => {
                 dispatch<SubcActions.FormSetAlignedCorpora>({

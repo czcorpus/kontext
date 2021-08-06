@@ -230,20 +230,20 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     const LiveAttrsView:React.FC<LiveAttrsModelState> = (props) => {
 
         const handleRefine = () => {
-            dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.RefineClicked>({
-                name: PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
+            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>({
+                name: PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
             });
         };
 
         const handleReset = () => {
-            dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.ResetClicked>({
-                name: PluginInterfaces.LiveAttributes.ActionName.ResetClicked,
+            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.ResetClicked>({
+                name: PluginInterfaces.LiveAttributes.Actions.ResetClicked.name,
             });
         };
 
         const handleUndo = () => {
-            dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.UndoClicked>({
-                name: PluginInterfaces.LiveAttributes.ActionName.UndoClicked,
+            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.UndoClicked>({
+                name: PluginInterfaces.LiveAttributes.Actions.UndoClicked.name,
             });
         };
 
@@ -284,8 +284,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     }> = (props) => {
 
         const clickHandler = () => {
-            dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>({
-                name: PluginInterfaces.LiveAttributes.ActionName.AlignedCorpChanged,
+            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>({
+                name: PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
                 payload: {
                     idx: props.itemIdx
                 }
@@ -316,8 +316,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         const handleMinIconClick = () => {
-            dispatcher.dispatch<PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>({
-                name: PluginInterfaces.LiveAttributes.ActionName.ToggleMinimizeAlignedLangList
+            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>({
+                name: PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList.name
             });
         };
 

@@ -380,14 +380,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
-            PluginInterfaces.LiveAttributes.ActionName.RefineClicked,
+        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
             action => {
                 this.changeState(state => {
                     state.busyAttribute = '#'; // # is a pseudo-value to keep model in busy state
                 });
-                this.dispatchSideEffect<PluginInterfaces.LiveAttributes.Actions.RefineReady>({
-                    name: PluginInterfaces.LiveAttributes.ActionName.RefineReady,
+                this.dispatchSideEffect<typeof PluginInterfaces.LiveAttributes.Actions.RefineReady>({
+                    name: PluginInterfaces.LiveAttributes.Actions.RefineReady.name,
                     payload: {
                         selections: this.exportSelections(false)
                     }
