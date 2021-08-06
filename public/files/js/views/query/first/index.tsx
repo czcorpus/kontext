@@ -37,7 +37,7 @@ import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { QueryContextModel } from '../../../models/query/context';
 import { ActionName, Actions } from '../../../models/query/actions';
 import { TTSelOps } from '../../../models/textTypes/selectionOps';
-import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
+import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 import { SearchHistoryModel } from '../../../models/searchHistory';
@@ -460,8 +460,8 @@ export function init({
 
         const toggleHelp = () => {
             if (!visible) {
-                dispatcher.dispatch<HelpActions.HelpRequested>({
-                    name: HelpActionName.HelpRequested,
+                dispatcher.dispatch<typeof HelpActions.HelpRequested>({
+                    name: HelpActions.HelpRequested.name,
                     payload: {
                         section: 'query'
                     }

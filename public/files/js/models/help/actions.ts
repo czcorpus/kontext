@@ -20,16 +20,13 @@
 
 import { Action } from 'kombo';
 
-export enum ActionName {
-    HelpRequested = 'HELP_REQUESTED',
-}
 
-export namespace Actions {
+export class Actions {
 
-    export interface HelpRequested extends Action<{
+    static HelpRequested:Action<{
         section:string;
-    }> {
-        name:ActionName.HelpRequested;
+    }> = {
+        name: 'HELP_REQUESTED'
     }
 
 }

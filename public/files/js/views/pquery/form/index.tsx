@@ -33,7 +33,7 @@ import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
-import { Actions as HelpActions, ActionName as HelpActionName } from '../../../models/help/actions';
+import { Actions as HelpActions } from '../../../models/help/actions';
 import { AdvancedFormFieldsetProps } from '../../query/input';
 
 export interface PqueryFormViewsArgs {
@@ -399,8 +399,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
         const toggleHelp = () => {
             if (!visible) {
-                dispatcher.dispatch<HelpActions.HelpRequested>({
-                    name: HelpActionName.HelpRequested,
+                dispatcher.dispatch<typeof HelpActions.HelpRequested>({
+                    name: HelpActions.HelpRequested.name,
                     payload: {
                         section: 'query'
                     }
