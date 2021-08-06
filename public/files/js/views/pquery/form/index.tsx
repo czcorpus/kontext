@@ -24,7 +24,7 @@ import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { PqueryFormModel } from '../../../models/pquery/form';
-import { Actions, ActionName } from '../../../models/pquery/actions';
+import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
@@ -143,8 +143,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
     }> = (props) => {
 
         const removeQueryHandler = (sourceId) => () => {
-            dispatcher.dispatch<Actions.RemoveQueryItem>({
-                name: ActionName.RemoveQueryItem,
+            dispatcher.dispatch<typeof Actions.RemoveQueryItem>({
+                name: Actions.RemoveQueryItem.name,
                 payload: {sourceId: sourceId}
             });
         };
@@ -175,15 +175,15 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
     }> = (props) => {
 
         const handleExpressionRoleTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.SetExpressionRoleType>({
-                name: ActionName.SetExpressionRoleType,
+            dispatcher.dispatch<typeof Actions.SetExpressionRoleType>({
+                name: Actions.SetExpressionRoleType.name,
                 payload: {sourceId: props.sourceId, value: evt.target.value}
             });
         };
 
         const handleExpressionRoleRatioChange = (evt) => {
-            dispatcher.dispatch<Actions.SetExpressionRoleRatio>({
-                name: ActionName.SetExpressionRoleRatio,
+            dispatcher.dispatch<typeof Actions.SetExpressionRoleRatio>({
+                name: Actions.SetExpressionRoleRatio.name,
                 payload: {
                     sourceId: props.sourceId,
                     value: evt.target.value
@@ -252,8 +252,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
     }> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.SetAlignType>({
-                name: ActionName.SetAlignType,
+            dispatcher.dispatch<typeof Actions.SetAlignType>({
+                name: Actions.SetAlignType.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -273,22 +273,22 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
     const PqueryForm:React.FC<PqueryFormModelState & PqueryFormProps> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch<Actions.SubmitQuery>({
-                name: ActionName.SubmitQuery,
+            dispatcher.dispatch<typeof Actions.SubmitQuery>({
+                name: Actions.SubmitQuery.name,
                 payload: {}
             });
         };
 
         const addQueryHandler = () => {
-            dispatcher.dispatch<Actions.AddQueryItem>({
-                name: ActionName.AddQueryItem,
+            dispatcher.dispatch<typeof Actions.AddQueryItem>({
+                name: Actions.AddQueryItem.name,
                 payload: {}
             });
         };
 
         const handleFreqChange = (e) => {
-            dispatcher.dispatch<Actions.FreqChange>({
-                name: ActionName.FreqChange,
+            dispatcher.dispatch<typeof Actions.FreqChange>({
+                name: Actions.FreqChange.name,
                 payload: {
                     value: e.target.value
                 }
@@ -296,8 +296,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         };
 
         const handleAttrChange = (e) => {
-            dispatcher.dispatch<Actions.AttrChange>({
-                name: ActionName.AttrChange,
+            dispatcher.dispatch<typeof Actions.AttrChange>({
+                name: Actions.AttrChange.name,
                 payload: {
                     value: e.target.value
                 }
@@ -305,14 +305,14 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         };
 
         const handleParamsFormVisibility = () => {
-            dispatcher.dispatch<Actions.ParamsToggleForm>({
-                name: ActionName.ParamsToggleForm
+            dispatcher.dispatch<typeof Actions.ParamsToggleForm>({
+                name: Actions.ParamsToggleForm.name
             });
         }
 
         const handleKwicRangeSelection = (left:number, right:number, inclKwic:boolean) => {
-            dispatcher.dispatch<Actions.SetPositionIndex>({
-                name: ActionName.SetPositionIndex,
+            dispatcher.dispatch<typeof Actions.SetPositionIndex>({
+                name: Actions.SetPositionIndex.name,
                 payload: {valueLeft: left, valueRight: right}
             });
         };

@@ -27,7 +27,7 @@ import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { List, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
 import { GetHistoryResponse, QueryHistoryItem, SearchHistoryModelState } from './common';
@@ -128,8 +128,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleQueryHistoryWidget, MainMenuActions.ShowQueryHistory>(
-            [Actions.ToggleQueryHistoryWidget.name, MainMenuActionName.ShowQueryHistory],
+        this.addActionHandler<typeof Actions.ToggleQueryHistoryWidget, typeof MainMenuActions.ShowQueryHistory>(
+            [Actions.ToggleQueryHistoryWidget.name, MainMenuActions.ShowQueryHistory.name],
             action => {
                 this.changeState(state => {
                     state.isBusy = true

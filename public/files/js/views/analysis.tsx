@@ -24,7 +24,7 @@ import { FormsViews as CollFormsViews } from './coll/forms';
 import { FormsViews as FreqFormsViews } from './freqs/forms';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 import { MainMenuModelState } from '../models/mainMenu';
-import { Actions as MMActions, ActionName as MMActionName } from '../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { List } from 'cnc-tskit';
 
 export interface AnalysisModuleArgs {
@@ -60,18 +60,18 @@ export function init({dispatcher, he, collViews, freqViews,
 
         _renderContents() {
             switch ((this.props.activeItem || {actionName: null}).actionName) {
-                case MMActionName.ShowCollForm:
+                case MainMenuActions.ShowCollForm.name:
                     return <collViews.CollForm />;
-                case MMActionName.ShowFreqForm:
+                case MainMenuActions.ShowFreqForm.name:
                     return <freqViews.FrequencyForm initialFreqFormVariant={this.props.initialFreqFormVariant} />;
             }
         }
 
         _getTitle() {
             switch ((this.props.activeItem || {actionName: null}).actionName) {
-                case MMActionName.ShowCollForm:
+                case MainMenuActions.ShowCollForm.name:
                     return he.translate('coll__form_heading');
-                case MMActionName.ShowFreqForm:
+                case MainMenuActions.ShowFreqForm.name:
                     return he.translate('freq__h2_freq_distr');
                 default:
                     return '?';
@@ -80,16 +80,16 @@ export function init({dispatcher, he, collViews, freqViews,
 
         _activeItemIsOurs() {
             const actions = [
-                MMActionName.ShowCollForm,
-                MMActionName.ShowFreqForm
+                MainMenuActions.ShowCollForm.name,
+                MainMenuActions.ShowFreqForm.name
             ];
             return this.props.activeItem !== null
                     && List.some(v => v === this.props.activeItem.actionName, actions);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<MMActions.ClearActiveItem>({
-                name: MMActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         }
 

@@ -23,7 +23,7 @@ import { Dict, HTTP, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, forkJoin, of as rxOf } from 'rxjs';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions, ActionName as GlobalActionName } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
@@ -55,7 +55,7 @@ interface PqueryFormModelSwitchPreserve {
 }
 
 interface HistoryState {
-    onPopStateAction:Actions.PopHistory;
+    onPopStateAction:typeof Actions.PopHistory;
 }
 
 
@@ -76,8 +76,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.attrHelper = attrHelper;
         this.hintListener = this.hintListener.bind(this);
 
-        this.addActionHandler<Actions.SubmitQuery>(
-            ActionName.SubmitQuery,
+        this.addActionHandler<typeof Actions.SubmitQuery>(
+            Actions.SubmitQuery.name,
             action => {
                 const validationErr = this.validateQueries();
                 if (validationErr) {
@@ -91,8 +91,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
                 this.submitForm(this.state).subscribe({
                     next: task => {
-                        this.dispatchSideEffect<Actions.SubmitQueryDone>({
-                            name: ActionName.SubmitQueryDone,
+                        this.dispatchSideEffect<typeof Actions.SubmitQueryDone>({
+                            name: Actions.SubmitQueryDone.name,
                             payload: {
                                 corpname: this.state.corpname,
                                 usesubcorp: this.state.usesubcorp,
@@ -102,8 +102,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     },
                     error: error => {
                         this.layoutModel.showMessage('error', error);
-                        this.dispatchSideEffect<Actions.SubmitQueryDone>({
-                            name: ActionName.SubmitQueryDone,
+                        this.dispatchSideEffect<typeof Actions.SubmitQueryDone>({
+                            name: Actions.SubmitQueryDone.name,
                             error
                         });
                     }
@@ -111,8 +111,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.SubmitQueryDone>(
-            ActionName.SubmitQueryDone,
+        this.addActionHandler<typeof Actions.SubmitQueryDone>(
+            Actions.SubmitQueryDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -200,15 +200,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.AddQueryItem>(
-            ActionName.AddQueryItem,
+        this.addActionHandler<typeof Actions.AddQueryItem>(
+            Actions.AddQueryItem.name,
             action => {
                 this.changeState(state => this.addSpecificationQueryItem(state));
             }
         );
 
-        this.addActionHandler<Actions.RemoveQueryItem>(
-            ActionName.RemoveQueryItem,
+        this.addActionHandler<typeof Actions.RemoveQueryItem>(
+            Actions.RemoveQueryItem.name,
             action => {
                 this.changeState(state => {
                     state.queries = this.removeItem(state.queries, action.payload.sourceId);
@@ -220,8 +220,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.FreqChange>(
-            ActionName.FreqChange,
+        this.addActionHandler<typeof Actions.FreqChange>(
+            Actions.FreqChange.name,
             action => {
                 this.changeState(state => {
                     state.minFreq.value = action.payload.value;
@@ -231,8 +231,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.SetPositionIndex>(
-            ActionName.SetPositionIndex,
+        this.addActionHandler<typeof Actions.SetPositionIndex>(
+            Actions.SetPositionIndex.name,
             action => {
                 this.changeState(state => {
                     state.posLeft = action.payload.valueLeft;
@@ -241,8 +241,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.SetAlignType>(
-            ActionName.SetAlignType,
+        this.addActionHandler<typeof Actions.SetAlignType>(
+            Actions.SetAlignType.name,
             action => {
                 this.changeState(state => {
                     state.posAlign = action.payload.value;
@@ -250,8 +250,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.AttrChange>(
-            ActionName.AttrChange,
+        this.addActionHandler<typeof Actions.AttrChange>(
+            Actions.AttrChange.name,
             action => {
                 this.changeState(state => {
                     state.attr = action.payload.value;
@@ -259,22 +259,22 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.StatePushToHistory>(
-            ActionName.StatePushToHistory,
+        this.addActionHandler<typeof Actions.StatePushToHistory>(
+            Actions.StatePushToHistory.name,
             action => {
                 this.pushStateToHistory(this.state, action.payload.queryId);
             }
         );
 
-        this.addActionHandler<Actions.PopHistory>(
-            ActionName.PopHistory,
+        this.addActionHandler<typeof Actions.PopHistory>(
+            Actions.PopHistory.name,
             action => {
                 console.log('pop history: ', action);
             }
         );
 
-        this.addActionHandler<Actions.ToggleModalForm>(
-            ActionName.ToggleModalForm,
+        this.addActionHandler<typeof Actions.ToggleModalForm>(
+            Actions.ToggleModalForm.name,
             action => {
                 this.changeState(state => {
                     state.modalVisible = action.payload.visible;
@@ -282,8 +282,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.ParamsToggleForm>(
-            ActionName.ParamsToggleForm,
+        this.addActionHandler<typeof Actions.ParamsToggleForm>(
+            Actions.ParamsToggleForm.name,
             action => {
                 this.changeState(state => {
                     state.paramsVisible = !state.paramsVisible;
@@ -329,8 +329,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.ConcordanceReady>(
-            ActionName.ConcordanceReady,
+        this.addActionHandler<typeof Actions.ConcordanceReady>(
+            Actions.ConcordanceReady.name,
             action => {
                 this.changeState(state => {
                     if (action.error) {
@@ -344,8 +344,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.SetExpressionRoleType>(
-            ActionName.SetExpressionRoleType,
+        this.addActionHandler<typeof Actions.SetExpressionRoleType>(
+            Actions.SetExpressionRoleType.name,
             action => {
                 if (action.payload.value !== 'specification' &&
                         Dict.some(
@@ -364,8 +364,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.SetExpressionRoleRatio>(
-            ActionName.SetExpressionRoleRatio,
+        this.addActionHandler<typeof Actions.SetExpressionRoleRatio>(
+            Actions.SetExpressionRoleRatio.name,
             action => {
                 this.changeState(state => {
                     state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.value = action.payload.value;
@@ -375,13 +375,13 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
+            Actions.ResultApplyQuickFilter.name,
             action => {
                 action.payload.concId
                 this.state.queries
-                this.dispatchSideEffect<Actions.ResultApplyQuickFilterArgsReady>({
-                    name: ActionName.ResultApplyQuickFilterArgsReady,
+                this.dispatchSideEffect<typeof Actions.ResultApplyQuickFilterArgsReady>({
+                    name: Actions.ResultApplyQuickFilterArgsReady.name,
                     payload: {
                         attr: this.state.attr,
                         posAlign: this.state.posAlign,
@@ -481,8 +481,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     {contentType: 'application/json'}
             ).pipe(
                 tap( _ => {
-                    this.dispatchSideEffect<Actions.ConcordanceReady>({
-                        name: ActionName.ConcordanceReady,
+                    this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
+                        name: Actions.ConcordanceReady.name,
                         payload: {sourceId: subsetSourceId}
                     })
                 }),
@@ -522,15 +522,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 tap(
                     ([,error]) => {
                         if (error) {
-                            this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                name: ActionName.ConcordanceReady,
+                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
+                                name: Actions.ConcordanceReady.name,
                                 payload: {sourceId},
                                 error
                             });
 
                         } else {
-                            this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                name: ActionName.ConcordanceReady,
+                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
+                                name: Actions.ConcordanceReady.name,
                                 payload: {sourceId}
                             });
                         }
@@ -587,15 +587,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 tap(
                     ([sourceId,, error]) => {
                         if (error) {
-                            this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                name: ActionName.ConcordanceReady,
+                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
+                                name: Actions.ConcordanceReady.name,
                                 payload: {sourceId},
                                 error
                             });
 
                         } else {
-                            this.dispatchSideEffect<Actions.ConcordanceReady>({
-                                name: ActionName.ConcordanceReady,
+                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
+                                name: Actions.ConcordanceReady.name,
                                 payload: {sourceId}
                             });
                         }
@@ -872,7 +872,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             args,
             {
                 onPopStateAction: {
-                    name: ActionName.PopHistory,
+                    name: Actions.PopHistory.name,
                     payload: {
                         corpname: state.corpname,
                         usesubcorp: state.usesubcorp,

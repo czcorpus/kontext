@@ -25,7 +25,7 @@ import { HTTP, List } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions, ActionName } from './actions';
 import { ViewOptsResponse } from './common';
 
@@ -105,8 +105,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         this.layoutModel = layoutModel;
         this.submitResponseHandlers = [];
 
-        this.addActionHandler<MainMenuActions.ShowGeneralViewOptions>(
-            MainMenuActionName.ShowGeneralViewOptions,
+        this.addActionHandler<typeof MainMenuActions.ShowGeneralViewOptions>(
+            MainMenuActions.ShowGeneralViewOptions.name,
             (state, action) => {
                 state.isBusy = true;
                 state.loaded = false;

@@ -23,7 +23,7 @@ import { List, tuple, pipe } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as GeneralOptsActions,
     ActionName as GeneralOptsActionName } from '../options/actions';
@@ -194,30 +194,30 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.UndoLastQueryOp>(
-            ActionName.UndoLastQueryOp,
+        this.addActionHandler<typeof Actions.UndoLastQueryOp>(
+            Actions.UndoLastQueryOp.name,
             null,
             (state, action, dispatch) => {
                 window.history.back();
             }
         );
 
-        this.addActionHandler<Actions.SetVisibleSubmenu>(
-            ActionName.SetVisibleSubmenu,
+        this.addActionHandler<typeof Actions.SetVisibleSubmenu>(
+            Actions.SetVisibleSubmenu.name,
             (state, action) => {
                 state.visibleSubmenu = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.ClearVisibleSubmenu>(
-            ActionName.ClearVisibleSubmenu,
+        this.addActionHandler<typeof Actions.ClearVisibleSubmenu>(
+            Actions.ClearVisibleSubmenu.name,
             (state, action) => {
                 state.visibleSubmenu = null;
             }
         );
 
-        this.addActionHandler<Actions.ClearActiveItem>(
-            ActionName.ClearActiveItem,
+        this.addActionHandler<typeof Actions.ClearActiveItem>(
+            Actions.ClearActiveItem.name,
             (state, action) => {
                 state.activeItem = null;
             }
@@ -225,8 +225,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ConcActions.AddedNewOperation.name
         );
 
-        this.addActionHandler<Actions.ShowSort>(
-            ActionName.ShowSort,
+        this.addActionHandler<typeof Actions.ShowSort>(
+            Actions.ShowSort.name,
             (state, action) => {
                 state.activeItem = {
                     actionName: action.name,
@@ -234,26 +234,26 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 };
             }
         ).reduceAlsoOn(
-            ActionName.ApplyShuffle,
-            ActionName.ShowSample,
-            ActionName.OverviewShowQueryInfo,
-            ActionName.ShowSaveQueryAsForm,
-            ActionName.MakeConcLinkPersistent,
-            ActionName.UndoLastQueryOp,
-            ActionName.FilterApplySubhitsRemove,
-            ActionName.FilterApplyFirstOccurrences,
-            ActionName.ShowFreqForm,
-            ActionName.ShowCollForm,
+            Actions.ApplyShuffle.name,
+            Actions.ShowSample.name,
+            Actions.OverviewShowQueryInfo.name,
+            Actions.ShowSaveQueryAsForm.name,
+            Actions.MakeConcLinkPersistent.name,
+            Actions.UndoLastQueryOp.name,
+            Actions.FilterApplySubhitsRemove.name,
+            Actions.FilterApplyFirstOccurrences.name,
+            Actions.ShowFreqForm.name,
+            Actions.ShowCollForm.name,
             ConcActions.SwitchKwicSentMode.name,
-            ActionName.ShowAttrsViewOptions,
-            ActionName.ShowGeneralViewOptions,
-            ActionName.ShowCitationInfo,
-            ActionName.ShowKeyShortcuts,
-            ActionName.ShowQueryHistory
+            Actions.ShowAttrsViewOptions.name,
+            Actions.ShowGeneralViewOptions.name,
+            Actions.ShowCitationInfo.name,
+            Actions.ShowKeyShortcuts.name,
+            Actions.ShowQueryHistory.name
         );
 
-        this.addActionHandler<Actions.ShowFilter>(
-            ActionName.ShowFilter,
+        this.addActionHandler<typeof Actions.ShowFilter>(
+            Actions.ShowFilter.name,
             (state, action) => {
                 state.activeItem = {
                     actionName: action.name,
@@ -267,8 +267,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ToggleDisabled>(
-            ActionName.ToggleDisabled,
+        this.addActionHandler<typeof Actions.ToggleDisabled>(
+            Actions.ToggleDisabled.name,
             (state, action) => {
                 this.toggleMenuItem(
                     state,

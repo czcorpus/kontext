@@ -24,7 +24,7 @@ import { Bound, IActionDispatcher } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result';
-import { ActionName, Actions } from '../../../models/pquery/actions';
+import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import { Color, id, List, pipe } from 'cnc-tskit';
 import { init as initSaveViews } from './save';
@@ -54,8 +54,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
     }> = (props) => {
 
         const setPage = (page) => () => {
-            dispatcher.dispatch<Actions.SetPage>({
-                name: ActionName.SetPage,
+            dispatcher.dispatch<typeof Actions.SetPage>({
+                name: Actions.SetPage.name,
                 payload: {
                     value: page > props.maxPage ? props.maxPage : page < 1 ? 1 : page
                 }
@@ -107,8 +107,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
         };
 
         const handleSortClick = () => {
-            dispatcher.dispatch<Actions.SortLines>({
-                name: ActionName.SortLines,
+            dispatcher.dispatch<typeof Actions.SortLines>({
+                name: Actions.SortLines.name,
                 payload: {
                     ...props.sortColumn,
                     reverse: !(isSortedByMe() && props.actualSortColumn.reverse)
@@ -138,16 +138,16 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
     const PqueryResultSection:React.FC<PqueryResultModelState> = (props) => {
 
         const _handleSaveFormClose = () => {
-            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
-                name: ActionName.ResultCloseSaveForm
+            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
+                name: Actions.ResultCloseSaveForm.name
             })
         };
 
         const mapColor = (idx:number) => colorHeatmap[~~Math.floor((idx) * (colorHeatmap.length - 1) / props.concIds.length)];
 
         const _handleFilter = (value:string, concId:string) => (e) => {
-            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
-                name: ActionName.ResultApplyQuickFilter,
+            dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
+                name: Actions.ResultApplyQuickFilter.name,
                 payload: {
                     value,
                     concId,

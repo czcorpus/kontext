@@ -22,173 +22,145 @@ import { Action } from 'kombo';
 import { SaveData } from '../../app/navigation';
 import { Kontext } from '../../types/common';
 
-export enum ActionName {
-    SetVisibleSubmenu = 'MAIN_MENU_SET_VISIBLE_SUBMENU',
-    ClearVisibleSubmenu = 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU',
-    ClearActiveItem = 'MAIN_MENU_CLEAR_ACTIVE_ITEM',
-    ShowSort = 'MAIN_MENU_SHOW_SORT',
-    ApplyShuffle = 'MAIN_MENU_APPLY_SHUFFLE',
-    ShowSample = 'MAIN_MENU_SHOW_SAMPLE',
-    OverviewShowQueryInfo = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO',
-    OverviewShowQueryInfoDone = 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE',
-    ShowSaveQueryAsForm = 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM',
-    MakeConcLinkPersistent = 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT',
-    UndoLastQueryOp = 'MAIN_MENU_UNDO_LAST_QUERY_OP',
-    ShowFilter = 'MAIN_MENU_SHOW_FILTER',
-    FilterApplySubhitsRemove = 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE',
-    FilterApplyFirstOccurrences = 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES',
-    ShowFreqForm = 'MAIN_MENU_SHOW_FREQ_FORM',
-    ShowCollForm = 'MAIN_MENU_SHOW_COLL_FORM',
-    ShowAttrsViewOptions = 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS',
-    ShowGeneralViewOptions = 'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS',
-    ShowCitationInfo = 'OVERVIEW_SHOW_CITATION_INFO',
-    ShowKeyShortcuts = 'OVERVIEW_SHOW_KEY_SHORTCUTS',
-    ShowSaveForm = 'MAIN_MENU_SHOW_SAVE_FORM',
-    DirectSave = 'MAIN_MENU_DIRECT_SAVE',
-    ShowSwitchMc = 'MAIN_MENU_SHOW_SWITCHMC',
-    ShowQueryHistory = 'MAIN_MENU_SHOW_QUERY_HISTORY',
-    ToggleDisabled = 'MAIN_MENU_TOGGLE_DISABLED',
-}
 
+export class Actions {
 
-export namespace Actions {
-
-    export interface SetVisibleSubmenu extends Action<{
+    static SetVisibleSubmenu:Action<{
         value:string;
-    }> {
-        name: ActionName.SetVisibleSubmenu;
+    }> = {
+        name: 'MAIN_MENU_SET_VISIBLE_SUBMENU'
     }
 
-    export interface ClearVisibleSubmenu extends Action<{
-    }> {
-        name: ActionName.ClearVisibleSubmenu;
+    static ClearVisibleSubmenu:Action<{
+    }> = {
+        name: 'MAIN_MENU_CLEAR_VISIBLE_SUBMENU'
     }
 
-    export interface ClearActiveItem extends Action<{
-    }> {
-        name: ActionName.ClearActiveItem;
+    static ClearActiveItem:Action<{
+    }> = {
+        name: 'MAIN_MENU_CLEAR_ACTIVE_ITEM'
     }
 
-    export interface ShowSort extends Action<{
-    }> {
-        name: ActionName.ShowSort;
+    static ShowSort:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_SORT'
     }
 
-    export interface ApplyShuffle extends Action<{
-    }> {
-        name: ActionName.ApplyShuffle;
+    static ApplyShuffle:Action<{
+    }> = {
+        name: 'MAIN_MENU_APPLY_SHUFFLE'
     }
 
-    export interface ShowSample extends Action<{
-    }> {
-        name: ActionName.ShowSample;
+    static ShowSample:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_SAMPLE'
     }
 
-    export interface OverviewShowQueryInfo extends Action<{
-    }> {
-        name: ActionName.OverviewShowQueryInfo;
+    static OverviewShowQueryInfo:Action<{
+    }> = {
+        name: 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO'
     }
 
-    export interface OverviewShowQueryInfoDone extends Action<{
+    static OverviewShowQueryInfoDone:Action<{
         Desc:Array<Kontext.QueryOperation>;
-    }> {
-        name: ActionName.OverviewShowQueryInfoDone;
+    }> = {
+        name: 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE'
     }
 
-    export interface ShowSaveQueryAsForm extends Action<{
-    }> {
-        name: ActionName.ShowSaveQueryAsForm;
+    static ShowSaveQueryAsForm:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
     }
 
-    export interface MakeConcLinkPersistent extends Action<{
-    }> {
-        name: ActionName.MakeConcLinkPersistent;
+    static MakeConcLinkPersistent:Action<{
+    }> = {
+        name: 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'
     }
 
-    export interface UndoLastQueryOp extends Action<{
-    }> {
-        name: ActionName.UndoLastQueryOp;
+    static UndoLastQueryOp:Action<{
+    }> = {
+        name: 'MAIN_MENU_UNDO_LAST_QUERY_OP'
     }
 
-    export interface ShowFilter extends Action<{
+    static ShowFilter:Action<{
         within:boolean;
         maincorp:string;
         pnfilter?:'p'|'n';
-    }> {
-        name: ActionName.ShowFilter;
+    }> = {
+        name: 'MAIN_MENU_SHOW_FILTER'
     }
 
-    export interface FilterApplySubhitsRemove extends Action<{
-    }> {
-        name: ActionName.FilterApplySubhitsRemove;
+    static FilterApplySubhitsRemove:Action<{
+    }> = {
+        name: 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE'
     }
 
-    export interface FilterApplyFirstOccurrences extends Action<{
-    }> {
-        name: ActionName.FilterApplyFirstOccurrences;
+    static FilterApplyFirstOccurrences:Action<{
+    }> = {
+        name: 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
     }
 
-    export interface ShowFreqForm extends Action<{
-    }> {
-        name: ActionName.ShowFreqForm;
+    static ShowFreqForm:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_FREQ_FORM'
     }
 
-    export interface ShowCollForm extends Action<{
-    }> {
-        name: ActionName.ShowCollForm;
+    static ShowCollForm:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_COLL_FORM'
     }
 
-    export interface ShowAttrsViewOptions extends Action<{
-    }> {
-        name: ActionName.ShowAttrsViewOptions;
+    static ShowAttrsViewOptions:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS'
     }
 
-    export interface ShowGeneralViewOptions extends Action<{
-    }> {
-        name: ActionName.ShowGeneralViewOptions;
+    static ShowGeneralViewOptions:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS'
     }
 
-    export interface ShowCitationInfo extends Action<{
-    }> {
-        name: ActionName.ShowCitationInfo;
+    static ShowCitationInfo:Action<{
+    }> = {
+        name: 'OVERVIEW_SHOW_CITATION_INFO'
     }
 
-    export interface ShowKeyShortcuts extends Action<{
-    }> {
-        name: ActionName.ShowKeyShortcuts;
+    static ShowKeyShortcuts:Action<{
+    }> = {
+        name: 'OVERVIEW_SHOW_KEY_SHORTCUTS'
     }
 
-    export interface ShowSaveForm extends Action<{
-    }> {
-        name: ActionName.ShowSaveForm;
+    static ShowSaveForm:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_SAVE_FORM'
     }
 
-    export interface DirectSave extends Action<{
+    static DirectSave:Action<{
         saveformat:SaveData.Format;
-    }> {
-        name: ActionName.DirectSave;
+    }> = {
+        name: 'MAIN_MENU_DIRECT_SAVE'
     }
 
-    export interface ShowSwitchMc extends Action<{
-    }> {
-        name: ActionName.ShowSwitchMc;
+    static ShowSwitchMc:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_SWITCHMC'
     }
 
-    export interface ShowQueryHistory extends Action<{
-    }> {
-        name: ActionName.ShowQueryHistory;
+    static ShowQueryHistory:Action<{
+    }> = {
+        name: 'MAIN_MENU_SHOW_QUERY_HISTORY'
     }
 
     /**
      * note: in case submenuId is not specified
      * the whole section should be disabled/enabled
      */
-    export interface ToggleDisabled extends Action<{
+    static ToggleDisabled:Action<{
         menuId:string;
         submenuId?:string;
         disabled:boolean;
 
-    }> {
-        name: ActionName.ToggleDisabled;
+    }> = {
+        name: 'MAIN_MENU_TOGGLE_DISABLED'
     }
 }

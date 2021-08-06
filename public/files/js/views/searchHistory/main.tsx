@@ -24,7 +24,7 @@ import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 import { Kontext } from '../../types/common';
 import { init as fullViewInit } from './full';
 import { MainMenuModelState } from '../../models/mainMenu';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { SearchHistoryModel } from '../../models/searchHistory';
 
 export interface MainModuleArgs {
@@ -51,12 +51,12 @@ export function init({dispatcher, helpers, searchHistoryModel, mainMenuModel}:Ma
         }
 
         _isActive() {
-            return this._isActiveItem(MainMenuActionName.ShowQueryHistory);
+            return this._isActiveItem(MainMenuActions.ShowQueryHistory.name);
         }
 
         _handleCloseClick() {
-            dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-                name: MainMenuActionName.ClearActiveItem
+            dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+                name: MainMenuActions.ClearActiveItem.name
             });
         }
 

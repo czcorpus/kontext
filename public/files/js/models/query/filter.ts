@@ -32,7 +32,7 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
@@ -380,8 +380,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 changeMaincorp: undefined
         });
         this.syncInitialArgs = syncInitialArgs;
-        this.addActionHandler<MainMenuActions.ShowFilter>(
-            MainMenuActionName.ShowFilter,
+        this.addActionHandler<typeof MainMenuActions.ShowFilter>(
+            MainMenuActions.ShowFilter.name,
             action => {
                 this.changeState(state => {
                     state.changeMaincorp = action.payload.maincorp

@@ -29,7 +29,7 @@ import { FreqServerArgs } from './common';
 import { HTTP, List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { ActionName, Actions } from './actions';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ajaxErrorMapped } from '../../app/navigation';
 
 
@@ -154,8 +154,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             quickSaveRowLimit: quickSaveRowLimit
         });
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             (state, action) => {state.saveFormActive = true}
         );
 
@@ -276,7 +276,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     payload: {data: this.getSubmitArgs(state)}
                 })
             }
-        ).sideEffectAlsoOn(MainMenuActionName.DirectSave);
+        ).sideEffectAlsoOn(MainMenuActions.DirectSave.name);
 
         this.addActionHandler<Actions.ResultApplyQuickFilter>(
             ActionName.ResultApplyQuickFilter,

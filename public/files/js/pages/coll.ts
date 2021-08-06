@@ -37,7 +37,7 @@ import { List, Dict } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
-import { ActionName as MMActionName } from '../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/coll/actions';
 
 
@@ -342,7 +342,7 @@ export class CollPage {
             this.layoutModel.dispatcher.registerActionListener(
                 (action) => {
                     switch (action.name) {
-                        case MMActionName.ShowFilter:
+                        case MainMenuActions.ShowFilter.name:
                             const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
@@ -351,19 +351,19 @@ export class CollPage {
                                 ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
                             );
                         break;
-                        case MMActionName.ShowSort:
+                        case MainMenuActions.ShowSort.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()
                             ) + '#sort');
                         break;
-                        case MMActionName.ShowSample:
+                        case MainMenuActions.ShowSample.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()
                             ) + '#sample');
                         break;
-                        case MMActionName.ApplyShuffle:
+                        case MainMenuActions.ApplyShuffle.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
                                 this.layoutModel.exportConcArgs().items()

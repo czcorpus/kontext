@@ -45,8 +45,7 @@ import { UserSettings } from './userSettings';
 import { MainMenuModel, InitialMenuData, disableMenuItems } from '../models/mainMenu';
 import { AppNavigation } from './navigation';
 import { EmptyPlugin } from '../plugins/empty/init';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName }
-    from '../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions as ATActions } from '../models/asyncTask/actions';
 import { ConcServerArgs, IConcArgsHandler } from '../models/concordance/common';
 import { Actions, ActionName } from '../models/common/actions';
@@ -585,8 +584,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     resetMenuActiveItemAndNotify():void {
-        this.dispatcher.dispatch<MainMenuActions.ClearActiveItem>({
-            name: MainMenuActionName.ClearActiveItem
+        this.dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
+            name: MainMenuActions.ClearActiveItem.name
         });
     }
 

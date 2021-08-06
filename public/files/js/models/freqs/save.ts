@@ -25,7 +25,7 @@ import {MultiDict} from '../../multidict';
 import {Freq2DTableModel} from './twoDimension/table2d';
 import {Freq2DFlatViewModel} from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ActionName, Actions } from './actions';
 
 
@@ -75,8 +75,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.formIsActive = true;
@@ -85,8 +85,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             }
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
@@ -223,8 +223,8 @@ export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModel
             action => this.changeState(state => {state.saveMode = action.payload.value})
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {
                 if (this.state.saveMode === 'table') {
                     this.ctTableModel.submitDataConversion(action.payload.saveformat);

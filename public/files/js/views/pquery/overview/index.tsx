@@ -28,7 +28,7 @@ import { init as formInit } from '../form';
 import * as React from 'react';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import * as S from './style';
-import { ActionName, Actions } from '../../../models/pquery/actions';
+import { Actions } from '../../../models/pquery/actions';
 import { HtmlHelpModel } from '../../../models/help/help';
 import { MainMenuModelState } from '../../../models/mainMenu';
 
@@ -47,8 +47,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const Overview:React.FC<PqueryFormModelState & OverviewProps> = (props) => {
 
         const handleQueryClick = () => {
-            dispatcher.dispatch<Actions.ToggleModalForm>({
-                name: ActionName.ToggleModalForm,
+            dispatcher.dispatch<typeof Actions.ToggleModalForm>({
+                name: Actions.ToggleModalForm.name,
                 payload: {
                     visible: true
                 }
@@ -56,8 +56,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         };
 
         const handleModalClose = () => {
-            dispatcher.dispatch<Actions.ToggleModalForm>({
-                name: ActionName.ToggleModalForm,
+            dispatcher.dispatch<typeof Actions.ToggleModalForm>({
+                name: Actions.ToggleModalForm.name,
                 payload: {
                     visible: false
                 }

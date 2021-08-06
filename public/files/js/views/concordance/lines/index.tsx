@@ -29,8 +29,7 @@ import { LineSelectionModel, LineSelectionModelState }
     from '../../../models/concordance/lineSelection';
 import { ConcDetailModel } from '../../../models/concordance/detail';
 import { Actions } from '../../../models/concordance/actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName }
-    from '../../../models/mainMenu/actions';
+import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
 import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
@@ -127,8 +126,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 });
 
             } else {
-                dispatcher.dispatch<MainMenuActions.ShowFilter>({
-                    name: MainMenuActionName.ShowFilter,
+                dispatcher.dispatch<typeof MainMenuActions.ShowFilter>({
+                    name: MainMenuActions.ShowFilter.name,
                     payload: {
                         within: true,
                         maincorp: corpusId

@@ -23,8 +23,8 @@ import { SaveData } from '../../app/navigation';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
-import { ActionName, Actions } from './actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions } from './actions';
 
 
 
@@ -73,8 +73,8 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.formIsActive = true;
@@ -83,8 +83,8 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
             }
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                         'global__quicksave_limit_warning_{format}{lines}',
@@ -95,12 +95,12 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                         state.toLine.value = `${state.quickSaveRowLimit}`
                     });
                     this.suspend({}, (action, syncData) =>
-                        action.name === ActionName.SaveFormPrepareSubmitArgsDone ? null : syncData
+                        action.name === Actions.SaveFormPrepareSubmitArgsDone.name ? null : syncData
 
                     ).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload
+                                (action as typeof Actions.SaveFormPrepareSubmitArgsDone).payload
                             );
                         }
                     )
@@ -108,38 +108,38 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             action => this.changeState(state => {state.formIsActive = false})
         );
 
-        this.addActionHandler<Actions.SaveFormSetFormat>(
-            ActionName.SaveFormSetFormat,
+        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
+            Actions.SaveFormSetFormat.name,
             action => this.changeState(state => {state.saveformat = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetFromLine>(
-            ActionName.SaveFormSetFromLine,
+        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
+            Actions.SaveFormSetFromLine.name,
             action => this.changeState(state => {state.fromLine.value = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetToLine>(
-            ActionName.SaveFormSetToLine,
+        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
+            Actions.SaveFormSetToLine.name,
             action => this.changeState(state => {state.toLine.value = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeHeading>(
-            ActionName.SaveFormSetIncludeHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeHeading>(
+            Actions.SaveFormSetIncludeHeading.name,
             action => this.changeState(state => {state.includeHeading = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeColHeading>(
-            ActionName.SaveFormSetIncludeColHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeColHeading>(
+            Actions.SaveFormSetIncludeColHeading.name,
             action => this.changeState(state => {state.includeColHeaders = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             action => {
                 let err;
                 this.changeState(state => {err = this.validateForm(state)});
@@ -149,11 +149,11 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
                 } else {
                     this.changeState(state => {state.formIsActive = false});
                     this.suspend({}, (action, syncData) => {
-                        return action.name === ActionName.SaveFormPrepareSubmitArgsDone ? null : syncData
+                        return action.name === Actions.SaveFormPrepareSubmitArgsDone.name ? null : syncData
                     }).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.SaveFormPrepareSubmitArgsDone).payload);
+                                (action as typeof Actions.SaveFormPrepareSubmitArgsDone).payload);
                         }
                     )
                 }

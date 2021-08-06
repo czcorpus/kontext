@@ -22,10 +22,9 @@
 import { HTTP, List, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PqueryResult } from './common';
-import { Actions as MMActions, ActionName as MMActionName } from '../mainMenu/actions';
 import { AlignTypes } from '../freqs/twoDimension/common';
 
 
@@ -66,8 +65,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<Actions.SortLines>(
-            ActionName.SortLines,
+        this.addActionHandler<typeof Actions.SortLines>(
+            Actions.SortLines.name,
             action => {
                 this.changeState(state => {
                     state.sortColumn = action.payload;
@@ -77,8 +76,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SetPage>(
-            ActionName.SetPage,
+        this.addActionHandler<typeof Actions.SetPage>(
+            Actions.SetPage.name,
             action => {
                 this.changeState(state => {
                     state.page = isNaN(action.payload.value) ? state.page : action.payload.value;
@@ -87,8 +86,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.saveFormActive = false;
@@ -96,8 +95,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             action => {
                 this.changeState(state => {
                     state.saveFormActive = true;
@@ -105,18 +104,18 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             action => {this.sendSaveArgs(dispatcher)}
         );
 
-        this.addActionHandler<MainMenuActions.DirectSave>(
-            MainMenuActionName.DirectSave,
+        this.addActionHandler<typeof MainMenuActions.DirectSave>(
+            MainMenuActions.DirectSave.name,
             action => {this.sendSaveArgs(dispatcher)}
         );
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
+            Actions.ResultApplyQuickFilter.name,
             action => {
                 this.suspendWithTimeout(
                     1000,
@@ -163,8 +162,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
         ).subscribe(
             resp => {
-                this.dispatchSideEffect<MMActions.ToggleDisabled>({
-                    name: MMActionName.ToggleDisabled,
+                this.dispatchSideEffect<typeof MainMenuActions.ToggleDisabled>({
+                    name: MainMenuActions.ToggleDisabled.name,
                     payload: {
                         menuId: 'menu-save',
                         disabled: List.empty(resp.rows)
@@ -179,8 +178,8 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
     }
 
     sendSaveArgs(dispatcher:IFullActionControl):void {
-        dispatcher.dispatchSideEffect<Actions.SaveFormPrepareSubmitArgsDone>({
-            name: ActionName.SaveFormPrepareSubmitArgsDone,
+        dispatcher.dispatchSideEffect<typeof Actions.SaveFormPrepareSubmitArgsDone>({
+            name: Actions.SaveFormPrepareSubmitArgsDone.name,
             payload: {
                 queryId: this.state.queryId,
                 sort: exportSortColumn(this.state.sortColumn),

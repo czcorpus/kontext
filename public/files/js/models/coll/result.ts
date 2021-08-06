@@ -27,7 +27,7 @@ import { PageModel } from '../../app/page';
 import { CollFormModel } from '../../models/coll/collForm';
 import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
-import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { HTTP, List } from 'cnc-tskit';
 import { CollResultData, CollResultHeading, CollResultRow, CollResultHeadingCell,
     AjaxResponse, CollServerArgs, CollSaveServerArgs } from './common';
@@ -284,8 +284,8 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
 
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm>(
-            MainMenuActionName.ShowSaveForm,
+        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
+            MainMenuActions.ShowSaveForm.name,
             (state, action) => {
                 state.saveFormVisible = true;
             }
