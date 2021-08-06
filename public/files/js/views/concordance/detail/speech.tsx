@@ -23,7 +23,7 @@ import { IActionDispatcher, Bound } from 'kombo';
 
 import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { Kontext } from '../../../types/common';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { Color, pipe, List, Dict } from 'cnc-tskit';
 import { init as initMediaViews } from '../media';
 import { PlayerStatus } from '../../../models/concordance/media';
@@ -56,8 +56,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleExpandClick = (position) => {
-            dispatcher.dispatch<Actions.ExpandSpeechDetail>({
-                name: ActionName.ExpandSpeechDetail,
+            dispatcher.dispatch<typeof Actions.ExpandSpeechDetail>({
+                name: Actions.ExpandSpeechDetail.name,
                 payload: {
                     position: position
                 }
@@ -137,7 +137,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         render() {
-            return (                
+            return (
                 this.props.isPlaying && this.props.audioPlayerStatus ?
                     <div>
                         <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
@@ -287,11 +287,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handlePlayClick(segments, rowIdx) {
-            dispatcher.dispatch<Actions.AudioPlayersStop>({
-                name: ActionName.AudioPlayersStop
+            dispatcher.dispatch<typeof Actions.AudioPlayersStop>({
+                name: Actions.AudioPlayersStop.name
             });
-            dispatcher.dispatch<Actions.PlaySpeech>({
-                name: ActionName.PlaySpeech,
+            dispatcher.dispatch<typeof Actions.PlaySpeech>({
+                name: Actions.PlaySpeech.name,
                 payload: {
                     segments: segments,
                     rowIdx: rowIdx

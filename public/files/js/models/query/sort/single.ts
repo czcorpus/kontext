@@ -31,7 +31,7 @@ import { Actions } from '../actions';
 import { Dict, HTTP, List } from 'cnc-tskit';
 import { SortFormProperties } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../concordance/actions';
+import { Actions as ConcActions } from '../../concordance/actions';
 
 
 /**
@@ -113,8 +113,8 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
                     )
                 ).subscribe(
                     (data) => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             payload: {
                                 concId: data.conc_persistence_op_id,
                                 data

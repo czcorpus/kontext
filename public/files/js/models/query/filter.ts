@@ -20,7 +20,7 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { filter, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
 import { Kontext } from '../../types/common';
@@ -31,7 +31,7 @@ import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { Actions } from './actions';
-import { ActionName as ConcActionName, Actions as ConcActions } from '../concordance/actions';
+import { Actions as ConcActions } from '../concordance/actions';
 import { ActionName as MainMenuActionName, Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginInterfaces } from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
@@ -469,10 +469,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                                 });
                             }
                         )
-                    ).subscribe(
-                        (data) => {
-                            dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                                name: ConcActionName.AddedNewOperation,
+                    ).subscribe({
+                        next: data => {
+                            dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                                name: ConcActions.AddedNewOperation.name,
                                 payload: {
                                     concId: data.conc_persistence_op_id,
                                     changeMaincorp: this.state.changeMaincorp,
@@ -481,13 +481,13 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             });
 
                         },
-                        (err) => {
+                        error: err => {
                             this.pageModel.showMessage('error', err);
                             this.changeState(state => {
                                 state.isBusy = false;
                             });
                         }
-                    );
+                    });
 
                 } else {
                     this.pageModel.showMessage('error', err);

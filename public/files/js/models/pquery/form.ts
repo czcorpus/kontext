@@ -31,7 +31,7 @@ import { Actions as ATActions } from '../../models/asyncTask/actions';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { Kontext, TextTypes } from '../../types/common';
 import { ConcQueryResponse } from '../concordance/common';
-import { concatMap, map, reduce, tap } from 'rxjs/operators';
+import { catchError, concatMap, map, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState,
@@ -89,8 +89,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     state.concWait = Dict.map(v => 'running', state.concWait);
                 });
 
-                this.submitForm(this.state).subscribe(
-                    (task) => {
+                this.submitForm(this.state).subscribe({
+                    next: task => {
                         this.dispatchSideEffect<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             payload: {
@@ -100,14 +100,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             },
                         });
                     },
-                    (error) => {
+                    error: error => {
                         this.layoutModel.showMessage('error', error);
                         this.dispatchSideEffect<Actions.SubmitQueryDone>({
                             name: ActionName.SubmitQueryDone,
                             error
                         });
                     }
-                )
+                })
             }
         );
 
@@ -203,27 +203,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.addActionHandler<Actions.AddQueryItem>(
             ActionName.AddQueryItem,
             action => {
-                this.changeState(state => {
-                    const size = Dict.size(state.queries);
-                    state.concWait[createSourceId(size)] = 'none';
-                    state.queries[createSourceId(size)] = {
-                        corpname: state.corpname,
-                        qtype: 'advanced',
-                        query: '',
-                        queryHtml: '',
-                        rawAnchorIdx: 0,
-                        rawFocusIdx: 0,
-                        parsedAttrs: [],
-                        focusedAttr: undefined,
-                        pcq_pos_neg: 'pos',
-                        include_empty: false,
-                        default_attr: null,
-                        expressionRole: {
-                            type: 'specification',
-                            maxNonMatchingRatio: Kontext.newFormValue('0', true)
-                        }
-                    }
-                });
+                this.changeState(state => this.addSpecificationQueryItem(state));
             }
         );
 
@@ -233,6 +213,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.queries = this.removeItem(state.queries, action.payload.sourceId);
                     state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
+                    if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                        this.addSpecificationQueryItem(state);
+                    }
                 });
             }
         );
@@ -350,7 +333,13 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ActionName.ConcordanceReady,
             action => {
                 this.changeState(state => {
-                    state.concWait[action.payload.sourceId] = 'finished';
+                    if (action.error) {
+                        state.concWait = Dict.map(_ => 'none', state.concWait);
+                        state.isBusy = false;
+
+                    } else {
+                        state.concWait[action.payload.sourceId] = 'finished';
+                    }
                 });
             }
         );
@@ -367,6 +356,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 } else {
                     this.changeState(state => {
                         state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
+                        if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                            this.addSpecificationQueryItem(state);
+                        }
                     });
                 }
             }
@@ -521,19 +513,39 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     {contentType: 'application/json'}
 
             ).pipe(
+                map(
+                    v => tuple<ConcQueryResponse, Error>(v, null)
+                ),
+                catchError(
+                    err => rxOf(tuple<ConcQueryResponse, Error>(null, err))
+                ),
                 tap(
-                    _ => {
-                        this.dispatchSideEffect<Actions.ConcordanceReady>({
-                            name: ActionName.ConcordanceReady,
-                            payload: {sourceId}
-                        })
+                    ([,error]) => {
+                        if (error) {
+                            this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                name: ActionName.ConcordanceReady,
+                                payload: {sourceId},
+                                error
+                            });
+
+                        } else {
+                            this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                name: ActionName.ConcordanceReady,
+                                payload: {sourceId}
+                            });
+                        }
                     }
                 ),
                 map(
-                    resp => tuple(
-                        resp,
-                        parseFloat(state.queries[sourceId].expressionRole.maxNonMatchingRatio.value)
-                    )
+                    ([resp, error]) => {
+                        if (error) {
+                            throw error;
+                        }
+                        return tuple(
+                            resp,
+                            parseFloat(state.queries[sourceId].expressionRole.maxNonMatchingRatio.value)
+                        );
+                    }
                 )
             );
 
@@ -562,20 +574,40 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
                     ).pipe(
                         map(
-                            resp => tuple(sourceId, resp)
+                            resp => tuple<string, ConcQueryResponse, Error>(sourceId, resp, undefined)
+                        ),
+                        catchError(
+                            err => {
+                                console.log('catching error: ', err);
+                                return rxOf(tuple<string, ConcQueryResponse, Error>(sourceId, undefined, err))
+                            }
                         )
                     )
                 ),
                 tap(
-                    ([sourceId,]) => {
-                        this.dispatchSideEffect<Actions.ConcordanceReady>({
-                            name: ActionName.ConcordanceReady,
-                            payload: {sourceId}
-                        })
+                    ([sourceId,, error]) => {
+                        if (error) {
+                            this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                name: ActionName.ConcordanceReady,
+                                payload: {sourceId},
+                                error
+                            });
+
+                        } else {
+                            this.dispatchSideEffect<Actions.ConcordanceReady>({
+                                name: ActionName.ConcordanceReady,
+                                payload: {sourceId}
+                            });
+                        }
                     }
                 ),
                 concatMap(
-                    ([,concResponse]) => this.mkFilterStream(state, concResponse)
+                    ([,concResponse, error]) => {
+                        if (error) {
+                            throw error;
+                        }
+                        return this.mkFilterStream(state, concResponse);
+                    }
                 ),
                 reduce(
                     (acc, respTuple) => List.push(respTuple, acc),
@@ -852,6 +884,28 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             },
             window.document.title
         )
+    }
+
+    private addSpecificationQueryItem(state:PqueryFormModelState) {
+        const size = Dict.size(state.queries);
+        state.concWait[createSourceId(size)] = 'none';
+        state.queries[createSourceId(size)] = {
+            corpname: state.corpname,
+            qtype: 'advanced',
+            query: '',
+            queryHtml: '',
+            rawAnchorIdx: 0,
+            rawFocusIdx: 0,
+            parsedAttrs: [],
+            focusedAttr: undefined,
+            pcq_pos_neg: 'pos',
+            include_empty: false,
+            default_attr: null,
+            expressionRole: {
+                type: 'specification',
+                maxNonMatchingRatio: Kontext.newFormValue('0', true)
+            }
+        }
     }
 
 }

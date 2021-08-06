@@ -20,10 +20,10 @@
 
 import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
-import { HTTP, List } from 'cnc-tskit';
+import { HTTP } from 'cnc-tskit';
 import { PageModel } from "../../app/page";
 import { AjaxResponse } from '../../types/ajaxResponses';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 
 
 export class HitReloader {
@@ -42,8 +42,8 @@ export class HitReloader {
     init():void {
         const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
         const applyData = (data:AjaxResponse.ConcStatus) => {
-            this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationUpdated>({
-                name: ActionName.AsyncCalculationUpdated,
+            this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationUpdated>({
+                name: Actions.AsyncCalculationUpdated.name,
                 payload: {
                     finished: !!data.finished,
                     concsize: data.concsize,
@@ -61,18 +61,18 @@ export class HitReloader {
                 corp_id:string;
                 subc_path:string;
                 conc_id:string}, AjaxResponse.ConcStatus>('conc_cache_status');
-            concCacheStatusSocket.subscribe(
-                (response) => {
+            concCacheStatusSocket.subscribe({
+                next: response => {
                     applyData(response);
                 },
-                (err) => {
-                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
-                        name: ActionName.AsyncCalculationFailed,
+                error: err => {
+                    this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationFailed>({
+                        name: Actions.AsyncCalculationFailed.name,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', err);
                 }
-            );
+            });
             checkConc$.next({
                 user_id: this.layoutModel.getConf<number>('userId'),
                 corp_id: this.layoutModel.getCorpusIdent().id,
@@ -107,8 +107,8 @@ export class HitReloader {
                     applyData(response);
                 },
                 (err) => {
-                    this.layoutModel.dispatcher.dispatch<Actions.AsyncCalculationFailed>({
-                        name: ActionName.AsyncCalculationFailed,
+                    this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationFailed>({
+                        name: Actions.AsyncCalculationFailed.name,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', err);

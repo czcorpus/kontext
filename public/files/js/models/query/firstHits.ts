@@ -28,7 +28,7 @@ import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { Actions } from './actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
 import { HTTP } from 'cnc-tskit';
 
@@ -75,8 +75,8 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                 this.submitForm(action.payload.opKey, concId)
                 .subscribe(
                     data => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             payload: {
                                 concId: data.conc_persistence_op_id,
                                 data
@@ -84,8 +84,8 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                         });
                     },
                     error => {
-                        dispatcher.dispatch<ConcActions.AddedNewOperation>({
-                            name: ConcActionName.AddedNewOperation,
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
                             error
                         });
                     }

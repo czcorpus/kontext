@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
-import { ActionName, Actions } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { Actions as UserActions } from '../../../models/user/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
 import * as S from './style';
@@ -88,23 +88,23 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         const actionChangeHandler = (evt:React.ChangeEvent<{value:string}>) => {
             switch (evt.target.value) {
                 case 'clear':
-                    dispatcher.dispatch<Actions.LineSelectionReset>({
-                        name: ActionName.LineSelectionReset
+                    dispatcher.dispatch<typeof Actions.LineSelectionReset>({
+                        name: Actions.LineSelectionReset.name
                     });
                 break;
                 case 'remove':
-                    dispatcher.dispatch<Actions.RemoveSelectedLines>({
-                        name: ActionName.RemoveSelectedLines
+                    dispatcher.dispatch<typeof Actions.RemoveSelectedLines>({
+                        name: Actions.RemoveSelectedLines.name
                     });
                 break;
                 case 'remove_inverted':
-                    dispatcher.dispatch<Actions.RemoveNonSelectedLines>({
-                        name: ActionName.RemoveNonSelectedLines
+                    dispatcher.dispatch<typeof Actions.RemoveNonSelectedLines>({
+                        name: Actions.RemoveNonSelectedLines.name
                     });
                 break;
                 case 'apply':
-                    dispatcher.dispatch<Actions.MarkLines>({
-                        name: ActionName.MarkLines
+                    dispatcher.dispatch<typeof Actions.MarkLines>({
+                        name: Actions.MarkLines.name
                     });
                 break;
             }
@@ -193,10 +193,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleConfirmClick() {
-            const newState = he.cloneState(this.state);
-            this.setState(newState);
-            dispatcher.dispatch<Actions.RenameSelectionGroup>({
-                name: ActionName.RenameSelectionGroup,
+            this.setState({...this.state});
+            dispatcher.dispatch<typeof Actions.RenameSelectionGroup>({
+                name: Actions.RenameSelectionGroup.name,
                 payload: {
                     srcGroupNum: Number(this.state.srcGroupNum),
                     dstGroupNum: this.state.dstGroupNum ? Number(this.state.dstGroupNum) : -1
@@ -353,28 +352,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         _actionSwitchHandler(evt) {
             switch (evt.target.value) {
                 case 'edit-groups':
-                    dispatcher.dispatch<Actions.UnlockLineSelection>({
-                        name: ActionName.UnlockLineSelection
+                    dispatcher.dispatch<typeof Actions.UnlockLineSelection>({
+                        name: Actions.UnlockLineSelection.name
                     });
                     break;
                 case 'sort-groups':
-                    dispatcher.dispatch<Actions.SortLineSelection>({
-                        name: ActionName.SortLineSelection
+                    dispatcher.dispatch<typeof Actions.SortLineSelection>({
+                        name: Actions.SortLineSelection.name
                     });
                     break;
                 case 'clear-groups':
-                    dispatcher.dispatch<Actions.LineSelectionResetOnServer>({
-                        name: ActionName.LineSelectionResetOnServer
+                    dispatcher.dispatch<typeof Actions.LineSelectionResetOnServer>({
+                        name: Actions.LineSelectionResetOnServer.name
                     });
                     break;
                 case 'remove-other-lines':
-                    dispatcher.dispatch<Actions.RemoveLinesNotInGroups>({
-                        name: ActionName.RemoveLinesNotInGroups
+                    dispatcher.dispatch<typeof Actions.RemoveLinesNotInGroups>({
+                        name: Actions.RemoveLinesNotInGroups.name
                     });
                     break;
                 case 'rename-group-label':
-                    dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
-                        name: ActionName.ToggleLineGroupRenameForm
+                    dispatcher.dispatch<typeof Actions.ToggleLineGroupRenameForm>({
+                        name: Actions.ToggleLineGroupRenameForm.name
                     });
                     break;
             }
@@ -382,14 +381,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
         _handleEmailDialogButton(evt:React.FormEvent<{value:string}>) {
             if (evt.currentTarget.value === 'cancel') {
-                dispatcher.dispatch<Actions.ClearUserCredentials>({
-                    name: ActionName.ClearUserCredentials,
+                dispatcher.dispatch<typeof Actions.ClearUserCredentials>({
+                    name: Actions.ClearUserCredentials.name,
                     payload: {}
                 });
 
             } else if (evt.currentTarget.value === 'send') {
-                dispatcher.dispatch<Actions.SendLineSelectionToEmail>({
-                    name: ActionName.SendLineSelectionToEmail,
+                dispatcher.dispatch<typeof Actions.SendLineSelectionToEmail>({
+                    name: Actions.SendLineSelectionToEmail.name,
                     payload: {
                         email: this.props.emailDialogCredentials.email
                     }
@@ -398,8 +397,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _emailChangeHandler(evt:React.ChangeEvent<{value:string}>) {
-            dispatcher.dispatch<Actions.ChangeEmail>({
-                name: ActionName.ChangeEmail,
+            dispatcher.dispatch<typeof Actions.ChangeEmail>({
+                name: Actions.ChangeEmail.name,
                 payload: {
                     email: evt.target.value
                 }
@@ -413,8 +412,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleRenameCancel() {
-            dispatcher.dispatch<Actions.ToggleLineGroupRenameForm>({
-                name: ActionName.ToggleLineGroupRenameForm
+            dispatcher.dispatch<typeof Actions.ToggleLineGroupRenameForm>({
+                name: Actions.ToggleLineGroupRenameForm.name
             });
         }
 

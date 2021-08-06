@@ -31,7 +31,7 @@ import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../.
 import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
 import { Actions } from '../../../models/query/actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../../../models/mainMenu/actions';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../../models/concordance/actions';
+import { Actions as ConcActions } from '../../../models/concordance/actions';
 import { ShuffleFormProps, SampleFormProps, SwitchMainCorpFormProps } from '../miscActions';
 import { QueryFormLiteProps, QueryFormProps } from '../first';
 import { FilterFormProps, SubHitsFormProps, FirstHitsFormProps} from '../filter';
@@ -554,7 +554,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         );
     }
 
-    const BoundQueryOverview = BoundWithProps<QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(QueryOverview, queryReplayModel);
+    const BoundQueryOverview = BoundWithProps<QueryOverviewProps, QueryReplayModelState|IndirectQueryReplayModelState>(
+        QueryOverview, queryReplayModel);
 
 
     // ------------------------ <RedirectingQueryOverview /> -------------------------------
@@ -711,8 +712,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         private handleSubmit() {
-            dispatcher.dispatch<ConcActions.MakeConcPermanent>({
-                name: ConcActionName.MakeConcPermanent,
+            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
+                name: ConcActions.MakeConcPermanent.name,
                 payload: {
                     revoke: false
                 }
@@ -720,8 +721,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         private handleRevokeSubmit() {
-            dispatcher.dispatch<ConcActions.MakeConcPermanent>({
-                name: ConcActionName.MakeConcPermanent,
+            dispatcher.dispatch<typeof ConcActions.MakeConcPermanent>({
+                name: ConcActions.MakeConcPermanent.name,
                 payload: {
                     revoke: true
                 }
@@ -733,8 +734,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         componentDidMount() {
-            dispatcher.dispatch<ConcActions.GetConcArchiveStatus>({
-                name: ConcActionName.GetConcArchiveStatus
+            dispatcher.dispatch<typeof ConcActions.GetConcArchiveStatus>({
+                name: ConcActions.GetConcArchiveStatus.name
             });
         }
 

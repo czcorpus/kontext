@@ -23,7 +23,6 @@ from collections import defaultdict
 import time
 from typing import Dict, Any, List, Union, Optional
 from dataclasses import asdict
-import math
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
@@ -41,7 +40,7 @@ from conclib.search import get_conc
 from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
 from conclib.errors import (
     UnknownConcordanceAction, ConcordanceException, ConcordanceQuerySyntaxError, ConcordanceQueryParamsError,
-    extract_manatee_syntax_error)
+    ConcordanceSpecificationError, extract_manatee_error)
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -207,7 +206,7 @@ class Actions(Querying):
         try:
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=asnc,
-                            save=self.args.save, samplesize=corpus_info.sample_size)
+                            samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -225,12 +224,10 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
-        except (ConcCacheStatusException, RuntimeError) as ex:
-            synt_err = extract_manatee_syntax_error(ex)
-            if isinstance(synt_err, ConcordanceQuerySyntaxError):
-                raise UserActionException(synt_err, code=422)
-            elif 'AttrNotFound' in str(ex):
-                raise UserActionException(ex, code=422)
+        except (ConcordanceException, RuntimeError) as ex:
+            manatee_error = extract_manatee_error(ex)
+            if isinstance(manatee_error, ConcordanceSpecificationError):
+                raise UserActionException(manatee_error, code=422)
             else:
                 raise ex
         except UnknownConcordanceAction as ex:
@@ -463,7 +460,7 @@ class Actions(Querying):
         if sampled_size:
             orig_conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                                  q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                 asnc=False, save=self.args.save)
+                                 asnc=False)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 
@@ -678,22 +675,16 @@ class Actions(Querying):
             logging.getLogger(__name__).debug('query: {}'.format(self.args.q))
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=qinfo.asnc,
-                            save=self.args.save, samplesize=corpus_info.sample_size)
+                            samplesize=corpus_info.sample_size)
             ans['size'] = conc.size()
             ans['finished'] = conc.finished()
             self.on_conc_store = store_last_op
             self._status = 201
-        except ConcordanceQueryParamsError as e:
-            ans['size'] = 0
-            ans['finished'] = True
-            self.add_system_message('warning', str(e))
         except (ConcordanceException, ConcCacheStatusException) as ex:
             ans['size'] = 0
             ans['finished'] = True
-            if isinstance(ex, ConcordanceQuerySyntaxError):
+            if isinstance(ex, ConcordanceSpecificationError):
                 raise UserActionException(ex, code=422)
-            elif 'AttrNotFound' in str(ex):
-                raise UserActionException(ex)
             else:
                 raise ex
         ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
@@ -832,7 +823,7 @@ class Actions(Querying):
             corpus_info = self.get_corpus_info(self.args.corpname)
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=True,
-                            save=self.args.save, samplesize=corpus_info.sample_size)
+                            samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -948,7 +939,6 @@ class Actions(Querying):
         args.user_id = self.session_get('user', 'id')
         args.q = self.args.q
         args.pagesize = self.args.pagesize
-        args.save = self.args.save
         args.samplesize = 0
         args.flimit = flimit
         args.fcrit = fcrit
@@ -1045,7 +1035,7 @@ class Actions(Querying):
                 pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
                 cc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                               q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
-                              pagesize=self.args.pagesize, asnc=False, save=self.args.save)
+                              pagesize=self.args.pagesize, asnc=False)
                 freq = cc.size()
                 err_nfilter, corr_nfilter = '', ''
                 if freq != calc_result['conc_size']:
@@ -1294,7 +1284,6 @@ class Actions(Querying):
             subcpath=self.subcpath,
             user_id=self.session_get('user', 'id'),
             q=self.args.q,
-            save=bool(self.args.save),
             samplesize=0,  # TODO (check also freqs)
             cattr=self.args.cattr,
             csortfn=self.args.csortfn,
@@ -1440,7 +1429,7 @@ class Actions(Querying):
 
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                             q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
-                            asnc=False, save=self.args.save, samplesize=corpus_info.sample_size)
+                            asnc=False, samplesize=corpus_info.sample_size)
             self._apply_linegroups(conc)
             kwic = Kwic(self.corp, self.args.corpname, conc)
             conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -1778,7 +1767,7 @@ class Actions(Querying):
                 ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
             self.args.q = [query]
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0, save=self.args.save)
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0)
             return dict(total=conc.fullsize() if conc else None)
 
     @exposed(return_type='json', http_method='POST')

@@ -27,7 +27,7 @@ import { PluginInterfaces } from '../../../types/plugins';
 import { init as initSpeechViews } from './speech';
 import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { DetailExpandPositions } from '../../../models/concordance/common';
 import * as S from './style';
 
@@ -270,8 +270,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         };
 
         const expandClickHandler = (position:DetailExpandPositions) => {
-            dispatcher.dispatch<Actions.ExpandKwicDetail>({
-                name: ActionName.ExpandKwicDetail,
+            dispatcher.dispatch<typeof Actions.ExpandKwicDetail>({
+                name: Actions.ExpandKwicDetail.name,
                 payload: {
                     position: position
                 }
@@ -330,8 +330,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         };
 
         const expandClickHandler = (position) => {
-            dispatcher.dispatch<Actions.ExpandKwicDetail>({
-                name: ActionName.ExpandKwicDetail,
+            dispatcher.dispatch<typeof Actions.ExpandKwicDetail>({
+                name: Actions.ExpandKwicDetail.name,
                 payload: {
                     position: position
                 }
@@ -339,8 +339,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
         };
 
         const handleDisplayWholeDocumentClick = () => {
-            dispatcher.dispatch<Actions.ShowWholeDocument>({
-                name: ActionName.ShowWholeDocument
+            dispatcher.dispatch<typeof Actions.ShowWholeDocument>({
+                name: Actions.ShowWholeDocument.name
             });
         };
 
@@ -352,11 +352,12 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
                 : null
                 }
 
-                {(props.data || []).map((item, i) => {
-                    return (
+                {List.map(
+                    (item, i) => (
                         <span key={i} className={item.class ? item.class : null}>{item.str + ' '}</span>
-                    );
-                })}
+                    ),
+                    (props.data || [])
+                )}
 
                 {props.hasExpandRight ?
                     <ExpandConcDetail position="right" isWaiting={isWaitingExpand('right')}
@@ -436,8 +437,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
     }> = (props) => {
 
         const handleMenuClick = (mode) => {
-            dispatcher.dispatch<Actions.DetailSwitchMode>({
-                name: ActionName.DetailSwitchMode,
+            dispatcher.dispatch<typeof Actions.DetailSwitchMode>({
+                name: Actions.DetailSwitchMode.name,
                 payload: {
                     value: mode
                 }

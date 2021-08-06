@@ -72,7 +72,7 @@ import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
-import { ActionName } from '../models/concordance/actions';
+import { Actions } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { ActionName as MMActionName } from '../models/mainMenu/actions';
 import { ConcSortModel } from '../models/query/sort/single';
@@ -283,7 +283,7 @@ export class ViewPage {
                     this.layoutModel.exportConcArgs(),
                     {
                         onPopStateAction: {
-                            name: ActionName.ReloadConc,
+                            name: Actions.ReloadConc.name,
                             payload: {
                                 concId: this.layoutModel.getConf<string>('concPersistenceOpId'),
                                 isPopState: true

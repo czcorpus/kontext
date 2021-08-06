@@ -35,7 +35,7 @@ import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
     mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
-import { Actions, ActionName, ConcGroupChangePayload,
+import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions, ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { SwitchMainCorpServerArgs } from '../query/common';
@@ -300,8 +300,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
             return interval(1000).subscribe(
                 (idx) => {
-                    dispatcher.dispatch<Actions.DataWaitTimeInc>({
-                        name: ActionName.DataWaitTimeInc,
+                    dispatcher.dispatch<typeof Actions.DataWaitTimeInc>({
+                        name: Actions.DataWaitTimeInc.name,
                         payload: {
                             idx
                         }
@@ -311,8 +311,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         };
         this.busyTimer = lineViewProps.Unfinished ? this.runBusyTimer(this.busyTimer) : null;
 
-        this.addActionHandler<Actions.AddedNewOperation>(
-            ActionName.AddedNewOperation,
+        this.addActionHandler<typeof Actions.AddedNewOperation>(
+            Actions.AddedNewOperation.name,
             action => {
                 if (action.error) {
                     this.changeState(state => {
@@ -329,7 +329,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.unfinishedCalculation = false;
                     });
                     this.pushHistoryState({
-                        name: ActionName.ReloadConc,
+                        name: Actions.ReloadConc.name,
                         payload: {
                             concId: action.payload.data.conc_persistence_op_id
                         }
@@ -338,16 +338,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ChangeMainCorpus>(
-            ActionName.ChangeMainCorpus,
+        this.addActionHandler<typeof Actions.ChangeMainCorpus>(
+            Actions.ChangeMainCorpus.name,
             action => {
                 this.changeMainCorpus(action.payload.maincorp);
                     // we leave the page here
             }
         );
 
-        this.addActionHandler<Actions.PlayAudioSegment>(
-            ActionName.PlayAudioSegment,
+        this.addActionHandler<typeof Actions.PlayAudioSegment>(
+            Actions.PlayAudioSegment.name,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.scrollY;
@@ -359,8 +359,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AudioPlayerClickControl>(
-            ActionName.AudioPlayerClickControl,
+        this.addActionSubtypeHandler<typeof Actions.AudioPlayerClickControl>(
+            Actions.AudioPlayerClickControl.name,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
@@ -373,8 +373,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionSubtypeHandler<Actions.AudioPlayerSetPosition>(
-            ActionName.AudioPlayerSetPosition,
+        this.addActionSubtypeHandler<typeof Actions.AudioPlayerSetPosition>(
+            Actions.AudioPlayerSetPosition.name,
             action => action.payload.playerId === ConcordanceModel.AUDIO_PLAYER_ID,
             action => {
                 this.changeState(state => {
@@ -387,8 +387,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AudioPlayersStop>(
-            ActionName.AudioPlayersStop,
+        this.addActionHandler<typeof Actions.AudioPlayersStop>(
+            Actions.AudioPlayersStop.name,
             action => {
                 this.handlePlayerControls('stop');
                 this.changeState(state => {
@@ -397,18 +397,18 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ChangePage, Actions.ReloadConc>(
+        this.addActionHandler<typeof Actions.ChangePage, typeof Actions.ReloadConc>(
             [
-                ActionName.ChangePage,
-                ActionName.ReloadConc
+                Actions.ChangePage.name,
+                Actions.ReloadConc.name
             ],
             action => {
                 forkJoin([
                     this.suspend({}, (action, syncData) => {
-                        return action.name === ActionName.PublishStoredLineSelections ?
+                        return action.name === Actions.PublishStoredLineSelections.name ?
                             null : syncData;
                     }).pipe(
-                        map(v => (v as Actions.PublishStoredLineSelections).payload)
+                        map(v => (v as typeof Actions.PublishStoredLineSelections).payload)
                     ),
                     Actions.isReloadConc(action) ?
                         this.loadConcPage(action.payload.concId) :
@@ -423,7 +423,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     next: ([,[,pageNum]]) => {
                         if (!action.payload.isPopState) {
                             this.pushHistoryState({
-                                name: ActionName.ChangePage,
+                                name: Actions.ChangePage.name,
                                 payload: {
                                     action: 'customPage',
                                     pageNum
@@ -440,11 +440,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.LineSelectionResetOnServer>(
-            ActionName.LineSelectionResetOnServer,
+        this.addActionHandler<typeof Actions.LineSelectionResetOnServer>(
+            Actions.LineSelectionResetOnServer.name,
             action => {
                 this.suspend({}, (action, syncData) => {
-                    return action.name === ActionName.LineSelectionResetOnServerDone ?
+                    return action.name === Actions.LineSelectionResetOnServerDone.name ?
                         null : syncData;
 
                 }).pipe(
@@ -453,7 +453,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 ).subscribe(
                     ([concId,]) => {
                         this.pushHistoryState({
-                            name: ActionName.ReloadConc,
+                            name: Actions.ReloadConc.name,
                             payload: {
                                 concId
                             }
@@ -467,8 +467,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.LineSelectionResetOnServerDone>(
-            ActionName.LineSelectionResetOnServerDone,
+        this.addActionHandler<typeof Actions.LineSelectionResetOnServerDone>(
+            Actions.LineSelectionResetOnServerDone.name,
             action => {
                 this.changeState(state => {
                     state.lineSelOptionsVisible = false;
@@ -476,8 +476,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AsyncCalculationUpdated>(
-            ActionName.AsyncCalculationUpdated,
+        this.addActionHandler<typeof Actions.AsyncCalculationUpdated>(
+            Actions.AsyncCalculationUpdated.name,
             action => {
                 const prevConcSize = this.state.concSize;
                 this.changeState(state => {
@@ -507,8 +507,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.AsyncCalculationFailed>(
-            ActionName.AsyncCalculationFailed,
+        this.addActionHandler<typeof Actions.AsyncCalculationFailed>(
+            Actions.AsyncCalculationFailed.name,
             action => {
                 this.busyTimer = this.stopBusyTimer(this.busyTimer);
                 this.changeState(state => {
@@ -519,16 +519,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ChangeLangVisibility>(
-            ActionName.ChangeLangVisibility,
+        this.addActionHandler<typeof Actions.ChangeLangVisibility>(
+            Actions.ChangeLangVisibility.name,
             action => {
                 this.changeColVisibility(action.payload.corpusId, action.payload.value);
                 this.emitChange();
             }
         );
 
-        this.addActionHandler<Actions.SwitchKwicSentMode>(
-            ActionName.SwitchKwicSentMode,
+        this.addActionHandler<typeof Actions.SwitchKwicSentMode>(
+            Actions.SwitchKwicSentMode.name,
             action => {
                 this.changeViewMode().subscribe(
                     () => {
@@ -543,8 +543,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.DataWaitTimeInc>(
-            ActionName.DataWaitTimeInc,
+        this.addActionHandler<typeof Actions.DataWaitTimeInc>(
+            Actions.DataWaitTimeInc.name,
             action => {
                 this.changeState(state => {state.busyWaitSecs = action.payload.idx});
             }
@@ -558,20 +558,20 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                         state.baseViewAttr = action.payload.baseViewAttr;
                         state.attrViewMode = action.payload.attrVmode;
                     });
-                    this.loadConcPage().subscribe(
-                        ([concId,]) => {
+                    this.loadConcPage().subscribe({
+                        next: ([concId,]) => {
                             this.pushHistoryState({
-                                name: ActionName.ReloadConc,
+                                name: Actions.ReloadConc.name,
                                 payload: {
                                     concId
                                 }
                             });
                             this.emitChange();
                         },
-                        (err) => {
+                        error: err => {
                             this.layoutModel.showMessage('error', err);
                         }
-                    );
+                    });
                 }
             }
         );
@@ -587,7 +587,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                     this.loadConcPage().subscribe(
                         ([concId,]) => {
                             this.pushHistoryState({
-                                name: ActionName.ReloadConc,
+                                name: Actions.ReloadConc.name,
                                 payload: {
                                     concId
                                 }
@@ -602,8 +602,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SetLineSelectionMode>(
-            ActionName.SetLineSelectionMode,
+        this.addActionHandler<typeof Actions.SetLineSelectionMode>(
+            Actions.SetLineSelectionMode.name,
             action => {
                 this.changeState(state => {
                     state.forceScroll = null;
@@ -611,8 +611,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.LineSelectionReset>(
-            ActionName.LineSelectionReset,
+        this.addActionHandler<typeof Actions.LineSelectionReset>(
+            Actions.LineSelectionReset.name,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -625,8 +625,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.UnlockLineSelectionDone>(
-            ActionName.UnlockLineSelectionDone,
+        this.addActionHandler<typeof Actions.UnlockLineSelectionDone>(
+            Actions.UnlockLineSelectionDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -639,8 +639,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<MainMenuActions.ShowSaveForm, Actions.ResultCloseSaveForm>(
-            [MainMenuActionName.ShowSaveForm, ActionName.ResultCloseSaveForm],
+        this.addActionHandler<MainMenuActions.ShowSaveForm, typeof Actions.ResultCloseSaveForm>(
+            [MainMenuActionName.ShowSaveForm, Actions.ResultCloseSaveForm.name],
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -649,8 +649,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowKwicDetail>(
-            ActionName.ShowKwicDetail,
+        this.addActionHandler<typeof Actions.ShowKwicDetail>(
+            Actions.ShowKwicDetail.name,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
@@ -661,8 +661,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowTokenDetail>(
-            ActionName.ShowTokenDetail,
+        this.addActionHandler<typeof Actions.ShowTokenDetail>(
+            Actions.ShowTokenDetail.name,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = true;
@@ -673,8 +673,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResetDetail>(
-            ActionName.ResetDetail,
+        this.addActionHandler<typeof Actions.ResetDetail>(
+            Actions.ResetDetail.name,
             action => {
                 this.changeState(state => {
                     state.kwicDetailVisible = false;
@@ -684,8 +684,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowRefDetail>(
-            ActionName.ShowRefDetail,
+        this.addActionHandler<typeof Actions.ShowRefDetail>(
+            Actions.ShowRefDetail.name,
             action => {
                 this.changeState(state => {
                     state.refDetailVisible = true;
@@ -696,8 +696,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.RefResetDetail>(
-            ActionName.RefResetDetail,
+        this.addActionHandler<typeof Actions.RefResetDetail>(
+            Actions.RefResetDetail.name,
             action => {
                 this.changeState(state => {
                     state.refDetailVisible = false;
@@ -707,8 +707,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SelectLines>(
-            ActionName.SelectLine,
+        this.addActionHandler<typeof Actions.SelectLine>(
+            Actions.SelectLine.name,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -724,15 +724,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ApplyStoredLineSelectionsDone>(
-            ActionName.ApplyStoredLineSelectionsDone,
+        this.addActionHandler<typeof Actions.ApplyStoredLineSelectionsDone>(
+            Actions.ApplyStoredLineSelectionsDone.name,
             action => {
                 this.applyLineSelections(action.payload);
             }
         );
 
-        this.addActionHandler<Actions.ToggleLineSelOptions>(
-            ActionName.ToggleLineSelOptions,
+        this.addActionHandler<typeof Actions.ToggleLineSelOptions>(
+            Actions.ToggleLineSelOptions.name,
             action => {
                 this.changeState(state => {
                     state.forceScroll = window.pageYOffset;
@@ -741,8 +741,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.MarkLinesDone>(
-            ActionName.MarkLinesDone,
+        this.addActionHandler<typeof Actions.MarkLinesDone>(
+            Actions.MarkLinesDone.name,
             action => {
                 if (!action.error) {
                     this.loadConcPage(action.payload.data.conc_persistence_op_id).subscribe(
@@ -760,8 +760,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.RenameSelectionGroupDone>(
-            ActionName.RenameSelectionGroupDone,
+        this.addActionHandler<typeof Actions.RenameSelectionGroupDone>(
+            Actions.RenameSelectionGroupDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -772,8 +772,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ShowSyntaxView>(
-            ActionName.ShowSyntaxView,
+        this.addActionHandler<typeof Actions.ShowSyntaxView>(
+            Actions.ShowSyntaxView.name,
             action => {
                 this.changeState(state => {
                     state.syntaxViewVisible = true;
@@ -781,8 +781,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.CloseSyntaxView>(
-            ActionName.CloseSyntaxView,
+        this.addActionHandler<typeof Actions.CloseSyntaxView>(
+            Actions.CloseSyntaxView.name,
             action => {
                 this.changeState(state => {
                     state.syntaxViewVisible = false;
@@ -790,8 +790,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<Actions.HideAnonymousUserWarning>(
-            ActionName.HideAnonymousUserWarning,
+        this.addActionHandler<typeof Actions.HideAnonymousUserWarning>(
+            Actions.HideAnonymousUserWarning.name,
             action => {
                 this.changeState(state => {
                     state.showAnonymousUserWarn = false;
@@ -849,7 +849,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         return this.state.numItemsInLockedGroups;
     }
 
-    private pushHistoryState(action:Actions.ChangePage|Actions.ReloadConc):void {
+    private pushHistoryState(action:typeof Actions.ChangePage|typeof Actions.ReloadConc):void {
         const args = this.layoutModel.exportConcArgs();
         if (Actions.isChangePage(action)) {
             args.set('fromp', action.payload.pageNum);

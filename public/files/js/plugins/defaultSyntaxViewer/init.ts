@@ -32,7 +32,7 @@ import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
-import { Actions as ConcActions, ActionName as ConcActionName } from '../../models/concordance/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 require('./style.css'); // webpack
 
 
@@ -64,8 +64,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<ConcActions.ShowSyntaxView>(
-            ConcActionName.ShowSyntaxView,
+        this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
+            ConcActions.ShowSyntaxView.name,
             action => {
                 this.changeState(state => {
                     state.tokenNumber = action.payload.tokenNumber;
@@ -127,21 +127,20 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                     return rxEmpty();
                 }
             )
-        ).subscribe(
-            null,
-            (error) => {
+        ).subscribe({
+            error: error => {
                 this.close();
                 this.pluginApi.showMessage('error', error);
                 if (this.errorHandler) {
                     this.errorHandler(error);
                 }
             },
-            () => {
+            complete: () => {
                 const target = document.getElementById(state.targetHTMLElementID);
                 this.renderTree(target);
                 window.addEventListener('resize', this.onPageResize);
             }
-        );
+        });
     }
 
     registerOnError(fn:(e:Error)=>void):void {

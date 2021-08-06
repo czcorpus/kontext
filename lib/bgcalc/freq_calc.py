@@ -53,7 +53,6 @@ class FreqCalsArgs(FixedDict):
     subcpath = None
     pagesize = None  # ??
     fpage = 1  # ??
-    save = 0
     samplesize = 0
     flimit = None  # default ??
     fcrit = None
@@ -202,7 +201,7 @@ def build_arf_db_status(corp, attrname):
 class FreqCalcCache(object):
 
     def __init__(self, corpname, subcname, user_id, subcpath, q=None, pagesize=0,
-                 save=0, samplesize=0):
+                 samplesize=0):
         """
         Creates a new freq calculator with fixed concordance parameters.
         """
@@ -211,7 +210,6 @@ class FreqCalcCache(object):
         self._user_id = user_id
         self._q = q
         self._pagesize = pagesize
-        self._save = save
         self._samplesize = samplesize
         self._subcpath = subcpath
 
@@ -266,7 +264,7 @@ def calculate_freqs(args: FreqCalsArgs):
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
     cache = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-                          q=args.q, pagesize=args.pagesize, save=args.save, samplesize=args.samplesize)
+                          q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
     calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
                                         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
                                         collator_locale=args.collator_locale)

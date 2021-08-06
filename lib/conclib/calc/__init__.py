@@ -32,7 +32,7 @@ import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
 from conclib.errors import (ConcCalculationStatusException, ConcNotFoundException, BrokenConcordanceException,
-                            extract_manatee_syntax_error)
+                            extract_manatee_error)
 import bgcalc
 from bgcalc.errors import CalcTaskNotFoundError
 
@@ -192,7 +192,7 @@ def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, 
             logging.getLogger(__name__).warning(
                 'Removed failed calculation cache record (error: {0}'.format(calc_status.error))
             cache_map.del_full_entry(subchash, q)
-            raise ConcCalculationStatusException(calc_status.error)
+            raise calc_status.normalized_error
 
     if _contains_shuffle_seq(q):
         srch_from = 1
@@ -295,9 +295,8 @@ class ConcCalculation(GeneralWorker):
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
             # here as this is performed by _get_cached_conc()
             # function in case it detects a problem.
-            synt_err = extract_manatee_syntax_error(e)
-            norm_err = synt_err if synt_err else e
-            import traceback
+            manatee_err = extract_manatee_error(e)
+            norm_err = manatee_err if manatee_err else e
             if cache_map is not None:
                 cache_map.update_calc_status(subchash, query, finished=True, error=norm_err)
 
@@ -343,7 +342,9 @@ class ConcSyncCalculation(GeneralWorker):
                                               overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
-            self._mark_calc_states_err(subchash, query, 0, ex)
+            manatee_err = extract_manatee_error(ex)
+            norm_err = manatee_err if manatee_err else ex
+            self._mark_calc_states_err(subchash, query, 0, norm_err)
             return
         # save additional concordance actions to cache (e.g. sample, aligned corpus without a query,...)
         for act in range(calc_from, len(query)):

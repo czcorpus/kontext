@@ -27,7 +27,7 @@ import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
 import { PluginInterfaces } from '../../../types/plugins';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { Actions as HintActions } from '../../../models/usageTips/actions';
 import * as S2 from '../style';
 import * as S from './style';
@@ -64,13 +64,13 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         const handleClick = () => {
             if (props.minimized) {
-                dispatcher.dispatch<Actions.DashboardMaximizeExtInfo>({
-                    name: ActionName.DashboardMaximizeExtInfo
+                dispatcher.dispatch<typeof Actions.DashboardMaximizeExtInfo>({
+                    name: Actions.DashboardMaximizeExtInfo.name
                 });
 
             } else {
-                dispatcher.dispatch<Actions.DashboardMinimizeExtInfo>({
-                    name: ActionName.DashboardMinimizeExtInfo
+                dispatcher.dispatch<typeof Actions.DashboardMinimizeExtInfo>({
+                    name: Actions.DashboardMinimizeExtInfo.name
                 });
             }
         };
@@ -134,8 +134,8 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
         componentDidMount() {
             if (!this.props.expanded) { // we are doing a pre-load here
-                dispatcher.dispatch<Actions.LoadTTDictOverview>({
-                    name: ActionName.LoadTTDictOverview,
+                dispatcher.dispatch<typeof Actions.LoadTTDictOverview>({
+                    name: Actions.LoadTTDictOverview.name,
                     payload: {}
                 });
             }

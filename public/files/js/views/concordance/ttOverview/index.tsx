@@ -25,7 +25,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../../models/concordance/ttDistModel';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import * as S from './style';
 
 
@@ -76,14 +76,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     }> = (props) => {
 
         const handleLimitRemove = () => {
-            dispatcher.dispatch<Actions.RemoveChartItemsLimit>({
-                name: ActionName.RemoveChartItemsLimit
+            dispatcher.dispatch<typeof Actions.RemoveChartItemsLimit>({
+                name: Actions.RemoveChartItemsLimit.name
             });
         };
 
         const handleLimitRestore = () => {
-            dispatcher.dispatch<Actions.RestoreChartItemsLimit>({
-                name: ActionName.RestoreChartItemsLimit
+            dispatcher.dispatch<typeof Actions.RestoreChartItemsLimit>({
+                name: Actions.RestoreChartItemsLimit.name
             });
         };
 
@@ -121,8 +121,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     class TextTypesDist extends React.PureComponent<TextTypesDistModelState> {
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.LoadTTDictOverview>({
-                name: ActionName.LoadTTDictOverview
+            dispatcher.dispatch<typeof Actions.LoadTTDictOverview>({
+                name: Actions.LoadTTDictOverview.name
             });
 
         }

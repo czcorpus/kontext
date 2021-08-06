@@ -42,7 +42,7 @@ import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
 import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
 import { UsageTipsModel } from '../../../models/usageTips';
 import { MainMenuModelState } from '../../../models/mainMenu';
-import { Actions, ActionName } from '../../../models/concordance/actions';
+import { Actions } from '../../../models/concordance/actions';
 import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
 import { Actions as UserActions } from '../../../models/user/actions';
 import * as S2 from '../style';
@@ -192,8 +192,8 @@ export function init({
         }
 
         _selectChangeHandler(event) {
-            dispatcher.dispatch<Actions.SetLineSelectionMode>({
-                name: ActionName.SetLineSelectionMode,
+            dispatcher.dispatch<typeof Actions.SetLineSelectionMode>({
+                name: Actions.SetLineSelectionMode.name,
                 payload: {
                     mode: event.currentTarget.value
                 }
@@ -201,14 +201,14 @@ export function init({
         }
 
         _selectMenuTriggerHandler() {
-            dispatcher.dispatch<Actions.ToggleLineSelOptions>({
-                name: ActionName.ToggleLineSelOptions
+            dispatcher.dispatch<typeof Actions.ToggleLineSelOptions>({
+                name: Actions.ToggleLineSelOptions.name
             });
         }
 
         _closeMenuHandler() {
-            dispatcher.dispatch<Actions.ToggleLineSelOptions>({
-                name: ActionName.ToggleLineSelOptions
+            dispatcher.dispatch<typeof Actions.ToggleLineSelOptions>({
+                name: Actions.ToggleLineSelOptions.name
             });
         }
 
@@ -362,8 +362,8 @@ export function init({
             const userConfirm = props.fastAdHocIpm ?
                     true : window.confirm(he.translate('global__ipm_calc_may_take_time'));
             if (userConfirm) {
-                dispatcher.dispatch<Actions.CalculateIpmForAdHocSubc>({
-                    name: ActionName.CalculateIpmForAdHocSubc,
+                dispatcher.dispatch<typeof Actions.CalculateIpmForAdHocSubc>({
+                    name: Actions.CalculateIpmForAdHocSubc.name,
                     payload: {}
                 });
             }
@@ -558,34 +558,34 @@ export function init({
         }
 
         _handleDetailCloseClick() {
-            dispatcher.dispatch<Actions.AudioPlayerClickControl>({
-                name: ActionName.AudioPlayerClickControl,
+            dispatcher.dispatch<typeof Actions.AudioPlayerClickControl>({
+                name: Actions.AudioPlayerClickControl.name,
                 payload: {
                     action: 'stop',
                     playerId: ConcDetailModel.AUDIO_PLAYER_ID
                 }
             });
-            dispatcher.dispatch<Actions.ResetDetail>({
-                name: ActionName.ResetDetail
+            dispatcher.dispatch<typeof Actions.ResetDetail>({
+                name: Actions.ResetDetail.name
             });
         }
 
         _handleAnonymousUserWarning() {
-            dispatcher.dispatch<Actions.HideAnonymousUserWarning>({
-                name: ActionName.HideAnonymousUserWarning
+            dispatcher.dispatch<typeof Actions.HideAnonymousUserWarning>({
+                name: Actions.HideAnonymousUserWarning.name
             })
         }
 
         _handleRefsDetailCloseClick() {
-            dispatcher.dispatch<Actions.RefResetDetail>({
-                name: ActionName.RefResetDetail,
+            dispatcher.dispatch<typeof Actions.RefResetDetail>({
+                name: Actions.RefResetDetail.name,
                 payload: {}
             });
         }
 
         _handleSyntaxBoxClose() {
-            dispatcher.dispatch<Actions.CloseSyntaxView>({
-                name: ActionName.CloseSyntaxView
+            dispatcher.dispatch<typeof Actions.CloseSyntaxView>({
+                name: Actions.CloseSyntaxView.name
             });
         }
 

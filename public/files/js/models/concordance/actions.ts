@@ -24,81 +24,6 @@ import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelV
 import { SaveData } from '../../app/navigation';
 import { TextTypes } from '../../types/common';
 
-export enum ActionName {
-    AddedNewOperation = 'CONCORDANCE_ADDED_NEW_OPERATION',
-    ChangeMainCorpus = 'CONCORDANCE_CHANGE_MAIN_CORPUS',
-    ExpandKwicDetail = 'CONCORDANCE_EXPAND_KWIC_DETAIL',
-    PlayAudioSegment = 'CONCORDANCE_PLAY_AUDIO_SEGMENT',
-    AudioPlayerClickControl = 'AUDIO_PLAYER_CLICK_CONTROL',
-    AudioPlayerSetPosition = 'AUDIO_PLAYER_SET_POSITION',
-    AudioPlayersStop = 'AUDIO_PLAYERS_STOP',
-    ChangePage = 'CONCORDANCE_CHANGE_PAGE',
-    ReloadConc = 'CONCORDANCE_RELOAD_CONC',
-    AsyncCalculationUpdated = 'CONCORDANCE_ASYNC_CALCULATION_UPDATED',
-    ConcordanceRecalculationReady = 'CONCORDANCE_RECALCULATION_READY',
-    AsyncCalculationFailed = 'CONCORDANCE_ASYNC_CALCULATION_FAILED',
-    CalculateIpmForAdHocSubc = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC',
-    CalculateIpmForAdHocSubcReady = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_READY',
-    CalculateIpmForAdHocSubcDone = 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_DONE',
-    ChangeLangVisibility = 'CONCORDANCE_CHANGE_LANG_VISIBILITY',
-    SwitchKwicSentMode = 'CONCORDANCE_SWITCH_KWIC_SENT_MODE',
-    DataWaitTimeInc = 'CONCORDANCE_DATA_WAIT_TIME_INC',
-    LoadTTDictOverview = 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW',
-    RemoveChartItemsLimit = 'CONCORDANCE_REMOVE_CHART_ITEMS_LIMIT',
-    RestoreChartItemsLimit = 'CONCORDANCE_RESTORE_CHART_ITEMS_LIMIT',
-    ShowKwicDetail = 'CONCORDANCE_SHOW_KWIC_DETAIL',
-    ShowTokenDetail = 'CONCORDANCE_SHOW_TOKEN_DETAIL',
-    ShowWholeDocument = 'CONCORDANCE_SHOW_WHOLE_DOCUMENT',
-    ShowSpeechDetail = 'CONCORDANCE_SHOW_SPEECH_DETAIL',
-    ExpandSpeechDetail = 'CONCORDANCE_EXPAND_SPEECH_DETAIL',
-    DetailSwitchMode = 'CONCORDANCE_DETAIL_SWITCH_MODE',
-    ResetDetail = 'CONCORDANCE_RESET_DETAIL',
-    ShowRefDetail = 'CONCORDANCE_SHOW_REF_DETAIL',
-    ShowRefDetailDone = 'CONCORDANCE_SHOW_REF_DETAIL_DONE',
-    PlaySpeech = 'CONCORDANCE_PLAY_SPEECH',
-    RefResetDetail = 'CONCORDANCE_REF_RESET_DETAIL',
-    SaveFormSubmit = 'CONCORDANCE_SAVE_FORM_SUBMIT',
-    SaveFormSetHeading = 'CONCORDANCE_SAVE_FORM_SET_HEADING',
-    SaveFormSetAlignKwic = 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC',
-    SaveFormSetFromLine = 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE',
-    SaveFormSetToLine = 'CONCORDANCE_SAVE_FORM_SET_TO_LINE',
-    SaveFormSetInclLineNumbers = 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS',
-    SaveFormSetFormat = 'CONCORDANCE_SAVE_FORM_SET_FORMAT',
-    ResultCloseSaveForm =  'CONCORDANCE_RESULT_CLOSE_SAVE_FORM',
-    SelectLine = 'LINE_SELECTION_SELECT_LINE',
-    RemoveSelectedLines = 'LINE_SELECTION_REMOVE_LINES',
-    RemoveNonSelectedLines = 'LINE_SELECTION_REMOVE_OTHER_LINES',
-    MarkLines = 'LINE_SELECTION_MARK_LINES',
-    MarkLinesDone = 'LINE_SELECTION_MARK_LINES_DONE',
-    RemoveLinesNotInGroups = 'LINE_SELECTION_REMOVE_NON_GROUP_LINES',
-    RenameSelectionGroup = 'LINE_SELECTION_GROUP_RENAME',
-    RenameSelectionGroupDone = 'LINE_SELECTION_GROUP_RENAME_DONE',
-    ChangeEmail = 'LINE_SELECTION_CHANGE_EMAIL',
-    ClearUserCredentials = 'LINE_SELECTION_CLEAR_USER_CREDENTIALS',
-    ToggleLineSelOptions = 'CONCORDANCE_TOGGLE_LINE_SEL_OPTIONS',
-    SendLineSelectionToEmail = 'LINE_SELECTION_SEND_URL_TO_EMAIL',
-    SendLineSelectionToEmailDone = 'LINE_SELECTION_SEND_URL_TO_EMAIL_DONE',
-    SortLineSelection = 'LINE_SELECTION_SORT_LINES',
-    SetLineSelectionMode = 'CONCORDANCE_SET_LINE_SELECTION_MODE',
-    UnlockLineSelection = 'LINE_SELECTION_REENABLE_EDIT',
-    UnlockLineSelectionDone = 'LINE_SELECTION_REENABLE_EDIT_DONE',
-    LineSelectionReset = 'LINE_SELECTION_RESET',
-    LineSelectionResetOnServer = 'LINE_SELECTION_RESET_ON_SERVER',
-    LineSelectionResetOnServerDone = 'LINE_SELECTION_RESET_ON_SERVER_DONE',
-    SaveLineSelection = 'LINE_SELECTION_SAVE',
-    ApplyStoredLineSelections = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS',
-    ApplyStoredLineSelectionsDone = 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE',
-    PublishStoredLineSelections = 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS',
-    ToggleLineGroupRenameForm = 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME',
-    MakeConcPermanent = 'QUERY_MAKE_CONCORDANCE_PERMANENT',
-    GetConcArchiveStatus = 'QUERY_GET_CONC_ARCHIVED_STATUS',
-    ShowSyntaxView = 'SHOW_SYNTAX_VIEW',
-    CloseSyntaxView = 'CLOSE_SYNTAX_VIEW',
-    HideAnonymousUserWarning = 'CONCORDANCE_HIDE_ANONYMOUS_USER_WARNING',
-    DashboardMinimizeExtInfo = 'DASHBOARD_MINIMIZE_EXTENDED_INFO',
-    DashboardMaximizeExtInfo = 'DASHBOARD_MAXIMIZE_EXTENDED_INFO',
-    DashboardToggleExtInfo = 'DASHBOARD_TOGGLE_EXTENDED_INFO'
-}
 
 export interface ConcGroupChangePayload {
     concId:string;
@@ -113,452 +38,429 @@ export interface PublishLineSelectionPayload {
     mode:LineSelectionModes;
 }
 
-export namespace Actions {
 
-    export interface AddedNewOperation extends Action<{
+export class Actions {
+
+    static AddedNewOperation:Action<{
         concId:string;
         data:AjaxConcResponse;
         changeMaincorp?:string;
-    }> {
-        name:ActionName.AddedNewOperation;
-    }
+    }> = {
+        name: 'CONCORDANCE_ADDED_NEW_OPERATION'
+    };
 
-    export interface ChangeMainCorpus extends Action<{
+    static ChangeMainCorpus:Action<{
         maincorp:string;
-    }> {
-        name:ActionName.ChangeMainCorpus;
-    }
+    }> = {
+        name: 'CONCORDANCE_CHANGE_MAIN_CORPUS'
+    };
 
-    export interface PlayAudioSegment extends Action<{
+    static ExpandKwicDetail:Action<{
+        position:DetailExpandPositions;
+    }> = {
+        name: 'CONCORDANCE_EXPAND_KWIC_DETAIL'
+    };
+
+    static PlayAudioSegment:Action<{
         chunksIds:Array<string>;
-    }> {
-        name:ActionName.PlayAudioSegment;
-    }
+    }> = {
+        name: 'CONCORDANCE_PLAY_AUDIO_SEGMENT'
+    };
 
-    export interface AudioPlayerClickControl extends Action<{
+    static AudioPlayerClickControl:Action<{
         playerId:string;
         action:AudioPlayerActions;
-    }> {
-        name:ActionName.AudioPlayerClickControl;
-    }
+    }> = {
+        name: 'AUDIO_PLAYER_CLICK_CONTROL'
+    };
 
-    export interface AudioPlayerSetPosition extends Action<{
+    static AudioPlayerSetPosition:Action<{
         playerId:string;
         offset:number;
-    }> {
-        name:ActionName.AudioPlayerSetPosition;
-    }
+    }> = {
+        name: 'AUDIO_PLAYER_SET_POSITION'
+    };
 
-    export interface AudioPlayersStop extends Action<{
-    }> {
-        name:ActionName.AudioPlayersStop;
-    }
+    static AudioPlayersStop:Action<{}> = {
+        name: 'AUDIO_PLAYERS_STOP'
+    };
 
-    export interface ChangePage extends Action<{
+    static ChangePage:Action<{
         action:PaginationActions;
         pageNum:number;
         isPopState?:boolean;
-    }> {
-        name:ActionName.ChangePage;
+    }> = {
+        name: 'CONCORDANCE_CHANGE_PAGE'
+    };
+
+    static isChangePage(a:Action):a is typeof Actions.ChangePage {
+        return a.name === Actions.ChangePage.name;
     }
 
-    export function isChangePage(a:Action):a is ChangePage {
-        return a.name === ActionName.ChangePage;
-    }
-
-    export interface ReloadConc extends Action<{
+    static ReloadConc:Action<{
         concId:string;
         isPopState?:boolean;
-    }> {
-        name:ActionName.ReloadConc;
+    }> = {
+        name: 'CONCORDANCE_RELOAD_CONC'
+    };
+
+    static isReloadConc(a:Action):a is typeof Actions.ReloadConc {
+        return a.name === Actions.ReloadConc.name;
     }
 
-    export function isReloadConc(a:Action):a is ReloadConc {
-        return a.name === ActionName.ReloadConc;
-    }
-
-    export interface AsyncCalculationUpdated extends Action<{
+    static AsyncCalculationUpdated:Action<{
         finished:boolean;
         concsize:number;
         fullsize:number;
         relconcsize:number;
         arf:number;
         availPages:number;
-    }> {
-        name:ActionName.AsyncCalculationUpdated;
-    }
+    }> = {
+        name: 'CONCORDANCE_ASYNC_CALCULATION_UPDATED'
+    };
 
-    export interface ConcordanceRecalculationReady extends Action<{
+    static ConcordanceRecalculationReady:Action<{
         concSize:number;
         overviewMinFreq:number;
-    }> {
-        name:ActionName.ConcordanceRecalculationReady;
+    }> = {
+        name: 'CONCORDANCE_RECALCULATION_READY'
+    };
+
+    static isConcordanceRecalculationReady(a:Action):a is typeof Actions.ConcordanceRecalculationReady {
+        return a.name === Actions.ConcordanceRecalculationReady.name;
     }
 
-    export function isConcordanceRecalculationReady(a:Action):a is Actions.ConcordanceRecalculationReady {
-        return a.name === ActionName.ConcordanceRecalculationReady;
-    }
 
-    export interface AsyncCalculationFailed extends Action<{
-    }> {
-        name:ActionName.AsyncCalculationFailed;
-    }
+    static AsyncCalculationFailed:Action<{}> = {
+        name: 'CONCORDANCE_ASYNC_CALCULATION_FAILED'
+    };
 
-    export interface CalculateIpmForAdHocSubc extends Action<{
-    }> {
-        name:ActionName.CalculateIpmForAdHocSubc;
-    }
+    static CalculateIpmForAdHocSubc:Action<{}> = {
+        name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC'
+    };
 
-    export interface CalculateIpmForAdHocSubcReady extends Action<{
+    static CalculateIpmForAdHocSubcReady:Action<{
         ttSelection:TextTypes.ExportedSelection;
-    }> {
-        name:ActionName.CalculateIpmForAdHocSubcReady;
-    }
+    }> = {
+        name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_READY'
+    };
 
-    export interface CalculateIpmForAdHocSubcDone extends Action<{
+    static CalculateIpmForAdHocSubcDone:Action<{
         ipm:number;
-    }> {
-        name:ActionName.CalculateIpmForAdHocSubcDone;
-    }
+    }> = {
+        name: 'CONCORDANCE_CALCULATE_IPM_FOR_AD_HOC_SUBC_DONE'
+    };
 
-    export interface ChangeLangVisibility extends Action<{
+    static ChangeLangVisibility:Action<{
         corpusId:string;
         value:boolean;
-    }> {
-        name:ActionName.ChangeLangVisibility;
-    }
+    }> = {
+        name: 'CONCORDANCE_CHANGE_LANG_VISIBILITY'
+    };
 
-    export interface SwitchKwicSentMode extends Action<{
-    }> {
-        name:ActionName.SwitchKwicSentMode;
-    }
+    static SwitchKwicSentMode:Action<{}> = {
+        name: 'CONCORDANCE_SWITCH_KWIC_SENT_MODE'
+    };
 
-    export interface DataWaitTimeInc extends Action<{
+    static DataWaitTimeInc:Action<{
         idx:number;
-    }> {
-        name:ActionName.DataWaitTimeInc;
-    }
+    }> = {
+        name: 'CONCORDANCE_DATA_WAIT_TIME_INC'
+    };
 
-    export interface ExpandKwicDetail extends Action<{
-        position:DetailExpandPositions;
-    }> {
-        name:ActionName.ExpandKwicDetail;
-    }
+    static LoadTTDictOverview:Action<{}> = {
+        name: 'CONCORDANCE_LOAD_TT_DIST_OVERVIEW'
+    };
 
-    export interface LoadTTDictOverview extends Action<{
-    }> {
-        name:ActionName.LoadTTDictOverview;
-    }
+    static RemoveChartItemsLimit:Action<{}> = {
+        name: 'CONCORDANCE_REMOVE_CHART_ITEMS_LIMIT'
+    };
 
-    export interface RemoveChartItemsLimit extends Action<{
-    }> {
-        name:ActionName.RemoveChartItemsLimit;
-    }
+    static RestoreChartItemsLimit:Action<{}> = {
+        name: 'CONCORDANCE_RESTORE_CHART_ITEMS_LIMIT'
+    };
 
-    export interface RestoreChartItemsLimit extends Action<{
-    }> {
-        name:ActionName.RestoreChartItemsLimit;
-    }
-
-    export interface ShowKwicDetail extends Action<{
+    static ShowKwicDetail:Action<{
         corpusId:string;
         tokenNumber:number;
         kwicLength:number;
         lineIdx:number;
-    }> {
-        name:ActionName.ShowKwicDetail;
-    }
+    }> = {
+        name: 'CONCORDANCE_SHOW_KWIC_DETAIL'
+    };
 
-    export interface ShowTokenDetail extends Action<{
+    static ShowTokenDetail:Action<{
         corpusId:string;
         tokenNumber:number;
         lineIdx:number;
-    }> {
-        name:ActionName.ShowTokenDetail;
-    }
+    }> = {
+        name: 'CONCORDANCE_SHOW_TOKEN_DETAIL'
+    };
 
-    export interface ShowWholeDocument extends Action<{
-    }> {
-        name:ActionName.ShowWholeDocument;
-    }
+    static ShowWholeDocument:Action<{}> = {
+        name: 'CONCORDANCE_SHOW_WHOLE_DOCUMENT'
+    };
 
-    export interface ShowSpeechDetail extends Action<{
+    static ShowSpeechDetail:Action<{
         corpusId:string;
         tokenNumber:number;
         kwicLength:number;
         lineIdx:number;
-    }> {
-        name:ActionName.ShowSpeechDetail;
-    }
+    }> = {
+        name: 'CONCORDANCE_SHOW_SPEECH_DETAIL'
+    };
 
-    export interface ExpandSpeechDetail extends Action<{
+    static ExpandSpeechDetail:Action<{
         position:DetailExpandPositions;
-    }> {
-        name:ActionName.ExpandSpeechDetail;
-    }
+    }> = {
+        name: 'CONCORDANCE_EXPAND_SPEECH_DETAIL'
+    };
 
-    export interface DetailSwitchMode extends Action<{
+    static DetailSwitchMode:Action<{
         value:string; // TODO more specific types here
-    }> {
-        name:ActionName.DetailSwitchMode;
-    }
+    }> = {
+        name: 'CONCORDANCE_DETAIL_SWITCH_MODE'
+    };
 
-    export interface ResetDetail extends Action<{
-    }> {
-        name:ActionName.ResetDetail;
-    }
+    static ResetDetail:Action<{}> = {
+        name: 'CONCORDANCE_RESET_DETAIL'
+    };
 
-    export interface ShowRefDetail extends Action<{
+    static ShowRefDetail:Action<{
         corpusId:string;
         tokenNumber:number;
         lineIdx:number;
-    }> {
-        name:ActionName.ShowRefDetail;
-    }
+    }> = {
+        name: 'CONCORDANCE_SHOW_REF_DETAIL'
+    };
 
-    export interface ShowRefDetailDone extends Action<{
+    static ShowRefDetailDone:Action<{
         data:Array<[RefsColumn, RefsColumn]>;
         lineIdx:number;
-    }> {
-        name:ActionName.ShowRefDetailDone;
-    }
+    }> = {
+        name: 'CONCORDANCE_SHOW_REF_DETAIL_DONE'
+    };
 
-    export interface PlaySpeech extends Action<{
+    static PlaySpeech:Action<{
         rowIdx:number;
         segments:Array<string>;
-    }> {
-        name:ActionName.PlaySpeech;
-    }
+    }> = {
+        name: 'CONCORDANCE_PLAY_SPEECH'
+    };
 
-    export interface RefResetDetail extends Action<{
-    }> {
-        name:ActionName.RefResetDetail;
-    }
+    static RefResetDetail:Action<{}> = {
+        name: 'CONCORDANCE_REF_RESET_DETAIL'
+    };
 
-    export interface SaveFormSubmit extends Action<{
-    }> {
-        name:ActionName.SaveFormSubmit;
-    }
+    static SaveFormSubmit:Action<{}> = {
+        name: 'CONCORDANCE_SAVE_FORM_SUBMIT'
+    };
 
-    export interface SaveFormSetFormat extends Action<{
+    static SaveFormSetHeading:Action<{
+        value:boolean;
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_HEADING'
+    };
+
+    static SaveFormSetAlignKwic:Action<{
+        value:boolean;
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_ALIGN_KWIC'
+    };
+
+    static SaveFormSetFromLine:Action<{
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_FROM_LINE'
+    };
+
+    static SaveFormSetToLine:Action<{
+        value:string;
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_TO_LINE'
+    };
+
+    static SaveFormSetInclLineNumbers:Action<{
+        value:boolean;
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_INCL_LINE_NUMBERS'
+    };
+
+    static SaveFormSetFormat:Action<{
         value:SaveData.Format;
-    }> {
-        name:ActionName.SaveFormSetFormat;
-    }
+    }> = {
+        name: 'CONCORDANCE_SAVE_FORM_SET_FORMAT'
+    };
 
-    export interface SaveFormSetHeading extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.SaveFormSetHeading;
-    }
+    static ResultCloseSaveForm:Action<{}> = {
+        name: 'CONCORDANCE_RESULT_CLOSE_SAVE_FORM'
+    };
 
-    export interface SaveFormSetInclLineNumbers extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.SaveFormSetInclLineNumbers;
-    }
-
-    export interface SaveFormSetAlignKwic extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.SaveFormSetAlignKwic;
-    }
-
-    export interface SaveFormSetFromLine extends Action<{
-        value:string;
-    }> {
-        name:ActionName.SaveFormSetFromLine;
-    }
-
-    export interface SaveFormSetToLine extends Action<{
-        value:string;
-    }> {
-        name:ActionName.SaveFormSetToLine;
-    }
-
-    export interface ResultCloseSaveForm extends Action<{
-    }> {
-        name:ActionName.ResultCloseSaveForm;
-    }
-
-    export interface SelectLines extends Action<{
+    static SelectLine:Action<{
         value:number;
         tokenNumber:number;
         kwicLength:number;
-    }> {
-        name:ActionName.SelectLine;
-    }
+    }> = {
+        name: 'LINE_SELECTION_SELECT_LINE'
+    };
 
-    export interface RemoveSelectedLines extends Action<{
-    }> {
-        name:ActionName.RemoveSelectedLines;
-    }
+    static RemoveSelectedLines:Action<{}> = {
+        name: 'LINE_SELECTION_REMOVE_LINES'
+    };
 
-    export interface RemoveNonSelectedLines extends Action<{
-    }> {
-        name:ActionName.RemoveNonSelectedLines;
-    }
+    static RemoveNonSelectedLines:Action<{}> = {
+        name: 'LINE_SELECTION_REMOVE_OTHER_LINES'
+    };
 
-    export interface MarkLines extends Action<{
-    }> {
-        name:ActionName.MarkLines;
-    }
+    static MarkLines:Action<{}> = {
+        name: 'LINE_SELECTION_MARK_LINES'
+    };
 
-    export interface MarkLinesDone extends Action<{
+    static MarkLinesDone:Action<{
         data:AjaxConcResponse;
         groupIds:Array<LineGroupId>;
-    }> {
-        name:ActionName.MarkLinesDone;
-    }
+    }> = {
+        name: 'LINE_SELECTION_MARK_LINES_DONE'
+    };
 
-    export interface RemoveLinesNotInGroups extends Action<{
-    }> {
-        name:ActionName.RemoveLinesNotInGroups;
-    }
+    static RemoveLinesNotInGroups:Action<{}> = {
+        name: 'LINE_SELECTION_REMOVE_NON_GROUP_LINES'
+    };
 
-    export interface RenameSelectionGroup extends Action<{
+    static RenameSelectionGroup:Action<{
         srcGroupNum:number;
         dstGroupNum:number;
-    }> {
-        name:ActionName.RenameSelectionGroup;
-    }
+    }> = {
+        name: 'LINE_SELECTION_GROUP_RENAME'
+    };
 
-    export interface RenameSelectionGroupDone extends Action<ConcGroupChangePayload> {
-        name:ActionName.RenameSelectionGroupDone;
-    }
+    static RenameSelectionGroupDone:Action<{
+        concId:string;
+        numLinesInGroups:number;
+        lineGroupIds:Array<LineGroupId>;
+        prevId:number;
+        newId:number;
+    }> = {
+        name: 'LINE_SELECTION_GROUP_RENAME_DONE'
+    };
 
-    export interface ChangeEmail extends Action<{
+    static ChangeEmail:Action<{
         email:string;
-    }> {
-        name:ActionName.ChangeEmail;
-    }
+    }> = {name: 'LINE_SELECTION_CHANGE_EMAIL'};
 
-    export interface ClearUserCredentials extends Action<{
-    }> {
-        name:ActionName.ClearUserCredentials;
-    }
+    static ClearUserCredentials:Action<{}> = {
+        name: 'LINE_SELECTION_CLEAR_USER_CREDENTIALS'
+    };
 
-    export interface ToggleLineSelOptions extends Action<{
-    }> {
-        name:ActionName.ToggleLineSelOptions;
-    }
+    static ToggleLineSelOptions:Action<{}> = {
+        name: 'CONCORDANCE_TOGGLE_LINE_SEL_OPTIONS'
+    };
 
-    export interface LineSelectionReset extends Action<{
-    }> {
-        name:ActionName.LineSelectionReset;
-    }
+    static SendLineSelectionToEmail:Action<{
+        email:string;
+    }> = {
+        name: 'LINE_SELECTION_SEND_URL_TO_EMAIL'
+    };
 
-    export interface LineSelectionResetOnServer extends Action<{
-    }> {
-        name:ActionName.LineSelectionResetOnServer;
-    }
+    static SendLineSelectionToEmailDone:Action<{}> = {
+        name: 'LINE_SELECTION_SEND_URL_TO_EMAIL_DONE'
+    };
 
-    export interface LineSelectionResetOnServerDone extends Action<{
-    }> {
-        name:ActionName.LineSelectionResetOnServerDone;
-    }
+    static SortLineSelection:Action<{}> = {
+        name: 'LINE_SELECTION_SORT_LINES'
+    };
 
-    export interface UnlockLineSelection extends Action<{
-    }> {
-        name:ActionName.UnlockLineSelection;
-    }
+    static SetLineSelectionMode:Action<{
+        mode:LineSelectionModes;
+    }> = {
+        name: 'CONCORDANCE_SET_LINE_SELECTION_MODE'
+    };
 
-    export interface UnlockLineSelectionDone extends Action<{
+    static UnlockLineSelection:Action<{}> = {
+        name: 'LINE_SELECTION_REENABLE_EDIT'
+    };
+
+    static UnlockLineSelectionDone:Action<{
         selection:Array<LineSelValue>;
         queryId:string;
         mode:LineSelectionModes;
+    }> = {
+        name: 'LINE_SELECTION_REENABLE_EDIT_DONE'
+    };
 
-    }> {
-        name:ActionName.UnlockLineSelectionDone;
-    }
+    static LineSelectionReset:Action<{}> = {
+        name: 'LINE_SELECTION_RESET'
+    };
 
-    export interface SendLineSelectionToEmail extends Action<{
-        email:string;
-    }> {
-        name:ActionName.SendLineSelectionToEmail;
-    }
+    static LineSelectionResetOnServer:Action<{}> = {
+        name: 'LINE_SELECTION_RESET_ON_SERVER'
+    };
 
-    export interface SendLineSelectionToEmailDone extends Action<{
-    }> {
-        name:ActionName.SendLineSelectionToEmailDone;
-    }
+    static LineSelectionResetOnServerDone:Action<{}> = {
+        name: 'LINE_SELECTION_RESET_ON_SERVER_DONE'
+    };
 
-    export interface SortLineSelection extends Action<{
-    }> {
-        name:ActionName.SortLineSelection;
-    }
+    static SaveLineSelection:Action<{}> = {
+        name: 'LINE_SELECTION_SAVE'
+    };
 
-    export interface SetLineSelectionMode extends Action<{
+    static ApplyStoredLineSelections:Action<{}> = {
+        name: 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS'
+    };
+
+    static ApplyStoredLineSelectionsDone:Action<{
+        selections:Array<LineSelValue>;
         mode:LineSelectionModes;
-    }> {
-        name:ActionName.SetLineSelectionMode;
-    }
+    }> = {
+        name: 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS_DONE'
+    };
 
-    export interface SaveLineSelection extends Action<{
-    }> {
-        name:ActionName.SaveLineSelection;
-    }
+    static PublishStoredLineSelections:Action<{
+        selections:Array<LineSelValue>;
+        mode:LineSelectionModes;
+    }> = {
+        name: 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS'
+    };
 
-    export interface ApplyStoredLineSelections extends Action<{
-    }> {
-        name:ActionName.ApplyStoredLineSelections;
-    }
+    static ToggleLineGroupRenameForm:Action<{}> = {
+        name: 'LINE_SELECTION_TOGGLE_LINE_GROUP_RENAME'
+    };
 
-    export interface ApplyStoredLineSelectionsDone extends Action<PublishLineSelectionPayload> {
-        name:ActionName.ApplyStoredLineSelectionsDone;
-    }
-
-    export interface PublishStoredLineSelections extends Action<PublishLineSelectionPayload> {
-        name:ActionName.PublishStoredLineSelections;
-    }
-
-    export interface ToggleLineGroupRenameForm extends Action<{
-    }> {
-        name:ActionName.ToggleLineGroupRenameForm;
-    }
-
-    export interface MakeConcPermanent extends Action<{
+    static MakeConcPermanent:Action<{
         revoke:boolean;
-    }> {
-        name:ActionName.MakeConcPermanent;
-    }
+    }> = {
+        name: 'QUERY_MAKE_CONCORDANCE_PERMANENT'
+    };
 
-    export interface GetConcArchiveStatus extends Action<{
-    }> {
-        name:ActionName.GetConcArchiveStatus;
-    }
+    static GetConcArchiveStatus:Action<{}> = {
+        name: 'QUERY_GET_CONC_ARCHIVED_STATUS'
+    };
 
-    export interface ShowSyntaxView extends Action<{
+    static ShowSyntaxView:Action<{
         tokenNumber:number;
         kwicLength:number;
         targetHTMLElementID:string;
-    }> {
-        name:ActionName.ShowSyntaxView;
-    }
+    }> = {
+        name: 'SHOW_SYNTAX_VIEW'
+    };
 
-    export interface CloseSyntaxView extends Action<{
-    }> {
-        name:ActionName.CloseSyntaxView;
-    }
+    static CloseSyntaxView:Action<{}> = {
+        name: 'CLOSE_SYNTAX_VIEW'
+    };
 
-    export interface HideAnonymousUserWarning extends Action<{
-    }> {
-        name:ActionName.HideAnonymousUserWarning;
-    }
+    static HideAnonymousUserWarning:Action<{}> = {
+        name: 'CONCORDANCE_HIDE_ANONYMOUS_USER_WARNING'
+    };
 
-    export interface DashboardMinimizeExtInfo extends Action<{
-    }> {
-        name:ActionName.DashboardMinimizeExtInfo;
-    }
+    static DashboardMinimizeExtInfo:Action<{}> = {
+        name: 'DASHBOARD_MINIMIZE_EXTENDED_INFO'
+    };
 
-    export interface DashboardMaximizeExtInfo extends Action<{
-    }> {
-        name:ActionName.DashboardMaximizeExtInfo;
-    }
+    static DashboardMaximizeExtInfo:Action<{}> = {
+        name: 'DASHBOARD_MAXIMIZE_EXTENDED_INFO'
+    };
 
-    export interface DashboardToggleExtInfo extends Action<{
-    }> {
-        name:ActionName.DashboardToggleExtInfo;
-    }
-
+    static DashboardToggleExtInfo:Action<{}> = {
+        name: 'DASHBOARD_TOGGLE_EXTENDED_INFO'
+    };
 }
