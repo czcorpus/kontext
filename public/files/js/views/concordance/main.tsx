@@ -615,7 +615,7 @@ export function init({dispatcher, he, lineSelectionModel, lineViewModel,
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
                                 viewMode={this.props.attrViewMode}
                                 onChartFrameReady={this.props.onLineSelChartFrameReady} />
-                        {this.props.showAnonymousUserWarn ?
+                        {this.props.showAnonymousUserWarn && this.props.anonymousUserConcLoginPrompt ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </div>
                     <div id="conclines-wrapper">

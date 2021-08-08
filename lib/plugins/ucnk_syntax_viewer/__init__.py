@@ -107,7 +107,7 @@ def create_instance(conf, auth, integ_db):
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(
             f'default_syntax_viewer uses integration_db[{integ_db.info}]')
-        corpora_conf = dsv.load_plugin_conf_from_db(integ_db)
+        corpora_conf = dsv.load_plugin_conf_from_db(integ_db, corp_table='corpora')
     else:
         corpora_conf = dsv.load_plugin_conf_from_file(conf)
     return dsv.SyntaxDataProvider(corpora_conf, UcnkManateeBackend(corpora_conf), auth)
