@@ -28,7 +28,7 @@ import { PluginInterfaces } from '../../types/plugins';
 import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { AudioPlayer, PlayerStatus } from './media';
-import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName } from '../options/actions';
+import { Actions as ViewOptionsActions } from '../options/actions';
 import { Actions } from './actions';
 import { AudioPlayerActions, DetailExpandPositions } from './common';
 
@@ -542,8 +542,8 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
             }
         );
 
-        this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
-            ViewOptionsActionName.SaveSettingsDone,
+        this.addActionHandler<typeof ViewOptionsActions.SaveSettingsDone>(
+            ViewOptionsActions.SaveSettingsDone.name,
             action => {
                 this.changeState(state => {
                     state.wideCtxGlobals = action.payload.widectxGlobals;

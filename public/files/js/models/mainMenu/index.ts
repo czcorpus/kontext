@@ -25,8 +25,7 @@ import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
-import { Actions as GeneralOptsActions,
-    ActionName as GeneralOptsActionName } from '../options/actions';
+import { Actions as GeneralOptsActions } from '../options/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { ConcServerArgs } from '../concordance/common';
@@ -279,8 +278,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<GeneralOptsActions.GeneralSubmitDone>(
-            GeneralOptsActionName.GeneralSubmitDone,
+        this.addActionHandler<typeof GeneralOptsActions.GeneralSubmitDone>(
+            GeneralOptsActions.GeneralSubmitDone.name,
             (state, action) => {
                 state.activeItem = null;
             }

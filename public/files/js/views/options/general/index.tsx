@@ -23,7 +23,7 @@ import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 
 import { Kontext } from '../../../types/common';
 import { GeneralViewOptionsModelState } from '../../../models/options/general';
-import { Actions, ActionName } from '../../../models/options/actions';
+import { Actions } from '../../../models/options/actions';
 
 import * as S from './style';
 
@@ -46,8 +46,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetPageSize>({
-                name: ActionName.GeneralSetPageSize,
+            dispatcher.dispatch<typeof Actions.GeneralSetPageSize>({
+                name: Actions.GeneralSetPageSize.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -77,8 +77,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetContextSize>({
-                name: ActionName.GeneralSetContextSize,
+            dispatcher.dispatch<typeof Actions.GeneralSetContextSize>({
+                name: Actions.GeneralSetContextSize.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -108,8 +108,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = () => {
-            dispatcher.dispatch<Actions.GeneralSetLineNums>({
-                name: ActionName.GeneralSetLineNums,
+            dispatcher.dispatch<typeof Actions.GeneralSetLineNums>({
+                name: Actions.GeneralSetLineNums.name,
                 payload: {
                     value: !props.value
                 }
@@ -141,8 +141,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = () => {
-            dispatcher.dispatch<Actions.GeneralSetShuffle>({
-                name: ActionName.GeneralSetShuffle,
+            dispatcher.dispatch<typeof Actions.GeneralSetShuffle>({
+                name: Actions.GeneralSetShuffle.name,
                 payload: {
                     value: !props.value
                 }
@@ -179,8 +179,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleCheckbox = () => {
-            dispatcher.dispatch<Actions.GeneralSetUseRichQueryEditor>({
-                name: ActionName.GeneralSetUseRichQueryEditor,
+            dispatcher.dispatch<typeof Actions.GeneralSetUseRichQueryEditor>({
+                name: Actions.GeneralSetUseRichQueryEditor.name,
                 payload: {
                     value: !props.value
                 }
@@ -240,8 +240,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetWlPageSize>({
-                name: ActionName.GeneralSetWlPageSize,
+            dispatcher.dispatch<typeof Actions.GeneralSetWlPageSize>({
+                name: Actions.GeneralSetWlPageSize.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -291,8 +291,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetFmaxItems>({
-                name: ActionName.GeneralSetFmaxItems,
+            dispatcher.dispatch<typeof Actions.GeneralSetFmaxItems>({
+                name: Actions.GeneralSetFmaxItems.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -342,8 +342,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetCitemsPerPage>({
-                name: ActionName.GeneralSetCitemsPerPage,
+            dispatcher.dispatch<typeof Actions.GeneralSetCitemsPerPage>({
+                name: Actions.GeneralSetCitemsPerPage.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -393,8 +393,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.GeneralSetPQueryitemsPerPage>({
-                name: ActionName.GeneralSetPQueryitemsPerPage,
+            dispatcher.dispatch<typeof Actions.GeneralSetPQueryitemsPerPage>({
+                name: Actions.GeneralSetPQueryitemsPerPage.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -444,8 +444,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const handleSubmitClick = () => {
-            dispatcher.dispatch<Actions.GeneralSubmit>({
-                name: ActionName.GeneralSubmit
+            dispatcher.dispatch<typeof Actions.GeneralSubmit>({
+                name: Actions.GeneralSubmit.name
             });
         };
 

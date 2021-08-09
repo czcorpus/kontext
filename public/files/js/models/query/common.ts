@@ -32,7 +32,7 @@ import { QueryFormType, Actions } from './actions';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { PluginInterfaces } from '../../types/plugins';
-import { Actions as CorpOptActions, ActionName as CorpOptActionName } from '../options/actions';
+import { Actions as CorpOptActions } from '../options/actions';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery, TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
@@ -749,8 +749,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<CorpOptActions.SaveSettingsDone>(
-            CorpOptActionName.SaveSettingsDone,
+        this.addActionHandler<typeof CorpOptActions.SaveSettingsDone>(
+            CorpOptActions.SaveSettingsDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
