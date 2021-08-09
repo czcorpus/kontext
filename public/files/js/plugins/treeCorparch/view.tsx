@@ -17,8 +17,8 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {TreeWidgetModel, Node, TreeWidgetModelState} from './init';
+import * as Kontext from '../../types/kontext';
+import { TreeWidgetModel, Node, TreeWidgetModelState } from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from './actions';
 import { List } from 'cnc-tskit';

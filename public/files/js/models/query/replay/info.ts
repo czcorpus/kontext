@@ -23,7 +23,7 @@ import { List, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';

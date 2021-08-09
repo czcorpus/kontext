@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { IssueReportingModel, IssueReportingModelState } from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from './actions';

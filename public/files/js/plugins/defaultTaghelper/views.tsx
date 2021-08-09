@@ -21,8 +21,8 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List, pipe } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { Actions as QueryActions, QueryFormType } from '../../models/query/actions';
 import { Actions } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';

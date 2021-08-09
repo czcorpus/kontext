@@ -22,7 +22,7 @@ import * as React from 'react';
 import { List, Dict } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { SubcMixerModel, SubcMixerModelState } from './model';
 import { init as subcorpViewsInit } from '../../views/subcorp/forms';
 import { CalculationResults, SubcMixerExpression } from './common';

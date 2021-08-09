@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { List } from 'cnc-tskit';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import {QueryFormModel, QueryFormModelState} from '../../../models/query/common';
 import { VirtualKeyboardModel, VirtualKeyboardState } from '../../../models/query/virtualKeyboard';
 import { Actions, QueryFormType } from '../../../models/query/actions';

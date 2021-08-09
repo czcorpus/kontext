@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { FreqResultResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from './save';
@@ -31,6 +30,7 @@ import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ajaxErrorMapped } from '../../app/navigation';
+import * as response from './response';
 
 
 export interface ResultItem {
@@ -85,7 +85,7 @@ export interface FreqDataRowsModelState {
 
 export function importData(
     pageModel:PageModel,
-    data:Array<FreqResultResponse.Block>,
+    data:Array<response.Block>,
     pageSize:number,
     currentPage:number
 ):Array<ResultBlock> {
@@ -288,7 +288,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     private dispatchLoad(
-        load:Observable<FreqResultResponse.FreqResultResponse>,
+        load:Observable<response.FreqResultResponse>,
         state:FreqDataRowsModelState,
         dispatch:SEDispatcher,
         pushHistory:boolean
@@ -368,8 +368,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return args;
     }
 
-    loadPage(state:FreqDataRowsModelState):Observable<FreqResultResponse.FreqResultResponse> {
-        return this.pageModel.ajax$<FreqResultResponse.FreqResultResponse>(
+    loadPage(state:FreqDataRowsModelState):Observable<response.FreqResultResponse> {
+        return this.pageModel.ajax$<response.FreqResultResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('freqs'),
             this.getSubmitArgs(state)

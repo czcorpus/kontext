@@ -20,14 +20,14 @@
  */
 
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { init as basicOverviewViewsInit } from '../../query/basicOverview';
 import { init as formInit } from '../form';
 import * as React from 'react';
 import { Actions } from '../../../models/wordlist/actions';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import { WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import * as S from './style';
 import { List } from 'cnc-tskit';
 import { splitFilterWords } from '../../../models/wordlist/common';

@@ -20,12 +20,12 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import * as React from 'react';
-import { AjaxResponse } from '../../../types/ajaxResponses';
-import { Kontext } from '../../../types/common';
+import { WideCtx } from '../../../models/concordance/common';
+import * as Kontext from '../../../types/kontext';
 
 
 export interface FormattedTextRendererProps {
-    data:AjaxResponse.WideCtx;
+    data:WideCtx;
 }
 
 

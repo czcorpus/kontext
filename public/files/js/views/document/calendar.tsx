@@ -21,9 +21,9 @@
 import { List, pipe } from 'cnc-tskit';
 import * as React from 'react';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { ImgWithMouseover } from './general';
-import { CoreViews } from '../../types/coreViews';
+import * as CoreViews from '../../types/coreViews';
 import * as S from './style';
 
 

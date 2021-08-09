@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { Actions } from '../../models/textTypes/actions';
 
 export interface ExtendedInfoButtonProps {

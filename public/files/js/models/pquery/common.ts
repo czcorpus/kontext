@@ -20,11 +20,11 @@
  */
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { highlightSyntaxStatic, ParsedAttr } from '../query/cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import { FilterFormArgs, isQueryFormArgs, QueryFormArgs } from '../query/formArgs';
 
 
 /**
@@ -99,7 +99,7 @@ export interface HistoryArgs {
     page:number;
 }
 
-export type InvolvedConcFormArgs = {[queryId:string]:AjaxResponse.QueryFormArgs|AjaxResponse.FilterFormArgs};
+export type InvolvedConcFormArgs = {[queryId:string]:QueryFormArgs|FilterFormArgs};
 
 export const enum PqueryAlignTypes {
     WHOLE_KWIC = 'whole'
@@ -318,8 +318,11 @@ export function importConcQueries(
     args:InvolvedConcFormArgs
 ):ConcQueries {
 
-    function extractQuery(q:AjaxResponse.QueryFormArgs|AjaxResponse.FilterFormArgs):[{[k:string]:string}, {[k:string]:string}] {
-        if (AjaxResponse.isQueryFormArgs(q)) {
+    function extractQuery(
+        q:QueryFormArgs|FilterFormArgs
+    ):[{[k:string]:string}, {[k:string]:string}] {
+
+        if (isQueryFormArgs(q)) {
             return tuple(q.curr_queries, q.curr_default_attr_values);
         }
         return tuple({[q.maincorp]: q.query}, {[q.maincorp]: q.default_attr});

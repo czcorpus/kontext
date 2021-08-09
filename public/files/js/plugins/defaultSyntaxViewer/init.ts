@@ -23,7 +23,7 @@
 import { empty as rxEmpty } from 'rxjs';
 import { StatefulModel, IModel } from 'kombo';
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 
 declare var require:any;
@@ -33,6 +33,7 @@ import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
 import { Actions as ConcActions } from '../../models/concordance/actions';
+import { IPluginApi } from '../../types/plugins/common';
 require('./style.css'); // webpack
 
 

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from '../save';
 import { CollResultModel, CollResultModelState } from '../../../models/coll/result';
 import { CollResultsSaveModel } from '../../../models/coll/save';

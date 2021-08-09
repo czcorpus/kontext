@@ -23,8 +23,7 @@ import { concatMap, tap, map, reduce } from 'rxjs/operators';
 import { SEDispatcher, IActionDispatcher } from 'kombo';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
-import { AjaxResponse } from '../../../types/ajaxResponses';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
 import { FirstQueryFormModel } from '../first';
 import { FilterFormModel } from '../filter';
@@ -35,11 +34,14 @@ import { FirstHitsModel } from '../../query/firstHits';
 import { QueryInfoModel } from './info';
 import { Actions } from '../actions';
 import { Actions as ConcActions } from '../../concordance/actions';
-import { ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse, QueryPipelineResponseItem } from './common';
+import {
+    ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse,
+    QueryPipelineResponseItem } from './common';
 import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
+import { ConcFormArgs, ConcFormArgsResponse, FilterFormArgs, FilterFormArgsResponse, FirstHitsFormArgs, QueryFormArgs, QueryFormArgsResponse, SampleFormArgs, SampleFormArgsResponse, SortFormArgs, SortFormArgsResponse, SwitchMainCorpArgs } from '../formArgs';
 
 
 /*
@@ -59,7 +61,7 @@ may or may not be available without additional AJAX request.
 /**
  * Local query form data cache.
  */
-export type LocalQueryFormData = {[ident:string]:AjaxResponse.ConcFormArgs};
+export type LocalQueryFormData = {[ident:string]:ConcFormArgs};
 
 
 /**
@@ -93,7 +95,7 @@ export interface QueryReplayModelState {
      * operation which will be submitted and appended to the current query (e.g. we add a
      * filter/sort/...)
      */
-    concArgsCache:{[key:string]:AjaxResponse.ConcFormArgs};
+    concArgsCache:{[key:string]:ConcFormArgs};
 
     branchReplayIsRunning:boolean;
 
@@ -135,7 +137,7 @@ type OperationChainArgs = [
     Kontext.QueryOperation,
     QueryPipelineResponseItem,
     number,
-    {[k:string]:AjaxResponse.ConcFormArgs}
+    {[k:string]:ConcFormArgs}
 ];
 
 /**
@@ -477,7 +479,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         op,
         pipeOp
     }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
-        const prepareFormData:Observable<[AjaxResponse.ConcFormArgs|null, string]> = changedOpIdx !== opIdx ?
+        const prepareFormData:Observable<[ConcFormArgs|null, string]> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
             return rxOf([]).pipe(
@@ -785,15 +787,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * @returns updated query store wrapped in a promise
      */
     private syncQueryForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.QueryFormArgs> {
+            opIdx:number):Observable<QueryFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return (queryKey !== undefined ?
             // cache hit
             this.queryModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.QueryFormArgs)
+                rxOf(state.concArgsCache[queryKey] as QueryFormArgs)
             ) :
             this.queryModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.QueryFormArgsResponse>(
+                this.pageModel.ajax$<QueryFormArgsResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -816,15 +818,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * respective query pipeline.
      */
     private syncFilterForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.FilterFormArgs> {
+            opIdx:number):Observable<FilterFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return (queryKey !== undefined ?
             // cache hit
             this.filterModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.FilterFormArgs)
+                rxOf(state.concArgsCache[queryKey] as FilterFormArgs)
             ) :
             this.filterModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.FilterFormArgsResponse>(
+                this.pageModel.ajax$<FilterFormArgsResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -838,15 +840,15 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncSortForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.SortFormArgs> {
+            opIdx:number):Observable<SortFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             this.sortModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.SortFormArgs)).pipe(
+                rxOf(state.concArgsCache[queryKey] as SortFormArgs)).pipe(
                     concatMap(data => this.mlConcSortModel.syncFrom(rxOf(data)))
             ) :
             this.sortModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.SortFormArgsResponse>(
+                this.pageModel.ajax$<SortFormArgsResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -857,21 +859,21 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 ).pipe(
                     concatMap(
                         data => this.mlConcSortModel.syncFrom(
-                            rxOf(data as AjaxResponse.SortFormArgs)
+                            rxOf(data as SortFormArgs)
                         )
                     )
                 ));
     }
 
     private syncSampleForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+            opIdx:number):Observable<ConcFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             this.sampleModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.SampleFormArgs)
+                rxOf(state.concArgsCache[queryKey] as SampleFormArgs)
             ) :
             this.sampleModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.SampleFormArgsResponse>(
+                this.pageModel.ajax$<SampleFormArgsResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -884,11 +886,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncShuffleForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+            opIdx:number):Observable<ConcFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             rxOf(state.concArgsCache[queryKey]) :
-            this.pageModel.ajax$<AjaxResponse.ConcFormArgsResponse>(
+            this.pageModel.ajax$<ConcFormArgsResponse>(
                 HTTP.Method.GET,
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
@@ -901,11 +903,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncSubhitsForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+            opIdx:number):Observable<ConcFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             rxOf(state.concArgsCache[queryKey]) :
-            this.pageModel.ajax$<AjaxResponse.ConcFormArgsResponse>(
+            this.pageModel.ajax$<ConcFormArgsResponse>(
                 HTTP.Method.GET,
                 this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                 {
@@ -917,14 +919,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncFirstHitsForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+            opIdx:number):Observable<ConcFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             this.firstHitsModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.FirstHitsFormArgs)
+                rxOf(state.concArgsCache[queryKey] as FirstHitsFormArgs)
             ) :
             this.firstHitsModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.FirstHitsFormArgs>(
+                this.pageModel.ajax$<FirstHitsFormArgs>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -938,14 +940,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncSwitchMcForm(state:QueryReplayModelState,
-            opIdx:number):Observable<AjaxResponse.ConcFormArgs> {
+            opIdx:number):Observable<ConcFormArgs> {
         const queryKey = this.opIdxToCachedQueryKey(state.replayOperations, opIdx);
         return queryKey !== undefined ?
             this.switchMcModel.syncFrom(
-                rxOf(state.concArgsCache[queryKey] as AjaxResponse.SwitchMainCorpArgs)
+                rxOf(state.concArgsCache[queryKey] as SwitchMainCorpArgs)
             ) :
             this.switchMcModel.syncFrom(
-                this.pageModel.ajax$<AjaxResponse.SwitchMainCorpArgs>(
+                this.pageModel.ajax$<SwitchMainCorpArgs>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('ajax_fetch_conc_form_args'),
                     {
@@ -958,7 +960,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     private syncFormData(state:QueryReplayModelState,
-            opIdx:number):Observable<[AjaxResponse.ConcFormArgs|null, string]> {
+            opIdx:number):Observable<[ConcFormArgs|null, string]> {
         const formType = state.currEncodedOperations[opIdx].formType;
         if (formType === Kontext.ConcFormTypes.QUERY) {
             return this.syncQueryForm(state, opIdx).pipe(

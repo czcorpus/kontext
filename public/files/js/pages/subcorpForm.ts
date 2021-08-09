@@ -20,8 +20,9 @@
 
 import * as React from 'react';
 
-import { Kontext, TextTypes } from '../types/common';
-import { PluginInterfaces } from '../types/plugins';
+import * as Kontext from '../types/kontext';
+import * as TextTypes from '../types/textTypes';
+import * as PluginInterfaces from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
 import { SubcorpFormModel } from '../models/subcorp/form';

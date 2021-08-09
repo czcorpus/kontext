@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 import * as React from 'react';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { KwicConnectModel, KwicConnectState } from './model';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 import * as S from './style';
 

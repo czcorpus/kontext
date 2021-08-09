@@ -24,7 +24,7 @@ import * as React from 'react';
 import { Actions, QueryFormType } from '../../../models/query/actions';
 import { QueryFormModel, QueryFormModelState } from '../../../models/query/common';
 import { ParsedSimpleQueryToken } from '../../../models/query/query';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import * as S from './style';
 
 export interface InputModuleArgs {

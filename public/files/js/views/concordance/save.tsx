@@ -20,8 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
+import * as Kontext from '../../types/kontext';
 import { ConcSaveModel, ConcSaveModelState } from '../../models/concordance/save';
 import { Actions } from '../../models/concordance/actions';
 
@@ -62,10 +61,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 </th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
-                        <option value={SaveData.Format.CSV}>CSV</option>
-                        <option value={SaveData.Format.XLSX}>XLSX (Excel)</option>
-                        <option value={SaveData.Format.XML}>XML</option>
-                        <option value={SaveData.Format.TEXT}>Text</option>
+                        <option value="csv">CSV</option>
+                        <option value="xlsx">XLSX (Excel)</option>
+                        <option value="xml">XML</option>
+                        <option value="text">Text</option>
                     </select>
                 </td>
             </tr>
@@ -230,14 +229,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _renderFormatDependentOptions() {
             switch (this.props.saveformat) {
-            case SaveData.Format.TEXT:
+            case 'text':
                 return <>
                         <TRAlignKwicCheckbox key="opt-ak" value={this.props.alignKwic} />
                         <TRIncludeHeadingCheckbox key="opt-ih" value={this.props.includeHeading} />
                 </>;
-            case SaveData.Format.XML:
-            case SaveData.Format.XLSX:
-            case SaveData.Format.CSV:
+            case 'xml':
+            case 'xlsx':
+            case 'csv':
                 return <TRIncludeHeadingCheckbox key="opt-ih" value={this.props.includeHeading} />;
             default:
                 return null;

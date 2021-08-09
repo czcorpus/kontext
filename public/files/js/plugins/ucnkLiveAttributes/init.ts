@@ -17,11 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { TextTypesModel } from '../../models/textTypes/main';
 import * as liveAttrsModel from './models';
 import { init as viewInit } from './view';
 import { List } from 'cnc-tskit';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {

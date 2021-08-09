@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { TextTypes } from '../../types/common';
+import * as TextTypes from '../../types/textTypes';
 import { List, pipe } from 'cnc-tskit';
 
 
@@ -26,16 +26,16 @@ import { List, pipe } from 'cnc-tskit';
  * TTSelOps is a set of operations applicable for any type of text type selection
  * (full list, raw input, regexp)
  */
-export namespace TTSelOps {
+export class TTSelOps {
 
-    export function mapValues(
+    static mapValues(
         sel:TextTypes.AnyTTSelection,
         mapFn:(item:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue
     ):TextTypes.AnyTTSelection {
         return sel.type === 'regexp' ? sel : {...sel, values: List.map(mapFn, sel.values)}
     };
 
-    export function toggleValueSelection(sel:TextTypes.AnyTTSelection, idx:number):TextTypes.AnyTTSelection {
+    static toggleValueSelection(sel:TextTypes.AnyTTSelection, idx:number):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             const val = sel.values[idx];
             if (val.selected) {
@@ -62,14 +62,14 @@ export namespace TTSelOps {
         }
     }
 
-    export function containsFullList(sel:TextTypes.AnyTTSelection):boolean {
+    static containsFullList(sel:TextTypes.AnyTTSelection):boolean {
         if (sel.type === 'full') {
             return true;
         }
         return false;
     }
 
-    export function hasUserChanges(sel:TextTypes.AnyTTSelection):boolean {
+    static hasUserChanges(sel:TextTypes.AnyTTSelection):boolean {
         if (sel.type === 'regexp') {
             return !!sel.textFieldValue;
 
@@ -82,7 +82,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean):Array<string> {
+    static exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean):Array<string> {
         if (sel.type === 'regexp') {
             return [sel.textFieldValue];
         }
@@ -100,7 +100,7 @@ export namespace TTSelOps {
         );
     }
 
-    export function keepIfPresentIn(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
+    static keepIfPresentIn(sel:TextTypes.AnyTTSelection, items:Array<string>):TextTypes.AnyTTSelection {
         if (sel.type === 'regexp') {
             return sel;
 
@@ -132,13 +132,13 @@ export namespace TTSelOps {
         }
     }
 
-    export function filter(sel:TextTypes.AnyTTSelection, fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AnyTTSelection {
+    static filter(sel:TextTypes.AnyTTSelection, fn:(v:TextTypes.AttributeValue)=>boolean):TextTypes.AnyTTSelection {
         return sel.type === 'regexp' ?
             sel :
             {...sel, values: sel.values.filter(fn)};
     }
 
-    export function addValue(sel:TextTypes.AnyTTSelection, value:TextTypes.AttributeValue):TextTypes.AnyTTSelection {
+    static addValue(sel:TextTypes.AnyTTSelection, value:TextTypes.AttributeValue):TextTypes.AnyTTSelection {
         if (sel.type == 'text') {
             if (sel.values.find(x => x.value === value.value) === undefined) {
                 return {
@@ -155,7 +155,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function removeValue(sel:TextTypes.AnyTTSelection, value:string):TextTypes.AnyTTSelection {
+    static removeValue(sel:TextTypes.AnyTTSelection, value:string):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             const idx = List.findIndex(x => x.value === value, sel.values);
             if (idx > -1) {
@@ -166,7 +166,7 @@ export namespace TTSelOps {
                 };
 
             } else {
-                return this;
+                return sel;
             }
 
         } else {
@@ -174,23 +174,23 @@ export namespace TTSelOps {
         }
     }
 
-    export function clearValues(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
+    static clearValues(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
         return sel.type === 'regexp' ?
             sel :
             {...sel, values: []};
     }
 
-    export function setValues(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AttributeValue>):TextTypes.AnyTTSelection {
+    static setValues(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AttributeValue>):TextTypes.AnyTTSelection {
         return sel.type === 'regexp' ?
             sel :
             {...sel, values};
     }
 
-    export function getValues(sel:TextTypes.AnyTTSelection):Array<TextTypes.AttributeValue> {
+    static getValues(sel:TextTypes.AnyTTSelection):Array<TextTypes.AttributeValue> {
         return sel.type === 'regexp' ? [] : sel.values;
     }
 
-    export function setAutoComplete(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AutoCompleteItem>):TextTypes.AnyTTSelection {
+    static setAutoComplete(sel:TextTypes.AnyTTSelection, values:Array<TextTypes.AutoCompleteItem>):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             return {
                 ...sel,
@@ -202,7 +202,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function resetAutoComplete(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
+    static resetAutoComplete(sel:TextTypes.AnyTTSelection):TextTypes.AnyTTSelection {
         if (sel.type === 'text') {
             return {
                 ...sel,
@@ -214,7 +214,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function getAutoComplete(sel:TextTypes.AnyTTSelection):Array<TextTypes.AutoCompleteItem> {
+    static getAutoComplete(sel:TextTypes.AnyTTSelection):Array<TextTypes.AutoCompleteItem> {
         if (sel.type === 'text') {
             return sel.autoCompleteHints;
 
@@ -223,11 +223,11 @@ export namespace TTSelOps {
         }
     }
 
-    export function isLocked(sel:TextTypes.AnyTTSelection):boolean {
+    static isLocked(sel:TextTypes.AnyTTSelection):boolean {
         return sel.type === 'regexp' ? sel.isLocked : List.some(item => item.locked, sel.values);
     }
 
-    export function setExtendedInfo(
+    static setExtendedInfo(
         sel:TextTypes.AnyTTSelection,
         ident:string,
         data:TextTypes.ExtendedInfo
@@ -257,7 +257,7 @@ export namespace TTSelOps {
         }
     }
 
-    export function getNumOfSelectedItems(sel:TextTypes.AnyTTSelection):number {
+    static getNumOfSelectedItems(sel:TextTypes.AnyTTSelection):number {
         return sel.type === 'regexp' ?
             0 :
             List.foldl(
@@ -267,7 +267,7 @@ export namespace TTSelOps {
             );
     }
 
-    export function setTextFieldValue(
+    static setTextFieldValue(
         sel:TextTypes.AnyTTSelection,
         value:string,
         valueDecoded?:string
@@ -292,7 +292,7 @@ export namespace TTSelOps {
     }
 
 
-    export function getTextFieldValue(sel:TextTypes.AnyTTSelection):string {
+    static getTextFieldValue(sel:TextTypes.AnyTTSelection):string {
         if (sel.type === 'text' || sel.type === 'regexp') {
             return sel.textFieldValue;
 

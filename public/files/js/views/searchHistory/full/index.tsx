@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 import { Keyboard, Dict, pipe, List } from 'cnc-tskit';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Actions } from '../../../models/searchHistory/actions';
 import { QueryType } from '../../../models/query/query';
 

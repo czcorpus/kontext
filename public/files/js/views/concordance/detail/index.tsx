@@ -22,8 +22,8 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import { Kontext } from '../../../types/common';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as Kontext from '../../../types/kontext';
+import * as PluginInterfaces from '../../../types/plugins';
 import { init as initSpeechViews } from './speech';
 import { ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
 import { RefsDetailModel, RefsDetailModelState } from '../../../models/concordance/refsDetail';

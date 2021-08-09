@@ -20,11 +20,11 @@
  */
 
 import { Action } from 'kombo';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes, PqueryExpressionRoles } from './common';
 import { SortColumn } from './result';
-import {SaveData} from '../../app/navigation';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export class Actions {
@@ -114,7 +114,7 @@ export class Actions {
     }
 
     static SaveFormSetFormat:Action<{
-        value:SaveData.Format;
+        value:DataSaveFormat;
     }> = {
         name: 'PQUERY_SAVE_FORM_SET_FORMAT'
     }

@@ -22,16 +22,19 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Observable, throwError as rxThrowError } from 'rxjs';
 import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
 
-import { Kontext, TextTypes } from '../../types/common';
-import { IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { validateSubcProps } from '../../models/subcorp/form';
 import { Actions } from './actions';
-import { SubcMixerExpression, CalculationResults, CalculationResponse, TextTypeAttrVal } from './common';
+import {
+    SubcMixerExpression, CalculationResults, CalculationResponse,
+    TextTypeAttrVal } from './common';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { BaseSubcorFormState } from '../../models/subcorp/common';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface SubcMixerModelState extends BaseSubcorFormState {
@@ -59,9 +62,10 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     private readonly pluginApi:IPluginApi;
 
     constructor(
-            dispatcher:IActionDispatcher,
-            pluginApi:IPluginApi,
-            initialState:SubcMixerModelState) {
+        dispatcher:IActionDispatcher,
+        pluginApi:IPluginApi,
+        initialState:SubcMixerModelState
+    ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 

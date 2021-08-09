@@ -21,13 +21,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
-import { combineLatest, forkJoin, Observable, Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
 import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 
-import { PluginInterfaces, IPluginApi } from '../types/plugins';
-import { Kontext } from '../types/common';
-import { CoreViews } from '../types/coreViews';
+import * as PluginInterfaces from '../types/plugins';
+import * as Kontext from '../types/kontext';
+import * as CoreViews from '../types/coreViews';
 import { init as documentViewsFactory } from '../views/document';
 import { init as commonViewsFactory, CommonViews } from '../views/common';
 import { init as menuViewsFactory } from '../views/menu';
@@ -59,6 +59,7 @@ import { IUnregistrable } from '../models/common/common';
 import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
+import { IPluginApi } from '../types/plugins/common';
 
 
 export enum DownloadType {

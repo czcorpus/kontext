@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Maths } from 'cnc-tskit';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
 import { Actions } from '../../../models/freqs/actions';
 

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { ConcServerArgs } from '../../models/concordance/common';
 import { Dict } from 'cnc-tskit';

@@ -20,7 +20,7 @@
 
 import {PageModel} from '../../app/page';
 import {MultiDict} from '../../multidict';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
 import { Actions } from './actions';

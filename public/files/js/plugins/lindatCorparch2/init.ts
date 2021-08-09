@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { CorplistWidgetModel } from './widget';
 import { CorplistPage, CorplistServerData } from './corplist';
 import { init as viewInit } from './corplistView';
@@ -28,6 +28,7 @@ import { init as overviewViewInit } from '../../views/overview';
 import { CorplistTableModel } from './corplist';
 import * as common from './common';
 import { SearchEngine } from './search';
+import { IPluginApi } from '../../types/plugins/common';
 
 declare var require:any;
 require('./style.css'); // webpack

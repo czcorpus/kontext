@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
-import {Keyboard} from 'cnc-tskit';
-import {QuerySaveAsFormModel, QuerySaveAsFormModelState} from '../../models/query/save';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import * as Kontext from '../../types/kontext';
+import { Keyboard } from 'cnc-tskit';
+import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../models/query/save';
 import { Actions } from '../../models/query/actions';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import * as S from './style';
@@ -45,7 +45,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------ <QueryNameInput /> -------------------------------
 
-    const QueryNameInput:React.SFC<{
+    const QueryNameInput:React.FC<{
         value:string;
         onKeyDown:(evt:React.KeyboardEvent<{}>)=>void;
 
@@ -73,7 +73,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------ <SubmitButton /> -------------------------------
 
-    const SubmitButton:React.SFC<{
+    const SubmitButton:React.FC<{
         isWaiting:boolean;
         onClick:(evt:React.MouseEvent<{}>)=>void;
         onKeyDown:(evt:React.KeyboardEvent<{}>)=>void;

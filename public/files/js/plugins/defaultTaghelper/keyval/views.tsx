@@ -3,7 +3,7 @@ import { IActionDispatcher } from 'kombo';
 import { List, pipe, Dict } from 'cnc-tskit';
 
 import { FilterRecord, UDTagBuilderModelState } from './models';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Actions } from '../actions';
 
 import * as S from '../style';

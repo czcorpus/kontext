@@ -21,8 +21,8 @@
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
     AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions } from './common';
-import { SaveData } from '../../app/navigation';
-import { TextTypes } from '../../types/common';
+import * as TextTypes from '../../types/textTypes';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface ConcGroupChangePayload {
@@ -287,7 +287,7 @@ export class Actions {
     };
 
     static SaveFormSetFormat:Action<{
-        value:SaveData.Format;
+        value:DataSaveFormat;
     }> = {
         name: 'CONCORDANCE_SAVE_FORM_SET_FORMAT'
     };

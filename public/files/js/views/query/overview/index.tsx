@@ -24,7 +24,7 @@ import { List, tuple } from 'cnc-tskit';
 
 import { init as saveViewInit } from '../save';
 import { init as basicOverviewInit } from '../basicOverview';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { ExtendedQueryOperation } from '../../../models/query/replay/common';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';

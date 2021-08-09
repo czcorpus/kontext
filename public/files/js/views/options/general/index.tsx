@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, StatelessModel } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { GeneralViewOptionsModelState } from '../../../models/options/general';
 import { Actions } from '../../../models/options/actions';
 

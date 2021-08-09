@@ -20,8 +20,8 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {TreeWidgetModel, Node} from './model';
+import * as Kontext from '../../types/kontext';
+import { TreeWidgetModel, Node } from './model';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 

@@ -22,7 +22,9 @@ import { Dict, List, tuple, pipe } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { diffArrays } from 'diff';
 
-import { Kontext, TextTypes, ViewOptions } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
+import * as ViewOptions from '../../types/viewOptions';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
@@ -31,15 +33,17 @@ import { ConcServerArgs } from '../concordance/common';
 import { QueryFormType, Actions } from './actions';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { Actions as CorpOptActions } from '../options/actions';
-import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
-    parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery, TokenSuggestions } from './query';
+import {
+    AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
+    parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
+    TokenSuggestions } from './query';
 import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions } from '../searchHistory/actions';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import { SubmitEncodedSimpleTokens } from './formArgs';
 
 /*
 Some important terms to prevent confusion:
@@ -103,7 +107,7 @@ export interface FilterServerArgs extends ConcServerArgs {
     inclkwic:0|1;
     qtype:QueryType;
     query:string;
-    queryParsed:AjaxResponse.SubmitEncodedSimpleTokens|undefined;
+    queryParsed:SubmitEncodedSimpleTokens|undefined;
     qmcase:boolean;
     within:boolean;
     default_attr:string|Array<string>;

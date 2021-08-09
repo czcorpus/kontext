@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { QueryFormModel, QueryFormModelState } from '../../models/query/common';
 import { Actions } from '../../models/query/actions';
 import { ContentEditable } from './contentEditable';

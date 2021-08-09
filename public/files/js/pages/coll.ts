@@ -16,7 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext, TextTypes } from '../types/common';
+import * as Kontext from '../types/kontext';
+import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { MultiDict } from '../multidict';

@@ -21,8 +21,11 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext, ViewOptions } from '../../../types/common';
-import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
+import * as Kontext from '../../../types/kontext';
+import * as ViewOptions from '../../../types/viewOptions';
+import {
+    CorpusViewOptionsModel,
+    CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
 import { Actions } from '../../../models/options/actions';
 import { List } from 'cnc-tskit';
 

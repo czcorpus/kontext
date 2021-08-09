@@ -19,7 +19,7 @@
  */
 
 import { StatefulModel, Action, IModel } from 'kombo';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 /**
  *

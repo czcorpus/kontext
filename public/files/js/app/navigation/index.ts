@@ -24,7 +24,7 @@ import { ajax, AjaxError, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
 import { pipe, List, HTTP, Dict, tuple, id } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { MultiDict } from '../../multidict';
 import { CorpusSwitchModel } from '../../models/common/corpusSwitch';
 import { createHistory } from './history';
@@ -63,32 +63,6 @@ export function parseUrlArgs(args:string):Array<[string, string]> {
         const tmp = item.split('=', 2);
         return [decodeURIComponent(tmp[0]), decodeURIComponent(tmp[1])];
     });
-}
-
-
-export namespace SaveData {
-
-    export enum Format {
-        CSV = 'csv',
-        TEXT = 'text',
-        XML = 'xml',
-        XLSX = 'xlsx'
-    }
-
-    export const formatToExt = (sf:Format):string => {
-        switch (sf) {
-            case Format.CSV:
-                return 'csv';
-            case Format.TEXT:
-                return 'txt';
-            case Format.XLSX:
-                return 'xlsx';
-            case Format.XML:
-                return 'xml';
-            default:
-                throw new Error(`Unknown safe format ${sf}`);
-        }
-    }
 }
 
 /**

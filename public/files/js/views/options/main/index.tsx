@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, IModel, BoundWithProps, StatelessModel } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { init as generalViewsInit } from '../general';
 import { init as structsAttrsViewsInit } from '../structsAttrs';
 import { CorpusViewOptionsModel } from '../../../models/options/structsAttrs';

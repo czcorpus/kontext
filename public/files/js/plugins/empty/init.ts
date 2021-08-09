@@ -19,10 +19,10 @@
  */
 
 import { IUnregistrable } from '../../models/common/common';
-import { IPluginApi, BasePlugin } from '../../types/plugins';
 import { IFullActionControl } from 'kombo';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { Observable } from 'rxjs';
+import { BasePlugin, IPluginApi } from '../../types/plugins/common';
 
 
 /**

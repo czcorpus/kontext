@@ -21,11 +21,12 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {IPluginApi, PluginInterfaces} from '../../types/plugins';
-import {TreeWidgetModel} from './model';
-import {Views as CorplistViews, init as corplistViewInit} from './view';
-import {init as widgetViewInit} from './widget';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
+import { IPluginApi } from '../../types/plugins/common';
+import { TreeWidgetModel } from './model';
+import { Views as CorplistViews, init as corplistViewInit } from './view';
+import { init as widgetViewInit } from './widget';
 
 
 export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage  {

@@ -18,23 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {CoreViews} from '../../types/coreViews';
+import * as Kontext from '../../types/kontext';
+import * as CoreViews from '../../types/coreViews';
 import { IActionDispatcher } from 'kombo';
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):{IssueReportingWidget:React.SFC<{}>} {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers
+):{IssueReportingWidget:React.FC<CoreViews.IssueReportingLink.Props>} {
 
     const layoutViews = he.getLayoutViews();
 
 
-    const IssueReportingWidget:React.SFC<CoreViews.IssueReportingLink.Props> = (props) => {
+    const IssueReportingWidget:React.FC<CoreViews.IssueReportingLink.Props> = (props) => {
         return <span><layoutViews.IssueReportingLink {...props} /></span>;
     };
 
     return {
-        IssueReportingWidget: IssueReportingWidget
+        IssueReportingWidget
     };
 }

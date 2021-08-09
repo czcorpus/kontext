@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../multidict';
-import {Kontext} from '../../types/common';
+import { MultiDict } from '../../multidict';
+import * as Kontext from '../../types/kontext';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { pipe, List, tuple, HTTP } from 'cnc-tskit';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 /**

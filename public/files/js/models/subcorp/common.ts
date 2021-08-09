@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext, TextTypes } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 
 export type InputMode = 'gui'|'within';
 
@@ -53,4 +54,33 @@ export interface CreateSubcorpusWithinArgs extends SubmitBase {
 export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
     cql:string;
     form_type:'cql';
+}
+
+
+export interface ServerSubcorpListItem {
+    deleted:boolean;
+    usesubcorp:string;
+    orig_subcname:string;
+    created:number;
+    cql:string;
+    cqlAvailable:boolean;
+    human_corpname:string;
+    corpname:string;
+    size:number;
+    name:string;
+    published:boolean;
+    description:string;
+}
+
+export interface SubcorpList extends Kontext.AjaxResponse {
+    SubcorpList:Array<any>; // TODO - do we need this?
+    subcorp_list:Array<ServerSubcorpListItem>;
+    filter:{[k:string]:any};
+    sort_key:{name:string; reverse:boolean};
+    related_corpora:Array<string>,
+    processed_subc:Array<Kontext.AsyncTaskInfo>;
+}
+
+export interface CreateSubcorpus extends Kontext.AjaxResponse {
+    processed_subc:Array<Kontext.AsyncTaskInfo>;
 }

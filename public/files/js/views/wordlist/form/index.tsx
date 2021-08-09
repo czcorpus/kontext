@@ -22,9 +22,9 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 import { Keyboard, List } from 'cnc-tskit';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { MultiposAttr, WordlistFormModel, WordlistFormState } from '../../../models/wordlist/form';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/wordlist/actions';
 import { FileTarget, WlnumsTypes } from '../../../models/wordlist/common';
 import * as S from './style';

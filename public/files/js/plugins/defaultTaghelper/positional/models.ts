@@ -22,10 +22,11 @@ import { Observable, of as rxOf } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { StatefulModel, IFullActionControl } from 'kombo';
 
-import { IPluginApi, PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import { TagBuilderBaseState } from '../common';
 import { Actions } from '../actions';
 import { Actions as QueryActions } from '../../../models/query/actions';
+import { IPluginApi } from '../../../types/plugins/common';
 
 
 type RawTagValues = Array<Array<[string, string]>>;
@@ -152,8 +153,12 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
     private readonly tagsetId:string;
 
 
-    constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi,
-            initialState:PosTagModelState, tagsetId:string) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pluginApi:IPluginApi,
+        initialState:PosTagModelState,
+        tagsetId:string
+    ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.tagsetId = tagsetId;

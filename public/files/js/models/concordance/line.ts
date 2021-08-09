@@ -22,15 +22,13 @@ import { List, pipe } from 'cnc-tskit';
 import { KWICSection, SentSection, TextChunk } from './common';
 
 
+export class ConclineSectionOps {
 
-
-export namespace ConclineSectionOps {
-
-    function isKwicSection(sect:KWICSection|SentSection):sect is KWICSection {
+    static isKwicSection(sect:KWICSection|SentSection):sect is KWICSection {
         return sect['left'] !== undefined && sect['kwic'] !== undefined && sect['right'] !== undefined;
     }
 
-    export function newKWICSection(
+    static newKWICSection(
         tokenNumber:number,
         lineNumber:number,
         ref:Array<string>,
@@ -61,7 +59,7 @@ export namespace ConclineSectionOps {
         return ans;
     }
 
-    export function newSentSection(
+    static newSentSection(
         tokenNumber:number,
         lineNumber:number,
         ref:Array<string>,
@@ -70,13 +68,13 @@ export namespace ConclineSectionOps {
         return {tokenNumber, lineNumber, ref, items};
     }
 
-    export function getAllChunks(sect:KWICSection|SentSection):Array<TextChunk> {
-        return isKwicSection(sect) ?
+    static getAllChunks(sect:KWICSection|SentSection):Array<TextChunk> {
+        return ConclineSectionOps.isKwicSection(sect) ?
             sect.left.concat(sect.kwic, sect.right) :
             sect.items;
     }
 
-    export function findChunk(sect:KWICSection|SentSection, chunkId:string):TextChunk {
-        return List.find(v => v.id === chunkId, getAllChunks(sect));
+    static findChunk(sect:KWICSection|SentSection, chunkId:string):TextChunk {
+        return List.find(v => v.id === chunkId, ConclineSectionOps.getAllChunks(sect));
     }
 }

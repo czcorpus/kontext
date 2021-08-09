@@ -20,13 +20,13 @@
 import { Observable, of as rxOf } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
-import { Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface WordlistSaveModelArgs {
@@ -41,7 +41,7 @@ export interface WordlistSaveModelState {
     queryId:string;
     formIsActive:boolean;
     toLine:Kontext.FormValue<string>;
-    saveFormat:SaveData.Format;
+    saveFormat:DataSaveFormat;
     includeHeading:boolean;
     includeColHeaders:boolean;
     quickSaveRowLimit:number;
@@ -60,8 +60,8 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             dispatcher,
             {
                 queryId,
-                toLine: {value: '', isInvalid: false, isRequired: true},
-                saveFormat: SaveData.Format.CSV,
+                toLine: { value: '', isInvalid: false, isRequired: true },
+                saveFormat: 'csv',
                 includeHeading: false,
                 includeColHeaders: false,
                 formIsActive: false,
@@ -218,7 +218,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             colheaders: state.includeColHeaders,
             heading: state.includeColHeaders
         };
-        if (state.saveFormat === SaveData.Format.CSV || state.saveFormat === SaveData.Format.XLSX) {
+        if (state.saveFormat === 'csv' || 'xlsx') {
             submitArgs.colheaders = state.includeColHeaders;
             submitArgs.heading = false;
 
@@ -227,7 +227,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             submitArgs.colheaders = true;
         }
         this.saveLinkFn(
-            `word-list.${SaveData.formatToExt(state.saveFormat)}`,
+            `word-list.${state.saveFormat}`,
             this.layoutModel.createActionUrl('wordlist/savewl'),
             submitArgs
         );

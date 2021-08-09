@@ -22,9 +22,9 @@ import { of as rxOf, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { HTTP, List } from 'cnc-tskit';
 
-import { IPluginApi } from '../../types/plugins';
 import { MultiDict } from '../../multidict';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 /**

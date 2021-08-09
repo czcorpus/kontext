@@ -22,7 +22,7 @@
 import * as React from 'react';
 import { Bound, IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PqueryResultModel, PqueryResultModelState, SortColumn } from '../../../models/pquery/result';
 import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';

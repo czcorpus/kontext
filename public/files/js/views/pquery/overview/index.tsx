@@ -22,7 +22,7 @@
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 import { PqueryFormModelState } from '../../../models/pquery/common';
 import { PqueryFormModel } from '../../../models/pquery/form';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { init as basicOverviewViewsInit } from '../../query/basicOverview';
 import { init as formInit } from '../form';
 import * as React from 'react';

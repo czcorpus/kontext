@@ -22,8 +22,10 @@ import * as React from 'react';
 import { List } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext} from '../../types/common';
-import { TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState } from '../../models/freqs/freqForms';
+import * as Kontext from '../../types/kontext';
+import {
+    TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel,
+    MLFreqFormModelState } from '../../models/freqs/freqForms';
 import { Actions } from '../../models/freqs/actions';
 import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
@@ -52,7 +54,7 @@ export function init(
         fttattr:Array<string>;
     }
 
-    const StructAttrSelect:React.SFC<StructAttrSelectProps> = (props) => {
+    const StructAttrSelect:React.FC<StructAttrSelectProps> = (props) => {
 
         const handleCheckboxChange = (evt) => {
             dispatcher.dispatch<typeof Actions.TTSetFttAttr>({
@@ -138,7 +140,7 @@ export function init(
         fttIncludeEmpty:boolean;
     }
 
-    const IncludeEmptyCheckbox:React.SFC<IncludeEmptyCheckboxProps> = (props) => {
+    const IncludeEmptyCheckbox:React.FC<IncludeEmptyCheckboxProps> = (props) => {
 
         const handleCheckboxChange = () => {
             dispatcher.dispatch<typeof Actions.TTSetIncludeEmpty>({
@@ -230,7 +232,7 @@ export function init(
         attrList:Array<Kontext.AttrItem>;
     }
 
-    const MLAttrSelection:React.SFC<MLAttrSelectionProps> = (props) => {
+    const MLAttrSelection:React.FC<MLAttrSelectionProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch<typeof Actions.MLSetMlxAttr>({
@@ -259,7 +261,7 @@ export function init(
         mlxicaseValue:boolean;
     }
 
-    const MLIgnoreCaseCheckbox:React.SFC<MLIgnoreCaseCheckboxProps> = (props) => {
+    const MLIgnoreCaseCheckbox:React.FC<MLIgnoreCaseCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch<typeof Actions.MLSetMlxiCase>({
@@ -282,7 +284,7 @@ export function init(
         positionRangeLabels:Array<string>;
     }
 
-    const MLPositionSelect:React.SFC<MLPositionSelectProps> = (props) => {
+    const MLPositionSelect:React.FC<MLPositionSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch<typeof Actions.MLSetMlxctxIndex>({
@@ -311,7 +313,7 @@ export function init(
         alignType:AlignTypes;
     }
 
-    const MLPosAlignmentSelect:React.SFC<MLPosAlignmentSelectProps> = (props) => {
+    const MLPosAlignmentSelect:React.FC<MLPosAlignmentSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
             dispatcher.dispatch<typeof Actions.MLSetAlignType>({
@@ -339,7 +341,7 @@ export function init(
         numLevels:number;
     }
 
-    const MLMoveLevelControl:React.SFC<MLMoveLevelControlProps> = (props) => {
+    const MLMoveLevelControl:React.FC<MLMoveLevelControlProps> = (props) => {
 
         const handleClick = (direction) => {
             dispatcher.dispatch<typeof Actions.MLChangeLevel>({
@@ -390,7 +392,7 @@ export function init(
         isRemovable:boolean;
     }
 
-    const SingleLevelFieldTR:React.SFC<SingleLevelFieldTRProps> = (props) => {
+    const SingleLevelFieldTR:React.FC<SingleLevelFieldTRProps> = (props) => {
 
         const handleRemoveLevelClick = () => {
             dispatcher.dispatch<typeof Actions.MLRemoveLevel>({

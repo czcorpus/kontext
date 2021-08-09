@@ -21,10 +21,10 @@
 
 import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { init as formViewInit } from '../views/pquery/form';
 import { PqueryFormModel } from '../models/pquery/form';
-import { PluginInterfaces } from '../types/plugins';
+import * as PluginInterfaces from '../types/plugins';
 import corplistComponent from 'plugins/corparch/init';
 import { Actions as GlobalActions } from '../models/common/actions';
 import { tuple } from 'cnc-tskit';

@@ -21,9 +21,9 @@
 
 import { DownloadType, PageModel } from '../app/page';
 import { KontextPage } from '../app/main';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { PqueryFormModel } from '../models/pquery/form';
-import { PluginInterfaces } from '../types/plugins';
+import * as PluginInterfaces from '../types/plugins';
 import { Actions } from '../models/pquery/actions';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';

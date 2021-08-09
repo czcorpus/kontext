@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { MultiDict } from '../../multidict';
 import { AjaxResponse, CollSaveServerArgs, CollServerArgs, HistoryState } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export class Actions {
@@ -133,7 +134,7 @@ export class Actions {
     };
 
     static SaveFormSetFormat:Action<{
-        value:string;
+        value:DataSaveFormat;
     }> = {
         name: 'COLL_SAVE_FORM_SET_FORMAT'
     };

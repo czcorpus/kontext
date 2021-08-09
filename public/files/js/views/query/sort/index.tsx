@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { ConcSortModel, ConcSortModelState } from '../../../models/query/sort/single';
 import { Actions } from '../../../models/query/actions';
 import { List } from 'cnc-tskit';

@@ -17,7 +17,7 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import * as VRD from './vallex';
 import * as PDTVRD from './pdt-vallex';
 import * as ENGVRD from './eng-vallex';

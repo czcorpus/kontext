@@ -17,8 +17,8 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../../types/common';
-import {init as defaultViewInit} from '../../defaultCorparch/corplistView';
+import * as Kontext from '../../../types/kontext';
+import { init as defaultViewInit } from '../../defaultCorparch/corplistView';
 import { corplistItemIsUcnk } from '../common';
 import { CorplistTableModel, CorplistTableModelState } from '../corplist';
 import { IActionDispatcher, BoundWithProps } from 'kombo';

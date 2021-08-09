@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { CorplistWidgetModel, FavListItem, CorplistWidgetModelState } from '../widget';
 import { CorplistItem } from '../common';
 import { SearchKeyword, SearchResultRow } from '../search';

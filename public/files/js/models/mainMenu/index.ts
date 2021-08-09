@@ -21,7 +21,7 @@
  import { IActionDispatcher, StatelessModel } from 'kombo';
 import { List, tuple, pipe } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';

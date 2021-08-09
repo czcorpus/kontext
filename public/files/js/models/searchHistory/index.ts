@@ -22,7 +22,7 @@ import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { List, HTTP, tuple } from 'cnc-tskit';

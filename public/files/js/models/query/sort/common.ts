@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
-import { AjaxResponse } from '../../../types/ajaxResponses';
+import * as Kontext from '../../../types/kontext';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { ConcFormArgs, SortFormArgs } from '../formArgs';
 
 
 
@@ -43,9 +43,9 @@ export interface SortFormProperties {
 }
 
 
-export function importMultiLevelArg<T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
+export function importMultiLevelArg<T extends SortFormArgs[keyof SortFormArgs]>(
     name:string,
-    data:AjaxResponse.SortFormArgs,
+    data:SortFormArgs,
     dflt?:(n:string)=>T
 ):Array<T> {
     const ans:Array<T> = [];
@@ -77,18 +77,19 @@ export function importMultiLevelArg<T extends AjaxResponse.SortFormArgs[keyof Aj
  * @returns a list of pairs [form ID, form args] where
  * each ID is of 'sort' type
  */
-export function fetchSortFormArgs<T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
-    args:{[ident:string]:AjaxResponse.ConcFormArgs},
-    initialArgs:AjaxResponse.SortFormArgs,
-    key:(item:AjaxResponse.SortFormArgs)=>T|Array<T>
+export function fetchSortFormArgs<T extends SortFormArgs[keyof SortFormArgs]>(
+    args:{[ident:string]:ConcFormArgs},
+    initialArgs:SortFormArgs,
+    key:(item:SortFormArgs)=>T|Array<T>
 ):Array<[string, Array<T>]> {
+
     const asArr = (v:T|Array<T>) => Array.isArray(v) ? v : [v];
 
     return pipe(
         args,
         Dict.toEntries(),
         List.filter(([, v]) => v.form_type === 'sort'),
-        List.map(([formId, args]) => tuple(formId, asArr(key(args as AjaxResponse.SortFormArgs)))),
+        List.map(([formId, args]) => tuple(formId, asArr(key(args as SortFormArgs)))),
         List.concat([tuple('__new__', asArr(key(initialArgs)))])
     );
 }

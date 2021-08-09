@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher, IModel } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Actions } from '../../../models/query/actions';
 import * as S from './style';
 import { MainMenuModelState } from '../../../models/mainMenu';

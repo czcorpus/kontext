@@ -24,13 +24,13 @@ import { tap, map } from 'rxjs/operators';
 import { Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
+import { ConcFormArgs, SampleFormArgs } from './formArgs';
 
 
 export interface SampleFormProperties {
@@ -38,12 +38,12 @@ export interface SampleFormProperties {
 }
 
 
-export function fetchSampleFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
-        key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]> {
+export function fetchSampleFormArgs<T>(args:{[ident:string]:ConcFormArgs},
+        key:(item:SampleFormArgs)=>T):Array<[string, T]> {
     const ans = [];
     for (let formId in args) {
         if (args.hasOwnProperty(formId) && args[formId].form_type === 'sample') {
-            ans.push([formId, key(args[formId] as AjaxResponse.SampleFormArgs)]);
+            ans.push([formId, key(args[formId] as SampleFormArgs)]);
         }
     }
     return ans;
@@ -58,9 +58,14 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
 
     private readonly pageModel:PageModel;
 
-    private readonly syncInitialArgs:AjaxResponse.SampleFormArgs;
+    private readonly syncInitialArgs:SampleFormArgs;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SampleFormProperties, syncInitialArgs:AjaxResponse.SampleFormArgs) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pageModel:PageModel,
+        props:SampleFormProperties,
+        syncInitialArgs:SampleFormArgs
+    ) {
         super(
             dispatcher,
             {
@@ -125,7 +130,7 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         );
     }
 
-    syncFrom(src:Observable<AjaxResponse.SampleFormArgs>):Observable<AjaxResponse.SampleFormArgs> {
+    syncFrom(src:Observable<SampleFormArgs>):Observable<SampleFormArgs> {
         return src.pipe(
             tap(
                 (data) => {

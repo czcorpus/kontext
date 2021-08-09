@@ -22,7 +22,8 @@ import * as React from 'react';
 import { List, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext, TextTypes } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { Actions } from '../../models/textTypes/actions';
 
 import * as S from './style';

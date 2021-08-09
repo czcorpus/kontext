@@ -24,9 +24,8 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { tuple, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { map } from 'rxjs/operators';
-import { RefsColumn } from './common';
+import { FullRef, RefsColumn } from './common';
 
 
 export interface RefsDetailModelState {
@@ -64,8 +63,8 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
                     action.payload.corpusId,
                     action.payload.tokenNumber
 
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.ShowRefDetailDone>({
                             name: Actions.ShowRefDetailDone.name,
                             payload: {
@@ -74,14 +73,14 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
                             }
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.layoutModel.showMessage('error', err);
                         dispatch<typeof Actions.ShowRefDetailDone>({
                             name: Actions.ShowRefDetailDone.name,
                             error: err
                         });
                     }
-                );
+                });
             }
         );
 
@@ -109,7 +108,7 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         );
     }
 
-    importData(data:AjaxResponse.FullRef):Array<[RefsColumn, RefsColumn]> {
+    importData(data:FullRef):Array<[RefsColumn, RefsColumn]> {
         const ans:Array<[RefsColumn, RefsColumn]> = [];
         for (let i = 0; i < data.Refs.length; i += 2) {
             ans.push(tuple(data.Refs[i], data.Refs[i + 1]));
@@ -121,7 +120,7 @@ export class RefsDetailModel extends StatelessModel<RefsDetailModelState> {
         corpusId:string,
         tokenNum:number,
     ):Observable<Array<[RefsColumn, RefsColumn]>> {
-        return this.layoutModel.ajax$<AjaxResponse.FullRef>(
+        return this.layoutModel.ajax$<FullRef>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('fullref'),
             {corpname: corpusId, pos: tokenNum}

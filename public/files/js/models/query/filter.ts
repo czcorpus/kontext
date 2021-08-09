@@ -23,8 +23,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { tuple, pipe, Dict, List, HTTP, id } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
@@ -33,12 +32,13 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
 import { highlightSyntaxStatic } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
+import * as formArgs from './formArgs';
 
 
 /**
@@ -71,7 +71,10 @@ export interface FilterFormProperties extends GeneralQueryFormProperties {
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
 }
 
-export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.FilterFormArgs):v is FilterFormProperties {
+export function isFilterFormProperties(
+    v:FilterFormProperties|formArgs.FilterFormArgs
+):v is FilterFormProperties {
+
     return Array.isArray(v['filters']) && typeof v['maincorps'] === 'object';
 }
 
@@ -79,16 +82,16 @@ export function isFilterFormProperties(v:FilterFormProperties|AjaxResponse.Filte
  * import {GeneralViewOptionsModel} from '../options/general';
  */
 export function fetchFilterFormArgs<T extends
-        AjaxResponse.FilterFormArgs[keyof AjaxResponse.FilterFormArgs]>(
-    args:{[ident:string]:AjaxResponse.ConcFormArgs},
-    initialArgs:AjaxResponse.FilterFormArgs,
-    key:(item:AjaxResponse.FilterFormArgs)=>T
+        formArgs.FilterFormArgs[keyof formArgs.FilterFormArgs]>(
+    args:{[ident:string]:formArgs.ConcFormArgs},
+    initialArgs:formArgs.FilterFormArgs,
+    key:(item:formArgs.FilterFormArgs)=>T
 
 ):{[sourceId:string]:T} {
     return pipe(
         args,
         Dict.filter((v, _) => v.form_type === Kontext.ConcFormTypes.FILTER),
-        Dict.map((args, _) => key(args as AjaxResponse.FilterFormArgs)),
+        Dict.map((args, _) => key(args as formArgs.FilterFormArgs)),
         (data) => ({...data, '__new__': key(initialArgs)})
     );
 }
@@ -146,7 +149,7 @@ export interface FilterFormModelState extends QueryFormModelState {
  * an Ajax response used e.g. when replaying an operation.
  */
 function importFormValues(src:FilterFormProperties):{[key:string]:AnyQuery};
-function importFormValues(src:AjaxResponse.FilterFormArgs, sourceId:string):{[key:string]:AnyQuery};
+function importFormValues(src:formArgs.FilterFormArgs, sourceId:string):{[key:string]:AnyQuery};
 function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
     if (isFilterFormProperties(src)) {
         return pipe(
@@ -205,7 +208,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
             Dict.fromEntries()
         );
 
-    } else if (sourceId && AjaxResponse.isFilterFormArgs(src)) {
+    } else if (sourceId && formArgs.isFilterFormArgs(src)) {
         const query = src.query || '';
         const [queryHtml,] = highlightSyntaxStatic(
             query,
@@ -277,7 +280,7 @@ function determineFilterTagWidgets(
  */
 export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
-    private readonly syncInitialArgs:AjaxResponse.FilterFormArgs;
+    private readonly syncInitialArgs:formArgs.FilterFormArgs;
 
     constructor(
             dispatcher:IFullActionControl,
@@ -286,7 +289,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             queryContextModel:QueryContextModel,
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:FilterFormProperties,
-            syncInitialArgs:AjaxResponse.FilterFormArgs) {
+            syncInitialArgs:formArgs.FilterFormArgs) {
         const queries:{[sourceId:string]:AnyQuery} = {
             ...importFormValues(props)
         };
@@ -576,7 +579,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
      * Synchronize user input values from an external source
      * (typically a server response or a local cache).
      */
-    syncFrom(fn:Observable<AjaxResponse.FilterFormArgs>):Observable<AjaxResponse.FilterFormArgs> {
+    syncFrom(fn:Observable<formArgs.FilterFormArgs>):Observable<formArgs.FilterFormArgs> {
         return fn.pipe(
             tap(
                 (data) => {

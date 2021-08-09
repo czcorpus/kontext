@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { ConcordanceModel } from '../../../models/concordance/main';
 import { ConcLinesStorage } from '../../../models/concordance/selectionStorage';
 import { init as initMediaViews } from '../media';
