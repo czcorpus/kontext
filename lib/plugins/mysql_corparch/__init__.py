@@ -29,7 +29,7 @@ import actions.user
 import plugins
 from plugins import inject
 from plugins.abstract.corparch import (
-    AbstractSearchableCorporaArchive, BrokenCorpusInfo,
+    AbstractSearchableCorporaArchive, BrokenCorpusInfo, PosCategoryItem,
     TokenConnect, KwicConnect, QuerySuggest, TagsetInfo, CorpusInfo, CorpusListItem)
 from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
 from plugins.mysql_corparch.backend import Backend
@@ -128,9 +128,11 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans._description_cs = row['description_cs']
             ans._description_en = row['description_en']
             try:
-                ans.default_view_opts = json.loads(row['default_view_opts']) if row['default_view_opts'] else {}
+                ans.default_view_opts = json.loads(
+                    row['default_view_opts']) if row['default_view_opts'] else {}
             except Exception as ex:
-                logging.getLogger(__name__).warning(f'Failed to load default view opts for {ans.id}: {ex}')
+                logging.getLogger(__name__).warning(
+                    f'Failed to load default view opts for {ans.id}: {ex}')
             ans.metadata.id_attr = row['id_attr']
             ans.metadata.label_attr = row['label_attr']
             ans.metadata.featured = bool(row['featured'])
@@ -252,8 +254,11 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row, user_lang)
             if corp:
-                corp.tagsets = [TagsetInfo().from_dict(row2)
-                                for row2 in self._backend.load_corpus_tagsets(corpus_id)]
+                for row2 in self._backend.load_corpus_tagsets(corpus_id):
+                    pos_category = [PosCategoryItem(
+                        **data) for data in self._backend.load_pos_category(row2['tagset_name'])]
+                    corp.tagsets.append(TagsetInfo().from_dict(
+                        {**row2, 'pos_category': pos_category}))
                 self._corpus_info_cache[corpus_id] = corp
                 for art in self._backend.load_corpus_articles(corpus_id):
                     if art['role'] == 'default':
@@ -266,7 +271,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     for drow in self._backend.load_ttdesc(row['ttdesc_id']):
                         self._tt_desc_i18n['cs'][row['ttdesc_id']] = drow['text_cs']
                         self._tt_desc_i18n['en'][row['ttdesc_id']] = drow['text_en']
-                corp.simple_query_default_attrs = self._backend.load_simple_query_default_attrs(corpus_id)
+                corp.simple_query_default_attrs = self._backend.load_simple_query_default_attrs(
+                    corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
     def get_corpus_info(self, plugin_ctx, corp_name):
@@ -284,7 +290,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     else:
                         ans = corp_info
                     ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
-                    ans.token_connect, ans.kwic_connect, ans.query_suggest = self._get_tckcqs_providers(corp_name)
+                    ans.token_connect, ans.kwic_connect, ans.query_suggest = self._get_tckcqs_providers(
+                        corp_name)
                     ans.metadata.interval_attrs = self._backend.load_interval_attrs(corp_name)
 
                     return ans
@@ -310,7 +317,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             corp_info = self._fetch_corpus_info(item.main_corpus_id, plugin_ctx.user_lang)
             if corp_info:
                 tmp['description'] = self._export_untranslated_label(
-                        plugin_ctx, corp_info.description)
+                    plugin_ctx, corp_info.description)
             else:
                 tmp['description'] = ''
             ans.append(tmp)
