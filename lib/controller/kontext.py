@@ -697,14 +697,6 @@ class Kontext(Controller):
         sref = maincorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
-
-        poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
-        result['Wposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        poslist = self.cm.corpconf_pairs(maincorp, 'LPOSLIST')
-        if 'lempos' not in attrlist:
-            poslist = self.cm.corpconf_pairs(maincorp, 'WPOSLIST')
-        result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-        result['lpos_dict'] = dict([(y, x) for x, y in poslist])
         result['default_attr'] = maincorp.get_conf('DEFAULTATTR')
         for listname in ['AttrList', 'StructAttrList']:
             if listname in result:
@@ -731,6 +723,21 @@ class Kontext(Controller):
         corp_info = self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
+
+        poslist = []
+        for tagset in corp_info.tagsets:
+            if tagset.tagset_name == corp_info.default_tagset:
+                poslist = tagset.pos_category
+                break
+        result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+
+        if 'lempos' in attrlist:
+            poslist = self.cm.corpconf_pairs(maincorp, 'LPOSLIST')
+            result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
+            result['lpos_dict'] = dict([(y, x) for x, y in poslist])
+        else:
+            result['Lposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+            result['lpos_dict'] = dict(poslist)
 
     def _setup_optional_plugins_js(self, result):
         """

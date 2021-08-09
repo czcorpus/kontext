@@ -33,6 +33,7 @@ from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, Sampl
 from argmapping import log_mapping
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
+from plugins.abstract.corparch import CorpusInfo
 import settings
 import conclib
 from conclib.empty import InitialConc
@@ -566,7 +567,7 @@ class Actions(Querying):
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
-    def _set_first_query(self, corpora: List[str], data: QueryFormArgs):
+    def _set_first_query(self, corpora: List[str], data: QueryFormArgs, corpus_info: CorpusInfo):
 
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
             filter_args = ContextFilterArgsConv(self._plugin_ctx, data)(
@@ -604,7 +605,12 @@ class Actions(Querying):
             lemmaattr = 'lemma'
         else:
             lemmaattr = 'word'
-        wposlist = dict(self.cm.corpconf_pairs(self.corp, 'WPOSLIST'))
+
+        wposlist = {}
+        for tagset in corpus_info.tagsets:
+            if tagset.tagset_name == corpus_info.default_tagset:
+                wposlist = [{'n': x.pos, 'v': x.pattern} for x in tagset.pos_category]
+                break
 
         if data.curr_default_attr_values[corpora[0]]:
             qbase = f'a{data.curr_default_attr_values[corpora[0]]},'
@@ -1809,9 +1815,6 @@ class Actions(Querying):
         tmp_out['ttcrit'] = [('fcrit', '%s 0' % a)
                              for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
-        poslist = self.cm.corpconf_pairs(self.corp, 'WPOSLIST')
-        lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
-
         self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
                                               corpora=self._select_current_aligned_corpora(
                                                   active_only=False),
@@ -1823,6 +1826,13 @@ class Actions(Querying):
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
+
+        lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
+        poslist = []
+        for tagset in corpus_info.tagsets:
+            if tagset.tagset_name == corpus_info.default_tagset:
+                poslist = tagset.pos_category
+                break
 
         ans = dict(
             corpname=self.args.corpname,
@@ -1852,7 +1862,7 @@ class Actions(Querying):
                 save_items=self._save_menu,
                 corpus_dependent=tmp_out['uses_corp_instance'],
                 ui_lang=self.ui_lang),
-            Wposlist=[{'n': x[0], 'v': x[1]} for x in poslist],
+            Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
             Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
             StructAttrList=tmp_out['StructAttrList'],
