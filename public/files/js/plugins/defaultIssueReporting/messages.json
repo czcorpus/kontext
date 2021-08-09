@@ -18,9 +18,9 @@
         "defaultIR__message_sent": "Twoja wiadōmośc była wysłanŏ."
     },
     "sl-SI": {
-        "defaultIR__report_issue_heading": "Report an issue UNTRANSLATED",
-        "defaultIR__report_issue_link": "Report an issue UNTRANSLATED",
-        "defaultIR__submit_btn": "Submit UNTRANSLATED",
-        "defaultIR__message_sent": "Your message has been sent. UNTRANSLATED"
+        "defaultIR__report_issue_heading": "Prijavite težavo",
+        "defaultIR__report_issue_link": "Prijavite težavo",
+        "defaultIR__submit_btn": "Pošlji",
+        "defaultIR__message_sent": "Vaše sporočilo je bilo poslano."
     }
 }
