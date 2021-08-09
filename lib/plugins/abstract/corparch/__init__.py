@@ -38,7 +38,7 @@ files.
 """
 
 import abc
-from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING, Union
+from typing import NamedTuple, Optional, Dict, Any, List, Tuple, TYPE_CHECKING, Union
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
@@ -145,6 +145,11 @@ class KwicConnect(DictLike):
         self.providers: List[Any] = []
 
 
+class PosCategoryItem(NamedTuple):
+    pattern: str
+    pos: str
+
+
 class TagsetInfo(DictLike):
 
     def __init__(self) -> None:
@@ -156,6 +161,7 @@ class TagsetInfo(DictLike):
         self.widget_enabled: bool = False
         self.doc_url_local: Optional[str] = None
         self.doc_url_en: Optional[str] = None
+        self.pos_category: Optional[List[PosCategoryItem]] = None
 
     def from_dict(self, data: Dict[str, Any]) -> 'DictLike':
         self.__dict__.update(data)
@@ -167,7 +173,8 @@ class TagsetInfo(DictLike):
         return dict(ident=self.tagset_name, type=self.tagset_type,
                     posAttr=self.pos_attr, featAttr=self.feat_attr,
                     widgetEnabled=self.widget_enabled,
-                    docUrlLocal=self.doc_url_local, docUrlEn=self.doc_url_en)
+                    docUrlLocal=self.doc_url_local, docUrlEn=self.doc_url_en,
+                    posCategory=self.pos_category)
 
 
 class QuerySuggest(DictLike):

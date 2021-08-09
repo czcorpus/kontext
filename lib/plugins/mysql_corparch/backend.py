@@ -372,6 +372,12 @@ class Backend(DatabaseBackend):
                        'WHERE ct.corpus_name = %s', (corpus_id, ))
         return cursor.fetchall()
 
+    def load_pos_category(self, tagset_name):
+        cursor = self._db.cursor()
+        cursor.execute('SELECT tag_search_pattern AS pattern, pos FROM tagset_pos_category '
+                       'WHERE tagset_name = %s', (tagset_name, ))
+        return cursor.fetchall()
+
     def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT interval_struct, interval_attr, widget '
