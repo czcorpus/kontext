@@ -227,6 +227,7 @@ class CorpusInfo(DictLike):
         self.path: Optional[str] = None
         self.web: Optional[str] = None
         self.sentence_struct: Optional[str] = None
+        self.default_tagset: Optional[str] = None
         self.tagsets: List[TagsetInfo] = []
         self.speech_segment = None
         self.speaker_id_attr = None

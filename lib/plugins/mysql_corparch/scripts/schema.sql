@@ -34,7 +34,7 @@ CREATE TABLE kontext_corpus (
   active int(11) NOT NULL,
   web varchar(255),
   sentence_struct varchar(63),
-  tagset varchar(255),
+  default_tagset varchar(63),
   collator_locale varchar(255),
   speech_segment_struct varchar(63),
   speech_segment_attr varchar(63),
@@ -66,7 +66,8 @@ CREATE TABLE kontext_corpus (
   CONSTRAINT corpora_speaker_id_attr_fkey FOREIGN KEY (name, speaker_id_struct, speaker_id_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
-  CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc (id)
+  CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc (id),
+  CONSTRAINT corpora_default_tagset_fkey FOREIGN KEY (default_tagset) REFERENCES tagset (name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 
@@ -234,7 +235,7 @@ CREATE TABLE corpus_tagset (
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE tagset_pos_category (
-  tagset_name varchar(50) NOT NULL,
+  tagset_name varchar(63) NOT NULL,
   position int(11) NOT NULL,
   pos varchar(64) NOT NULL,
   tag_search_pattern varchar(32) NOT NULL,

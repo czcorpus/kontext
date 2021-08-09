@@ -219,7 +219,7 @@ export namespace PluginInterfaces {
              * A URL leading to an English version of the tagset description
              */
             docUrlEn:string;
-            
+
             /**
              * tagset categories [search pattern, name]
              */

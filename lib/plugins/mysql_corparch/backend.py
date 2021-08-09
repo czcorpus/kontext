@@ -108,7 +108,7 @@ class Backend(DatabaseBackend):
             'c.ttdesc_id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
             'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
             'c.default_virt_keyboard as default_virt_keyboard, '
-            'c.default_view_opts '
+            'c.default_view_opts, c.default_tagset '
             f'FROM {self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '

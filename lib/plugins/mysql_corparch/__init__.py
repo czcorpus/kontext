@@ -125,6 +125,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.speech_overlap_attr = row['speech_overlap_attr']
             ans.speech_overlap_val = row['speech_overlap_val']
             ans.use_safe_font = row['use_safe_font']
+            ans.default_tagset = row['default_tagset']
             ans._description_cs = row['description_cs']
             ans._description_en = row['description_en']
             try:
