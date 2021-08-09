@@ -28,7 +28,7 @@ import { Observable } from 'rxjs';
 import { FreqServerArgs } from './common';
 import { HTTP, List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ajaxErrorMapped } from '../../app/navigation';
 
@@ -159,13 +159,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             (state, action) => {state.saveFormActive = true}
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             (state, action) => {state.saveFormActive = false}
         );
 
-        this.addActionHandler<Actions.ResultSetMinFreqVal>(
-            ActionName.ResultSetMinFreqVal,
+        this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
+            Actions.ResultSetMinFreqVal.name,
             (state, action) => {
                 if (this.validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
@@ -176,8 +176,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultApplyMinFreq>(
-            ActionName.ResultApplyMinFreq,
+        this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
+            Actions.ResultApplyMinFreq.name,
             (state, action) => {
                 state.isBusy = true,
                 state.currentPage = '1';
@@ -192,8 +192,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultDataLoaded>(
-            ActionName.ResultDataLoaded,
+        this.addActionHandler<typeof Actions.ResultDataLoaded>(
+            Actions.ResultDataLoaded.name,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -205,15 +205,15 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.StatePushToHistory>(
-            ActionName.StatePushToHistory,
+        this.addActionHandler<typeof Actions.StatePushToHistory>(
+            Actions.StatePushToHistory.name,
             (state, action) => {
                 this.pushStateToHistory(state);
             }
         );
 
-        this.addActionHandler<Actions.PopHistory>(
-            ActionName.PopHistory,
+        this.addActionHandler<typeof Actions.PopHistory>(
+            Actions.PopHistory.name,
             (state, action) => {
                 state.currentPage = action.payload.currentPage;
                 state.flimit = action.payload.flimit;
@@ -229,8 +229,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultSortByColumn>(
-            ActionName.ResultSortByColumn,
+        this.addActionHandler<typeof Actions.ResultSortByColumn>(
+            Actions.ResultSortByColumn.name,
             (state, action) => {
                 state.isBusy = true;
                 state.sortColumn = action.payload.value;
@@ -245,8 +245,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.ResultSetCurrentPage>(
-            ActionName.ResultSetCurrentPage,
+        this.addActionHandler<typeof Actions.ResultSetCurrentPage>(
+            Actions.ResultSetCurrentPage.name,
             (state, action) => {
                 if (this.validateNumber(action.payload.value, 1)) {
                     state.isBusy = true;
@@ -267,19 +267,19 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             null,
             (state, action, dispatch) => {
-                dispatch<Actions.ResultPrepareSubmitArgsDone>({
-                    name: ActionName.ResultPrepareSubmitArgsDone,
+                dispatch<typeof Actions.ResultPrepareSubmitArgsDone>({
+                    name: Actions.ResultPrepareSubmitArgsDone.name,
                     payload: {data: this.getSubmitArgs(state)}
                 })
             }
         ).sideEffectAlsoOn(MainMenuActions.DirectSave.name);
 
-        this.addActionHandler<Actions.ResultApplyQuickFilter>(
-            ActionName.ResultApplyQuickFilter,
+        this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
+            Actions.ResultApplyQuickFilter.name,
             null,
             (state, action, dispatch) => {
                 this.pageModel.setLocationPost(action.payload.url, [], action.payload.blankWindow);
@@ -296,8 +296,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
         load.subscribe(
             (data) => {
-                dispatch<Actions.ResultDataLoaded>({
-                    name: ActionName.ResultDataLoaded,
+                dispatch<typeof Actions.ResultDataLoaded>({
+                    name: Actions.ResultDataLoaded.name,
                     payload: {
                         data: importData(
                             this.pageModel,
@@ -308,14 +308,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     },
                 });
                 if (pushHistory) {
-                    dispatch<Actions.StatePushToHistory>({
-                        name: ActionName.StatePushToHistory
+                    dispatch<typeof Actions.StatePushToHistory>({
+                        name: Actions.StatePushToHistory.name
                     });
                 }
             },
             (err) => {
-                dispatch<Actions.ResultDataLoaded>({
-                    name: ActionName.ResultDataLoaded,
+                dispatch<typeof Actions.ResultDataLoaded>({
+                    name: Actions.ResultDataLoaded.name,
                     payload: {data: null},
                     error: err
                 });
@@ -331,7 +331,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             args,
             {
                 onPopStateAction: {
-                    name: ActionName.PopHistory,
+                    name: Actions.PopHistory.name,
                     payload: {
                         currentPage: state.currentPage,
                         flimit: state.flimit,

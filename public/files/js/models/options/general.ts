@@ -26,7 +26,7 @@ import { HTTP, List } from 'cnc-tskit';
 import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { ViewOptsResponse } from './common';
 
 
@@ -114,8 +114,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             (state, action, dispatch) => {
                 this.loadData().subscribe(
                     (data) => {
-                        dispatch<Actions.GeneralInitalDataLoaded>({
-                            name: ActionName.GeneralInitalDataLoaded,
+                        dispatch<typeof Actions.GeneralInitalDataLoaded>({
+                            name: Actions.GeneralInitalDataLoaded.name,
                             payload: {
                                 data: data
                             }
@@ -123,8 +123,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     },
                     (err) => {
                         this.layoutModel.showMessage('error', err);
-                        dispatch<Actions.GeneralInitalDataLoaded>({
-                            name: ActionName.GeneralInitalDataLoaded,
+                        dispatch<typeof Actions.GeneralInitalDataLoaded>({
+                            name: Actions.GeneralInitalDataLoaded.name,
                             error: err
                         });
                     }
@@ -132,8 +132,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         );
 
-        this.addActionHandler<Actions.GeneralInitalDataLoaded>(
-            ActionName.GeneralInitalDataLoaded,
+        this.addActionHandler<typeof Actions.GeneralInitalDataLoaded>(
+            Actions.GeneralInitalDataLoaded.name,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -152,71 +152,71 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetPageSize>(
-            ActionName.GeneralSetPageSize,
+        this.addActionHandler<typeof Actions.GeneralSetPageSize>(
+            Actions.GeneralSetPageSize.name,
             (state, action) => {
                 state.pageSize.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetContextSize>(
-            ActionName.GeneralSetContextSize,
+        this.addActionHandler<typeof Actions.GeneralSetContextSize>(
+            Actions.GeneralSetContextSize.name,
             (state, action) => {
                 state.newCtxSize.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetLineNums>(
-            ActionName.GeneralSetLineNums,
+        this.addActionHandler<typeof Actions.GeneralSetLineNums>(
+            Actions.GeneralSetLineNums.name,
             (state, action) => {
                 state.lineNumbers = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetShuffle>(
-            ActionName.GeneralSetShuffle,
+        this.addActionHandler<typeof Actions.GeneralSetShuffle>(
+            Actions.GeneralSetShuffle.name,
             (state, action) => {
                 state.shuffle = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetUseRichQueryEditor>(
-            ActionName.GeneralSetUseRichQueryEditor,
+        this.addActionHandler<typeof Actions.GeneralSetUseRichQueryEditor>(
+            Actions.GeneralSetUseRichQueryEditor.name,
             (state, action) => {
                 state.useRichQueryEditor = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetWlPageSize>(
-            ActionName.GeneralSetWlPageSize,
+        this.addActionHandler<typeof Actions.GeneralSetWlPageSize>(
+            Actions.GeneralSetWlPageSize.name,
             (state, action) => {
                 state.wlpagesize.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetFmaxItems>(
-            ActionName.GeneralSetFmaxItems,
+        this.addActionHandler<typeof Actions.GeneralSetFmaxItems>(
+            Actions.GeneralSetFmaxItems.name,
             (state, action) => {
                 state.fmaxitems.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetCitemsPerPage>(
-            ActionName.GeneralSetCitemsPerPage,
+        this.addActionHandler<typeof Actions.GeneralSetCitemsPerPage>(
+            Actions.GeneralSetCitemsPerPage.name,
             (state, action) => {
                 state.citemsperpage.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSetPQueryitemsPerPage>(
-            ActionName.GeneralSetPQueryitemsPerPage,
+        this.addActionHandler<typeof Actions.GeneralSetPQueryitemsPerPage>(
+            Actions.GeneralSetPQueryitemsPerPage.name,
             (state, action) => {
                 state.pqueryitemsperpage.value = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.GeneralSubmit>(
-            ActionName.GeneralSubmit,
+        this.addActionHandler<typeof Actions.GeneralSubmit>(
+            Actions.GeneralSubmit.name,
             (state, action) => {
                 state.isBusy = true;
                 this.validateForm(state);
@@ -225,16 +225,16 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 if (this.hasErrorInputs(state)) {
                     const err = new Error(this.layoutModel.translate('global__the_form_contains_errors_msg'));
                     this.layoutModel.showMessage('error', err);
-                    dispatch<Actions.GeneralSubmitDone>({
-                        name: ActionName.GeneralSubmitDone,
+                    dispatch<typeof Actions.GeneralSubmitDone>({
+                        name: Actions.GeneralSubmitDone.name,
                         error: err
                     });
 
                 } else {
                     this.submit(state).subscribe(
                         () => {
-                            dispatch<Actions.GeneralSubmitDone>({
-                                name: ActionName.GeneralSubmitDone,
+                            dispatch<typeof Actions.GeneralSubmitDone>({
+                                name: Actions.GeneralSubmitDone.name,
                                 payload: {
                                     showLineNumbers: state.lineNumbers,
                                     pageSize: state.pageSize.value,
@@ -249,8 +249,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                         },
                         (err) => {
                             this.layoutModel.showMessage('error', err);
-                            dispatch<Actions.GeneralSubmitDone>({
-                                name: ActionName.GeneralSubmitDone,
+                            dispatch<typeof Actions.GeneralSubmitDone>({
+                                name: Actions.GeneralSubmitDone.name,
                                 error: err
                             });
                         }
@@ -259,8 +259,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             }
         );
 
-        this.addActionHandler<Actions.GeneralSubmitDone>(
-            ActionName.GeneralSubmitDone,
+        this.addActionHandler<typeof Actions.GeneralSubmitDone>(
+            Actions.GeneralSubmitDone.name,
             (state, action) => {
                 state.isBusy = false;
             }

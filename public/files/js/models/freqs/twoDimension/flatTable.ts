@@ -25,7 +25,7 @@ import { PageModel, DownloadType } from '../../../app/page';
 import { GeneralFreq2DModel, CTFreqCell, GeneralFreq2DModelState, importAvailAlphaLevels } from './generalDisplay';
 import { MultiDict } from '../../../multidict';
 import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities, CTFreqResultData } from './common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 
 /**
  * En extended 2d freq. data item containing
@@ -101,8 +101,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetMinFreq>(
-            ActionName.FreqctFormSetMinFreq,
+        this.addActionHandler<typeof Actions.FreqctFormSetMinFreq>(
+            Actions.FreqctFormSetMinFreq.name,
             action => {
                 if (this.validateMinAbsFreqAttr(action.payload.value)) {
                     this.changeState(state => {
@@ -118,8 +118,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetMinFreqType>(
-            ActionName.FreqctFormSetMinFreqType,
+        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
+            Actions.FreqctFormSetMinFreqType.name,
             action => {
                 this.changeState(state => {
                     state.minFreqType = action.payload.value;
@@ -127,8 +127,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetAlphaLevel>(
-            ActionName.FreqctSetAlphaLevel,
+        this.addActionHandler<typeof Actions.FreqctSetAlphaLevel>(
+            Actions.FreqctSetAlphaLevel.name,
             action => {
                 this.changeState(state => {
                     state.alphaLevel = action.payload.value;
@@ -138,8 +138,8 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             }
         );
 
-        this.addActionHandler<Actions.FreqctSortFlatList>(
-            ActionName.FreqctSortFlatList,
+        this.addActionHandler<typeof Actions.FreqctSortFlatList>(
+            Actions.FreqctSortFlatList.name,
             action => {
                 this.changeState(state => {
                     state.sortBy = action.payload.value;

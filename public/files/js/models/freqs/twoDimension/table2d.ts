@@ -27,7 +27,7 @@ import { GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels, GeneralFreq2DMo
 import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
 import { CTFreqServerArgs } from '../common';
 import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities, CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData, isDummyResponse } from './common';
-import { Actions,  ActionName } from '../actions';
+import { Actions } from '../actions';
 import { TextTypes } from '../../../types/common';
 import { colorHeatmap } from '../../../views/theme/default';
 
@@ -219,8 +219,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetAlphaLevel>(
-            ActionName.FreqctSetAlphaLevel,
+        this.addActionHandler<typeof Actions.FreqctSetAlphaLevel>(
+            Actions.FreqctSetAlphaLevel.name,
             action => {
                 this.changeState(state => {
                     state.alphaLevel = action.payload.value;
@@ -230,8 +230,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetMinFreqType>(
-            ActionName.FreqctFormSetMinFreqType,
+        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
+            Actions.FreqctFormSetMinFreqType.name,
             action => {
                 this.changeState(state =>  {
                     state.minFreqType = action.payload.value;
@@ -241,8 +241,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetMinFreq>(
-            ActionName.FreqctSetMinFreq,
+        this.addActionHandler<typeof Actions.FreqctSetMinFreq>(
+            Actions.FreqctSetMinFreq.name,
             action => {
                 if (this.validateMinAbsFreqAttr(action.payload.value)) {
                     this.changeState(state => {
@@ -257,8 +257,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetEmptyVecVisibility>(
-            ActionName.FreqctSetEmptyVecVisibility,
+        this.addActionHandler<typeof Actions.FreqctSetEmptyVecVisibility>(
+            Actions.FreqctSetEmptyVecVisibility.name,
             action => {
                 this.changeState(state => {
                     state.filterZeroVectors = action.payload.value;
@@ -267,8 +267,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctTransposeTable>(
-            ActionName.FreqctTransposeTable,
+        this.addActionHandler<typeof Actions.FreqctTransposeTable>(
+            Actions.FreqctTransposeTable.name,
             action => {
                 this.changeState(state => {
                     this.transposeTable(state);
@@ -276,8 +276,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSortByDimension>(
-            ActionName.FreqctSortByDimension,
+        this.addActionHandler<typeof Actions.FreqctSortByDimension>(
+            Actions.FreqctSortByDimension.name,
             action => {
                 this.changeState(state => {
                     this.sortByDimension(
@@ -290,8 +290,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetDisplayQuantity>(
-            ActionName.FreqctSetDisplayQuantity,
+        this.addActionHandler<typeof Actions.FreqctSetDisplayQuantity>(
+            Actions.FreqctSetDisplayQuantity.name,
             action => {
                 this.changeState(state => {
                     state.displayQuantity = action.payload.value;
@@ -300,8 +300,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetColorMapping>(
-            ActionName.FreqctSetColorMapping,
+        this.addActionHandler<typeof Actions.FreqctSetColorMapping>(
+            Actions.FreqctSetColorMapping.name,
             action => {
                 this.changeState(state => {
                     state.colorMapping = action.payload.value;
@@ -310,8 +310,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctSetHighlightedGroup>(
-            ActionName.FreqctSetHighlightedGroup,
+        this.addActionHandler<typeof Actions.FreqctSetHighlightedGroup>(
+            Actions.FreqctSetHighlightedGroup.name,
             action => {
                 this.changeState(state => {
                     state.highlightedGroup = action.payload.value;
@@ -319,8 +319,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctHighlight2DCoord>(
-            ActionName.FreqctHighlight2DCoord,
+        this.addActionHandler<typeof Actions.FreqctHighlight2DCoord>(
+            Actions.FreqctHighlight2DCoord.name,
             action =>  {
                 this.changeState(state => {
                     state.highlightedCoord = action.payload.coord
@@ -328,8 +328,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctReset2DCoordHighlight>(
-            ActionName.FreqctReset2DCoordHighlight,
+        this.addActionHandler<typeof Actions.FreqctReset2DCoordHighlight>(
+            Actions.FreqctReset2DCoordHighlight.name,
             action => {
                 this.changeState(state => {
                     state.highlightedCoord = null;
@@ -337,8 +337,8 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
             }
         );
 
-        this.addActionHandler<Actions.FreqctApplyQuickFilter>(
-            ActionName.FreqctApplyQuickFilter,
+        this.addActionHandler<typeof Actions.FreqctApplyQuickFilter>(
+            Actions.FreqctApplyQuickFilter.name,
             action => {
                 this.pageModel.setLocationPost(action.payload.url, []);
             }

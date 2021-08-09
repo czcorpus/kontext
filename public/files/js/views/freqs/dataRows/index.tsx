@@ -22,7 +22,7 @@ import { Kontext } from '../../../types/common';
 import * as React from 'react';
 import { ResultHeader, ResultItem } from '../../../models/freqs/dataRows';
 import { IActionDispatcher } from 'kombo';
-import { Actions, ActionName } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/actions';
 import { List } from 'cnc-tskit';
 import * as S from './style';
 
@@ -56,8 +56,8 @@ export function init(
     const DataRowPNFilter:React.FC<DataRowPNFilterProps> = (props) => {
 
         const handlePFilter = (e) => {
-            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
-                name: ActionName.ResultApplyQuickFilter,
+            dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
+                name: Actions.ResultApplyQuickFilter.name,
                 payload: {
                     url: props.pfilter,
                     blankWindow: e.ctrlKey
@@ -66,8 +66,8 @@ export function init(
         };
 
         const handleNFilter = (e) => {
-            dispatcher.dispatch<Actions.ResultApplyQuickFilter>({
-                name: ActionName.ResultApplyQuickFilter,
+            dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
+                name: Actions.ResultApplyQuickFilter.name,
                 payload: {
                     url: props.nfilter,
                     blankWindow: e.ctrlKey
@@ -148,8 +148,8 @@ export function init(
     const TableColHead:React.FC<TableColHeadProps> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.ResultSortByColumn>({
-                name: ActionName.ResultSortByColumn,
+            dispatcher.dispatch<typeof Actions.ResultSortByColumn>({
+                name: Actions.ResultSortByColumn.name,
                 payload: {
                     value: props.data.s
                 }

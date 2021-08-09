@@ -25,7 +25,7 @@ import { Kontext } from '../../../../types/common';
 import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../../models/freqs/twoDimension/flatTable';
 import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { init as ctViewOptsFactory } from '../viewOpts';
-import { Actions, ActionName } from '../../../../models/freqs/actions';
+import { Actions } from '../../../../models/freqs/actions';
 import * as S from './style';
 
 
@@ -74,8 +74,8 @@ export function init(
         };
 
         const handlePFilter = () => {
-            dispatcher.dispatch<Actions.FreqctApplyQuickFilter>({
-                name: ActionName.FreqctApplyQuickFilter,
+            dispatcher.dispatch<typeof Actions.FreqctApplyQuickFilter>({
+                name: Actions.FreqctApplyQuickFilter.name,
                 payload: {
                     url: props.data.pfilter
                 }
@@ -112,8 +112,8 @@ export function init(
     const THSortableCol = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.FreqctSortFlatList>({
-                name: ActionName.FreqctSortFlatList,
+            dispatcher.dispatch<typeof Actions.FreqctSortFlatList>({
+                name: Actions.FreqctSortFlatList.name,
                 payload: {
                     value: props.value,
                     reversed: props.isActive ? !props.isReversed : false

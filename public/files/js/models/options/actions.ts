@@ -23,189 +23,159 @@ import { ViewOptsResponse, GeneralOptionsShared } from './common';
 import { ViewOptions } from '../../types/common';
 
 
-export enum ActionName {
-    GeneralInitalDataLoaded = 'GENERAL_VIEW_OPTIONS_INITIAL_DATA_LOADED',
-    GeneralSetPageSize = 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE',
-    GeneralSetContextSize = 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE',
-    GeneralSetLineNums = 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS',
-    GeneralSetShuffle = 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE',
-    GeneralSetUseRichQueryEditor = 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR',
-    GeneralSetWlPageSize = 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE',
-    GeneralSetFmaxItems = 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS',
-    GeneralSetCitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE',
-    GeneralSetPQueryitemsPerPage = 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE',
-    GeneralSubmit = 'GENERAL_VIEW_OPTIONS_SUBMIT',
-    GeneralSubmitDone = 'GENERAL_VIEW_OPTIONS_SUBMIT_DONE',
-    LoadDataDone = 'VIEW_OPTIONS_LOAD_DATA_DONE',
-    DataReady = 'VIEW_OPTIONS_DATA_READY',
-    UpdateAttrVisibility = 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY',
-    ToggleAttribute = 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE',
-    ToggleAllAttributes = 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES',
-    ToggleStructure = 'VIEW_OPTIONS_TOGGLE_STRUCTURE',
-    ToggleAllStructures = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES',
-    ToggleAllStructureAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS',
-    ToggleReference = 'VIEW_OPTIONS_TOGGLE_REFERENCE',
-    ToogleAllReferenceAttrs = 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS',
-    ToggleAllReferences = 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES',
-    SetBaseViewAttr = 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR',
-    SaveSettings = 'VIEW_OPTIONS_SAVE_SETTINGS',
-    SaveSettingsDone = 'VIEW_OPTIONS_SAVE_SETTINGS_DONE',
-    ChangeQuerySuggestionMode = 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
-}
+export class Actions {
 
-export namespace Actions {
+    static GeneralInitalDataLoaded: Action<{
+        data: ViewOptsResponse;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_INITIAL_DATA_LOADED'
+        };
 
-    export interface GeneralInitalDataLoaded extends Action<{
-        data:ViewOptsResponse;
-    }> {
-        name:ActionName.GeneralInitalDataLoaded;
-    }
+    static GeneralSetPageSize: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE'
+        };
 
-    export interface GeneralSetPageSize extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetPageSize;
-    }
+    static GeneralSetContextSize: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE'
+        };
 
-    export interface GeneralSetContextSize extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetContextSize;
-    }
+    static GeneralSetLineNums: Action<{
+        value: boolean;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS'
+        };
 
-    export interface GeneralSetLineNums extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.GeneralSetLineNums;
-    }
+    static GeneralSetShuffle: Action<{
+        value: boolean;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE'
+        };
 
-    export interface GeneralSetShuffle extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.GeneralSetShuffle;
-    }
+    static GeneralSetUseRichQueryEditor: Action<{
+        value: boolean;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR'
+        };
 
-    export interface GeneralSetUseRichQueryEditor extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.GeneralSetUseRichQueryEditor;
-    }
+    static GeneralSetWlPageSize: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE'
+        };
 
-    export interface GeneralSetWlPageSize extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetWlPageSize;
-    }
+    static GeneralSetFmaxItems: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS'
+        };
 
-    export interface GeneralSetFmaxItems extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetFmaxItems;
-    }
+    static GeneralSetCitemsPerPage: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE'
+        };
 
-    export interface GeneralSetCitemsPerPage extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetCitemsPerPage;
-    }
+    static GeneralSetPQueryitemsPerPage: Action<{
+        value: number;
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE'
+        };
 
-    export interface GeneralSetPQueryitemsPerPage extends Action<{
-        value:number;
-    }> {
-        name:ActionName.GeneralSetPQueryitemsPerPage;
-    }
+    static GeneralSubmit: Action<{
+    }> = {
+            name: 'GENERAL_VIEW_OPTIONS_SUBMIT'
+        };
 
-    export interface GeneralSubmit extends Action<{
-    }> {
-        name:ActionName.GeneralSubmit;
-    }
+    static GeneralSubmitDone: Action<GeneralOptionsShared> = {
+        name: 'GENERAL_VIEW_OPTIONS_SUBMIT_DONE'
+    };
 
-    export interface GeneralSubmitDone extends Action<GeneralOptionsShared> {
-        name:ActionName.GeneralSubmitDone;
-    }
+    static LoadDataDone: Action<{
+        data: ViewOptions.PageData;
+    }> = {
+            name: 'VIEW_OPTIONS_LOAD_DATA_DONE'
+        };
 
-    export interface LoadDataDone extends Action<{
-        data:ViewOptions.PageData;
-    }> {
-        name:ActionName.LoadDataDone;
-    }
+    static DataReady: Action<{}> = {
+        name: 'VIEW_OPTIONS_DATA_READY'
+    };
 
-    export interface DataReady extends Action<{}> {
-        name:ActionName.DataReady;
-    }
+    static UpdateAttrVisibility: Action<{
+        value: ViewOptions.AttrViewMode;
+    }> = {
+            name: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY'
+        };
 
-    export interface UpdateAttrVisibility extends Action<{
-        value:ViewOptions.AttrViewMode;
-    }> {
-        name:ActionName.UpdateAttrVisibility;
-    }
+    static ToggleAttribute: Action<{
+        idx: number;
+    }> = {
+            name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE'
+        };
 
-    export interface ToggleAttribute extends Action<{
-        idx:number;
-    }> {
-        name:ActionName.ToggleAttribute;
-    }
+    static ToggleAllAttributes: Action<{}> = {
+        name: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES'
+    };
 
-    export interface ToggleAllAttributes extends Action<{}> {
-        name:ActionName.ToggleAllAttributes;
-    }
+    static ToggleStructure: Action<{
+        structIdent: string;
+        structAttrIdent: string;
+    }> = {
+            name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE'
+        };
 
-    export interface ToggleStructure extends Action<{
-        structIdent:string;
-        structAttrIdent:string;
-    }> {
-        name:ActionName.ToggleStructure;
-    }
+    static ToggleAllStructures: Action<{}> = {
+        name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES'
+    };
 
-    export interface ToggleAllStructures extends Action<{}> {
-        name:ActionName.ToggleAllStructures;
-    }
+    static ToggleAllStructureAttrs: Action<{
+        structIdent: string;
+    }> = {
+            name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS'
+        };
 
-    export interface ToggleAllStructureAttrs extends Action<{
-        structIdent:string;
-    }> {
-        name:ActionName.ToggleAllStructureAttrs;
-    }
+    static ToggleReference: Action<{
+        refIdent: string;
+        refAttrIdent: string | null;
+    }> = {
+            name: 'VIEW_OPTIONS_TOGGLE_REFERENCE'
+        };
 
-    export interface ToggleReference extends Action<{
-        refIdent:string;
-        refAttrIdent:string|null;
-    }> {
-        name:ActionName.ToggleReference;
-    }
+    static ToogleAllReferenceAttrs: Action<{
+        refIdent: string;
+    }> = {
+            name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS'
+        };
 
-    export interface ToogleAllReferenceAttrs extends Action<{
-        refIdent:string;
-    }> {
-        name:ActionName.ToogleAllReferenceAttrs;
-    }
+    static ToggleAllReferences: Action<{}> = {
+        name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES'
+    };
 
-    export interface ToggleAllReferences extends Action<{}> {
-        name:ActionName.ToggleAllReferences;
-    }
-    export interface SetBaseViewAttr extends Action<{
-        value:string;
-    }> {
-        name:ActionName.SetBaseViewAttr;
-    }
+    static SetBaseViewAttr: Action<{
+        value: string;
+    }> = {
+            name: 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR'
+        };
 
-    export interface SaveSettings extends Action<{}> {
-        name:ActionName.SaveSettings;
-    }
+    static SaveSettings: Action<{}> = {
+        name: 'VIEW_OPTIONS_SAVE_SETTINGS'
+    };
 
-    export interface SaveSettingsDone extends Action<{
-        baseViewAttr:string;
-        widectxGlobals:Array<[string, string]>;
-        attrVmode:ViewOptions.AttrViewMode;
-        qsEnabled:boolean;
-    }> {
-        name:ActionName.SaveSettingsDone;
-    }
+    static SaveSettingsDone: Action<{
+        baseViewAttr: string;
+        widectxGlobals: Array<[string, string]>;
+        attrVmode: ViewOptions.AttrViewMode;
+        qsEnabled: boolean;
+    }> = {
+            name: 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
+        };
 
-    export interface ChangeQuerySuggestionMode extends Action<{
-        value:boolean;
-    }> {
-        name:ActionName.ChangeQuerySuggestionMode;
-    }
-
+    static ChangeQuerySuggestionMode: Action<{
+        value: boolean;
+    }> = {
+            name: 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
+        };
 }

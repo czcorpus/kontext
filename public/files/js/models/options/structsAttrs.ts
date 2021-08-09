@@ -25,7 +25,7 @@ import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { Kontext, ViewOptions } from '../../types/common';
 import { PageModel } from '../../app/page';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
 import { MultiDict } from '../../multidict';
@@ -128,8 +128,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         )
                     ).subscribe(
                         (data:ViewOptions.LoadOptionsResponse) => {
-                            dispatch<Actions.LoadDataDone>({
-                                name: ActionName.LoadDataDone,
+                            dispatch<typeof Actions.LoadDataDone>({
+                                name: Actions.LoadDataDone.name,
                                 payload: {
                                     data: {
                                         AttrList: data.AttrList,
@@ -149,52 +149,52 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                         },
                         (err:Error) => {
                             this.layoutModel.showMessage('error', err);
-                            dispatch<Actions.LoadDataDone>({
-                                name: ActionName.LoadDataDone,
+                            dispatch<typeof Actions.LoadDataDone>({
+                                name: Actions.LoadDataDone.name,
                                 error: err
                             });
                         }
                     );
 
                 } else {
-                    dispatch<Actions.DataReady>({
-                        name: ActionName.DataReady
+                    dispatch<typeof Actions.DataReady>({
+                        name: Actions.DataReady.name
                     });
                 }
             }
         );
 
-        this.addActionHandler<Actions.LoadDataDone>(
-            ActionName.LoadDataDone,
+        this.addActionHandler<typeof Actions.LoadDataDone>(
+            Actions.LoadDataDone.name,
             (state, action) => {
                 this.importData(state, action.payload.data);
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<Actions.DataReady>(
-            ActionName.DataReady,
+        this.addActionHandler<typeof Actions.DataReady>(
+            Actions.DataReady.name,
              (state, action) => {
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<Actions.UpdateAttrVisibility>(
-            ActionName.UpdateAttrVisibility,
+        this.addActionHandler<typeof Actions.UpdateAttrVisibility>(
+            Actions.UpdateAttrVisibility.name,
             (state, action) => {
                 state.attrVmode = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.ChangeQuerySuggestionMode>(
-            ActionName.ChangeQuerySuggestionMode,
+        this.addActionHandler<typeof Actions.ChangeQuerySuggestionMode>(
+            Actions.ChangeQuerySuggestionMode.name,
             (state, action) => {
                 state.qsEnabled = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.ToggleAttribute>(
-            ActionName.ToggleAttribute,
+        this.addActionHandler<typeof Actions.ToggleAttribute>(
+            Actions.ToggleAttribute.name,
             (state, action) => {
                 const attr = state.attrList[action.payload.idx];
                 if (!attr.selected || attr.n !== state.baseViewAttr) {
@@ -212,8 +212,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
-        this.addActionHandler<Actions.ToggleAllAttributes>(
-            ActionName.ToggleAllAttributes,
+        this.addActionHandler<typeof Actions.ToggleAllAttributes>(
+            Actions.ToggleAllAttributes.name,
             (state, action) => {
                 this.toggleAllAttributes(state);
                 if (!pipe(
@@ -226,51 +226,51 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
-        this.addActionHandler<Actions.ToggleStructure>(
-            ActionName.ToggleStructure,
+        this.addActionHandler<typeof Actions.ToggleStructure>(
+            Actions.ToggleStructure.name,
             (state, action) => {
                 this.toggleStructure(
                     state, action.payload.structIdent, action.payload.structAttrIdent);
             }
         );
 
-        this.addActionHandler<Actions.ToggleAllStructures>(
-            ActionName.ToggleAllStructures,
+        this.addActionHandler<typeof Actions.ToggleAllStructures>(
+            Actions.ToggleAllStructures.name,
             (state, action) => {
                 this.toggleAllStructures(state);
             }
         );
 
-        this.addActionHandler<Actions.ToggleAllStructureAttrs>(
-            ActionName.ToggleAllStructureAttrs,
+        this.addActionHandler<typeof Actions.ToggleAllStructureAttrs>(
+            Actions.ToggleAllStructureAttrs.name,
             (state, action) => {
                 this.toggleAllStructureAttrs(state, action.payload.structIdent);
             }
         );
 
-        this.addActionHandler<Actions.ToggleReference>(
-            ActionName.ToggleReference,
+        this.addActionHandler<typeof Actions.ToggleReference>(
+            Actions.ToggleReference.name,
             (state, action) => {
                 this.toggleReference(state, action.payload.refIdent, action.payload.refAttrIdent);
             }
         );
 
-        this.addActionHandler<Actions.ToogleAllReferenceAttrs>(
-            ActionName.ToogleAllReferenceAttrs,
+        this.addActionHandler<typeof Actions.ToogleAllReferenceAttrs>(
+            Actions.ToogleAllReferenceAttrs.name,
             (state, action) => {
                 this.toggleAllReferenceAttrs(state, action.payload.refIdent);
             }
         );
 
-        this.addActionHandler<Actions.ToggleAllReferences>(
-            ActionName.ToggleAllReferences,
+        this.addActionHandler<typeof Actions.ToggleAllReferences>(
+            Actions.ToggleAllReferences.name,
             (state, action) => {
                 this.toggleAllReferences(state);
             }
         );
 
-        this.addActionHandler<Actions.SetBaseViewAttr>(
-            ActionName.SetBaseViewAttr,
+        this.addActionHandler<typeof Actions.SetBaseViewAttr>(
+            Actions.SetBaseViewAttr.name,
             (state, action) => {
                 state.baseViewAttr = action.payload.value;
                 const idx = List.findIndex(v => v.n === state.baseViewAttr, state.attrList);
@@ -280,8 +280,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
-        this.addActionHandler<Actions.SaveSettings>(
-            ActionName.SaveSettings,
+        this.addActionHandler<typeof Actions.SaveSettings>(
+            Actions.SaveSettings.name,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -290,8 +290,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             }
         );
 
-        this.addActionHandler<Actions.SaveSettingsDone>(
-            ActionName.SaveSettingsDone,
+        this.addActionHandler<typeof Actions.SaveSettingsDone>(
+            Actions.SaveSettingsDone.name,
             (state, action) => {
                 state.isBusy = false;
             }
@@ -377,8 +377,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             )
         ).subscribe(
             (data) => {
-                dispatch<Actions.SaveSettingsDone>({
-                    name: ActionName.SaveSettingsDone,
+                dispatch<typeof Actions.SaveSettingsDone>({
+                    name: Actions.SaveSettingsDone.name,
                     payload: {
                         widectxGlobals: data.widectx_globals,
                         baseViewAttr: state.baseViewAttr,
@@ -392,8 +392,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 );
             },
             (err) => {
-                dispatch<Actions.SaveSettingsDone>({
-                    name: ActionName.SaveSettingsDone,
+                dispatch<typeof Actions.SaveSettingsDone>({
+                    name: Actions.SaveSettingsDone.name,
                     error: err
                 });
                 this.layoutModel.showMessage('error', err);

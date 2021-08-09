@@ -30,8 +30,7 @@ import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
 import { AudioPlayer, PlayerStatus} from './media';
 import { ConcSaveModel } from './save';
-import { Actions as ViewOptionsActions, ActionName as ViewOptionsActionName }
-    from '../options/actions';
+import { Actions as ViewOptionsActions } from '../options/actions';
 import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
     ServerPagination, ServerLineData, ServerTextChunk, LineGroupId, attachColorsToIds,
     mapIdToIdWithColors, Line, TextChunk, KWICSection, PaginationActions} from './common';
@@ -550,8 +549,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<ViewOptionsActions.SaveSettingsDone>(
-            ViewOptionsActionName.SaveSettingsDone,
+        this.addActionHandler<typeof ViewOptionsActions.SaveSettingsDone>(
+            ViewOptionsActions.SaveSettingsDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -576,8 +575,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<ViewOptionsActions.GeneralSubmitDone>(
-            ViewOptionsActionName.GeneralSubmitDone,
+        this.addActionHandler<typeof ViewOptionsActions.GeneralSubmitDone>(
+            ViewOptionsActions.GeneralSubmitDone.name,
             action => {
                 if (!action.error) {
                     this.changeState(state => {

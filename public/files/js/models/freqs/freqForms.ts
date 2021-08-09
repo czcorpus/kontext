@@ -26,7 +26,7 @@ import { PageModel } from '../../app/page';
 import { FreqServerArgs } from './common';
 import { MultiDict } from '../../multidict';
 import { AlignTypes } from './twoDimension/common';
-import { Actions, ActionName } from './actions';
+import { Actions } from './actions';
 
 
 export interface FreqFormInputs {
@@ -109,13 +109,13 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.MLSetFLimit>(
-            ActionName.MLSetFLimit,
+        this.addActionHandler<typeof Actions.MLSetFLimit>(
+            Actions.MLSetFLimit.name,
             (state, action) => {state.flimit.value = action.payload.value}
         );
 
-        this.addActionHandler<Actions.MLAddLevel>(
-            ActionName.MLAddLevel,
+        this.addActionHandler<typeof Actions.MLAddLevel>(
+            Actions.MLAddLevel.name,
             (state, action) => {
                 if (state.mlxattr.length < state.maxNumLevels) {
                     this.addLevel(state);
@@ -126,38 +126,38 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.MLRemoveLevel>(
-            ActionName.MLRemoveLevel,
+        this.addActionHandler<typeof Actions.MLRemoveLevel>(
+            Actions.MLRemoveLevel.name,
             (state, action) => this.removeLevel(state, action.payload.levelIdx)
         );
 
-        this.addActionHandler<Actions.MLChangeLevel>(
-            ActionName.MLChangeLevel,
+        this.addActionHandler<typeof Actions.MLChangeLevel>(
+            Actions.MLChangeLevel.name,
             (state, action) => this.changeLevel(state, action.payload.levelIdx, action.payload.direction)
         );
 
-        this.addActionHandler<Actions.MLSetMlxAttr>(
-            ActionName.MLSetMlxAttr,
+        this.addActionHandler<typeof Actions.MLSetMlxAttr>(
+            Actions.MLSetMlxAttr.name,
             (state, action) => {state.mlxattr[action.payload.levelIdx] = action.payload.value}
         );
 
-        this.addActionHandler<Actions.MLSetMlxiCase>(
-            ActionName.MLSetMlxiCase,
+        this.addActionHandler<typeof Actions.MLSetMlxiCase>(
+            Actions.MLSetMlxiCase.name,
             (state, action) => {state.mlxicase[action.payload.levelIdx] = !state.mlxicase[action.payload.levelIdx]}
         );
 
-        this.addActionHandler<Actions.MLSetMlxctxIndex>(
-            ActionName.MLSetMlxctxIndex,
+        this.addActionHandler<typeof Actions.MLSetMlxctxIndex>(
+            Actions.MLSetMlxctxIndex.name,
             (state, action) => {state.mlxctxIndices[action.payload.levelIdx] = Number(action.payload.value)}
         );
 
-        this.addActionHandler<Actions.MLSetAlignType>(
-            ActionName.MLSetAlignType,
+        this.addActionHandler<typeof Actions.MLSetAlignType>(
+            Actions.MLSetAlignType.name,
             (state, action) => {state.alignType[action.payload.levelIdx] = action.payload.value}
         );
 
-        this.addActionHandler<Actions.MLSubmit>(
-            ActionName.MLSubmit,
+        this.addActionHandler<typeof Actions.MLSubmit>(
+            Actions.MLSubmit.name,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {
@@ -256,8 +256,8 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.TTSetFttAttr>(
-            ActionName.TTSetFttAttr,
+        this.addActionHandler<typeof Actions.TTSetFttAttr>(
+            Actions.TTSetFttAttr.name,
             (state, action) => {
                 if (state.fttattr.includes(action.payload.value)) {
                     state.fttattr = List.removeValue(action.payload.value, state.fttattr);
@@ -268,18 +268,18 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.TTSetIncludeEmpty>(
-            ActionName.TTSetIncludeEmpty,
+        this.addActionHandler<typeof Actions.TTSetIncludeEmpty>(
+            Actions.TTSetIncludeEmpty.name,
             (state, action) => {state.fttIncludeEmpty = !state.fttIncludeEmpty}
         );
 
-        this.addActionHandler<Actions.TTSetFLimit>(
-            ActionName.TTSetFLimit,
+        this.addActionHandler<typeof Actions.TTSetFLimit>(
+            Actions.TTSetFLimit.name,
             (state, action) => {state.flimit.value = action.payload.value}
         );
 
-        this.addActionHandler<Actions.TTSubmit>(
-            ActionName.TTSubmit,
+        this.addActionHandler<typeof Actions.TTSubmit>(
+            Actions.TTSubmit.name,
             (state, action) => {
                 const err = this.validateForm(state);
                 if (!err) {

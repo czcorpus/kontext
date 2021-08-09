@@ -24,7 +24,7 @@ import { IActionDispatcher} from 'kombo';
 import { Kontext } from '../../types/common';
 import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
 import { init as freqFormsFactory } from './freqForms';
-import { Actions, ActionName } from '../../models/freqs/actions';
+import { Actions } from '../../models/freqs/actions';
 import { init as ctFreqFormFactory } from './twoDimension/form';
 import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
 
@@ -76,18 +76,18 @@ export function init(
         _handleSubmitClick() {
             switch (this.state.formType) {
                 case 'ml':
-                    dispatcher.dispatch<Actions.MLSubmit>({
-                        name: ActionName.MLSubmit
+                    dispatcher.dispatch<typeof Actions.MLSubmit>({
+                        name: Actions.MLSubmit.name
                     });
                 break;
                 case 'tt':
-                    dispatcher.dispatch<Actions.TTSubmit>({
-                        name: ActionName.TTSubmit
+                    dispatcher.dispatch<typeof Actions.TTSubmit>({
+                        name: Actions.TTSubmit.name
                     });
                 break;
                 case 'ct':
-                    dispatcher.dispatch<Actions.FreqctFormSubmit>({
-                        name: ActionName.FreqctFormSubmit
+                    dispatcher.dispatch<typeof Actions.FreqctFormSubmit>({
+                        name: Actions.FreqctFormSubmit.name
                     });
             }
         }

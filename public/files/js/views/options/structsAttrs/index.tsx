@@ -23,8 +23,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext, ViewOptions } from '../../../types/common';
 import { CorpusViewOptionsModel, CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
-import { Actions, ActionName } from '../../../models/options/actions';
-import { Actions as OptionsActions, ActionName as OptionsActionName } from '../../../models/options/actions';
+import { Actions } from '../../../models/options/actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
@@ -60,8 +59,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleClick = () => {
-            dispatcher.dispatch<Actions.ToggleAttribute>({
-                name: ActionName.ToggleAttribute,
+            dispatcher.dispatch<typeof Actions.ToggleAttribute>({
+                name: Actions.ToggleAttribute.name,
                 payload: {
                     idx: props.idx
                 }
@@ -103,8 +102,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleSelectChangeFn = (event:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.UpdateAttrVisibility>({
-                name: ActionName.UpdateAttrVisibility,
+            dispatcher.dispatch<typeof Actions.UpdateAttrVisibility>({
+                name: Actions.UpdateAttrVisibility.name,
                 payload: {
                     value: event.target.value as ViewOptions.AttrViewMode
                 }
@@ -164,15 +163,15 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleSelectAll = () => {
-            dispatcher.dispatch<Actions.ToggleAllAttributes>({
-                name: ActionName.ToggleAllAttributes
+            dispatcher.dispatch<typeof Actions.ToggleAllAttributes>({
+                name: Actions.ToggleAllAttributes.name
             });
         };
 
 
         const handlePrimaryAttrSel = (attr:string) => (evt:React.MouseEvent) => {
-            dispatcher.dispatch<Actions.SetBaseViewAttr>({
-                name: ActionName.SetBaseViewAttr,
+            dispatcher.dispatch<typeof Actions.SetBaseViewAttr>({
+                name: Actions.SetBaseViewAttr.name,
                 payload: {
                     value: attr
                 }
@@ -264,8 +263,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
         const handleSelect = (structIdent) => {
             return (structAttrIdent) => {
-                dispatcher.dispatch<Actions.ToggleStructure>({
-                    name: ActionName.ToggleStructure,
+                dispatcher.dispatch<typeof Actions.ToggleStructure>({
+                    name: Actions.ToggleStructure.name,
                     payload: {
                         structIdent,
                         structAttrIdent
@@ -275,8 +274,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         const handleSelectCategory = (event) => {
-            dispatcher.dispatch<Actions.ToggleStructure>({
-                name: ActionName.ToggleStructure,
+            dispatcher.dispatch<typeof Actions.ToggleStructure>({
+                name: Actions.ToggleStructure.name,
                 payload: {
                     structIdent: event.target.value,
                     structAttrIdent: null
@@ -285,15 +284,15 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         const handleSelectCategoryAll = (structIdent) => {
-            dispatcher.dispatch<Actions.ToggleAllStructureAttrs>({
-                name: ActionName.ToggleAllStructureAttrs,
+            dispatcher.dispatch<typeof Actions.ToggleAllStructureAttrs>({
+                name: Actions.ToggleAllStructureAttrs.name,
                 payload: {structIdent}
             });
         };
 
         const handleSelectAll = (evt) => {
-            dispatcher.dispatch<Actions.ToggleAllStructures>({
-                name: ActionName.ToggleAllStructures
+            dispatcher.dispatch<typeof Actions.ToggleAllStructures>({
+                name: Actions.ToggleAllStructures.name
             });
         };
 
@@ -345,8 +344,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleSelect = (refIdent) => (refAttrIdent:string) => {
-            dispatcher.dispatch<Actions.ToggleReference>({
-                name: ActionName.ToggleReference,
+            dispatcher.dispatch<typeof Actions.ToggleReference>({
+                name: Actions.ToggleReference.name,
                 payload: {
                     refIdent,
                     refAttrIdent
@@ -355,8 +354,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         const handleSelectCategory = (event) => {
-            dispatcher.dispatch<Actions.ToggleReference>({
-                name: ActionName.ToggleReference,
+            dispatcher.dispatch<typeof Actions.ToggleReference>({
+                name: Actions.ToggleReference.name,
                 payload: {
                     refIdent: event.target.value,
                     refAttrIdent: null
@@ -365,15 +364,15 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         };
 
         const handleSelectCategoryAll = (refIdent:string) => {
-            dispatcher.dispatch<Actions.ToogleAllReferenceAttrs>({
-                name: ActionName.ToogleAllReferenceAttrs,
+            dispatcher.dispatch<typeof Actions.ToogleAllReferenceAttrs>({
+                name: Actions.ToogleAllReferenceAttrs.name,
                 payload: {refIdent}
             });
         };
 
         const handleSelectAll = (evt) => {
-            dispatcher.dispatch<Actions.ToggleAllReferences>({
-                name: ActionName.ToggleAllReferences
+            dispatcher.dispatch<typeof Actions.ToggleAllReferences>({
+                name: Actions.ToggleAllReferences.name
             });
         };
 
@@ -415,8 +414,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleSelectChangeFn = () => {
-            dispatcher.dispatch<Actions.ChangeQuerySuggestionMode>({
-                name: ActionName.ChangeQuerySuggestionMode,
+            dispatcher.dispatch<typeof Actions.ChangeQuerySuggestionMode>({
+                name: Actions.ChangeQuerySuggestionMode.name,
                 payload: {
                     value: !props.queryHintEnabled
                 }
@@ -465,8 +464,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
     }> = (props) => {
 
         const handleSaveClick = () => {
-            dispatcher.dispatch<OptionsActions.SaveSettings>({
-                name: OptionsActionName.SaveSettings
+            dispatcher.dispatch<typeof Actions.SaveSettings>({
+                name: Actions.SaveSettings.name
             });
         };
 

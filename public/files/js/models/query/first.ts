@@ -33,7 +33,7 @@ import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { Actions } from './actions';
-import { ActionName as GenOptsActionName, Actions as GenOptsActions } from '../options/actions';
+import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import { PluginInterfaces } from '../../types/plugins';
@@ -592,8 +592,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<GenOptsActions.GeneralSetShuffle>(
-            GenOptsActionName.GeneralSetShuffle,
+        this.addActionHandler<typeof GenOptsActions.GeneralSetShuffle>(
+            GenOptsActions.GeneralSetShuffle.name,
             action => {
                 this.changeState(state => {
                     state.shuffleConcByDefault = action.payload.value;
