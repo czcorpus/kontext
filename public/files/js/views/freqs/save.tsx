@@ -23,7 +23,7 @@ import {Kontext} from '../../types/common';
 import {SaveData} from '../../app/navigation';
 import {FreqResultsSaveModel, FreqResultsSaveModelState} from '../../models/freqs/save';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {ActionName, Actions} from '../../models/freqs/actions';
+import {Actions} from '../../models/freqs/actions';
 
 
 interface SaveFreqFormProps {
@@ -65,8 +65,8 @@ export function init(
     const TRSaveFormatSelect:React.SFC<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFormat>({
-                name: ActionName.SaveFormSetFormat,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFormat>({
+                name: Actions.SaveFormSetFormat.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -101,8 +101,8 @@ export function init(
     const TRIncludeHeadingCheckbox:React.SFC<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetIncludeHeading>({
-                name: ActionName.SaveFormSetIncludeHeading,
+            dispatcher.dispatch<typeof Actions.SaveFormSetIncludeHeading>({
+                name: Actions.SaveFormSetIncludeHeading.name,
                 payload: {
                     value: !props.value
                 }
@@ -136,8 +136,8 @@ export function init(
     const TRColHeadersCheckbox:React.SFC<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.SaveFormSetIncludeColHeading>({
-                name: ActionName.SaveFormSetIncludeColHeading,
+            dispatcher.dispatch<typeof Actions.SaveFormSetIncludeColHeading>({
+                name: Actions.SaveFormSetIncludeColHeading.name,
                 payload: {
                     value: !props.value
                 }
@@ -165,8 +165,8 @@ export function init(
     const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetFromLine>({
-                name: ActionName.SaveFormSetFromLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({
+                name: Actions.SaveFormSetFromLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -174,8 +174,8 @@ export function init(
         };
 
         const handleToInput = (evt) => {
-            dispatcher.dispatch<Actions.SaveFormSetToLine>({
-                name: ActionName.SaveFormSetToLine,
+            dispatcher.dispatch<typeof Actions.SaveFormSetToLine>({
+                name: Actions.SaveFormSetToLine.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -223,8 +223,8 @@ export function init(
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<Actions.SaveFormSubmit>({
-                name: ActionName.SaveFormSubmit,
+            dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
+                name: Actions.SaveFormSubmit.name,
                 payload: {}
             });
         }

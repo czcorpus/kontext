@@ -24,7 +24,7 @@ import { Kontext } from '../../../types/common';
 import { PageModel } from '../../../app/page';
 import { MultiDict } from '../../../multidict';
 import { CTFreqServerArgs } from '../common';
-import { Actions, ActionName } from '../actions';
+import { Actions } from '../actions';
 import { FreqFilterQuantities, AlignTypes, CTFormProperties, Dimensions, isStructAttr, roundFloat, validatePercentile,
     isPercentileFilterQuantity, validateMinAbsFreqAttr } from './common';
 
@@ -83,22 +83,22 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<Actions.FreqctFormSetDimensionAttr>(
-            ActionName.FreqctFormSetDimensionAttr,
+        this.addActionHandler<typeof Actions.FreqctFormSetDimensionAttr>(
+            Actions.FreqctFormSetDimensionAttr.name,
             (state, action) => {
                 this.setDimensionAttr(state, action.payload.dimension, action.payload.value);
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetMinFreqType>(
-            ActionName.FreqctFormSetMinFreqType,
+        this.addActionHandler<typeof Actions.FreqctFormSetMinFreqType>(
+            Actions.FreqctFormSetMinFreqType.name,
             (state, action) => {
                 state.minFreqType = action.payload.value;
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetMinFreq>(
-            ActionName.FreqctFormSetMinFreq,
+        this.addActionHandler<typeof Actions.FreqctFormSetMinFreq>(
+            Actions.FreqctFormSetMinFreq.name,
             (state, action) => {
                 state.minFreq = action.payload.value;
                 state.minFreqHint = this.getMinFreqHint(state);
@@ -111,8 +111,8 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetCtx>(
-            ActionName.FreqctFormSetCtx,
+        this.addActionHandler<typeof Actions.FreqctFormSetCtx>(
+            Actions.FreqctFormSetCtx.name,
             (state, action) => {
                 if (action.payload.dim === Dimensions.FIRST) {
                     state.ctxIndex1 = action.payload.value;
@@ -123,8 +123,8 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSetAlignType>(
-            ActionName.FreqctFormSetAlignType,
+        this.addActionHandler<typeof Actions.FreqctFormSetAlignType>(
+            Actions.FreqctFormSetAlignType.name,
             (state, action) => {
                 if (action.payload.dim === Dimensions.FIRST) {
                     state.alignType1 = action.payload.value;
@@ -135,8 +135,8 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
             }
         );
 
-        this.addActionHandler<Actions.FreqctFormSubmit>(
-            ActionName.FreqctFormSubmit,
+        this.addActionHandler<typeof Actions.FreqctFormSubmit>(
+            Actions.FreqctFormSubmit.name,
             null,
             (state, action, dispatch) => {
                 const err = this.validateMinFreq(state.minFreqType, state.minFreq);

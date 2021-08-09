@@ -21,12 +21,10 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Maths, Dict, tuple, pipe, List } from 'cnc-tskit';
 
-import { TextTypes } from '../../../types/common';
-import { FreqResultResponse } from '../../../types/ajaxResponses';
 import { PageModel } from '../../../app/page';
 import { MultiDict } from '../../../multidict';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
-import { FreqFilterQuantities, CTFormProperties, validateMinAbsFreqAttr, isStructAttr } from './common';
+import { FreqFilterQuantities, validateMinAbsFreqAttr, isStructAttr } from './common';
 
 
 /**

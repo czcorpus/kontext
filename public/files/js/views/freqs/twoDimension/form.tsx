@@ -24,7 +24,7 @@ import { IActionDispatcher, Bound } from 'kombo';
 import { Kontext } from '../../../types/common';
 import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/freqs/twoDimension/common';
 import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form';
-import { Actions, ActionName } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/actions';
 
 import * as S from './style';
 
@@ -52,8 +52,8 @@ export function init(
     const CTFreqFormMinFreqInput:React.SFC<CTFreqFormMinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctFormSetMinFreq>({
-                name: ActionName.FreqctFormSetMinFreq,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetMinFreq>({
+                name: Actions.FreqctFormSetMinFreq.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -61,8 +61,8 @@ export function init(
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctFormSetMinFreqType>({
-                name: ActionName.FreqctFormSetMinFreqType,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetMinFreqType>({
+                name: Actions.FreqctFormSetMinFreqType.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -98,8 +98,8 @@ export function init(
     const CTFreqPosSelect:React.SFC<CTFreqPosSelectProps> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctFormSetCtx>({
-                name: ActionName.FreqctFormSetCtx,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetCtx>({
+                name: Actions.FreqctFormSetCtx.name,
                 payload: {
                     dim: props.dim,
                     value: parseInt(evt.target.value, 10)
@@ -124,8 +124,8 @@ export function init(
     const CTFreqNodeStartSelect:React.SFC<CTFreqNodeStartSelectProps> = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctFormSetAlignType>({
-                name: ActionName.FreqctFormSetAlignType,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetAlignType>({
+                name: Actions.FreqctFormSetAlignType.name,
                 payload: {
                     dim: props.dim,
                     value: evt.target.value
@@ -151,8 +151,8 @@ export function init(
         }
 
         _handleAttrSelChange(dimension, evt) {
-            dispatcher.dispatch<Actions.FreqctFormSetDimensionAttr>({
-                name: ActionName.FreqctFormSetDimensionAttr,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetDimensionAttr>({
+                name: Actions.FreqctFormSetDimensionAttr.name,
                 payload: {
                     dimension: dimension,
                     value: evt.target.value

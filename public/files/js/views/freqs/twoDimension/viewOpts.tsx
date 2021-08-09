@@ -24,7 +24,7 @@ import { Maths } from 'cnc-tskit';
 
 import { Kontext } from '../../../types/common';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
-import { Actions, ActionName } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/actions';
 
 
 interface AlphaLevelSelectProps {
@@ -63,8 +63,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     const MinFreqInput:React.SFC<MinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSetMinFreq>({
-                name: ActionName.FreqctSetMinFreq,
+            dispatcher.dispatch<typeof Actions.FreqctSetMinFreq>({
+                name: Actions.FreqctSetMinFreq.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -72,8 +72,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         };
 
         const handleTypeChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctFormSetMinFreqType>({
-                name: ActionName.FreqctFormSetMinFreqType,
+            dispatcher.dispatch<typeof Actions.FreqctFormSetMinFreqType>({
+                name: Actions.FreqctFormSetMinFreqType.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -140,8 +140,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _onChange(evt) {
-            dispatcher.dispatch<Actions.FreqctSetAlphaLevel>({
-                name: ActionName.FreqctSetAlphaLevel,
+            dispatcher.dispatch<typeof Actions.FreqctSetAlphaLevel>({
+                name: Actions.FreqctSetAlphaLevel.name,
                 payload: {
                     value: evt.target.value
                 }

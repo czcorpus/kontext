@@ -30,7 +30,7 @@ import { Freq2DTableModel, Data2DTable, ColorMappings, TableInfo, Freq2DTableMod
 import { FreqFilterQuantities, Dimensions, FreqQuantities } from '../../../../models/freqs/twoDimension/common';
 import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { DataPoint } from '../../../../charts/confIntervals';
-import { Actions, ActionName } from '../../../../models/freqs/actions';
+import { Actions } from '../../../../models/freqs/actions';
 import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions';
 import * as S from './style';
 
@@ -76,8 +76,8 @@ export function init(
     const QuantitySelect = (props) => {
 
         const handleSelectChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSetDisplayQuantity>({
-                name: ActionName.FreqctSetDisplayQuantity,
+            dispatcher.dispatch<typeof Actions.FreqctSetDisplayQuantity>({
+                name: Actions.FreqctSetDisplayQuantity.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -106,8 +106,8 @@ export function init(
     const EmptyVectorVisibilitySwitch = (props) => {
 
         const handleCheckboxChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSetEmptyVecVisibility>({
-                name: ActionName.FreqctSetEmptyVecVisibility,
+            dispatcher.dispatch<typeof Actions.FreqctSetEmptyVecVisibility>({
+                name: Actions.FreqctSetEmptyVecVisibility.name,
                 payload: {value: evt.target.checked}
             });
         };
@@ -126,8 +126,8 @@ export function init(
      */
     const TransposeTableCheckbox = (props) => {
         const handleClickTranspose = (evt) => {
-            dispatcher.dispatch<Actions.FreqctTransposeTable>({
-                name: ActionName.FreqctTransposeTable
+            dispatcher.dispatch<typeof Actions.FreqctTransposeTable>({
+                name: Actions.FreqctTransposeTable.name
             });
         };
 
@@ -177,8 +177,8 @@ export function init(
         }
 
         _handleChange(evt) {
-            dispatcher.dispatch<Actions.FreqctSetColorMapping>({
-                name: ActionName.FreqctSetColorMapping,
+            dispatcher.dispatch<typeof Actions.FreqctSetColorMapping>({
+                name: Actions.FreqctSetColorMapping.name,
                 payload: {value: evt.target.value}
             });
         }
@@ -226,8 +226,8 @@ export function init(
     const TableSortRowsSelect = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSortByDimension>({
-                name: ActionName.FreqctSortByDimension,
+            dispatcher.dispatch<typeof Actions.FreqctSortByDimension>({
+                name: Actions.FreqctSortByDimension.name,
                 payload: {
                     dim: Dimensions.FIRST,
                     attr: evt.target.value
@@ -257,8 +257,8 @@ export function init(
     const TableSortColsSelect = (props) => {
 
         const handleChange = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSortByDimension>({
-                name: ActionName.FreqctSortByDimension,
+            dispatcher.dispatch<typeof Actions.FreqctSortByDimension>({
+                name: Actions.FreqctSortByDimension.name,
                 payload: {
                     dim: Dimensions.SECOND,
                     attr: evt.target.value
@@ -288,22 +288,22 @@ export function init(
     const FieldsetBasicOptions = (props) => {
 
         const handleClick = (evt) => {
-            dispatcher.dispatch<Actions.FreqctSortByDimension>({
-                name: ActionName.FreqctSortByDimension,
+            dispatcher.dispatch<typeof Actions.FreqctSortByDimension>({
+                name: Actions.FreqctSortByDimension.name,
                 payload: {
                     dim: Dimensions.FIRST,
                     attr: evt.target.value
                 }
             });
-            dispatcher.dispatch<Actions.FreqctSortByDimension>({
-                name: ActionName.FreqctSortByDimension,
+            dispatcher.dispatch<typeof Actions.FreqctSortByDimension>({
+                name: Actions.FreqctSortByDimension.name,
                 payload: {
                     dim: Dimensions.SECOND,
                     attr: evt.target.value
                 }
             });
-            dispatcher.dispatch<Actions.FreqctSetDisplayQuantity>({
-                name: ActionName.FreqctSetDisplayQuantity,
+            dispatcher.dispatch<typeof Actions.FreqctSetDisplayQuantity>({
+                name: Actions.FreqctSetDisplayQuantity.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -424,8 +424,8 @@ export function init(
         };
 
         const handlePFilter = () => {
-            dispatcher.dispatch<Actions.FreqctApplyQuickFilter>({
-                name: ActionName.FreqctApplyQuickFilter,
+            dispatcher.dispatch<typeof Actions.FreqctApplyQuickFilter>({
+                name: Actions.FreqctApplyQuickFilter.name,
                 payload: {
                     url: props.pfilter
                 }
@@ -781,8 +781,8 @@ export function init(
 
         const handleClickHighlightedGroupFn = (val) => {
             return () => {
-                dispatcher.dispatch<Actions.FreqctSetHighlightedGroup>({
-                    name: ActionName.FreqctSetHighlightedGroup,
+                dispatcher.dispatch<typeof Actions.FreqctSetHighlightedGroup>({
+                    name: Actions.FreqctSetHighlightedGroup.name,
                     payload: {
                         value: val
                     }
@@ -946,8 +946,8 @@ export function init(
         }
 
         _handleHighlightedGroupClose() {
-            dispatcher.dispatch<Actions.FreqctSetHighlightedGroup>({
-                name: ActionName.FreqctSetHighlightedGroup,
+            dispatcher.dispatch<typeof Actions.FreqctSetHighlightedGroup>({
+                name: Actions.FreqctSetHighlightedGroup.name,
                 payload: {
                     value: [null, null]
                 }
@@ -955,14 +955,14 @@ export function init(
         }
 
         _resetHighlight() {
-            dispatcher.dispatch<Actions.FreqctReset2DCoordHighlight>({
-                name: ActionName.FreqctReset2DCoordHighlight
+            dispatcher.dispatch<typeof Actions.FreqctReset2DCoordHighlight>({
+                name: Actions.FreqctReset2DCoordHighlight.name
             });
         }
 
         _highlightItem(i:number, j:number) {
-            dispatcher.dispatch<Actions.FreqctHighlight2DCoord>({
-                name: ActionName.FreqctHighlight2DCoord,
+            dispatcher.dispatch<typeof Actions.FreqctHighlight2DCoord>({
+                name: Actions.FreqctHighlight2DCoord.name,
                 payload: {
                     coord: [i, j]
                 }
@@ -1039,8 +1039,8 @@ export function init(
         }
 
         _handleModeSwitch(evt) {
-            dispatcher.dispatch<Actions.SetCtSaveMode>({
-                name: ActionName.SetCtSaveMode,
+            dispatcher.dispatch<typeof Actions.SetCtSaveMode>({
+                name: Actions.SetCtSaveMode.name,
                 payload: {value: evt.target.value}
             });
             this.setState({mode: evt.target.value});
@@ -1058,8 +1058,8 @@ export function init(
         }
 
         componentDidMount() {
-            dispatcher.dispatch<Actions.SetCtSaveMode>({
-                name: ActionName.SetCtSaveMode,
+            dispatcher.dispatch<typeof Actions.SetCtSaveMode>({
+                name: Actions.SetCtSaveMode.name,
                 payload: {value: this.state.mode}
             });
         }

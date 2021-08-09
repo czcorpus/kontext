@@ -25,7 +25,7 @@ import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from '../save';
 import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/dataRows';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions, ActionName } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/actions';
 import * as S from './style';
 
 // --------------------------- exported types --------------------------------------
@@ -76,15 +76,15 @@ export function init(
     const Paginator:React.FC<PaginatorProps> = (props) => {
 
         const handlePageChangeByClick = (curr, step) => {
-            dispatcher.dispatch<Actions.ResultSetCurrentPage>({
-                name: ActionName.ResultSetCurrentPage,
+            dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
+                name: Actions.ResultSetCurrentPage.name,
                 payload: {value: String(Number(curr) + step)}
             });
         };
 
         const handlePageChange = (evt) => {
-            dispatcher.dispatch<Actions.ResultSetCurrentPage>({
-                name: ActionName.ResultSetCurrentPage,
+            dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
+                name: Actions.ResultSetCurrentPage.name,
                 payload: {value: evt.target.value}
             });
         };
@@ -142,16 +142,16 @@ export function init(
     }> = (props) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
-            dispatcher.dispatch<Actions.ResultSetMinFreqVal>({
-                name: ActionName.ResultSetMinFreqVal,
+            dispatcher.dispatch<typeof Actions.ResultSetMinFreqVal>({
+                name: Actions.ResultSetMinFreqVal.name,
                 payload: {value: evt.target.value}
             });
         };
 
         const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
             if (evt.key === Keyboard.Value.ENTER) {
-                dispatcher.dispatch<Actions.ResultApplyMinFreq>({
-                    name: ActionName.ResultApplyMinFreq,
+                dispatcher.dispatch<typeof Actions.ResultApplyMinFreq>({
+                    name: Actions.ResultApplyMinFreq.name,
                     payload: {}
                 });
                 evt.preventDefault();
@@ -180,8 +180,8 @@ export function init(
     const FilterForm:React.FC<FilterFormProps> = (props) => {
 
         const handleApplyClick = (evt) => {
-            dispatcher.dispatch<Actions.ResultApplyMinFreq>({
-                name: ActionName.ResultApplyMinFreq,
+            dispatcher.dispatch<typeof Actions.ResultApplyMinFreq>({
+                name: Actions.ResultApplyMinFreq.name,
                 payload: {}
             });
         };
@@ -202,8 +202,8 @@ export function init(
     class FreqResultView extends React.Component<FreqDataRowsModelState> {
 
         _handleSaveFormClose() {
-            dispatcher.dispatch<Actions.ResultCloseSaveForm>({
-                name: ActionName.ResultCloseSaveForm,
+            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
+                name: Actions.ResultCloseSaveForm.name,
                 payload: {}
             });
         }

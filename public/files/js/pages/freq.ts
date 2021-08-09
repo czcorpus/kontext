@@ -47,7 +47,7 @@ import { List, Dict } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { ActionName } from '../models/freqs/actions';
+import { Actions } from '../models/freqs/actions';
 
 
 /**
@@ -374,7 +374,7 @@ class FreqPage {
                     args,
                     {
                         onPopStateAction: {
-                            name: ActionName.PopHistory,
+                            name: Actions.PopHistory.name,
                             payload: {
                                 currentPage: state.currentPage,
                                 flimit: state.flimit,

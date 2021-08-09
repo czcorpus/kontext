@@ -26,7 +26,7 @@ import {Freq2DTableModel} from './twoDimension/table2d';
 import {Freq2DFlatViewModel} from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { ActionName, Actions } from './actions';
+import { Actions } from './actions';
 
 
 
@@ -97,49 +97,49 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                         state.toLine.value = `${state.quickSaveRowLimit}`
                     });
                     this.suspend({}, (action, syncData) =>
-                        action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
+                        action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
                     ).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.ResultPrepareSubmitArgsDone).payload.data);
+                                (action as typeof Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
                     )
                 }
             }
         );
 
-        this.addActionHandler<Actions.ResultCloseSaveForm>(
-            ActionName.ResultCloseSaveForm,
+        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
+            Actions.ResultCloseSaveForm.name,
             action => this.changeState(state => {state.formIsActive = false})
         );
 
-        this.addActionHandler<Actions.SaveFormSetFormat>(
-            ActionName.SaveFormSetFormat,
+        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
+            Actions.SaveFormSetFormat.name,
             action => this.changeState(state => {state.saveformat = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetFromLine>(
-            ActionName.SaveFormSetFromLine,
+        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
+            Actions.SaveFormSetFromLine.name,
             action => this.changeState(state => {state.fromLine.value = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetToLine>(
-            ActionName.SaveFormSetToLine,
+        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
+            Actions.SaveFormSetToLine.name,
             action => this.changeState(state => {state.toLine.value = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeHeading>(
-            ActionName.SaveFormSetIncludeHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeHeading>(
+            Actions.SaveFormSetIncludeHeading.name,
             action => this.changeState(state => {state.includeHeading = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSetIncludeColHeading>(
-            ActionName.SaveFormSetIncludeColHeading,
+        this.addActionHandler<typeof Actions.SaveFormSetIncludeColHeading>(
+            Actions.SaveFormSetIncludeColHeading.name,
             action => this.changeState(state => {state.includeColHeaders = action.payload.value})
         );
 
-        this.addActionHandler<Actions.SaveFormSubmit>(
-            ActionName.SaveFormSubmit,
+        this.addActionHandler<typeof Actions.SaveFormSubmit>(
+            Actions.SaveFormSubmit.name,
             action => {
                 let err;
                 this.changeState(state => {err = this.validateForm(state)});
@@ -149,11 +149,11 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                 } else {
                     this.changeState(state => {state.formIsActive = false});
                     this.suspend({}, (action, syncData) => {
-                        return action.name === ActionName.ResultPrepareSubmitArgsDone ? null : syncData
+                        return action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
                     }).subscribe(
                         (action) => {
                             this.submit(
-                                (action as Actions.ResultPrepareSubmitArgsDone).payload.data);
+                                (action as typeof Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
                     )
                 }
@@ -218,8 +218,8 @@ export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModel
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;
 
-        this.addActionHandler<Actions.SetCtSaveMode>(
-            ActionName.SetCtSaveMode,
+        this.addActionHandler<typeof Actions.SetCtSaveMode>(
+            Actions.SetCtSaveMode.name,
             action => this.changeState(state => {state.saveMode = action.payload.value})
         );
 

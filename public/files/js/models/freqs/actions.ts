@@ -28,344 +28,291 @@ import { ColorMappings } from './twoDimension/table2d';
 import { HistoryState } from './common';
 
 
-export enum ActionName {
-    ResultSetMinFreqVal = 'FREQ_RESULT_SET_MIN_FREQ_VAL',
-    ResultApplyMinFreq = 'FREQ_RESULT_APPLY_MIN_FREQ',
-    ResultDataLoaded = 'FREQ_RESULT_DATA_LOADED',
-    StatePushToHistory = 'FREQ_STATE_PUSH_TO_HISTORY',
-    PopHistory = 'FREQ_POP_HISTORY',
-    ResultSortByColumn = 'FREQ_RESULT_SORT_BY_COLUMN',
-    ResultSetCurrentPage = 'FREQ_RESULT_SET_CURRENT_PAGE',
-    ResultCloseSaveForm = 'FREQ_RESULT_CLOSE_SAVE_FORM',
-    ResultPrepareSubmitArgsDone = 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE',
-    ResultApplyQuickFilter = 'FREQ_RESULT_APPLY_QUICK_FILTER',
-    SaveFormSetFormat = 'FREQ_SAVE_FORM_SET_FORMAT',
-    SaveFormSetFromLine = 'FREQ_SAVE_FORM_SET_FROM_LINE',
-    SaveFormSetToLine = 'FREQ_SAVE_FORM_SET_TO_LINE',
-    SaveFormSetIncludeHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING',
-    SaveFormSetIncludeColHeading = 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS',
-    SaveFormSubmit = 'FREQ_SAVE_FORM_SUBMIT',
-    SetCtSaveMode = 'FREQ_CT_SET_SAVE_MODE',
-    MLSetFLimit = 'FREQ_ML_SET_FLIMIT',
-    MLAddLevel = 'FREQ_ML_ADD_LEVEL',
-    MLRemoveLevel = 'FREQ_ML_REMOVE_LEVEL',
-    MLChangeLevel = 'FREQ_ML_CHANGE_LEVEL',
-    MLSetMlxAttr = 'FREQ_ML_SET_MLXATTR',
-    MLSetMlxiCase = 'FREQ_ML_SET_MLXICASE',
-    MLSetMlxctxIndex = 'FREQ_ML_SET_MLXCTX_INDEX',
-    MLSetAlignType = 'FREQ_ML_SET_ALIGN_TYPE',
-    MLSubmit = 'FREQ_ML_SUBMIT',
-    TTSetFttAttr = 'FREQ_TT_SET_FTTATTR',
-    TTSetIncludeEmpty = 'FREQ_TT_SET_FTT_INCLUDE_EMPTY',
-    TTSetFLimit = 'FREQ_TT_SET_FLIMIT',
-    TTSubmit = 'FREQ_TT_SUBMIT',
-    FreqctFormSetDimensionAttr = 'FREQ_CT_FORM_SET_DIMENSION_ATTR',
-    FreqctFormSetMinFreqType = 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE',
-    FreqctFormSetMinFreq = 'FREQ_CT_FORM_SET_MIN_FREQ',
-    FreqctFormSetCtx = 'FREQ_CT_FORM_SET_CTX',
-    FreqctFormSetAlignType = 'FREQ_CT_FORM_SET_ALIGN_TYPE',
-    FreqctFormSubmit = 'FREQ_CT_SUBMIT',
-    FreqctSetAlphaLevel = 'FREQ_CT_SET_ALPHA_LEVEL',
-    FreqctSetMinFreq = 'FREQ_CT_SET_MIN_FREQ',
-    FreqctSetEmptyVecVisibility = 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY',
-    FreqctTransposeTable = 'FREQ_CT_TRANSPOSE_TABLE',
-    FreqctSortByDimension = 'FREQ_CT_SORT_BY_DIMENSION',
-    FreqctSetDisplayQuantity = 'FREQ_CT_SET_DISPLAY_QUANTITY',
-    FreqctSetColorMapping = 'FREQ_CT_SET_COLOR_MAPPING',
-    FreqctSetHighlightedGroup = 'FREQ_CT_SET_HIGHLIGHTED_GROUP',
-    FreqctSortFlatList = 'FREQ_CT_SORT_FLAT_LIST',
-    FreqctHighlight2DCoord = 'FREQ_CT_HIGHLIGHT_2D_COORD',
-    FreqctReset2DCoordHighlight = 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT',
-    FreqctApplyQuickFilter = 'FREQ_CT_APPLY_QUICK_FILTER',
+export class Actions {
 
-}
+    static ResultSetMinFreqVal: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
+        };
 
+    static ResultApplyMinFreq: Action<{
+    }> = {
+            name: 'FREQ_RESULT_APPLY_MIN_FREQ'
+        };
 
-export namespace Actions {
+    static ResultDataLoaded: Action<{
+        data: Array<ResultBlock>;
+    }> = {
+            name: 'FREQ_RESULT_DATA_LOADED'
+        };
 
-    export interface ResultSetMinFreqVal extends Action<{
-        value:string;
-    }> {
-        name: ActionName.ResultSetMinFreqVal;
-    }
+    static StatePushToHistory: Action<{
+    }> = {
+            name: 'FREQ_STATE_PUSH_TO_HISTORY'
+        };
 
-    export interface ResultApplyMinFreq extends Action<{
-    }> {
-        name: ActionName.ResultApplyMinFreq;
-    }
+    static PopHistory: Action<HistoryState> = {
+        name: 'FREQ_POP_HISTORY'
+    };
 
-    export interface ResultDataLoaded extends Action<{
-        data:Array<ResultBlock>;
-    }> {
-        name: ActionName.ResultDataLoaded;
-    }
+    static ResultSortByColumn: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_RESULT_SORT_BY_COLUMN'
+        };
 
-    export interface StatePushToHistory extends Action<{
-    }> {
-        name: ActionName.StatePushToHistory;
-    }
+    static ResultSetCurrentPage: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_RESULT_SET_CURRENT_PAGE'
+        };
 
-    export interface PopHistory extends Action<HistoryState> {
-        name: ActionName.PopHistory;
-    }
+    static ResultCloseSaveForm: Action<{
+    }> = {
+            name: 'FREQ_RESULT_CLOSE_SAVE_FORM'
+        };
 
-    export interface ResultSortByColumn extends Action<{
-        value:string;
-    }> {
-        name: ActionName.ResultSortByColumn;
-    }
+    static ResultPrepareSubmitArgsDone: Action<{
+        data: MultiDict;
+    }> = {
+            name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
+        };
 
-    export interface ResultSetCurrentPage extends Action<{
-        value:string;
-    }> {
-        name: ActionName.ResultSetCurrentPage;
-    }
+    static ResultApplyQuickFilter: Action<{
+        url: string;
+        blankWindow: boolean;
+    }> = {
+            name: 'FREQ_RESULT_APPLY_QUICK_FILTER'
+        };
 
-    export interface ResultCloseSaveForm extends Action<{
-    }> {
-        name: ActionName.ResultCloseSaveForm;
-    }
+    static SaveFormSetFormat: Action<{
+        value: SaveData.Format;
+    }> = {
+            name: 'FREQ_SAVE_FORM_SET_FORMAT'
+        };
 
-    export interface ResultPrepareSubmitArgsDone extends Action<{
-        data:MultiDict;
-    }> {
-        name: ActionName.ResultPrepareSubmitArgsDone;
-    }
+    static SaveFormSetFromLine: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_SAVE_FORM_SET_FROM_LINE'
+        };
 
-    export interface ResultApplyQuickFilter extends Action<{
-        url:string;
-        blankWindow:boolean;
-    }> {
-        name: ActionName.ResultApplyQuickFilter;
-    }
+    static SaveFormSetToLine: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_SAVE_FORM_SET_TO_LINE'
+        };
 
-    export interface SaveFormSetFormat extends Action<{
-        value:SaveData.Format;
-    }> {
-        name: ActionName.SaveFormSetFormat;
-    }
+    static SaveFormSetIncludeHeading: Action<{
+        value: boolean;
+    }> = {
+            name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING'
+        };
 
-    export interface SaveFormSetFromLine extends Action<{
-        value:string;
-    }> {
-        name: ActionName.SaveFormSetFromLine;
-    }
+    static SaveFormSetIncludeColHeading: Action<{
+        value: boolean;
+    }> = {
+            name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
+        };
 
-    export interface SaveFormSetToLine extends Action<{
-        value:string;
-    }> {
-        name: ActionName.SaveFormSetToLine;
-    }
+    static SaveFormSubmit: Action<{
+    }> = {
+            name: 'FREQ_SAVE_FORM_SUBMIT'
+        };
 
-    export interface SaveFormSetIncludeHeading extends Action<{
-        value:boolean;
-    }> {
-        name: ActionName.SaveFormSetIncludeHeading;
-    }
+    static SetCtSaveMode: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_CT_SET_SAVE_MODE'
+        };
 
-    export interface SaveFormSetIncludeColHeading extends Action<{
-        value:boolean;
-    }> {
-        name: ActionName.SaveFormSetIncludeColHeading;
-    }
+    static MLSetFLimit: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_ML_SET_FLIMIT'
+        };
 
-    export interface SaveFormSubmit extends Action<{
-    }> {
-        name: ActionName.SaveFormSubmit;
-    }
+    static MLAddLevel: Action<{
+    }> = {
+            name: 'FREQ_ML_ADD_LEVEL'
+        };
 
-    export interface SetCtSaveMode extends Action<{
-        value:string;
-    }> {
-        name: ActionName.SetCtSaveMode;
-    }
+    static MLRemoveLevel: Action<{
+        levelIdx: number;
+    }> = {
+            name: 'FREQ_ML_REMOVE_LEVEL'
+        };
 
-    export interface MLSetFLimit extends Action<{
-        value:string;
-    }> {
-        name: ActionName.MLSetFLimit;
-    }
+    static MLChangeLevel: Action<{
+        levelIdx: number;
+        direction: string;
+    }> = {
+            name: 'FREQ_ML_CHANGE_LEVEL'
+        };
 
-    export interface MLAddLevel extends Action<{
-    }> {
-        name: ActionName.MLAddLevel;
-    }
+    static MLSetMlxAttr: Action<{
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'FREQ_ML_SET_MLXATTR'
+        };
 
-    export interface MLRemoveLevel extends Action<{
-        levelIdx:number;
-    }> {
-        name: ActionName.MLRemoveLevel;
-    }
+    static MLSetMlxiCase: Action<{
+        levelIdx: number;
+    }> = {
+            name: 'FREQ_ML_SET_MLXICASE'
+        };
 
-    export interface MLChangeLevel extends Action<{
-        levelIdx:number;
-        direction:string;
-    }> {
-        name: ActionName.MLChangeLevel;
-    }
+    static MLSetMlxctxIndex: Action<{
+        levelIdx: number;
+        value: string;
+    }> = {
+            name: 'FREQ_ML_SET_MLXCTX_INDEX'
+        };
 
-    export interface MLSetMlxAttr extends Action<{
-        levelIdx:number;
-        value:string;
-    }> {
-        name: ActionName.MLSetMlxAttr;
-    }
+    static MLSetAlignType: Action<{
+        levelIdx: number;
+        value: AlignTypes;
+    }> = {
+            name: 'FREQ_ML_SET_ALIGN_TYPE'
+        };
 
-    export interface MLSetMlxiCase extends Action<{
-        levelIdx:number;
-    }> {
-        name: ActionName.MLSetMlxiCase;
-    }
+    static MLSubmit: Action<{
+    }> = {
+            name: 'FREQ_ML_SUBMIT'
+        };
 
-    export interface MLSetMlxctxIndex extends Action<{
-        levelIdx:number;
-        value:string;
-    }> {
-        name: ActionName.MLSetMlxctxIndex;
-    }
+    static TTSetFttAttr: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_TT_SET_FTTATTR'
+        };
 
-    export interface MLSetAlignType extends Action<{
-        levelIdx:number;
-        value:AlignTypes;
-    }> {
-        name: ActionName.MLSetAlignType;
-    }
+    static TTSetIncludeEmpty: Action<{
+    }> = {
+            name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY'
+        };
 
-    export interface MLSubmit extends Action<{
-    }> {
-        name: ActionName.MLSubmit;
-    }
+    static TTSetFLimit: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_TT_SET_FLIMIT'
+        };
 
-    export interface TTSetFttAttr extends Action<{
-        value:string;
-    }> {
-        name: ActionName.TTSetFttAttr;
-    }
+    static TTSubmit: Action<{
+    }> = {
+            name: 'FREQ_TT_SUBMIT'
+        };
 
-    export interface TTSetIncludeEmpty extends Action<{
-    }> {
-        name: ActionName.TTSetIncludeEmpty;
-    }
+    static FreqctFormSetDimensionAttr: Action<{
+        dimension: Dimensions;
+        value: string;
+    }> = {
+            name: 'FREQ_CT_FORM_SET_DIMENSION_ATTR'
+        };
 
-    export interface TTSetFLimit extends Action<{
-        value:string;
-    }> {
-        name: ActionName.TTSetFLimit;
-    }
+    static FreqctFormSetMinFreqType: Action<{
+        value: FreqFilterQuantities;
+    }> = {
+            name: 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE'
+        };
 
-    export interface TTSubmit extends Action<{
-    }> {
-        name: ActionName.TTSubmit;
-    }
+    static FreqctFormSetMinFreq: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_CT_FORM_SET_MIN_FREQ'
+        };
 
-    export interface FreqctFormSetDimensionAttr extends Action<{
-        dimension:Dimensions;
-        value:string;
-    }> {
-        name: ActionName.FreqctFormSetDimensionAttr;
-    }
+    static FreqctFormSetCtx: Action<{
+        dim: Dimensions;
+        value: number;
+    }> = {
+            name: 'FREQ_CT_FORM_SET_CTX'
+        };
 
-    export interface FreqctFormSetMinFreqType extends Action<{
-        value:FreqFilterQuantities;
-    }> {
-        name: ActionName.FreqctFormSetMinFreqType;
-    }
+    static FreqctFormSetAlignType: Action<{
+        dim: Dimensions;
+        value: AlignTypes;
+    }> = {
+            name: 'FREQ_CT_FORM_SET_ALIGN_TYPE'
+        };
 
-    export interface FreqctFormSetMinFreq extends Action<{
-        value:string;
-    }> {
-        name: ActionName.FreqctFormSetMinFreq;
-    }
+    static FreqctFormSubmit: Action<{
+    }> = {
+            name: 'FREQ_CT_SUBMIT'
+        };
 
-    export interface FreqctFormSetCtx extends Action<{
-        dim:Dimensions;
-        value:number;
-    }> {
-        name: ActionName.FreqctFormSetCtx;
-    }
+    static FreqctSetAlphaLevel: Action<{
+        value: Maths.AlphaLevel;
+    }> = {
+            name: 'FREQ_CT_SET_ALPHA_LEVEL'
+        };
 
-    export interface FreqctFormSetAlignType extends Action<{
-        dim:Dimensions;
-        value:AlignTypes;
-    }> {
-        name: ActionName.FreqctFormSetAlignType;
-    }
+    static FreqctSetMinFreq: Action<{
+        value: string;
+    }> = {
+            name: 'FREQ_CT_SET_MIN_FREQ'
+        };
 
-    export interface FreqctFormSubmit extends Action<{
-    }> {
-        name: ActionName.FreqctFormSubmit;
-    }
+    static FreqctSetEmptyVecVisibility: Action<{
+        value: boolean;
+    }> = {
+            name: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY'
+        };
 
-    export interface FreqctSetAlphaLevel extends Action<{
-        value:Maths.AlphaLevel;
-    }> {
-        name: ActionName.FreqctSetAlphaLevel;
-    }
+    static FreqctTransposeTable: Action<{
+    }> = {
+            name: 'FREQ_CT_TRANSPOSE_TABLE'
+        };
 
-    export interface FreqctSetMinFreq extends Action<{
-        value:string;
-    }> {
-        name: ActionName.FreqctSetMinFreq;
-    }
+    static FreqctSortByDimension: Action<{
+        dim: Dimensions;
+        attr: string;
+    }> = {
+            name: 'FREQ_CT_SORT_BY_DIMENSION'
+        };
 
-    export interface FreqctSetEmptyVecVisibility extends Action<{
-        value:boolean;
-    }> {
-        name: ActionName.FreqctSetEmptyVecVisibility;
-    }
+    static FreqctSetDisplayQuantity: Action<{
+        value: FreqQuantities;
+    }> = {
+            name: 'FREQ_CT_SET_DISPLAY_QUANTITY'
+        };
 
-    export interface FreqctTransposeTable extends Action<{
-    }> {
-        name: ActionName.FreqctTransposeTable;
-    }
+    static FreqctSetColorMapping: Action<{
+        value: ColorMappings;
+    }> = {
+            name: 'FREQ_CT_SET_COLOR_MAPPING'
+        };
 
-    export interface FreqctSortByDimension extends Action<{
-        dim:Dimensions;
-        attr:string;
-    }> {
-        name: ActionName.FreqctSortByDimension;
-    }
+    static FreqctSetHighlightedGroup: Action<{
+        value: [number, number];
+    }> = {
+            name: 'FREQ_CT_SET_HIGHLIGHTED_GROUP'
+        };
 
-    export interface FreqctSetDisplayQuantity extends Action<{
-        value:FreqQuantities;
-    }> {
-        name: ActionName.FreqctSetDisplayQuantity;
-    }
+    static FreqctSortFlatList: Action<{
+        value: string;
+        reversed: boolean;
+    }> = {
+            name: 'FREQ_CT_SORT_FLAT_LIST'
+        };
 
-    export interface FreqctSetColorMapping extends Action<{
-        value:ColorMappings;
-    }> {
-        name: ActionName.FreqctSetColorMapping;
-    }
+    static FreqctHighlight2DCoord: Action<{
+        coord: [number, number];
+    }> = {
+            name: 'FREQ_CT_HIGHLIGHT_2D_COORD'
+        };
 
-    export interface FreqctSetHighlightedGroup extends Action<{
-        value:[number, number];
-    }> {
-        name: ActionName.FreqctSetHighlightedGroup;
-    }
+    static FreqctReset2DCoordHighlight: Action<{
+    }> = {
+            name: 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT'
+        };
 
-    export interface FreqctSortFlatList extends Action<{
-        value:string;
-        reversed:boolean;
-    }> {
-        name: ActionName.FreqctSortFlatList;
-    }
-
-    export interface FreqctHighlight2DCoord extends Action<{
-        coord:[number, number];
-    }> {
-        name: ActionName.FreqctHighlight2DCoord;
-    }
-
-    export interface FreqctReset2DCoordHighlight extends Action<{
-    }> {
-        name: ActionName.FreqctReset2DCoordHighlight;
-    }
-
-    export interface FreqctApplyQuickFilter extends Action<{
-        url:string;
-    }> {
-        name: ActionName.FreqctApplyQuickFilter;
-    }
+    static FreqctApplyQuickFilter: Action<{
+        url: string;
+    }> = {
+            name: 'FREQ_CT_APPLY_QUICK_FILTER'
+        };
 
 }

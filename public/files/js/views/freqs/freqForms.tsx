@@ -24,7 +24,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import { Kontext} from '../../types/common';
 import { TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel, MLFreqFormModelState } from '../../models/freqs/freqForms';
-import { Actions, ActionName } from '../../models/freqs/actions';
+import { Actions } from '../../models/freqs/actions';
 import { AlignTypes } from '../../models/freqs/twoDimension/common';
 
 import * as S from './style';
@@ -55,8 +55,8 @@ export function init(
     const StructAttrSelect:React.SFC<StructAttrSelectProps> = (props) => {
 
         const handleCheckboxChange = (evt) => {
-            dispatcher.dispatch<Actions.TTSetFttAttr>({
-                name: ActionName.TTSetFttAttr,
+            dispatcher.dispatch<typeof Actions.TTSetFttAttr>({
+                name: Actions.TTSetFttAttr.name,
                 payload: {
                     value: evt.target.value
                 }
@@ -108,14 +108,14 @@ export function init(
 
     // ---------------------- <FreqLimitInput /> --------------------------------------------
 
-    const FreqLimitInput:React.SFC<{
-        actionName:ActionName.MLSetFLimit|ActionName.TTSetFLimit;
+    const FreqLimitInput:React.FC<{
+        actionName:typeof Actions.MLSetFLimit.name|typeof Actions.TTSetFLimit.name;
         flimit:Kontext.FormValue<string>;
 
     }> = (props) => {
 
         const handleInputChange = (evt) => {
-            dispatcher.dispatch<Actions.MLSetFLimit|Actions.TTSetFLimit>({
+            dispatcher.dispatch<typeof Actions.MLSetFLimit|typeof Actions.TTSetFLimit>({
                 name: props.actionName,
                 payload: {
                     value: evt.target.value
@@ -141,8 +141,8 @@ export function init(
     const IncludeEmptyCheckbox:React.SFC<IncludeEmptyCheckboxProps> = (props) => {
 
         const handleCheckboxChange = () => {
-            dispatcher.dispatch<Actions.TTSetIncludeEmpty>({
-                name: ActionName.TTSetIncludeEmpty,
+            dispatcher.dispatch<typeof Actions.TTSetIncludeEmpty>({
+                name: Actions.TTSetIncludeEmpty.name,
                 payload: {}
             });
         };
@@ -192,7 +192,7 @@ export function init(
                                     </label>
                                 </th>
                                 <td>
-                                    <FreqLimitInput flimit={this.props.flimit} actionName={ActionName.TTSetFLimit} />
+                                    <FreqLimitInput flimit={this.props.flimit} actionName={Actions.TTSetFLimit.name} />
                                 </td>
                             </tr>
                             <tr>
@@ -233,8 +233,8 @@ export function init(
     const MLAttrSelection:React.SFC<MLAttrSelectionProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.MLSetMlxAttr>({
-                name: ActionName.MLSetMlxAttr,
+            dispatcher.dispatch<typeof Actions.MLSetMlxAttr>({
+                name: Actions.MLSetMlxAttr.name,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -262,8 +262,8 @@ export function init(
     const MLIgnoreCaseCheckbox:React.SFC<MLIgnoreCaseCheckboxProps> = (props) => {
 
         const handleChange = () => {
-            dispatcher.dispatch<Actions.MLSetMlxiCase>({
-                name: ActionName.MLSetMlxiCase,
+            dispatcher.dispatch<typeof Actions.MLSetMlxiCase>({
+                name: Actions.MLSetMlxiCase.name,
                 payload: {
                     levelIdx: props.levelIdx
                 }
@@ -285,8 +285,8 @@ export function init(
     const MLPositionSelect:React.SFC<MLPositionSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.MLSetMlxctxIndex>({
-                name: ActionName.MLSetMlxctxIndex,
+            dispatcher.dispatch<typeof Actions.MLSetMlxctxIndex>({
+                name: Actions.MLSetMlxctxIndex.name,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -314,8 +314,8 @@ export function init(
     const MLPosAlignmentSelect:React.SFC<MLPosAlignmentSelectProps> = (props) => {
 
         const handleSelection = (evt) => {
-            dispatcher.dispatch<Actions.MLSetAlignType>({
-                name: ActionName.MLSetAlignType,
+            dispatcher.dispatch<typeof Actions.MLSetAlignType>({
+                name: Actions.MLSetAlignType.name,
                 payload: {
                     levelIdx: props.levelIdx,
                     value: evt.target.value
@@ -342,8 +342,8 @@ export function init(
     const MLMoveLevelControl:React.SFC<MLMoveLevelControlProps> = (props) => {
 
         const handleClick = (direction) => {
-            dispatcher.dispatch<Actions.MLChangeLevel>({
-                name: ActionName.MLChangeLevel,
+            dispatcher.dispatch<typeof Actions.MLChangeLevel>({
+                name: Actions.MLChangeLevel.name,
                 payload: {
                     levelIdx: props.levelIdx,
                     direction: direction
@@ -393,8 +393,8 @@ export function init(
     const SingleLevelFieldTR:React.SFC<SingleLevelFieldTRProps> = (props) => {
 
         const handleRemoveLevelClick = () => {
-            dispatcher.dispatch<Actions.MLRemoveLevel>({
-                name: ActionName.MLRemoveLevel,
+            dispatcher.dispatch<typeof Actions.MLRemoveLevel>({
+                name: Actions.MLRemoveLevel.name,
                 payload: {
                     levelIdx: props.levelIdx
                 }
@@ -452,8 +452,8 @@ export function init(
         }
 
         _handleAddLevelClick() {
-            dispatcher.dispatch<Actions.MLAddLevel>({
-                name: ActionName.MLAddLevel,
+            dispatcher.dispatch<typeof Actions.MLAddLevel>({
+                name: Actions.MLAddLevel.name,
                 payload: {}
             });
         }
@@ -467,7 +467,7 @@ export function init(
                             <td>
                                 <label style={{fontWeight: 'bold'}}>
                                     {he.translate('freq__freq_limit_label')}:{'\u00a0'}
-                                    <FreqLimitInput flimit={this.props.flimit} actionName={ActionName.MLSetFLimit} />
+                                    <FreqLimitInput flimit={this.props.flimit} actionName={Actions.MLSetFLimit.name} />
                                 </label>
                             </td>
                             <td />
