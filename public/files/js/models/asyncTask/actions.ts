@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 
 
 export class Actions {

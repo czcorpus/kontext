@@ -24,13 +24,12 @@ import { tap, map } from 'rxjs/operators';
 import { Color, List, pipe, Dict, HTTP, tuple } from 'cnc-tskit';
 
 import { MultiDict } from '../../multidict';
-import { PluginInterfaces } from '../../types/plugins';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import * as PluginInterfaces from '../../types/plugins';
 import { PageModel } from '../../app/page';
 import { AudioPlayer, PlayerStatus } from './media';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { Actions } from './actions';
-import { AudioPlayerActions, DetailExpandPositions } from './common';
+import { AudioPlayerActions, DetailExpandPositions, WideCtx } from './common';
 
 /**
  *
@@ -715,7 +714,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      */
     private loadWholeDocument():Observable<any> {
         // TODO if mode speeches or a custom one, throw an error here
-        return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
+        return this.layoutModel.ajax$<WideCtx>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('structctx'),
             {
@@ -829,7 +828,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         args.set('detail_left_ctx', lft);
         args.set('detail_right_ctx', rgt);
 
-        return this.layoutModel.ajax$<AjaxResponse.WideCtx>(
+        return this.layoutModel.ajax$<WideCtx>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('widectx'),
             args,

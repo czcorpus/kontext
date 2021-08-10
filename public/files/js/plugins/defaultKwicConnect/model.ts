@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
-import { Kontext } from '../../types/common';
-import { Response as TTDistResponse } from '../../models/concordance/ttDistModel';
+import * as PluginInterfaces from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as ttResponse from '../../models/concordance/ttdist/response';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { MultiDict } from '../../multidict';
 import { StatefulModel, IFullActionControl } from 'kombo';
@@ -29,6 +29,7 @@ import { concatMap } from 'rxjs/operators';
 import { FreqServerArgs } from '../../models/freqs/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export enum KnownRenderers {
@@ -438,7 +439,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         args.set('freq_sort', 'freq');
         args.set('fmaxitems', KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
         args.set('format', 'json');
-        return this.pluginApi.ajax$<TTDistResponse.FreqData>(
+        return this.pluginApi.ajax$<ttResponse.FreqData>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('freqs'),
             args

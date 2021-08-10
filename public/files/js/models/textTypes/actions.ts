@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { TextTypes } from '../../types/common';
+import * as TextTypes from '../../types/textTypes';
 import { SelectionFilterMap } from './common';
 
 

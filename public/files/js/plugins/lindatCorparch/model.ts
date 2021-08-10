@@ -20,14 +20,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
-import { IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
 import { Action, StatefulModel } from 'kombo';
 import { forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { AjaxConcResponse } from '../../models/concordance/common';
 import { List, HTTP } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
+import { IPluginApi } from '../../types/plugins/common';
 
 export enum ParallelType {
     DEFAULT = 'default',
@@ -131,8 +131,11 @@ export class TreeWidgetModel extends StatefulModel<{}> implements IUnregistrable
 
     private corpusClickHandler:(ident: string) => void;
 
-    constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                corpusClickHandler:(ident: string) => void) {
+    constructor(
+        pluginApi:IPluginApi,
+        corpusIdent:Kontext.FullCorpusIdent,
+        corpusClickHandler:(ident: string) => void
+    ) {
         super(pluginApi.dispatcher(), {});
         this.pluginApi = pluginApi;
         this.corpusIdent = corpusIdent;

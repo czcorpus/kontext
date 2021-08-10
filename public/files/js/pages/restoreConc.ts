@@ -23,7 +23,7 @@ import { PageModel } from '../app/page';
 import { HitReloader } from '../models/concordance/concStatus';
 import { ConcRestoreModel } from '../models/concRestore';
 import { Actions } from '../models/concRestore/actions';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { init as viewInit } from '../views/restoreConc';
 
 

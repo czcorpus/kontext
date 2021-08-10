@@ -22,7 +22,6 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { FirstHitsServerArgs } from './common';
 import { MultiDict } from '../../multidict';
@@ -31,6 +30,7 @@ import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
 import { HTTP } from 'cnc-tskit';
+import { FirstHitsFormArgs } from './formArgs';
 
 
 export interface FirstHitsModelState {
@@ -42,10 +42,14 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly syncInitialArgs:AjaxResponse.FirstHitsFormArgs;
+    private readonly syncInitialArgs:FirstHitsFormArgs;
 
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel, syncInitialArgs:AjaxResponse.FirstHitsFormArgs) {
+    constructor(
+        dispatcher:IFullActionControl,
+        layoutModel:PageModel,
+        syncInitialArgs:FirstHitsFormArgs
+    ) {
         super(
             dispatcher,
             {
@@ -110,7 +114,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
         );
     }
 
-    syncFrom(fn:Observable<AjaxResponse.FirstHitsFormArgs>):Observable<AjaxResponse.FirstHitsFormArgs> {
+    syncFrom(fn:Observable<FirstHitsFormArgs>):Observable<FirstHitsFormArgs> {
         return fn.pipe(
             tap(
                 (data) => {

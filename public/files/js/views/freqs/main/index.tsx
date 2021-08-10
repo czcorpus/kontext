@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Keyboard, List } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from '../save';

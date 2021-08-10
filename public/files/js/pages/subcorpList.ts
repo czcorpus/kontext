@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../types/common';
-import { AjaxResponse } from '../types/ajaxResponses';
+import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
 import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/list';
 import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
+import { ServerSubcorpListItem } from '../models/subcorp/common';
 
 /**
  *
@@ -57,7 +57,7 @@ class SubcorpListPage {
             this.subcorpListModel = new SubcorpListModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                this.layoutModel.getConf<Array<AjaxResponse.ServerSubcorpListItem>>('SubcorpList'),
+                this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
                 this.layoutModel.getConf<SortKey>('SortKey'),
                 this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
                 this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),

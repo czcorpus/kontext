@@ -23,7 +23,7 @@ import { Observable } from 'rxjs';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { HTTP, List } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';

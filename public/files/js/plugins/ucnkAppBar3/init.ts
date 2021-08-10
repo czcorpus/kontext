@@ -22,7 +22,7 @@
 
 import { IFullActionControl, StatelessModel } from 'kombo';
 
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import * as toolbar from 'plugins/applicationBar/toolbar';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';

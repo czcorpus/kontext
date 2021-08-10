@@ -23,9 +23,9 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { List, Dict, pipe, tuple, HTTP, Strings } from 'cnc-tskit';
 
-import { TextTypes, Kontext } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
+import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
 import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
     WidgetView } from './common';
@@ -34,6 +34,8 @@ import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { PluginName } from '../../app/plugin';
+import { QueryFormArgs } from '../query/formArgs';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 
@@ -700,7 +702,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             TTSelOps.addValue(TTSelOps.clearValues(state.attributes[attrIdx]), newVal);
     }
 
-    syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
+    syncFrom(src:Observable<QueryFormArgs>):Observable<QueryFormArgs> {
         return src.pipe(
             tap(
                 (data) => {

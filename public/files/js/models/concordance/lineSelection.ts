@@ -22,7 +22,7 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { ConcLinesStorage } from './selectionStorage';
 import { PageModel } from '../../app/page';
 import { HTTP, List } from 'cnc-tskit';

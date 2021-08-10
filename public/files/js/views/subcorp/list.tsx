@@ -20,9 +20,9 @@
 
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem, SubcorpListModelState} from '../../models/subcorp/list';
-import { CoreViews } from '../../types/coreViews';
+import * as CoreViews from '../../types/coreViews';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 

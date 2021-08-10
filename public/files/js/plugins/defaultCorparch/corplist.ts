@@ -21,12 +21,13 @@ import { map } from 'rxjs/operators';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { List, HTTP, pipe, tuple } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { Actions } from './actions';
 import { CorplistItem, Filters, CorplistDataResponse } from './common';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {

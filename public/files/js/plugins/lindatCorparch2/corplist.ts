@@ -16,16 +16,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import * as common from './common';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {

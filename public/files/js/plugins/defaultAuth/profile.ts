@@ -19,16 +19,18 @@
  */
 
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { Observable, of as rxOf, throwError } from 'rxjs';
+import { Observable, of as rxOf } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
-import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
+import { HTTP, List, pipe } from 'cnc-tskit';
 
-import {Kontext} from '../../types/common';
-import {IPluginApi} from '../../types/plugins';
-import {MultiDict} from '../../multidict';
+import * as Kontext from '../../types/kontext';
+import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
-import { UsernameTestResponse, validationStatusHasErrors, SignUpResponse, ValidationStatus,
-    PasswordSetResponse, newValidationStatus, SubmitFormErrors } from './common';
+import {
+    UsernameTestResponse, validationStatusHasErrors, SignUpResponse,
+    ValidationStatus, PasswordSetResponse, newValidationStatus,
+    SubmitFormErrors } from './common';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface UserProfileState {

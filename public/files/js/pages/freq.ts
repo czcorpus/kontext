@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext, TextTypes } from '../types/common';
-import { AjaxResponse, FreqResultResponse } from '../types/ajaxResponses';
+import * as Kontext from '../types/kontext';
+import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
@@ -48,6 +48,8 @@ import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/freqs/actions';
+import { Block } from '../models/freqs/response';
+import { ConcFormArgs } from '../models/query/formArgs';
 
 
 /**
@@ -288,7 +290,7 @@ class FreqPage {
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
                     initialData: importFreqData(
                         this.layoutModel,
-                        this.layoutModel.getConf<Array<FreqResultResponse.Block>>('FreqResultData'),
+                        this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                         this.layoutModel.getConf<number>('FreqItemsPerPage'),
                         1
                     ),
@@ -332,7 +334,7 @@ class FreqPage {
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);

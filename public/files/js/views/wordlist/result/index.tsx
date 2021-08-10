@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Keyboard } from 'cnc-tskit';
 import { IActionDispatcher, BoundWithProps, IModel, Bound } from 'kombo';
 import { WordlistResultModel, WordlistResultModelState } from '../../../models/wordlist/main';

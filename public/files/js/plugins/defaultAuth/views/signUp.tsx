@@ -23,8 +23,8 @@ import { IActionDispatcher, Bound } from 'kombo';
 import { Subject, Observable } from 'rxjs';
 import { debounceTime } from 'rxjs/operators'
 
-import { Kontext } from '../../../types/common';
-import { UserProfileModel, UserProfileState } from './../profile';
+import * as Kontext from '../../../types/kontext';
+import { UserProfileModel, UserProfileState } from '../profile';
 import { UserProfileViews } from './profile';
 import { Actions } from '../actions';
 

@@ -21,15 +21,15 @@
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { MultiDict } from '../../multidict';
 import { IUnregistrable } from './common';
+import { AjaxConcResponse } from '../concordance/common';
 
 
 interface UnregistrationGroup {
@@ -40,6 +40,39 @@ interface UnregistrationGroup {
 export interface CorpusSwitchModelState {
     prevCorpora:Array<string>;
     isBusy:boolean;
+}
+
+export interface CorpusSwitchResponse extends AjaxConcResponse {
+    corpname:string; // deprecated
+    humanCorpname:string; // deprecated
+    corpusIdent:Kontext.FullCorpusIdent;
+    subcorpname:string;
+    baseAttr:string;
+    currentArgs:Array<[string, string]>;
+    concPersistenceOpId:string;
+    alignedCorpora:Array<string>;
+    availableAlignedCorpora:Array<Kontext.AttrItem>;
+    activePlugins:Array<string>;
+    queryOverview:Array<Kontext.QueryOperation>;
+    numQueryOps:number;
+    textTypesData:any; // TODO type
+    structsAndAttrs:Kontext.StructsAndAttrs;
+    menuData:any; // TODO type
+    Wposlist:Array<any>; // TODO type
+    AttrList:Array<any>; // TODO type
+    StructAttrList:Array<Kontext.AttrItem>;
+    StructList:Array<string>;
+    InputLanguages:{[corpname:string]:string};
+    ConcFormsArgs:any; // TODO type
+    CurrentSubcorp:string;
+    SubcorpList:Array<{v:string; n:string}>;
+    TextTypesNotes:string;
+    TextDirectionRTL:boolean;
+    // here it is impossible to determine a detailed type in a reasonable way
+    pluginData:{[plgName:string]:any};
+    DefaultVirtKeyboard:string;
+    SimpleQueryDefaultAttrs:Array<string>;
+    QSEnabled:boolean;
 }
 
 
@@ -137,7 +170,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             {}
                         )
                     ),
-                    this.appNavig.ajax$<AjaxResponse.CorpusSwitchResponse>(
+                    this.appNavig.ajax$<CorpusSwitchResponse>(
                         HTTP.Method.POST,
                         this.appNavig.createActionUrl('ajax_switch_corpus'),
                         {

@@ -22,7 +22,8 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
+import * as ViewOptions from '../../../types/viewOptions';
 import { init as lineExtrasViewsInit } from '../lineExtras';
 import { ConcordanceModel, ConcordanceModelState } from '../../../models/concordance/main';
 import { LineSelectionModel, LineSelectionModelState }
@@ -30,7 +31,9 @@ import { LineSelectionModel, LineSelectionModelState }
 import { ConcDetailModel } from '../../../models/concordance/detail';
 import { Actions } from '../../../models/concordance/actions';
 import { Actions as MainMenuActions } from '../../../models/mainMenu/actions';
-import { ConcToken, KWICSection, LineSelectionModes, TextChunk, Line as ConcLine } from '../../../models/concordance/common';
+import {
+    ConcToken, KWICSection, LineSelectionModes, TextChunk,
+    Line as ConcLine } from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
 
@@ -64,7 +67,13 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         }
     }
 
-    function getViewModeTitle(mode:ViewOptions.AttrViewMode, isKwic:boolean, supportsTokenConnect:boolean, tailAttrs:Array<string>):string {
+    function getViewModeTitle(
+        mode:ViewOptions.AttrViewMode,
+        isKwic:boolean,
+        supportsTokenConnect:boolean,
+        tailAttrs:Array<string>
+    ):string {
+
         const tokenConnectInfo1 = supportsTokenConnect ?
             he.translate('concview__click_to_see_external_token_info') : '';
         const tokenConnectInfo2 = supportsTokenConnect ?
@@ -72,7 +81,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
 
         if (mode === ViewOptions.AttrViewMode.MOUSEOVER ||
                 mode === ViewOptions.AttrViewMode.VISIBLE_KWIC && !isKwic) {
-            return tailAttrs.length > 0 ? `${tailAttrs.join(ATTR_SEPARATOR)} ${tokenConnectInfo2}` : tokenConnectInfo1;
+            return tailAttrs.length > 0 ?
+                `${tailAttrs.join(ATTR_SEPARATOR)} ${tokenConnectInfo2}` :
+                tokenConnectInfo1;
         }
         return tokenConnectInfo1;
     }

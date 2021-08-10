@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IPluginApi } from '../types/plugins';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { MultiDict } from '../multidict';
 import { CommonViews } from '../views/common';
-import { CoreViews } from '../types/coreViews';
+import * as CoreViews from '../types/coreViews';
 import { Observable } from 'rxjs';
 import { PageModel } from './page';
 import { ConcServerArgs } from '../models/concordance/common';
+import { IPluginApi } from '../types/plugins/common';
 
 
 export enum PluginName {

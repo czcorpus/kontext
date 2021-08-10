@@ -20,8 +20,7 @@
 
 /// <reference path="../types/compat.d.ts" />
 
-import { IPluginApi } from '../types/plugins';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { PluginApi } from './plugin';
 import { PageModel } from './page';
 import { ComponentTools } from './component';
@@ -30,6 +29,7 @@ import { UserSettings } from './userSettings';
 import { AppNavigation } from './navigation';
 import { ActionDispatcher } from 'kombo';
 import { Dict, List } from 'cnc-tskit';
+import { IPluginApi } from '../types/plugins/common';
 
 
 /**

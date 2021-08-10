@@ -22,11 +22,16 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { concatMap, map } from 'rxjs/operators';
 import { Actions } from './actions';
 import { PageModel } from '../../app/page';
-import { TextTypes } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { Observable } from 'rxjs';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { HTTP } from 'cnc-tskit';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
+
+
+export interface WithinMaxHits extends Kontext.AjaxResponse {
+    total:number;
+}
 
 
 export interface ConcSummaryModelState {
@@ -158,7 +163,7 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
     }
 
     private calculateAdHocIpm(state:ConcSummaryModelState, ttSelection:TextTypes.ExportedSelection):Observable<number> {
-        return this.layoutModel.ajax$<AjaxResponse.WithinMaxHits>(
+        return this.layoutModel.ajax$<WithinMaxHits>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'get_adhoc_subcorp_size'

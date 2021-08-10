@@ -25,8 +25,8 @@ import { Observable } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
-import { Kontext, TextTypes } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
@@ -36,20 +36,21 @@ import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from './cqleditor/attrs';
 import { highlightSyntaxStatic } from './cqleditor/parser';
+import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
 
 
 export interface QueryFormUserEntries {
     currQueryTypes:{[sourceId:string]:QueryType};
     // current queries values (e.g. when restoring a form state)
     currQueries:{[sourceId:string]:string};
-    currParsedQueries:{[sourceId:string]:AjaxResponse.SubmitEncodedSimpleTokens};
+    currParsedQueries:{[sourceId:string]:SubmitEncodedSimpleTokens};
     currPcqPosNegValues:{[sourceId:string]:'pos'|'neg'};
     currDefaultAttrValues:{[sourceId:string]:string};
     currUseRegexpValues:{[sourceId:string]:boolean};
@@ -87,8 +88,8 @@ export interface QueryInputSetQueryProps {
  *
  * @param data
  */
-export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArgs}):
-        AjaxResponse.QueryFormArgsResponse => {
+export const fetchQueryFormArgs = (data:{[ident:string]:ConcFormArgs}):
+        QueryFormArgsResponse => {
     const k = (() => {
         for (let p in data) {
             if (data.hasOwnProperty(p) && data[p].form_type === Kontext.ConcFormTypes.QUERY) {
@@ -99,7 +100,7 @@ export const fetchQueryFormArgs = (data:{[ident:string]:AjaxResponse.ConcFormArg
     })();
 
     if (k !== null) {
-        return data[k] as AjaxResponse.QueryFormArgsResponse;
+        return data[k] as QueryFormArgsResponse;
 
     } else {
         return {
@@ -730,7 +731,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         return this.state.activeWidgets[sourceId];
     }
 
-    syncFrom(src:Observable<AjaxResponse.QueryFormArgs>):Observable<AjaxResponse.QueryFormArgs> {
+    syncFrom(src:Observable<QueryFormArgs>):Observable<QueryFormArgs> {
         return src.pipe(
             tap(
                 (data) => {

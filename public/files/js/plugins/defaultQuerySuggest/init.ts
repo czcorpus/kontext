@@ -22,12 +22,15 @@
 import { List, pipe, tuple } from 'cnc-tskit';
 import { createElement } from 'react';
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, KnownRenderers, SuggestionsViews } from './view';
 import { isEmptyResponse, Model } from './model';
-import { isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickValue } from './frontends';
+import {
+    isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend,
+    isPosAttrPairRelClickValue } from './frontends';
 import { AnyProviderInfo } from './providers';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 /**

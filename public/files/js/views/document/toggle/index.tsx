@@ -20,8 +20,8 @@
 
 import * as React from 'react';
 
-import { Kontext } from '../../../types/common';
-import { CoreViews } from '../../../types/coreViews';
+import * as Kontext from '../../../types/kontext';
+import * as CoreViews from '../../../types/coreViews';
 import * as S from './style';
 
 

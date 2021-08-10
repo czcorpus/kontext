@@ -20,7 +20,7 @@
 
 import { StatelessModel, IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Actions } from './actions';

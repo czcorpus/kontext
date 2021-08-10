@@ -24,7 +24,7 @@ import { concatMap } from 'rxjs/operators';
 import { List, Ident, HTTP } from 'cnc-tskit';
 
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import {IActionDispatcher} from 'kombo';
-import {Kontext} from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
     from '../../models/common/layout';
 import { Subscription } from 'rxjs';

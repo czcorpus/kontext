@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 
@@ -38,7 +38,7 @@ export interface PqueryResultsSaveModelArgs {
 
 export interface PqueryResultsSaveModelState {
     formIsActive:boolean;
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     includeColHeaders:boolean;
     includeHeading:boolean;
     fromLine:Kontext.FormValue<string>;
@@ -61,9 +61,9 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
             dispatcher,
             {
                 formIsActive: false,
-                saveformat: SaveData.Format.CSV,
-                fromLine: {value: '1', isInvalid: false, isRequired: true},
-                toLine: {value: '', isInvalid: false, isRequired: false},
+                saveformat: 'csv',
+                fromLine: { value: '1', isInvalid: false, isRequired: true },
+                toLine: { value: '', isInvalid: false, isRequired: false },
                 includeHeading: false,
                 includeColHeaders: false,
                 quickSaveRowLimit: quickSaveRowLimit
@@ -198,7 +198,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
         args.set('to_line', isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
-            `pquery.${SaveData.formatToExt(this.state.saveformat)}`,
+            `pquery.${this.state.saveformat}`,
             this.layoutModel.createActionUrl('pquery/download', args.items())
         );
     }

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { Keyboard } from 'cnc-tskit';
 import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc';

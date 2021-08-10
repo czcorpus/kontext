@@ -23,8 +23,8 @@ import { throwError, Observable, interval, Subscription, forkJoin } from 'rxjs';
 import { tap, map, concatMap } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 
-import { ViewOptions } from '../../types/common';
-import { PluginInterfaces } from '../../types/plugins';
+import * as ViewOptions from '../../types/viewOptions';
+import * as PluginInterfaces from '../../types/plugins';
 import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';

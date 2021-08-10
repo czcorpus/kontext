@@ -19,7 +19,7 @@
  */
 
 import { Bound, IActionDispatcher } from 'kombo';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import * as React from 'react';
 import * as S from './style';
 import * as GS from './global-style';

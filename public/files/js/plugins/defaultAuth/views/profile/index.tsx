@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { Subscription } from 'rxjs';
 
-import { Kontext } from '../../../../types/common';
+import * as Kontext from '../../../../types/kontext';
 import { UserProfileModel, UserProfileState } from '../../profile';
 import { Actions } from '../../actions';
 import * as S from './style';

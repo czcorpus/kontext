@@ -20,10 +20,11 @@
  */
 
 import { DefaultTokenConnectBackend } from '../defaultTokenConnect/init';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as initDefaultView, Views as DefaultTokenConnectRenderers } from '../defaultTokenConnect/views';
 import { init as initLindatView, Views as LindatTokenConnectRenderers } from './view';
 import { KnownRenderers } from '../defaultKwicConnect/model';
+import { IPluginApi } from '../../types/plugins/common';
 
 declare var require:any;
 require('../defaultTokenConnect/style.css');
@@ -39,8 +40,13 @@ export class LindatTokenConnectBackend extends DefaultTokenConnectBackend {
 
     private lindatViews:LindatTokenConnectRenderers;
 
-    constructor(pluginApi:IPluginApi, defaultViews:DefaultTokenConnectRenderers,
-                lindatView:LindatTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
+    constructor(
+        pluginApi:IPluginApi,
+        defaultViews:DefaultTokenConnectRenderers,
+        lindatView:LindatTokenConnectRenderers,
+        alignedCorpora:Array<string>,
+        conf:ServerExportedConf
+    ) {
         super(pluginApi, defaultViews, alignedCorpora, conf);
         this.lindatViews = lindatView;
         this.alignedCorpora = alignedCorpora;

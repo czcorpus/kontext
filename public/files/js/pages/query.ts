@@ -21,8 +21,7 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Dict, id, List, pipe, tuple } from 'cnc-tskit';
 
-import { Kontext } from '../types/common';
-import { AjaxResponse } from '../types/ajaxResponses';
+import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
 import { TextTypesModel } from '../models/textTypes/main';
 import { FirstQueryFormModel } from '../models/query/first';
@@ -32,16 +31,19 @@ import { QueryContextModel } from '../models/query/context';
 import { UsageTipsModel } from '../models/usageTips';
 import { init as queryFormInit, QueryFormProps } from '../views/query/first';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
-import { PluginInterfaces } from '../types/plugins';
+import * as PluginInterfaces from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
-import { ConcLinesStorage, StorageUsingState, openStorage } from '../models/concordance/selectionStorage';
+import {
+    ConcLinesStorage, StorageUsingState,
+    openStorage } from '../models/concordance/selectionStorage';
 import { Actions as QueryActions } from '../models/query/actions';
 import { Actions as GlobalActions } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
+import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 
 
 /**
@@ -139,7 +141,7 @@ export class QueryPage {
         );
     }
 
-    createTTViews(queryFormArgs:AjaxResponse.QueryFormArgs):QueryFormProps {
+    createTTViews(queryFormArgs:QueryFormArgs):QueryFormProps {
         const textTypesData = this.layoutModel.getConf<any>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
@@ -187,7 +189,7 @@ export class QueryPage {
         };
     }
 
-    private initQueryModel(queryFormArgs:AjaxResponse.QueryFormArgs):void {
+    private initQueryModel(queryFormArgs:QueryFormArgs):void {
         const corpora = [this.layoutModel.getCorpusIdent().id].concat(
             this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
         this.queryModel = new FirstQueryFormModel(
@@ -314,10 +316,10 @@ export class QueryPage {
                 this.layoutModel
             );
 
-            const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            const concFormsArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
                 'ConcFormsArgs'
             );
-            const queryFormArgs = concFormsArgs['__new__'] as AjaxResponse.QueryFormArgs;
+            const queryFormArgs = concFormsArgs['__new__'] as QueryFormArgs;
             this.queryContextModel = new QueryContextModel(
                 this.layoutModel.dispatcher,
                 queryFormArgs

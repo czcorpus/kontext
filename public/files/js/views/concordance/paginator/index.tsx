@@ -25,7 +25,7 @@ import { Subscription } from 'rxjs';
 
 import { ConcordanceModel } from '../../../models/concordance/main';
 import { Actions } from '../../../models/concordance/actions'
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PaginationActions } from '../../../models/concordance/common';
 import * as S from './style';
 

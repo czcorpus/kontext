@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
 import { Speech, ConcDetailModel, ConcDetailModelState } from '../../../models/concordance/detail';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { Actions } from '../../../models/concordance/actions';
 import { Color, pipe, List, Dict } from 'cnc-tskit';
 import { init as initMediaViews } from '../media';

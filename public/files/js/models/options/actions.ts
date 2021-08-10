@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { ViewOptsResponse, GeneralOptionsShared } from './common';
-import { ViewOptions } from '../../types/common';
+import * as ViewOptions from '../../types/viewOptions';
 
 
 export class Actions {

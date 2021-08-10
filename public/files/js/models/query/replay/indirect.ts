@@ -20,7 +20,7 @@
 
 import { QueryInfoModel } from './info';
 import { ExtendedQueryOperation, importEncodedOperation } from './common';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';

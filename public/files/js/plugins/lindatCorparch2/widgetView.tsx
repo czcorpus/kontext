@@ -18,7 +18,7 @@
 
 import * as React from 'react';
 import { Keyboard, List } from 'cnc-tskit';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { FavListItem, CorplistWidgetModelState, CorplistWidgetModel } from './widget';
 import { CorplistItem } from './common';
 import { SearchKeyword, SearchResultRow } from './search';

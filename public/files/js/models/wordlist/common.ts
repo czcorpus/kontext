@@ -19,8 +19,8 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { SaveData } from '../../app/navigation';
-import { Kontext } from '../../types/common';
+import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext';
 
 
 export enum WlnumsTypes {
@@ -50,7 +50,7 @@ export interface WordlistSaveArgs {
     usesubcorp:string;
     from_line:number;
     to_line:number;
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     colheaders:boolean;
     heading:boolean;
 }

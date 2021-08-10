@@ -23,7 +23,8 @@ import { tap, concatMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { pipe, List, Dict, HTTP, tuple } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as ViewOptions from '../../types/viewOptions';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';

@@ -21,14 +21,14 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { init as inputInit } from '../input';
 import { FilterFormModel, FilterFormModelState } from '../../../models/query/filter';
 import { FirstHitsModelState } from '../../../models/query/firstHits';
 import { WithinBuilderModel } from '../../../models/query/withinBuilder';
 import { VirtualKeyboardModel } from '../../../models/query/virtualKeyboard';
 import { FirstHitsModel } from '../../../models/query/firstHits';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import { UsageTipsModel } from '../../../models/usageTips';
 import { Actions } from '../../../models/query/actions';
 import { Keyboard } from 'cnc-tskit';

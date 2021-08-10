@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext} from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs';
 import { List, tuple, pipe, Dict } from 'cnc-tskit';

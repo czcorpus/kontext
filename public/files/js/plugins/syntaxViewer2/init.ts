@@ -21,9 +21,12 @@
 import { IFullActionControl, StatefulModel, IModel } from 'kombo';
 import { HTTP } from 'cnc-tskit';
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { createGenerator, SourceData, DetailAttrOrders } from './treeView';
+import * as PluginInterfaces from '../../types/plugins';
+import { DetailAttrOrders } from './common';
+import { createGenerator } from './treeView';
 import { Actions as ConcActions } from '../../models/concordance/actions';
+import * as srcData from './srcdata';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 declare var require:any;
@@ -37,7 +40,7 @@ interface ServerExportedData {
 }
 
 export interface SyntaxTreeViewerState extends PluginInterfaces.SyntaxViewer.BaseState {
-    data:Array<SourceData.Data>;
+    data:Array<srcData.Data>;
 }
 
 /**
@@ -144,7 +147,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
 
     render(state:SyntaxTreeViewerState):void {
 
-        this.pluginApi.ajax$<Array<SourceData.Data>>(
+        this.pluginApi.ajax$<Array<srcData.Data>>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {

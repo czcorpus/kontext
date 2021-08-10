@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
 import { Actions } from '../../../models/concordance/actions';
 import { Actions as UserActions } from '../../../models/user/actions';

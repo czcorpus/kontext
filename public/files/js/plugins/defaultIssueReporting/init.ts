@@ -18,11 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PluginInterfaces, IPluginApi} from '../../types/plugins';
-import {init as viewInit} from './view';
+import * as PluginInterfaces from '../../types/plugins';
+import { init as viewInit } from './view';
 import { StatelessModel } from 'kombo';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface IssueReportingModelState {

@@ -22,8 +22,23 @@ import { of as rxOf, zip } from 'rxjs';
 import { expand, takeWhile, delay, concatMap, take } from 'rxjs/operators';
 import { HTTP } from 'cnc-tskit';
 import { PageModel } from "../../app/page";
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { Actions } from './actions';
+import * as Kontext from '../../types/kontext';
+
+
+export interface ConcStatus extends Kontext.AjaxResponse {
+    relconcsize:number;
+    concsize:number;
+    finished:boolean;
+    fullsize:number;
+
+    /**
+     * ARF metrics; please note that this value
+     * is non-empty only once the status has
+     * finished = true (i.e. the result is complete)
+     */
+    arf:number;
+}
 
 
 export class HitReloader {
@@ -41,7 +56,7 @@ export class HitReloader {
 
     init():void {
         const linesPerPage = this.layoutModel.getConf<number>('ItemsPerPage');
-        const applyData = (data:AjaxResponse.ConcStatus) => {
+        const applyData = (data:ConcStatus) => {
             this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationUpdated>({
                 name: Actions.AsyncCalculationUpdated.name,
                 payload: {
@@ -60,7 +75,7 @@ export class HitReloader {
                 user_id:number;
                 corp_id:string;
                 subc_path:string;
-                conc_id:string}, AjaxResponse.ConcStatus>('conc_cache_status');
+                conc_id:string}, ConcStatus>('conc_cache_status');
             concCacheStatusSocket.subscribe({
                 next: response => {
                     applyData(response);
@@ -89,7 +104,7 @@ export class HitReloader {
                 concatMap(v => rxOf(v).pipe(delay(v * 1000))),
                 concatMap(
                     (interval) => zip(
-                        this.layoutModel.ajax$<AjaxResponse.ConcStatus>(
+                        this.layoutModel.ajax$<ConcStatus>(
                             HTTP.Method.GET,
                             this.layoutModel.createActionUrl('get_conc_cache_status'),
                             this.layoutModel.exportConcArgs()
@@ -102,18 +117,18 @@ export class HitReloader {
                         !response.finished,
                     true // true => emit also the last item (which already breaks the predicate)
                 ),
-            ).subscribe(
-                ([response,]) => {
+            ).subscribe({
+                next: ([response,]) => {
                     applyData(response);
                 },
-                (err) => {
+                error: (err) => {
                     this.layoutModel.dispatcher.dispatch<typeof Actions.AsyncCalculationFailed>({
                         name: Actions.AsyncCalculationFailed.name,
                         payload: {}
                     });
                     this.layoutModel.showMessage('error', err);
                 }
-            );
+            });
         }
     }
 }

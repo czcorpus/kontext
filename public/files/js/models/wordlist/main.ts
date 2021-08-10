@@ -23,7 +23,8 @@ import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
 import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
 
-import { Kontext, ViewOptions } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as ViewOptions from '../../types/viewOptions';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';

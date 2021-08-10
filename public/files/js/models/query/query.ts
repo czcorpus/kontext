@@ -19,8 +19,8 @@
  */
 
 import { id, List, tuple } from 'cnc-tskit';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
+import { SubmitEncodedSimpleTokens } from './formArgs';
 
 
 export type QueryType = 'simple'|'advanced';
@@ -120,7 +120,7 @@ export interface SimpleQuerySubmit {
     corpname:string;
     qtype:'simple';
     query:string;
-    queryParsed:AjaxResponse.SubmitEncodedSimpleTokens;
+    queryParsed:SubmitEncodedSimpleTokens;
     qmcase:boolean;
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;

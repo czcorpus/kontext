@@ -18,8 +18,8 @@
 
 import * as React from 'react';
 import {IActionDispatcher, Bound, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
-import {PluginInterfaces} from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/form';
 import { SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine } from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';

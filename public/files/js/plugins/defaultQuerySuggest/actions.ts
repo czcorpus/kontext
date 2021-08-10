@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 
 export class Actions {

@@ -18,10 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit } from './view';
 import { ClarinSiAppBarModel } from './model';
 import { IFullActionControl } from 'kombo';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export class LindatAppBar implements PluginInterfaces.ApplicationBar.IPlugin {

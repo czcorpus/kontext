@@ -19,8 +19,8 @@
  */
 
 import { Action } from 'kombo';
-import { SaveData } from '../../app/navigation';
-import { Kontext } from '../../types/common';
+import { DataSaveFormat } from '../../app/navigation/save';
+import * as Kontext from '../../types/kontext';
 
 
 export class Actions {
@@ -136,7 +136,7 @@ export class Actions {
     }
 
     static DirectSave:Action<{
-        saveformat:SaveData.Format;
+        saveformat:DataSaveFormat;
     }> = {
         name: 'MAIN_MENU_DIRECT_SAVE'
     }

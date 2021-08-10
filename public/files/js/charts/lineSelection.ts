@@ -26,7 +26,7 @@ import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import { MultiDict } from '../multidict';
 import { PageModel, DownloadType } from '../app/page';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
 
 export interface LineGroupChartItem {

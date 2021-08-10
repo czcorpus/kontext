@@ -19,7 +19,7 @@
  */
 
 
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 
 /**
  * Test whether a string 's' represents an integer

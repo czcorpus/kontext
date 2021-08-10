@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { CorplistPage } from './corplist';
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit } from './view';
 import { init as overviewViewInit } from '../../views/overview';
 import { CorplistTableModel } from './corplist';
 import { Plugin as DCPlugin } from '../defaultCorparch/init';
 import { CorplistServerData } from '../defaultCorparch/corplist';
+import { IPluginApi } from '../../types/plugins/common';
 
 class Plugin extends DCPlugin {
 

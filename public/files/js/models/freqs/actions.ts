@@ -21,17 +21,17 @@
 import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
 import { MultiDict } from '../../multidict';
-import { SaveData } from '../../app/navigation';
 import { Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities } from './twoDimension/common';
 import { Maths } from 'cnc-tskit';
 import { ColorMappings } from './twoDimension/table2d';
 import { HistoryState } from './common';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export class Actions {
 
     static ResultSetMinFreqVal: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
         };
@@ -42,7 +42,7 @@ export class Actions {
         };
 
     static ResultDataLoaded: Action<{
-        data: Array<ResultBlock>;
+        data:Array<ResultBlock>;
     }> = {
             name: 'FREQ_RESULT_DATA_LOADED'
         };
@@ -57,13 +57,13 @@ export class Actions {
     };
 
     static ResultSortByColumn: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_RESULT_SORT_BY_COLUMN'
         };
 
     static ResultSetCurrentPage: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_RESULT_SET_CURRENT_PAGE'
         };
@@ -74,44 +74,44 @@ export class Actions {
         };
 
     static ResultPrepareSubmitArgsDone: Action<{
-        data: MultiDict;
+        data:MultiDict;
     }> = {
             name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
         };
 
     static ResultApplyQuickFilter: Action<{
-        url: string;
-        blankWindow: boolean;
+        url:string;
+        blankWindow:boolean;
     }> = {
             name: 'FREQ_RESULT_APPLY_QUICK_FILTER'
         };
 
     static SaveFormSetFormat: Action<{
-        value: SaveData.Format;
+        value:DataSaveFormat;
     }> = {
             name: 'FREQ_SAVE_FORM_SET_FORMAT'
         };
 
     static SaveFormSetFromLine: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_SAVE_FORM_SET_FROM_LINE'
         };
 
     static SaveFormSetToLine: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_SAVE_FORM_SET_TO_LINE'
         };
 
     static SaveFormSetIncludeHeading: Action<{
-        value: boolean;
+        value:boolean;
     }> = {
             name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING'
         };
 
     static SaveFormSetIncludeColHeading: Action<{
-        value: boolean;
+        value:boolean;
     }> = {
             name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
         };
@@ -122,13 +122,13 @@ export class Actions {
         };
 
     static SetCtSaveMode: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_CT_SET_SAVE_MODE'
         };
 
     static MLSetFLimit: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_ML_SET_FLIMIT'
         };
@@ -139,41 +139,41 @@ export class Actions {
         };
 
     static MLRemoveLevel: Action<{
-        levelIdx: number;
+        levelIdx:number;
     }> = {
             name: 'FREQ_ML_REMOVE_LEVEL'
         };
 
     static MLChangeLevel: Action<{
-        levelIdx: number;
-        direction: string;
+        levelIdx:number;
+        direction:string;
     }> = {
             name: 'FREQ_ML_CHANGE_LEVEL'
         };
 
     static MLSetMlxAttr: Action<{
-        levelIdx: number;
-        value: string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'FREQ_ML_SET_MLXATTR'
         };
 
     static MLSetMlxiCase: Action<{
-        levelIdx: number;
+        levelIdx:number;
     }> = {
             name: 'FREQ_ML_SET_MLXICASE'
         };
 
     static MLSetMlxctxIndex: Action<{
-        levelIdx: number;
-        value: string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'FREQ_ML_SET_MLXCTX_INDEX'
         };
 
     static MLSetAlignType: Action<{
-        levelIdx: number;
-        value: AlignTypes;
+        levelIdx:number;
+        value:AlignTypes;
     }> = {
             name: 'FREQ_ML_SET_ALIGN_TYPE'
         };
@@ -184,7 +184,7 @@ export class Actions {
         };
 
     static TTSetFttAttr: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_TT_SET_FTTATTR'
         };
@@ -195,7 +195,7 @@ export class Actions {
         };
 
     static TTSetFLimit: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_TT_SET_FLIMIT'
         };
@@ -206,8 +206,8 @@ export class Actions {
         };
 
     static FreqctFormSetDimensionAttr: Action<{
-        dimension: Dimensions;
-        value: string;
+        dimension:Dimensions;
+        value:string;
     }> = {
             name: 'FREQ_CT_FORM_SET_DIMENSION_ATTR'
         };
@@ -219,21 +219,21 @@ export class Actions {
         };
 
     static FreqctFormSetMinFreq: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_CT_FORM_SET_MIN_FREQ'
         };
 
     static FreqctFormSetCtx: Action<{
-        dim: Dimensions;
-        value: number;
+        dim:Dimensions;
+        value:number;
     }> = {
             name: 'FREQ_CT_FORM_SET_CTX'
         };
 
     static FreqctFormSetAlignType: Action<{
-        dim: Dimensions;
-        value: AlignTypes;
+        dim:Dimensions;
+        value:AlignTypes;
     }> = {
             name: 'FREQ_CT_FORM_SET_ALIGN_TYPE'
         };
@@ -244,19 +244,19 @@ export class Actions {
         };
 
     static FreqctSetAlphaLevel: Action<{
-        value: Maths.AlphaLevel;
+        value:Maths.AlphaLevel;
     }> = {
             name: 'FREQ_CT_SET_ALPHA_LEVEL'
         };
 
     static FreqctSetMinFreq: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'FREQ_CT_SET_MIN_FREQ'
         };
 
     static FreqctSetEmptyVecVisibility: Action<{
-        value: boolean;
+        value:boolean;
     }> = {
             name: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY'
         };
@@ -267,39 +267,39 @@ export class Actions {
         };
 
     static FreqctSortByDimension: Action<{
-        dim: Dimensions;
-        attr: string;
+        dim:Dimensions;
+        attr:string;
     }> = {
             name: 'FREQ_CT_SORT_BY_DIMENSION'
         };
 
     static FreqctSetDisplayQuantity: Action<{
-        value: FreqQuantities;
+        value:FreqQuantities;
     }> = {
             name: 'FREQ_CT_SET_DISPLAY_QUANTITY'
         };
 
     static FreqctSetColorMapping: Action<{
-        value: ColorMappings;
+        value:ColorMappings;
     }> = {
             name: 'FREQ_CT_SET_COLOR_MAPPING'
         };
 
     static FreqctSetHighlightedGroup: Action<{
-        value: [number, number];
+        value:[number, number];
     }> = {
             name: 'FREQ_CT_SET_HIGHLIGHTED_GROUP'
         };
 
     static FreqctSortFlatList: Action<{
-        value: string;
-        reversed: boolean;
+        value:string;
+        reversed:boolean;
     }> = {
             name: 'FREQ_CT_SORT_FLAT_LIST'
         };
 
     static FreqctHighlight2DCoord: Action<{
-        coord: [number, number];
+        coord:[number, number];
     }> = {
             name: 'FREQ_CT_HIGHLIGHT_2D_COORD'
         };
@@ -310,7 +310,7 @@ export class Actions {
         };
 
     static FreqctApplyQuickFilter: Action<{
-        url: string;
+        url:string;
     }> = {
             name: 'FREQ_CT_APPLY_QUICK_FILTER'
         };

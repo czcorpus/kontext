@@ -18,15 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit } from './view';
 import { SubcMixerModel } from './model';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 
-    pluginApi:IPluginApi
+    pluginApi:IPluginApi;
 
     private model:SubcMixerModel;
 

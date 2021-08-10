@@ -25,7 +25,7 @@
 
 import { List } from 'cnc-tskit';
 
-import { TextTypes } from '../../types/common';
+import * as TextTypes from '../../types/textTypes';
 
 
 export enum IntervalChar {

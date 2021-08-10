@@ -20,7 +20,7 @@
 
 import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
 import { Actions as QueryActions } from './query/actions';
 

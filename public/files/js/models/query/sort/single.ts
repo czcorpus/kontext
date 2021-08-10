@@ -22,16 +22,16 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
-import { Kontext } from '../../../types/common';
-import { AjaxResponse } from '../../../types/ajaxResponses';
+import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
 import { SortServerArgs } from '../common';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions } from '../actions';
-import { Dict, HTTP, List } from 'cnc-tskit';
+import { Dict, HTTP, List, tuple } from 'cnc-tskit';
 import { SortFormProperties } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
 import { Actions as ConcActions } from '../../concordance/actions';
+import { SortFormArgs } from '../formArgs';
 
 
 /**
@@ -59,9 +59,14 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
 
     private readonly pageModel:PageModel;
 
-    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
+    private readonly syncInitialArgs:SortFormArgs;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pageModel:PageModel,
+        props:SortFormProperties,
+        syncInitialArgs:SortFormArgs
+    ) {
         super(
             dispatcher,
             {
@@ -166,13 +171,16 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
                     })
 
                 } else {
-                    this.pageModel.showMessage('error', this.pageModel.translate('query__sort_set_spos_error_msg'));
+                    this.pageModel.showMessage(
+                        'error',
+                        this.pageModel.translate('query__sort_set_spos_error_msg')
+                    );
                 }
             }
         );
     }
 
-    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
+    syncFrom(src:Observable<SortFormArgs>):Observable<SortFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
@@ -217,8 +225,8 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             this.pageModel.createActionUrl(
                 'sortx',
                 [
-                    ['format', 'json'],
-                    ['q', '~' + concId]
+                    tuple('format', 'json'),
+                    tuple('q', '~' + concId)
                 ]
             ),
             args,

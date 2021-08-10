@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { ConcRestoreModel, ConcRestoreModelState } from '../../models/concRestore';
 import * as S from './style';
 

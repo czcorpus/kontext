@@ -23,75 +23,14 @@ import { Observable, of as rxOf } from 'rxjs';
 import { map, concatMap, tap } from 'rxjs/operators';
 import { pipe, List, HTTP, tuple } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
-import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
-import { ConcordanceModel } from './main';
-import { Actions as ConcActions } from '../../models/concordance/actions';
-import { SampleServerArgs } from '../query/common';
-import { FreqServerArgs } from '../freqs/common';
-
-
-export type TTCrit = Array<[string, string]>;
-
-export interface TextTypesDistModelProps {
-    ttCrit:TTCrit;
-}
-
-
-export namespace Response {
-
-    interface FreqItem {
-        Word:Array<{n:string}>;
-        fbar:number;
-        freq:number;
-        freqbar:number;
-        nbar:number;
-        nfilter:Array<[string, string]>;
-        norel:number;
-        norm:number;
-        pfilter:Array<[string, string]>;
-        rel:number;
-        relbar:number;
-    }
-
-    interface FreqBlock {
-        Total:number;
-        TotalPages:number;
-        Items:Array<FreqItem>;
-        Head:Array<{s:string; n:string}>;
-    }
-
-    export interface FreqData {
-        FCrit:TTCrit;
-        Blocks:Array<FreqBlock>;
-        paging:number;
-        concsize:number;
-        fmaxitems:number;
-        quick_from_line:number;
-        quick_to_line:number;
-    }
-
-    export interface Reduce extends Kontext.AjaxResponse {
-        sampled_size:number;
-        conc_persistence_op_id:string;
-    }
-}
-
-
-export interface FreqItem {
-    value:string;
-    ipm:number;
-    abs:number;
-    barWidth:number;
-    color:string;
-}
-
-
-export interface FreqBlock {
-    label:string;
-    items:Array<FreqItem>;
-}
+import { PageModel } from '../../../app/page';
+import { MultiDict } from '../../../multidict';
+import { ConcordanceModel } from '../main';
+import { Actions as ConcActions } from '../actions';
+import { SampleServerArgs } from '../../query/common';
+import { FreqServerArgs } from '../../freqs/common';
+import { FreqBlock, TextTypesDistModelProps, TTCrit } from './common';
+import { FreqData, Reduce } from './response';
 
 
 export interface TextTypesDistModelState {
@@ -122,8 +61,12 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
     private readonly concLineModel:ConcordanceModel;
 
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
-            concLineModel:ConcordanceModel, props:TextTypesDistModelProps) {
+    constructor(
+        dispatcher:IFullActionControl,
+        layoutModel:PageModel,
+        concLineModel:ConcordanceModel,
+        props:TextTypesDistModelProps
+    ) {
         super(
             dispatcher,
             {
@@ -150,16 +93,16 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                     }
                     return syncData;
 
-                }).subscribe(
-                    action => {
+                }).subscribe({
+                    next: action => {
                         if (ConcActions.isConcordanceRecalculationReady(action)) {
                             this.performDataLoad(action.payload.concSize, action.payload.overviewMinFreq);
                         }
                     },
-                    error => {
+                    error: error => {
                         this.layoutModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
@@ -173,16 +116,16 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                         }
                         return syncData;
 
-                    }).subscribe(
-                        action => {
+                    }).subscribe({
+                        next: action => {
                             if (ConcActions.isConcordanceRecalculationReady(action)) {
                                 this.performDataLoad(action.payload.concSize, action.payload.overviewMinFreq);
                             }
                         },
-                        error => {
+                        error: error => {
                             this.layoutModel.showMessage('error', error);
                         }
-                    );
+                    });
                 }
             }
         );
@@ -210,17 +153,17 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             if (this.state.lastArgs !== args.head('q')) {
                 this.state.isBusy = true;
                 this.emitChange();
-                this.loadData(args, concSize, flimit).subscribe(
-                    (ans) => {
+                this.loadData(args, concSize, flimit).subscribe({
+                    next: ans => {
                         this.state.isBusy = false;
                         this.emitChange();
                     },
-                    (err) => {
+                    error: err => {
                         this.state.isBusy = false;
                         this.layoutModel.showMessage('error', err);
                         this.emitChange();
                     }
-                );
+                });
             }
         }
     }
@@ -232,7 +175,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
                 args.set('format', 'json');
                 this.state.lastArgs = args.head('q');
-                return this.layoutModel.ajax$<Response.Reduce>(
+                return this.layoutModel.ajax$<Reduce>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl('reduce', args),
                     {}
@@ -256,7 +199,7 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                     this.state.sampleSize = reduceAns.sampled_size;
                     args.set('q', `~${reduceAns.conc_persistence_op_id}`);
                 }
-                return this.layoutModel.ajax$<Response.FreqData>(
+                return this.layoutModel.ajax$<FreqData>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl('freqs'),
                     args

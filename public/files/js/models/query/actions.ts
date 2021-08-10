@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { Kontext } from '../../types/common';
-import { AjaxResponse } from '../../types/ajaxResponses';
+import * as Kontext from '../../types/kontext';
 import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
+import { ConcFormArgs } from './formArgs';
 import { QueryType } from './query';
 
 
@@ -50,7 +50,7 @@ export class Actions {
     static EditQueryOperationDone: Action<{
         operationIdx: number;
         sourceId: string;
-        data: AjaxResponse.ConcFormArgs;
+        data: ConcFormArgs;
     }> = {
             name: 'EDIT_QUERY_OPERATION_DONE'
         };

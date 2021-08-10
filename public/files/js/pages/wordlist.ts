@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { PageModel, DownloadType } from '../app/page';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as wordlistResultViewInit } from '../views/wordlist/result';

@@ -23,14 +23,15 @@ import { Subscription, timer as rxTimer, Observable, of as rxOf } from 'rxjs';
 import { take, tap, map, concatMap } from 'rxjs/operators';
 import { List, tuple, HTTP, pipe } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import * as common from './common';
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { SearchEngine, SearchKeyword, SearchResultRow} from './search';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
+import { IPluginApi } from '../../types/plugins/common';
 
 /**
  *

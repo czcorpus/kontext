@@ -22,10 +22,11 @@ import * as React from 'react';
 import { IActionDispatcher, Bound, IModel } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import { Kontext, TextTypes } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { LiveAttrsModel, LiveAttrsModelState, TTSelectionStep,
     AlignedLangSelectionStep, isAlignedSelectionStep } from './models';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as ttViewInit } from '../../views/textTypes';
 import { TextTypesModelState } from '../../models/textTypes/main';
 

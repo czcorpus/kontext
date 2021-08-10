@@ -23,7 +23,7 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { List, HTTP, pipe, Dict } from 'cnc-tskit';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
 import { Actions } from './actions';
 import { taskCheckTimer } from './common';

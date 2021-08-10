@@ -19,7 +19,7 @@
  */
 
 import { QueryType } from '../../models/query/query';
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 interface ProviderInfo<T> {
     ident:string;

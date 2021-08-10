@@ -19,10 +19,10 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Kontext} from '../../types/common';
-import {PublicSubcorpListState, PublicSubcorpListModel, DataItem} from '../../models/subcorp/listPublic';
-import {Actions} from '../../models/subcorp/actions';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import * as Kontext from '../../types/kontext';
+import { PublicSubcorpListState, PublicSubcorpListModel, DataItem } from '../../models/subcorp/listPublic';
+import { Actions } from '../../models/subcorp/actions';
 import { List, tuple } from 'cnc-tskit';
 
 import * as S from './style';

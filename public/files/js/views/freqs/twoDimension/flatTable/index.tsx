@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import { Kontext } from '../../../../types/common';
+import * as Kontext from '../../../../types/kontext';
 import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../../models/freqs/twoDimension/flatTable';
 import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { init as ctViewOptsFactory } from '../viewOpts';

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import * as React from 'react';
 import { ResultHeader, ResultItem } from '../../../models/freqs/dataRows';
 import { IActionDispatcher } from 'kombo';

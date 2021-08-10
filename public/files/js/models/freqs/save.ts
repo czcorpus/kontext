@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
-import {Freq2DTableModel} from './twoDimension/table2d';
-import {Freq2DFlatViewModel} from './twoDimension/flatTable';
+import * as Kontext from '../../types/kontext';
+import { PageModel } from '../../app/page';
+import { MultiDict } from '../../multidict';
+import { Freq2DTableModel } from './twoDimension/table2d';
+import { Freq2DFlatViewModel } from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 
@@ -40,7 +40,7 @@ export interface FreqResultsSaveModelArgs {
 
 export interface FreqResultsSaveModelState {
     formIsActive:boolean;
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     includeColHeaders:boolean;
     includeHeading:boolean;
     fromLine:Kontext.FormValue<string>;
@@ -63,7 +63,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             dispatcher,
             {
                 formIsActive: false,
-                saveformat: SaveData.Format.CSV,
+                saveformat: 'csv',
                 fromLine: {value: '1', isInvalid: false, isRequired: true},
                 toLine: {value: '', isInvalid: false, isRequired: false},
                 includeHeading: false,
@@ -196,7 +196,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         args.set('to_line', this.state.toLine.value);
         args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
-            `frequencies.${SaveData.formatToExt(this.state.saveformat)}`,
+            `frequencies.${this.state.saveformat}`,
             this.layoutModel.createActionUrl('savefreq', args.items())
         );
     }

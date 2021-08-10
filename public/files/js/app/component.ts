@@ -19,8 +19,8 @@
  */
 
 
-import { Kontext } from '../types/common';
-import { CoreViews } from '../types/coreViews';
+import * as Kontext from '../types/kontext';
+import * as CoreViews from '../types/coreViews';
 import { PageModel } from './page';
 
 /**

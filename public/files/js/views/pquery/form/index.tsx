@@ -22,14 +22,15 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PqueryFormModel } from '../../../models/pquery/form';
 import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
 import { Dict, List } from 'cnc-tskit';
-import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles, PqueryFormModelState } from '../../../models/pquery/common';
+import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles,
+    PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';

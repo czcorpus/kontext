@@ -22,13 +22,13 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError, of as rxOf } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
 
-import { AjaxResponse } from '../../types/ajaxResponses';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { SubcorpusInfoResponse } from '../common/layout';
+import { CreateSubcorpus, ServerSubcorpListItem, SubcorpList } from './common';
 
 
 
@@ -82,7 +82,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     private layoutModel:PageModel;
 
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
-            data:Array<AjaxResponse.ServerSubcorpListItem>, sortKey:SortKey,
+            data:Array<ServerSubcorpListItem>, sortKey:SortKey,
             relatedCorpora:Array<string>,
             unfinished:Array<Kontext.AsyncTaskInfo>,
             initialFilter:SubcListFilter) {
@@ -438,7 +438,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         params.set('publish', '0'); // TODO do we want to user-editable?
         params.set('cql', cql !== undefined ? cql : srcRow.cql);
 
-        return this.layoutModel.ajax$<AjaxResponse.CreateSubcorpus>(
+        return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
             params
@@ -494,7 +494,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
     }
 
-    private importLines(data:Array<AjaxResponse.ServerSubcorpListItem>):Array<SubcorpListItem> {
+    private importLines(data:Array<ServerSubcorpListItem>):Array<SubcorpListItem> {
         return List.map(item => ({
             name: decodeURIComponent(item.name),
             corpname: item.corpname,
@@ -549,7 +549,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         }
         this.mergeFilter(args, this.state.filter);
 
-        return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
+        return this.layoutModel.ajax$<SubcorpList>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('subcorpus/list'),
             args
@@ -593,7 +593,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
         }
         this.mergeFilter(args, filter);
-        return this.layoutModel.ajax$<AjaxResponse.SubcorpList>(
+        return this.layoutModel.ajax$<SubcorpList>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('subcorpus/list'),
             args

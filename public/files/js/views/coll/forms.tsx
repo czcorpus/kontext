@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { CollFormModel, CollFormModelState } from '../../models/coll/collForm';
 import { Dict, List } from 'cnc-tskit';
 import { Actions } from '../../models/coll/actions';

@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { MultiDict } from '../../../multidict';
 import { UserStatusModel, UsersStatusModelState } from '../init';
 import { Actions as UserActions } from '../../../models/user/actions';

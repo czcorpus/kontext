@@ -22,9 +22,9 @@ import * as React from 'react';
 import { List, pipe } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { InputModuleViews } from '../input';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/query/actions';
 import { Actions as GlobalActions } from '../../../models/common/actions';
 import { AnyQuery } from '../../../models/query/query';

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as localeInit } from './locale';
 import { StatelessModel, IFullActionControl } from 'kombo';
 import { Actions as GlobalActions } from '../../models/common/actions';

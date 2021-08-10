@@ -16,14 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import * as corplistDefault from '../defaultCorparch/corplist';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { CorplistItem } from '../defaultCorparch/common';
 import { Actions} from './actions';
 import { HTTP } from 'cnc-tskit';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface CorplistTableModelState extends corplistDefault.CorplistTableModelState {

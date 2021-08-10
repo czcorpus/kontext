@@ -23,8 +23,8 @@ import { Actions } from './actions';
 import { CtxLemwordType } from './common';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { List } from 'cnc-tskit';
+import { QueryFormArgs } from './formArgs';
 
 
 
@@ -46,7 +46,7 @@ export interface QueryContextModelState {
 export class QueryContextModel extends StatefulModel<QueryContextModelState>
     implements IUnregistrable {
 
-    constructor(dispatcher:IFullActionControl, values:AjaxResponse.QueryFormArgs) {
+    constructor(dispatcher:IFullActionControl, values:QueryFormArgs) {
         super(dispatcher, {
             formData: {
                 fc_lemword_wsize: values.fc_lemword_wsize,

@@ -22,16 +22,16 @@
  import { Dict, pipe, List, HTTP } from 'cnc-tskit';
  import { of as rxOf, Observable } from 'rxjs';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { SortFormProperties, importMultiLevelArg } from './common';
 import { PageModel } from '../../../app/page';
-import { AjaxResponse } from '../../../types/ajaxResponses';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions } from '../actions';
 import { tap, map } from 'rxjs/operators';
 import { MLSortServerArgs } from '../common';
 import { AjaxConcResponse } from '../../concordance/common';
 import { Actions as ConcActions } from '../../concordance/actions';
+import { SortFormArgs } from '../formArgs';
 
 
  /**
@@ -67,9 +67,14 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
 
     private readonly pageModel:PageModel;
 
-    private readonly syncInitialArgs:AjaxResponse.SortFormArgs;
+    private readonly syncInitialArgs:SortFormArgs;
 
-    constructor(dispatcher:IFullActionControl, pageModel:PageModel, props:SortFormProperties, syncInitialArgs:AjaxResponse.SortFormArgs) {
+    constructor(
+        dispatcher:IFullActionControl,
+        pageModel:PageModel,
+        props:SortFormProperties,
+        syncInitialArgs:SortFormArgs
+    ) {
         super(
             dispatcher,
             {
@@ -202,7 +207,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
         );
     }
 
-    syncFrom(src:Observable<AjaxResponse.SortFormArgs>):Observable<AjaxResponse.SortFormArgs> {
+    syncFrom(src:Observable<SortFormArgs>):Observable<SortFormArgs> {
         return src.pipe(
             tap(
                 (data) => {
@@ -216,8 +221,12 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
                             state.mlxbwardValues[sortId] = importMultiLevelArg('mlxbward', data);
 
                             const mlxctxTmp = importMultiLevelArg<string>('mlxctx', data);
-                            state.ctxIndexValues[sortId] = List.map(item => MultiLevelConcSortModel.decodeCtxValue(item), mlxctxTmp);
-                            state.ctxAlignValues[sortId] = List.map(item => MultiLevelConcSortModel.decodeCtxAlignValue(item), mlxctxTmp);
+                            state.ctxIndexValues[sortId] = List.map(
+                                item => MultiLevelConcSortModel.decodeCtxValue(item), mlxctxTmp
+                            );
+                            state.ctxAlignValues[sortId] = List.map(
+                                item => MultiLevelConcSortModel.decodeCtxAlignValue(item), mlxctxTmp
+                            );
                         });
                     }
                 }

@@ -23,10 +23,12 @@
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../../types/common';
-import { TextTypesDistModel, FreqItem, FreqBlock, TextTypesDistModelState } from '../../../models/concordance/ttDistModel';
+import * as Kontext from '../../../types/kontext';
+import { TextTypesDistModel, TextTypesDistModelState } from '../../../models/concordance/ttdist/model';
 import { Actions } from '../../../models/concordance/actions';
 import * as S from './style';
+import { FreqBlock, FreqItem } from '../../../models/concordance/ttdist/common';
+import { List } from 'cnc-tskit';
 
 
 export interface TtOverviewViews {
@@ -34,7 +36,11 @@ export interface TtOverviewViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, ttDistModel:TextTypesDistModel):TtOverviewViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    ttDistModel:TextTypesDistModel
+):TtOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -47,17 +53,22 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             <S.FreqBar>
                 <div className="legend">
                     <strong>{props.label}:</strong>
-                    {props.items.map((item, i) =>
-                        <span key={`${i}:${item.value}`} className="item" title={mkTitle(item)}>
-                            <span className="color-box" style={{color: item.color}}>{'\u25A0'}</span>
-                            {item.value ? item.value : '\u2014'} </span>)
-                    }
+                    {List.map(
+                        (item, i) =>
+                            <span key={`${i}:${item.value}`} className="item" title={mkTitle(item)}>
+                                <span className="color-box" style={{color: item.color}}>{'\u25A0'}</span>
+                                {item.value ? item.value : '\u2014'} </span>,
+                        props.items
+                    )}
                 </div>
                 <div className="data">
-                    {props.items.map((item, i) =>
+                    {List.map(
+                        (item, i) =>
                                 <div key={`${i}:${item.value}`} className="item"
                                         style={{backgroundColor: item.color, width: `${item.barWidth}px`}}
-                                        title={`${item.value}, ${mkTitle(item)}`}></div>)}
+                                        title={`${item.value}, ${mkTitle(item)}`}></div>,
+                        props.items
+                    )}
                 </div>
             </S.FreqBar>
         );
@@ -65,7 +76,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     // ------------------------- <FreqsNotes /> ----------------------------------
 
-    const FreqsNotes:React.SFC<{
+    const FreqsNotes:React.FC<{
         blocks:Array<FreqBlock>;
         isDisplayedBlocksSubset:boolean;
         shouldDisplayBlocksSubset:boolean;
@@ -135,11 +146,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         {he.translate('concview__freqs_overview_heading')}
                     </h3>
                     <FreqsNotes blocks={blocks}
-                                minFreq={this.props.flimit}
-                                sampleSize={this.props.sampleSize}
-                                maxChartItems={this.props.maxBlockItems}
-                                isDisplayedBlocksSubset={TextTypesDistModel.isDisplayedBlocksSubset(this.props)}
-                                shouldDisplayBlocksSubset={TextTypesDistModel.shouldDisplayBlocksSubset(this.props)} />
+                            minFreq={this.props.flimit}
+                            sampleSize={this.props.sampleSize}
+                            maxChartItems={this.props.maxBlockItems}
+                            isDisplayedBlocksSubset={TextTypesDistModel.isDisplayedBlocksSubset(this.props)}
+                            shouldDisplayBlocksSubset={TextTypesDistModel.shouldDisplayBlocksSubset(this.props)} />
                     <hr />
                     <div className="contents">
                         {this.props.isBusy ?

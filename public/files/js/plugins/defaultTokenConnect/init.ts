@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, Views as DefaultTokenConnectRenderers } from './views';
 import { MultiDict } from '../../multidict';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 declare var require:any;

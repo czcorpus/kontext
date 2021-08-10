@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Kontext } from '../../../types/common';
-import { AjaxResponse } from '../../../types/ajaxResponses';
+import * as Kontext from '../../../types/kontext';
+import { ConcFormArgs } from '../formArgs';
 
 
 export interface QueryOverviewResponseRow {
@@ -39,7 +39,7 @@ export interface ExtendedQueryOperation extends Kontext.QueryOperation {
 
 
 export interface QueryPipelineResponseItem {
-    form_args:AjaxResponse.ConcFormArgs;
+    form_args:ConcFormArgs;
     id: string;
 }
 

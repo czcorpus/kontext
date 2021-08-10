@@ -17,8 +17,8 @@
  */
 
 import { throwError } from 'rxjs';
-import { Kontext } from '../../types/common';
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit, Views as TreeCorparchViews } from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
 import { map } from 'rxjs/operators';
@@ -26,6 +26,7 @@ import { Actions } from './actions';
 import { List, HTTP } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions } from '../../models/common/actions';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface Node {
@@ -55,8 +56,11 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
 
     private corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick;
 
-    constructor(pluginApi:IPluginApi, corpusIdent:Kontext.FullCorpusIdent,
-                corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick) {
+    constructor(
+        pluginApi:IPluginApi,
+        corpusIdent:Kontext.FullCorpusIdent,
+        corpusClickHandler:PluginInterfaces.Corparch.CorplistItemClick
+    ) {
         super(
             pluginApi.dispatcher(),
             {

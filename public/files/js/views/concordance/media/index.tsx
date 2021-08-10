@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { PlayerStatus } from '../../../models/concordance/media';
 import { Actions } from '../../../models/concordance/actions';
 import * as S from './style';

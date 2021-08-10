@@ -21,8 +21,7 @@
 import * as React from 'react';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 
-import { Kontext } from '../../../types/common';
-import { SaveData } from '../../../app/navigation';
+import * as Kontext from '../../../types/kontext';
 import { CollResultsSaveModel, CollResultsSaveModelState } from '../../../models/coll/save';
 import { Actions } from '../../../models/coll/actions';
 import * as S from './style';
@@ -196,10 +195,10 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
 
         const renderFormatDependentOptions = () => {
             switch (props.saveformat) {
-                case SaveData.Format.XML:
+                case 'xml':
                     return <TRIncludeHeadingCheckbox value={props.includeHeading} />;
-                case SaveData.Format.CSV:
-                case SaveData.Format.XLSX:
+                case 'csv':
+                case 'xlsx':
                     return <TRColHeadersCheckbox value={props.includeColHeaders} />
                 default:
                 return <span />;

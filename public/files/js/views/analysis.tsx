@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../types/common';
+import * as Kontext from '../types/kontext';
 import { FormsViews as CollFormsViews } from './coll/forms';
 import { FormsViews as FreqFormsViews } from './freqs/forms';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';

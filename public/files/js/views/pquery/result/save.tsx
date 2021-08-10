@@ -19,11 +19,10 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../../types/common';
-import {SaveData} from '../../../app/navigation';
-import {PqueryResultsSaveModel, PqueryResultsSaveModelState} from '../../../models/pquery/save';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Actions} from '../../../models/pquery/actions';
+import * as Kontext from '../../../types/kontext';
+import { PqueryResultsSaveModel, PqueryResultsSaveModelState } from '../../../models/pquery/save';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Actions } from '../../../models/pquery/actions';
 
 
 interface SavePqueryFormProps {
@@ -70,9 +69,9 @@ export function init(
                 <th>{utils.translate('coll__save_form_select_label')}:</th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
-                        <option value={SaveData.Format.CSV}>CSV</option>
-                        <option value={SaveData.Format.XLSX}>XLSX (Excel)</option>
-                        <option value={SaveData.Format.XML}>XML</option>
+                        <option value="csv">CSV</option>
+                        <option value="xlsx">XLSX (Excel)</option>
+                        <option value="xml">XML</option>
                     </select>
                 </td>
             </tr>
@@ -222,10 +221,10 @@ export function init(
 
         _renderFormatDependentOptions() {
             switch (this.props.saveformat) {
-                case SaveData.Format.XML:
+                case 'xml':
                     return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
-                case SaveData.Format.CSV:
-                case SaveData.Format.XLSX:
+                case 'csv':
+                case 'xlsx':
                     return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
                 default:
                 return <tr><td colSpan={2} /></tr>;

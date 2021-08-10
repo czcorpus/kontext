@@ -19,19 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
-import { Kontext } from '../../types/common';
+import * as PluginInterfaces from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
-import { map, tap, concatMap, mergeMap, scan, catchError } from 'rxjs/operators';
+import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions } from '../../models/query/actions';
-import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
-    isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
+import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend,
+    mergeResults, isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {

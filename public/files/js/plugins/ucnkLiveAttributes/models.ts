@@ -23,14 +23,16 @@ import { Observable } from 'rxjs';
 import { concatMap, map } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
-import { TextTypes, Kontext } from '../../types/common';
-import { IPluginApi, PluginInterfaces } from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
+import * as PluginInterfaces from '../../types/plugins';
 import { SelectionFilterMap } from '../../models/textTypes/common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 interface ServerRefineResponse extends Kontext.AjaxResponse {

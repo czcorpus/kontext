@@ -21,7 +21,7 @@
 import * as React from 'react';
 import { IActionDispatcher} from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
 import { init as freqFormsFactory } from './freqForms';
 import { Actions } from '../../models/freqs/actions';

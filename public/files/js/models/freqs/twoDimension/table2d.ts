@@ -23,12 +23,17 @@ import { Maths, HTTP, pipe, List, tuple, Dict } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page';
 import { MultiDict } from '../../../multidict';
-import { GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels, GeneralFreq2DModelState } from './generalDisplay';
+import {
+    GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels,
+    GeneralFreq2DModelState } from './generalDisplay';
 import { DataPoint, ConfIntervals } from '../../../charts/confIntervals';
 import { CTFreqServerArgs } from '../common';
-import { CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities, CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData, isDummyResponse } from './common';
+import {
+    CTFormProperties, roundFloat, Dimensions, FreqQuantities, FreqFilterQuantities,
+    CTFreqResultDummyResponse, CTFreqResultResponse, CTFreqResultData,
+    isDummyResponse } from './common';
 import { Actions } from '../actions';
-import { TextTypes } from '../../../types/common';
+import * as TextTypes from '../../../types/textTypes';
 import { colorHeatmap } from '../../../views/theme/default';
 
 /**

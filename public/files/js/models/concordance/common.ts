@@ -19,8 +19,9 @@
  */
 
 import { Color, pipe, List } from 'cnc-tskit';
-import { ViewOptions, Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
+import * as Kontext from '../../types/kontext';
+import * as ViewOptions from '../../types/viewOptions';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface ConcToken {
@@ -248,7 +249,7 @@ export interface ConcQuickFilterServerArgs extends ConcServerArgs {
  * save a concordance to a file.
  */
 export interface ConcSaveServerArgs extends ConcServerArgs {
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     from_line:string;
     to_line:string;
     heading:'0'|'1';
@@ -534,6 +535,33 @@ export function attachColorsToIds<T, U>(ids:Array<T>, idMapper:(item:T)=>number,
     );
 }
 
+
 export function mapIdToIdWithColors(id:number, fgColor:string, bgColor:string):LineGroupId {
     return {id, fgColor, bgColor};
+}
+
+
+export interface WideCtx extends Kontext.AjaxResponse {
+    content:Array<{class:string; str:string}>;
+    expand_left_args:{
+        pos:number;
+        hitlen:number;
+        detail_left_ctx:number;
+        detail_right_ctx:number
+    };
+    expand_right_args:{
+        pos:number;
+        hitlen:number;
+        detail_left_ctx:number;
+        detail_right_ctx:number
+    };
+    righttoleft:'0'|'1';
+    pos:number;
+    maxdetail:number;
+    features?:any;
+}
+
+
+export interface FullRef extends Kontext.AjaxResponse {
+    Refs:Array<{name:string; val:string}>;
 }

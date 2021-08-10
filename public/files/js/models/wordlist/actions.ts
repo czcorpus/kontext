@@ -20,9 +20,9 @@
 
 import { Action } from 'kombo';
 import { IndexedResultItem, WlTypes, FileTarget, WordlistSubmitArgs } from './common';
-import { SaveData } from '../../app/navigation';
 import { FilterEditorData } from './form';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export class Actions {
@@ -214,7 +214,7 @@ export class Actions {
     };
 
     static WordlistSaveFormSetFormat:Action<{
-        value:SaveData.Format;
+        value:DataSaveFormat;
     }> = {
         name: 'WORDLIST_SAVE_FORM_SET_FORMAT'
     };

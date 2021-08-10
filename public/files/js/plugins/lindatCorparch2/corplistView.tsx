@@ -17,8 +17,8 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo} from './corplist';
+import * as Kontext from '../../types/kontext';
+import { CorplistTableModel, CorplistTableModelState, Filters, KeywordInfo } from './corplist';
 import { CorplistItem } from './common';
 import { CorpusInfoBoxProps } from '../../views/overview';
 import { CorpusInfoType } from '../../models/common/layout';

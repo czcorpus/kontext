@@ -23,8 +23,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { CoreViews } from '../../types/coreViews';
+import * as Kontext from '../../types/kontext';
+import * as CoreViews from '../../types/coreViews';
 import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { Actions } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
@@ -791,11 +791,13 @@ export function init(
         StatusIcon,
         DelItemIcon,
         ValidatedItem,
+        TabButton,
         TabView,
         PlusButton,
         Calendar,
         ExpandButton,
         ExpandableArea,
+        FadeInFrame,
         KwicRangeSelector,
         ToggleSwitch,
         UnsupportedRenderer

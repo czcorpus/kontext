@@ -21,7 +21,7 @@
 import { tuple } from 'cnc-tskit';
 import { StatelessModel, IFullActionControl, Action } from 'kombo';
 import { Actions as GlobalActions } from '../../models/common/actions';
-import { IPluginApi } from '../../types/plugins';
+import { IPluginApi } from '../../types/plugins/common';
 
 
 export class Actions {

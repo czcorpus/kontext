@@ -21,13 +21,14 @@
 import { BoundWithProps } from 'kombo';
 import { List, tuple, pipe } from 'cnc-tskit';
 
-import { PluginInterfaces, IPluginApi } from '../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 import { PosTagModel, PosTagModelState, createEmptyPosTagsetStatus } from './positional/models';
 import { createEmptyUDTagsetStatus, UDTagBuilderModel, UDTagBuilderModelState } from './keyval/models';
 import { init as viewInit} from './views';
 import { init as ppTagsetViewInit} from './positional/views';
 import { init as udTagsetViewInit} from './keyval/views';
 import { TabFrameModel } from './models';
+import { IPluginApi } from '../../types/plugins/common';
 
 declare var require:any;
 require('./style.css'); // webpack

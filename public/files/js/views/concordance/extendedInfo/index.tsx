@@ -21,12 +21,12 @@
 import * as React from 'react';
 import { IActionDispatcher, Bound, BoundWithProps } from 'kombo';
 
-import { Kontext} from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { init as ttOverviewInit } from '../ttOverview';
-import { TextTypesDistModel } from '../../../models/concordance/ttDistModel';
+import { TextTypesDistModel } from '../../../models/concordance/ttdist/model';
 import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/dashboard';
 import { UsageTipsModel, UsageTipsState, UsageTipCategory } from '../../../models/usageTips';
-import { PluginInterfaces } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
 import { Actions } from '../../../models/concordance/actions';
 import { Actions as HintActions } from '../../../models/usageTips/actions';
 import * as S2 from '../style';
@@ -57,7 +57,7 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
     // ------------------------- <MinimizeIcon /> ---------------------------
 
-    const MinimizeIcon:React.SFC<{
+    const MinimizeIcon:React.FC<{
         minimized:boolean;
 
     }> = (props) => {

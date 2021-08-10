@@ -19,7 +19,8 @@
  */
 
 import { AnyQuery, QuerySuggestion } from '../../../models/query/query';
-import { PluginInterfaces, IPluginApi } from '../../../types/plugins';
+import * as PluginInterfaces from '../../../types/plugins';
+import { IPluginApi } from '../../../types/plugins/common';
 
 /**
  *

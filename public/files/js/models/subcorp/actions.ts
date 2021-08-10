@@ -21,7 +21,7 @@
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
 import { InputMode } from './common';
-import { TextTypes } from '../../types/common';
+import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 
 

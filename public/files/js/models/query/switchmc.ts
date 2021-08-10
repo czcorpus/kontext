@@ -21,15 +21,15 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { Dict } from 'cnc-tskit';
 
-import { AjaxResponse } from '../../types/ajaxResponses';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
+import { ConcFormArgs, SwitchMainCorpArgs } from './formArgs';
 
 
 
@@ -38,12 +38,12 @@ export interface SwitchMainCorpFormProperties {
 }
 
 
-export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:AjaxResponse.ConcFormArgs},
-        key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]> {
+export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:ConcFormArgs},
+        key:(item:SwitchMainCorpArgs)=>T):Array<[string, T]> {
     const ans = [];
     for (let formId in args) {
         if (args.hasOwnProperty(formId) && args[formId].form_type === 'sample') {
-            ans.push([formId, key(args[formId] as AjaxResponse.SwitchMainCorpArgs)]);
+            ans.push([formId, key(args[formId] as SwitchMainCorpArgs)]);
         }
     }
     return ans;
@@ -59,13 +59,13 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
 
     private readonly layoutModel:PageModel;
 
-    private readonly syncInitialArgs:AjaxResponse.SwitchMainCorpArgs;
+    private readonly syncInitialArgs:SwitchMainCorpArgs;
 
     constructor(
         dispatcher:IFullActionControl,
         layoutModel:PageModel,
         data:SwitchMainCorpFormProperties,
-        syncInitialArgs:AjaxResponse.SwitchMainCorpArgs
+        syncInitialArgs:SwitchMainCorpArgs
     ) {
         super(
             dispatcher,
@@ -107,8 +107,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
     }
 
     syncFrom(
-        src:Observable<AjaxResponse.SwitchMainCorpArgs>
-    ):Observable<AjaxResponse.SwitchMainCorpArgs> {
+        src:Observable<SwitchMainCorpArgs>
+    ):Observable<SwitchMainCorpArgs> {
 
         return src.pipe(
             tap(

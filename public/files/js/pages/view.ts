@@ -24,10 +24,10 @@ import { Action } from 'kombo';
 import { List, tuple, Dict, pipe, id } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
-import { Kontext, ViewOptions } from '../types/common';
-import { AjaxResponse } from '../types/ajaxResponses';
+import * as ViewOptions from '../types/viewOptions';
+import * as Kontext from '../types/kontext';
 import { PageModel, DownloadType } from '../app/page';
-import { PluginInterfaces } from '../types/plugins';
+import * as PluginInterfaces from '../types/plugins';
 import { parseUrlArgs } from '../app/navigation';
 import { MultiDict } from '../multidict';
 import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
@@ -56,7 +56,8 @@ import { FirstHitsModel } from '../models/query/firstHits';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
-import { TextTypesDistModel, TTCrit } from '../models/concordance/ttDistModel';
+import { TextTypesDistModel } from '../models/concordance/ttdist/model';
+import { TTCrit } from '../models/concordance/ttdist/common';
 import { DummySyntaxViewModel } from '../models/concordance/syntax';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
@@ -89,6 +90,7 @@ import { QueryType } from '../models/query/query';
 import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcSummaryModel } from '../models/concordance/summary';
+import * as formArgs from '../models/query/formArgs';
 
 
 export class QueryModels {
@@ -114,6 +116,8 @@ interface RenderLinesDeps {
     lvprops:ViewConfiguration;
     tagh:PluginInterfaces.TagHelper.IPlugin;
 }
+
+
 
 /**
  * This is the concordance viewing and operating model with
@@ -144,7 +148,7 @@ export class ViewPage {
 
     private miscQueryOpsViews:SampleFormViews;
 
-    private concFormsInitialArgs:AjaxResponse.ConcFormsInitialArgs;
+    private concFormsInitialArgs:formArgs.ConcFormsInitialArgs;
 
     private collFormModel:CollFormModel;
 
@@ -168,7 +172,8 @@ export class ViewPage {
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
         this.queryModels = new QueryModels();
-        this.concFormsInitialArgs = this.layoutModel.getConf<AjaxResponse.ConcFormsInitialArgs>('ConcFormsInitialArgs');
+        this.concFormsInitialArgs = this.layoutModel.getConf<formArgs.ConcFormsInitialArgs>(
+            'ConcFormsInitialArgs');
         this.lineGroupsChart = new LineSelGroupsRatiosChart(
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
@@ -305,13 +310,15 @@ export class ViewPage {
     /**
      *
      */
-    private initQueryForm(queryFormArgs:AjaxResponse.QueryFormArgsResponse):void {
+    private initQueryForm(queryFormArgs:formArgs.QueryFormArgsResponse):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
             this.layoutModel.translate.bind(this.layoutModel)
         );
-        this.queryModels.withinBuilderModel = new WithinBuilderModel(this.layoutModel.dispatcher,
-                this.layoutModel);
+        this.queryModels.withinBuilderModel = new WithinBuilderModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
         this.queryModels.virtualKeyboardModel = new VirtualKeyboardModel(
             this.layoutModel.dispatcher,
             this.layoutModel
@@ -415,13 +422,17 @@ export class ViewPage {
         });
     }
 
-    private initFilterForm(querySuggest:PluginInterfaces.QuerySuggest.IPlugin, firstHitsModel:FirstHitsModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+    private initFilterForm(
+        querySuggest:PluginInterfaces.QuerySuggest.IPlugin,
+        firstHitsModel:FirstHitsModel
+    ):void {
+
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArgs = <T extends AjaxResponse.FilterFormArgs[
-                keyof AjaxResponse.FilterFormArgs]>
-                (key:(item:AjaxResponse.FilterFormArgs)=>T) =>
+        const fetchArgs = <T extends formArgs.FilterFormArgs[
+                keyof formArgs.FilterFormArgs]>
+                (key:(item:formArgs.FilterFormArgs)=>T) =>
             fetchFilterFormArgs(concFormsArgs, this.concFormsInitialArgs.filter, key);
 
         const filterFormProps:FilterFormProperties = {
@@ -494,18 +505,18 @@ export class ViewPage {
     }
 
     private initSortForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
-            key:(item:AjaxResponse.SortFormArgs)=>T
+        const fetchArgs = <T extends formArgs.SortFormArgs[keyof formArgs.SortFormArgs]>(
+            key:(item:formArgs.SortFormArgs)=>T
         ):Array<[string, T]> => List.map(
             ([k, v]) => tuple(k, v[0]),
             fetchSortFormArgs(concFormsArgs, this.concFormsInitialArgs.sort, key)
         );
 
-        const fetchMLArgs = <T extends AjaxResponse.SortFormArgs[keyof AjaxResponse.SortFormArgs]>(
-            key:(item:AjaxResponse.SortFormArgs)=>Array<T>
+        const fetchMLArgs = <T extends formArgs.SortFormArgs[keyof formArgs.SortFormArgs]>(
+            key:(item:formArgs.SortFormArgs)=>Array<T>
         ):Array<[string, Array<T>]> => fetchSortFormArgs(
             concFormsArgs, this.concFormsInitialArgs.sort, key);
 
@@ -549,10 +560,10 @@ export class ViewPage {
     }
 
     private initSampleForm(switchMcModel:SwitchMainCorpModel):void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs'
         );
-        const fetchArg = <T>(key:(item:AjaxResponse.SampleFormArgs)=>T):Array<[string, T]>=>
+        const fetchArg = <T>(key:(item:formArgs.SampleFormArgs)=>T):Array<[string, T]>=>
             fetchSampleFormArgs(concFormsArgs, key);
 
         const sampleModelProps:SampleFormProperties = {
@@ -574,9 +585,9 @@ export class ViewPage {
     }
 
     private initSwitchMainCorpForm():void {
-        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+        const concFormsArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs');
-        const fetchArg = <T>(key:(item:AjaxResponse.SwitchMainCorpArgs)=>T):Array<[string, T]>=>
+        const fetchArg = <T>(key:(item:formArgs.SwitchMainCorpArgs)=>T):Array<[string, T]>=>
             fetchSwitchMainCorpFormArgs(concFormsArgs, key);
 
         const switchMainCorpProps:SwitchMainCorpFormProperties = {
@@ -813,7 +824,7 @@ export class ViewPage {
     }
 
     private initTextTypesModel():TextTypesModel {
-        const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
@@ -839,7 +850,7 @@ export class ViewPage {
     }
 
     private initModels(
-        queryFormArgs:AjaxResponse.QueryFormArgsResponse,
+        queryFormArgs:formArgs.QueryFormArgsResponse,
         syntaxViewer:PluginInterfaces.SyntaxViewer.IPlugin,
         tokenConnect:PluginInterfaces.TokenConnect.IPlugin
     ):ViewConfiguration {
@@ -1041,7 +1052,7 @@ export class ViewPage {
                 );
             }
 
-            const concFormArgs = this.layoutModel.getConf<{[ident:string]:AjaxResponse.ConcFormArgs}>(
+            const concFormArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
                 'ConcFormsArgs'
             );
             const queryFormArgs = fetchQueryFormArgs(concFormArgs);

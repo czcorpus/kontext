@@ -19,24 +19,16 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {FreqResultsSaveModel, FreqResultsSaveModelState} from '../../models/freqs/save';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
-import {Actions} from '../../models/freqs/actions';
+import * as Kontext from '../../types/kontext';
+import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../models/freqs/save';
+import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { Actions } from '../../models/freqs/actions';
 
 
 interface SaveFreqFormProps {
     onClose:()=>void;
 }
 
-interface SaveFreqFormState {
-    saveformat:string;
-    includeColHeaders:boolean;
-    includeHeading:boolean;
-    fromLine:Kontext.FormValue<string>;
-    toLine:Kontext.FormValue<string>;
-}
 
 interface ExportedViews {
     SaveFreqForm:React.ComponentClass<SaveFreqFormProps>;
@@ -78,10 +70,10 @@ export function init(
                 <th>{utils.translate('coll__save_form_select_label')}:</th>
                 <td>
                     <select value={props.value} onChange={handleSelect}>
-                        <option value={SaveData.Format.CSV}>CSV</option>
-                        <option value={SaveData.Format.XLSX}>XLSX (Excel)</option>
-                        <option value={SaveData.Format.XML}>XML</option>
-                        <option value={SaveData.Format.TEXT}>Text</option>
+                        <option value="csv">CSV</option>
+                        <option value="xlsx">XLSX (Excel)</option>
+                        <option value="xml">XML</option>
+                        <option value="text">Text</option>
                     </select>
                 </td>
             </tr>
@@ -231,10 +223,10 @@ export function init(
 
         _renderFormatDependentOptions() {
             switch (this.props.saveformat) {
-                case SaveData.Format.XML:
+                case 'xml':
                     return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
-                case SaveData.Format.CSV:
-                case SaveData.Format.XLSX:
+                case 'csv':
+                case 'xlsx':
                     return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
                 default:
                 return <tr><td colSpan={2} /></tr>;
@@ -267,7 +259,8 @@ export function init(
     }
 
     return {
-        SaveFreqForm: BoundWithProps(SaveFreqForm, freqSaveModel)
+        SaveFreqForm: BoundWithProps<SaveFreqFormProps, FreqResultsSaveModelState>(
+            SaveFreqForm, freqSaveModel)
     };
 
 }

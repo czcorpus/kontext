@@ -20,10 +20,10 @@
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
-import { SaveData } from '../../app/navigation';
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
+import { DataSaveFormat, isDataSaveFormat } from '../../app/navigation/save';
 
 
 export interface COllResultsSaveModelArgs {
@@ -35,7 +35,7 @@ export interface COllResultsSaveModelArgs {
 
 export interface CollResultsSaveModelState {
     formIsActive:boolean;
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     includeColHeaders:boolean;
     includeHeading:boolean;
     fromLine:Kontext.FormValue<string>;
@@ -61,7 +61,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
             dispatcher,
             {
                 formIsActive: false,
-                saveformat: SaveData.Format.CSV,
+                saveformat: 'csv',
                 fromLine: {value: '1', isInvalid: false, isRequired: true},
                 toLine: {value: '', isInvalid: false, isRequired: true},
                 includeColHeaders: false,
@@ -107,7 +107,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
         this.addActionHandler<typeof Actions.SaveFormSetFormat>(
             Actions.SaveFormSetFormat.name,
             (state, action) => {
-                state.saveformat = action.payload.value as SaveData.Format; // TODO type
+                state.saveformat = action.payload.value;
             }
         );
 
@@ -201,7 +201,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                             parseInt(state.toLine.value) :
                             undefined);
                 this.saveLinkFn(
-                    `collocation.${SaveData.formatToExt(state.saveformat)}`,
+                    `collocation.${state.saveformat}`,
                     this.layoutModel.createActionUrl('savecoll', args.items())
                 );
             }

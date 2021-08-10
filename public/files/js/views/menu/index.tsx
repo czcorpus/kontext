@@ -22,7 +22,7 @@ import * as React from 'react';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
-import { Kontext } from '../../types/common';
+import * as Kontext from '../../types/kontext';
 import { isDynamicItem, isStaticItem, isEventTriggeringItem, StaticSubmenuItem,
         DynamicSubmenuItem, MainMenuModelState } from '../../models/mainMenu';
 import { Actions } from '../../models/mainMenu/actions';

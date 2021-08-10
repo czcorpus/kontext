@@ -20,14 +20,14 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 
-import { Kontext } from '../../types/common';
-import { SaveData } from '../../app/navigation';
+import * as Kontext from '../../types/kontext';
 import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { MultiDict } from '../../multidict';
 import { ConcSaveServerArgs } from './common';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 
@@ -41,7 +41,7 @@ export interface ConcSaveModelArgs {
 
 export interface ConcSaveModelState {
     formIsActive:boolean;
-    saveformat:SaveData.Format;
+    saveformat:DataSaveFormat;
     includeHeading:boolean;
     fromLine:Kontext.FormValue<string>;
     toLine:Kontext.FormValue<string>;
@@ -65,7 +65,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             dispatcher,
             {
                 formIsActive: false,
-                saveformat: SaveData.Format.CSV,
+                saveformat: 'csv',
                 fromLine: {value: '1', isInvalid: false, isRequired: true},
                 toLine: {value: `${concSize}`, isInvalid: false, isRequired: true},
                 alignKwic: false,
@@ -208,7 +208,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
         args.set('numbering', this.state.includeLineNumbers ? '1' : '0');
         args.set('align_kwic', this.state.alignKwic ? '1' : '0');
         this.saveLinkFn(
-            `concordance.${SaveData.formatToExt(this.state.saveformat)}`,
+            `concordance.${this.state.saveformat}`,
             this.layoutModel.createActionUrl('saveconc', args.items())
         );
     }

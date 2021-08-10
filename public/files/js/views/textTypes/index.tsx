@@ -22,10 +22,11 @@ import * as React from 'react';
 import { List, Dict, pipe } from 'cnc-tskit';
 import { IActionDispatcher, IModel, BoundWithProps } from 'kombo';
 
-import { PluginInterfaces } from '../../types/plugins';
-import { Kontext, TextTypes } from '../../types/common';
+import * as PluginInterfaces from '../../types/plugins';
+import * as Kontext from '../../types/kontext';
+import * as TextTypes from '../../types/textTypes';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { CoreViews } from '../../types/coreViews';
+import * as CoreViews from '../../types/coreViews';
 import { TextTypesModelState } from '../../models/textTypes/main';
 import { Actions } from '../../models/textTypes/actions';
 import { WidgetView } from '../../models/textTypes/common';

@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Kontext } from '../../../types/common';
+import * as Kontext from '../../../types/kontext';
 import { MultiDict } from '../../../multidict';
 import { IActionDispatcher } from 'kombo';
 import { init as ftInit, FormattedTextRendererProps } from './formattedText';
@@ -48,7 +48,7 @@ export interface Views {
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) {
-    
+
     const layoutViews = he.getLayoutViews();
     const FormattedTextRenderer = ftInit(he);
 

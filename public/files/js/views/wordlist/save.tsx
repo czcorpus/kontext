@@ -19,12 +19,12 @@
  */
 
 import * as React from 'react';
-import {Kontext} from '../../types/common';
-import {SaveData} from '../../app/navigation';
-import {IActionDispatcher, Bound} from 'kombo';
+import * as Kontext from '../../types/kontext';
+import { IActionDispatcher, Bound } from 'kombo';
 import { WordlistSaveModel, WordlistSaveModelState } from '../../models/wordlist/save';
-import {CommonViews} from '../common';
+import { CommonViews } from '../common';
 import { Actions } from '../../models/wordlist/actions';
+import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface WordlistSaveViews {
@@ -46,7 +46,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // --------------------------- <TRColHeadingSelector /> -------------------------------
 
-    const TRColHeadingSelector:React.SFC<{
+    const TRColHeadingSelector:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -78,7 +78,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // --------------------------- <TRHeadingSelector /> -------------------------------
 
-    const TRHeadingSelector:React.SFC<{
+    const TRHeadingSelector:React.FC<{
         value:boolean;
 
     }> = (props) => {
@@ -109,13 +109,13 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // ---------------------------<MaxLinesInput /> -----------------------------
 
-    const TRGeneralHeadingSelector:React.SFC<{
+    const TRGeneralHeadingSelector:React.FC<{
         saveFormat:string;
         includeColHeaders:boolean;
         includeHeading:boolean;
 
     }> = (props) => {
-        if (props.saveFormat === SaveData.Format.CSV || props.saveFormat === SaveData.Format.XLSX) {
+        if (props.saveFormat === 'csv' || props.saveFormat === 'xlsx') {
             return <TRColHeadingSelector value={props.includeColHeaders} />;
 
         } else {
@@ -123,9 +123,9 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
         }
     };
 
-    // ---------------------------<MaxLinesInput /> -----------------------------
+    // ---------------------------<TRToLineInput /> -----------------------------
 
-    const TRToLineInput:React.SFC<{
+    const TRToLineInput:React.FC<{
         value:Kontext.FormValue<string>;
 
     }> = (props) => {
@@ -154,7 +154,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // --------------------------- <TRSaveFormatSelector /> -------------------------------
 
-    const TRSaveFormatSelector:React.SFC<{
+    const TRSaveFormatSelector:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -163,7 +163,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
             dispatcher.dispatch<typeof Actions.WordlistSaveFormSetFormat>({
                 name: Actions.WordlistSaveFormSetFormat.name,
                 payload: {
-                    value: evt.target.value as SaveData.Format
+                    value: evt.target.value as DataSaveFormat
                 }
             });
         };
@@ -183,7 +183,7 @@ export function init({dispatcher, utils, commonViews, saveModel}:WordlistSaveFor
 
     // --------------------------- <SaveWlForm /> -------------------------------
 
-    const WordlistSaveForm:React.SFC<WordlistSaveModelState> = (props) => {
+    const WordlistSaveForm:React.FC<WordlistSaveModelState> = (props) => {
 
         const handleCloseClick = () => {
             dispatcher.dispatch<typeof Actions.WordlistSaveFormHide>({
