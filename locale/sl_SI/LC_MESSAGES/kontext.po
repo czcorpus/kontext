@@ -652,3 +652,6 @@ msgstr "Create new subcorpus UNTRANSLATED"
 
 msgid "Paradigmatic query calculation"
 msgstr "Paradigmatic query calculation UNTRANSLATED"
+
+msgid "Login"
+msgstr "Prijava"
