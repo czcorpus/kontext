@@ -88,7 +88,7 @@ class Options(Kontext):
 
         def ref_is_allowed(r):
             return r and r not in (
-                '#', self.get_corpus_info(self.args.corpname).get('speech_segment'))
+                '#', self.get_corpus_info(self.args.corpname).speech_segment)
 
         for item in availref:
             if ref_is_allowed(item):

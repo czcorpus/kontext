@@ -322,17 +322,18 @@ class DefaultCorplistProvider(CorplistProvider):
                     corp['keywords'] = []
                     for k in keywords:
                         if k not in all_keywords_map:
-                            logging.getLogger(__name__).warning(f'Undefined search keyword {k} (corpus {corp["id"]}')
+                            logging.getLogger(__name__).warning(
+                                f'Undefined search keyword {k} (corpus {corp["id"]}')
                             continue
                         corp['keywords'].append((k, all_keywords_map[k]))
                     corp['found_in'] = found_in
                     corp['fav_id'] = fav_id(corp['id'])
                     # because of client-side fav/feat/search items compatibility
                     corp['corpus_id'] = corp['id']
-                    corp['pmltq'] = full_data['pmltq']
-                    corp['repo'] = full_data['web']
-                    corp['access'] = full_data['access']
-                    corp['tokenConnect'] = full_data['token_connect']['providers']
+                    corp['pmltq'] = full_data.pmltq
+                    corp['repo'] = full_data.web
+                    corp['access'] = full_data.access
+                    corp['tokenConnect'] = full_data.token_connect.providers
                     ans['rows'].append(corp)
                     used_keywords.update(keywords)
                     if not self.should_fetch_next(ans, offset, limit):

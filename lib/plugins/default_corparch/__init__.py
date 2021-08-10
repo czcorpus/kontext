@@ -307,7 +307,8 @@ class DefaultCorplistProvider(CorplistProvider):
                     corp['keywords'] = []
                     for k in keywords:
                         if k not in all_keywords_map:
-                            logging.getLogger(__name__).warning(f'Undefined search keyword {k} (corpus {corp["id"]}')
+                            logging.getLogger(__name__).warning(
+                                f'Undefined search keyword {k} (corpus {corp["id"]}')
                             continue
                         corp['keywords'].append((k, all_keywords_map[k]))
                     corp['found_in'] = found_in
@@ -524,7 +525,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.web = web_url
         ans.sentence_struct = sentence_struct
         ans.tagsets = [
-            TagsetInfo().from_dict({
+            TagsetInfo.from_dict({
                 'corpus_name': ans.name,
                 'tagset_name': tagset.attrib.get('name', None),
                 'tagset_type': tagset.attrib.get('type', None),

@@ -46,74 +46,62 @@ import json
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus
 import l10n
+from dataclasses import dataclass, asdict, field
 
 
-class DictLike(object):
-
-    def __getitem__(self, item: str):
-        return getattr(self, item)
-
+class BaseCorpInfo:
     def __contains__(self, item: str):
         return hasattr(self, item)
-
-    def __repr__(self):
-        return 'DictLike {}'.format(self.__dict__)
 
     def get(self, key: str, default=None):
         return getattr(self, key, default)
 
     def to_json(self):
-        return json.dumps(self, cls=CorpInfoEncoder)
-
-    def to_dict(self):
-        return CorpInfoEncoder().default(self)
-
-    def from_dict(self, data: Dict[str, Any]) -> 'DictLike':
-        self.__dict__.update(data)
-        return self
-
-
-class CorpusMetadata(DictLike):
-    def __init__(self) -> None:
-        self.database: Optional[str] = None
-        self.label_attr: Optional[str] = None
-        self.avg_label_attr_len: Optional[int] = None
-        self.id_attr: Optional[str] = None
-        self.sort_attrs: bool = False
-        self.desc: Dict[str, Any] = {}
-        self.keywords: List[Tuple[str, str]] = []
-        self.interval_attrs: List[Tuple[str, str]] = []
-        self.group_duplicates: bool = False
-        self.default_virt_keyboard: Optional[str] = None
-
-
-class CitationInfo(DictLike):
-    def __init__(self) -> None:
-        self.default_ref: Optional[str] = None
-        self.article_ref: List[str] = []
-        self.other_bibliography: Optional[str] = None
+        return json.dumps(self.to_dict())
 
     def to_dict(self) -> Dict[str, Any]:
-        return {k: v for k, v in self.__dict__.items()}
+        return asdict(self)
 
 
-class ManateeCorpusInfo(DictLike):
+@dataclass
+class CorpusMetadata(BaseCorpInfo):
+    database: Optional[str] = None
+    label_attr: Optional[str] = None
+    avg_label_attr_len: Optional[int] = None
+    id_attr: Optional[str] = None
+    sort_attrs: bool = False
+    desc: Dict[str, Any] = field(default_factory=dict)
+    keywords: List[Tuple[str, str]] = field(default_factory=list)
+    interval_attrs: List[Tuple[str, str]] = field(default_factory=list)
+    group_duplicates: bool = False
+    default_virt_keyboard: Optional[str] = None
+
+
+@dataclass
+class CitationInfo(BaseCorpInfo):
+    default_ref: Optional[str] = None
+    article_ref: List[str] = field(default_factory=list)
+    other_bibliography: Optional[str] = None
+
+
+@dataclass
+class ManateeCorpusInfo(BaseCorpInfo):
     """
     Represents a subset of corpus information
     as provided by manatee.Corpus instance
     """
 
-    def __init__(self) -> None:
-        self.encoding: Optional[str] = None
-        self.name: Optional[str] = None
-        self.description: Optional[str] = None
-        self.attrs: List[str] = []
-        self.size: int = 0
-        self.has_lemma: bool = False
-        self.tagset_doc: Optional[str] = None
-        self.lang: Optional[str] = None
+    encoding: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    attrs: List[str] = field(default_factory=list)
+    size: int = 0
+    has_lemma: bool = False
+    tagset_doc: Optional[str] = None
+    lang: Optional[str] = None
 
 
+@dataclass
 class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     """
     Represents a subset of corpus information
@@ -133,16 +121,14 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
         self.lang = corpus.get_conf('LANGUAGE')
 
 
-class TokenConnect(DictLike):
+@dataclass
+class TokenConnect(BaseCorpInfo):
+    providers: List[Any] = field(default_factory=list)
 
-    def __init__(self) -> None:
-        self.providers: List[Any] = []
 
-
-class KwicConnect(DictLike):
-
-    def __init__(self) -> None:
-        self.providers: List[Any] = []
+@dataclass
+class KwicConnect(BaseCorpInfo):
+    providers: List[Any] = field(default_factory=list)
 
 
 class PosCategoryItem(NamedTuple):
@@ -150,23 +136,22 @@ class PosCategoryItem(NamedTuple):
     pos: str
 
 
-class TagsetInfo(DictLike):
+@dataclass
+class TagsetInfo(BaseCorpInfo):
+    corpus_name: Optional[str] = None
+    pos_attr: Optional[str] = None
+    feat_attr: Optional[str] = None
+    tagset_type: Optional[str] = None
+    tagset_name: Optional[str] = None
+    widget_enabled: bool = False
+    doc_url_local: Optional[str] = None
+    doc_url_en: Optional[str] = None
+    pos_category: Optional[List[PosCategoryItem]] = field(default_factory=list)
 
-    def __init__(self) -> None:
-        self.corpus_name: Optional[str] = None
-        self.pos_attr: Optional[str] = None
-        self.feat_attr: Optional[str] = None
-        self.tagset_type: Optional[str] = None
-        self.tagset_name: Optional[str] = None
-        self.widget_enabled: bool = False
-        self.doc_url_local: Optional[str] = None
-        self.doc_url_en: Optional[str] = None
-        self.pos_category: Optional[List[PosCategoryItem]] = None
-
-    def from_dict(self, data: Dict[str, Any]) -> 'DictLike':
-        self.__dict__.update(data)
-        self.widget_enabled = bool(self.widget_enabled)
-        return self
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> 'TagsetInfo':
+        data['widget_enabled'] = bool(data.get('widget_enabled', False))
+        return TagsetInfo(**data)
 
     def to_dict(self):
         # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
@@ -177,32 +162,30 @@ class TagsetInfo(DictLike):
                     posCategory=self.pos_category)
 
 
-class QuerySuggest(DictLike):
-
-    def __init__(self) -> None:
-        self.providers: List[Any] = []
-
-
-class CorpusListItem(DictLike):
-
-    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None,
-                 featured=False, keywords=None):
-        self.id = id
-        self.corpus_id = corpus_id
-        self.name = name
-        self.description = description
-        self.size = size
-        self.size_info = l10n.simplify_num(size)
-        self.path = path
-        self.featured = featured
-        self.found_in = []
-        self.keywords = [] if keywords is None else keywords
-
-    def __repr__(self):
-        return 'CorpusListItem({0})'.format(self.__dict__)
+@dataclass
+class QuerySuggest(BaseCorpInfo):
+    providers: List[Any] = field(default_factory=list)
 
 
-class CorpusInfo(DictLike):
+@dataclass
+class CorpusListItem(BaseCorpInfo):
+    id: str = None
+    corpus_id: str = None
+    name: str = None
+    description: str = None
+    size: int = 0
+    size_info: str = field(init=False)
+    path: str = None
+    featured: bool = False
+    found_in: List[str] = field(default_factory=list)
+    keywords: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.size_info = l10n.simplify_num(self.size)
+
+
+@dataclass
+class CorpusInfo(BaseCorpInfo):
     """
     Genereal corpus information and metadata.
     All the possible implementations are expected to
@@ -218,34 +201,33 @@ class CorpusInfo(DictLike):
     plug-ins).
     """
 
-    def __init__(self) -> None:
-        self.id: Optional[str] = None
-        self.name: Optional[str] = None
-        self.description: Optional[str] = None  # filled in during localization
-        self._description_cs: Optional[str] = None
-        self._description_en: Optional[str] = None
-        self.path: Optional[str] = None
-        self.web: Optional[str] = None
-        self.sentence_struct: Optional[str] = None
-        self.default_tagset: Optional[str] = None
-        self.tagsets: List[TagsetInfo] = []
-        self.speech_segment = None
-        self.speaker_id_attr = None
-        self.speech_overlap_attr = None
-        self.speech_overlap_val = None
-        self.bib_struct = None
-        self.sample_size: int = -1
-        self.featured: bool = False
-        self.collator_locale: str = 'en_US'  # this does not apply for Manatee functions
-        self.use_safe_font: bool = False
-        self.citation_info: CitationInfo = CitationInfo()
-        self.metadata: CorpusMetadata = CorpusMetadata()
-        self.token_connect: TokenConnect = TokenConnect()
-        self.kwic_connect: KwicConnect = KwicConnect()
-        self.manatee: ManateeCorpusInfo = ManateeCorpusInfo()
-        self.default_view_opts: Dict[str, Any] = {}
-        self.query_suggest: QuerySuggest = QuerySuggest()
-        self.simple_query_default_attrs: List[str] = []
+    id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None  # filled in during localization
+    _description_cs: Optional[str] = None
+    _description_en: Optional[str] = None
+    path: Optional[str] = None
+    web: Optional[str] = None
+    sentence_struct: Optional[str] = None
+    default_tagset: Optional[str] = None
+    tagsets: List[TagsetInfo] = field(default_factory=list)
+    speech_segment = None
+    speaker_id_attr = None
+    speech_overlap_attr = None
+    speech_overlap_val = None
+    bib_struct = None
+    sample_size: int = -1
+    featured: bool = False
+    collator_locale: str = 'en_US'  # this does not apply for Manatee functions
+    use_safe_font: bool = False
+    citation_info: CitationInfo = CitationInfo()
+    metadata: CorpusMetadata = CorpusMetadata()
+    token_connect: TokenConnect = TokenConnect()
+    kwic_connect: KwicConnect = KwicConnect()
+    manatee: ManateeCorpusInfo = ManateeCorpusInfo()
+    default_view_opts: Dict[str, Any] = field(default_factory=dict)
+    query_suggest: QuerySuggest = QuerySuggest()
+    simple_query_default_attrs: List[str] = field(default_factory=list)
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':
@@ -254,6 +236,7 @@ class CorpusInfo(DictLike):
             return self._description_en
 
 
+@dataclass
 class BrokenCorpusInfo(CorpusInfo):
     """
     An incomplete corpus information. It should be used in corpora lists/search
@@ -268,17 +251,6 @@ class BrokenCorpusInfo(CorpusInfo):
         self.name = name if name else 'undefined'
         self.metadata = CorpusMetadata()
         self.manatee = ManateeCorpusInfo()
-
-
-class CorpInfoEncoder(json.JSONEncoder):
-    def default(self, o):
-        ans = {}
-        for key, val in list(o.__dict__.items()):
-            if isinstance(val, DictLike):
-                ans[key] = val.__dict__
-            else:
-                ans[key] = val
-        return ans
 
 
 class AbstractCorporaArchive(abc.ABC):
