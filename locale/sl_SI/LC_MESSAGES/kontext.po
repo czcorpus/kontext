@@ -644,3 +644,6 @@ msgstr "Vnesite novo poizvedbo"
 
 msgid "Subcorpus \"%s\" not found"
 msgstr "Podkorpus \"%s\" ni bil najden"
+
+msgid "Login"
+msgstr "Prijava"
