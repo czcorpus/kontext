@@ -201,16 +201,19 @@ class Querying(Kontext):
 
         corpora = self._select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=QueryFormArgs(plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False).to_dict(),
+            query=QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                corpora=corpora, persist=False).to_dict(),
             filter=FilterFormArgs(
                 plugin_ctx=self._plugin_ctx,
-                maincorp=getattr(self.args, 'maincorp') if getattr(self.args, 'maincorp') else getattr(self.args, 'corpname'),
+                maincorp=getattr(self.args, 'maincorp') if getattr(
+                    self.args, 'maincorp') else getattr(self.args, 'corpname'),
                 persist=False
             ).to_dict(),
             sort=SortFormArgs(persist=False).to_dict(),
             sample=SampleFormArgs(persist=False).to_dict(),
             shuffle=ShuffleFormArgs(persist=False).to_dict(),
-            firsthits=FirstHitsFilterFormArgs(persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
+            firsthits=FirstHitsFilterFormArgs(
+                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
         )
 
     def _attach_aligned_query_params(self, tpl_out: Dict[str, Any]):
@@ -227,21 +230,33 @@ class Querying(Kontext):
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
                 alcorp = self.cm.get_corpus(al)
+                corp_info = self.get_corpus_info(al)
+
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
                 attrlist = alcorp.get_conf('ATTRLIST').split(',')
-                poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'WPOSLIST')
-                tpl_out['Wposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
+
+                poslist = []
+                for tagset in corp_info.tagsets:
+                    if tagset.tagset_name == corp_info.default_tagset:
+                        poslist = tagset.pos_category
+                        break
+                tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+
                 if 'lempos' in attrlist:
                     poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'LPOSLIST')
-                tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                tpl_out['input_languages'][al] = self.get_corpus_info(al)['collator_locale']
+                    tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
+                else:
+                    tpl_out['Lposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+
+                tpl_out['input_languages'][al] = corp_info['collator_locale']
 
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.
-            pipeline = [x for x in self.load_pipeline_ops(request.args['last_key']) if x.form_type != 'nop']
+            pipeline = [x for x in self.load_pipeline_ops(
+                request.args['last_key']) if x.form_type != 'nop']
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
         except (IndexError, KeyError):
