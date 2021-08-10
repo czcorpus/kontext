@@ -178,9 +178,9 @@ class Querying(Kontext):
         sorting, samples,...)
         """
         corpus_info = self.get_corpus_info(self.args.corpname)
-        tpl_out['metadata_desc'] = corpus_info['metadata']['desc']
+        tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
-        tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info['collator_locale']
+        tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
         if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
@@ -248,7 +248,7 @@ class Querying(Kontext):
                 else:
                     tpl_out['Lposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
 
-                tpl_out['input_languages'][al] = corp_info['collator_locale']
+                tpl_out['input_languages'][al] = corp_info.collator_locale
 
     @exposed(return_type='json', http_method='GET')
     def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:

@@ -131,7 +131,8 @@ class TextTypes(object):
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self._corpname)
+        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+            self._plugin_ctx, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
         # entries even if their count is < maxlistsize
@@ -144,8 +145,8 @@ class TextTypes(object):
             logging.getLogger(__name__).warning('Duplicate SUBCORPATTRS item found')
 
         if plugins.runtime.LIVE_ATTRIBUTES.exists:
-            ans['bib_attr'] = corpus_info['metadata']['label_attr']
-            ans['id_attr'] = corpus_info['metadata']['id_attr']
+            ans['bib_attr'] = corpus_info.metadata.label_attr
+            ans['id_attr'] = corpus_info.metadata.id_attr
             # We have to ensure that the bibliography item (which uses different values
             # for labels and different values for actual identifiers) is represented
             # as an input box on client-side. Passing list_none with bib_attr element
@@ -208,10 +209,11 @@ class TextTypes(object):
         return normslist
 
     def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, self._corpname)['metadata']
+        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(
+            self._plugin_ctx, self._corpname).metadata
         for line in tt:
             for item in line.get('Line', ()):
-                label, widget = next((x for x in metadata.get('interval_attrs')
+                label, widget = next((x for x in metadata.interval_attrs
                                       if x[0] == item['label']), (None, None))
                 item['is_interval'] = int(bool(label))
                 item['widget'] = widget

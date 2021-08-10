@@ -99,7 +99,7 @@ class Actions(Querying):
         Returns:
             str: segment name if speech_segment is configured in 'corpora.xml' and it actually exists; else None
         """
-        speech_struct = self.get_corpus_info(self.args.corpname).get('speech_segment')
+        speech_struct = self.get_corpus_info(self.args.corpname).speech_segment
         if speech_struct is not None:
             return tuple(speech_struct.split('.'))
         else:
@@ -110,7 +110,7 @@ class Actions(Querying):
         Returns:
             tuple (structname, attr_name)
         """
-        segment_str = self.get_corpus_info(self.args.corpname).get('speech_segment')
+        segment_str = self.get_corpus_info(self.args.corpname).speech_segment
         if segment_str:
             return tuple(segment_str.split('.'))
         return None
@@ -192,7 +192,7 @@ class Actions(Querying):
         if self.args.pagesize < 1:
             raise UserActionException('Invalid page size')
 
-        self._apply_viewmode(corpus_info['sentence_struct'])
+        self._apply_viewmode(corpus_info.sentence_struct)
 
         i = 0
         while i < len(self.args.q):
@@ -672,7 +672,8 @@ class Actions(Querying):
         self.add_conc_form_args(qinfo)
         # 2) process the query
         try:
-            self._set_first_query([q['corpname'] for q in request.json['queries']], qinfo)
+            self._set_first_query([q['corpname']
+                                   for q in request.json['queries']], qinfo, corpus_info)
             if self.args.shuffle == 1 and 'f' not in self.args.q:
                 self.args.shuffle = 0
                 self.args.q.append('f')
@@ -1431,7 +1432,7 @@ class Actions(Querying):
 
         try:
             corpus_info = self.get_corpus_info(self.args.corpname)
-            self._apply_viewmode(corpus_info['sentence_struct'])
+            self._apply_viewmode(corpus_info.sentence_struct)
 
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                             q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
