@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 import os
 from xml.sax.saxutils import escape
-from urllib.parse import unquote, quote
+from urllib.parse import unquote, quote, urlparse
 import json
 import logging
 import time
@@ -53,7 +53,7 @@ from translation import ugettext as translate
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
 from argmapping import Persistence, Args
 from argmapping.func import convert_func_mapping_types
-from .errors import (UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
+from .errors import (ForbiddenException, UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
 
 import werkzeug.wrappers
@@ -192,6 +192,11 @@ class Controller(object):
         self.args: Args = Args()
         self._uses_valid_sid: bool = True
         self._plugin_ctx: Optional[PluginCtx] = None  # must be implemented in a descendant
+
+        self._redirect_safe_domains: Tuple[str] = (
+            urlparse(self.get_root_url()).netloc,
+            *settings.get('global', 'redirect_safe_domains', ())
+        )
 
     def init_session(self) -> None:
         """
@@ -507,7 +512,11 @@ class Controller(object):
         self._status = code
         if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
             url = self.get_root_url() + url
-        self._headers['Location'] = url
+
+        if any(urlparse(url).netloc.endswith(domain) for domain in self._redirect_safe_domains):
+            self._headers['Location'] = url
+        else:
+            raise ForbiddenException('Not allowed redirection domain')
 
     def set_not_found(self) -> None:
         """
