@@ -220,13 +220,13 @@ class CorpusInfo(BaseCorpInfo):
     featured: bool = False
     collator_locale: str = 'en_US'  # this does not apply for Manatee functions
     use_safe_font: bool = False
-    citation_info: CitationInfo = CitationInfo()
-    metadata: CorpusMetadata = CorpusMetadata()
-    token_connect: TokenConnect = TokenConnect()
-    kwic_connect: KwicConnect = KwicConnect()
-    manatee: ManateeCorpusInfo = ManateeCorpusInfo()
+    citation_info: CitationInfo = field(default_factory=lambda: CitationInfo())
+    metadata: CorpusMetadata = field(default_factory=lambda: CorpusMetadata())
+    token_connect: TokenConnect = field(default_factory=lambda: TokenConnect())
+    kwic_connect: KwicConnect = field(default_factory=lambda: KwicConnect())
+    manatee: ManateeCorpusInfo = field(default_factory=lambda: ManateeCorpusInfo())
     default_view_opts: Dict[str, Any] = field(default_factory=dict)
-    query_suggest: QuerySuggest = QuerySuggest()
+    query_suggest: QuerySuggest = field(default_factory=lambda: QuerySuggest())
     simple_query_default_attrs: List[str] = field(default_factory=list)
 
     def localized_desc(self, lang) -> str:
@@ -249,8 +249,6 @@ class BrokenCorpusInfo(CorpusInfo):
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__()
         self.name = name if name else 'undefined'
-        self.metadata = CorpusMetadata()
-        self.manatee = ManateeCorpusInfo()
 
 
 class AbstractCorporaArchive(abc.ABC):
