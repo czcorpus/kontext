@@ -360,6 +360,18 @@
                             <ref name="boolValues" />
                         </element>
                     </optional>
+                    <optional>
+                        <element name="redirect_safe_domains">
+                            <a:documentation>
+                                Domains allowed to redirect to
+                            </a:documentation>
+                            <oneOrMore>
+                                <element name="domain">
+                                    <data type="anyURI" />
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </optional>
                 </interleave>
             </element>
             <element name="calc_backend">
