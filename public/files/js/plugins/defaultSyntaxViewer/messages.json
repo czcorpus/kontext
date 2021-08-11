@@ -1,14 +1,14 @@
 {
   "en-US": {
-      "syntaxViewer__click_to_see_the_tree": "Click to see the syntax tree"
+    "syntaxViewer__click_to_see_the_tree": "Click to see the syntax tree"
   },
   "cs-CZ": {
-      "syntaxViewer__click_to_see_the_tree": "Klikněte pro zobrazení syntaktického stromu"
+    "syntaxViewer__click_to_see_the_tree": "Klikněte pro zobrazení syntaktického stromu"
   },
   "szl": {
-      "syntaxViewer__click_to_see_the_tree": "Kliknij, żeby pokŏzać strōm składnie"
+    "syntaxViewer__click_to_see_the_tree": "Kliknij, żeby pokŏzać strōm składnie"
   },
   "sl-SI": {
-    "syntaxViewer__click_to_see_the_tree": "Click to see the syntax tree UNTRANSLATED"
+    "syntaxViewer__click_to_see_the_tree": "Kliknite, da prikažete sintaksno drevo"
   }
 }

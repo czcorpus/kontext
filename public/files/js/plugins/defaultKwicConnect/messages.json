@@ -1,5 +1,5 @@
 {
-    "en-US": {
+    "en-Us": {
         "default_kwic_connect__view_in_treq": "view in Treq",
         "default_kwic_connect__translation_not_found": "translation not found",
         "default_kwic_connect__using_attr_for_srch_{attr}": "Using attribute [{attr}] for the search",
@@ -24,11 +24,11 @@
         "default_kwic_connect__item_been_ommitted_due_size": "One or more items has been omitted due to KWIC size"
     },
     "sl-SI": {
-        "default_kwic_connect__view_in_treq": "view in Treq UNTRANSLATED",
-        "default_kwic_connect__translation_not_found": "translation not found UNTRANSLATED",
-        "default_kwic_connect__using_attr_for_srch_{attr}": "Using attribute [{attr}] for the search UNTRANSLATED",
-        "default_kwic_connect__abs_freq": "Abs. frequency UNTRANSLATED",
-        "default_kwic_connect__use_as_filter_in_2nd_corp": "Use as a filter in the second corpus UNTRANSLATED",
-        "default_kwic_connect__item_been_ommitted_due_size": "One or more items has been omitted due to KWIC size UNTRANSLATED"
+        "default_kwic_connect__view_in_treq": "pokaži v Trequ",
+        "default_kwic_connect__translation_not_found": "prevoda ni mogoče najti",
+        "default_kwic_connect__using_attr_for_srch_{attr}": "Iskanje z atributom [{attr}]",
+        "default_kwic_connect__abs_freq": "Abs. frekvenca",
+        "default_kwic_connect__use_as_filter_in_2nd_corp": "Uporabi kot filter v drugem korpusu",
+        "default_kwic_connect__item_been_ommitted_due_size": "Eden ali več elementov je bilo izpuščenih zaradi velikosti KWIC"
     }
 }

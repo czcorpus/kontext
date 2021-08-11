@@ -1,46 +1,46 @@
 {
-  "en-US": {
-      "taghelper__create_tag_heading": "Create / edit a tag",
-      "taghelper__insert_btn": "Insert",
-      "taghelper__unfulfilled": "Unspecified",
-      "taghelper__reset": "Reset",
-      "taghelper__undo": "Undo",
-      "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported.",
-      "taghelper__selected_features_label": "Selected features",
-      "taghelper__part_of_speech_label": "Part of speech",
-      "taghelper__features_label": "Features"
-  },
-  "cs-CZ": {
-      "taghelper__create_tag_heading": "Vytvořit / upravit tag",
-      "taghelper__insert_btn": "Vložit",
-      "taghelper__unfulfilled": "Neurčeno",
-      "taghelper__reset": "Obnovit",
-      "taghelper__undo": "Krok zpět",
-      "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány.",
-      "taghelper__selected_features_label": "Zvolené vlastnosti",
-      "taghelper__part_of_speech_label": "Slovní druh",
-      "taghelper__features_label": "Vlastnosti"
-  },
-  "szl": {
-      "taghelper__create_tag_heading": "Create / edit a tag",
-      "taghelper__insert_btn": "Wraź",
-      "taghelper__unfulfilled": "Unspecified",
-      "taghelper__reset": "Ôdnōw",
-      "taghelper__undo": "Cŏfnij",
-      "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane.",
-      "taghelper__selected_features_label": "Selected features",
-      "taghelper__part_of_speech_label": "Part of speech",
-      "taghelper__features_label": "Features"
-  },
-  "sl-SI": {
-    "taghelper__create_tag_heading": "Create / edit a tag UNTRANSLATED",
-    "taghelper__insert_btn": "Insert UNTRANSLATED",
-    "taghelper__unfulfilled": "Unspecified UNTRANSLATED",
-    "taghelper__reset": "Reset UNTRANSLATED",
-    "taghelper__undo": "Undo UNTRANSLATED",
-    "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported. UNTRANSLATED",
-    "taghelper__selected_features_label": "Selected features UNTRANSLATED",
-    "taghelper__part_of_speech_label": "Part of speech UNTRANSLATED",
-    "taghelper__features_label": "Features UNTRANSLATED"
-  }
+    "en-US": {
+        "taghelper__create_tag_heading": "Create / edit a tag",
+        "taghelper__insert_btn": "Insert",
+        "taghelper__unfulfilled": "Unspecified",
+        "taghelper__reset": "Reset",
+        "taghelper__undo": "Undo",
+        "taghelper__cannot_parse": "The patterns containing alternations (e.g. \"N.M|N.F\") are not supported.",
+        "taghelper__selected_features_label": "Selected features",
+        "taghelper__part_of_speech_label": "Part of speech",
+        "taghelper__features_label": "Features"
+    },
+    "cs-CZ": {
+        "taghelper__create_tag_heading": "Vytvořit / upravit tag",
+        "taghelper__insert_btn": "Vložit",
+        "taghelper__unfulfilled": "Neurčeno",
+        "taghelper__reset": "Obnovit",
+        "taghelper__undo": "Krok zpět",
+        "taghelper__cannot_parse": "Regulární výrazy obsahující alternace (např. \"N.M|N.F\") nejsou podporovány.",
+        "taghelper__selected_features_label": "Zvolené vlastnosti",
+        "taghelper__part_of_speech_label": "Slovní druh",
+        "taghelper__features_label": "Vlastnosti"
+    },
+    "szl": {
+        "taghelper__create_tag_heading": "Create / edit a tag",
+        "taghelper__insert_btn": "Wraź",
+        "taghelper__unfulfilled": "Unspecified",
+        "taghelper__reset": "Ôdnōw",
+        "taghelper__undo": "Cŏfnij",
+        "taghelper__cannot_parse": "Szymle, co zawiyrajōm alternatywy (bp. \"N.M|N.F\") niy sōm spiyrane.",
+        "taghelper__selected_features_label": "Selected features",
+        "taghelper__part_of_speech_label": "Part of speech",
+        "taghelper__features_label": "Features"
+    },
+    "sl-SI": {
+        "taghelper__create_tag_heading": "Ustvari / uredi tag",
+        "taghelper__insert_btn": "Vstavi",
+        "taghelper__unfulfilled": "Nedoločeno",
+        "taghelper__reset": "Ponastavi",
+        "taghelper__undo": "Razveljavi",
+        "taghelper__cannot_parse": "Regularni izrazi, ki vsebujejo disjunkcije (npr. \"N.M|N.F\") niso podprti",
+        "taghelper__selected_features_label": "Izbrane funkcije",
+        "taghelper__part_of_speech_label": "Oblikoskladenjske oznake",
+        "taghelper__features_label": "Funkcije"
+    }
 }

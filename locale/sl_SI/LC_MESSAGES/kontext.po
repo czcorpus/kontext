@@ -1,10 +1,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.2\n"
+"Project-Id-Version: 0.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-04 12:38+0200\n"
-"PO-Revision-Date: 2017-12-14 17:15+0100\n"
+"PO-Revision-Date: 2021-06-27 17:15+0100\n"
 "Last-Translator: Tomaž Erjavec <tomaz.erjavec@ijs.si>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -232,249 +232,248 @@ msgstr "Seznam mojih podkorpusov"
 
 #: cmpltmpl/subcorp_list.py:150 cmpltmpl/document.py:1979
 msgid "My subcorpora"
-msgstr ""
+msgstr "Moji podkorpusi"
 
 msgid "Last name not valid"
-msgstr "Last name not valid UNTRANSLATED"
+msgstr "Priimek ni veljaven"
 
 msgid "General view options"
-msgstr "General view options UNTRANSLATED"
+msgstr "Splošne možnosti prikaza"
 
 msgid "The application is under maintenance. Sorry for inconvenience."
 msgstr ""
-"The application is under maintenance. Sorry for inconvenience. UNTRANSLATED"
+"V aplikaciji potekajo vzdrževalna dela. Za nevšečnosti se opravičujemo."
 
 msgid "Shuffle"
-msgstr "Shuffle UNTRANSLATED"
+msgstr "Premešaj"
 
 msgid "Failed to sign up user"
-msgstr "Failed to sign up user UNTRANSLATED"
+msgstr "Registracija uporabnika ni uspela."
 
 msgid ""
 "To verify your new account {username} (full name: {firstname} {lastname}) "
 "please click the link below"
 msgstr ""
-"To verify your new account {username} (full name: {firstname} {lastname}) "
-"please click the link below UNTRANSLATED"
+"Za potrditev vašega novega računa {username} (full name: {firstname} "
+"{lastname}) prosimo kliknite spodnjo povezavo"
 
 msgid "First hits in documents"
-msgstr "First hits in documents UNTRANSLATED"
+msgstr "Prvi zadetki v dokumentih"
 
 msgid ""
 "Please note that KonText is not compatible with Microsoft Internet Explorer "
 "browser which has been discontinued by Microsoft in favour of the Edge "
 "browser in 2015."
 msgstr ""
-"Please note that KonText is not compatible with Microsoft Internet Explorer "
-"browser which has been discontinued by Microsoft in favour of the Edge "
-"browser in 2015. UNTRANSLATED"
+"KonText ni kompatibilen z brskalnikom Microsoft Internet Explorer, ki ga je "
+"Microsoft ukinil in nadomestil z brskalnikom Edge leta 2015."
 
 msgid "version"
-msgstr "version UNTRANSLATED"
+msgstr "različica"
 
 msgid "Attribute not found."
-msgstr "Attribute not found. UNTRANSLATED"
+msgstr "Atribut ni bil najden."
 
 msgid "Switch KWIC"
-msgstr "Switch KWIC UNTRANSLATED"
+msgstr "Preklopi KWIC"
 
 msgid "Query"
-msgstr "Query UNTRANSLATED"
+msgstr "Poizvedba"
 
 msgid "thank you for using KonText at {url}."
-msgstr "thank you for using KonText at {url}. UNTRANSLATED"
+msgstr "hvala, da uporabljate KonText na {url}."
 
 msgid "Application outage"
-msgstr "Application outage UNTRANSLATED"
+msgstr "Izpad aplikacije"
 
 msgid "No access to corpus {0}"
-msgstr "No access to corpus {0} UNTRANSLATED"
+msgstr "Ni dostopa do korpusa {0}"
 
 msgid "Query overview"
-msgstr "Query overview UNTRANSLATED"
+msgstr "Pregled iskanja"
 
 msgid "%s Please make sure the query and selected query type are correct."
 msgstr ""
-"%s Please make sure the query and selected query type are correct. "
-"UNTRANSLATED"
+"%s Prosimo, preverite, ali sta poizvedba in izbrana vrsta iskanja pravilni."
 
 msgid "Recent queries"
-msgstr "Recent queries UNTRANSLATED"
+msgstr "Nedavna iskanja"
 
 msgid "Positive filter (excluding KWIC)"
-msgstr "Positive filter (excluding KWIC) UNTRANSLATED"
+msgstr "Pozitivni filter (brez KWIC)"
 
 msgid "Subcorpus already exists"
-msgstr "Subcorpus already exists UNTRANSLATED"
+msgstr "Podkorpus že obstaja"
 
 msgid "Invalid or expired query"
-msgstr "Invalid or expired query UNTRANSLATED"
+msgstr "Neveljavna ali potekla poizvedba"
 
 msgid "Two-attribute interrelationship"
-msgstr "Two-attribute interrelationship UNTRANSLATED"
+msgstr "Medsebojna povezanost dveh atributov"
 
 msgid "Query failed: Syntax error at position %s."
-msgstr "Query failed: Syntax error at position %s. UNTRANSLATED"
+msgstr "Iskanje ni uspelo: Napaka v sintaksi na položaju %s."
 
 msgid "Username not available"
-msgstr "Username not available UNTRANSLATED"
+msgstr "Uporabniško ime ni na voljo"
 
 msgid "Positive filter"
-msgstr "Positive filter UNTRANSLATED"
+msgstr "Pozitivni filter"
 
 msgid "Permanent link"
-msgstr "Permanent link UNTRANSLATED"
+msgstr "Trajna povezava"
 
 msgid "Sorting"
-msgstr "Sorting UNTRANSLATED"
+msgstr "Razvrščanje"
 
 msgid "Corpus-specific settings"
-msgstr "Corpus-specific settings UNTRANSLATED"
+msgstr "Specifične nastavitve za korpus"
 
 msgid "Negative filter (excluding KWIC)"
-msgstr "Negative filter (excluding KWIC) UNTRANSLATED"
+msgstr "Negativni filter (brez KWIC)"
 
 msgid "confirmed"
-msgstr "confirmed UNTRANSLATED"
+msgstr "potrjeno"
 
 msgid "Failed to open corpus {0}"
-msgstr "Failed to open corpus {0} UNTRANSLATED"
+msgstr "Korpusa ni bilo mogoče odpreti {0}"
 
 msgid "Verification key confirmation"
-msgstr "Verification key confirmation UNTRANSLATED"
+msgstr "Potrditev ključa za preverjanje"
 
 msgid "Subcorpus created but there was a problem saving a backup copy."
 msgstr ""
-"Subcorpus created but there was a problem saving a backup copy. UNTRANSLATED"
+"Podkorpus je bil ustvarjen, vendar je prišlo do napake pri shranjevanju "
+"varnostne kopije."
 
 msgid ""
 "Missing display configuration of structural attributes (SUBCORPATTRS or "
 "FULLREF)."
 msgstr ""
-"Missing display configuration of structural attributes (SUBCORPATTRS or "
-"FULLREF). UNTRANSLATED"
+"Manjkajoča konfiguracija prikaza strukturnih atributov (SUBCORPATTRS ali "
+"FULLREF)."
 
 msgid "Login options"
-msgstr "Login options UNTRANSLATED"
+msgstr "Možnosti prijave"
 
 msgid "logDice"
-msgstr "logDice UNTRANSLATED"
+msgstr "logDice"
 
 msgid "Cannot change status of a concordance belonging to another user"
 msgstr ""
-"Cannot change status of a concordance belonging to another user UNTRANSLATED"
+"Stanja konkordanc, ki pripadajo drugemu uporabniku, ni mogoče spremeniti"
 
 msgid "Undo"
-msgstr "Undo UNTRANSLATED"
+msgstr "Razveljavi"
 
 msgid "Remove nested matches"
-msgstr "Remove nested matches UNTRANSLATED"
+msgstr "Odstrani gnezdena ujemanja"
 
 msgid "Word List"
-msgstr "Word List UNTRANSLATED"
+msgstr "Seznam besed"
 
 msgid "Negative filter"
-msgstr "Negative filter UNTRANSLATED"
+msgstr "Negativni filter"
 
 msgid "translation not available"
-msgstr "translation not available UNTRANSLATED"
+msgstr "prevod ni na voljo"
 
 msgid "User profile"
-msgstr "User profile UNTRANSLATED"
+msgstr "Uporabniški profil"
 
 msgid "Password not valid"
-msgstr "Password not valid UNTRANSLATED"
+msgstr "Neveljavno geslo"
 
 msgid ""
 "Cannot calculate yet - source concordance not finished. Please try again "
 "later."
 msgstr ""
-"Cannot calculate yet - source concordance not finished. Please try again "
-"later. UNTRANSLATED"
+"Izračun še ni mogoč - izvorne konkordance še niso pripravljene. Prosimo, "
+"poskusite pozneje."
 
 msgid "No corpus selected"
-msgstr "No corpus selected UNTRANSLATED"
+msgstr "Ni izbranega korpusa"
 
 msgid "frequency distribution"
-msgstr "frequency distribution UNTRANSLATED"
+msgstr "frekvenčna porazdelitev"
 
 msgid "Help"
-msgstr "Help UNTRANSLATED"
+msgstr "Pomoč"
 
 msgid "Attribute \"%s\" not found."
-msgstr "Attribute \"%s\" not found. UNTRANSLATED"
+msgstr "Atribut \"%s\" ni bil najden."
 
 msgid "MI"
-msgstr "MI UNTRANSLATED"
+msgstr "MI"
 
 msgid "Current concordance"
-msgstr "Current concordance UNTRANSLATED"
+msgstr "Trenutne konkordance"
 
 msgid "Word List Form"
-msgstr "Word List Form UNTRANSLATED"
+msgstr "Obrazec za seznam besed"
 
 msgid "logout"
-msgstr "logout UNTRANSLATED"
+msgstr "odjava"
 
 msgid "Invalid page number"
-msgstr "Invalid page number UNTRANSLATED"
+msgstr "Neveljavna številka strani"
 
 msgid "T-score"
-msgstr "T-score UNTRANSLATED"
+msgstr "T-vrednost"
 
 msgid "Username not valid"
-msgstr "Username not valid UNTRANSLATED"
+msgstr "Uporabniško ime ni veljavno"
 
 msgid "Sign in"
-msgstr "Sign in UNTRANSLATED"
+msgstr "Prijava"
 
 msgid "Invalid user or password"
-msgstr "Invalid user or password UNTRANSLATED"
+msgstr "Neveljavno uporabniško ime ali geslo"
 
 msgid "MI.log_f"
-msgstr "MI.log_f UNTRANSLATED"
+msgstr "MI.log_f"
 
 msgid "Query failed: Syntax error."
-msgstr "Query failed: Syntax error. UNTRANSLATED"
+msgstr "Iskanje ni uspelo: Napaka v sintaksi."
 
 msgid "Syntax error. Please check the query and its type."
-msgstr "Syntax error. Please check the query and its type. UNTRANSLATED"
+msgstr "Napaka v sintaksi. Preverite poizvedbo in vrsto iskanja."
 
 msgid "No alignment available for the selected languages"
-msgstr "No alignment available for the selected languages UNTRANSLATED"
+msgstr "Za izbrane jezike ni poravnave."
 
 msgid "pre-installed on Windows 10"
-msgstr "pre-installed on Windows 10 UNTRANSLATED"
+msgstr "vnaprej nameščeno v sistemu Windows 10"
 
 msgid "min. sensitivity"
-msgstr "min. sensitivity UNTRANSLATED"
+msgstr "min. občutljivost"
 
 msgid "Doc IDs"
-msgstr "Doc IDs UNTRANSLATED"
+msgstr "ID-ji dokumentov"
 
 msgid "pre-installed on Apple macOS"
-msgstr "pre-installed on Apple macOS UNTRANSLATED"
+msgstr "vnaprej nameščeno v sistemu Apple macOS"
 
 msgid "Node forms"
-msgstr "Node forms UNTRANSLATED"
+msgstr "Oblike zadetkov"
 
 msgid "new subcorpora in your library: %s"
-msgstr "new subcorpora in your library: %s UNTRANSLATED"
+msgstr "novi podkorpusi v vaši knjižnici: %s"
 
 msgid "Public subcorpora"
-msgstr "Public subcorpora UNTRANSLATED"
+msgstr "Javni podkorpusi"
 
 msgid "The confirmation link will expire on %m/%d/%Y at %H:%M"
-msgstr "The confirmation link will expire on %m/%d/%Y at %H:%M UNTRANSLATED"
+msgstr "Povezava za potrditev poteče %m/%d/%Y ob %H:%M"
 
 msgid "Corpora"
-msgstr "Corpora UNTRANSLATED"
+msgstr "Korpusi"
 
 msgid "MI3"
-msgstr "MI3 UNTRANSLATED"
+msgstr "MI3"
 
 msgid "KonText feedback from user {0} for {1}"
-msgstr "KonText feedback from user {0} for {1} UNTRANSLATED"
+msgstr "Povratna informacija o KonTextu uporabnika {0} za {1}"
 
 msgid ""
 "Query type <em>basic</em> is suitable for getting to know the corpus. It "
@@ -482,176 +481,174 @@ msgid ""
 "is also a canonical dictionary form (lemma), all its word forms are searched"
 " as well."
 msgstr ""
-"Query type <em>basic</em> is suitable for getting to know the corpus. It "
-"searches for the input expression as a word form case-insensitively; if it "
-"is also a canonical dictionary form (lemma), all its word forms are searched"
-" as well. UNTRANSLATED"
+"Vrsta iskanja <em>osnovno</em> je primerna za spoznavanje s korpusom. "
+"Besedno obliko išče ne glede na velike/male črke. Če je iskana beseda obenem"
+" osnovna oblika besede (lema), boste z osnovnim iskanjem iskali tudi po vseh"
+" besednih oblikah te leme."
 
 msgid "case insensitive"
-msgstr "case insensitive UNTRANSLATED"
+msgstr "ne ločuje malih/velikih črk"
 
 msgid "Confirmation key not found"
-msgstr "Confirmation key not found UNTRANSLATED"
+msgstr "Potrditveni ključ ni bil najden"
 
 msgid "Concordance regeneration"
-msgstr "Concordance regeneration UNTRANSLATED"
+msgstr "Ponovno ustvarjanje konkordanc"
 
 msgid "Frequency"
-msgstr "Frequency UNTRANSLATED"
+msgstr "Frekvenca"
 
 msgid ""
 "Failed to send a confirmation e-mail. Please check that you entered a valid "
 "e-mail and try again. Alternatively you can report a problem."
 msgstr ""
-"Failed to send a confirmation e-mail. Please check that you entered a valid "
-"e-mail and try again. Alternatively you can report a problem. UNTRANSLATED"
+"Potrditvenega sporočila ni bilo mogoče poslati. Preverite, ali ste vnesli "
+"veljaven e-poštni naslov in poskusite ponovno. Lahko tudi prijavite napako."
 
 msgid "First name not valid"
-msgstr "First name not valid UNTRANSLATED"
+msgstr "Ime ni veljavno"
 
 msgid "Access forbidden - please log-in."
-msgstr "Access forbidden - please log-in. UNTRANSLATED"
+msgstr "Dostop prepovedan - prosimo, prijavite se."
 
 msgid "Loading..."
-msgstr "Loading... UNTRANSLATED"
+msgstr "Nalaganje ..."
 
 msgid "Report an error"
-msgstr "Report an error UNTRANSLATED"
+msgstr "Prijava napake"
 
 msgid "KWIC/Sentence"
-msgstr "KWIC/Sentence UNTRANSLATED"
+msgstr "KWIC/Stavek"
 
 msgid "Find a published subcorpus"
-msgstr "Find a published subcorpus UNTRANSLATED"
+msgstr "Poišči objavljen podkorpus"
 
 msgid "View on GitHub"
-msgstr "View on GitHub UNTRANSLATED"
+msgstr "Oglejte si na GitHubu"
 
 msgid "browser info"
-msgstr "browser info UNTRANSLATED"
+msgstr "informacije o brskalniku"
 
 msgid "Hello"
-msgstr "Hello UNTRANSLATED"
+msgstr "Pozdravljeni"
 
 msgid "The string must be at least %s characters long."
-msgstr "The string must be at least %s characters long. UNTRANSLATED"
+msgstr "Niz mora imeti vsaj %s znakov."
 
 msgid "Unknown concordance action: %s"
-msgstr "Unknown concordance action: %s UNTRANSLATED"
+msgstr "Neznan ukaz za konkordance: %s"
 
 msgid "log likelihood"
-msgstr "log likelihood UNTRANSLATED"
+msgstr "log likelihood"
 
 msgid "KonText sign up confirmation"
-msgstr "KonText sign up confirmation UNTRANSLATED"
+msgstr "Potrditev registracije v KonText"
 
 msgid "user interface languages"
-msgstr "user interface languages UNTRANSLATED"
+msgstr "jeziki uporabniškega vmesnika"
 
 msgid "Lemmas"
-msgstr "Lemmas UNTRANSLATED"
+msgstr "Leme"
 
 msgid "Continue as anonymous user"
-msgstr "Continue as anonymous user UNTRANSLATED"
+msgstr "Nadaljuj kot anonimni uporabnik"
 
 msgid "To use KonText please install any modern web browser. E.g."
 msgstr ""
-"To use KonText please install any modern web browser. E.g. UNTRANSLATED"
+"Za uporabo KonTexta namestite katerikoli sodoben spletni brskalnik, npr."
 
 msgid "Compatibility notice"
-msgstr "Compatibility notice UNTRANSLATED"
+msgstr "Obvestilo o kompatibilnosti"
 
 msgid "Positive"
-msgstr "Positive UNTRANSLATED"
+msgstr "Pozitivni"
 
 msgid "Archive query"
-msgstr "Archive query UNTRANSLATED"
+msgstr "Arhiviraj poizvedbo"
 
 msgid "KonText feedback from user {0}"
-msgstr "KonText feedback from user {0} UNTRANSLATED"
+msgstr "Povratna informacija o KonTextu uporabnika {0}"
 
 msgid "Sample"
-msgstr "Sample UNTRANSLATED"
+msgstr "Vzorec"
 
 msgid ""
 "The value must be at least %s characters long and must contain only a..z, "
 "A..Z, 0..9, _, - characters"
 msgstr ""
-"The value must be at least %s characters long and must contain only a..z, "
-"A..Z, 0..9, _, - characters UNTRANSLATED"
+"Vrednost mora biti dolga najmanj %s znakov in vsebovati samo znake a..z, "
+"A..Z, 0..9, _, -"
 
 msgid "Subcorpus %s has been deleted permanently."
-msgstr "Subcorpus %s has been deleted permanently. UNTRANSLATED"
+msgstr "Podkorpus %s je bil trajno izbrisan."
 
 msgid "instances per million positions (refers to the respective category)"
-msgstr ""
-"instances per million positions (refers to the respective category) "
-"UNTRANSLATED"
+msgstr "pojavitev na milijon položajev (nanaša se na določeno kategorijo)"
 
 msgid ""
 "Failed to get the syntax tree due to limited KWIC context (too long "
 "sentence)."
 msgstr ""
-"Failed to get the syntax tree due to limited KWIC context (too long "
-"sentence). UNTRANSLATED"
+"Sintaktičnega drevesa ni bilo mogoče izdelati zaradi omejenega konteksta "
+"KWIC (predolg stavek)."
 
 msgid "Unknown action [%s]"
-msgstr "Unknown action [%s] UNTRANSLATED"
+msgstr "Neznan ukaz [%s]"
 
 msgid "Available corpora"
-msgstr "Available corpora UNTRANSLATED"
+msgstr "Razpoložljivi korpusi"
 
 msgid "Concordance"
-msgstr "Concordance UNTRANSLATED"
+msgstr "Konkordance"
 
 msgid ""
 "Character encoding of this corpus ({0}) does not support one or more "
 "characters in the query."
 msgstr ""
-"Character encoding of this corpus ({0}) does not support one or more "
-"characters in the query. UNTRANSLATED"
+"Kodiranje znakov tega korpusa ({0}) ne podpira enega ali več znakov v "
+"poizvedbi."
 
 msgid "E-mail not valid"
-msgstr "E-mail not valid UNTRANSLATED"
+msgstr "E-poštni naslov ni veljaven"
 
 msgid ""
 "No result. Please make sure the query and selected query type are correct."
 msgstr ""
-"No result. Please make sure the query and selected query type are correct. "
-"UNTRANSLATED"
+"Ni rezultatov. Prosimo, preverite, ali sta poizvedba in izbrana vrsta "
+"iskanja pravilni."
 
 msgid ""
 "This e-mail has been generated automatically - please do not reply to it."
 msgstr ""
-"This e-mail has been generated automatically - please do not reply to it. "
-"UNTRANSLATED"
+"To e-poštno sporočilo je bilo ustvarjeno samodejno - prosimo, ne "
+"odgovarjajte nanj."
 
 msgid "Saves at most {0} items. Use \"Custom\" for more options."
-msgstr "Saves at most {0} items. Use \"Custom\" for more options. UNTRANSLATED"
+msgstr "Shrani največ {0} elementov. Uporabite \"Po meri\" za več možnosti."
 
 msgid "Click to enter a new query"
-msgstr "Click to enter a new query UNTRANSLATED"
+msgstr "Kliknite, da vnesete novo poizvedbo"
 
 msgid "Negative"
-msgstr "Negative UNTRANSLATED"
+msgstr "Negativni"
 
 msgid "View"
-msgstr "View UNTRANSLATED"
+msgstr "Prikaz"
 
 msgid "Random sample"
-msgstr "Random sample UNTRANSLATED"
+msgstr "Naključni vzorec"
 
 msgid ""
 "Failed to evaluate the query. Please check the syntax and used attributes."
 msgstr ""
-"Failed to evaluate the query. Please check the syntax and used attributes. "
-"UNTRANSLATED"
+"Poizvedbe ni bilo mogoče oceniti. Prosimo, preverite sintakso in uporabljene"
+" atribute."
 
 msgid "Create new subcorpus"
-msgstr "Create new subcorpus UNTRANSLATED"
-
-msgid "Paradigmatic query calculation"
-msgstr "Paradigmatic query calculation UNTRANSLATED"
+msgstr "Ustvari nov podkorpus"
 
 msgid "Login"
 msgstr "Prijava"
+
+msgid "Paradigmatic query calculation"
+msgstr "Paradigmatic query calculation UNTRANSLATED"
