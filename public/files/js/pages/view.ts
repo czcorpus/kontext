@@ -21,7 +21,7 @@
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
 import { Action } from 'kombo';
-import { List, tuple, Dict, pipe, id } from 'cnc-tskit';
+import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
 import * as ViewOptions from '../types/viewOptions';
@@ -390,7 +390,7 @@ export class ViewPage {
                         List.map(v => v.n),
                         this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
                             List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
-                            id
+                            v => v
                     )
                 )),
                 Dict.fromEntries()
@@ -476,7 +476,7 @@ export class ViewPage {
                     List.map(v => v.n),
                     this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
                         List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
-                        id
+                        v => v
                 )
             }
         };

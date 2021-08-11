@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { Dict, id, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
@@ -245,7 +245,7 @@ export class QueryPage {
                             List.map(v => v.n),
                             this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs').length > 0 ?
                                 List.unshift<string|Array<string>>(this.layoutModel.getConf<Array<string>>('SimpleQueryDefaultAttrs')) :
-                                id
+                                v => v
                         )
                     )),
                     Dict.fromEntries()

@@ -54,8 +54,7 @@ class PreparePlugin {
             }
             fs.mkdirSync(tmpJsDir);
 
-            compiler.options.resolve.alias = kontext.loadModulePathMap(
-                this._confDoc, this._jsPath, this._cssPath, this._themesPath, this._isProduction);
+            compiler.options.resolve.alias = kontext.loadModulePathMap(this._confDoc, this._jsPath, this._cssPath);
             console.log("\x1b[44m", 'Defined aliases:', "\x1b[0m");
             Object.keys(compiler.options.resolve.alias).forEach(item => {
                 console.log("\x1b[32m", item, "\x1b[0m", '\u21D2', compiler.options.resolve.alias[item]);
