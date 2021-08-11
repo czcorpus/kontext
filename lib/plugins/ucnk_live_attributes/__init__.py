@@ -128,7 +128,7 @@ class LiveAttributes(AbstractLiveAttributes):
 
         if corpname not in self.databases:
             db_path = self.corparch.get_corpus_info(
-                plugin_ctx, corpname).get('metadata', {}).get('database')
+                plugin_ctx, corpname).metadata.database
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row

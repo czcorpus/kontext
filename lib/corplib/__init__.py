@@ -31,7 +31,7 @@ import l10n
 import manatee
 from translation import ugettext as _
 import plugins
-from plugins.abstract.corparch import DefaultManateeCorpusInfo
+from plugins.abstract.corparch.corpus import DefaultManateeCorpusInfo
 from functools import cmp_to_key
 from .corpus import _PublishedSubcMetadata
 from .errors import MissingSubCorpFreqFile
