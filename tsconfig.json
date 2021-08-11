@@ -1,14 +1,22 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
         "outDir": "./public/files/js/min",
         "sourceMap": true,
         "noImplicitAny": false,
         "module": "esnext",
         "target": "esnext",
         "jsx": "react",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "paths": {
+            "plugins/corparch/*": ["./public/files/js/plugins/defaultCorparch/*"],
+            "plugins/syntaxViewer/*": ["./public/files/js/plugins/syntaxViewer2/*"]
+        }
     },
     "include": [
         "./public/files/js/**/*"
+    ],
+    "exclude": [
+        "./node_modules"
     ]
 }

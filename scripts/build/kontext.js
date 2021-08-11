@@ -125,23 +125,31 @@
      * @param {string} confDoc - parsed KonText XML config
      * @param {string} jsPath - a path to JS/TS plug-ins implementations
      * @param {string} cssPath - a path to core CSS/LESS files
-     * @param {string} themesPath - a path to theme customization dir
-     * @param {boolean} isProduction - set whether a production setup should be exported
+     * @param {boolean} isTypecheck - if true then any unnecessary feature is disabled
      * @return {[fakePath:string]:string}
      */
-    module.exports.loadModulePathMap = function (confDoc, jsPath, cssPath, themesPath, isProduction) {
+    module.exports.loadModulePathMap = function (confDoc, jsPath, cssPath, isTypecheck) {
         const pluginsPath = path.resolve(jsPath, 'plugins');
         const langs = findConfiguredLanguages(confDoc);
-        mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'), langs);
-        const cqlParserPath = parseCqlGrammar(jsPath);
+        let translatPath;
+        let cqlParserPath;
+
+        if (isTypecheck) {
+            translatPath = path.resolve(jsPath, '..', '..', '..', 'scripts', 'build', 'null');
+            cqlParserPath = path.resolve(jsPath, '..', '..', '..', 'scripts', 'build', 'null');
+
+        } else {
+            mergeTranslations(jsPath, path.resolve(jsPath, '.compiled/translations.js'), langs);
+            translatPath = path.resolve(jsPath, '.compiled/translations');
+            cqlParserPath = parseCqlGrammar(jsPath);
+        }
         const moduleMap = {
-            'translations': path.resolve(jsPath, '.compiled/translations'),
+            'translations': translatPath,
             'views': path.resolve(jsPath, 'views'),
             'vendor/d3': path.resolve(jsPath, 'vendor/d3.min'),
             'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
             'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
             'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min'),
-            'vendor/cookies' : path.resolve(jsPath, 'vendor/cookies'),
             'cqlParser/parser': cqlParserPath,
             'misc/keyboardLayouts': path.resolve(jsPath, 'kb-layouts.json'),
             'styles': cssPath

@@ -84,14 +84,21 @@ module.exports = {
                 },
                 {
                     test: /\.tsx?$/,
-                    use: [
-                        {
-                            loader: 'ts-loader',
-                            options: {
-                                transpileOnly: env ? !!env.TS_TRANSPILE_ONLY : false
+                    exclude: /(node_modules|bower_components)/,
+                    use: {
+                        loader: "swc-loader",
+                        options: {
+                            jsc: {
+                                parser: {
+                                    syntax: 'typescript',
+                                    tsx: true,
+                                    decorators: false,
+                                    dynamicImport: false
+                                },
+                                target: 'es2016'
                             }
                         }
-                    ]
+                    }
                 }
             ]
         },
