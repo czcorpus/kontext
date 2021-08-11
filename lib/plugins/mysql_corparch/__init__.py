@@ -28,9 +28,9 @@ from controller import exposed
 import actions.user
 import plugins
 from plugins import inject
-from plugins.abstract.corparch import (
-    AbstractSearchableCorporaArchive, BrokenCorpusInfo, PosCategoryItem,
-    TokenConnect, KwicConnect, QuerySuggest, TagsetInfo, CorpusInfo, CorpusListItem)
+from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusListItem
+from plugins.abstract.corparch.corpus import (
+    BrokenCorpusInfo, PosCategoryItem, TokenConnect, KwicConnect, QuerySuggest, TagsetInfo, CorpusInfo)
 from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query

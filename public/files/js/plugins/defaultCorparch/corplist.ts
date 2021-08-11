@@ -75,7 +75,7 @@ export interface CorplistTableModelState {
     filters:Filters;
     favouritesOnly:boolean;
     keywords:Array<KeywordInfo>;
-    detailData:CorpusInfo;
+    detailData:CorpusInfo|null;
     isBusy:boolean;
     searchedCorpName:string;
     offset:number;
@@ -323,20 +323,21 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.detailData = this.createEmptyDetail(); // to force view to show detail box
             },
             (state, action, dispatch) => {
-                this.loadCorpusInfo(action.payload.corpusId).subscribe(
-                    (data) => {
+                this.loadCorpusInfo(action.payload.corpusId).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.CorpusInfoLoaded>({
                             name: Actions.CorpusInfoLoaded.name,
                             payload: {data: {...data, type: CorpusInfoType.CORPUS}}
                         });
                     },
-                    (err) => {
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
                         dispatch<typeof Actions.CorpusInfoLoaded>({
                             name: Actions.CorpusInfoLoaded.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
@@ -344,13 +345,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             Actions.CorpusInfoLoaded.name,
             (state, action) => {
                 state.isBusy = false;
-                if (!action.error) {
-                    state.detailData = action.payload.data;
-                }
-            },
-            (state, action, dispatch) => {
                 if (action.error) {
-                    this.pluginApi.showMessage('error', action.error);
+                    state.detailData = null;
+
+                } else {
+                    state.detailData = action.payload.data;
                 }
             }
         );
