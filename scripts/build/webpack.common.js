@@ -86,7 +86,7 @@ module.exports = {
                     test: /\.tsx?$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
-                        loader: "swc-loader",
+                        loader: 'swc-loader',
                         options: {
                             jsc: {
                                 parser: {
