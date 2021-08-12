@@ -366,7 +366,7 @@ class Backend(DatabaseBackend):
 
     def load_corpus_tagsets(self, corpus_id):
         cursor = self._db.cursor()
-        cursor.execute('SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, t.name AS tagset_name, '
+        cursor.execute('SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type AS type, t.name AS ident, '
                        'ct.kontext_widget_enabled AS widget_enabled, t.doc_url_local, t.doc_url_en '
                        'FROM tagset AS t JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
                        'WHERE ct.corpus_name = %s', (corpus_id, ))

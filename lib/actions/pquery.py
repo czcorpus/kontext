@@ -107,9 +107,7 @@ class ParadigmaticQuery(Kontext):
 
     def _get_tagsets(self):
         corp_info = self.get_corpus_info(self.args.corpname)
-        return [dict(ident=tagset.tagset_name, posAttr=tagset.pos_attr, featAttr=tagset.feat_attr,
-                     docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
-                for tagset in corp_info.tagsets]
+        return [tagset.to_dict() for tagset in corp_info.tagsets]
 
     def _get_default_attr(self):
         attrs = self.corp.get_conf('ATTRLIST').split(',')

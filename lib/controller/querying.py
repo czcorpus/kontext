@@ -237,7 +237,7 @@ class Querying(Kontext):
 
                 poslist = []
                 for tagset in corp_info.tagsets:
-                    if tagset.tagset_name == corp_info.default_tagset:
+                    if tagset.ident == corp_info.default_tagset:
                         poslist = tagset.pos_category
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]

@@ -256,8 +256,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             corp = self._corp_info_from_row(row, user_lang)
             if corp:
                 for row2 in self._backend.load_corpus_tagsets(corpus_id):
-                    pos_category = [PosCategoryItem(
-                        **data) for data in self._backend.load_pos_category(row2['tagset_name'])]
+                    pos_category = [
+                        PosCategoryItem(**data)
+                        for data in self._backend.load_pos_category(row2['ident'])
+                    ]
                     corp.tagsets.append(TagsetInfo(**{**row2, 'pos_category': pos_category}))
                 self._corpus_info_cache[corpus_id] = corp
                 for art in self._backend.load_corpus_articles(corpus_id):

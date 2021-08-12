@@ -527,8 +527,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.tagsets = [
             TagsetInfo(
                 corpus_name=ans.name,
-                tagset_name=tagset.attrib.get('name', None),
-                tagset_type=tagset.attrib.get('type', None),
+                ident=tagset.attrib.get('name', None),
+                type=tagset.attrib.get('type', None),
                 pos_attr=tagset.attrib.get('pos_attr', None),
                 feat_attr=tagset.attrib.get('feat_attr', None),
             )

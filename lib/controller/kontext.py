@@ -726,7 +726,7 @@ class Kontext(Controller):
 
         poslist = []
         for tagset in corp_info.tagsets:
-            if tagset.tagset_name == corp_info.default_tagset:
+            if tagset.ident == corp_info.default_tagset:
                 poslist = tagset.pos_category
                 break
         result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]

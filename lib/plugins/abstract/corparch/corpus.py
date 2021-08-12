@@ -18,21 +18,11 @@
 
 
 from typing import NamedTuple, Optional, Dict, Any, List, Tuple, Union
-import json
+from dataclasses_json.api import LetterCase
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
-
-
-@dataclass
-class SerializableInfo:
-
-    def to_json(self):
-        return json.dumps(self.to_dict())
-
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
 
 
 @dataclass_json
@@ -116,13 +106,14 @@ class PosCategoryItem(NamedTuple):
     pos: str
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class TagsetInfo(SerializableInfo):
+class TagsetInfo:
+    ident: Optional[str] = None
+    type: Optional[str] = None
     corpus_name: Optional[str] = None
     pos_attr: Optional[str] = None
     feat_attr: Optional[str] = None
-    tagset_type: Optional[str] = None
-    tagset_name: Optional[str] = None
     widget_enabled: bool = False
     doc_url_local: Optional[str] = None
     doc_url_en: Optional[str] = None
@@ -130,14 +121,6 @@ class TagsetInfo(SerializableInfo):
 
     def __post_init__(self):
         self.widget_enabled = bool(self.widget_enabled)
-
-    def to_dict(self):
-        # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
-        return dict(ident=self.tagset_name, type=self.tagset_type,
-                    posAttr=self.pos_attr, featAttr=self.feat_attr,
-                    widgetEnabled=self.widget_enabled,
-                    docUrlLocal=self.doc_url_local, docUrlEn=self.doc_url_en,
-                    posCategory=self.pos_category)
 
 
 @dataclass_json
