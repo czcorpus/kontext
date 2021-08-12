@@ -22,6 +22,7 @@ import json
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus
 from dataclasses import dataclass, asdict, field
+from dataclasses_json import dataclass_json
 
 
 @dataclass
@@ -34,8 +35,9 @@ class SerializableInfo:
         return asdict(self)
 
 
+@dataclass_json
 @dataclass
-class CorpusMetadata(SerializableInfo):
+class CorpusMetadata:
     """
     TODO: this class needs some clean-up as some properties do not fit here
     """
@@ -51,15 +53,17 @@ class CorpusMetadata(SerializableInfo):
     default_virt_keyboard: Optional[str] = None
 
 
+@dataclass_json
 @dataclass
-class CitationInfo(SerializableInfo):
+class CitationInfo:
     default_ref: Optional[str] = None
     article_ref: List[str] = field(default_factory=list)
     other_bibliography: Optional[str] = None
 
 
+@dataclass_json
 @dataclass
-class ManateeCorpusInfo(SerializableInfo):
+class ManateeCorpusInfo:
     """
     Represents a subset of corpus information
     as provided by manatee.Corpus instance
@@ -74,12 +78,14 @@ class ManateeCorpusInfo(SerializableInfo):
     lang: Optional[str] = None
 
 
+@dataclass_json
 @dataclass
 class DefaultManateeCorpusInfo(ManateeCorpusInfo):
     """
     Represents a subset of corpus information
     as provided by manatee.Corpus instance
     """
+
     def __init__(self, corpus: Union[KCorpus, EmptyCorpus], corpus_id) -> None:
         super().__init__()
         self.encoding = corpus.get_conf('ENCODING')
@@ -93,13 +99,15 @@ class DefaultManateeCorpusInfo(ManateeCorpusInfo):
         self.lang = corpus.get_conf('LANGUAGE')
 
 
+@dataclass_json
 @dataclass
-class TokenConnect(SerializableInfo):
+class TokenConnect:
     providers: List[Any] = field(default_factory=list)
 
 
+@dataclass_json
 @dataclass
-class KwicConnect(SerializableInfo):
+class KwicConnect:
     providers: List[Any] = field(default_factory=list)
 
 
@@ -118,12 +126,10 @@ class TagsetInfo(SerializableInfo):
     widget_enabled: bool = False
     doc_url_local: Optional[str] = None
     doc_url_en: Optional[str] = None
-    pos_category: Optional[List[PosCategoryItem]] = field(default_factory=list)
+    pos_category: List[PosCategoryItem] = field(default_factory=list)
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'TagsetInfo':
-        data['widget_enabled'] = bool(data.get('widget_enabled', False))
-        return TagsetInfo(**data)
+    def __post_init__(self):
+        self.widget_enabled = bool(self.widget_enabled)
 
     def to_dict(self):
         # Note: the returned type must match client-side's PluginInterfaces.TagHelper.TagsetInfo
@@ -134,13 +140,15 @@ class TagsetInfo(SerializableInfo):
                     posCategory=self.pos_category)
 
 
+@dataclass_json
 @dataclass
-class QuerySuggest(SerializableInfo):
+class QuerySuggest:
     providers: List[Any] = field(default_factory=list)
 
 
+@dataclass_json
 @dataclass
-class CorpusInfo(SerializableInfo):
+class CorpusInfo:
     """
     Genereal corpus information and metadata.
     All the possible implementations are expected to
@@ -191,6 +199,7 @@ class CorpusInfo(SerializableInfo):
             return self._description_en
 
 
+@dataclass_json
 @dataclass
 class BrokenCorpusInfo(CorpusInfo):
     """
