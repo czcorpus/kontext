@@ -10,13 +10,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from dataclasses import dataclass
-import logging
 from collections import defaultdict
 from typing import List, Dict, Any, Union
-
+from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
-
 from controller import exposed
 from controller.kontext import Kontext
 import plugins
@@ -24,18 +21,21 @@ from plugins.abstract.corparch import AbstractSearchableCorporaArchive
 from translation import ugettext as translate
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class KeyWord:
     name: str
     color: str
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class AttrStruct:
     name: str
     size: str
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class ErrorInfo:
     error: str
@@ -50,7 +50,7 @@ class CorpusDetail:
     attrlist: Union[List[AttrStruct], ErrorInfo]
     structlist: List[AttrStruct]
     web_url: str
-    citation_info: Dict[str, Any]
+    citation_info: Dict[str, Any]  # TODO why CitationInfo dataclass wont work?
     keywords: List[KeyWord]
 
 
