@@ -10,14 +10,31 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from dataclasses import dataclass
 import logging
 from collections import defaultdict
+from typing import Any, List
+
+from dataclasses_json import dataclass_json
 
 from controller import exposed
 from controller.kontext import Kontext
 import plugins
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive
 from translation import ugettext as translate
+
+
+@dataclass_json
+@dataclass
+class CorpusDetail:
+    corpname: str
+    description: str
+    size: int
+    attrlist: List[Any]
+    structlist: List[Any]
+    web_url: str
+    citation_info: List[Any]
+    keywords: List[Any]
 
 
 class Corpora(Kontext):
@@ -56,32 +73,37 @@ class Corpora(Kontext):
         corpus = self.cm.get_corpus(request.args['corpname'])
         citation_info = corp_conf_info.citation_info.to_dict()
 
-        ans = {
-            'corpname': corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
-            'description': corp_conf_info.description,
-            'size': corpus.size,
-            'attrlist': [],
-            'structlist': [],
-            'web_url': corp_conf_info.web if corp_conf_info is not None else '',
-            'citation_info': citation_info,
-            'keywords': []
-        }
+        ans = CorpusDetail(
+            corpname = corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
+            description = corp_conf_info.description,
+            size = corpus.size,
+            attrlist = [],
+            structlist = [],
+            web_url = corp_conf_info.web if corp_conf_info is not None else '',
+            citation_info = citation_info,
+            keywords = [],
+        )
 
         with plugins.runtime.CORPARCH as corparch_plugin:
-            ans['keywords'] = [
+            ans.keywords = [
                 {'name': name, 'color': corparch_plugin.get_label_color(ident)}
                 for (ident, name) in corp_conf_info.metadata.keywords
             ]
 
         try:
-            ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
-                               for item in corpus.get_conf('ATTRLIST').split(',')]
+            ans.attrlist = [
+                {'name': item, 'size': int(corpus.get_attr(item).id_range())}
+                for item in corpus.get_conf('ATTRLIST').split(',')
+            ]
         except RuntimeError as e:
             logging.getLogger(__name__).warning('%s' % e)
-            ans['attrlist'] = {'error': translate('Failed to load')}
+            ans.attrlist = {'error': translate('Failed to load')}
 
-        ans['structlist'] = [{'name': item, 'size': int(corpus.get_struct(item).size())}
-                             for item in corpus.get_conf('STRUCTLIST').split(',')]
+        ans.structlist = [
+            {'name': item, 'size': int(corpus.get_struct(item).size())}
+            for item in corpus.get_conf('STRUCTLIST').split(',')
+        ]
+
         return ans
 
     @exposed(return_type='json')
