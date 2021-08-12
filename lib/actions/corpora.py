@@ -13,9 +13,9 @@
 from dataclasses import dataclass
 import logging
 from collections import defaultdict
-from typing import Any, List, Union, Dict
+from typing import List, Dict, Any, Union
 
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, LetterCase
 
 from controller import exposed
 from controller.kontext import Kontext
@@ -41,7 +41,7 @@ class ErrorInfo:
     error: str
 
 
-@dataclass_json
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class CorpusDetail:
     corpname: str

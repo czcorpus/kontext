@@ -238,8 +238,8 @@ export interface CorpusInfoResponse {
     size:number;
     attrlist:Array<{name:string; size:number}>;
     structlist:Array<{name:string; size:number}>;
-    web_url:string;
-    citation_info:CitationInfo;
+    webUrl:string;
+    citationInfo:CitationInfo;
     keywords:Array<{name:string; color:string}>;
 }
 
@@ -468,7 +468,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 return {...this.state.corpusData, type:CorpusInfoType.CORPUS};
             case CorpusInfoType.CITATION:
                 return {
-                    ...this.state.corpusData.citation_info,
+                    ...this.state.corpusData.citationInfo,
                     corpname: this.state.currentCorpus,
                     type: CorpusInfoType.CITATION
                 };
