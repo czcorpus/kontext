@@ -11,14 +11,12 @@
 # GNU General Public License for more details.
 
 import logging
-from functools import partial
 from collections import defaultdict
 
 from controller import exposed
 from controller.kontext import Kontext
 import plugins
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive
-import l10n
 from translation import ugettext as translate
 
 
@@ -54,39 +52,34 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_get_corp_details(self, request):
-        """
-        """
         corp_conf_info = self.get_corpus_info(request.args['corpname'])
         corpus = self.cm.get_corpus(request.args['corpname'])
         citation_info = corp_conf_info.citation_info.to_dict()
 
-        if corpus.get_conf('NAME'):
-            corpus_name = corpus.get_conf('NAME')
-        else:
-            corpus_name = corpus.corpname
-
-        with plugins.runtime.CORPARCH as corparch_plugin:
-            keywords = [
-                {'name': name, 'color': corparch_plugin.get_label_color(ident)}
-                for (ident, name) in corp_conf_info.metadata.keywords
-            ]
-
         ans = {
-            'corpname': corpus_name,
+            'corpname': corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
             'description': corp_conf_info.description,
             'size': corpus.size,
             'attrlist': [],
             'structlist': [],
             'web_url': corp_conf_info.web if corp_conf_info is not None else '',
             'citation_info': citation_info,
-            'keywords': keywords
+            'keywords': []
         }
+
+        with plugins.runtime.CORPARCH as corparch_plugin:
+            ans['keywords'] = [
+                {'name': name, 'color': corparch_plugin.get_label_color(ident)}
+                for (ident, name) in corp_conf_info.metadata.keywords
+            ]
+
         try:
             ans['attrlist'] = [{'name': item, 'size': int(corpus.get_attr(item).id_range())}
                                for item in corpus.get_conf('ATTRLIST').split(',')]
         except RuntimeError as e:
             logging.getLogger(__name__).warning('%s' % e)
             ans['attrlist'] = {'error': translate('Failed to load')}
+
         ans['structlist'] = [{'name': item, 'size': int(corpus.get_struct(item).size())}
                              for item in corpus.get_conf('STRUCTLIST').split(',')]
         return ans
