@@ -146,7 +146,7 @@ class RegistryConf(object):
 
     @property
     def posattrs(self):
-        return (x for x in self._items if isinstance(x, Attribute))
+        return (x for x in self._items if isinstance(x, PosAttribute))
 
     @property
     def structs(self):

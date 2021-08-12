@@ -279,6 +279,24 @@ class WriteBackend(DatabaseWriteBackend):
             'WHERE name = %s',
             vals1)
 
+        # positional attributes
+        cursor.execute(
+            'SELECT name FROM corpus_posattr WHERE corpus_name = %s', (install_json.ident,))
+        curr_posattrs = set(row['name'] for row in cursor.fetchall())
+        new_posattrs = {}
+        for new_posattr in registry_conf.posattrs:
+            new_posattrs[new_posattr.name] = new_posattr
+        added_posattrs = set(new_posattrs.keys()) - curr_posattrs
+
+        removed_structattrs = curr_posattrs - set(new_posattrs.keys())
+        for rma in removed_structattrs:
+            cursor.execute(
+                'DELETE FROM corpus_posattr WHERE corpus_name = %s AND name = %s',
+                (install_json.ident, rma))
+        for i, aa in enumerate(added_posattrs):
+            keyvals = [(v.name, v.value) for v in new_posattrs[aa].non_empty_items]
+            self.save_corpus_posattr(install_json.ident, aa, i, keyvals)
+
         # structural attributes
         cursor.execute(
             'SELECT CONCAT(structure_name, ".", name) AS name '
