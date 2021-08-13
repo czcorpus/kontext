@@ -13,7 +13,7 @@
 from typing import Union, List, Optional, Dict, Any
 from enum import Enum
 import logging
-import attr
+from dataclasses import dataclass, field
 
 from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
 
@@ -59,149 +59,152 @@ WordlistArgsMapping = (
 )
 
 
-def def_attr(value, persistent: Persistence = Persistence.NON_PERSISTENT):
-    return attr.ib(default=value, metadata={'persistent': persistent})
+def mk_metdata(persistent: Persistence = Persistence.NON_PERSISTENT):
+    return {'persistent': persistent}
 
 
-@attr.s(kw_only=True, auto_attribs=True)
+@dataclass
 class Args(object):
     """
 
     """
     # specifies response output format (used in case default one is not applicable)
-    format: str = def_attr('')
+    format: str = field(default='', metadata=mk_metdata())
 
-    ml: int = def_attr(0)
-    concarf: str = def_attr('')
-    concsize: str = def_attr('')
-    Lines: List = def_attr(attr.Factory(list))
-    fromp: int = def_attr(1)
-    numofpages: int = def_attr(0)
-    pnfilter: str = def_attr('p')
-    filfl: str = def_attr('f')
-    filfpos: str = def_attr('-5', persistent=Persistence.SEMI_PERSISTENT)
-    filtpos: str = def_attr('5', persistent=Persistence.SEMI_PERSISTENT)
+    ml: int = field(default=0, metadata=mk_metdata())
+    concarf: str = field(default='', metadata=mk_metdata())
+    concsize: str = field(default='', metadata=mk_metdata())
+    Lines: List = field(default_factory=list, metadata=mk_metdata())
+    fromp: int = field(default=1, metadata=mk_metdata())
+    numofpages: int = field(default=0, metadata=mk_metdata())
+    pnfilter: str = field(default='p', metadata=mk_metdata())
+    filfl: str = field(default='f', metadata=mk_metdata())
+    filfpos: str = field(default='-5', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    filtpos: str = field(default='5', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
 
     # concordance sorting
-    sattr: str = def_attr('')
-    sicase: str = def_attr('')
-    sbward: str = def_attr('')
-    spos: int = def_attr(5)
-    skey: str = def_attr('rc')
-    sortlevel: int = def_attr(1)
-    ml1attr: str = def_attr('')
-    ml2attr: str = def_attr('')
-    ml3attr: str = def_attr('')
-    ml4attr: str = def_attr('')
-    ml1icase: str = def_attr('')
-    ml2icase: str = def_attr('')
-    ml3icase: str = def_attr('')
-    ml4icase: str = def_attr('')
-    ml1bward: str = def_attr('')
-    ml2bward: str = def_attr('')
-    ml3bward: str = def_attr('')
-    ml4bward: str = def_attr('')
-    ml1pos: int = def_attr(1)
-    ml2pos: int = def_attr(1)
-    ml3pos: int = def_attr(1)
-    ml4pos: int = def_attr(1)
-    ml1ctx: str = def_attr('0~0>0')
-    ml2ctx: str = def_attr('0~0>0')
-    ml3ctx: str = def_attr('0~0>0')
-    ml4ctx: str = def_attr('0~0>0')
+    sattr: str = field(default='', metadata=mk_metdata())
+    sicase: str = field(default='', metadata=mk_metdata())
+    sbward: str = field(default='', metadata=mk_metdata())
+    spos: int = field(default=5, metadata=mk_metdata())
+    skey: str = field(default='rc', metadata=mk_metdata())
+    sortlevel: int = field(default=1, metadata=mk_metdata())
+    ml1attr: str = field(default='', metadata=mk_metdata())
+    ml2attr: str = field(default='', metadata=mk_metdata())
+    ml3attr: str = field(default='', metadata=mk_metdata())
+    ml4attr: str = field(default='', metadata=mk_metdata())
+    ml1icase: str = field(default='', metadata=mk_metdata())
+    ml2icase: str = field(default='', metadata=mk_metdata())
+    ml3icase: str = field(default='', metadata=mk_metdata())
+    ml4icase: str = field(default='', metadata=mk_metdata())
+    ml1bward: str = field(default='', metadata=mk_metdata())
+    ml2bward: str = field(default='', metadata=mk_metdata())
+    ml3bward: str = field(default='', metadata=mk_metdata())
+    ml4bward: str = field(default='', metadata=mk_metdata())
+    ml1pos: int = field(default=1, metadata=mk_metdata())
+    ml2pos: int = field(default=1, metadata=mk_metdata())
+    ml3pos: int = field(default=1, metadata=mk_metdata())
+    ml4pos: int = field(default=1, metadata=mk_metdata())
+    ml1ctx: str = field(default='0~0>0', metadata=mk_metdata())
+    ml2ctx: str = field(default='0~0>0', metadata=mk_metdata())
+    ml3ctx: str = field(default='0~0>0', metadata=mk_metdata())
+    ml4ctx: str = field(default='0~0>0', metadata=mk_metdata())
 
-    freq_sort: str = def_attr('')
-    heading: int = def_attr(0)
-    saveformat: str = def_attr('text')
-    simple_n: int = def_attr(1)
-    usearf: int = def_attr(0)
-    collpage: int = def_attr(1)
-    fpage: int = def_attr(1)
-    fmaxitems: int = def_attr(50)
-    ftt_include_empty: str = def_attr('')
-    subcsize: int = def_attr(0)
-    ref_usesubcorp: str = def_attr('')
-    wlsort: str = def_attr('')
-    keywords: str = def_attr('')
-    Keywords: List[str] = def_attr(attr.Factory(list))
-    Items: List[str] = def_attr(attr.Factory(list))  # TODO check and remove
-    selected: str = def_attr('')
-    pages: int = def_attr(0)
-    leftctx: str = def_attr('')
-    rightctx: str = def_attr('')
-    numbering: int = def_attr(0)
-    align_kwic: int = def_attr(0)
-    stored: str = def_attr('')
-    line_numbers: bool = def_attr(False, persistent=Persistence.PERSISTENT)
+    freq_sort: str = field(default='', metadata=mk_metdata())
+    heading: int = field(default=0, metadata=mk_metdata())
+    saveformat: str = field(default='text', metadata=mk_metdata())
+    simple_n: int = field(default=1, metadata=mk_metdata())
+    usearf: int = field(default=0, metadata=mk_metdata())
+    collpage: int = field(default=1, metadata=mk_metdata())
+    fpage: int = field(default=1, metadata=mk_metdata())
+    fmaxitems: int = field(default=50, metadata=mk_metdata())
+    ftt_include_empty: str = field(default='', metadata=mk_metdata())
+    subcsize: int = field(default=0, metadata=mk_metdata())
+    ref_usesubcorp: str = field(default='', metadata=mk_metdata())
+    wlsort: str = field(default='', metadata=mk_metdata())
+    keywords: str = field(default='', metadata=mk_metdata())
+    Keywords: List[str] = field(default_factory=list, metadata=mk_metdata())
+    Items: List[str] = field(default_factory=list, metadata=mk_metdata())  # TODO check and remove
+    selected: str = field(default='', metadata=mk_metdata())
+    pages: int = field(default=0, metadata=mk_metdata())
+    leftctx: str = field(default='', metadata=mk_metdata())
+    rightctx: str = field(default='', metadata=mk_metdata())
+    numbering: int = field(default=0, metadata=mk_metdata())
+    align_kwic: int = field(default=0, metadata=mk_metdata())
+    stored: str = field(default='', metadata=mk_metdata())
+    line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     # end
 
     # must be an empty string and not None
-    corpname: str = def_attr('', persistent=Persistence.SEMI_PERSISTENT)
-    usesubcorp: str = def_attr('')
-    subcname: str = def_attr('')
-    subcpath: List[str] = def_attr(attr.Factory(list))
-    save: int = def_attr(1)
-    rlines: str = def_attr('250')
-    attrs: str = def_attr('word', persistent=Persistence.PERSISTENT)
-    base_viewattr: str = def_attr('word', persistent=Persistence.PERSISTENT)
-    attr_vmode: str = def_attr('visible-kwic', persistent=Persistence.PERSISTENT)
-    structs: str = def_attr('', persistent=Persistence.PERSISTENT)
-    q: List[str] = def_attr(attr.Factory(list))
-    pagesize: int = def_attr(40, persistent=Persistence.PERSISTENT)
-    wlpagesize: int = def_attr(25, persistent=Persistence.PERSISTENT)
-    citemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
-    pqueryitemsperpage: int = def_attr(50, persistent=Persistence.PERSISTENT)
-    multiple_copy: int = def_attr(0, persistent=Persistence.PERSISTENT)  # TODO do we need this?
-    wlsendmail: str = def_attr('')
-    cup_hl: str = def_attr('q', persistent=Persistence.PERSISTENT)
-    structattrs: List[str] = def_attr(attr.Factory(list), persistent=Persistence.PERSISTENT)
+    corpname: str = field(default='', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    usesubcorp: str = field(default='', metadata=mk_metdata())
+    subcname: str = field(default='', metadata=mk_metdata())
+    subcpath: List[str] = field(default_factory=list, metadata=mk_metdata())
+    save: int = field(default=1, metadata=mk_metdata())
+    rlines: str = field(default='250', metadata=mk_metdata())
+    attrs: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT))
+    base_viewattr: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT))
+    attr_vmode: str = field(default='visible-kwic', metadata=mk_metdata(Persistence.PERSISTENT))
+    structs: str = field(default='', metadata=mk_metdata(Persistence.PERSISTENT))
+    q: List[str] = field(default_factory=list, metadata=mk_metdata())
+    pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
+    wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
+    citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
+    pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
+    multiple_copy: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))  # TODO do we need this?
+    wlsendmail: str = field(default='', metadata=mk_metdata())
+    cup_hl: str = field(default='q', metadata=mk_metdata(Persistence.PERSISTENT))
+    structattrs: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.PERSISTENT))
 
-    rich_query_editor: bool = def_attr(True, persistent=Persistence.PERSISTENT)
-    qs_enabled: bool = def_attr(True, persistent=Persistence.PERSISTENT)
+    rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
+    qs_enabled: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
 
-    flimit: int = def_attr(1)
-    freqlevel: int = def_attr(1)
-    hidenone: int = def_attr(1)
-    fttattr: List[str] = def_attr(attr.Factory(list))
+    flimit: int = field(default=1, metadata=mk_metdata())
+    freqlevel: int = field(default=1, metadata=mk_metdata())
+    hidenone: int = field(default=1, metadata=mk_metdata())
+    fttattr: List[str] = field(default_factory=list, metadata=mk_metdata())
 
-    kwicleftctx: str = def_attr('-10', persistent=Persistence.PERSISTENT)
-    kwicrightctx: str = def_attr('10', persistent=Persistence.PERSISTENT)
-    senleftctx_tpl: str = def_attr('-1:%s')
-    senrightctx_tpl: str = def_attr('1:%s')
-    viewmode: str = def_attr('kwic')
-    align: List[str] = def_attr(attr.Factory(list), persistent=Persistence.SEMI_PERSISTENT)
-    maincorp: str = def_attr('')  # used only in case of parallel corpora - specifies primary corp.
+    kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
+    kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
+    senleftctx_tpl: str = field(default='-1:%s', metadata=mk_metdata())
+    senrightctx_tpl: str = field(default='1:%s', metadata=mk_metdata())
+    viewmode: str = field(default='kwic', metadata=mk_metdata())
+    align: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    maincorp: str = field(default='', metadata=mk_metdata())
+    """
+    used only in case of parallel corpora - specifies primary corp.
+    """
     # None means "not initialized" while '' means "user wants no refs"
-    refs: Optional[str] = def_attr(None)
-    hitlen: int = def_attr(1)
+    refs: Optional[str] = field(default=None, metadata=mk_metdata())
+    hitlen: int = field(default=1, metadata=mk_metdata())
 
-    shuffle: int = def_attr(0, persistent=Persistence.PERSISTENT)
+    shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
 
-    subcnorm: str = def_attr('tokens')
+    subcnorm: str = field(default='tokens', metadata=mk_metdata())
 
     # Collocations
 
-    cattr: str = def_attr('word')
-    csortfn: str = def_attr('d')
-    cbgrfns: List[str] = def_attr(['m', 't', 'd'])
-    cfromw: int = def_attr(-5)
-    ctow: int = def_attr(5)
-    cminfreq: int = def_attr(3)
-    cminbgr: int = def_attr(3)
+    cattr: str = field(default='word', metadata=mk_metdata())
+    csortfn: str = field(default='d', metadata=mk_metdata())
+    cbgrfns: List[str] = field(default_factory=lambda: ['m', 't', 'd'], metadata=mk_metdata())
+    cfromw: int = field(default=-5, metadata=mk_metdata())
+    ctow: int = field(default=5, metadata=mk_metdata())
+    cminfreq: int = field(default=3, metadata=mk_metdata())
+    cminbgr: int = field(default=3, metadata=mk_metdata())
 
-    # Contingency table
+    # 2-dimensional frequency
 
-    ctminfreq: int = def_attr(80)   # 80th percentile (see ctminfreq_type)
-    ctminfreq_type: str = def_attr('pabs')  # percentile as a default filter mode
-    ctattr1: str = def_attr('word')
-    ctattr2: str = def_attr('word')
-    ctfcrit1: str = def_attr('0<0')
-    ctfcrit2: str = def_attr('0<0')
+    ctminfreq: int = field(default=80, metadata=mk_metdata())   # 80th percentile (see ctminfreq_type)
+    ctminfreq_type: str = field(default='pabs', metadata=mk_metdata())  # percentile as a default filter mode
+    ctattr1: str = field(default='word', metadata=mk_metdata())
+    ctattr2: str = field(default='word', metadata=mk_metdata())
+    ctfcrit1: str = field(default='0<0', metadata=mk_metdata())
+    ctfcrit2: str = field(default='0<0', metadata=mk_metdata())
 
-    maxsavelines: int = def_attr(1000)
-    fcrit: List[str] = def_attr(attr.Factory(list))
+    maxsavelines: int = field(default=1000, metadata=mk_metdata())
+    fcrit: List[str] = field(default_factory=list, metadata=mk_metdata())
 
-    sort_linegroups: int = def_attr(0)
+    sort_linegroups: int = field(default=0, metadata=mk_metdata())
 
     def _upgrade_legacy_value(self, key: str, value: Union[str, int], src_data: RequestArgsProxy) -> Union[str, int]:
         """
