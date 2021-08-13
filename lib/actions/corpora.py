@@ -11,13 +11,14 @@
 # GNU General Public License for more details.
 
 from collections import defaultdict
-from typing import List, Dict, Any, Union
+from typing import List, Union
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
 from controller import exposed
 from controller.kontext import Kontext
 import plugins
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive
+from plugins.abstract.corparch.corpus import CitationInfo
 from translation import ugettext as translate
 
 
@@ -50,7 +51,7 @@ class CorpusDetail:
     attrlist: Union[List[AttrStruct], ErrorInfo]
     structlist: List[AttrStruct]
     web_url: str
-    citation_info: Dict[str, Any]  # TODO why CitationInfo dataclass wont work?
+    citation_info: CitationInfo
     keywords: List[KeyWord]
 
 
@@ -96,7 +97,7 @@ class Corpora(Kontext):
             attrlist=[],
             structlist=[],
             web_url=corp_conf_info.web if corp_conf_info is not None else '',
-            citation_info=corp_conf_info.citation_info.to_dict(),
+            citation_info=corp_conf_info.citation_info,
             keywords=[],
         )
 
