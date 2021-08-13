@@ -22,6 +22,8 @@ KonText controller and related auxiliary objects
 """
 
 from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING, TypeVar
+
+from dataclasses_json.api import DataClassJsonMixin
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .plg import PluginCtx
@@ -850,6 +852,8 @@ class Controller(object):
             return result()
         elif return_type == 'json':
             try:
+                if isinstance(result, DataClassJsonMixin):
+                    return result.to_json()
                 return json.dumps(result)
             except Exception as e:
                 self._status = 500

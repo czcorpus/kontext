@@ -44,11 +44,13 @@ if TYPE_CHECKING:
     from controller.plg import PluginCtx
 import l10n
 from dataclasses import dataclass, field
-from .corpus import CorpusInfo, SerializableInfo
+from dataclasses_json import dataclass_json
+from .corpus import CorpusInfo
 
 
+@dataclass_json
 @dataclass
-class CorpusListItem(SerializableInfo):
+class CorpusListItem:
     id: str = None
     corpus_id: str = None
     name: str = None

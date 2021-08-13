@@ -135,8 +135,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const CorpusInfoBox:React.FC<CorpusInfoBoxProps> = (props) => {
 
         const renderWebLink = () => {
-            if (props.data.web_url) {
-                return <a href={props.data.web_url} target="_blank">{props.data.web_url}</a>;
+            if (props.data.webUrl) {
+                return <a href={props.data.webUrl} target="_blank">{props.data.webUrl}</a>;
 
             } else {
                 return '-';
@@ -196,7 +196,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         </dd>
                         <dt>{he.translate('global__citation_info')}:</dt>
                         <dd className="references">
-                            <CorpusReference data={props.data.citation_info} />
+                            <CorpusReference data={props.data.citationInfo} />
                         </dd>
                     </dl>
                 </S.CorpusInfoBox>

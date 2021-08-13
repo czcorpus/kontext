@@ -83,40 +83,40 @@ class Taghelper(AbstractTaghelper):
     def loader(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._loaders:
             for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
-                if tagset.tagset_type == 'positional':
-                    self._loaders[(corpus_name, tagset.tagset_name)] = PositionalTagVariantLoader(
-                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
+                if tagset.type == 'positional':
+                    self._loaders[(corpus_name, tagset.ident)] = PositionalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.ident,
                         cache_dir=self._conf['tags_cache_dir'],
                         tags_src_dir=self._conf['tags_src_dir'],
                         cache_clear_interval=self._conf['clear_interval'],
                         taglist_path=self._conf['taglist_path'])
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
-                elif tagset.tagset_type == 'keyval':
-                    self._loaders[(corpus_name, tagset.tagset_name)] = KeyvalTagVariantLoader(
-                        corpus_name=corpus_name, tagset_name=tagset.tagset_name,
+                    self._fetchers[(corpus_name, tagset.ident)] = PositionalSelectionFetcher()
+                elif tagset.type == 'keyval':
+                    self._loaders[(corpus_name, tagset.ident)] = KeyvalTagVariantLoader(
+                        corpus_name=corpus_name, tagset_name=tagset.ident,
                         tags_src_dir=self._conf['tags_src_dir'],
                     )
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.ident)] = KeyvalSelectionFetcher()
                 else:
-                    self._loaders[(corpus_name, tagset.tagset_name)] = NullTagVariantLoader()
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
+                    self._loaders[(corpus_name, tagset.ident)] = NullTagVariantLoader()
+                    self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._loaders[(corpus_name, tagset_name)]
 
     def fetcher(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._fetchers:
             for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
-                if tagset.tagset_type == 'positional':
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = PositionalSelectionFetcher()
-                elif tagset.tagset_type == 'keyval':
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = KeyvalSelectionFetcher()
+                if tagset.type == 'positional':
+                    self._fetchers[(corpus_name, tagset.ident)] = PositionalSelectionFetcher()
+                elif tagset.type == 'keyval':
+                    self._fetchers[(corpus_name, tagset.ident)] = KeyvalSelectionFetcher()
                 else:
-                    self._fetchers[(corpus_name, tagset.tagset_name)] = NullSelectionFetcher()
+                    self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
     def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
         for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
-            if tagset.tagset_name == tagset_id:
-                loader = self.loader(plugin_ctx, corpus_name, tagset.tagset_name)
+            if tagset.ident == tagset_id:
+                loader = self.loader(plugin_ctx, corpus_name, tagset.ident)
                 return loader.is_available()
         return False
 
@@ -128,7 +128,7 @@ class Taghelper(AbstractTaghelper):
         for corp in ([plugin_ctx.current_corpus.corpname] + plugin_ctx.available_aligned_corpora):
             info = self._corparch.get_corpus_info(plugin_ctx, corp)
             for tagset in info.tagsets:
-                tagsets[tagset.tagset_name] = tagset
+                tagsets[tagset.ident] = tagset
         return dict(corp_tagsets=[x.to_dict() for x in tagsets.values()])
 
 

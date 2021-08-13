@@ -13,6 +13,9 @@
       "dev:Run development profile": "docker:dev",
       "default:Run production profile": "docker:default",
       "mysql:Run production profile with mysql": "docker:mysql"
+    },
+    "typecheck:Run typecheck": {
+      "client:Run typecheck on client": "typecheck:client"
     }
   }
 }

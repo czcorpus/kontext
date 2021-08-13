@@ -19,6 +19,9 @@
 """
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
+import json
+from typing import List
+from plugins.abstract.corparch.corpus import TagsetInfo, PosCategoryItem
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins.abstract.corparch.backend.regkeys import (
     REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
@@ -364,19 +367,34 @@ class Backend(DatabaseBackend):
                        f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [r['corpus_id'] for r in cursor.fetchall()]
 
-    def load_corpus_tagsets(self, corpus_id):
+    def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         cursor = self._db.cursor()
-        cursor.execute('SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, t.name AS tagset_name, '
-                       'ct.kontext_widget_enabled AS widget_enabled, t.doc_url_local, t.doc_url_en '
-                       'FROM tagset AS t JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
-                       'WHERE ct.corpus_name = %s', (corpus_id, ))
-        return cursor.fetchall()
-
-    def load_pos_category(self, tagset_name):
-        cursor = self._db.cursor()
-        cursor.execute('SELECT tag_search_pattern AS pattern, pos FROM tagset_pos_category '
-                       'WHERE tagset_name = %s', (tagset_name, ))
-        return cursor.fetchall()
+        cursor.execute("SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, "
+                       "ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, "
+                       "JSON_ARRAYAGG(CONCAT_WS(',',tpc.tag_search_pattern,tpc.pos)) AS patterns_pos "
+                       "FROM tagset AS t "
+                       "JOIN corpus_tagset AS ct ON ct.tagset_name = t.name "
+                       "LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name "
+                       "WHERE ct.corpus_name = %s "
+                       "GROUP BY tagset_name", (corpus_id, ))
+        return [
+            TagsetInfo(
+                ident=row['tagset_name'],
+                type=row['tagset_type'],
+                corpus_name=row['corpus_name'],
+                pos_attr=row['pos_attr'],
+                feat_attr=row['feat_attr'],
+                widget_enabled=bool(row['kontext_widget_enabled']),
+                doc_url_local=row['doc_url_local'],
+                doc_url_en=row['doc_url_en'],
+                pos_category=[
+                    PosCategoryItem(*pattern_pos.split(','))
+                    for pattern_pos in json.loads(row['patterns_pos'])
+                    if pattern_pos
+                ]
+            )
+            for row in cursor
+        ]
 
     def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()

@@ -525,13 +525,13 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.web = web_url
         ans.sentence_struct = sentence_struct
         ans.tagsets = [
-            TagsetInfo.from_dict({
-                'corpus_name': ans.name,
-                'tagset_name': tagset.attrib.get('name', None),
-                'tagset_type': tagset.attrib.get('type', None),
-                'pos_attr': tagset.attrib.get('pos_attr', None),
-                'feat_attr': tagset.attrib.get('feat_attr', None),
-            })
+            TagsetInfo(
+                corpus_name=ans.name,
+                ident=tagset.attrib.get('name', None),
+                type=tagset.attrib.get('type', None),
+                pos_attr=tagset.attrib.get('pos_attr', None),
+                feat_attr=tagset.attrib.get('feat_attr', None),
+            )
             for tagset in node.findall('tagsets/tagset')
         ]
         ans.speech_segment = node.attrib.get('speech_segment', None)

@@ -608,7 +608,7 @@ class Actions(Querying):
 
         wposlist = {}
         for tagset in corpus_info.tagsets:
-            if tagset.tagset_name == corpus_info.default_tagset:
+            if tagset.ident == corpus_info.default_tagset:
                 wposlist = [{'n': x.pos, 'v': x.pattern} for x in tagset.pos_category]
                 break
 
@@ -1831,7 +1831,7 @@ class Actions(Querying):
         lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
         poslist = []
         for tagset in corpus_info.tagsets:
-            if tagset.tagset_name == corpus_info.default_tagset:
+            if tagset.ident == corpus_info.default_tagset:
                 poslist = tagset.pos_category
                 break
 
@@ -1839,9 +1839,7 @@ class Actions(Querying):
             corpname=self.args.corpname,
             subcorpname=self.corp.subcname if self.corp.is_subcorpus else None,
             baseAttr=Kontext.BASE_ATTR,
-            tagsets=[dict(ident=tagset.tagset_name, posAttr=tagset.pos_attr, featAttr=tagset.feat_attr,
-                          docUrlLocal=tagset.doc_url_local, docUrlEn=tagset.doc_url_en)
-                     for tagset in corpus_info.tagsets],
+            tagsets=[tagset.to_dict() for tagset in corpus_info.tagsets],
             humanCorpname=self._human_readable_corpname(),
             corpusIdent=dict(
                 id=self.args.corpname, name=self._human_readable_corpname(),

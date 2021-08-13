@@ -421,7 +421,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             type: CorpusInfoType.CORPUS,
             attrlist: [],
             structlist: [],
-            citation_info: {
+            citationInfo: {
                 type: CorpusInfoType.CITATION,
                 corpname: null,
                 article_ref: [],
@@ -431,7 +431,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             corpname: null,
             description: null,
             size: null,
-            web_url: null,
+            webUrl: null,
             keywords: []
         };
     }
