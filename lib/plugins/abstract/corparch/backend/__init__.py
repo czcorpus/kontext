@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, Any, Tuple, Dict, Optional
+from plugins.abstract.corparch.corpus import TagsetInfo
 from plugins.abstract.corparch.install import InstallJson
 from plugins.abstract.corparch.registry import RegistryConf
 import abc
@@ -98,7 +99,7 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def get_permitted_corpora(self, user_id) -> List[str]:
+    def get_permitted_corpora(self, user_id: str) -> List[str]:
         pass
 
     @abc.abstractmethod
@@ -106,10 +107,10 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_corpus_tagsets(self, corpus_id) -> List[Dict[str, Any]]:
+    def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         pass
 
-    def load_interval_attrs(self, corpus_id):
+    def load_interval_attrs(self, corpus_id: str):
         """
         Load structural attributes selectable via
         numeric range (typically - publication date).
@@ -118,7 +119,7 @@ class DatabaseBackend:
         """
         return []
 
-    def load_simple_query_default_attrs(self, corpus_id) -> List[str]:
+    def load_simple_query_default_attrs(self, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
 

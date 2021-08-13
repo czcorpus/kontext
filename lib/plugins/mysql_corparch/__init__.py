@@ -30,7 +30,7 @@ import plugins
 from plugins import inject
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusListItem
 from plugins.abstract.corparch.corpus import (
-    BrokenCorpusInfo, PosCategoryItem, TokenConnect, KwicConnect, QuerySuggest, TagsetInfo, CorpusInfo)
+    BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo)
 from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query
@@ -255,12 +255,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row, user_lang)
             if corp:
-                for row2 in self._backend.load_corpus_tagsets(corpus_id):
-                    pos_category = [
-                        PosCategoryItem(**data)
-                        for data in self._backend.load_pos_category(row2['ident'])
-                    ]
-                    corp.tagsets.append(TagsetInfo(**{**row2, 'pos_category': pos_category}))
+                corp.tagsets = self._backend.load_corpus_tagsets(corpus_id)
                 self._corpus_info_cache[corpus_id] = corp
                 for art in self._backend.load_corpus_articles(corpus_id):
                     if art['role'] == 'default':

@@ -119,9 +119,6 @@ class TagsetInfo:
     doc_url_en: Optional[str] = None
     pos_category: List[PosCategoryItem] = field(default_factory=list)
 
-    def __post_init__(self):
-        self.widget_enabled = bool(self.widget_enabled)
-
 
 @dataclass_json
 @dataclass
