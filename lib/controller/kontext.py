@@ -19,8 +19,8 @@ from argmapping.query import ConcFormArgs
 from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
-import attr
 from functools import partial
+from dataclasses import fields
 
 import logging
 import inspect
@@ -242,7 +242,7 @@ class Kontext(Controller):
         if optlist is None:
             optlist = []
         tosave = [(att.name, getattr(self.args, att.name))
-                  for att in attr.fields(Args) if att.name in optlist]
+                  for att in fields(Args) if att.name in optlist]
 
         def merge_incoming_opts_to(opts):
             if opts is None:

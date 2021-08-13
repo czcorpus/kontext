@@ -362,7 +362,7 @@ class CTCalculation(object):
 
     def ct_dist(self, crit, limit_type, limit=1):
         """
-        Calculate join distribution (contingency table).
+        Calculate join distribution (2d frequency).
         """
         words = manatee.StrVector()
         freqs = manatee.NumVector()

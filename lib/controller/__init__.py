@@ -38,7 +38,7 @@ import types
 import hashlib
 import uuid
 import jinja2
-import attr
+from dataclasses import fields, asdict
 
 import werkzeug.urls
 import werkzeug.http
@@ -545,7 +545,7 @@ class Controller(object):
         def is_valid_parameter(att):
             return att.metadata['persistent'] is persistence_types
 
-        return tuple(att.name for att in attr.fields(Args) if is_valid_parameter(att))
+        return tuple(att.name for att in fields(Args) if is_valid_parameter(att))
 
     def _get_items_by_persistence(self, persistence_types: Persistence) -> Dict[str, any]:
         """
@@ -862,7 +862,7 @@ class Controller(object):
         elif isinstance(result, dict):
             self.add_globals(self._request, result, methodname, action_metadata)
             template_object = self._template_env.get_template(template)
-            for k in attr.asdict(self.args):
+            for k in asdict(self.args):
                 if k not in result:
                     result[k] = getattr(self.args, k)
             return template_object.render(result)

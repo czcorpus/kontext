@@ -40,8 +40,8 @@ from conclib.empty import InitialConc
 from conclib.search import get_conc
 from conclib.calc import cancel_conc_task, require_existing_conc, ConcNotFoundException
 from conclib.errors import (
-    UnknownConcordanceAction, ConcordanceException, ConcordanceQuerySyntaxError, ConcordanceQueryParamsError,
-    ConcordanceSpecificationError, extract_manatee_error)
+    UnknownConcordanceAction, ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError,
+    extract_manatee_error)
 import corplib
 from bgcalc import freq_calc, coll_calc, calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
@@ -56,7 +56,6 @@ from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
 import templating
 import mailing
-import attr
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
@@ -212,7 +211,7 @@ class Actions(Querying):
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
 
-                kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
+                kwic_args = KwicPageArgs(asdict(self.args), base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
@@ -835,7 +834,7 @@ class Actions(Querying):
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
 
-                kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
+                kwic_args = KwicPageArgs(asdict(self.args), base_attr=Kontext.BASE_ATTR)
                 kwic_args.speech_attr = self._get_speech_segment()
                 kwic_args.labelmap = {}
                 kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
@@ -1205,7 +1204,7 @@ class Actions(Querying):
             freq_data = freq_calc.calculate_freqs_ct(args)
         except UserActionException as ex:
             freq_data = dict(data=[], full_size=0)
-            self.add_system_message('error', str(e))
+            self.add_system_message('error', str(ex))
 
         self._add_save_menu_item('XLSX', save_format='xlsx')
 
@@ -1449,7 +1448,7 @@ class Actions(Querying):
                 'numbering': numbering
             }
 
-            kwic_args = KwicPageArgs(attr.asdict(self.args), base_attr=Kontext.BASE_ATTR)
+            kwic_args = KwicPageArgs(asdict(self.args), base_attr=Kontext.BASE_ATTR)
             kwic_args.speech_attr = self._get_speech_segment()
             kwic_args.fromp = 1
             kwic_args.pagesize = to_line - (from_line - 1)
