@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import List, Any, Tuple, Dict, Optional
+from typing import Iterable, List, Any, Tuple, Dict, Optional
 from plugins.abstract.corparch.corpus import TagsetInfo
 from plugins.abstract.corparch.install import InstallJson
 from plugins.abstract.corparch.registry import RegistryConf
@@ -30,22 +30,28 @@ class DatabaseBackend:
     """
 
     @abc.abstractmethod
-    def contains_corpus(self, corpus_id: str):
+    def contains_corpus(self, corpus_id: str) -> bool:
         pass
 
     @abc.abstractmethod
-    def load_corpus_articles(self, corpus_id: str) -> Dict[str, Any]:
+    def load_corpus_articles(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
-    def load_all_keywords(self) -> Dict[str, str]:
+    def load_all_keywords(self) -> Iterable[Dict[str, str]]:
         """
         expected db cols: id, label_cs, label_en, color
         """
         pass
 
     @abc.abstractmethod
-    def load_ttdesc(self, desc_id: int) -> Dict[str, str]:
+    def load_ttdesc(self, desc_id: int) -> Iterable[Dict[str, str]]:
+        """
+        """
+        pass
+
+    @abc.abstractmethod
+    def load_corpora_descriptions(self, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
         """
         """
         pass
@@ -57,13 +63,13 @@ class DatabaseBackend:
     @abc.abstractmethod
     def load_all_corpora(self, user_id: int, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None,
                          min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
-                         offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Dict[str, str]:
+                         offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Iterable[Dict[str, Any]]:
         """
         """
         pass
 
     @abc.abstractmethod
-    def load_featured_corpora(self, user_lang: str) -> List[Dict[str, Any]]:
+    def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
         pass
 
     @abc.abstractmethod
@@ -71,7 +77,7 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_corpus_posattrs(self, corpus_id: str) -> List[Dict[str, Any]]:
+    def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
@@ -83,7 +89,11 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_corpus_structures(self, corpus_id: str) -> List[Dict[str, Any]]:
+    def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
+        pass
+
+    @abc.abstractmethod
+    def load_corpus_structattrs(self, corpus_id: str, structure_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
@@ -95,7 +105,7 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_tckc_providers(self, corpus_id: str) -> List[Dict[str, Any]]:
+    def load_tckc_providers(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
@@ -110,7 +120,7 @@ class DatabaseBackend:
     def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         pass
 
-    def load_interval_attrs(self, corpus_id: str):
+    def load_interval_attrs(self, corpus_id: str) -> List[str]:
         """
         Load structural attributes selectable via
         numeric range (typically - publication date).

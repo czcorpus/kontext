@@ -11,6 +11,7 @@
 # GNU General Public License for more details.
 
 from collections import defaultdict
+import logging
 from typing import List, Union
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
@@ -63,18 +64,18 @@ class Corpora(Kontext):
     @exposed(skip_corpus_init=True)
     def corplist(self, request):
         self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-        with plugins.runtime.CORPARCH as corparch_plugin:
-            if isinstance(corparch_plugin, AbstractSearchableCorporaArchive):
-                params = corparch_plugin.initial_search_params(self._plugin_ctx, request.args.get('query'),
-                                                               request.args)
-                data = corparch_plugin.search(plugin_ctx=self._plugin_ctx,
-                                              query=False,
-                                              offset=0,
-                                              limit=request.args.get('limit', None),
-                                              filter_dict=request.args)
+        with plugins.runtime.CORPARCH as cp:
+            if isinstance(cp, AbstractSearchableCorporaArchive):
+                params = cp.initial_search_params(self._plugin_ctx, request.args.get('query'),
+                                                  request.args)
+                data = cp.search(plugin_ctx=self._plugin_ctx,
+                                 query=False,
+                                 offset=0,
+                                 limit=request.args.get('limit', None),
+                                 filter_dict=request.args)
             else:
                 params = {}
-                data = corparch_plugin.get_all(self._plugin_ctx)
+                data = cp.get_all(self._plugin_ctx)
             data['search_params'] = params
             return dict(corplist_data=data)
 
@@ -101,9 +102,9 @@ class Corpora(Kontext):
             keywords=[],
         )
 
-        with plugins.runtime.CORPARCH as corparch_plugin:
+        with plugins.runtime.CORPARCH as cp:
             ans.keywords = [
-                KeyWord(name=name, color=corparch_plugin.get_label_color(ident))
+                KeyWord(name=name, color=cp.get_label_color(ident))
                 for (ident, name) in corp_conf_info.metadata.keywords
             ]
 

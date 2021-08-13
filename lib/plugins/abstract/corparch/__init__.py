@@ -121,7 +121,7 @@ class CorplistProvider(abc.ABC):
     @abc.abstractmethod
     def search(
             self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
-            filter_dict: Optional[Dict[str, Any]] = None) -> Any:
+            filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         arguments:
         plugin_ctx --
@@ -139,7 +139,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
 
     def search(
             self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
-            filter_dict: Optional[Dict[str, Any]] = None):
+            filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Returns a subset of corplist matching provided query.
 

@@ -29,6 +29,7 @@ import actions.user
 import plugins
 from plugins import inject
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusListItem
+from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins.abstract.corparch.corpus import (
     BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo)
 from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
@@ -60,7 +61,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
-    def __init__(self, db_backend, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
+    def __init__(self, db_backend: DatabaseBackend, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
         """
 
         arguments:
@@ -71,7 +72,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             max_page_size --
             registry_lang --
         """
-        self._backend = db_backend
+        self._backend: DatabaseBackend = db_backend
         self._user_items = user_items
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
@@ -250,7 +251,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     self._qs_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._qs_providers[corpus_id]
 
-    def _fetch_corpus_info(self, corpus_id: str, user_lang: str):
+    def _fetch_corpus_info(self, corpus_id: str, user_lang: str) -> CorpusInfo:
         if corpus_id not in self._corpus_info_cache:
             row = self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row, user_lang)
