@@ -20,7 +20,7 @@
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 import json
-from typing import List
+from typing import Any, Dict, Iterable, List, Tuple
 from plugins.abstract.corparch.corpus import TagsetInfo, PosCategoryItem
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins.abstract.corparch.backend.regkeys import (
@@ -55,12 +55,12 @@ class Backend(DatabaseBackend):
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
 
-    def contains_corpus(self, corpus_id):
+    def contains_corpus(self, corpus_id: str) -> bool:
         cursor = self._db.cursor()
         cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))
         return cursor.fetchone() is not None
 
-    def load_corpus_articles(self, corpus_id):
+    def load_corpus_articles(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         cursor = self._db.cursor()
         cursor.execute('SELECT ca.role, a.entry '
                        'FROM kontext_article AS a '
@@ -68,18 +68,18 @@ class Backend(DatabaseBackend):
                        'WHERE ca.corpus_name = %s', (corpus_id,))
         return cursor.fetchall()
 
-    def load_all_keywords(self):
+    def load_all_keywords(self) -> Iterable[Dict[str, str]]:
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY display_order')
         return cursor.fetchall()
 
-    def load_ttdesc(self, desc_id):
+    def load_ttdesc(self, desc_id) -> Iterable[Dict[str, str]]:
         cursor = self._db.cursor()
         cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
         return cursor.fetchall()
 
-    def load_corpora_descriptions(self, corp_ids, user_lang):
+    def load_corpora_descriptions(self, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
         if len(corp_ids) == 0:
             return {}
         cursor = self._db.cursor()
@@ -90,7 +90,7 @@ class Backend(DatabaseBackend):
                        f'WHERE name IN ({placeholders})', corp_ids)
         return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
 
-    def load_corpus(self, corp_id):
+    def load_corpus(self, corp_id: str) -> Dict[str, Any]:
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
@@ -122,7 +122,7 @@ class Backend(DatabaseBackend):
         return cursor.fetchone()
 
     def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=10000000000, favourites=()):
+                         offset=0, limit=10000000000, favourites=()) -> Iterable[Dict[str, Any]]:
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
@@ -235,7 +235,7 @@ class Backend(DatabaseBackend):
         c.execute(sql, where + [limit, offset])
         return c.fetchall()
 
-    def load_featured_corpora(self, user_lang):
+    def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
         cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
         cursor.execute('SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
@@ -245,7 +245,7 @@ class Backend(DatabaseBackend):
                        'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name')
         return cursor.fetchall()
 
-    def load_registry_table(self, corpus_id, variant):
+    def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
         cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(REG_COLS_MAP.items())] +
                 ['rv.{0} AS {1}'.format(v, k) for k, v in list(REG_VAR_COLS_MAP.items())])
         if variant:
@@ -264,14 +264,14 @@ class Backend(DatabaseBackend):
         cursor.execute(sql, vals)
         return cursor.fetchone()
 
-    def load_corpus_posattrs(self, corpus_id):
+    def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
             ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(POS_COLS_MAP.items())]))
         cursor = self._db.cursor()
         cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
 
-    def load_corpus_posattr_references(self, corpus_id, posattr_id):
+    def load_corpus_posattr_references(self, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT r2.name AS n1, r3.name AS n2 '
                        'FROM corpus_posattr AS r1 '
@@ -281,14 +281,14 @@ class Backend(DatabaseBackend):
         ans = cursor.fetchone()
         return (ans['n1'], ans['n2']) if ans is not None else (None, None)
 
-    def load_corpus_alignments(self, corpus_id):
+    def load_corpus_alignments(self, corpus_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT ca.corpus_name_2 AS id '
                        'FROM corpus_alignment AS ca '
                        'WHERE ca.corpus_name_1 = %s', (corpus_id,))
         return [row['id'] for row in cursor.fetchall()]
 
-    def load_corpus_structures(self, corpus_id):
+    def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
                            for k, v in list(STRUCT_COLS_MAP.items())]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
@@ -296,14 +296,14 @@ class Backend(DatabaseBackend):
         cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
 
-    def load_corpus_structattrs(self, corpus_id, structure_id):
+    def load_corpus_structattrs(self, corpus_id: str, structure_id: str) -> Iterable[Dict[str, Any]]:
         cursor = self._db.cursor()
         sql = 'SELECT {0} FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s'.format(
             ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
         cursor.execute(sql, (corpus_id, structure_id))
         return cursor.fetchall()
 
-    def load_subcorpattrs(self, corpus_id):
+    def load_subcorpattrs(self, corpus_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT cs.structure_name AS struct, cs.name AS structattr '
                        'FROM corpus_structattr AS cs '
@@ -311,7 +311,7 @@ class Backend(DatabaseBackend):
                        'ORDER BY cs.subcorpattrs_idx', (corpus_id,))
         return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
 
-    def load_freqttattrs(self, corpus_id):
+    def load_freqttattrs(self, corpus_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT cs.structure_name AS struct, cs.name AS structattr '
                        'FROM corpus_structattr AS cs '
@@ -319,14 +319,14 @@ class Backend(DatabaseBackend):
                        'ORDER BY cs.freqttattrs_idx', (corpus_id,))
         return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
 
-    def load_tckc_providers(self, corpus_id):
+    def load_tckc_providers(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
             (corpus_id,))
         return cursor.fetchall()
 
-    def corpus_access(self, user_id, corpus_id):
+    def corpus_access(self, user_id: str, corpus_id: str) -> Tuple[bool, bool, str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
@@ -349,7 +349,7 @@ class Backend(DatabaseBackend):
             return False, False, ''
         return False, True, row['variant'] if row['variant'] else ''
 
-    def get_permitted_corpora(self, user_id):
+    def get_permitted_corpora(self, user_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '
@@ -396,14 +396,14 @@ class Backend(DatabaseBackend):
             for row in cursor
         ]
 
-    def load_interval_attrs(self, corpus_id):
+    def load_interval_attrs(self, corpus_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT interval_struct, interval_attr, widget '
                        'FROM kontext_interval_attr '
                        'WHERE corpus_name = %s', (corpus_id,))
         return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
 
-    def load_simple_query_default_attrs(self, corpus_id):
+    def load_simple_query_default_attrs(self, corpus_id: str) -> List[str]:
         cursor = self._db.cursor()
         cursor.execute('SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = %s',
                        (corpus_id,))
