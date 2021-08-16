@@ -2,28 +2,38 @@
 <!--
 A schema describing default_corparch and ucnk_corparch compatible corpus list.
 -->
-<element name="kontext" xmlns="http://relaxng.org/ns/structure/1.0"
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
-    <optional>
-        <element name="corplist">
-            <element name="keywords">
-                <oneOrMore>
-                    <element name="keyword">
-                        <attribute name="ident">
-                            <text/>
-                        </attribute>
-                        <oneOrMore>
-                            <element name="label">
-                                <attribute name="lang">
-                                    <text/>
-                                </attribute>
-                                <text/>
-                            </element>
-                        </oneOrMore>
-                    </element>
-                </oneOrMore>
-            </element>
+
+    <define name="boolValues">
+        <choice>
+            <value>false</value>
+            <value>true</value>
+            <value>0</value>
+            <value>1</value>
+        </choice>
+    </define>
+    <start>
+        <element name="kontext">
             <element name="corplist">
+                <element name="keywords">
+                    <zeroOrMore>
+                        <element name="keyword">
+                            <attribute name="ident">
+                                <text/>
+                            </attribute>
+                            <oneOrMore>
+                                <element name="label">
+                                    <attribute name="lang">
+                                        <text/>
+                                    </attribute>
+                                    <text/>
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </zeroOrMore>
+                </element>
                 <oneOrMore>
                     <element name="corpus">
                         <attribute name="ident">
@@ -37,6 +47,70 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                         <attribute name="sentence_struct">
                             <text/>
                         </attribute>
+                        <optional>
+                            <element name="metadata">
+                                <interleave>
+                                    <optional>
+                                        <element name="featured">
+                                            <empty/>
+                                        </element>
+                                    </optional>
+                                    <optional>
+                                        <element name="keywords">
+                                            <zeroOrMore>
+                                                <element name="item">
+                                                    <text/>
+                                                </element>
+                                            </zeroOrMore>
+                                        </element>
+                                    </optional>
+                                    <optional>
+                                        <element name="database"><text /></element>
+                                    </optional>
+                                    <optional>
+                                        <element name="id_attr"><text /></element>
+                                    </optional>
+                                    <optional>
+                                        <element name="label_attr"><text /></element>
+                                    </optional>
+                                    <optional>
+                                        <element name="avg_label_attr_len"><data type="integer" /></element>
+                                    </optional>
+                                    <optional>
+                                        <element name="group_duplicates"><ref name="boolValues" /></element>
+                                    </optional>
+                                    <zeroOrMore>
+                                        <element name="desc">
+                                            <choice>
+                                                <group>
+                                                    <attribute name="lang"><text /></attribute>
+                                                    <optional>
+                                                        <attribute name="ident"><text /></attribute>
+                                                    </optional>
+                                                </group>
+                                                <attribute name="ref"><text /></attribute>
+                                            </choice>
+                                            <text />
+                                        </element>
+                                    </zeroOrMore>
+                                    <optional>
+                                        <element name="interval_attrs">
+                                            <oneOrMore>
+                                                <element name="item">
+                                                    <attribute name="widget">
+                                                        <choice>
+                                                            <value>years</value>
+                                                            <value>days</value>
+                                                        </choice>
+                                                    </attribute>
+                                                    <text />
+                                                </element>
+                                            </oneOrMore>
+                                        </element>
+                                    </optional>
+                                </interleave>
+                            </element>
+                        </optional>
                         <optional>
                             <element name="tagsets">
                                 <oneOrMore>
@@ -56,6 +130,26 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                                             <attribute name="feat_attr">
                                                 <text/>
                                             </attribute>
+                                        </optional>
+                                        <optional>
+                                            <element name="pos_categories">
+                                                <zeroOrMore>
+                                                    <element name="item">
+                                                        <element name="position">
+                                                            <data type="integer" />
+                                                            <a:documentation>position of the category in a resulting encoded tag</a:documentation>
+                                                        </element>
+                                                        <element name="pos">
+                                                            <text />
+                                                            <a:documentation>PoS name (e.g. "noun", "preposition",...)</a:documentation>
+                                                        </element>
+                                                        <element name="tag_search_pattern">
+                                                            <text />
+                                                            <a:documentation>A tag search regexp (e.g. "N.*", "R.*")</a:documentation>
+                                                        </element>
+                                                    </element>
+                                                </zeroOrMore>
+                                            </element>
                                         </optional>
                                     </element>
                                 </oneOrMore>
@@ -105,70 +199,10 @@ A schema describing default_corparch and ucnk_corparch compatible corpus list.
                                 </oneOrMore>
                             </element>
                         </optional>
-                        <optional>
-                            <element name="metadata">
-                                <interleave>
-                                    <optional>
-                                        <element name="featured">
-                                            <empty/>
-                                        </element>
-                                    </optional>
-                                    <optional>
-                                        <element name="keywords">
-                                            <zeroOrMore>
-                                                <element name="item">
-                                                    <text/>
-                                                </element>
-                                            </zeroOrMore>
-                                        </element>
-                                    </optional>
-                                    <optional>
-                                        <element name="database"><text /></element>
-                                    </optional>
-                                    <optional>
-                                        <element name="id_attr"><text /></element>
-                                    </optional>
-                                    <optional>
-                                        <element name="label_attr"><text /></element>
-                                    </optional>
-                                    <optional>
-                                        <element name="avg_label_attr_len"><data type="integer" /></element>
-                                    </optional>
-                                    <zeroOrMore>
-                                        <element name="desc">
-                                            <choice>
-                                                <group>
-                                                    <attribute name="lang"><text /></attribute>
-                                                    <optional>
-                                                        <attribute name="ident"><text /></attribute>
-                                                    </optional>
-                                                </group>
-                                                <attribute name="ref"><text /></attribute>
-                                            </choice>
-                                            <text />
-                                        </element>
-                                    </zeroOrMore>
-                                    <optional>
-                                        <element name="interval_attrs">
-                                            <oneOrMore>
-                                                <element name="item">
-                                                    <attribute name="widget">
-                                                        <choice>
-                                                            <value>years</value>
-                                                            <value>days</value>
-                                                        </choice>
-                                                    </attribute>
-                                                    <text />
-                                                </element>
-                                            </oneOrMore>
-                                        </element>
-                                    </optional>
-                                </interleave>
-                            </element>
-                        </optional>
+
                     </element>
                 </oneOrMore>
             </element>
         </element>
-    </optional>
-</element>
+    </start>
+</grammar>
