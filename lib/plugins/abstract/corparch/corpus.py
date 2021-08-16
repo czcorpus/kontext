@@ -41,6 +41,7 @@ class CorpusMetadata:
     interval_attrs: List[Tuple[str, str]] = field(default_factory=list)
     group_duplicates: bool = False
     default_virt_keyboard: Optional[str] = None
+    featured: bool = False
 
 
 @dataclass_json
