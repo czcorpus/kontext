@@ -108,6 +108,7 @@ import copy
 import re
 from functools import reduce
 import logging
+from typing import List, Optional
 try:
     from markdown import markdown
 except ImportError:
@@ -116,14 +117,13 @@ from lxml import etree
 
 import plugins
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive
-from plugins.abstract.corparch import BrokenCorpusInfo
-from plugins.abstract.corparch import CorplistProvider, DictLike, TagsetInfo
+from plugins.abstract.corparch.corpus import CorpusInfo, BrokenCorpusInfo, TagsetInfo, PosCategoryItem
+from plugins.abstract.corparch import CorplistProvider
 from plugins.abstract.auth import AbstractAuth
 from plugins import inject
 import l10n
 from controller import exposed
 import actions.user
-from corplib.fallback import EmptyCorpus
 from controller.plg import PluginCtx
 from translation import ugettext as _
 from settings import import_bool
@@ -138,25 +138,6 @@ def translate_markup(s):
     if not s:
         return None
     return markdown(s.strip())
-
-
-class CorpusListItem(DictLike):
-
-    def __init__(self, id=None, corpus_id=None, name=None, description=None, size=0, path=None,
-                 featured=False, keywords=None):
-        self.id = id
-        self.corpus_id = corpus_id
-        self.name = name
-        self.description = description
-        self.size = size
-        self.size_info = l10n.simplify_num(size)
-        self.path = path
-        self.featured = featured
-        self.found_in = []
-        self.keywords = [] if keywords is None else keywords
-
-    def __repr__(self):
-        return 'CorpusListItem({0})'.format(self.__dict__)
 
 
 def parse_query(tag_prefix, query):
@@ -348,12 +329,13 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
-    def __init__(self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
-                 max_page_size, registry_lang):
+    def __init__(
+            self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
+            max_page_size, registry_lang):
         super(CorpusArchive, self).__init__()
         self._auth: AbstractAuth = auth
         self._user_items = user_items
-        self._corplist = None
+        self._corplist: Optional[OrderedDict[str, CorpusInfo]] = None
         self.file_path = file_path
         self.root_xpath = root_xpath
         self._tag_prefix = tag_prefix
@@ -503,16 +485,25 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 ans[keyword] = keyword
         return list(ans.items())
 
-    def _get_interval_attrs(self, root):
+    def _get_interval_attrs(self, node: etree.Element):
         interval_attrs = {}
-        for k in root.findall('./interval_attrs/item'):
+        for k in node.findall('./interval_attrs/item'):
             interval_attrs[k.text.strip()] = k.attrib.get('widget', None)
         return list(interval_attrs.items())
 
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _process_corpus_node(self, plugin_ctx: PluginCtx, node, path, data):
+    def _process_pos_categories(self, tagset_node: etree.Element) -> List[PosCategoryItem]:
+        ulist = []
+        for item in tagset_node.findall('pos_categories/item'):
+            tmp = dict(pos=None, position=None, tag_search_pattern=None)
+            for elm in item:
+                tmp[elm.tag] = elm.text
+            ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
+        return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
+
+    def _process_corpus_node(self, plugin_ctx: PluginCtx, node: etree.Element, path: str) -> CorpusInfo:
         corpus_id = node.attrib['ident'].lower(
         ) if self._auth.ignores_corpora_names_case() else node.attrib['ident']
         web_url = node.attrib['web'] if 'web' in node.attrib else None
@@ -524,16 +515,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
-        ans.tagsets = [
-            TagsetInfo(
+        ans.tagsets = []
+        for tagset in node.findall('tagsets/tagset'):
+            tinfo = TagsetInfo(
                 corpus_name=ans.name,
                 ident=tagset.attrib.get('name', None),
                 type=tagset.attrib.get('type', None),
                 pos_attr=tagset.attrib.get('pos_attr', None),
-                feat_attr=tagset.attrib.get('feat_attr', None),
-            )
-            for tagset in node.findall('tagsets/tagset')
-        ]
+                feat_attr=tagset.attrib.get('feat_attr', None))
+            tinfo.pos_category = self._process_pos_categories(tagset)
+            ans.tagsets.append(tinfo)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
         ans.speech_overlap_attr = node.attrib.get('speech_overlap_attr', None)
@@ -595,26 +586,27 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.default_view_opts = {}  # not supported in this version of the plug-in
 
         self.customize_corpus_info(ans, node)
-        data.append(ans)
         return ans
 
-    def _parse_corplist_node(self, plugin_ctx: PluginCtx, root, path, data):
+    def _parse_corplist_node(self, plugin_ctx: PluginCtx, root: etree.Element, path: str) -> List[CorpusInfo]:
         """
         """
         if not hasattr(root, 'tag') or not root.tag == 'corplist':
-            return data
+            return []
         title = self._get_corplist_title(root, plugin_ctx.user_lang)
         if title:
-            path = "%s%s/" % (path, title)
+            path = f'{path}{title}/'
+        data: List[CorpusInfo] = []
         for item in root:
             if not hasattr(item, 'tag'):  # getting rid of non-elements
                 continue
             elif item.tag == 'keywords':
                 self._parse_keywords(item)
             elif item.tag == 'corplist':
-                self._parse_corplist_node(plugin_ctx, item, path, data)
+                data += self._parse_corplist_node(plugin_ctx, item, path)
             elif item.tag == 'corpus':
-                self._process_corpus_node(plugin_ctx, item, path, data)
+                data.append(self._process_corpus_node(plugin_ctx, item, path))
+        return data
 
     def _localize_corpus_info(self, plugin_ctx: PluginCtx, data):
         """
@@ -660,18 +652,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         """
         Loads data from a configuration file
         """
-        data = []
+        data: List[CorpusInfo] = []
         self._keywords = OrderedDict()
         with open(self.file_path) as f:
             xml = etree.parse(f)
             root = xml.find(self.root_xpath)
             if root is not None:
-                self._parse_corplist_node(plugin_ctx, root, '/', data)
+                data = self._parse_corplist_node(plugin_ctx, root, '/')
 
         def lowercase(s): return s.lower()
         def identity(s): return s
         name_mod = lowercase if self._auth.ignores_corpora_names_case() else identity
-        self._corplist = OrderedDict([(name_mod(item['id']), item) for item in data])
+        self._corplist = OrderedDict([(name_mod(item.id), item) for item in data])
 
     def _raw_list(self, plugin_ctx: PluginCtx):
         """
@@ -694,21 +686,20 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
 
         def is_featured(o):
-            return o['metadata'].get('featured', False)
+            return o.metadata.featured
 
         featured = []
         for x in list(self._raw_list(plugin_ctx).values()):
-            if x['id'] in permitted_corpora and is_featured(x):
+            if x.id in permitted_corpora and is_featured(x):
+                cinfo = plugin_ctx.corpus_manager.get_info(x.id)
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
-                    'id': x['id'],
-                    'corpus_id': x['id'],
-                    'name': plugin_ctx.corpus_manager.get_info(x['id']).name,
-                    'size': plugin_ctx.corpus_manager.get_info(x['id']).size,
-                    'size_info': l10n.simplify_num(plugin_ctx.corpus_manager.get_info(x['id']).size),
-                    'description': self._export_untranslated_label(
-                        plugin_ctx, plugin_ctx.corpus_manager.get_info(x['id']).description)
-                })
+                    'id': x.id,
+                    'corpus_id': x.id,
+                    'name': cinfo.name,
+                    'size': cinfo.size,
+                    'size_info': l10n.simplify_num(cinfo.size),
+                    'description': self._export_untranslated_label(plugin_ctx, cinfo.description)})
         return featured
 
     def export_favorite(self, plugin_ctx, favitems):
@@ -753,12 +744,12 @@ def create_instance(conf, auth, user_items):
     """
     Interface function called by KonText creates new plugin instance
     """
-    return CorpusArchive(auth=auth,
-                         user_items=user_items,
-                         file_path=conf.get('plugins', 'corparch')['file'],
-                         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
-                         tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
-                         max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
-                         max_page_size=conf.get('plugins', 'corparch').get(
-                             'default_page_list_size', 20),
-                         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))
+    return CorpusArchive(
+        auth=auth,
+        user_items=user_items,
+        file_path=conf.get('plugins', 'corparch')['file'],
+        root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
+        tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
+        max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
+        max_page_size=conf.get('plugins', 'corparch').get('default_page_list_size', 20),
+        registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

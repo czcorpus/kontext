@@ -127,13 +127,11 @@ class LiveAttributes(AbstractLiveAttributes):
         """
 
         if corpname not in self.databases:
-            db_path = self.corparch.get_corpus_info(
-                plugin_ctx, corpname).metadata.database
+            db_path = self.corparch.get_corpus_info(plugin_ctx, corpname).metadata.database
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
-                self.databases[corpname].create_function(
-                    'ktx_lower', 1, lambda x: unidecode(x.lower()))
+                self.databases[corpname].create_function('ktx_lower', 1, lambda x: unidecode(x.lower()))
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]
