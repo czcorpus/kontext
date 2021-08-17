@@ -27,6 +27,7 @@ import { map } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { isFilterFormArgs } from '../../models/query/formArgs';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -393,11 +394,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     protected updateFilter(state:CorplistTableModelState, filter:Filters):void {
-        for (let p in filter) {
-            if (filter.hasOwnProperty(p)) {
-                state.filters[p] = filter[p];
-            }
-        }
+        state.filters = {...state.filters,...filter};
     }
 
     exportQuery(state:CorplistTableModelState):string {
@@ -516,21 +513,11 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             selected: v.selected
         }), state.keywords);
         state.nextOffset = inData.nextOffset;
-        state.filters = {
-            maxSize: inData.filters.maxSize,
-            minSize: inData.filters.minSize,
-            name: inData.filters.name,
-            sortBySize: inData.filters.sortBySize
-        };
+        state.filters = {...state.filters,...inData.filters};
     }
 
     private extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
-        state.filters = {
-            maxSize: data.filters.maxSize,
-            minSize: data.filters.minSize,
-            name: data.filters.name,
-            sortBySize: data.filters.sortBySize
-        };
+        state.filters = {...state.filters,...data.filters};
         state.nextOffset = data.nextOffset;
         state.rows = List.concat(data.rows, state.rows);
     }
