@@ -268,7 +268,6 @@ export const QueryHints = styled.div`
 // ------------------- <QueryToolbox /> --------------------------------
 
 export const QueryToolbox = styled.div`
-    position: relative;
 
     > ul {
         list-style-type: none;

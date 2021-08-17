@@ -62,6 +62,7 @@ import werkzeug.wrappers
 import http.cookies
 
 T = TypeVar('T')
+ResultType = Union[Callable, Dict[str, Any], str, bytes, DataClassJsonMixin]
 
 # this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
@@ -654,7 +655,9 @@ class Controller(object):
                 translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
         return err
 
-    def _run_message_action(self, req_args: RequestArgsProxy, action_metadata: Dict[str, Any], message_type: str, message: str) -> Tuple[str, Dict[str, Any]]:
+    def _run_message_action(
+            self, req_args: RequestArgsProxy, action_metadata: Dict[str, Any], message_type: str,
+            message: str) -> Tuple[str, Dict[str, Any]]:
         """
         Run a special action displaying a message (typically an error one) to properly
         finish a broken regular action which raised an Exception.
@@ -837,8 +840,9 @@ class Controller(object):
             ans.append(('Set-Cookie', cookie.OutputString()))
         return ans
 
-    def output_result(self, methodname: str, template: str, result: Union[Callable, Dict[str, Any], str, bytes],
-                      action_metadata: Dict[str, Any], return_type: str) -> Union[str, bytes]:
+    def output_result(
+            self, methodname: str, template: str, result: ResultType, action_metadata: Dict[str, Any],
+            return_type: str) -> Union[str, bytes]:
         """
         Renders a response body out of a provided data resource along with which can
         required target data type.

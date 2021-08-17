@@ -19,7 +19,18 @@
  */
 
 import { Action } from 'kombo';
-import { Node } from './init';
+import { CorpusInfo } from '../../types/plugins/corparch';
+
+
+export interface Corplist {
+    ident:string;
+    name:string;
+    corplist:Array<Corplist|CorpusInfo>;
+}
+
+export function itemIsCorplist(item:Corplist|CorpusInfo):item is Corplist {
+    return Array.isArray(item['corplist']);
+}
 
 
 export class Actions {
@@ -41,8 +52,7 @@ export class Actions {
     };
 
     static GetDataDone:Action<{
-        node:Node;
-        nodeActive:{[key:string]:boolean};
+        corplist:Corplist;
     }> = {
         name: 'TREE_CORPARCH_GET_DATA_DONE'
     };

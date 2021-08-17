@@ -22,27 +22,21 @@ import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit, Views as TreeCorparchViews } from './view';
 import { StatelessModel, SEDispatcher } from 'kombo';
 import { map } from 'rxjs/operators';
-import { Actions } from './actions';
-import { List, HTTP } from 'cnc-tskit';
+import { Actions, Corplist, itemIsCorplist } from './common';
+import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 import { IUnregistrable } from '../../models/common/common';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { IPluginApi } from '../../types/plugins/common';
 
 
-export interface Node {
-    name: string;
-    ident?: string;
-    corplist?: Array<Node>
-}
-
 export interface TreeResponseData extends Kontext.AjaxResponse {
-    corplist:Array<Node>;
+    corplist:Corplist;
 }
 
 export interface TreeWidgetModelState {
     active:boolean;
     corpusIdent:Kontext.FullCorpusIdent;
-    data:Node;
+    data:Corplist;
     nodeActive:{[key:string]:boolean};
 }
 
@@ -95,8 +89,12 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
             Actions.GetDataDone.name,
             (state, action) => {
                 state.active = true;
-                state.data = action.payload.node;
-                state.nodeActive = action.payload.nodeActive;
+                state.data = action.payload.corplist;
+                state.nodeActive = pipe(
+                    this.getAllNodes(state.data),
+                    List.map(v => tuple(v.ident, false)),
+                    Dict.fromEntries()
+                );
             }
         );
 
@@ -125,62 +123,33 @@ export class TreeWidgetModel extends StatelessModel<TreeWidgetModelState>
         );
     }
 
-    private importTree(
-        nodeActive:{[key:string]:boolean},
-        rootNode:Node, nodeId:string='a'
-    ):{node:Node, nodeActive:{[key:string]:boolean}} {
-
-        const node = {
-            name: rootNode.name,
-            ident: rootNode.ident,
-            corplist: []
-        };
-        if (rootNode.corplist) {
-            node.ident = nodeId;
-            node.corplist = List.map((node, i) =>
-                this.importTree(
-                    nodeActive,
-                    node,
-                    nodeId + '.' + String(i)
-                ).node,
-                rootNode.corplist
-            );
-        }
-        nodeActive[node.ident] = false;
-        return {node, nodeActive};
-    }
-
     getRegistrationId():string {
         return 'tree-corparch-model';
     }
 
-    dumpNode(rootNode:Node):void {
-        if (rootNode.corplist) {
-            rootNode.corplist.forEach((item) => this.dumpNode(item));
-        }
-    }
-
     loadData(state:TreeWidgetModelState, dispatch:SEDispatcher) {
-        return this.pluginApi.ajax$<any>(
+        return this.pluginApi.ajax$<Corplist>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_get_corptree_data'),
             {}
 
-        ).pipe(
-            map((data) => {
-                if (data.containsErrors) {
-                    throw throwError('Data contain error');
-
-                } else {
-                    return this.importTree({}, data);
-                }
-            })
-        ).subscribe(
-            next => dispatch<typeof Actions.GetDataDone>({
+        ).subscribe({
+            next: corplist => dispatch<typeof Actions.GetDataDone>({
                 name: Actions.GetDataDone.name,
-                payload: next
+                payload: {corplist}
             }),
-            err => this.pluginApi.showMessage('error', err)
+            error: error => this.pluginApi.showMessage('error', error)
+        });
+    }
+
+    private getAllNodes(node:Corplist):Array<Corplist> {
+        return pipe(
+            node.corplist,
+            List.filter(itemIsCorplist),
+            List.foldl(
+                (acc, curr) => List.concat(this.getAllNodes(curr), List.push(curr, acc)),
+                [node] as Array<Corplist>
+            )
         );
     }
 }

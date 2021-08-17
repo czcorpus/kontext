@@ -241,6 +241,16 @@ def get_favorite_corpora(ctrl, request):
         return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
 
 
+def process_pos_categories(tagset_node: etree.Element) -> List[PosCategoryItem]:
+    ulist = []
+    for item in tagset_node.findall('pos_categories/item'):
+        tmp = dict(pos=None, position=None, tag_search_pattern=None)
+        for elm in item:
+            tmp[elm.tag] = elm.text
+        ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
+    return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
+
+
 class CorpusArchive(AbstractSearchableCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
@@ -420,15 +430,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _process_pos_categories(self, tagset_node: etree.Element) -> List[PosCategoryItem]:
-        ulist = []
-        for item in tagset_node.findall('pos_categories/item'):
-            tmp = dict(pos=None, position=None, tag_search_pattern=None)
-            for elm in item:
-                tmp[elm.tag] = elm.text
-            ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
-        return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
-
     def _process_corpus_node(self, plugin_ctx: PluginCtx, node: etree.Element, path: str) -> CorpusInfo:
         corpus_id = node.attrib['ident'].lower(
         ) if self._auth.ignores_corpora_names_case() else node.attrib['ident']
@@ -449,7 +450,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 type=tagset.attrib.get('type', None),
                 pos_attr=tagset.attrib.get('pos_attr', None),
                 feat_attr=tagset.attrib.get('feat_attr', None))
-            tinfo.pos_category = self._process_pos_categories(tagset)
+            tinfo.pos_category = process_pos_categories(tagset)
             ans.tagsets.append(tinfo)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)
