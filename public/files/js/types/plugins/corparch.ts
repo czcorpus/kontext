@@ -25,6 +25,72 @@ import { BasePlugin, IPluginApi } from './common';
 // ------------------------------------------------------------------------
 // ------------------------ [corparch] plug-in ----------------------------
 
+/**
+ * This should be 1:1 with a respective Python class in plugins.abstract.corparch.corpus
+ */
+export interface CorpusInfo {
+    id:string;
+    name:string;
+    description:string;
+    _descriptionCs:string|undefined;
+    _descriptionEn:string|undefined;
+    path:string;
+    web:string|undefined;
+    sentenceStruct:string|undefined;
+    defaultTagset:string|undefined;
+    tagsets:Array<{
+
+    }>;
+    speechSegment:string|undefined;
+    speakerIdAttr:string|undefined;
+    speechOverlapAttr:string|undefined;
+    speechOverlapVal:string|undefined;
+    bibStruct:string|undefined;
+    sampleSize:string|undefined;
+    featured:boolean;
+    collatorLocale:string;
+    useSafeFont:boolean;
+    citationInfo:{
+        defaultRef:string|undefined;
+        articleRef:Array<string>;
+        otherBibliography:string|undefined;
+    };
+    metadata:{
+        database:string|undefined;
+        labelAttr:string|undefined;
+        avgLabelAttrLen:number|undefined;
+        idAttr:string|undefined;
+        sortAttrs:boolean;
+        desc:{[lang:string]:string};
+        keywords:Array<[string, string]>;
+        intervalAttrs:Array<[string, string]>;
+        groupDuplicates:boolean;
+        defaultVirtKeyboard:string|undefined;
+        featured:boolean;
+    };
+    tokenConnect:{
+        providers:Array<unknown>; // TODO item type
+    }
+    kwicConnect:{
+        providers:Array<unknown>; // TODO item type
+    }
+    manatee:{
+        encoding:string|undefined;
+        name:string|undefined;
+        description:string|undefined;
+        attrs:Array<string>;
+        size:number;
+        has_lemma:boolean;
+        tagset_doc:string|undefined;
+        lang:string|undefined;
+    }
+    defaultViewOpts:{[key:string]:string|boolean|number};
+    querySuggest:{
+        providers:Array<unknown>; // TODO item type
+    }
+    simpleQueryDefaultAttrs:Array<string>;
+}
+
 
 /**
  * A general click action performed on featured/favorite/searched item

@@ -46,19 +46,19 @@ export interface CorplistViews {
 
     CorplistTable:React.ComponentClass<CorplistTableProps>;
 
-    CorplistHeader:React.SFC<{
+    CorplistHeader:React.FC<{
 
     }>;
 
     FilterForm:React.ComponentClass<FilterFormProps>;
 
-    FavStar:React.SFC<{
+    FavStar:React.FC<{
         corpusId:string;
         corpusName:string;
         favId:string;
     }>;
 
-    CorpKeywordLink:React.SFC<{
+    CorpKeywordLink:React.FC<{
         keyword:string;
         label:string;
     }>;
@@ -67,7 +67,7 @@ export interface CorplistViews {
 export interface CorplistViewModuleArgs {
     dispatcher:IActionDispatcher;
     he:Kontext.ComponentHelpers;
-    CorpusInfoBox:React.SFC<CorpusInfoBoxProps>;
+    CorpusInfoBox:React.FC<CorpusInfoBoxProps>;
     listModel:CorplistTableModel;
 }
 
@@ -83,7 +83,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     // -------------------------------- <CorplistHeader /> -----------------
 
 
-    const CorplistHeader:React.SFC<{}> = (props) => {
+    const CorplistHeader:React.FC<{}> = (props) => {
 
         return (
             <tr>
@@ -120,7 +120,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A single dataset row
      */
-    const CorplistRow:React.SFC<{
+    const CorplistRow:React.FC<{
         enableUserActions:boolean;
         row:CorplistItem;
         detailClickHandler:(corpId:string)=>void;
@@ -208,7 +208,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      * Provides a link allowing to load more items with current
      * query and filter settings.
      */
-    const ListExpansion:React.SFC<{
+    const ListExpansion:React.FC<{
         offset:number;
 
     }> = (props) => {
@@ -335,7 +335,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A keyword link from the filter form
      */
-    const KeywordLink:React.SFC<{
+    const KeywordLink:React.FC<{
         keyword:KeywordInfo;
 
     }> = (props) => {
@@ -377,7 +377,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A keyword-like link to reset currently set keywords
      */
-    const ResetLink:React.SFC<{
+    const ResetLink:React.FC<{
 
     }> = (props) => {
 
@@ -401,7 +401,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * A form fieldset containing all the available keywords
      */
-    const KeywordsField:React.SFC<{
+    const KeywordsField:React.FC<{
         label:string;
         keywords:Array<KeywordInfo>;
 
@@ -433,7 +433,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * An input to specify minimum corpus size
      */
-    const MinSizeInput:React.SFC<{
+    const MinSizeInput:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -455,7 +455,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * An input to specify maximum corpus size
      */
-    const MaxSizeInput:React.SFC<{
+    const MaxSizeInput:React.FC<{
         value:string;
 
     }> = (props) => {
@@ -529,10 +529,10 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
             if (this._timer) {
                 window.clearTimeout(this._timer);
             }
-            this._timer = window.setTimeout(((value) => () => {
+            this._timer = window.setTimeout(((query) => () => {
                 dispatcher.dispatch<typeof Actions.FilterChanged>({
                     name: Actions.FilterChanged.name,
-                    payload: {corpusName: value}
+                    payload: {query}
                 });
                 window.clearTimeout(this._timer);
             })(e.target.value), 300);
@@ -562,7 +562,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         }
 
         _handleLegendClick() {
-            const newState = he.cloneState(this.state);
+            const newState = {...this.state};
             newState.expanded = !this.state.expanded;
             this.setState(newState);
         }

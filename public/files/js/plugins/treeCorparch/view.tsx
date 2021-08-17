@@ -18,9 +18,9 @@
 
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
-import { TreeWidgetModel, Node, TreeWidgetModelState } from './init';
+import { TreeWidgetModel, TreeWidgetModelState } from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from './actions';
+import { Actions, Corplist, itemIsCorplist } from './common';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
@@ -38,7 +38,7 @@ export interface CorptreePageComponentProps {
 export interface Views {
     CorptreeWidget:React.ComponentClass<CorptreeWidgetProps, TreeWidgetModelState>;
     CorptreePageComponent:React.ComponentClass<CorptreePageComponentProps, TreeWidgetModelState>;
-    FilterPageComponent:React.SFC<{}>;
+    FilterPageComponent:React.FC<{}>;
 }
 
 
@@ -47,11 +47,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // --------------------------------- <TreeNode /> --------------------------
 
-    const TreeNode:React.SFC<{
+    const TreeNode:React.FC<{
         name:string;
         ident:string;
         nodeActive:{[key:string]:boolean};
-        corplist:Array<Node>;
+        corplist:Corplist;
 
     }> = (props) => {
 
@@ -83,7 +83,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <TreeLeaf /> -------------------------------
 
-    const TreeLeaf:React.SFC<{
+    const TreeLeaf:React.FC<{
         ident:string;
         name:string;
 
@@ -109,25 +109,25 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------------- <ItemList /> -------------------------------
 
-    const ItemList:React.SFC<{
+    const ItemList:React.FC<{
         htmlClass?:string;
         name?:string;
-        corplist:Array<Node>;
+        corplist:Corplist;
         nodeActive:{[key:string]:boolean};
 
     }> = (props) => {
 
         const renderChildren = () => {
             return List.map((item, i) => {
-                if (item.corplist.length > 0) {
+                if (itemIsCorplist(item)) {
                     return <TreeNode key={i} name={item.name} ident={item.ident}
-                                        corplist={item.corplist} nodeActive={props.nodeActive}
+                                        corplist={item} nodeActive={props.nodeActive}
                             />;
 
                 } else {
-                    return <TreeLeaf key={i} name={item.name} ident={item.ident} />;
+                    return <TreeLeaf key={i} name={item.name} ident={item.id} />;
                 }
-            }, props.corplist);
+            }, props.corplist.corplist);
         };
 
         return (
@@ -163,7 +163,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {this.props.corpusIdent.id}
                     </button>
                     {this.props.active ? <ItemList htmlClass="corp-tree"
-                        corplist={this.props.data.corplist} nodeActive={this.props.nodeActive} /> : null}
+                        corplist={this.props.data} nodeActive={this.props.nodeActive} /> : null}
                 </S.CorpTreeWidget>
             );
         }
@@ -181,7 +181,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             return (
                 <S.CorpTreeComponent>
                     <ItemList htmlClass="corp-tree"
-                            corplist={this.props.data ? this.props.data.corplist : []}
+                            corplist={this.props.data}
                             nodeActive={this.props.nodeActive}
                     />
                 </S.CorpTreeComponent>
@@ -189,7 +189,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const FilterPageComponent:React.SFC<{}> = (props) => {
+    const FilterPageComponent:React.FC<{}> = (props) => {
         return <span />;
     }
 

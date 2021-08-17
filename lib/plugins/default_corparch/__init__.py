@@ -21,85 +21,11 @@ interpreted via a custom JavaScript (which is an integral part of the plug-in).
 
 
 Required config.xml/plugins entries: please see config.rng
+For the corplist XML format specification please see resources/corplist.rng
 
+To validate your corplist.xml use:
 
-Corplist.xml entries:
---------------------
-
-### Keywords
-
-element keywords {
-    element keyword {
-        attribute ident {
-            text  # an internal identifier of the keywords (referenced by corpus/keywords/item)
-        }
-        element label {
-            attribute lang {
-                text  # a 2-char identifier (cs, en, us, pl,...)
-            }
-            text  # a translated representation of the label
-        }+
-    }*
-}?
-
-### Corpus
-
-element corpus {
-    attribute web {
-        text
-    }
-    attribute sentence_struct {
-        text  # a structural attribute specifying a sentence (used to switch between kwic and sentence view mode)
-    }
-    attribute ident {
-        text  # a corpus identifier (case insensitive by default)
-    }
-    attribute tagset {
-        text  #  an optional positional tagset identifier (used by tag-builder widget)
-    }?
-    attribute speaker_id_attr {
-        text  # a structural attribute used to identify a speaker within a speech
-    }?
-    attribute speech_overlap_attr {
-        text  # a structural attribute specifying whether there is an overlap between structures
-    }?
-    attribute speech_overlap_val {
-        text  # a value denoting 'true' in case of speech_overlap_attr
-    }?
-    element metadata {
-        element featured {
-            empty  # if present then the corpus is added to the "Featured corpora list"
-        }?
-        element database {
-            text  # path to a sqlite3 database file containing text types values (= values of structural attrs.)
-        }?
-        element id_attr {
-            text  # an attribute used to identify a bibliography item (e.g.: doc.id, opus.id,...)
-        }?
-        element label_attr {
-            text  # an attribute used to represent a bibliography item (e.g.: doc.title, opus.label,...)
-        }?
-        element sort_attrs {
-            empty  # if present then the bibliography item attributes are sorted alphabetically (e.g.: doc.author,..., doc.translator)
-        }?
-    }?
-    element keywords {
-        element item {
-            text  # an internal identifier of a keyword
-        }*
-    }?
-    element reference {
-        element default {
-            text
-        }
-        element article {
-            text  # a respective scientific paper representing the corpus
-        }?
-        element other_bibliography {
-            text  # a web address leading to more information
-        }?
-    }?
-}
+./scripts/validate_xml.py -s lib/plugins/default_corparch/resources/corplist.rng your/custom/corplist.xml
 
 """
 
@@ -315,6 +241,16 @@ def get_favorite_corpora(ctrl, request):
         return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
 
 
+def process_pos_categories(tagset_node: etree.Element) -> List[PosCategoryItem]:
+    ulist = []
+    for item in tagset_node.findall('pos_categories/item'):
+        tmp = dict(pos=None, position=None, tag_search_pattern=None)
+        for elm in item:
+            tmp[elm.tag] = elm.text
+        ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
+    return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
+
+
 class CorpusArchive(AbstractSearchableCorporaArchive):
     """
     Loads and provides access to a hierarchical list of corpora
@@ -494,15 +430,6 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _process_pos_categories(self, tagset_node: etree.Element) -> List[PosCategoryItem]:
-        ulist = []
-        for item in tagset_node.findall('pos_categories/item'):
-            tmp = dict(pos=None, position=None, tag_search_pattern=None)
-            for elm in item:
-                tmp[elm.tag] = elm.text
-            ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
-        return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
-
     def _process_corpus_node(self, plugin_ctx: PluginCtx, node: etree.Element, path: str) -> CorpusInfo:
         corpus_id = node.attrib['ident'].lower(
         ) if self._auth.ignores_corpora_names_case() else node.attrib['ident']
@@ -523,7 +450,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 type=tagset.attrib.get('type', None),
                 pos_attr=tagset.attrib.get('pos_attr', None),
                 feat_attr=tagset.attrib.get('feat_attr', None))
-            tinfo.pos_category = self._process_pos_categories(tagset)
+            tinfo.pos_category = process_pos_categories(tagset)
             ans.tagsets.append(tinfo)
         ans.speech_segment = node.attrib.get('speech_segment', None)
         ans.speaker_id_attr = node.attrib.get('speaker_id_attr', None)

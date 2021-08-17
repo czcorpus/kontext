@@ -155,11 +155,11 @@ class CorpusInfo:
     sentence_struct: Optional[str] = None
     default_tagset: Optional[str] = None
     tagsets: List[TagsetInfo] = field(default_factory=list)
-    speech_segment = None
-    speaker_id_attr = None
-    speech_overlap_attr = None
-    speech_overlap_val = None
-    bib_struct = None
+    speech_segment: Optional[str] = None
+    speaker_id_attr: Optional[str] = None
+    speech_overlap_attr: Optional[str] = None
+    speech_overlap_val: Optional[str] = None
+    bib_struct: Optional[str] = None
     sample_size: int = -1
     featured: bool = False
     collator_locale: str = 'en_US'  # this does not apply for Manatee functions
