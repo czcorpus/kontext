@@ -731,14 +731,6 @@ class Kontext(Controller):
                 break
         result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
 
-        if 'lempos' in attrlist:
-            poslist = self.cm.corpconf_pairs(maincorp, 'LPOSLIST')
-            result['Lposlist'] = [{'n': x[0], 'v': x[1]} for x in poslist]
-            result['lpos_dict'] = dict([(y, x) for x, y in poslist])
-        else:
-            result['Lposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-            result['lpos_dict'] = dict(poslist)
-
     def _setup_optional_plugins_js(self, result):
         """
         Updates result dict with JavaScript module paths required to

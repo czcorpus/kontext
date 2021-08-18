@@ -218,26 +218,6 @@ class CorpusManager:
                 if callable(fn):
                     fn(fullpath, variant, proc_aligned=True)
 
-    def findPosAttr(self, corpname: str, attrname: str) -> PosAttr:
-        return manatee.findPosAttr(corpname.split(':', 1)[0], attrname)
-
-    def corpconf_pairs(self, corp: Corpus, label: str) -> List[Tuple[str, str]]:
-        """
-        Encodes some specific corpus registry file configuration values
-        where a list of pairs is actually flattened (k1, v1, k2, v2,..., kN, vN).
-        This applies e.g. for WPOSLIST and LPOSLIST.
-        Returns:
-             a list of pairs
-        """
-        if type(corp) is str:
-            corp = self.get_corpus(corp)
-        val = corp.get_conf(label)
-        if len(val) > 2:
-            val = val[1:].split(val[0])
-        else:
-            val = ''
-        return [(val[i], val[i + 1]) for i in range(0, len(val), 2)]
-
     def subc_files(self, corpname: str) -> List[str]:
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
         sp = self.subcpath[0]

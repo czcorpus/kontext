@@ -241,13 +241,6 @@ class Querying(Kontext):
                         poslist = tagset.pos_category
                         break
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-
-                if 'lempos' in attrlist:
-                    poslist = getattr(self.cm, 'corpconf_pairs')(alcorp, 'LPOSLIST')
-                    tpl_out['Lposlist_' + al] = [{'n': x[0], 'v': x[1]} for x in poslist]
-                else:
-                    tpl_out['Lposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
     @exposed(return_type='json', http_method='GET')
