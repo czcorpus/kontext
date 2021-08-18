@@ -81,7 +81,7 @@ class Actions(Querying):
         request -- werkzeug's Request obj.
         ui_lang -- a language code in which current action's result will be presented
         """
-        super(Actions, self).__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
+        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self.disabled_menu_items = ()
 
     def get_mapping_url_prefix(self):
@@ -358,28 +358,14 @@ class Actions(Querying):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
 
-    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
-    def query(self, _):
-        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sent-switch'))
-        out = {'aligned_corpora': self.args.align}
-        tt_data = self.tt.export_with_norms(ret_nums=True)
-        out['Normslist'] = tt_data['Normslist']
-        out['text_types_data'] = tt_data
-
-        corp_info = self.get_corpus_info(self.args.corpname)
-        out['text_types_notes'] = corp_info.metadata.desc
-        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
-
+    def _fetch_prev_query(self) -> Optional[QueryFormArgs]:
         if self._prev_q_data is None:
-            qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                    corpora=self._select_current_aligned_corpora(active_only=False),
-                                    persist=False)
             last_op = self._load_last_search('conc')
             if last_op:
                 with plugins.runtime.QUERY_PERSISTENCE as qp:
                     last_op_form = qp.open(last_op)
+                    if last_op_form is None:  # probably a lost/deleted concordance record
+                        return None
                     prev_corpora = last_op_form.get('corpora', [])
                     prev_subcorp = last_op_form.get('usesubcorp', None)
                     curr_corpora = [self.args.corpname] + self.args.align
@@ -395,17 +381,37 @@ class Actions(Querying):
                             raise ImmediateRedirectException(self.create_url('query', args))
 
                     if last_op_form:
+                        qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                                corpora=self._select_current_aligned_corpora(active_only=False),
+                                                persist=False)
                         qf_args.apply_last_used_opts(
                             data=last_op_form.get('lastop_form', {}),
                             prev_corpora=prev_corpora,
                             curr_corpora=[self.args.corpname] + self.args.align,
                             curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
-        else:
+                        return qf_args
+        return None
+
+    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
+    def query(self, _):
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sent-switch'))
+        out = {'aligned_corpora': self.args.align}
+        tt_data = self.tt.export_with_norms(ret_nums=True)
+        out['Normslist'] = tt_data['Normslist']
+        out['text_types_data'] = tt_data
+
+        corp_info = self.get_corpus_info(self.args.corpname)
+        out['text_types_notes'] = corp_info.metadata.desc
+        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
+
+        qf_args = self._fetch_prev_query()
+        if qf_args is None:
             qf_args = QueryFormArgs(
                 plugin_ctx=self._plugin_ctx,
-                corpora=self._prev_q_data.get('corpora', []),
-                persist=False).updated(
-                    self._prev_q_data.get('lastop_form', {}), '__new__')
+                corpora=[self.args.corpname],
+                persist=False)
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
