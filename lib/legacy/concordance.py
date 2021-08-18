@@ -21,14 +21,6 @@ from collections import defaultdict
 import logging
 
 
-def nop_upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> Dict[str, Any]:
-    """
-    This is a no-operation version of conc persistence record upgrade which
-    is used by default.
-    """
-    return attrs
-
-
 def _set_qtype_q(data, sid, value):
     data['curr_query_types'][sid] = value
 
@@ -67,6 +59,14 @@ def _set_nop(data, sid, value):
 
 def _get_nop(data, sid):
     return None
+
+
+def nop_upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> Dict[str, Any]:
+    """
+    This is a no-operation version of conc persistence record upgrade which
+    is used by default.
+    """
+    return attrs
 
 
 def upgrade_stored_record(attrs: Dict[str, Any], avail_posattrs: List[str]) -> Dict[str, Any]:

@@ -12,8 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
-from manatee import Corpus
+from typing import Optional, Dict, Any, TypeVar, Union, TYPE_CHECKING
+from corplib.corpus import KCorpus, KSubcorpus
+from corplib.fallback import EmptyCorpus
 from werkzeug import Request
 from secure_cookie.session import Session
 from . import KonTextCookie
@@ -88,7 +89,7 @@ class PluginCtx(object):
         return self._controller.user_is_anonymous()
 
     @property
-    def current_corpus(self) -> Corpus:
+    def current_corpus(self) -> Union[KCorpus, KSubcorpus, EmptyCorpus]:
         return self._controller.corp
 
     @property

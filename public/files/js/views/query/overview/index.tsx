@@ -341,14 +341,13 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const QueryOpInfo:React.FC<{
         idx:number;
         corpname:string;
+        numOps:number;
         item:ExtendedQueryOperation;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
-        editOpKey:string;
         editIsLocked:boolean;
         isLoading:boolean;
         modeRunFullQuery:boolean;
-        numOps:number;
         shuffleMinResultWarning:number;
         clickHandler:()=>void;
         closeEditorHandler:()=>void;
@@ -392,7 +391,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         operationIdx={props.idx}
                         operationId={props.item.opid}
                         operationFormType={props.item.formType}
-                        opKey={props.editOpKey}
+                        opKey={props.item.concPersistenceId}
                         isLoading={props.isLoading}
                         modeRunFullQuery={props.modeRunFullQuery}
                         numOps={props.numOps}
@@ -535,15 +534,14 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 corpname={props.corpname}
                                 key={`op_${i}`}
                                 idx={i}
-                                editOpKey={props.replayOperations[i]}
                                 item={item}
+                                numOps={List.size(props.currEncodedOperations)}
                                 clickHandler={handleEditClick(i, item.opid)}
                                 hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
                                 editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
                                 closeEditorHandler={handleEditorClose}
                                 isLoading={props.branchReplayIsRunning}
                                 modeRunFullQuery={props.stopAfterOpIdx === null}
-                                numOps={props.currEncodedOperations.length}
                                 shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
                                 editIsLocked={props.editIsLocked} />
                         ),
@@ -591,23 +589,23 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                     origSubcorpName={props.origSubcorpName}
                                     foreignSubcorp={props.foreignSubcorp} />
                             : null}
-                    {props.ops.map((item, i) => (
-                        <QueryOpInfo
+                    {List.map(
+                        (item, i) => <QueryOpInfo
                             key={`op_${i}`}
                             corpname={props.corpname}
                             idx={i}
                             item={item}
                             clickHandler={handleEditClickFn(i)}
                             hasOpenEditor={false}
-                            editOpKey={null}
+                            numOps={List.size(props.ops)}
                             editorProps={null}
                             closeEditorHandler={()=>undefined}
                             isLoading={false}
                             modeRunFullQuery={false}
-                            numOps={props.ops.length}
                             shuffleMinResultWarning={null}
-                            editIsLocked={true} />
-                    ))}
+                            editIsLocked={true} />,
+                        props.ops
+                    )}
             </Style_QueryOverviewBarUL>
         );
     }

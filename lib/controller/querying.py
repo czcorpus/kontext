@@ -22,23 +22,22 @@ extended, re-editable query processing.
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-from argmapping.query import ConcFormArgs
+from argmapping.conc.query import ConcFormArgs
 from werkzeug import Request
 from collections import defaultdict
-import logging
 
 from controller.kontext import Kontext
 from texttypes import TextTypesCache
 import plugins
-from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
-                              FirstHitsFilterFormArgs, build_conc_form_args)
+from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
+from argmapping.conc.query import QueryFormArgs
+from argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
+from argmapping.conc.sort import SortFormArgs
+from argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
+from argmapping.conc import build_conc_form_args
 from translation import ugettext as translate
 from controller import exposed
-import settings
-if settings.get_bool('global', 'legacy_support', False):
-    from legacy.concordance import upgrade_stored_record
-else:
-    from legacy.concordance import nop_upgrade_stored_record as upgrade_stored_record
+from controller.errors import NotFoundException
 
 
 class Querying(Kontext):
@@ -93,7 +92,7 @@ class Querying(Kontext):
             if (
                     isinstance(self._curr_conc_form_args, QueryFormArgs) or
                     isinstance(self._curr_conc_form_args, FilterFormArgs)):
-                use_history = not self._curr_conc_form_args.no_query_history
+                use_history = not self._curr_conc_form_args.data.no_query_history
         return use_history, data
 
     def _update_output_with_conc_params(self, op_id, tpl_data):
@@ -184,10 +183,9 @@ class Querying(Kontext):
         if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
             op_key = self._prev_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(self._plugin_ctx,
-                                             self._prev_q_data.get('corpora', []),
-                                             self._prev_q_data['lastop_form'],
-                                             op_key).to_dict()
+                op_key: build_conc_form_args(
+                    self._plugin_ctx, self._prev_q_data.get('corpora', []),
+                    self._prev_q_data['lastop_form'], op_key).to_dict()
             }
         else:
             conc_forms_args = {}
@@ -248,38 +246,13 @@ class Querying(Kontext):
         try:
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.
-            pipeline = [x for x in self.load_pipeline_ops(
-                request.args['last_key']) if x.form_type != 'nop']
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                stored_ops = qp.load_pipeline_ops(self._plugin_ctx, request.args['last_key'], build_conc_form_args)
+            pipeline = [x for x in stored_ops if x.form_type != 'nop']
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
-        except (IndexError, KeyError):
-            self.add_system_message('error', translate('Operation not found in the storage'))
-            return {}
-
-    def load_pipeline_ops(self, last_id: str) -> List[ConcFormArgs]:
-        ans = []
-        # here checking if instance exists -> we can ignore type check error cp.open does not exist on None
-        if plugins.runtime.QUERY_PERSISTENCE.exists:
-            with plugins.runtime.QUERY_PERSISTENCE as cp:
-                data = cp.open(last_id)  # type: ignore
-                if data is not None:
-                    form_data = upgrade_stored_record(data.get('lastop_form', {}),
-                                                      self.corp.get_conf('ATTRLIST').split(','))
-                    ans.append(build_conc_form_args(
-                        self._plugin_ctx, data.get('corpora', []), form_data, data['id']))
-                limit = 100
-                while data is not None and data.get('prev_id') and limit > 0:
-                    data = cp.open(data['prev_id'])  # type: ignore
-                    if data is not None:
-                        form_data = upgrade_stored_record(data.get('lastop_form', {}),
-                                                          self.corp.get_conf('ATTRLIST').split(','))
-                        ans.insert(0, build_conc_form_args(
-                            self._plugin_ctx, data.get('corpora', []), form_data, data['id']))
-                    limit -= 1
-                    if limit == 0:
-                        logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
-                            last_id))
-        return ans
+        except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
+            raise NotFoundException(translate('Query information not stored: {}').format(ex))
 
     def _get_structs_and_attrs(self) -> Dict[str, List[str]]:
         structs_and_attrs: Dict[str, List[str]] = defaultdict(list)

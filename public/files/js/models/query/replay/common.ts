@@ -35,6 +35,11 @@ export interface QueryOverviewResponseRow {
  */
 export interface ExtendedQueryOperation extends Kontext.QueryOperation {
     formType:string;
+
+    /**
+     * note: if undefined then the operation is not synced yet
+     */
+    concPersistenceId:string|undefined;
 }
 
 
@@ -94,6 +99,7 @@ function mapOpIdToFormType(opId:string):string {
 }
 
 export function importEncodedOperation(operation:Kontext.QueryOperation):ExtendedQueryOperation {
+
     return {
         op: operation.op,
         opid: operation.opid,
@@ -101,6 +107,7 @@ export function importEncodedOperation(operation:Kontext.QueryOperation):Extende
         tourl: operation.tourl,
         arg: operation.arg,
         size: operation.size,
-        formType: mapOpIdToFormType(operation.opid)
+        formType: mapOpIdToFormType(operation.opid),
+        concPersistenceId: undefined
     };
 }
