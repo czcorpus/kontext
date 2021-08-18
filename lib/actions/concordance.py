@@ -1827,7 +1827,6 @@ class Actions(Querying):
         self._setup_optional_plugins_js(plg_status)
         conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
 
-        lposlist = self.cm.corpconf_pairs(self.corp, 'LPOSLIST')
         poslist = []
         for tagset in corpus_info.tagsets:
             if tagset.ident == corpus_info.default_tagset:
@@ -1861,7 +1860,6 @@ class Actions(Querying):
                 corpus_dependent=tmp_out['uses_corp_instance'],
                 ui_lang=self.ui_lang),
             Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
-            Lposlist=[{'n': x[0], 'v': x[1]} for x in lposlist],
             AttrList=tmp_out['AttrList'],
             StructAttrList=tmp_out['StructAttrList'],
             StructList=tmp_out['StructList'],
