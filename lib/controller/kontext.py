@@ -15,7 +15,7 @@
 
 from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
 from main_menu import AbstractMenuItem
-from argmapping.query import ConcFormArgs
+from argmapping.conc.query import ConcFormArgs
 from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict

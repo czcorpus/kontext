@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +17,6 @@ import settings
 from controller import exposed
 from controller.kontext import Kontext
 from translation import ugettext as translate
-import corplib
 from argmapping import WidectxArgsMapping
 
 
@@ -24,9 +25,9 @@ class Options(Kontext):
     def get_mapping_url_prefix(self):
         return '/options/'
 
-    def _set_new_viewopts(self, pagesize=0, newctxsize=0, ctxunit='',
-                          line_numbers=False, shuffle=False, wlpagesize=0,
-                          fmaxitems=0, citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
+    def _set_new_viewopts(
+            self, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
+            fmaxitems=0, citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
         self.args.pagesize = pagesize
         if ctxunit == '@pos':
             ctxunit = ''

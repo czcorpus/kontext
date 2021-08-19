@@ -45,6 +45,7 @@ from dataclasses import fields, asdict
 import werkzeug.urls
 import werkzeug.http
 import werkzeug.exceptions
+from werkzeug import Request
 
 from translation import ugettext
 import l10n
@@ -72,7 +73,7 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
             func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_result: bool = False,
             http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None,
             apply_semi_persist_args: bool = False, return_type: str = 'template',
-            action_log_mapper: Callable[[None], Any] = False) -> Callable[..., Any]:
+            action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -110,8 +111,9 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
 
 
 def val_to_js(obj):
-    return re.sub(r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', json.dumps(obj),
-                  flags=re.IGNORECASE)
+    s = obj.to_json() if callable(getattr(obj, 'to_json', None)) else json.dumps(obj)
+    return re.sub(
+        r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', s, flags=re.IGNORECASE)
 
 
 class KonTextCookie(http.cookies.BaseCookie):

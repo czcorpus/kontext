@@ -27,9 +27,12 @@ from dataclasses import asdict
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
 from controller.errors import UserActionException, ImmediateRedirectException, NotFoundException
-from argmapping.query import (FilterFormArgs, QueryFormArgs, SortFormArgs, SampleFormArgs, ShuffleFormArgs,
-                              LgroupOpArgs, LockedOpFormsArgs, ContextFilterArgsConv, QuickFilterArgsConv,
-                              KwicSwitchArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
+from argmapping.conc.query import QueryFormArgs
+from argmapping.conc.filter import (
+    FilterFormArgs, ContextFilterArgsConv, QuickFilterArgsConv, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
+from argmapping.conc.sort import SortFormArgs
+from argmapping.conc.other import SampleFormArgs, ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, KwicSwitchArgs
+from argmapping.conc import build_conc_form_args
 from argmapping import log_mapping
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from argmapping import ConcArgsMapping
@@ -81,7 +84,7 @@ class Actions(Querying):
         request -- werkzeug's Request obj.
         ui_lang -- a language code in which current action's result will be presented
         """
-        super(Actions, self).__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
+        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self.disabled_menu_items = ()
 
     def get_mapping_url_prefix(self):
@@ -358,28 +361,14 @@ class Actions(Querying):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
 
-    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
-    def query(self, _):
-        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sent-switch'))
-        out = {'aligned_corpora': self.args.align}
-        tt_data = self.tt.export_with_norms(ret_nums=True)
-        out['Normslist'] = tt_data['Normslist']
-        out['text_types_data'] = tt_data
-
-        corp_info = self.get_corpus_info(self.args.corpname)
-        out['text_types_notes'] = corp_info.metadata.desc
-        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
-
+    def _fetch_prev_query(self) -> Optional[QueryFormArgs]:
         if self._prev_q_data is None:
-            qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                    corpora=self._select_current_aligned_corpora(active_only=False),
-                                    persist=False)
             last_op = self._load_last_search('conc')
             if last_op:
                 with plugins.runtime.QUERY_PERSISTENCE as qp:
                     last_op_form = qp.open(last_op)
+                    if last_op_form is None:  # probably a lost/deleted concordance record
+                        return None
                     prev_corpora = last_op_form.get('corpora', [])
                     prev_subcorp = last_op_form.get('usesubcorp', None)
                     curr_corpora = [self.args.corpname] + self.args.align
@@ -395,17 +384,37 @@ class Actions(Querying):
                             raise ImmediateRedirectException(self.create_url('query', args))
 
                     if last_op_form:
+                        qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
+                                                corpora=self._select_current_aligned_corpora(active_only=False),
+                                                persist=False)
                         qf_args.apply_last_used_opts(
                             data=last_op_form.get('lastop_form', {}),
                             prev_corpora=prev_corpora,
                             curr_corpora=[self.args.corpname] + self.args.align,
                             curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
-        else:
+                        return qf_args
+        return None
+
+    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
+    def query(self, _):
+        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
+                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+                                    MainMenu.VIEW('kwic-sent-switch'))
+        out = {'aligned_corpora': self.args.align}
+        tt_data = self.tt.export_with_norms(ret_nums=True)
+        out['Normslist'] = tt_data['Normslist']
+        out['text_types_data'] = tt_data
+
+        corp_info = self.get_corpus_info(self.args.corpname)
+        out['text_types_notes'] = corp_info.metadata.desc
+        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
+
+        qf_args = self._fetch_prev_query()
+        if qf_args is None:
             qf_args = QueryFormArgs(
                 plugin_ctx=self._plugin_ctx,
-                corpora=self._prev_q_data.get('corpora', []),
-                persist=False).updated(
-                    self._prev_q_data.get('lastop_form', {}), '__new__')
+                corpora=[self.args.corpname],
+                persist=False)
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)
         self._attach_aligned_query_params(out)
@@ -482,18 +491,18 @@ class Actions(Querying):
         qinfo.update_by_user_query(request.json)
         self.add_conc_form_args(qinfo)
 
-        if qinfo.skey == 'lc':
-            ctx = f'-1<0~-{qinfo.spos}<0'
-        elif qinfo.skey == 'kw':
+        if qinfo.data.skey == 'lc':
+            ctx = f'-1<0~-{qinfo.data.spos}<0'
+        elif qinfo.data.skey == 'kw':
             ctx = '0<0~0>0'
-        elif qinfo.skey == 'rc':
-            ctx = f'1>0~{qinfo.spos}>0'
+        elif qinfo.data.skey == 'rc':
+            ctx = f'1>0~{qinfo.data.spos}>0'
         else:
             ctx = ''
-        if '.' in qinfo.sattr:
+        if '.' in qinfo.data.sattr:
             ctx = ctx.split('~')[0]
 
-        self.args.q.append(f's{qinfo.sattr}/{qinfo.sicase}{qinfo.sbward} {ctx}')
+        self.args.q.append(f's{qinfo.data.sattr}/{qinfo.data.sicase}{qinfo.data.sbward} {ctx}')
         return self.view(request)
 
     @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
@@ -506,14 +515,14 @@ class Actions(Querying):
         self.add_conc_form_args(qinfo)
 
         mlxfcode = 'rc'
-        crit = one_level_crit('s', qinfo.ml1attr, qinfo.ml1ctx, qinfo.ml1pos, mlxfcode,
-                              qinfo.ml1icase, qinfo.ml1bward)
-        if qinfo.sortlevel > 1:
-            crit += one_level_crit(' ', qinfo.ml2attr, qinfo.ml2ctx, qinfo.ml2pos, mlxfcode,
-                                   qinfo.ml2icase, qinfo.ml2bward)
-            if qinfo.sortlevel > 2:
-                crit += one_level_crit(' ', qinfo.ml3attr, qinfo.ml3ctx, qinfo.ml3pos, mlxfcode,
-                                       qinfo.ml3icase, qinfo.ml3bward)
+        crit = one_level_crit('s', qinfo.data.ml1attr, qinfo.data.ml1ctx, qinfo.data.ml1pos, mlxfcode,
+                              qinfo.data.ml1icase, qinfo.data.ml1bward)
+        if qinfo.data.sortlevel > 1:
+            crit += one_level_crit(' ', qinfo.data.ml2attr, qinfo.data.ml2ctx, qinfo.data.ml2pos, mlxfcode,
+                                   qinfo.data.ml2icase, qinfo.data.ml2bward)
+            if qinfo.data.sortlevel > 2:
+                crit += one_level_crit(' ', qinfo.data.ml3attr, qinfo.data.ml3ctx, qinfo.data.ml3pos, mlxfcode,
+                                       qinfo.data.ml3icase, qinfo.data.ml3bward)
         self.args.q.append(crit)
         return self.view(request)
 
@@ -521,21 +530,21 @@ class Actions(Querying):
         availstruct = self.corp.get_conf('STRUCTLIST').split(',')
         return 'err' in availstruct and 'corr' in availstruct
 
-    def _compile_query(self, corpus: str, data: Union[QueryFormArgs, FilterFormArgs]):
-        if isinstance(data, QueryFormArgs):
-            qtype = data.curr_query_types[corpus]
-            query = data.curr_queries[corpus]
-            icase = '' if data.curr_qmcase_values[corpus] else '(?i)'
-            attr = data.curr_default_attr_values[corpus]
-            use_regexp = data.curr_use_regexp_values[corpus]
-            query_parsed = [x for x, _ in data.curr_parsed_queries[corpus]]
+    def _compile_query(self, corpus: str, form: Union[QueryFormArgs, FilterFormArgs]):
+        if isinstance(form, QueryFormArgs):
+            qtype = form.data.curr_query_types[corpus]
+            query = form.data.curr_queries[corpus]
+            icase = '' if form.data.curr_qmcase_values[corpus] else '(?i)'
+            attr = form.data.curr_default_attr_values[corpus]
+            use_regexp = form.data.curr_use_regexp_values[corpus]
+            query_parsed = [x for x, _ in form.data.curr_parsed_queries[corpus]]
         else:
-            qtype = data.query_type
-            query = data.query
-            icase = '' if data.qmcase else '(?i)'
-            attr = data.default_attr
-            use_regexp = data.use_regexp
-            query_parsed = [x for x, _ in data.parsed_query]
+            qtype = form.data.query_type
+            query = form.data.query
+            icase = '' if form.data.qmcase else '(?i)'
+            attr = form.data.default_attr
+            use_regexp = form.data.use_regexp
+            query_parsed = [x for x, _ in form.data.parsed_query]
 
         if query.strip() == '':
             return None
@@ -566,10 +575,10 @@ class Actions(Querying):
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
-    def _set_first_query(self, corpora: List[str], data: QueryFormArgs, corpus_info: CorpusInfo):
+    def _set_first_query(self, corpora: List[str], form: QueryFormArgs, corpus_info: CorpusInfo):
 
         def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(self._plugin_ctx, data)(
+            filter_args = ContextFilterArgsConv(self._plugin_ctx, form)(
                 corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
@@ -611,12 +620,12 @@ class Actions(Querying):
                 wposlist = [{'n': x.pos, 'v': x.pattern} for x in tagset.pos_category]
                 break
 
-        if data.curr_default_attr_values[corpora[0]]:
-            qbase = f'a{data.curr_default_attr_values[corpora[0]]},'
+        if form.data.curr_default_attr_values[corpora[0]]:
+            qbase = f'a{form.data.curr_default_attr_values[corpora[0]]},'
         else:
             qbase = 'q'
 
-        texttypes = TextTypeCollector(self.corp, data.selected_text_types).get_query()
+        texttypes = TextTypeCollector(self.corp, form.data.selected_text_types).get_query()
         if texttypes:
             ttquery = ' '.join(['within <%s %s />' % nq for nq in texttypes])
         else:
@@ -624,30 +633,30 @@ class Actions(Querying):
         par_query = ''
         nopq = []
         for al_corpname in corpora[1:]:
-            wnot = '' if data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
-            pq = self._compile_query(corpus=al_corpname, data=data)
+            wnot = '' if form.data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
+            pq = self._compile_query(corpus=al_corpname, form=form)
             if pq:
                 par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
             if not pq or wnot:
                 nopq.append(al_corpname)
 
         self.args.q = [
-            ' '.join(x for x in [qbase + self._compile_query(corpora[0], data), ttquery, par_query] if x)]
+            ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
 
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
         ag_op_idx = append_filter(ag_op_idx,
                                   lemmaattr,
-                                  data.fc_lemword.split(),
-                                  (data.fc_lemword_wsize[0], data.fc_lemword_wsize[1], 1),
-                                  data.fc_lemword_type)
+                                  form.data.fc_lemword.split(),
+                                  (form.data.fc_lemword_wsize[0], form.data.fc_lemword_wsize[1], 1),
+                                  form.data.fc_lemword_type)
         append_filter(ag_op_idx,
                       'tag',
-                      [wposlist.get(t, '') for t in data.fc_pos],
-                      (data.fc_pos_wsize[0], data.fc_pos_wsize[1], 1),
-                      data.fc_pos_type)
+                      [wposlist.get(t, '') for t in form.data.fc_pos],
+                      (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
+                      form.data.fc_pos_type)
 
         for al_corpname in corpora[1:]:
-            if al_corpname in nopq and not int(data.curr_include_empty_values[al_corpname]):
+            if al_corpname in nopq and not int(form.data.curr_include_empty_values[al_corpname]):
                 self.args.q.append('X%s' % al_corpname)
         if len(corpora) > 1:
             self.args.viewmode = 'align'
@@ -680,7 +689,7 @@ class Actions(Querying):
                     len(self.args.q) - 1, ShuffleFormArgs(persist=True))
             logging.getLogger(__name__).debug('query: {}'.format(self.args.q))
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=qinfo.asnc,
+                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=qinfo.data.asnc,
                             samplesize=corpus_info.sample_size)
             ans['size'] = conc.size()
             ans['finished'] = conc.finished()
@@ -742,11 +751,11 @@ class Actions(Querying):
         if err is not None:
             raise UserActionException(err)
         self.add_conc_form_args(ff_args)
-        rank = dict(f=1, l=-1).get(ff_args.filfl, 1)
+        rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
         texttypes = TextTypeCollector(self.corp, {}).get_query()
         maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
         try:
-            query = self._compile_query(data=ff_args, corpus=maincorp)
+            query = self._compile_query(form=ff_args, corpus=maincorp)
             if query is None:
                 raise ConcordanceQueryParamsError(translate('No query entered.'))
         except ConcordanceQueryParamsError:
@@ -757,26 +766,27 @@ class Actions(Querying):
             else:
                 raise ConcordanceQueryParamsError(translate('No query entered.'))
         query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
-        if ff_args.within:
+        if ff_args.data.within:
             wquery = f' within {maincorp}:({query})'
             self.args.q[0] += wquery
             self.args.q.append(f'x-{maincorp}')
         else:
             wquery = ''
             self.args.q.append(
-                f'{ff_args.pnfilter}{ff_args.filfpos} {ff_args.filtpos} {rank} {query}')
+                f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
         self._status = 201
         try:
             return self.view(request)
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
-            if ff_args.within:
+            if ff_args.data.within:
                 self.args.q[0] = self.args.q[0][:-len(wquery)]
             else:
                 del self.args.q[-1]
             raise
 
-    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True, http_method='POST')
+    @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True,
+             http_method='POST')
     def reduce(self, request):
         """
         random sample
@@ -1653,7 +1663,8 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_unset_lines_groups(self, _):
-        pipeline = self.load_pipeline_ops(self._q_code)
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            pipeline = qp.load_pipeline_ops(self._plugin_ctx, self._q_code, build_conc_form_args)
         i = len(pipeline) - 1
         # we have to go back before the current block
         # of lines-groups operations and find an
@@ -1880,7 +1891,8 @@ class Actions(Querying):
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, _):
-        pipeline = self.load_pipeline_ops(self._q_code)
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            pipeline = qp.load_pipeline_ops(self._plugin_ctx, self._q_code, build_conc_form_args)
         ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
         self._attach_query_overview(ans)
         return ans

@@ -17,7 +17,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, Optional, Tuple, Any, Union
+import logging
+from typing import Dict, Optional, Tuple, Any, Union, List, Callable
+import settings
+if settings.get_bool('global', 'legacy_support', False):
+    from legacy.concordance import upgrade_stored_record
+else:
+    from legacy.concordance import nop_upgrade_stored_record as upgrade_stored_record
+from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
+from controller.plg import PluginCtx
+from argmapping.conc import ConcFormArgs
+
+
+ConcFormArgsFactory = Callable[[PluginCtx, List[str], Dict[str, Any], str], ConcFormArgs]
 
 
 class AbstractQueryPersistence(abc.ABC):
@@ -133,3 +145,39 @@ class AbstractQueryPersistence(abc.ABC):
         elif 'lastop_form' in data:
             return data['lastop_form'].get('form_type')
         return None
+
+    def load_pipeline_ops(
+            self, plugin_ctx: PluginCtx, last_id: str,
+            conc_form_args_factory: ConcFormArgsFactory) -> List[ConcFormArgs]:
+        """
+        Load all the operations which make up the current concordance
+        (identified by 'last_id' argument) and restore the data into
+        respective classes (using provided 'conc_form_args_factory').
+
+        Please note that the 'last_id' must match with the currently used
+        corpus - so it is not possible to load an operation pipeline
+        form a corpus Foo while using corpus Bar.
+        """
+        ans = []
+        attr_list = plugin_ctx.current_corpus.get_conf('ATTRLIST').split(',')
+        data = self.open(last_id)  # type: ignore
+        if data is not None:
+            form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
+            ans.append(conc_form_args_factory(
+                plugin_ctx, data.get('corpora', []), form_data, data['id']))
+        limit = 100
+        while data is not None and data.get('prev_id') and limit > 0:
+            prev_id = data['prev_id']
+            data = self.open(prev_id)  # type: ignore
+            if data is None:
+                raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
+            else:
+                form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
+                ans.insert(0, conc_form_args_factory(
+                    plugin_ctx, data.get('corpora', []), form_data, data['id']))
+            limit -= 1
+            if limit == 0:
+                logging.getLogger(__name__).warning('Reached hard limit when loading query pipeline {0}'.format(
+                    last_id))
+        logging.getLogger(__name__).debug('load pipeline ops: {}'.format(ans))
+        return ans
