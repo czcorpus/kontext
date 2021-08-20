@@ -310,12 +310,12 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             url: callArgs.url,
             body: callArgs.requestBody,
             method: callArgs.method,
-            responseType: callArgs.responseType,
+            responseType: callArgs.responseType as XMLHttpRequestResponseType, // TODO fix in the 'master' branch
             headers: {
                 'Content-Type': callArgs.contentType
             }
         }).pipe(
-            map<RxAjaxResponse, T>(v => v.response)
+            map<RxAjaxResponse<T>, T>(v => v.response)
         );
     }
 
