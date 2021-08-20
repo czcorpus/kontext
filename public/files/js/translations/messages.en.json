@@ -411,7 +411,7 @@
         "qhistory__attached_text_types": "Text types",
         "qhistory__curr_corp_only_label": "contains currently used corpus",
         "qhistory__query_type_sel": "contains query type",
-        "qhistory__sel_anytime": "any type",
+        "qhistory__sel_any_type": "any type",
         "qhistory__th_query": "corpus and query",
         "qhistory__th_query_details": "details",
         "qhistory__th_datetime": "date and time",

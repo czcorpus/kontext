@@ -50,11 +50,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     }> = (props) => {
 
-        const handleChange = (evt) => {
+        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
             dispatcher.dispatch<Actions.StorageSetQueryType>({
                 name: ActionName.StorageSetQueryType,
                 payload: {
-                    value: evt.target.value
+                    value: evt.target.value as QueryType
                 }
             });
         };
@@ -62,25 +62,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <select value={props.value} onChange={handleChange}>
                 <option value="">
-                    {he.translate('qhistory__sel_anytime')}
+                    {he.translate('qhistory__sel_any_type')}
                 </option>
-                <option value="iquery">
-                    {he.translate('query__qt_basic')}
+                <option value="simple">
+                    {he.translate('query__qt_simple')}
                 </option>
-                <option value="lemma">
-                    {he.translate('query__qt_lemma')}
-                </option>
-                <option value="phrase">
-                    {he.translate('query__qt_phrase')}
-                </option>
-                <option value="word">
-                    {he.translate('query__qt_word_form')}
-                </option>
-                <option value="char">
-                    {he.translate('query__qt_word_part')}
-                </option>
-                <option value="cql">
-                    {he.translate('query__qt_cql')}
+                <option value="advanced">
+                    {he.translate('query__qt_advanced')}
                 </option>
             </select>
         );
