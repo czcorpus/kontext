@@ -476,7 +476,7 @@
         "qhistory__attached_text_types": "Vrste besedil",
         "qhistory__curr_corp_only_label": "samo {corpus}",
         "qhistory__query_type_sel": "vsebuje vrsto poizvedbe",
-        "qhistory__sel_anytime": "katerikoli vrsto",
+        "qhistory__sel_any_type": "katerikoli vrsto",
         "qhistory__query_supertype_sel": "išči vrsto",
         "qhistory__qs_any": "katerikoli",
         "qhistory__th_query": "korpus in poizvedba ",

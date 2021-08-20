@@ -715,7 +715,7 @@ export namespace Actions {
     }
 
     export interface StorageSetQueryType extends Action<{
-        value:string;
+        value:QueryType;
     }> {
         name:ActionName.StorageSetQueryType;
     }

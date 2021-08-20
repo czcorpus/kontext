@@ -411,7 +411,7 @@
         "qhistory__attached_text_types": "Typy textů",
         "qhistory__curr_corp_only_label": "obsahuje aktuálně používaný korpus",
         "qhistory__query_type_sel": "obsahuje typ dotazu",
-        "qhistory__sel_anytime": "libovolný typ",
+        "qhistory__sel_any_type": "libovolný typ",
         "qhistory__th_query": "korpus a dotaz",
         "qhistory__th_query_details": "podrobnosti",
         "qhistory__th_datetime": "datum a čas",
