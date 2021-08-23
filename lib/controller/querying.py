@@ -231,7 +231,6 @@ class Querying(Kontext):
                 corp_info = self.get_corpus_info(al)
 
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
-                attrlist = alcorp.get_conf('ATTRLIST').split(',')
 
                 poslist = []
                 for tagset in corp_info.tagsets:
@@ -247,7 +246,8 @@ class Querying(Kontext):
             # we must include only regular (i.e. the ones visible in the breadcrumb-like
             # navigation bar) operations - otherwise the indices would not match.
             with plugins.runtime.QUERY_PERSISTENCE as qp:
-                stored_ops = qp.load_pipeline_ops(self._plugin_ctx, request.args['last_key'], build_conc_form_args)
+                stored_ops = qp.load_pipeline_ops(
+                    self._plugin_ctx, request.args['last_key'], build_conc_form_args)
             pipeline = [x for x in stored_ops if x.form_type != 'nop']
             op_data = pipeline[int(request.args['idx'])]
             return op_data.to_dict()
@@ -256,7 +256,7 @@ class Querying(Kontext):
 
     def _get_structs_and_attrs(self) -> Dict[str, List[str]]:
         structs_and_attrs: Dict[str, List[str]] = defaultdict(list)
-        attrs = (t for t in self.corp.get_conf('STRUCTATTRLIST').split(',') if t != '')
+        attrs = (t for t in self.corp.get_structattrs() if t != '')
         for s, a in [t.split('.') for t in attrs]:
             structs_and_attrs[s].append(a)
         return dict(structs_and_attrs)

@@ -694,7 +694,6 @@ class Kontext(Controller):
             result['subcorp_size'] = self.corp.search_size
         else:
             result['subcorp_size'] = None
-        attrlist = maincorp.get_conf('ATTRLIST').split(',')
         sref = maincorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
@@ -707,7 +706,7 @@ class Kontext(Controller):
                 'n': n,
                 **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
             } for n in maincorp.get_conf(listname.upper()).split(',') if n]
-        result['StructList'] = self.corp.get_conf('STRUCTLIST').split(',')
+        result['StructList'] = self.corp.get_structs()
 
         if maincorp.get_conf('FREQTTATTRS'):
             ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')

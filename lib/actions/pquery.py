@@ -110,7 +110,7 @@ class ParadigmaticQuery(Kontext):
         return [tagset.to_dict() for tagset in corp_info.tagsets]
 
     def _get_default_attr(self):
-        attrs = self.corp.get_conf('ATTRLIST').split(',')
+        attrs = self.corp.get_posattrs()
         return 'lemma' if 'lemma' in attrs else attrs[0]
 
     def pre_dispatch(self, action_name, action_metadata=None):

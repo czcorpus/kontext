@@ -278,8 +278,8 @@ class Actions(Querying):
         out['conc_use_safe_font'] = corpus_info.use_safe_font
         speaker_struct = corpus_info.speaker_id_attr.split(
             '.')[0] if corpus_info.speaker_id_attr else None
-        out['speech_attrs'] = [x[1] for x in [x for x in [x.split('.') for x in self.corp.get_conf(
-            'STRUCTATTRLIST').split(',')] if x[0] == speaker_struct]]
+        out['speech_attrs'] = [x[1] for x in [x for x in [
+            x.split('.') for x in self.corp.get_structattrs()] if x[0] == speaker_struct]]
         out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
 
         # query form data
@@ -385,13 +385,14 @@ class Actions(Querying):
 
                     if last_op_form:
                         qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                                corpora=self._select_current_aligned_corpora(active_only=False),
+                                                corpora=self._select_current_aligned_corpora(
+                                                    active_only=False),
                                                 persist=False)
                         qf_args.apply_last_used_opts(
                             data=last_op_form.get('lastop_form', {}),
                             prev_corpora=prev_corpora,
                             curr_corpora=[self.args.corpname] + self.args.align,
-                            curr_posattrs=self.corp.get_conf('ATTRLIST').split(','))
+                            curr_posattrs=self.corp.get_posattrs())
                         return qf_args
         return None
 
@@ -527,7 +528,7 @@ class Actions(Querying):
         return self.view(request)
 
     def _is_err_corpus(self):
-        availstruct = self.corp.get_conf('STRUCTLIST').split(',')
+        availstruct = self.corp.get_structs()
         return 'err' in availstruct and 'corr' in availstruct
 
     def _compile_query(self, corpus: str, form: Union[QueryFormArgs, FilterFormArgs]):
@@ -609,7 +610,7 @@ class Actions(Querying):
                     append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
                 return idx + len(items)
 
-        if 'lemma' in self.corp.get_conf('ATTRLIST').split(','):
+        if 'lemma' in self.corp.get_posattrs():
             lemmaattr = 'lemma'
         else:
             lemmaattr = 'word'
@@ -935,7 +936,7 @@ class Actions(Querying):
             crit_attrs = set(re.findall(r'(\w+)/\s+-?[0-9]+[<>][0-9]+\s*', criteria))
             if len(crit_attrs) == 0:
                 crit_attrs = set(re.findall(r'(\w+\.\w+)\s+[0-9]+', criteria))
-            attr_list = set(self.corp.get_conf('ATTRLIST').split(','))
+            attr_list = set(self.corp.get_posattrs())
             return crit_attrs <= attr_list
 
         result = {}
@@ -1014,7 +1015,7 @@ class Actions(Querying):
                         if not item['freq']:
                             continue
                         if '.' not in attr:
-                            if attr in self.corp.get_conf('ATTRLIST').split(','):
+                            if attr in self.corp.get_posattrs():
                                 wwords = item['Word'][level]['n'].split('  ')  # two spaces
                                 fquery = '%s %s 0 ' % (begin, end)
                                 fquery += ''.join(['[%s="%s%s"]'
@@ -1512,7 +1513,7 @@ class Actions(Querying):
                         doc_struct = self.corp.get_conf('DOCSTRUCTURE')
                         refs_args = [x.strip('=') for x in self.args.refs.split(',')]
                         used_refs = ([('#', translate('Token number')), (doc_struct, translate('Document number'))] +
-                                     [(x, x) for x in self.corp.get_conf('STRUCTATTRLIST').split(',')])
+                                     [(x, x) for x in self.corp.get_structattrs()])
                         used_refs = [x[1] for x in used_refs if x[0] in refs_args]
                         writer.write_ref_headings([''] + used_refs if numbering else used_refs)
 
@@ -1805,7 +1806,7 @@ class Actions(Querying):
             undo_q=[]
         )
 
-        attrlist = self.corp.get_conf('ATTRLIST').split(',')
+        attrlist = self.corp.get_posattrs()
         tmp_out['AttrList'] = [{
             'label': self.corp.get_conf(f'{n}.LABEL') or n,
             'n': n,
@@ -1813,9 +1814,9 @@ class Actions(Querying):
         } for n in attrlist if n]
 
         tmp_out['StructAttrList'] = [{'label': self.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
-                                     for n in self.corp.get_conf('STRUCTATTRLIST').split(',')
+                                     for n in self.corp.get_structattrs()
                                      if n]
-        tmp_out['StructList'] = self.corp.get_conf('STRUCTLIST').split(',')
+        tmp_out['StructList'] = self.corp.get_structs()
         sref = self.corp.get_conf('SHORTREF')
         tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 

@@ -111,7 +111,7 @@ class Corpora(Kontext):
         try:
             ans.attrlist = [
                 AttrStruct(name=item, size=int(corpus.get_attr(item).id_range()))
-                for item in corpus.get_conf('ATTRLIST').split(',')
+                for item in corpus.get_posattrs()
             ]
         except RuntimeError as e:
             logging.getLogger(__name__).warning('%s' % e)
@@ -119,7 +119,7 @@ class Corpora(Kontext):
 
         ans.structlist = [
             AttrStruct(name=item, size=int(corpus.get_struct(item).size()))
-            for item in corpus.get_conf('STRUCTLIST').split(',')
+            for item in corpus.get_structs()
         ]
 
         return ans
@@ -132,7 +132,7 @@ class Corpora(Kontext):
         """
         speech_segment = self.get_corpus_info(self.args.corpname).speech_segment
         ans = defaultdict(lambda: [])
-        for item in self.corp.get_conf('STRUCTATTRLIST').split(','):
+        for item in self.corp.get_structattrs():
             if item != speech_segment:
                 k, v = item.split('.')
                 ans[k].append(v)
