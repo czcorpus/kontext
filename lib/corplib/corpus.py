@@ -305,6 +305,15 @@ class KCorpus:
         data_mtime = os.path.getmtime(data_dir)
         return max(reg_mtime, data_mtime)
 
+    def get_posattrs(self) -> List[str]:
+        return self._corp.get_conf('ATTRLIST').split(',')
+
+    def get_structattrs(self) -> List[str]:
+        return self._corp.get_conf('STRUCTATTRLIST').split(',')
+
+    def get_structs(self) -> List[str]:
+        return self._corp.get_conf('STRUCTLIST').split(',')
+
 
 class KSubcorpus(KCorpus):
     """

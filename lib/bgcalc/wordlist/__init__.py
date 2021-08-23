@@ -18,7 +18,6 @@ import os
 from typing import List, Dict, Tuple
 from corplib.corpus import KCorpus
 from corplib import frq_db
-import re
 import csv
 import sys
 import l10n
