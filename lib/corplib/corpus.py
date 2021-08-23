@@ -307,13 +307,16 @@ class KCorpus(AbstractKCorpus):
         return max(reg_mtime, data_mtime)
 
     def get_posattrs(self) -> List[str]:
-        return self._corp.get_conf('ATTRLIST').split(',')
+        items = self._corp.get_conf('ATTRLIST')
+        return items.split(',') if items else []
 
     def get_structattrs(self) -> List[str]:
-        return self._corp.get_conf('STRUCTATTRLIST').split(',')
+        items = self._corp.get_conf('STRUCTATTRLIST')
+        return items.split(',') if items else []
 
     def get_structs(self) -> List[str]:
-        return self._corp.get_conf('STRUCTLIST').split(',')
+        items = self._corp.get_conf('STRUCTLIST')
+        return items.split(',') if items else []
 
 
 class KSubcorpus(KCorpus):
