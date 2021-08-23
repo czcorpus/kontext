@@ -176,6 +176,10 @@ export const ConcordanceDetail = styled.div`
             }
         }
     }
+
+    .coll {
+        color: ${theme.colorLogoPink};
+    }
 `;
 
 
