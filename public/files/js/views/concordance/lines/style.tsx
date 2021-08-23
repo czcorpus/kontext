@@ -141,6 +141,7 @@ export const ConcLines = styled.table`
 
     .coll {
         color: ${theme.colorLogoPink};
+        cursor: pointer;
     }
 
     em.coll {
@@ -149,10 +150,6 @@ export const ConcLines = styled.table`
 
     .col0 {
         font-weight: bold;
-    }
-
-    .coll {
-        cursor: pointer;
     }
 
     i.coll {
