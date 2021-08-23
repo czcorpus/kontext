@@ -10,10 +10,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import List
+from corplib.abstract import AbstractKCorpus
 from manatee import Corpus
 
 
-class EmptyCorpus:
+class EmptyCorpus(AbstractKCorpus):
     """
     EmptyCorpus serves as kind of a fake corpus to keep KonText operational
     in some special cases (= cases where we do not need any corpus to be
@@ -124,6 +126,15 @@ class EmptyCorpus:
     @property
     def corp_mtime(self):
         return -1
+
+    def get_posattrs(self) -> List[str]:
+        return []
+
+    def get_structattrs(self) -> List[str]:
+        return []
+
+    def get_structs(self) -> List[str]:
+        return []
 
 
 class ErrorCorpus(EmptyCorpus):

@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from corplib.abstract import AbstractKCorpus
 from manatee import Corpus, SubCorpus
 from typing import Union, Optional, Tuple, List, Dict, Any
 from hashlib import md5
@@ -129,7 +130,7 @@ def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
     return data[offset:limit]
 
 
-class KCorpus:
+class KCorpus(AbstractKCorpus):
     """
     KCorpus is an abstraction of a corpus/subcorpus used by KonText.
 

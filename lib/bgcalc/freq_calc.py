@@ -21,7 +21,7 @@ import hashlib
 import logging
 import pickle
 from structures import FixedDict
-from typing import Union, List
+from typing import Optional, Union, List
 
 import manatee
 import corplib
@@ -350,7 +350,7 @@ class CTCalculation(object):
 
     def __init__(self, args):
         self._args = args
-        self._corp: Union[KCorpus, None] = None
+        self._corp: Optional[KCorpus] = None
         self._conc = None
 
     def _get_num_structattrs(self, attrs):

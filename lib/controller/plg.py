@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 from typing import Optional, Dict, Any, TypeVar, Union, TYPE_CHECKING
+from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus, KSubcorpus
 from corplib.fallback import EmptyCorpus
 from werkzeug import Request
@@ -89,7 +90,7 @@ class PluginCtx(object):
         return self._controller.user_is_anonymous()
 
     @property
-    def current_corpus(self) -> Union[KCorpus, KSubcorpus, EmptyCorpus]:
+    def current_corpus(self) -> AbstractKCorpus:
         return self._controller.corp
 
     @property
