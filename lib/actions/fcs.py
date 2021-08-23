@@ -1,6 +1,6 @@
 # coding=utf-8
+from corplib.corpus import KCorpus
 import l10n
-from argmapping import Args
 import kwiclib
 from controller.kontext import Kontext
 from controller import exposed
@@ -64,7 +64,7 @@ class Actions(Kontext):
             resources.append((corpus_id, corpus_title, resource_info))
         return resources
 
-    def fcs_search(self, corp, corpname, fcs_query, max_rec, start):
+    def fcs_search(self, corp: KCorpus, corpname, fcs_query, max_rec, start):
         """
             aux function for federated content search: operation=searchRetrieve
         """
@@ -75,7 +75,7 @@ class Actions(Kontext):
             query = query[:pos] + '=' + query[pos + 5:]  # 1st exact > =
             exact_match = True
 
-        attrs = corp.get_conf('ATTRLIST').split(',')  # list of available attrs
+        attrs = corp.get_posattrs()  # list of available attrs
         try:  # parse query
             if '=' in query:  # lemma=word | lemma="word" | lemma="w1 w2" | word=""
                 attr, term = query.split('=')
@@ -250,7 +250,7 @@ class Actions(Kontext):
                     ['recordPacking', 'x-fcs-endpoint-description']
                 )
                 corpus = self.cm.get_corpus(corpname)
-                data['result'] = corpus.get_conf('ATTRLIST').split(',')
+                data['result'] = corpus.get_posattrs()
                 data['numberOfRecords'] = len(data['result'])
                 data['corpus_desc'] = 'Corpus {0} ({1} tokens)'.format(
                     corpus.get_conf('NAME'), l10n.simplify_num(corpus.size))
@@ -292,7 +292,8 @@ class Actions(Kontext):
                             'Requested unavailable corpus [%s], defaulting to [%s]', req_corpname, corpname)
                     data['corpname'] = corpname
 
-                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info(self._plugin_ctx, corpname)
+                corp_conf_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+                    self._plugin_ctx, corpname)
                 data['corppid'] = corp_conf_info.get('web', '')
                 query = req.args.get('query', '')
                 corpus = self.cm.get_corpus(corpname)

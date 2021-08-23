@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from corplib.abstract import AbstractKCorpus
 from manatee import Corpus, SubCorpus
 from typing import Union, Optional, Tuple, List, Dict, Any
 from hashlib import md5
@@ -129,7 +130,7 @@ def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
     return data[offset:limit]
 
 
-class KCorpus:
+class KCorpus(AbstractKCorpus):
     """
     KCorpus is an abstraction of a corpus/subcorpus used by KonText.
 
@@ -304,6 +305,18 @@ class KCorpus:
         data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
         data_mtime = os.path.getmtime(data_dir)
         return max(reg_mtime, data_mtime)
+
+    def get_posattrs(self) -> List[str]:
+        items = self._corp.get_conf('ATTRLIST')
+        return items.split(',') if items else []
+
+    def get_structattrs(self) -> List[str]:
+        items = self._corp.get_conf('STRUCTATTRLIST')
+        return items.split(',') if items else []
+
+    def get_structs(self) -> List[str]:
+        items = self._corp.get_conf('STRUCTLIST')
+        return items.split(',') if items else []
 
 
 class KSubcorpus(KCorpus):

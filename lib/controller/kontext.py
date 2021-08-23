@@ -14,6 +14,7 @@
 # GNU General Public License for more details.
 
 from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
+from corplib.abstract import AbstractKCorpus
 from main_menu import AbstractMenuItem
 from argmapping.conc.query import ConcFormArgs
 from werkzeug import Request
@@ -631,7 +632,7 @@ class Kontext(Controller):
             self._status = 500
 
     @property
-    def corp(self) -> Union[ErrorCorpus, EmptyCorpus, KCorpus]:
+    def corp(self) -> AbstractKCorpus:
         """
         Contains the current corpus. The property always contains a corpus-like object
         (even in case of an error). Possible values:
@@ -693,7 +694,6 @@ class Kontext(Controller):
             result['subcorp_size'] = self.corp.search_size
         else:
             result['subcorp_size'] = None
-        attrlist = maincorp.get_conf('ATTRLIST').split(',')
         sref = maincorp.get_conf('SHORTREF')
         result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
@@ -706,7 +706,7 @@ class Kontext(Controller):
                 'n': n,
                 **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
             } for n in maincorp.get_conf(listname.upper()).split(',') if n]
-        result['StructList'] = self.corp.get_conf('STRUCTLIST').split(',')
+        result['StructList'] = self.corp.get_structs()
 
         if maincorp.get_conf('FREQTTATTRS'):
             ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')

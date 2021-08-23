@@ -159,7 +159,7 @@ class AbstractQueryPersistence(abc.ABC):
         form a corpus Foo while using corpus Bar.
         """
         ans = []
-        attr_list = plugin_ctx.current_corpus.get_conf('ATTRLIST').split(',')
+        attr_list = plugin_ctx.current_corpus.get_posattrs()
         data = self.open(last_id)  # type: ignore
         if data is not None:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)

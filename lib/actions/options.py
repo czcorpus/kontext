@@ -71,10 +71,10 @@ class Options(Kontext):
             'label': corp.get_conf(f'{n}.LABEL') or n,
             'n': n,
             'multisep': corp.get_conf(f'{n}.MULTISEP')
-        } for n in corp.get_conf('ATTRLIST').split(',') if n]
+        } for n in corp.get_posattrs() if n]
         out['fixed_attr'] = 'word'
         out['attr_vmode'] = self.args.attr_vmode
-        availstruct = corp.get_conf('STRUCTLIST').split(',')
+        availstruct = corp.get_structs()
         structlist = set(self.args.structs.split(',')).union(
             set([x.split('.')[0] for x in self.args.structattrs]))
         out['Availstructs'] = [{'n': n,
@@ -82,7 +82,7 @@ class Options(Kontext):
                                 'label': corp.get_conf(f'{n}.LABEL')}
                                for n in availstruct if n and n != '#']
         out['base_viewattr'] = self.args.base_viewattr
-        availref = corp.get_conf('STRUCTATTRLIST').split(',')
+        availref = corp.get_structattrs()
         reflist = self.args.refs.split(',') if self.args.refs else []
         structattrs = defaultdict(list)
         out['qs_enabled'] = self.args.qs_enabled

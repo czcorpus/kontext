@@ -54,11 +54,11 @@ An expected configuration:
 """
 
 import json
+from corplib.abstract import AbstractKCorpus
 import manatee
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional
 
 from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
-from corplib.corpus import KCorpus, KSubcorpus
 
 
 class TreeConf(object):
@@ -373,7 +373,7 @@ class ManateeBackend(SearchBackend):
         """
         self._conf = ManateeBackendConf(conf)
 
-    def _load_raw_sent(self, corpus: Union[KCorpus, KSubcorpus], corpus_id, token_id, kwic_len, tree_attrs):
+    def _load_raw_sent(self, corpus: AbstractKCorpus, corpus_id, token_id, kwic_len, tree_attrs):
         """
         Retrieve a sentence via Manatee
         Args:
