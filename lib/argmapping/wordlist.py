@@ -13,27 +13,24 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any, List, Optional
+from dataclasses import dataclass, field, asdict
 
 
+@dataclass
 class WordlistFormArgs(object):
-
-    def __init__(self):
-        self._id = None
-        self.form_type = 'wlist'
-        self.corpname = None
-        self.usesubcorp = None
-        self.wlattr = None
-        self.wlpat = None
-        self.wlminfreq = 1
-        self.wlnums = 'frq'
-        self.wltype = 'simple'
-        self.pfilter_words = []
-        self.nfilter_words = []
-        self.include_nonwords = '0'
-        self.wlposattrs: List[str] = []
-
-    def __str__(self):
-        return f'WordlistFormArgs({self.__dict__})'
+    _id: str = None
+    form_type: str = 'wlist'
+    corpname: str = None
+    usesubcorp: str = None
+    wlattr: str = None
+    wlpat: str = None
+    wlminfreq: int = 1
+    wlnums: str = 'frq'
+    wltype: str = 'simple'
+    pfilter_words: List[str] = field(default_factory=list)
+    nfilter_words: List[str] = field(default_factory=list)
+    include_nonwords: str = '0'
+    wlposattrs: List[str] = field(default_factory=list)
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -49,8 +46,7 @@ class WordlistFormArgs(object):
         self.wlposattrs = data.get('wlposattrs', [])
 
     def to_dict(self) -> Dict[str, Any]:
-        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
-        return tmp
+        return {k: v for k, v in asdict(self).items() if not k.startswith('_')}
 
     def to_qp(self) -> Dict[str, Any]:
         return self.to_dict()
@@ -72,16 +68,15 @@ class WordlistFormArgs(object):
         return self.wlposattrs[level] if level < len(self.wlposattrs) else None
 
 
+@dataclass
 class WordlistSaveFormArgs:
-
-    def __init__(self):
-        self.corpname = ''
-        self.usesubcorp = ''
-        self.from_line = 1
-        self.to_line: Optional[int] = None
-        self.saveformat = 'text'
-        self.colheaders = False
-        self.heading = False
+    corpname: str = ''
+    usesubcorp: str = ''
+    from_line: int = 1
+    to_line: Optional[int] = None
+    saveformat: str = 'text'
+    colheaders: bool = False
+    heading: bool = False
 
     def update_by_user_query(self, data):
         self.corpname = data['corpname']
@@ -93,5 +88,4 @@ class WordlistSaveFormArgs:
         self.heading = data['heading']
 
     def to_dict(self) -> Dict[str, Any]:
-        tmp = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
-        return tmp
+        return {k: v for k, v in asdict(self).items() if not k.startswith('_')}
