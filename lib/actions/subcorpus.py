@@ -16,6 +16,7 @@ import time
 import hashlib
 from typing import List, Dict, Union
 
+from dataclasses import dataclass
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
 from bgcalc import AsyncTaskStatus
@@ -38,6 +39,7 @@ class SubcorpusError(Exception):
     pass
 
 
+@dataclass
 class SubmitBase:
     corpname: str
     subcname: str
@@ -50,34 +52,19 @@ class SubmitBase:
         return len(self.aligned_corpora) > 0 if type(self.aligned_corpora) is list else False
 
 
+@dataclass
 class CreateSubcorpusArgs(SubmitBase):
     text_types: Dict[str, Union[List[str], List[int]]]
 
-    @staticmethod
-    def from_dict(data):
-        ans = CreateSubcorpusArgs()
-        ans.__dict__.update(data)
-        return ans
 
-
+@dataclass
 class CreateSubcorpusWithinArgs(SubmitBase):
     within: List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
 
-    @staticmethod
-    def from_dict(data):
-        ans = CreateSubcorpusWithinArgs()
-        ans.__dict__.update(data)
-        return ans
 
-
+@dataclass
 class CreateSubcorpusRawCQLArgs(SubmitBase):
     cql: str
-
-    @staticmethod
-    def from_dict(data):
-        ans = CreateSubcorpusRawCQLArgs()
-        ans.__dict__.update(data)
-        return ans
 
 
 class Subcorpus(Querying):
@@ -122,7 +109,7 @@ class Subcorpus(Querying):
         form_type = request.json['form_type']
 
         if form_type == 'tt-sel':
-            data = CreateSubcorpusArgs.from_dict(request.json)
+            data = CreateSubcorpusArgs(**request.json)
             corpus_info = self.get_corpus_info(data.corpname)
             if (plugins.runtime.LIVE_ATTRIBUTES.exists
                     and plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(self._plugin_ctx, data.corpname)
@@ -155,13 +142,13 @@ class Subcorpus(Querying):
                 full_cql = 'aword,[] within %s' % full_cql
                 imp_cql = (full_cql,)
         elif form_type == 'within':
-            data = CreateSubcorpusWithinArgs.from_dict(request.json)
+            data = CreateSubcorpusWithinArgs(**request.json)
             tt_query = ()
             within_cql = self._deserialize_custom_within(data.within)
             full_cql = 'aword,[] %s' % within_cql
             imp_cql = (full_cql,)
         elif form_type == 'cql':
-            data = CreateSubcorpusRawCQLArgs.from_dict(request.json)
+            data = CreateSubcorpusRawCQLArgs(**request.json)
             tt_query = ()
             within_cql = data.cql
             full_cql = f'aword,[] {data.cql}'
