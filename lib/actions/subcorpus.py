@@ -10,7 +10,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from dataclasses import asdict
 import os
 import logging
 import time
@@ -381,9 +380,7 @@ class Subcorpus(Querying):
                 tmp = sr.get_info(self.session_get('user', 'id'),
                                   self.args.corpname, self.corp.subcname)
                 if tmp:
-                    data = asdict(tmp)
-                    data['timestamp'] = tmp.timestamp.timestamp()
-                    ans['extended_info'].update(data)
+                    ans['extended_info'].update(tmp.to_dict())
         return ans
 
     @exposed(access_level=1, return_type='json', http_method='POST')

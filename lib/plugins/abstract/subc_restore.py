@@ -26,7 +26,7 @@ Expected factory method signature: create_instance(config, db)
 import abc
 from typing import Any, Dict, List, Optional
 from controller.plg import PluginCtx
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import datetime
 
 
@@ -38,6 +38,14 @@ class SubcRestoreRow:
     subcname: str
     cql: str
     timestamp: datetime.datetime
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Method to get json serializable dict
+        """
+        res = asdict(self)
+        res['timestamp'] = self.timestamp.timestamp()
+        return res
 
 
 class AbstractSubcRestore(abc.ABC):
