@@ -10,6 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from dataclasses import asdict
 import os
 import logging
 import time
@@ -327,13 +328,13 @@ class Subcorpus(Querying):
             filter_args['corpname'] = ''  # JS code requires non-null value
 
         if plugins.runtime.SUBC_RESTORE.exists:
-            try:
-                full_list = plugins.runtime.SUBC_RESTORE.instance.extend_subc_list(self._plugin_ctx, data,
-                                                                                   filter_args, 0)
-            except Exception as e:
-                logging.getLogger(__name__).error(
-                    'subc_restore plug-in failed to list queries: %s' % e)
-                full_list = data
+            with plugins.runtime.SUBC_RESTORE as sr:
+                try:
+                    full_list = sr.extend_subc_list(self._plugin_ctx, data, filter_args, 0)
+                except Exception as e:
+                    logging.getLogger(__name__).error(
+                        'subc_restore plug-in failed to list queries: %s' % e)
+                    full_list = data
         else:
             full_list = data
 
@@ -350,8 +351,10 @@ class Subcorpus(Querying):
             subcorp_list=full_list,
             sort_key=dict(name=sort_key, reverse=rev),
             filter=filter_args,
-            processed_subc=[v.to_dict() for v in self.get_async_tasks(
-                category=AsyncTaskStatus.CATEGORY_SUBCORPUS)],
+            processed_subc=[
+                v.to_dict()
+                for v in self.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
+            ],
             related_corpora=sorted(related_corpora),
             uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
         )
@@ -378,7 +381,9 @@ class Subcorpus(Querying):
                 tmp = sr.get_info(self.session_get('user', 'id'),
                                   self.args.corpname, self.corp.subcname)
                 if tmp:
-                    ans['extended_info'].update(tmp)
+                    data = asdict(tmp)
+                    data['timestamp'] = tmp.timestamp.timestamp()
+                    ans['extended_info'].update(data)
         return ans
 
     @exposed(access_level=1, return_type='json', http_method='POST')

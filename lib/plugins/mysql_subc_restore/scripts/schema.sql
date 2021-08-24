@@ -6,5 +6,5 @@ CREATE TABLE kontext_subc_archive (
   corpname TEXT NOT NULL,
   subcname TEXT NOT NULL,
   cql TEXT NOT NULL,
-  created TIMESTAMP NOT NULL
+  timestamp TIMESTAMP NOT NULL
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

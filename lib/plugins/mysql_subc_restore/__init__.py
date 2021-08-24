@@ -15,7 +15,7 @@
 
 from controller.plg import PluginCtx
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -25,7 +25,7 @@ from mysql.connector.connection import MySQLConnection
 import werkzeug.urls
 import plugins
 from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.subc_restore import AbstractSubcRestore
+from plugins.abstract.subc_restore import AbstractSubcRestore, SubcRestoreRow
 from plugins import inject
 
 
@@ -45,7 +45,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'INSERT INTO {self.TABLE_NAME} '
-                '(user_id, corpname, subcname, cql, created) '
+                '(user_id, corpname, subcname, cql, timestamp) '
                 'VALUES (%s, %s, %s, %s, %s)',
                 (user_id, corpname, subcname, cql, datetime.now())
             )
@@ -60,7 +60,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             )
         self._db.commit()
 
-    def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[Dict[str, Any]]:
+    def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[SubcRestoreRow]:
         sql = [
             'SELECT * FROM kontext_subc_archive',
             'WHERE user_id = %s ORDER BY id',
@@ -75,25 +75,27 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
         with self._db.cursor() as cursor:
             cursor.execute(' '.join(sql), args)
-            return cursor.fetchall()
+            return [SubcRestoreRow(**row) for row in cursor]
 
-    def get_info(self, user_id: int, corpname: str, subcname: str) -> Dict[str, Any]:
+    def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
                 'WHERE user_id = %s AND corpname = %s AND subcname = %s '
-                'ORDER BY created',
+                'ORDER BY timestamp',
                 (user_id, corpname, subcname)
             )
-            return cursor.fetchone()
+            row = cursor.fetchone()
+            return None if row is None else SubcRestoreRow(**row)
 
-    def get_query(self, query_id: int) -> Dict[str, Any]:
+    def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
                 'WHERE id = %s', (query_id, )
             )
-            return cursor.fetchone()
+            row = cursor.fetchone()
+            return None if row is None else SubcRestoreRow(**row)
 
     def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
         """
@@ -118,9 +120,9 @@ class MySQLSubcRestore(AbstractSubcRestore):
             return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
 
         subc_queries = self.list_queries(plugin_ctx.user_id, from_idx, to_idx)
-        subc_queries_map = {}
+        subc_queries_map: Dict[Tuple[str, str], SubcRestoreRow] = {}
         for x in subc_queries:
-            subc_queries_map[(x['corpname'], x['subcname'])] = x
+            subc_queries_map[(x.corpname, x.subcname)] = x
 
         if filter_args.get('show_deleted', False):
             deleted_keys = set(subc_queries_map.keys()) - \
@@ -138,28 +140,30 @@ class MySQLSubcRestore(AbstractSubcRestore):
         deleted_items = []
         for dk in deleted_keys:
             try:
-                corpus_name = subc_queries_map[dk]['corpname']
+                subc_query = subc_queries_map[dk]
+                corpus_name = subc_query.corpname
                 if corpname_matches(corpus_name):
                     corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpus_name)
                     deleted_items.append({
-                        'name': '{0} / {1}'.format(corpus_info.id, subc_queries_map[dk]['subcname']),
+                        'name': '{0} / {1}'.format(corpus_info.id, subc_query.subcname),
                         'size': None,
-                        'created': int(subc_queries_map[dk]['created'].timestamp()),
+                        'created': int(subc_query.timestamp.timestamp()),
                         'human_corpname': corpus_info.name,
-                        'corpname': subc_queries_map[dk]['corpname'],
-                        'usesubcorp': escape_subcname(subc_queries_map[dk]['subcname']),
-                        'cql': urllib.parse.quote(subc_queries_map[dk]['cql']).encode('utf-8') if include_cql else None,
-                        'cqlAvailable': bool(urllib.parse.quote(subc_queries_map[dk]['cql'])),
+                        'corpname': corpus_name,
+                        'usesubcorp': escape_subcname(subc_query.subcname),
+                        'cql': urllib.parse.quote(subc_query.cql).encode('utf-8') if include_cql else None,
+                        'cqlAvailable': bool(urllib.parse.quote(subc_query.cql)),
                         'deleted': True,
-                        'published': False})
+                        'published': False
+                    })
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
         for subc in subc_list:
             key = (subc['corpname'], get_user_subcname(subc))
             if key in subc_queries_map:
-                subc['cqlAvailable'] = bool(urllib.parse.quote(subc_queries_map[key]['cql']))
-                subc['cql'] = urllib.parse.quote(subc_queries_map[dk]['cql']).encode(
-                    'utf-8') if include_cql else None
+                cql_quoted = urllib.parse.quote(subc_queries_map[key].cql)
+                subc['cqlAvailable'] = bool(cql_quoted)
+                subc['cql'] = cql_quoted.encode('utf-8') if include_cql else None
             else:
                 subc['cqlAvailable'] = False
                 subc['cql'] = None
