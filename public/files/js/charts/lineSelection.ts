@@ -24,7 +24,6 @@
 import * as d3 from 'vendor/d3';
 import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
 
-import { MultiDict } from '../multidict';
 import { PageModel, DownloadType } from '../app/page';
 import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
@@ -201,27 +200,27 @@ export class LineSelGroupsRatiosChart {
                 aElm.attr('class', 'export');
                 aElm.text(ef);
                 aElm.on('click', () => {
-                    const args = new MultiDict<{corpname:String; cformat:string}>();
-                    args.set('corpname', corpusId);
-                    args.set('cformat', ef);
-                    const postArgs = new MultiDict<{data:string; title:string}>();
-                    postArgs.set(
-                        'data',
-                        pipe(
-                            data,
-                            List.map(({groupId, count}) => tuple(
-                                groupId, count
-                            )),
-                            (data) => JSON.stringify(data)
-                        )
-                    );
-                    postArgs.set('title', this.layoutModel.translate('linesel__saved_line_groups_heading'));
                     this.layoutModel.bgDownload({
                         filename: 'line-selection-overview.xlsx',
                         type: DownloadType.LINE_SELECTION,
-                        url: this.layoutModel.createActionUrl('export_line_groups_chart', args),
+                        url: this.layoutModel.createActionUrl(
+                            'export_line_groups_chart',
+                            Dict.toEntries({
+                                corpname: corpusId,
+                                cformat: ef
+                            })
+                        ),
                         contentType: 'multipart/form-data',
-                        args: postArgs
+                        args: {
+                            data: pipe(
+                                data,
+                                List.map(({groupId, count}) => tuple(
+                                    groupId, count
+                                )),
+                                (data) => JSON.stringify(data)
+                            ),
+                            title: this.layoutModel.translate('linesel__saved_line_groups_heading')
+                        }
                     });
                 });
             });
@@ -234,7 +233,7 @@ export class LineSelGroupsRatiosChart {
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(
                 'ajax_get_line_groups_stats',
-                this.layoutModel.exportConcArgs().items()
+                this.layoutModel.getConcArgs()
             ),
             {}
 

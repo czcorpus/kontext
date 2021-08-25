@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PageModel} from '../../app/page';
-import { MultiDict } from '../../multidict';
+import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable, Subject } from 'rxjs';
@@ -152,10 +151,13 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             Actions.UseInQuery.name,
             null,
             (state, action, dispatch) => {
-                const args = new MultiDict();
-                args.set('corpname', action.payload.corpname);
-                args.set('usesubcorp', action.payload.id);
-                window.location.href = this.pageModel.createActionUrl('query', args);
+                window.location.href = this.pageModel.createActionUrl(
+                    'query',
+                    {
+                        corpname: action.payload.corpname,
+                        usesubcorp: action.payload.id
+                    }
+                );
             }
 
         );
@@ -163,15 +165,15 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     private loadData(state:PublicSubcorpListState):Observable<LoadDataResponse> {
         // TODO
-        const args = new MultiDict();
-        args.set('format', 'json');
-        args.set('query', state.searchQuery);
-        args.set('offset', 0); // TODO
-        args.set('limit', 20); // TODO
         return this.pageModel.ajax$<LoadDataResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('subcorpus/list_published'),
-            args
+            {
+                format: 'json',
+                query: state.searchQuery,
+                offset: 0, // TODO
+                limit: 20 // TODO
+            }
         );
     }
 

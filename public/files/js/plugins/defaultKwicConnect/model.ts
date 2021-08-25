@@ -22,7 +22,6 @@ import * as PluginInterfaces from '../../types/plugins';
 import * as Kontext from '../../types/kontext';
 import * as ttResponse from '../../models/concordance/ttdist/response';
 import { Actions as ConcActions } from '../../models/concordance/actions';
-import { MultiDict } from '../../multidict';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
@@ -398,12 +397,14 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         items:Array<string>
     ):Observable<Array<ProviderWordMatch>> {
 
-        const args = new MultiDict<{corpname:string; align:string; w:string}>();
-        args.set('corpname', this.state.mainCorp);
-        args.replace('align', List.filter(v => v !== this.state.mainCorp, this.state.corpora));
+        const args = {
+            corpname: this.state.mainCorp,
+            align: List.filter(v => v !== this.state.mainCorp, this.state.corpora),
+            w: []
+        };
         const procItems = List.slice(0, KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE, items);
         if (procItems.length > 0) {
-            List.forEach(v => args.add('w', v), procItems);
+            List.forEach(v => args.w.push(v), procItems);
             return this.pluginApi.ajax$<AjaxResponseFetchData>(
                 HTTP.Method.GET,
                 this.pluginApi.createActionUrl('fetch_external_kwic_info'),
@@ -432,13 +433,17 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
     }
 
     private fetchUniqValues(fDistType:FreqDistType, flimit:number):Observable<Array<string>> {
-        const args = this.pluginApi.exportConcArgs() as MultiDict<FreqServerArgs>;
-        args.set('fcrit', `${fDistType}/ie 0~0>0`);
-        args.set('ml', 0);
-        args.set('flimit', flimit);
-        args.set('freq_sort', 'freq');
-        args.set('fmaxitems', KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE);
-        args.set('format', 'json');
+        const args:FreqServerArgs = {
+            ...this.pluginApi.getConcArgs(),
+            fcrit: `${fDistType}/ie 0~0>0`,
+            ml: false,
+            flimit,
+            freq_sort: 'freq',
+            fmaxitems: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
+            freqlevel: undefined,
+            ftt_include_empty: undefined,
+            format: 'json'
+        };
         return this.pluginApi.ajax$<ttResponse.FreqData>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('freqs'),

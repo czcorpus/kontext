@@ -245,7 +245,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             sicase: this.state.sicaseValues[sortId],
             spos: this.state.sposValues[sortId],
             ...this.pageModel.getConcArgs(),
-            q: '~' + concId
+            q: ['~' + concId]
         }
     }
 

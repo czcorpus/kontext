@@ -119,10 +119,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 const title = he.translate('subclist__search_in_subc');
                 const href = he.createActionLink(
                     'query',
-                    [
-                        ['corpname', item.corpname],
-                        ['usesubcorp', item.usesubcorp]
-                    ]
+                    {
+                        corpname: item.corpname,
+                        usesubcorp: item.usesubcorp
+                    }
                 );
                 return <a title={title} href={href}>{item.name}</a>;
 

@@ -728,7 +728,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         }
 
         private createPermanentUrl() {
-            return he.createActionLink('view', [['q', '~' + this.props.queryId]]);
+            return he.createActionLink('view', {q: '~' + this.props.queryId});
         }
 
         componentDidMount() {

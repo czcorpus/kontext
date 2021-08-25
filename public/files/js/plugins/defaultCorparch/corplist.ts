@@ -19,11 +19,10 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { List, HTTP, pipe, tuple } from 'cnc-tskit';
+import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
-import { MultiDict } from '../../multidict';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { Actions } from './actions';
 import { CorplistItem, Filters, CorplistDataResponse } from './common';
@@ -431,23 +430,21 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
     }
 
-    private loadData(query:string, filters:Filters, offset:number, limit?:number,
-            favouriteOnly?:boolean):Observable<CorplistDataResponse> {
-        const args = new MultiDict();
-        args.set('query', query);
-        args.set('offset', offset);
-        if (limit !== undefined) {
-            args.set('limit', limit);
-        }
-        if (filters) {
-            for (let p in filters) {
-                args.set(p, filters[p]);
-            }
-        }
-        if (favouriteOnly !== undefined) {
-            args.set('favOnly', +favouriteOnly);
-        }
-        args.set('requestable', '1');
+    private loadData(
+        query:string,
+        filters:Filters,
+        offset:number,
+        limit?:number,
+        favOnly?:boolean
+    ):Observable<CorplistDataResponse> {
+        const args = {
+            query,
+            offset,
+            limit,
+            favOnly,
+            requestable: true,
+            ...filters
+        };
         return this.pluginApi.ajax$<CorplistDataResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),

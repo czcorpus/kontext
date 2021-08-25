@@ -23,7 +23,7 @@ import * as ReactDOM from 'react-dom';
 import { ITranslator, IFullActionControl, StatelessModel } from 'kombo';
 import { Observable, Subject } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
-import { List, HTTP, tuple, pipe } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe, URL as CURL } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../types/plugins';
 import * as Kontext from '../types/kontext';
@@ -34,7 +34,6 @@ import { init as menuViewsFactory } from '../views/menu';
 import { init as overviewAreaViewsFactory } from '../views/overview';
 import { init as viewOptionsFactory } from '../views/options/main';
 import { init as initQueryHistoryViews } from '../views/searchHistory/main';
-import { MultiDict } from '../multidict';
 import * as docModels from '../models/common/layout';
 import { UserInfo } from '../models/user/info';
 import { CorpusViewOptionsModel } from '../models/options/structsAttrs';
@@ -425,7 +424,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string {
+    createActionUrl<T>(path:string, args?:T):string {
         return this.appNavig.createActionUrl(path, args);
     }
 
@@ -435,13 +434,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      */
     setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
         this.appNavig.setLocationPost(path, args, blankWindow);
-    }
-
-    /**
-     *
-     */
-    encodeURLParameters<T>(params:MultiDict<T>):string {
-        return this.appNavig.encodeURLParameters(params);
     }
 
     getHistory():Kontext.IHistory {
@@ -473,40 +465,18 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return this.conf.getConf('corpusIdent') || {id: null, variant: '', name: null};
     }
 
-    /**
-     * Return a list of concordance arguments and their values. Multi-value keys
-     * are preserved.
-     */
-    exportConcArgs():MultiDict<ConcServerArgs> {
-        const args = this.getConcArgs();
-        return new MultiDict([
-            tuple('maincorp', args.maincorp),
-            tuple('viewmode', args.viewmode),
-            tuple('format', args.format),
-            tuple('pagesize', args.pagesize),
-            tuple('attrs', args.attrs),
-            tuple('attr_vmode', args.attr_vmode),
-            tuple('base_viewattr', args.base_viewattr),
-            tuple('ctxattrs', args.ctxattrs),
-            tuple('structs', args.structs),
-            tuple('refs', args.refs),
-            tuple('fromp', args.fromp),
-            tuple('q', args.q)
-        ]);
-    }
-
     getConcArgs():ConcServerArgs {
         return {
             maincorp: undefined,
             viewmode: 'kwic',
             format: undefined,
             pagesize: 0,
-            attrs: undefined,
+            attrs: [],
             attr_vmode: undefined,
             base_viewattr: undefined,
-            ctxattrs: undefined,
-            structs: undefined,
-            refs: undefined,
+            ctxattrs: [],
+            structs: [],
+            refs: [],
             fromp: undefined,
             q: undefined,
             ...this.getConf<ConcServerArgs>('currentArgs')
@@ -704,8 +674,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         return window['WebSocket'] !== undefined && this.getConf('jobStatusServiceUrl');
     }
 
-    openWebSocket<T, U>(path:string='', args?:MultiDict):[Subject<T>, Observable<U>] {
-        const params = args ? '?' + this.encodeURLParameters(args) : '';
+    openWebSocket<T, U>(path:string='', args?:{}):[Subject<T>, Observable<U>] {
+        const params = args ?
+                '?' + pipe(args, CURL.valueToPairs(), List.map(([k, v]) => `${k}=${v}`)) :
+                '';
         const url = new URL(path + params, this.getConf<string>('jobStatusServiceUrl'));
         const ws = webSocket<any>(url.href);
         const input = new Subject<T>();

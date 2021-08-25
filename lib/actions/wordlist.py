@@ -84,11 +84,10 @@ class Wordlist(Kontext):
 
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
-        conc_args = templating.StateGlobals(
-            self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping))
+        conc_args = self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping)
         q = request.args.get('q')
         if q:
-            conc_args.set('q', [q])
+            conc_args['q'] = [q]
         args = {}
         result['Globals'] = conc_args.update(args)
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')

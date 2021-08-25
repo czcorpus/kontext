@@ -24,7 +24,7 @@ export interface FreqServerArgs extends ConcServerArgs {
     flimit:number;
     freqlevel:number;
     freq_sort:string;
-    ftt_include_empty:'0'|'1';
+    ftt_include_empty:boolean;
     [other:string]:any;
 }
 

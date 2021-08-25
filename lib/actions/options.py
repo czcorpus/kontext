@@ -116,16 +116,17 @@ class Options(Kontext):
 
     @exposed(access_level=0, return_type='json', http_method='POST')
     def viewattrsx(self, request):
-        self._set_new_corp_options(attrs=request.json.get('attrs'),
-                                   attr_vmode=request.json.get('attr_vmode'),
-                                   structs=request.json.get('structs'),
-                                   refs=request.json.get('refs', ()),
-                                   structattrs=request.json.get('structattrs'),
-                                   qs_enabled=request.json.get('qs_enabled'),
-                                   base_viewattr=request.json.get('base_viewattr'))
-        self._save_options(['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr',
-                            'qs_enabled'],
-                           self.args.corpname)
+        self._set_new_corp_options(
+            attrs=request.json.get('attrs'),
+            attr_vmode=request.json.get('attr_vmode'),
+            structs=request.json.get('structs'),
+            refs=request.json.get('refs', ()),
+            structattrs=request.json.get('structattrs'),
+            qs_enabled=request.json.get('qs_enabled'),
+            base_viewattr=request.json.get('base_viewattr'))
+        self._save_options(
+            ['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr', 'qs_enabled'],
+            self.args.corpname)
         return dict(
             widectx_globals=self._get_mapped_attrs(
                 WidectxArgsMapping, dict(structs=self._get_struct_opts())),

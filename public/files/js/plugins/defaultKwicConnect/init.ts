@@ -56,7 +56,7 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
         isUnfinishedCalculation:boolean
     ) {
         this.pluginApi = pluginApi;
-        const concArgs = this.pluginApi.exportConcArgs();
+        const concArgs = this.pluginApi.getConcArgs();
         this.model = new KwicConnectModel({
             dispatcher: pluginApi.dispatcher(),
             pluginApi,
@@ -64,9 +64,9 @@ export class DefaultKwicConnectPlugin implements PluginInterfaces.KwicConnect.IP
                 pluginApi.getConf<Array<string>>('alignedCorpora'),
                 [pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
             ),
-            mainCorp: concArgs.has('maincorp') ?
-                concArgs.head('maincorp') :
-                pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
+            mainCorp: concArgs.maincorp ?
+                        concArgs.maincorp :
+                        pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent').id,
             rendererMap: this.selectRenderer.bind(this),
             loadChunkSize,
             maxKwicWords,

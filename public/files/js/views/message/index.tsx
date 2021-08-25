@@ -100,7 +100,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     }
                     {props.lastUsedCorpus.corpname ?
                         <li>
-                            <a href={he.createActionLink('query', [['corpname', props.lastUsedCorpus.corpname]])}>
+                            <a href={he.createActionLink('query', {corpname: props.lastUsedCorpus.corpname})}>
                                 {he.translate('global__select_last_used_corpus_{corpname}', {corpname: props.lastUsedCorpus.human_corpname})}
                             </a>
                         </li> :

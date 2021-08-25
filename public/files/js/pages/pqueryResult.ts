@@ -28,7 +28,6 @@ import { Actions } from '../models/pquery/actions';
 import { PqueryResultModel } from '../models/pquery/result';
 import { init as resultViewInit } from '../views/pquery/result';
 import { init as queryOverviewInit } from '../views/pquery/overview';
-import { MultiDict } from '../multidict';
 import { PqueryResult, FreqIntersectionArgs, importConcQueries, InvolvedConcFormArgs,
     storedQueryToModel } from '../models/pquery/common';
 import { AttrHelper } from '../models/query/cqleditor/attrs';
@@ -149,12 +148,10 @@ class ParadigmaticQueryPage {
 
             this.layoutModel.dispatcher.registerActionListener(
                 (action, dispatch) => {
-                    const args = new MultiDict();
                     if (Actions.isSubmitQueryDone(action)) {
-                        args.set('q', `~${this.layoutModel.getConf<string>('QueryId')}`);
                         this.layoutModel.getHistory().replaceState(
                             'pquery/result',
-                            args,
+                            {q: `~${this.layoutModel.getConf<string>('QueryId')}`},
                             {},
                             window.document.title
                         );

@@ -29,8 +29,8 @@ import * as Kontext from '../../types/kontext';
  * case of outdated browsers)
  */
 export class NullHistory implements Kontext.IHistory {
-    replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {}
-    pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {}
+    replaceState<T>(action:string, args:T, stateData?:any, title?:string):void {}
+    pushState<T>(action:string, args:T, stateData?:any, title?:string):void {}
     setOnPopState(fn:(event:PopStateEvent)=>void):void {}
 }
 
@@ -56,14 +56,14 @@ export class History implements Kontext.IHistory {
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title
      */
-    replaceState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {
+    replaceState<T>(action:string, args:T, stateData?:any, title?:string):void {
         if (/^https?:\/\//.exec(action)) {
             throw new Error('Invalid action specifier (cannot use URL here)');
         }
         window.history.replaceState(
             stateData || {},
             title || window.document.title,
-            `${this.h.createActionUrl(action)}?${this.h.encodeURLParameters(args)}`
+            this.h.createActionUrl(action, args)
         );
     }
 
@@ -75,14 +75,14 @@ export class History implements Kontext.IHistory {
      * @param stateData (just like in window.history.replaceState)
      * @param title (just like in window.history.replaceState), default is window.document.title
      */
-    pushState<T>(action:string, args:Kontext.IMultiDict<T>, stateData?:any, title?:string):void {
+    pushState<T>(action:string, args:T, stateData?:any, title?:string):void {
         if (/^https?:\/\//.exec(action)) {
             throw new Error('Invalid action specifier (cannot use URL here)');
         }
         window.history.pushState(
             stateData || {},
             title || window.document.title,
-            `${this.h.createActionUrl(action)}?${this.h.encodeURLParameters(args)}`
+            this.h.createActionUrl(action, args)
         );
     }
 

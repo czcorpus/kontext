@@ -20,7 +20,6 @@
 
 import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
-import { MultiDict } from '../../multidict';
 import { Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities } from './twoDimension/common';
 import { Maths } from 'cnc-tskit';
 import { ColorMappings } from './twoDimension/table2d';
@@ -74,7 +73,7 @@ export class Actions {
         };
 
     static ResultPrepareSubmitArgsDone: Action<{
-        data:MultiDict;
+        data:{};
     }> = {
             name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
         };

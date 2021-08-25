@@ -27,7 +27,6 @@ import * as Kontext from '../../types/kontext';
 import * as ViewOptions from '../../types/viewOptions';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
 import { ConcQueryArgs } from '../query/common';
@@ -173,13 +172,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 ).subscribe(
                     (data:ConcQueryResponse) => {
                         window.location.href = this.layoutModel.createActionUrl(
-                            'view', [
-                                ['q', '~' + data.conc_persistence_op_id],
-                                ...pipe(
-                                    data.conc_args,
-                                    Dict.toEntries()
-                                )
-                            ]
+                            'view',
+                            {
+                                q: '~' + data.conc_persistence_op_id,
+                                ...data.conc_args
+                            }
                         );
 
                     },
@@ -366,7 +363,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                         if (!skipHistory) {
                             this.layoutModel.getHistory().pushState(
                                 'wordlist/result',
-                                new MultiDict(this.exportReloadArgs(state))
+                                this.exportReloadArgs(state)
                             );
                         }
                     }
@@ -387,7 +384,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(
                 'wordlist/result',
-                MultiDict.fromDict({
+                Dict.toEntries({
                     q: `~${state.queryId}`,
                     wlpage: newPage,
                     wlsort: state.wlsort || undefined,
@@ -413,20 +410,20 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         word:string
     ):ConcQueryArgs {
         const primaryCorpus = formSubmitArgs.corpname;
-        const currArgs = this.layoutModel.exportConcArgs();
+        const currArgs = this.layoutModel.getConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
             maincorp: primaryCorpus,
             usesubcorp: formSubmitArgs.usesubcorp || null,
             viewmode: 'kwic',
-            pagesize: parseInt(currArgs.head('pagesize')),
-            attrs: currArgs.getList('attrs'),
-            attr_vmode: currArgs.head('attr_vmode') as ViewOptions.AttrViewMode,
-            base_viewattr: currArgs.head('base_viewattr'),
-            ctxattrs: currArgs.getList('ctxattrs'),
-            structs: currArgs.getList('structs'),
-            refs: currArgs.getList('refs'),
-            fromp: parseInt(currArgs.head('fromp') || '0'),
+            pagesize: currArgs.pagesize,
+            attrs: currArgs.attrs,
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: currArgs.ctxattrs,
+            structs: currArgs.structs,
+            refs: currArgs.refs,
+            fromp: currArgs.fromp || 0,
             shuffle: 0,
             queries: [
                 {

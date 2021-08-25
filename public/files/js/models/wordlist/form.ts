@@ -21,7 +21,7 @@
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { List, Ident, HTTP } from 'cnc-tskit';
+import { List, Ident, HTTP, tuple } from 'cnc-tskit';
 
 
 import * as Kontext from '../../types/kontext';
@@ -36,7 +36,6 @@ import {
     ConcFreqRedirectResponse, FileTarget, isConcFreqRedirectResponse, splitFilterWords,
     SubmitResponse, WlnumsTypes, WlTypes, WordlistSubmitArgs } from './common';
 import { IUnregistrable } from '../common/common';
-import { MultiDict } from '../../multidict';
 
 
 /**
@@ -577,9 +576,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     if (resp.freq_files_avail) {
                         window.location.href = this.layoutModel.createActionUrl(
                             'wordlist/result',
-                            MultiDict.fromDict({
-                                q: `~${resp.wl_query_id}`
-                            })
+                            [tuple('q',  `~${resp.wl_query_id}`)]
                         );
 
                     } else {

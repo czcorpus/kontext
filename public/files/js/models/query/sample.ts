@@ -21,10 +21,9 @@
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
-import { Dict, HTTP, tuple } from 'cnc-tskit';
+import { Dict, HTTP, List, tuple } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { SampleServerArgs } from './common';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
@@ -107,10 +106,10 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
             action => {
                 this.submitQuery(
                     action.payload.sampleId,
-                    this.pageModel.getConcArgs().q.substr(1)
+                    List.head(this.pageModel.getConcArgs().q).substr(1)
 
-                ).subscribe(
-                    data => {
+                ).subscribe({
+                    next: data => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             payload: {
@@ -119,13 +118,13 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
                             }
                         });
                     },
-                    error => {
+                    error: error => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             error
                         });
                     }
-                )
+                });
             }
         );
     }
@@ -157,11 +156,12 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
         );
     }
 
-    createSubmitArgs(sortId:string, concId:string):MultiDict<SampleServerArgs> {
-        const args = this.pageModel.exportConcArgs() as MultiDict<SampleServerArgs>;
-        args.set('q', '~' + concId);
-        args.set('rlines', parseInt(this.state.rlinesValues[sortId]));
-        return args;
+    createSubmitArgs(sortId:string, concId:string):SampleServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            q: ['~' + concId],
+            rlines: parseInt(this.state.rlinesValues[sortId])
+        };
     }
 
     submitQuery(sortId:string, concId:string):Observable<AjaxConcResponse> {

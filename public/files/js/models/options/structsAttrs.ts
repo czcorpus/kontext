@@ -29,7 +29,6 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
-import { MultiDict } from '../../multidict';
 
 
 interface StructAttrsSubmit {
@@ -376,8 +375,8 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )
-        ).subscribe(
-            (data) => {
+        ).subscribe({
+            next: data => {
                 dispatch<typeof Actions.SaveSettingsDone>({
                     name: Actions.SaveSettingsDone.name,
                     payload: {
@@ -392,14 +391,14 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.translate('options__options_saved')
                 );
             },
-            (err) => {
+            error: error => {
                 dispatch<typeof Actions.SaveSettingsDone>({
                     name: Actions.SaveSettingsDone.name,
-                    error: err
+                    error
                 });
-                this.layoutModel.showMessage('error', err);
+                this.layoutModel.showMessage('error', error);
             }
-        );
+        });
     }
 
     private toggleAllAttributes(state:CorpusViewOptionsModelState):void {
@@ -736,13 +735,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private loadData(state:CorpusViewOptionsModelState):Observable<ViewOptions.LoadOptionsResponse> {
-        const args = new MultiDict();
-        args.set('corpname', state.corpusIdent.id);
         return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('options/viewattrs', args),
+            this.layoutModel.createActionUrl(
+                'options/viewattrs', {corpname: state.corpusIdent.id}
+            ),
             {}
         );
     }
-
 }

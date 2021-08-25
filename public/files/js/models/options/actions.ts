@@ -21,6 +21,7 @@
 import { Action } from 'kombo';
 import { ViewOptsResponse, GeneralOptionsShared } from './common';
 import * as ViewOptions from '../../types/viewOptions';
+import { WideCtxArgs } from '../concordance/common';
 
 
 export class Actions {
@@ -166,7 +167,7 @@ export class Actions {
 
     static SaveSettingsDone: Action<{
         baseViewAttr: string;
-        widectxGlobals: Array<[string, string]>;
+        widectxGlobals:WideCtxArgs;
         attrVmode: ViewOptions.AttrViewMode;
         qsEnabled: boolean;
     }> = {

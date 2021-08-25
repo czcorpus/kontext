@@ -19,12 +19,12 @@ T = TypeVar('T')
 
 class ConcFormArgs(Generic[T]):
     """
-    A helper class to handle miscellaneous
-    concordance-related forms (filter, query, sort,...).
+    A helper class to handle serialization and
+    deserialization of concordance-related forms
+    (query, filter, sort,...).
+    The actual form data (= the 'data' property)
+    are expected to be represented by a data class.
 
-    It is also used to store/restore data via
-    conc. persistence plug-in. Perstitent form can
-    be tested using `is_persistent` property.
     """
 
     def __init__(self, persist: bool) -> None:
@@ -34,14 +34,10 @@ class ConcFormArgs(Generic[T]):
 
     def updated(self, attrs: Dict[str, Any], op_key: str) -> 'ConcFormArgs[T]':
         """
-        Return an updated self object
-        (the same instance). There must
-        be always the 'op_key' value
-        present to emphasize the fact
-        that only serialized data (i.e.
-        data with their database key)
-        can be used to update an 'unbound'
-        instance.
+        Return an updated self object (the same instance). There must
+        be always the 'op_key' value present to emphasize the fact
+        that only serialized data (i.e. data with their database key)
+        can be used to update an 'unbound' instance.
         """
         for k, v in attrs.items():
             if hasattr(self.data, k):
@@ -58,8 +54,8 @@ class ConcFormArgs(Generic[T]):
     def serialize(self) -> Dict[str, Any]:
         """
         Export data required to be saved. In case there
-        are some corpus-dependent and fixed data (e.g. list of PoS),
-        it can be omitted here and re-initialized in __init__
+        are some per-corpus constant data (e.g. list of PoS),
+        they can be omitted here and re-attached back in __init__
         from user-independent data. By default - all the
         object's attributes are exported.
         """

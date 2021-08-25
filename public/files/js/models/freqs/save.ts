@@ -20,7 +20,6 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Freq2DTableModel } from './twoDimension/table2d';
 import { Freq2DFlatViewModel } from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
@@ -186,18 +185,19 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         return false;
     }
 
-    private submit(dataRowsArgs:MultiDict):void {
-        const args = new MultiDict();
-        dataRowsArgs.items().forEach(([k, v]) => args.add(k, v));
-        args.set('saveformat', this.state.saveformat);
-        args.set('colheaders', this.state.includeColHeaders ? '1' : '0');
-        args.set('heading', this.state.includeHeading ? '1' : '0');
-        args.set('from_line', this.state.fromLine.value);
-        args.set('to_line', this.state.toLine.value);
-        args.remove('format'); // cannot risk 'json' here
+    private submit(dataRowsArgs:{}):void {
+        const args = {
+            ...dataRowsArgs,
+            saveformat: this.state.saveformat,
+            colheaders: this.state.includeColHeaders,
+            heading: this.state.includeHeading,
+            from_line: this.state.fromLine.value,
+            to_line: this.state.toLine.value,
+            format: undefined
+        };
         this.saveLinkFn(
             `frequencies.${this.state.saveformat}`,
-            this.layoutModel.createActionUrl('savefreq', args.items())
+            this.layoutModel.createActionUrl('savefreq', args)
         );
     }
 }

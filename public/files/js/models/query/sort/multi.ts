@@ -253,10 +253,10 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'mlsortx',
-                [
-                    ['format', 'json'],
-                    ['q', '~' + concId]
-                ]
+                {
+                    format: 'json',
+                    q: '~' + concId
+                }
             ),
             args,
             {
@@ -270,7 +270,7 @@ export class MultiLevelConcSortModel extends StatefulModel<MultiLevelConcSortMod
             levels: [],
             type:'mlSortQueryArgs',
             ...this.pageModel.getConcArgs(),
-            q: '~' + concId
+            q: ['~' + concId]
         };
         for (let i = 0; i < this.state.sortlevelValues[sortId]; i += 1) {
             args.levels.push({

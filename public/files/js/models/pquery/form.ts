@@ -43,7 +43,6 @@ import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSo
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { MultiDict } from '../../multidict';
 
 
 interface PqueryFormModelSwitchPreserve {
@@ -740,12 +739,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             maincorp: state.corpname,
             viewmode: 'kwic',
             pagesize: 1,
-            attrs: '', // TODO
+            attrs: [], // TODO
             attr_vmode: currArgs.attr_vmode,
             base_viewattr: currArgs.base_viewattr,
-            ctxattrs: null,
-            structs: null,
-            refs: null,
+            ctxattrs: [],
+            structs: [],
+            refs: [],
             fromp: 1,
             qtype: 'advanced',
             query: query.query,
@@ -761,7 +760,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             inclkwic: 1,
             within: false,
             format: 'json',
-            q: '~' + concId,
+            q: ['~' + concId],
             no_query_history: true
         }
     }
@@ -865,11 +864,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private pushStateToHistory(state:PqueryFormModelState, queryId:string):void {
-        const args = new MultiDict();
-        args.set('q', `~${queryId}`);
         this.layoutModel.getHistory().pushState<{}, HistoryState>(
             'pquery/result',
-            args,
+            {q: `~${queryId}`},
             {
                 onPopStateAction: {
                     name: Actions.PopHistory.name,

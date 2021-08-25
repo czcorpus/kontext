@@ -19,9 +19,8 @@
  */
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
-import { MultiDict } from '../../multidict';
 import { IActionDispatcher } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 
 
@@ -60,24 +59,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     };
 
     const DataMuseSimilarWords:Views['DataMuseSimilarWords'] = (props) => {
+        // TODO check whether this works with the new submit system
         const generateLink = (word:string) => {
-            const args = new MultiDict();
-            args.set('corpname', props.corpora[0]);
-            pipe(
-                props.corpora,
-                List.tail(),
-                List.forEach(
-                    v => {
-                        args.set('align', v);
-                        // currently we have to ignore aligned kwics (the are not that easy to fetch)
-                        // so we just set a key for query type and ignore the aligned query
-                        args.set(`qtype_${v}`, 'simple');
-                    }
-                )
-            );
-            args.set('qtype', 'simple');
-            args.set('query', word);
-            return he.createActionLink('query_submit', args);
+            return he.createActionLink('create_view',
+            {
+                corpname: props.corpora[0],
+                q: `[word="(?i)${word}"]`
+            });
         };
 
         return (

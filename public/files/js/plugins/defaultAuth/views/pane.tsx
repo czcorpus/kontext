@@ -22,7 +22,6 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
-import { MultiDict } from '../../../multidict';
 import { UserStatusModel, UsersStatusModelState } from '../init';
 import { Actions as UserActions } from '../../../models/user/actions';
 
@@ -46,46 +45,40 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const LoginForm = (props:{
         onCloseClick:()=>void,
         returnUrl:string
-    }) => {
-
-        const args = new MultiDict();
-        args.set('return_url', props.returnUrl);
-
-        return (
-            <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
-                <layoutViews.CloseableFrame onCloseClick={props.onCloseClick}
-                        label={he.translate('user__login_header')}>
-                    <form className="login" action={he.createActionLink('user/login', args)} method="POST">
-                        <table className="form">
-                            <tbody>
-                                <tr>
-                                    <th>
-                                        {he.translate('user__username')}:
-                                    </th>
-                                    <td>
-                                        <input type="text" name="username" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>
-                                        {he.translate('user__password')}:
-                                    </th>
-                                    <td>
-                                        <input type="password" name="password" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p>
-                            <button type="submit" className="default-button">
-                                {he.translate('user__login_btn')}
-                            </button>
-                        </p>
-                    </form>
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
-        );
-    };
+    }) => (
+        <layoutViews.ModalOverlay onCloseKey={props.onCloseClick}>
+            <layoutViews.CloseableFrame onCloseClick={props.onCloseClick}
+                    label={he.translate('user__login_header')}>
+                <form className="login" action={he.createActionLink('user/login', {return_url: props.returnUrl})} method="POST">
+                    <table className="form">
+                        <tbody>
+                            <tr>
+                                <th>
+                                    {he.translate('user__username')}:
+                                </th>
+                                <td>
+                                    <input type="text" name="username" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    {he.translate('user__password')}:
+                                </th>
+                                <td>
+                                    <input type="password" name="password" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>
+                        <button type="submit" className="default-button">
+                            {he.translate('user__login_btn')}
+                        </button>
+                    </p>
+                </form>
+            </layoutViews.CloseableFrame>
+        </layoutViews.ModalOverlay>
+    );
 
 
 

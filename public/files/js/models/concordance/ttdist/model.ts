@@ -24,7 +24,6 @@ import { map, concatMap, tap } from 'rxjs/operators';
 import { pipe, List, HTTP, tuple } from 'cnc-tskit';
 
 import { PageModel } from '../../../app/page';
-import { MultiDict } from '../../../multidict';
 import { ConcordanceModel } from '../main';
 import { Actions as ConcActions } from '../actions';
 import { SampleServerArgs } from '../../query/common';
@@ -149,11 +148,11 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
 
     private performDataLoad(concSize:number, flimit:number):void {
         if (!this.state.blockedByAsyncConc && concSize > 0) {
-            const args = this.layoutModel.exportConcArgs();
-            if (this.state.lastArgs !== args.head('q')) {
+            const args = this.layoutModel.getConcArgs();
+            if (this.state.lastArgs !== List.head(args.q)) {
                 this.state.isBusy = true;
                 this.emitChange();
-                this.loadData(args, concSize, flimit).subscribe({
+                this.loadData({...args, rlines: 0}, concSize, flimit).subscribe({
                     next: ans => {
                         this.state.isBusy = false;
                         this.emitChange();
@@ -168,13 +167,13 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         }
     }
 
-    private loadData(args:MultiDict<SampleServerArgs>, concSize:number, flimit:number):Observable<boolean> {
+    private loadData(args:SampleServerArgs, concSize:number, flimit:number):Observable<boolean> {
 
         return (() => {
             if (concSize > TextTypesDistModel.SAMPLE_SIZE) {
-                args.set('rlines', TextTypesDistModel.SAMPLE_SIZE);
-                args.set('format', 'json');
-                this.state.lastArgs = args.head('q');
+                args.rlines = TextTypesDistModel.SAMPLE_SIZE;
+                args.format = 'json';
+                this.state.lastArgs = List.head(args.q);
                 return this.layoutModel.ajax$<Reduce>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl('reduce', args),
@@ -186,18 +185,18 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
             }
         })().pipe(
             map(
-                (reduceAns) => tuple(reduceAns, this.layoutModel.exportConcArgs() as MultiDict<FreqServerArgs>)
+                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs() as FreqServerArgs)
             ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
                 this.state.ttCrit.forEach(([key, value]) => args.add(key, value));
                 this.state.flimit = flimit;
-                args.set('ml', 0);
-                args.set('flimit', this.state.flimit);
-                args.set('force_cache', '1');
-                args.set('format', 'json');
+                args.ml = 0;
+                args.flimit = this.state.flimit;
+                args.force_cache = '1';
+                args.format = 'json';
                 if (reduceAns.conc_persistence_op_id) {
                     this.state.sampleSize = reduceAns.sampled_size;
-                    args.set('q', `~${reduceAns.conc_persistence_op_id}`);
+                    args.q = [`~${reduceAns.conc_persistence_op_id}`];
                 }
                 return this.layoutModel.ajax$<FreqData>(
                     HTTP.Method.GET,

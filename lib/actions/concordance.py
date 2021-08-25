@@ -119,10 +119,9 @@ class Actions(Querying):
 
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
-        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
-        conc_args.set('q', [q for q in result.get('Q')])
-        args = {}
-        result['Globals'] = conc_args.update(args)
+        conc_args = self._get_mapped_attrs(ConcArgsMapping)
+        conc_args['q'] = [q for q in result.get('Q')]
+        result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
 
     def _apply_linegroups(self, conc):
@@ -703,7 +702,7 @@ class Actions(Querying):
                 raise UserActionException(ex, code=422)
             else:
                 raise ex
-        ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
+        ans['conc_args'] = self._get_mapped_attrs(ConcArgsMapping)
         self._attach_query_overview(ans)
         return ans
 
@@ -1837,7 +1836,7 @@ class Actions(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
-        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
+        conc_args = self._get_mapped_attrs(ConcArgsMapping)
 
         poslist = []
         for tagset in corpus_info.tagsets:

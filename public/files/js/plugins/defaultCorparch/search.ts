@@ -22,7 +22,6 @@ import { of as rxOf, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { HTTP, List } from 'cnc-tskit';
 
-import { MultiDict } from '../../multidict';
 import * as Kontext from '../../types/kontext';
 import { IPluginApi } from '../../types/plugins/common';
 
@@ -114,12 +113,11 @@ export class SearchEngine {
             return rxOf(this.cache.get(q));
 
         } else {
-            const args = new MultiDict();
-            args.set('query', q);
             return this.pluginApi.ajax$<SearchResponse>(
                 HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
-                args
+                {query: q}
+
             ).pipe(
                 tap(
                     (data) => {

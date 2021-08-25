@@ -20,13 +20,12 @@
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
-import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { InputMode, BaseSubcorFormState, CreateSubcorpusArgs } from './common';
 import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
-import { List, HTTP } from 'cnc-tskit';
+import { List, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -224,7 +223,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(
                     '/subcorpus/create',
-                    MultiDict.fromDict({format: 'json'})
+                    [tuple('format', 'json')]
                 ),
                 args,
                 {

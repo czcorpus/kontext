@@ -22,7 +22,6 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
 import { CollServerArgs } from './common';
@@ -265,19 +264,23 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
         return !!/^([1-9]\d*)?$/.exec(s);
     }
 
-    getSubmitArgs(state:CollFormModelState):MultiDict<CollServerArgs> {
-        const args = this.pageModel.exportConcArgs() as MultiDict<CollServerArgs>;
-        args.set('cattr', state.cattr);
-        args.set('cfromw', state.cfromw.value);
-        args.set('ctow', state.ctow.value);
-        args.set('cminfreq', state.cminfreq.value);
-        args.set('cminbgr', state.cminbgr.value);
-        args.replace('cbgrfns', Dict.keys(state.cbgrfns));
-        args.set('csortfn', state.csortfn);
-        return args;
+    getSubmitArgs(state:CollFormModelState):CollServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            ... {
+                cattr: state.cattr,
+                cfromw: state.cfromw.value,
+                ctow: state.ctow.value,
+                cminfreq: state.cminfreq.value,
+                cminbgr: state.cminbgr.value,
+                cbgrfns: Dict.keys(state.cbgrfns),
+                csortfn: state.csortfn,
+                collpage: undefined
+            }
+        };
     }
 
     private submit(state:CollFormModelState):void {
-        window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs(state).items());
+        window.location.href = this.pageModel.createActionUrl('collx', this.getSubmitArgs(state));
     }
 }

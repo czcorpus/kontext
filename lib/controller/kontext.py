@@ -22,6 +22,7 @@ import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 from functools import partial
 from dataclasses import fields
+from collections import defaultdict
 
 import logging
 import inspect
@@ -48,7 +49,6 @@ from corplib.corpus import KCorpus
 from argmapping import ConcArgsMapping, Args
 from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
 from .plg import PluginCtx
-from templating import DummyGlobals
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
 import bgcalc
@@ -247,11 +247,12 @@ class Kontext(Controller):
 
         def merge_incoming_opts_to(opts):
             if opts is None:
-                opts = {}
+                return {}
             excluded_attrs = self._get_save_excluded_attributes()
             for attr, val in tosave:
                 if attr not in excluded_attrs:
                     opts[attr] = val
+            return opts
 
         # data must be loaded (again) because in-memory settings are
         # in general a subset of the ones stored in db (and we want
@@ -260,11 +261,11 @@ class Kontext(Controller):
             if self._user_has_persistent_settings():
                 if corpus_id:
                     options = settings_storage.load(self.session_get('user', 'id'), corpus_id)
-                    merge_incoming_opts_to(options)
+                    options = merge_incoming_opts_to(options)
                     settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
                 else:
                     options = settings_storage.load(self.session_get('user', 'id'))
-                    merge_incoming_opts_to(options)
+                    options = merge_incoming_opts_to(options)
                     settings_storage.save(self.session_get('user', 'id'), None, options)
             else:
                 options = {}
@@ -389,9 +390,9 @@ class Kontext(Controller):
     def _get_curr_conc_args(self):
         args = self._get_mapped_attrs(ConcArgsMapping)
         if self._q_code:
-            args.append(('q', f'~{self._q_code}'))
+            args['q'] = f'~{self._q_code}'
         else:
-            args += [('q', q) for q in getattr(self.args, 'q')]
+            args['q'] = [q for q in self.args.q]
         return args
 
     def _redirect_to_conc(self):
@@ -751,7 +752,7 @@ class Kontext(Controller):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
-    def _get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> List[Tuple[str, str]]:
+    def _get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> Dict[str, Any]:
         """
         Returns required attributes (= passed attr_names) and their respective values found
         in 'self.args'. Only attributes initiated via class attributes and the Parameter class
@@ -764,17 +765,19 @@ class Kontext(Controller):
             return hasattr(self.args, name) and value != ''
 
         def get_val(k):
-            return force_values[k] if k in force_values else getattr(self.args, k, None)
+            fld = Args.get_field(k)
+            to_js = fld.metadata.get('to_js')
+            return to_js(force_values[k]) if k in force_values else to_js(getattr(self.args, k, None))
 
-        ans = []
+        ans = {}
         for attr in attr_names:
             v_tmp = get_val(attr)
             if not is_valid(attr, v_tmp):
                 continue
             if type(v_tmp) in (str, float, int, bool) or v_tmp is None:
-                v_tmp = [v_tmp]
-            for v in v_tmp:
-                ans.append((attr, v))
+                ans[attr] = v_tmp
+            else:
+                ans[attr] = [v for v in v_tmp]
         return ans
 
     def _apply_theme(self, data):
@@ -846,7 +849,7 @@ class Kontext(Controller):
         """
         super().add_globals(request, result, methodname, action_metadata)
         result['corpus_ident'] = {}
-        result['Globals'] = DummyGlobals()
+        result['Globals'] = {}
         result['base_attr'] = Kontext.BASE_ATTR
         result['root_url'] = self.get_root_url()
         result['files_path'] = self._files_path
@@ -984,7 +987,7 @@ class Kontext(Controller):
         here: structs & structattrs where the former is the one used in URL and the latter
         stores user's persistent settings (but can be also passed via URL with some limitations).
         """
-        return ','.join(x for x in (getattr(self.args, 'structs'), ','.join(getattr(self.args, 'structattrs'))) if x)
+        return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
 
     @staticmethod
     def _parse_sorting_param(k):

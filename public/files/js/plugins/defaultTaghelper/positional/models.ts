@@ -422,10 +422,10 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
-                [
-                    ['corpname', this.state.data[sourceId].corpname],
-                    ['tagset', this.state.tagsetInfo.ident]
-                ]
+                {
+                    corpname: this.state.data[sourceId].corpname,
+                    tagset: this.state.tagsetInfo.ident
+                }
             ),
             {}
         );
@@ -436,11 +436,11 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
             HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
-                [
-                    ['corpname', this.state.data[sourceId].corpname],
-                    ['tagset', this.state.tagsetInfo.ident],
-                    ['pattern', this.state.data[sourceId].srchPattern]
-                ]
+                {
+                    corpname: this.state.data[sourceId].corpname,
+                    tagset: this.state.tagsetInfo.ident,
+                    pattern: this.state.data[sourceId].srchPattern
+                }
             ),
             {}
         );
