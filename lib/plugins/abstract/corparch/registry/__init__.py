@@ -222,11 +222,9 @@ class RegistryConf(object):
 
         if created_rt:
             # positional attributes
-            posattr_map = {}
             for pos in self.posattrs:
-                new_id = self._backend.save_corpus_posattr(
+                self._backend.save_corpus_posattr(
                     self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
-                posattr_map[pos.name] = new_id
 
             # now we fill in self references
             for pos in self.posattrs:
@@ -234,12 +232,12 @@ class RegistryConf(object):
                 mapto_id = None
                 for pitem in pos.attrs:
                     if pitem.name == 'FROMATTR':
-                        fromattr_id = posattr_map[pitem.value]
+                        fromattr_id = pitem.value
                     elif pitem.name == 'MAPTO':
-                        mapto_id = posattr_map[pitem.value]
+                        mapto_id = pitem.value
                 if fromattr_id is not None or mapto_id is not None:
                     self._backend.update_corpus_posattr_references(
-                        self._corpus_id, posattr_map[pos.name], fromattr_id, mapto_id)
+                        self._corpus_id, pos.name, fromattr_id, mapto_id)
 
             # structures >>>
             for struct in self.structs:
