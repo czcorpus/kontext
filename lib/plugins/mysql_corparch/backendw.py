@@ -286,7 +286,7 @@ class WriteBackend(DatabaseWriteBackend):
         new_posattrs = {}
         for new_posattr in registry_conf.posattrs:
             new_posattrs[new_posattr.name] = new_posattr
-        added_posattrs = set(new_posattrs.keys()) - curr_posattrs
+        added_posattrs = set(new_posattrs.keys())  # added or updated
 
         removed_structattrs = curr_posattrs - set(new_posattrs.keys())
         for rma in removed_structattrs:
@@ -307,7 +307,7 @@ class WriteBackend(DatabaseWriteBackend):
         for new_structattr in registry_conf.structs:
             for x in new_structattr.attributes:
                 new_structattrs[f'{new_structattr.name}.{x.name}'] = x
-        added_structattrs = set(new_structattrs.keys()) - curr_structattrs
+        added_structattrs = set(new_structattrs.keys())  # added or updated
         # we must wait with adding of structattrs for structures to be ready
         removed_structattrs = curr_structattrs - set(new_structattrs.keys())
 
@@ -323,7 +323,7 @@ class WriteBackend(DatabaseWriteBackend):
         new_structs = {}
         for struct in registry_conf.structs:
             new_structs[struct.name] = struct
-        for struct in set(new_structs.keys()) - curr_structs:
+        for struct in set(new_structs.keys()):
             self.save_corpus_structure(
                 install_json.ident, struct, [(a.name, a.value) for a in new_structs[struct].simple_items])
         removed_structures = curr_structs - set(new_structs.keys())
@@ -416,29 +416,38 @@ class WriteBackend(DatabaseWriteBackend):
     def save_corpus_posattr(self, corpus_id, name, position, values):
         """
         """
+
         cols = ['corpus_name', 'name', 'position'] + [POS_COLS_MAP[k]
                                                       for k, v in values if k in POS_COLS_MAP]
         vals = [corpus_id, name, position] + [v for k, v in values if k in POS_COLS_MAP]
-        sql = 'INSERT INTO corpus_posattr ({0}) VALUES ({1})'.format(
-            ', '.join(cols), ', '.join(['%s'] * len(vals)))
         cursor = self._db.cursor()
         try:
-            cursor.execute(sql, vals)
+            cursor.execute('SELECT * FROM corpus_posattr WHERE corpus_name = %s AND name = %s', (corpus_id, name))
+            row = cursor.fetchone()
+            if row is None:
+                sql = 'INSERT INTO corpus_posattr ({0}) VALUES ({1})'.format(
+                    ', '.join(cols), ', '.join(['%s'] * len(vals)))
+                cursor.execute(sql, vals)
+            else:
+                ucols = ', '.join(f'{v} = %s' for v in cols)
+                sql = 'UPDATE corpus_posattr SET {0} WHERE corpus_name = %s AND name = %s'.format(ucols)
+                print(ucols)
+                print(vals)
+                cursor.execute(sql, vals + [corpus_id, name])
         except mysql.connector.errors.Error as ex:
             logging.getLogger(__name__).error(
                 'Failed to save registry values: {0}.'.format(list(zip(cols, vals))))
             raise ex
-        cursor.execute('SELECT last_insert_id() AS last_id')
-        return cursor.fetchone()['last_id']
 
     def update_corpus_posattr_references(self, corpus_id, posattr_id, fromattr_id, mapto_id):
         """
         both fromattr_id and mapto_id can be None
         """
         cursor = self._db.cursor()
-        cursor.execute('UPDATE corpus_posattr SET fromattr = %s, mapto = %s '
-                       'WHERE corpus_name = %s AND name = %s',
-                       (fromattr_id, mapto_id, corpus_id, posattr_id))
+        cursor.execute(
+            'UPDATE corpus_posattr SET fromattr = %s, mapto = %s '
+            'WHERE corpus_name = %s AND name = %s',
+            (fromattr_id, mapto_id, corpus_id, posattr_id))
 
     def save_corpus_alignments(self, corpus_id, aligned_ids):
         cursor = self._db.cursor()
@@ -463,7 +472,7 @@ class WriteBackend(DatabaseWriteBackend):
         row = cursor.fetchone()
         if row and row['cnt'] == 1:
             if len(base_vals) > 0:
-                uexpr = ', '.join('{0} = %s'.format(c) for c in base_cols)
+                uexpr = ', '.join(f'{c} = %s' for c in base_cols)
                 sql = 'UPDATE corpus_structure SET {0} WHERE corpus_name = %s AND name = %s'.format(
                     uexpr)
                 vals = base_vals + [corpus_id, name]
