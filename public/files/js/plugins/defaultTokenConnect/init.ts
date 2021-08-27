@@ -20,7 +20,6 @@
 
 import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, Views as DefaultTokenConnectRenderers } from './views';
-import { MultiDict } from '../../multidict';
 import { KnownRenderers } from '../defaultKwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -49,7 +48,12 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
 
     protected providers:Array<{ident:string, isKwicView:boolean}>;
 
-    constructor(pluginApi:IPluginApi, views:DefaultTokenConnectRenderers, alignedCorpora:Array<string>, conf:ServerExportedConf) {
+    constructor(
+        pluginApi:IPluginApi,
+        views:DefaultTokenConnectRenderers,
+        alignedCorpora:Array<string>,
+        conf:ServerExportedConf
+    ) {
         this.pluginApi = pluginApi;
         this.views = views;
         this.alignedCorpora = alignedCorpora;
@@ -70,21 +74,17 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
         context?:[number, number]
     ):Observable<PluginInterfaces.TokenConnect.TCData> {
 
-        const args = new MultiDict();
-        args.set('corpname', corpusId);
-        args.set('token_id', tokenId);
-        args.set('num_tokens', numTokens);
-        if (context && context[0]) {
-            args.set('detail_left_ctx', context[0]);
-        };
-        if (context && context[1]) {
-            args.set('detail_right_ctx', context[1]);
-        };
-        args.replace('align', this.alignedCorpora);
         return this.pluginApi.ajax$<PluginInterfaces.TokenConnect.Response>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('fetch_token_detail'),
-            args
+            {
+                corpname: corpusId,
+                token_id: tokenId,
+                num_tokens: numTokens,
+                detail_left_ctx: context && context[0] ? context[0] : undefined,
+                detail_right_ctx: context && context[1] ? context[1] : undefined,
+                align: this.alignedCorpora
+            }
 
         ).pipe(
             map(

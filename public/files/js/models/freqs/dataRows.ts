@@ -21,7 +21,6 @@
 import { PageModel } from '../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from './save';
-import { MultiDict } from '../../multidict';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { FreqServerArgs } from './common';
@@ -64,7 +63,7 @@ export interface ResultBlock {
 export interface FreqDataRowsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
-    freqCrit:Array<[string, string]>;
+    freqCrit:Array<string>;
     formProps:FreqFormInputs;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
@@ -76,7 +75,7 @@ export interface FreqDataRowsModelState {
     data:Array<ResultBlock>;
     currentPage:string|null; // null means multi-block output which cannot be paginated
     sortColumn:string
-    freqCrit:Array<[string, string]>;
+    freqCrit:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
     isBusy:boolean;
@@ -112,12 +111,13 @@ export function importData(
     }), data);
 }
 
-function createQuickFilterUrl(pageModel:PageModel, args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>):string {
-    if (args && args.length > 0) {
-        const submitArgs = pageModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
-        submitArgs.remove('q2');
-        args.forEach(([key, value]) => submitArgs.add(key, value));
-        return pageModel.createActionUrl('quick_filter', submitArgs.items());
+function createQuickFilterUrl(pageModel:PageModel, args:ConcQuickFilterServerArgs):string {
+    if (args) {
+        const submitArgs = {
+            ...pageModel.getConcArgs(),
+            ...args
+        };
+        return pageModel.createActionUrl('quick_filter', submitArgs);
 
     } else {
         return null;
@@ -136,7 +136,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             dispatcher,
             {
                 data: initialData,
-                freqCrit: freqCrit,
+                freqCrit,
                 currentPage: initialData.length > 1 ? null : `${currentPage}`,
                 sortColumn: formProps.freq_sort,
                 ftt_include_empty: formProps.ftt_include_empty,
@@ -282,7 +282,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultApplyQuickFilter.name,
             null,
             (state, action, dispatch) => {
-                this.pageModel.setLocationPost(action.payload.url, [], action.payload.blankWindow);
+                this.pageModel.setLocationPost(action.payload.url, {}, action.payload.blankWindow);
             }
         );
     }
@@ -324,8 +324,10 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     private pushStateToHistory(state:FreqDataRowsModelState):void {
-        const args = this.getSubmitArgs(state);
-        args.remove('format');
+        const args = {
+            ...this.getSubmitArgs(state),
+            format: undefined
+        };
         this.pageModel.getHistory().pushState(
             'freqs',
             args,
@@ -353,19 +355,18 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return false;
     }
 
-    getSubmitArgs(state:FreqDataRowsModelState):MultiDict {
-        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
-        args.remove('fcrit');
-        state.freqCrit.forEach((item) => {
-            args.add(item[0], item[1]);
-        });
-        args.set('flimit', parseInt(state.flimit));
-        args.set('freq_sort', state.sortColumn);
-        // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
-        args.set('fpage', state.currentPage !== null ? state.currentPage : '1');
-        args.set('ftt_include_empty', state.ftt_include_empty ? '1' : '0');
-        args.set('format', 'json');
-        return args;
+    getSubmitArgs(state:FreqDataRowsModelState):FreqServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            fcrit: state.freqCrit,
+            flimit: parseInt(state.flimit),
+            freq_sort: state.sortColumn,
+            // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
+            fpage: state.currentPage !== null ? state.currentPage : '1',
+            ftt_include_empty: state.ftt_include_empty,
+            freqlevel: 1,
+            format: 'json'
+        };
     }
 
     loadPage(state:FreqDataRowsModelState):Observable<response.FreqResultResponse> {

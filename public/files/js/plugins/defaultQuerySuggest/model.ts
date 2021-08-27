@@ -23,7 +23,6 @@ import * as PluginInterfaces from '../../types/plugins';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
-import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
 import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions } from '../../models/query/actions';
@@ -33,6 +32,21 @@ import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
 import { IPluginApi } from '../../types/plugins/common';
+
+
+interface HTTPRequestArgs {
+    ui_lang:string;
+    corpname:string;
+    subcorpus:string;
+    align:Array<string>;
+    value:string;
+    value_type:PluginInterfaces.QuerySuggest.SuggestionValueType;
+    value_subformat:PluginInterfaces.QuerySuggest.QueryValueSubformat,
+    query_type:string;
+    p_attr:string;
+    struct:string;
+    s_attr:string;
+}
 
 
 export interface HTTPResponse extends Kontext.AjaxResponse {
@@ -382,32 +396,19 @@ export class Model extends StatelessModel<ModelState> {
         if (cached) {
             return rxOf(cached);
         }
-
-        const args = new MultiDict<{
-            ui_lang:string;
-            corpname:string;
-            subcorpus:string;
-            align:string;
-            value:string;
-            value_type:PluginInterfaces.QuerySuggest.SuggestionValueType;
-            value_subformat:PluginInterfaces.QuerySuggest.QueryValueSubformat,
-            query_type:string;
-            p_attr:string;
-            struct:string;
-            s_attr:string;
-        }>();
-
-        args.set('ui_lang', state.uiLang);
-        args.set('corpname', List.head(suggArgs.corpora));
-        args.set('subcorpus', suggArgs.subcorpus);
-        args.replace('align', List.tail(suggArgs.corpora));
-        args.set('value', word);
-        args.set('value_type', suggArgs.valueType);
-        args.set('value_subformat', suggArgs.valueSubformat);
-        args.set('query_type', suggArgs.queryType);
-        args.set('p_attr', suggArgs.posAttr);
-        args.set('struct', suggArgs.struct);
-        args.set('s_attr', suggArgs.structAttr);
+        const args:HTTPRequestArgs = {
+            ui_lang: state.uiLang,
+            corpname: List.head(suggArgs.corpora),
+            subcorpus: suggArgs.subcorpus,
+            align: List.tail(suggArgs.corpora),
+            value: word,
+            value_type: suggArgs.valueType,
+            value_subformat: suggArgs.valueSubformat,
+            query_type: suggArgs.queryType,
+            p_attr: suggArgs.posAttr,
+            struct: suggArgs.struct,
+            s_attr: suggArgs.structAttr
+        };
 
         return this.pluginApi.ajax$<HTTPResponse>(
             HTTP.Method.GET,

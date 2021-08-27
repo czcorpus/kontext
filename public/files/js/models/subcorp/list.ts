@@ -24,7 +24,6 @@ import { tap, concatMap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { SubcorpusInfoResponse } from '../common/layout';
@@ -350,15 +349,15 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     private updateSubcorpusDescSubmit(rowIdx:number):Observable<any> {
         const data = this.state.lines[rowIdx];
-        const args = new MultiDict();
-        args.set('corpname', data.corpname);
-        args.set('usesubcorp', data.usesubcorp);
-        args.set('description', data.description);
 
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
-            args
+            {
+                corpname: data.corpname,
+                usesubcorp: data.usesubcorp,
+                description: data.description
+            }
         );
     }
 
@@ -397,14 +396,14 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             return throwError(new Error('Cannot publish deleted subcorpus'));
         }
 
-        const args = new MultiDict();
-        args.set('corpname', data.corpname);
-        args.set('subcname', data.usesubcorp);
-        args.set('description', description);
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
-            args
+            {
+                corpname: data.corpname,
+                subcname: data.usesubcorp,
+                description: description
+            }
 
         ).pipe(
             tap((_) => {
@@ -432,16 +431,15 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     ):Observable<any> {
 
         const srcRow = this.state.lines[idx];
-        const params = new MultiDict();
-        params.set('corpname', srcRow.corpname);
-        params.set('subcname', subcname !== undefined ? subcname : srcRow.usesubcorp);
-        params.set('publish', '0'); // TODO do we want to user-editable?
-        params.set('cql', cql !== undefined ? cql : srcRow.cql);
-
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
-            params
+            {
+                corpname: srcRow.corpname,
+                subcname: subcname !== undefined ? subcname : srcRow.usesubcorp,
+                publish: false,
+                cql: cql !== undefined ? cql : srcRow.cql
+            }
 
         ).pipe(
             tap((data) => {
@@ -529,13 +527,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         if (!item) {
             return throwError(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
         }
-        const args = new MultiDict();
-        args.set('corpname', item.corpname);
-        args.set('usesubcorp', item.usesubcorp);
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
-            args,
+            {
+                corpname: item.corpname,
+                usesubcorp: item.usesubcorp
+            },
 
         ).pipe(
             concatMap(data => this.reloadItems())

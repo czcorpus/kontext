@@ -22,7 +22,6 @@ import { IFullActionControl, StatelessModel } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
-import { MultiDict } from '../../../multidict';
 import { CTFreqServerArgs } from '../common';
 import { Actions } from '../actions';
 import { FreqFilterQuantities, AlignTypes, CTFormProperties, Dimensions, isStructAttr, roundFloat, validatePercentile,
@@ -225,20 +224,21 @@ export class Freq2DFormModel extends StatelessModel<Freq2DFormModelState> {
         return isStructAttr(attr) ? '0' : this.getAttrCtx(state, dim);
     }
 
-    private getSubmitArgs(state:Freq2DFormModelState):MultiDict<CTFreqServerArgs> {
-        const args = this.pageModel.exportConcArgs() as MultiDict<CTFreqServerArgs>;
-        args.set('ctfcrit1', this.generateCrit(state, 1));
-        args.set('ctfcrit2', this.generateCrit(state, 2));
-        args.set('ctattr1', state.attr1);
-        args.set('ctattr2', state.attr2);
-        args.set('ctminfreq', state.minFreq);
-        args.set('ctminfreq_type', state.minFreqType);
-        return args;
+    private getSubmitArgs(state:Freq2DFormModelState):CTFreqServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            ctfcrit1: this.generateCrit(state, 1),
+            ctfcrit2: this.generateCrit(state, 2),
+            ctattr1: state.attr1,
+            ctattr2: state.attr2,
+            ctminfreq: state.minFreq,
+            ctminfreq_type: state.minFreqType
+        };
     }
 
     submitForm(state:Freq2DFormModelState):void {
         const args = this.getSubmitArgs(state);
-        window.location.href = this.pageModel.createActionUrl('freqct', args.items());
+        window.location.href = this.pageModel.createActionUrl('freqct', args);
     }
 
     private getMinFreqHint(state:Freq2DFormModelState):string {

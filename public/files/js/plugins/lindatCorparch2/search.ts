@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { MultiDict } from '../../multidict';
 import * as Kontext from '../../types/kontext';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
@@ -116,12 +115,10 @@ export class SearchEngine {
             return rxOf(this.cache.get(q));
 
         } else {
-            const args = new MultiDict();
-            args.set('query', q);
             return this.pluginApi.ajax$<SearchResponse>(
                 HTTP.Method.GET,
                 this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),
-                args
+                {query: q}
 
             ).pipe(
                 tap((data) => {

@@ -497,8 +497,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                         }
                     )
 
-                ).subscribe(
-                    ([data, messages]) => {
+                ).subscribe({
+                    next: ([data, messages]) => {
                         if (data === null) {
                             if (!List.empty(messages)) {
                                 List.forEach(
@@ -528,13 +528,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             );
                         }
                     },
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                         this.changeState(state => {
                             state.isBusy = false;
                         });
                     }
-                )
+                });
             }
         );
 
@@ -875,8 +875,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         noQueryHistory:boolean
     ):ConcQueryArgs {
 
-        const exportCsVal = (v:string) => typeof v === 'string' ? v.split(',') : [];
-
         const primaryCorpus = List.head(this.state.corpora);
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
@@ -885,12 +883,12 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             usesubcorp: this.state.currentSubcorp || null,
             viewmode: 'kwic',
             pagesize: currArgs.pagesize,
-            attrs: exportCsVal(currArgs.attrs),
+            attrs: currArgs.attrs,
             attr_vmode: currArgs.attr_vmode,
             base_viewattr: currArgs.base_viewattr,
-            ctxattrs: exportCsVal(currArgs.ctxattrs),
-            structs: exportCsVal(currArgs.structs),
-            refs: exportCsVal(currArgs.refs),
+            ctxattrs: currArgs.ctxattrs,
+            structs: currArgs.structs,
+            refs: currArgs.refs,
             fromp: currArgs.fromp || 0,
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
@@ -916,15 +914,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     createViewUrl(concId:string, args:ConcServerArgs, retJson:boolean, async:boolean):string {
         return this.pageModel.createActionUrl(
-            'view', [
-                ['q', '~' + concId],
-                ['asnc', async ? '1' : '0'],
-                ['format', retJson ? 'json' : undefined],
-                ...pipe(
-                    args,
-                    Dict.toEntries()
-                )
-            ]
+            'view',
+            {
+                q: ['~' + concId],
+                asnc: async,
+                format: retJson ? 'json' : undefined,
+                ...args
+            }
         );
     }
 
@@ -939,7 +935,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'query_submit',
-                [tuple('format', 'json')]
+                {format: 'json'}
             ),
             this.createSubmitArgs(contextFormArgs, async, noQueryHistory),
             {

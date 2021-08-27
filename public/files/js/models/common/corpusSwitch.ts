@@ -27,7 +27,6 @@ import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
-import { MultiDict } from '../../multidict';
 import { IUnregistrable } from './common';
 import { AjaxConcResponse } from '../concordance/common';
 
@@ -183,9 +182,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                 ]).pipe(
                     tap(
                         ([,data]) => {
-                            const args = new MultiDict();
-                            args.set('corpname', data.corpusIdent.id);
-                            args.set('usesubcorp', data.corpusIdent.usesubcorp);
+                            const args = {corpname: data.corpusIdent.id, usesubcorp: data.corpusIdent.usesubcorp};
                             this.history.pushState(this.conf.getConf<string>('currentAction'), args);
 
                             this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);

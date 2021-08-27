@@ -10,10 +10,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Union, List, Optional, Dict, Any
+from typing import Union, List, Optional, Dict, Any, Callable
 from enum import Enum
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, Field
 
 from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
 
@@ -40,7 +40,7 @@ ConcArgsMapping = (
     'attr_vmode',
     'base_viewattr',  # attribute used in a text flow
     'structs',
-    'refs',
+    'refs'
 )
 
 
@@ -59,8 +59,12 @@ WordlistArgsMapping = (
 )
 
 
-def mk_metdata(persistent: Persistence = Persistence.NON_PERSISTENT):
-    return {'persistent': persistent}
+def comma_separated_to_js(v: str) -> List[str]:
+    return v.split(',') if v else []
+
+
+def mk_metdata(persistent: Persistence = Persistence.NON_PERSISTENT, to_js: Optional[Callable[[Any], Any]] = None):
+    return {'persistent': persistent, 'to_js': to_js if to_js else lambda v: v}
 
 
 @dataclass
@@ -68,6 +72,11 @@ class Args(object):
     """
 
     """
+
+    @staticmethod
+    def get_field(name: str) -> Field:
+        return Args.__dataclass_fields__[name]
+
     # specifies response output format (used in case default one is not applicable)
     format: str = field(default='', metadata=mk_metdata())
 
@@ -142,10 +151,10 @@ class Args(object):
     subcpath: List[str] = field(default_factory=list, metadata=mk_metdata())
     save: int = field(default=1, metadata=mk_metdata())
     rlines: str = field(default='250', metadata=mk_metdata())
-    attrs: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT))
+    attrs: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT, comma_separated_to_js))
     base_viewattr: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT))
     attr_vmode: str = field(default='visible-kwic', metadata=mk_metdata(Persistence.PERSISTENT))
-    structs: str = field(default='', metadata=mk_metdata(Persistence.PERSISTENT))
+    structs: str = field(default='', metadata=mk_metdata(Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
     pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
     wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
@@ -175,7 +184,7 @@ class Args(object):
     used only in case of parallel corpora - specifies primary corp.
     """
     # None means "not initialized" while '' means "user wants no refs"
-    refs: Optional[str] = field(default=None, metadata=mk_metdata())
+    refs: Optional[str] = field(default=None, metadata=mk_metdata(to_js=comma_separated_to_js))
     hitlen: int = field(default=1, metadata=mk_metdata())
 
     shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))

@@ -261,7 +261,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             },
             (_, action, __) => {
                 if (action.payload.within) {
-                    this.pageModel.replaceConcArg('maincorp', [action.payload.maincorp]);
+                    this.pageModel.updateConcArgs({maincorp: action.payload.maincorp});
                 }
             }
         );

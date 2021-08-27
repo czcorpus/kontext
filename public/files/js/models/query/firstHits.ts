@@ -24,12 +24,11 @@ import { tap, map } from 'rxjs/operators';
 
 import { PageModel } from '../../app/page';
 import { FirstHitsServerArgs } from './common';
-import { MultiDict } from '../../multidict';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { AjaxConcResponse } from '../concordance/common';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import { FirstHitsFormArgs } from './formArgs';
 
 
@@ -75,7 +74,7 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
         this.addActionHandler<typeof Actions.FilterFirstHitsSubmit>(
             Actions.FilterFirstHitsSubmit.name,
             action => {
-                const concId = this.layoutModel.getConcArgs().q.substr(1);
+                const concId = List.head(this.layoutModel.getConcArgs().q).substr(1);
                 this.submitForm(action.payload.opKey, concId)
                 .subscribe(
                     data => {
@@ -99,11 +98,15 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
     }
 
     getSubmitUrl(opKey:string, concId:string):string {
-        const args = this.layoutModel.exportConcArgs() as MultiDict<FirstHitsServerArgs>;
-        args.set('q', '~' + concId);
-        args.set('format', 'json');
-        args.set('fh_struct', this.state.docStructValues[opKey]);
-        return this.layoutModel.createActionUrl('filter_firsthits', args);
+        return this.layoutModel.createActionUrl(
+            'filter_firsthits',
+            {
+                ...this.layoutModel.getConcArgs(),
+                q: ['~' + concId],
+                format: 'json',
+                fh_struct: this.state.docStructValues[opKey]
+            }
+        );
     }
 
     submitForm(opKey:string, concId:string):Observable<AjaxConcResponse> {

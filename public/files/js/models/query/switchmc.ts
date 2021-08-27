@@ -25,7 +25,6 @@ import * as Kontext from '../../types/kontext';
 import { Dict } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { SwitchMainCorpServerArgs } from './common';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
 import { Actions } from './actions';
@@ -100,10 +99,14 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
     }
 
     getSubmitUrl(opId:string, concId:string):string {
-        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
-        args.set('q', '~' + concId);
-        args.set('maincorp', this.state.maincorpValues[opId]);
-        return this.layoutModel.createActionUrl('switch_main_corp', args);
+        return this.layoutModel.createActionUrl(
+            'switch_main_corp',
+            {
+                ...this.layoutModel.getConcArgs(),
+                q: ['~' + concId],
+                maincorp: this.state.maincorpValues[opId]
+            }
+        );
     }
 
     syncFrom(

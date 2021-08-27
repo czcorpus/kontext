@@ -20,7 +20,6 @@ import * as Kontext from '../types/kontext';
 import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
-import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
@@ -34,7 +33,7 @@ import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, Dict } from 'cnc-tskit';
+import { List, Dict, pipe, URL } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
@@ -304,9 +303,12 @@ export class CollPage {
         });
         const state = this.collResultModel.getState(); // no antipattern here
         const formState = this.collFormModel.getState();
-        const args = this.collResultModel.getSubmitArgs(
-                state, this.collFormModel.getSubmitArgs(formState));
-        args.remove('format');
+        const args = {
+            ...this.collResultModel.getSubmitArgs(
+                state, this.collFormModel.getSubmitArgs(formState)
+            ),
+            format: undefined
+        };
         this.layoutModel.getHistory().replaceState(
             'collx',
             args,
@@ -344,30 +346,33 @@ export class CollPage {
                 (action) => {
                     switch (action.name) {
                         case MainMenuActions.ShowFilter.name:
-                            const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
                                     'view',
-                                    this.layoutModel.exportConcArgs().items()
-                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                                    this.layoutModel.getConcArgs()
+                                ) + '#filter/' + pipe(
+                                    action.payload,
+                                    URL.valueToPairs(),
+                                    List.map(([k, v]) => `${k}=${v}`)
+                                ).join('&')
                             );
                         break;
                         case MainMenuActions.ShowSort.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#sort');
                         break;
                         case MainMenuActions.ShowSample.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#sample');
                         break;
                         case MainMenuActions.ApplyShuffle.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#shuffle');
                         break;
                 }

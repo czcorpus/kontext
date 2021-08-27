@@ -243,7 +243,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         const keywords = props.row.keywords.map((k, i) => {
             return <defaultComponents.CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = he.createActionLink('query', [['corpname', props.row.id]]);
+        const link = he.createActionLink('query', {corpname: props.row.id});
         const size = props.row.size_info ? props.row.size_info : '-';
 
         let userAction = null;

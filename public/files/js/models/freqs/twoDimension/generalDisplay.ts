@@ -22,7 +22,6 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Maths, Dict, tuple, pipe, List } from 'cnc-tskit';
 
 import { PageModel } from '../../../app/page';
-import { MultiDict } from '../../../multidict';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { FreqFilterQuantities, validateMinAbsFreqAttr, isStructAttr } from './common';
 
@@ -164,33 +163,33 @@ export abstract class GeneralFreq2DModel<T extends GeneralFreq2DModelState> exte
      * @param v2
      */
     generatePFilter(state:GeneralFreq2DModelState, v1:string, v2:string):string {
-        const args = this.pageModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
+        const args = {...this.pageModel.getConcArgs(), q2: undefined};
 
         if (isStructAttr(state.attr1) && isStructAttr(state.attr2)) {
             const [s1, a1] = state.attr1.split('.');
             const [s2, a2] = state.attr2.split('.');
-            args.set('q2', `p0 0 1 [] within <${s1} ${a1}="${v1}" /> within <${s2} ${a2}="${v2}" />`);
+            args.q2 = `p0 0 1 [] within <${s1} ${a1}="${v1}" /> within <${s2} ${a2}="${v2}" />`;
 
         } else if (!isStructAttr(state.attr1) && !isStructAttr(state.attr2)) {
             const icase1 = ''; // TODO - optionally (?i)
             const begin1 = state.ctFcrit1;
             const end1 = state.ctFcrit1;
             const icase2 = ''; // TODO - optionally (?i)
-            args.set('q2', `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}" & ${state.attr2}="${icase2}${v2}"]`);
+            args.q2 =`p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}" & ${state.attr2}="${icase2}${v2}"]`;
 
         } else if (isStructAttr(state.attr1) && !isStructAttr(state.attr2)) {
             const [s1, a1] = state.attr1.split('.');
             const icase2 = ''; // TODO - optionally (?i)
             const begin2 = state.ctFcrit2;
             const end2 = state.ctFcrit2;
-            args.set('q2', `p${begin2} ${end2} 0 [${state.attr2}="${icase2}${v2}"] within <${s1} ${a1}="${v1}" />`);
+            args.q2 = `p${begin2} ${end2} 0 [${state.attr2}="${icase2}${v2}"] within <${s1} ${a1}="${v1}" />`;
 
         } else {
             const icase1 = ''; // TODO - optionally (?i)
             const begin1 = state.ctFcrit1;
             const end1 = state.ctFcrit1;
             const [s2, a2] = state.attr2.split('.');
-            args.set('q2', `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`);
+            args.q2 = `p${begin1} ${end1} 0 [${state.attr1}="${icase1}${v1}"] within <${s2} ${a2}="${v2}" />`;
         }
         return this.pageModel.createActionUrl('quick_filter', args);
     }

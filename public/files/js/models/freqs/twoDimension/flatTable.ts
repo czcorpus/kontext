@@ -23,7 +23,6 @@ import { Maths, List, pipe, tuple, Dict } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page';
 import { GeneralFreq2DModel, CTFreqCell, GeneralFreq2DModelState, importAvailAlphaLevels } from './generalDisplay';
-import { MultiDict } from '../../../multidict';
 import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities, CTFreqResultData } from './common';
 import { Actions } from '../actions';
 
@@ -303,9 +302,10 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
     }
 
     submitDataConversion(format:string):void {
-        const args = new MultiDict();
-        args.set('saveformat', format);
-        args.set('savemode', 'flat');
+        const args = {
+            saveformat: format,
+            savemode: 'flat'
+        };
         this.pageModel.bgDownload({
             filename: `2d-frequency.${format}`,
             type: DownloadType.FREQ2D,

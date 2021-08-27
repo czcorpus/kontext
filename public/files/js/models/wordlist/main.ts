@@ -21,13 +21,11 @@
 import { Observable, throwError } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
-import { List, HTTP, tuple, pipe, Dict } from 'cnc-tskit';
+import { List, HTTP, tuple, Dict } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
-import * as ViewOptions from '../../types/viewOptions';
 import { validateGzNumber } from '../base';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
 import { ResultItem, IndexedResultItem, HeadingItem, ResultData, WordlistSubmitArgs } from './common';
 import { ConcQueryArgs } from '../query/common';
@@ -41,7 +39,7 @@ export interface DataAjaxResponse extends Kontext.AjaxResponse {
     query_id:string;
     wlattr_label:string;
     wlsort:string;
-    reversed:boolean;
+    reverse:boolean;
     wlpagesize:number;
     wlpage:number;
     quick_save_row_limit:number;
@@ -64,7 +62,7 @@ export interface WordlistResultModelState {
 
     wlsort:string;
 
-    reversed:boolean;
+    reverse:boolean;
 
     data:Array<IndexedResultItem>;
 
@@ -127,7 +125,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 corpname: data.corpname,
                 usesubcorp: data.usesubcorp,
                 wlsort: data.wlsort,
-                reversed: data.reversed,
+                reverse: data.reverse,
                 currPage: data.page,
                 currPageInput: data.page + '',
                 pageSize: data.pageSize,
@@ -162,8 +160,10 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                             return this.layoutModel.ajax$<ConcQueryResponse>(
                                 HTTP.Method.POST,
                                 this.layoutModel.createActionUrl(
-                                    'query_submit', [tuple('format', 'json')]),
-                                    this.createConcSubmitArgs(state, formArgs, action.payload.word),
+                                    'query_submit',
+                                    {format: 'json'}
+                                ),
+                                this.createConcSubmitArgs(state, formArgs, action.payload.word),
                                 {
                                     contentType: 'application/json'
                                 }
@@ -173,13 +173,11 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 ).subscribe(
                     (data:ConcQueryResponse) => {
                         window.location.href = this.layoutModel.createActionUrl(
-                            'view', [
-                                ['q', '~' + data.conc_persistence_op_id],
-                                ...pipe(
-                                    data.conc_args,
-                                    Dict.toEntries()
-                                )
-                            ]
+                            'view',
+                            {
+                                q: '~' + data.conc_persistence_op_id,
+                                ...data.conc_args
+                            }
                         );
 
                     },
@@ -196,6 +194,8 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 if (!action.error) {
                     state.currPage = action.payload.page;
                     state.currPageInput = action.payload.page + '';
+                    state.wlsort = action.payload.sortColumn.wlsort;
+                    state.reverse = action.payload.sortColumn.reverse;
                     state.data = action.payload.data;
                 }
                 state.isBusy = false;
@@ -206,7 +206,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             Actions.WordlistResultReload.name,
             null,
             (state, action, dispatch) => {
-                this.processPageLoad(state, state.currPage, dispatch);
+                this.processPageLoad(
+                    state,
+                    state.currPage,
+                    {wlsort: state.wlsort, reverse: state.reverse},
+                    dispatch
+                );
             }
         );
 
@@ -216,7 +221,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.processPageLoad(state, state.currPage + 1, dispatch);
+                this.processPageLoad(
+                    state,
+                    state.currPage + 1,
+                    {wlsort: state.wlsort, reverse: state.reverse},
+                    dispatch
+                );
             }
         );
 
@@ -226,7 +236,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.processPageLoad(state, state.currPage - 1, dispatch);
+                this.processPageLoad(
+                    state,
+                    state.currPage - 1,
+                    {wlsort: state.wlsort, reverse: state.reverse},
+                    dispatch
+                );
             }
         );
 
@@ -252,7 +267,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             },
             (state, action, dispatch) => {
                 // action.payload.page is already validated here
-                this.processPageLoad(state, parseInt(action.payload.page), dispatch);
+                this.processPageLoad(
+                    state,
+                    parseInt(action.payload.page),
+                    {wlsort: state.wlsort, reverse: state.reverse},
+                    dispatch
+                );
             }
         );
 
@@ -267,6 +287,7 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 this.processPageLoad(
                     state,
                     state.currPage,
+                    {wlsort: state.wlsort, reverse: state.reverse},
                     dispatch
                 )
             }
@@ -278,7 +299,12 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.processPageLoad(state, 1, dispatch);
+                this.processPageLoad(
+                    state,
+                    1,
+                    {wlsort: state.wlsort, reverse: state.reverse},
+                    dispatch
+                );
             }
         );
 
@@ -295,22 +321,34 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         this.addActionHandler<typeof Actions.WordlistHistoryPopState>(
             Actions.WordlistHistoryPopState.name,
             (state, action) => {
-                state.currPageInput = action.payload.currPageInput;
-                state.currPage = parseInt(state.currPageInput);
+                state.currPageInput = '' + action.payload.wlpage;
+                state.currPage = action.payload.wlpage;
+                state.wlsort = action.payload.wlsort;
+                state.reverse = action.payload.reverse;
             },
             (state, action, dispatch) => {
-                this.processPageLoad(state, state.currPage, dispatch);
+                this.processPageLoad(
+                    state,
+                    action.payload.wlpage,
+                    {wlsort: action.payload.wlsort, reverse: action.payload.reverse},
+                    dispatch,
+                    true
+                );
             }
         );
 
         this.addActionHandler<typeof Actions.WordlistResultSetSortColumn>(
             Actions.WordlistResultSetSortColumn.name,
             (state, action) => {
-                state.wlsort = action.payload.sortKey;
-                state.reversed = action.payload.reverse;
+                state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.processPageLoad(state, state.currPage, dispatch);
+                this.processPageLoad(
+                    state,
+                    state.currPage,
+                    {wlsort: action.payload.sortKey, reverse: action.payload.reverse},
+                    dispatch
+                );
             }
         );
     }
@@ -319,54 +357,68 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
     }
 
-    private exportReloadArgs(state:WordlistResultModelState):Array<[string, string|number]> {
-        return [
-            tuple('q', `~${state.queryId}`),
-            tuple('wlpage', state.currPage.toString()),
-            tuple('wlsort', state.wlsort)
-        ];
+    private exportReloadArgs(state:WordlistResultModelState):{q:string; wlpage: string; wlsort:string} {
+        return {
+            q: `~${state.queryId}`,
+            wlpage: state.currPage.toString(),
+            wlsort: state.wlsort
+        };
     }
 
     private processPageLoad(
         state:WordlistResultModelState,
         newPage:number,
+        sortColumn:{wlsort:string; reverse:boolean},
         dispatch:SEDispatcher,
         skipHistory=false
     ):void {
-        this.pageLoad(state, newPage, skipHistory).subscribe(
-            ([data, total]) => {
+        this.pageLoad(state, newPage, sortColumn, skipHistory).subscribe({
+            next: ([data, total]) => {
                 dispatch<typeof Actions.WordlistPageLoadDone>({
                     name: Actions.WordlistPageLoadDone.name,
                     payload: {
                         page: newPage,
+                        sortColumn,
                         data
                     }
                 });
             },
-            (err) => {
-                this.layoutModel.showMessage('error', err);
+            error: error => {
+                this.layoutModel.showMessage('error', error);
                 dispatch<typeof Actions.WordlistPageLoadDone>({
                     name: Actions.WordlistPageLoadDone.name,
-                    error: err
+                    error
                 });
             }
-        );
+        });
     }
 
     private pageLoad(
         state:WordlistResultModelState,
         newPage:number,
+        sortColumn:{wlsort:string; reverse:boolean},
         skipHistory=false
     ):Observable<[Array<IndexedResultItem>, number]> {
         return newPage < 1 || newPage > state.numPages ?
             throwError(new Error(this.layoutModel.translate('wordlist__page_not_found_err'))) :
-            this.loadData(state, newPage).pipe(
+            this.loadData(state, newPage, sortColumn).pipe(
                 tap(
                     () => {
                         if (!skipHistory) {
                             this.layoutModel.getHistory().pushState(
                                 'wordlist/result',
-                                new MultiDict(this.exportReloadArgs(state))
+                                {
+                                    q: `~${state.queryId}`,
+                                    wlpage: newPage,
+                                    wlsort: sortColumn.wlsort,
+                                    reverse: sortColumn.reverse
+                                },
+                                {
+                                    q: `~${state.queryId}`,
+                                    wlpage: newPage,
+                                    wlsort: sortColumn.wlsort,
+                                    reverse: sortColumn.reverse
+                                }
                             );
                         }
                     }
@@ -374,26 +426,26 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
             );
     }
 
-
     /**
      *
      * @return Observable of tuple (data, total num of items)
      */
     private loadData(
         state:WordlistResultModelState,
-        newPage:number
+        newPage:number,
+        sortColumn:{wlsort:string; reverse:boolean}
     ):Observable<[Array<IndexedResultItem>, number]> {
         return this.layoutModel.ajax$<DataAjaxResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(
                 'wordlist/result',
-                MultiDict.fromDict({
+                {
                     q: `~${state.queryId}`,
                     wlpage: newPage,
-                    wlsort: state.wlsort || undefined,
-                    reversed: state.reversed,
+                    wlsort: sortColumn.wlsort || undefined,
+                    reverse: sortColumn.reverse,
                     format: 'json'
-                })
+                }
             ),
             {}
 
@@ -413,20 +465,20 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         word:string
     ):ConcQueryArgs {
         const primaryCorpus = formSubmitArgs.corpname;
-        const currArgs = this.layoutModel.exportConcArgs();
+        const currArgs = this.layoutModel.getConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
             maincorp: primaryCorpus,
             usesubcorp: formSubmitArgs.usesubcorp || null,
             viewmode: 'kwic',
-            pagesize: parseInt(currArgs.head('pagesize')),
-            attrs: currArgs.getList('attrs'),
-            attr_vmode: currArgs.head('attr_vmode') as ViewOptions.AttrViewMode,
-            base_viewattr: currArgs.head('base_viewattr'),
-            ctxattrs: currArgs.getList('ctxattrs'),
-            structs: currArgs.getList('structs'),
-            refs: currArgs.getList('refs'),
-            fromp: parseInt(currArgs.head('fromp') || '0'),
+            pagesize: currArgs.pagesize,
+            attrs: currArgs.attrs,
+            attr_vmode: currArgs.attr_vmode,
+            base_viewattr: currArgs.base_viewattr,
+            ctxattrs: currArgs.ctxattrs,
+            structs: currArgs.structs,
+            refs: currArgs.refs,
+            fromp: currArgs.fromp || 0,
             shuffle: 0,
             queries: [
                 {

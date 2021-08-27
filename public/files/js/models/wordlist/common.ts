@@ -62,7 +62,7 @@ export type ResultData = {
     data:Array<ResultItem>;
     total:number;
     wlsort:string;
-    reversed:boolean;
+    reverse:boolean;
     page:number;
     pageSize:number;
     isLastPage:boolean;

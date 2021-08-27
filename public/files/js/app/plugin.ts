@@ -19,7 +19,6 @@
  */
 
 import * as Kontext from '../types/kontext';
-import { MultiDict } from '../multidict';
 import { CommonViews } from '../views/common';
 import * as CoreViews from '../types/coreViews';
 import { Observable } from 'rxjs';
@@ -70,7 +69,7 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.createStaticUrl(path);
     }
 
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string {
+    createActionUrl<T>(path:string, args?:T):string {
         return this.pageModel.createActionUrl(path, args);
     }
 
@@ -135,10 +134,6 @@ export class PluginApi implements IPluginApi {
         return this.pageModel.getConcArgs();
     }
 
-    exportConcArgs():MultiDict<ConcServerArgs> {
-        return this.pageModel.exportConcArgs();
-    }
-
     getCorpusIdent():Kontext.FullCorpusIdent {
         return this.pageModel.getCorpusIdent();
     }
@@ -151,7 +146,7 @@ export class PluginApi implements IPluginApi {
         return this.getHelpLink(ident);
     }
 
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+    setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         this.pageModel.setLocationPost(path, args, blankWindow);
     }
 }

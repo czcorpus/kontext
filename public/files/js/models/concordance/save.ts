@@ -25,7 +25,6 @@ import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { MultiDict } from '../../multidict';
 import { ConcSaveServerArgs } from './common';
 import { DataSaveFormat } from '../../app/navigation/save';
 
@@ -200,16 +199,18 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
     }
 
     private submit():void {
-        const args = this.layoutModel.exportConcArgs() as MultiDict<ConcSaveServerArgs>;
-        args.set('saveformat', this.state.saveformat);
-        args.set('from_line', this.state.fromLine.value);
-        args.set('to_line', this.state.toLine.value);
-        args.set('heading', this.state.includeHeading ? '1' : '0');
-        args.set('numbering', this.state.includeLineNumbers ? '1' : '0');
-        args.set('align_kwic', this.state.alignKwic ? '1' : '0');
+        const args = {
+            ...this.layoutModel.getConcArgs(),
+            saveformat: this.state.saveformat,
+            from_line: this.state.fromLine.value,
+            to_line: this.state.toLine.value,
+            heading: this.state.includeHeading,
+            numbering: this.state.includeLineNumbers,
+            align_kwic: this.state.alignKwic
+        };
         this.saveLinkFn(
             `concordance.${this.state.saveformat}`,
-            this.layoutModel.createActionUrl('saveconc', args.items())
+            this.layoutModel.createActionUrl('saveconc', args)
         );
     }
 }

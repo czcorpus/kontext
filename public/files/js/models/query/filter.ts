@@ -462,7 +462,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     });
                     this.submitQuery(
                         action.payload.filterId,
-                        this.pageModel.getConcArgs().q.substr(1)
+                        List.head(this.pageModel.getConcArgs().q).substr(1)
                     ).pipe(
                         tap(
                             (data) => {
@@ -659,7 +659,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
             within: this.state.withinArgs[filterId],
             ...this.pageModel.getConcArgs(),
-            q: '~' + concId
+            q: ['~' + concId]
         }
     }
 
@@ -674,10 +674,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'filter',
-                [
-                    ['format', 'json'],
-                    ['q', '~' + concId]
-                ]
+                {
+                    format: 'json',
+                    q: ['~' + concId]
+                }
             ),
             args,
             {

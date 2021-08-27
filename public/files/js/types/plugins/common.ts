@@ -41,8 +41,7 @@ export interface BasePlugin {
     getConf<T>(key:string):T;
     getNestedConf<T>(...keys:Array<string>):T;
     createStaticUrl(path:string):string;
-    createActionUrl<T>(
-        path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string;
+    createActionUrl<T>(path:string, args?:T):string;
     ajax$<T>(method:string, url:string, args:any, options?:Kontext.AjaxOptions):Observable<T>;
     showMessage(type:string, message:any, onClose?:()=>void);
     userIsAnonymous():boolean;
@@ -55,9 +54,8 @@ export interface BasePlugin {
     getViews():CoreViews.Runtime;
     pluginTypeIsActive(name:string):boolean;
     getConcArgs():ConcServerArgs;
-    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
     getCorpusIdent():Kontext.FullCorpusIdent;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean):void;
+    setLocationPost<T>(path:string, args:T, blankWindow?:boolean):void;
 }

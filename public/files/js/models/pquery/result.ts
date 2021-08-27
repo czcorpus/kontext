@@ -130,17 +130,20 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                                 List.filter(v => v.length > 0),
                                 List.map(s => `[${action2.payload.attr}="${s}"]`)
                             )
-                            const posRight = action2.payload.posLeft + List.size(cqlList) - 1                            
-                            const url = this.layoutModel.createActionUrl('quick_filter', [
-                                ['q', `~${action.payload.concId}`],
-                                ['q2', `p${action2.payload.posLeft} ${posRight} ${alignIdx} ${cqlList.join('')}`]
-                            ]);
-                            this.layoutModel.setLocationPost(url, [], action.payload.blankWindow);
+                            const posRight = action2.payload.posLeft + List.size(cqlList) - 1
+                            const url = this.layoutModel.createActionUrl(
+                                'quick_filter',
+                                {
+                                    q: `~${action.payload.concId}`,
+                                    q2: `p${action2.payload.posLeft} ${posRight} ${alignIdx} ${cqlList.join('')}`
+                                }
+                            );
+                            this.layoutModel.setLocationPost(url, {}, action.payload.blankWindow);
                         }
 
                     },
                     error: (error) => {
-
+                        console.log(error);
                     }
                 })
             }

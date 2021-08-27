@@ -309,24 +309,26 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         )
                     )
 
-                ).subscribe(
-                    data => {
-                        dispatch<typeof ConcActions.AddedNewOperation>({
-                            name: ConcActions.AddedNewOperation.name,
-                            payload: {
-                                concId: data.conc_persistence_op_id,
-                                data: data
-                            }
-                        });
+                ).subscribe({
+                    next: data => {
+                        if (data) { // if false then probably window.location.href has been set
+                            dispatch<typeof ConcActions.AddedNewOperation>({
+                                name: ConcActions.AddedNewOperation.name,
+                                payload: {
+                                    concId: data.conc_persistence_op_id,
+                                    data: data
+                                }
+                            });
+                        }
                     },
-                    err => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                         dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
-                            error: err
+                            error
                         });
                     }
-                )
+                });
             }
         );
 
@@ -336,7 +338,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = true;
             },
             (state, action, dispatch) => {
-                const args = this.pageModel.exportConcArgs();
+                const args = this.pageModel.getConcArgs();
                 return this.pageModel.ajax$<QueryPipelineResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('load_query_pipeline'),
@@ -354,7 +356,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             } else {
                                 window.location.href = this.pageModel.createActionUrl(
                                     'view',
-                                    [['q', '~' + data.ops[action.payload.operationIdx].id]]
+                                    {q: '~' + data.ops[action.payload.operationIdx].id}
                                 );
                             }
                         }
@@ -405,8 +407,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             ConcActions.ReloadConc.name,
             null,
             (state, action, dispatch) => {
-                const args = this.pageModel.exportConcArgs();
-                args.set('q', '~' + state.lastOperationKey);
+                const args = {
+                    ...this.pageModel.getConcArgs(),
+                    q: '~' + state.lastOperationKey
+                };
                 this.pageModel.ajax$<QueryPipelineResponse>(
                     HTTP.Method.GET,
                     this.pageModel.createActionUrl('load_query_pipeline'),
@@ -505,7 +509,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 queryContext, false, false);
                             const url = this.pageModel.createActionUrl(
                                 'query_submit',
-                                [tuple('format', 'json')]
+                                {format: 'json'}
                             );
                             return this.pageModel.ajax$<ConcQueryResponse>(
                                 HTTP.Method.POST,
@@ -574,8 +578,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
         // please note that shuffle does not have its own store
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SHUFFLE) {
-            const args = this.pageModel.exportConcArgs();
-            args.set('q', '~' + baseOnConcId);
+            const args = {
+                ...this.pageModel.getConcArgs(),
+                q: '~' + baseOnConcId
+            };
             return rxOf(this.pageModel.createActionUrl('shuffle', args)).pipe(
                 concatMap(
                     (targetUrl) => {
@@ -589,7 +595,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         } else {
                             return rxOf(null).pipe(
                                 tap(
-                                    () => {
+                                    (data) => {
                                         window.location.href = targetUrl;
                                     }
                                 )
@@ -624,8 +630,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             );
 
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SUBHITS) {
-            const args = this.pageModel.exportConcArgs();
-            args.set('q', '~' + baseOnConcId);
+            const args = {
+                ...this.pageModel.getConcArgs(),
+                q: '~' + baseOnConcId
+            };
             return prepareFormData.pipe(
                 concatMap(
                     () => {
@@ -662,12 +670,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.LOCKED) {
             return new Observable<string>((observer) => {
-                    const args = this.pageModel.exportConcArgs();
-                    args.replace('q', [
-                        '~' + baseOnConcId,
-                        op ? `${op.opid}${op.arg}` : ''
-                    ]);
-                    observer.next(this.pageModel.createActionUrl('view', args.items()));
+                    const args = {
+                        ...this.pageModel.getConcArgs(),
+                        q: [
+                            '~' + baseOnConcId,
+                            op ? `${op.opid}${op.arg}` : ''
+                        ]
+                    };
+                    observer.next(this.pageModel.createActionUrl('view', args));
                     observer.complete();
 
             }).pipe(
@@ -710,10 +720,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * function containing a side-effect local action (typically - the last operation contains
      * something like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
-    private branchQuery(state:QueryReplayModelState, queryContext:QueryContextArgs,
-                changedOpIdx:number, dispatch:SEDispatcher):Observable<AjaxConcResponse> {
-        const args = this.pageModel.exportConcArgs();
-        args.set('q', '~' + state.lastOperationKey);
+    private branchQuery(
+        state:QueryReplayModelState,
+        queryContext:QueryContextArgs,
+        changedOpIdx:number,
+        dispatch:SEDispatcher
+    ):Observable<AjaxConcResponse> {
+
+        const args = {
+            ...this.pageModel.getConcArgs(),
+            q: '~' + state.lastOperationKey
+        };
         return this.pageModel.ajax$<QueryPipelineResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('load_query_pipeline'),

@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { WideCtxArgs } from '../models/concordance/common';
 import * as Kontext from './kontext';
 
 
@@ -96,7 +97,7 @@ export interface LoadOptionsResponse extends Kontext.AjaxResponse {
 }
 
 export interface SaveViewAttrsOptionsResponse extends Kontext.AjaxResponse {
-    widectx_globals:Array<[string, string]>;
+    widectx_globals:WideCtxArgs;
     conc_persistence_op_id:string|null;
     conc_args:Array<[string, string]>;
 }

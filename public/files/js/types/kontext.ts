@@ -102,13 +102,6 @@ export const resetFormValue = <T>(formValue:FormValue<T>, val:T) => ({
 
 export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
 
-//
-
-/**
- * Represents possible sources for MultiDict
- * (either a list of 2-tuples or a dict).
- */
-export type MultiDictSrc = Array<[string,any]>|GeneralProps;
 
 export interface UserCredentials {
     id:number;
@@ -252,7 +245,7 @@ export interface ComponentHelpers extends Translator {
      * http://localhost/kontext/query depending
      * on a concrete configuration).
      */
-    createActionLink(path:string, args?:MultiDictSrc):string;
+    createActionLink<T>(path:string, args?:T):string;
 
     /**
      * Create a proper static resource URL based on normalized
@@ -332,33 +325,16 @@ export interface AsyncTaskOnUpdate {
     (taskInfoList:Array<AsyncTaskInfo>):void;
 }
 
-/**
- * A dictionary allowing multiple values per-key.
- * It is mostly used to carry URL arguments.
- */
-export interface IMultiDict<T={[k:string]:string|number|boolean}> {
-    head<K extends keyof T>(key:K):string;
-    getList<K extends keyof T>(key:K):Array<string>;
-    set<K extends keyof T>(key:K, value:T[K]):IMultiDict<T>;
-    replace<K extends keyof T>(key:K, values:Array<T[K]>):IMultiDict<T>;
-    remove<K extends keyof T>(key:K):IMultiDict<T>;
-    add<K extends keyof T>(key:K, value:T[K]):IMultiDict<T>;
-    items():Array<[string, string]>;
-    toDict():{[key:string]:string};
-    has<K extends keyof T>(key:K):boolean;
-    size():number;
-}
 
 export interface IURLHandler {
     createStaticUrl(path:string):string;
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|IMultiDict<T>):string;
-    encodeURLParameters<T>(params:IMultiDict<T>):string
+    createActionUrl<T>(path:string, args?:T):string;
 }
 
 /**
  * Possible types for PageModel's ajax method request args
  */
-export type AjaxArgs = IMultiDict|{[key:string]:any}|string;
+export type AjaxArgs = {[key:string]:any}|string;
 
 /**
  *
@@ -373,9 +349,9 @@ export interface IAjaxHandler {
 }
 
 export interface IHistory {
-    pushState<T, U={}>(action:string, args:IMultiDict<T>, stateData?:U,
+    pushState<T, U={}>(action:string, args:T, stateData?:U,
         title?:string):void;
-    replaceState<T, U={}>(action:string, args:IMultiDict<T>, stateData?:U,
+    replaceState<T, U={}>(action:string, args:T, stateData?:U,
         title?:string):void;
     setOnPopState(fn:(event:PopStateEvent)=>void):void;
 }

@@ -22,10 +22,9 @@ import { Observable } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ajax, AjaxError, AjaxResponse as RxAjaxResponse } from 'rxjs/ajax';
 import { IFullActionControl } from 'kombo';
-import { pipe, List, HTTP, Dict, tuple, id } from 'cnc-tskit';
+import { pipe, List, HTTP, Dict, tuple, URL } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
-import { MultiDict } from '../../multidict';
 import { CorpusSwitchModel } from '../../models/common/corpusSwitch';
 import { createHistory } from './history';
 import { PageLeaveVoting, IPageLeaveVoter } from '../../models/common/pageLeave';
@@ -105,7 +104,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * @param path
      * @param args
      */
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+    setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
         form.setAttribute('method', 'post');
@@ -114,31 +113,22 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             form.setAttribute('target', '_blank');
         }
         body.appendChild(form);
-        (args || []).filter(v => !!v[1]).forEach(item => {
-            const input = window.document.createElement('input');
-            input.setAttribute('type', 'hidden');
-            input.setAttribute('name', item[0]);
-            input.setAttribute('value', item[1]);
-            form.appendChild(input);
-        });
+        pipe(
+            args || {},
+            Dict.toEntries(),
+            List.filter(([,v]) => !!v),
+            List.forEach(item => {
+                const input = window.document.createElement('input');
+                input.setAttribute('type', 'hidden');
+                input.setAttribute('name', item[0]);
+                input.setAttribute('value', item[1]);
+                form.appendChild(input);
+            })
+        );
         form.submit();
         window.onbeforeunload = () => {
             body.removeChild(form);
         };
-    }
-
-    /**
-     *
-     * @param params
-     * @returns {string}
-     */
-    encodeURLParameters<T>(params:MultiDict<T>):string {
-        function exportValue(v) {
-            return v === null || v === undefined ? '' : encodeURIComponent(v);
-        }
-        return params.items().map((item) => {
-            return encodeURIComponent(item[0]) + '=' + exportValue(item[1]);
-        }).join('&');
     }
 
     /**
@@ -161,20 +151,16 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * Undefined/null/empty string values and their respective names
      * are left out.
      */
-    createActionUrl<T>(path:string, args?:Array<[keyof T, T[keyof T]]>|Kontext.IMultiDict<T>):string {
+    createActionUrl<T>(path:string, args?:T):string {
         if (typeof path !== 'string') {
             throw new Error(`Cannot create action url. Invalid path: ${path}`);
         }
         let urlArgs = '';
         if (args !== undefined) {
-            const nArgs = Array.isArray(args) ? args : args.items();
             urlArgs = pipe(
-                nArgs,
-                List.filter(([, value]) => value !== null && value !== undefined),
-                List.map(
-                    ([key, value]) => encodeURIComponent(key + '') + '=' +
-                            encodeURIComponent(value + '')
-                )
+                args,
+                URL.valueToPairs(),
+                List.map(([key, value]) => `${key}=${value}`)
             ).join('&');
         }
         return this.conf.getConf('rootPath') +
@@ -203,7 +189,15 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         }
 
         function exportValue(v) {
-            return v === null || v === undefined ? '' : encodeURIComponent(v);
+            if (v === null || v === undefined) {
+                return '';
+
+            } else if (typeof v === 'boolean') {
+                return ~~v;
+
+            } else {
+                return encodeURIComponent(v);
+            }
         }
 
         function encodeArgs(obj:{[k:string]:any}):string {
@@ -217,17 +211,14 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
                     }
                     return [tuple(k, v)];
                 }),
-                List.flatMap(id),
+                List.flatMap(v => v),
                 List.map(([k, v]) => encodeURIComponent(k) + '=' + exportValue(v))
             ).join('&');
         }
 
         let body;
 
-        if (args instanceof MultiDict) {
-            body = this.encodeURLParameters(args);
-
-        } else if (typeof args === 'object') {
+        if (typeof args === 'object') {
             if (options.contentType === 'application/json') {
                 body = JSON.stringify(args);
 
@@ -280,7 +271,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         options?:Kontext.AjaxOptions
     ):Observable<T> {
         const callArgs = this.prepareAjax(method, url, args, options);
-        return ajax({
+        return ajax<T>({
             url: callArgs.url,
             body: callArgs.requestBody,
             method: callArgs.method,

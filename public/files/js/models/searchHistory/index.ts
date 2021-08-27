@@ -23,7 +23,6 @@ import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
-import { MultiDict } from '../../multidict';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
 import { List, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
@@ -245,13 +244,11 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     state.isBusy = true;
                 });
 
-                this.deleteItem(action.payload.itemIdx).subscribe(
-                    _ => {
-                    },
-                    error => {
+                this.deleteItem(action.payload.itemIdx).subscribe({
+                    error: error => {
                         this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         )
     }
@@ -265,7 +262,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         };
         window.location.href = this.pageModel.createActionUrl(
             actions[item.q_supertype],
-            [tuple('q', `~${item.query_id}`)]
+            {q: `~${item.query_id}`}
         );
     }
 
@@ -286,18 +283,17 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     }
 
     private loadData(widgetMode:boolean=false):Observable<GetHistoryResponse> {
-        const args = new MultiDict();
-        args.set('offset', this.state.offset);
-        args.set('limit', this.state.limit + 1);
-        args.set('query_supertype', this.state.querySupertype);
-        if (!widgetMode && this.state.currentCorpusOnly) {
-            args.set('corpname', this.pageModel.getCorpusIdent().id);
-        }
-        args.set('archived_only', widgetMode || !this.state.archivedOnly ? '0' : '1');
         return this.pageModel.ajax$<GetHistoryResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('user/ajax_query_history'),
-            args
+            {
+                offset: this.state.offset,
+                limit: this.state.limit + 1,
+                query_supertype: this.state.querySupertype,
+                corpname: !widgetMode && this.state.currentCorpusOnly ?
+                    this.pageModel.getCorpusIdent().id : undefined,
+                archived_only: !widgetMode && this.state.archivedOnly
+            }
 
         ).pipe(
             tap(data => {
@@ -326,10 +322,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         return this.pageModel.ajax$<any>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl('delete_query'),
-            MultiDict.fromDict({
-                query_id: item.query_id,
-                created: item.created
-            })
+            [
+                tuple('query_id', item.query_id),
+                tuple('created', item.created)
+            ]
 
         ).pipe(
             tap(
@@ -347,26 +343,24 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
     private saveItem(itemIdx:number):Observable<string> {
         return (() => {
             const item = this.state.data[itemIdx];
-            const args = new MultiDict();
-            args.set('query_id', item.query_id);
-            args.set('name', item.name);
             if (item.name) {
                 return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
-                    args
+                    {
+                        query_id: item.query_id,
+                        name: item.name
+                    }
 
                 ).pipe(
                     map(resp => tuple(resp, true))
                 )
 
             } else {
-                const args = new MultiDict();
-                args.set('query_id', item.query_id);
                 return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('unsave_query'),
-                    args
+                    {query_id: item.query_id}
 
                 ).pipe(
                     map(resp => tuple(resp, false))

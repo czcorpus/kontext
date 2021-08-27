@@ -24,7 +24,6 @@ import { concatMap } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
-import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
 import {
     UsernameTestResponse, validationStatusHasErrors, SignUpResponse,
@@ -379,15 +378,14 @@ export class UserProfileModel extends StatelessModel<UserProfileState> {
     }
 
     private submitNewPassword(state:UserProfileState):Observable<ValidationStatus> {
-        const args = new MultiDict();
-        args.set('curr_passwd', state.currPasswd.value);
-        args.set('new_passwd', state.newPasswd.value);
-        args.set('new_passwd2', state.newPasswd2.value);
-
         return this.pluginApi.ajax$<PasswordSetResponse>(
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('user/set_user_password'),
-            args
+            {
+                curr_passwd: state.currPasswd.value,
+                new_passwd: state.newPasswd.value,
+                new_passwd2: state.newPasswd2.value
+            }
 
         ).pipe(
             concatMap(

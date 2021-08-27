@@ -29,7 +29,6 @@ import * as Kontext from '../types/kontext';
 import { PageModel, DownloadType } from '../app/page';
 import * as PluginInterfaces from '../types/plugins';
 import { parseUrlArgs } from '../app/navigation';
-import { MultiDict } from '../multidict';
 import { init as concViewsInit, ViewPageModels, MainViews as ConcViews }
     from '../views/concordance/main';
 import { LineSelectionModel, LineSelectionModelState } from '../models/concordance/lineSelection';
@@ -69,7 +68,7 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData }
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
@@ -183,37 +182,36 @@ export class ViewPage {
 
     private deserializeHashAction(v:string):Action {
         const [action, rawArgs] = (v || '').substr(1).split('/');
-        const args = new MultiDict(parseUrlArgs(rawArgs || ''));
-        return this.createFormAction(action, args);
+        return this.createFormAction(action, parseUrlArgs(rawArgs || ''));
     }
 
-    private createFormAction(actionName:string, args:Kontext.IMultiDict):Action {
+    private createFormAction(actionName:string, args:{}):Action {
         switch (actionName) {
             case 'filter':
                 return {
                     name: MainMenuActions.ShowFilter.name,
-                    payload: args.toDict()
+                    payload: args
                 };
             case 'sort':
             case 'sortx':
                 return {
                     name: MainMenuActions.ShowSort.name,
-                    payload: args.toDict()
+                    payload: args
                 };
             case 'sample':
                 return {
                     name: MainMenuActions.ShowSample.name,
-                    payload: args.toDict()
+                    payload: args
                 };
             case 'shuffle':
                 return {
                     name: MainMenuActions.ApplyShuffle.name,
-                    payload: args.toDict()
+                    payload: args
                 };
             case 'edit_op':
                 return {
                     name: QueryActions.EditQueryOperation.name,
-                    payload: {operationIdx: Number(args.head('operationIdx'))}
+                    payload: {operationIdx: Number(args['operationIdx'])} // TODO untyped property
                 };
             default:
                 return null;
@@ -266,15 +264,16 @@ export class ViewPage {
         const currAction = this.layoutModel.getConf<string>('currentAction');
         switch (currAction) {
             case 'quick_filter':
-            case 'create_view': {
+            case 'create_view':
+            case 'filter_subhits': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
-                    this.layoutModel.exportConcArgs(),
+                    this.layoutModel.getConcArgs(),
                     {
                         onPopStateAction: {
                             name: QueryActions.EditLastQueryOperation.name,
                             payload: {
-                                sourceId: this.layoutModel.exportConcArgs().head('q')
+                                sourceId: this.layoutModel.getConcArgs().q
                             }
                         }
                     },
@@ -285,7 +284,7 @@ export class ViewPage {
             case 'view': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
-                    this.layoutModel.exportConcArgs(),
+                    this.layoutModel.getConcArgs(),
                     {
                         onPopStateAction: {
                             name: Actions.ReloadConc.name,
@@ -689,9 +688,9 @@ export class ViewPage {
                 filterSubHitsFormProps: {
                     formType: Kontext.ConcFormTypes.SUBHITS,
                     submitFn:() => {
-                        const args = this.layoutModel.exportConcArgs();
+                        const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl(
-                            'filter_subhits', args.items());
+                            'filter_subhits', args);
                     },
                     opKey: undefined
                 },
@@ -710,9 +709,9 @@ export class ViewPage {
                         'ShuffleMinResultWarning'
                     ),
                     shuffleSubmitFn: () => {
-                        const args = this.layoutModel.exportConcArgs();
+                        const args = this.layoutModel.getConcArgs();
                         window.location.href = this.layoutModel.createActionUrl(
-                            'shuffle', args.items());
+                            'shuffle', args);
                     }
                 },
                 switchMcFormProps: {
@@ -866,8 +865,8 @@ export class ViewPage {
 
         const lineViewProps:ViewConfiguration = {
             basePosAttr: this.layoutModel.getConf<string>('baseAttr'),
-            baseViewAttr: this.layoutModel.exportConcArgs().head('base_viewattr'),
-            activePosAttrs: this.layoutModel.exportConcArgs().head('attrs').split(','),
+            baseViewAttr: this.layoutModel.getConcArgs().base_viewattr,
+            activePosAttrs: this.layoutModel.getConcArgs().attrs,
             anonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             ViewMode: this.layoutModel.getConf<'kwic'|'sen'|'align'>('ViewMode'),
             AttrViewMode: this.layoutModel.getConf<ViewOptions.AttrViewMode>('AttrViewMode'),
@@ -884,7 +883,7 @@ export class ViewPage {
             origSubCorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
             pagination: this.layoutModel.getConf<ServerPagination>('Pagination'),
             currentPage: this.layoutModel.getConf<number>('FromPage'),
-            mainCorp: this.layoutModel.exportConcArgs().head('maincorp'),
+            mainCorp: this.layoutModel.getConcArgs().maincorp,
             concSummary: concSummaryProps,
             Unfinished: this.layoutModel.getConf<boolean>('Unfinished'),
             FastAdHocIpm: this.layoutModel.getConf<boolean>('FastAdHocIpm'),
@@ -896,7 +895,7 @@ export class ViewPage {
             SpeechOverlapVal: this.layoutModel.getConf<string>('SpeechOverlapVal'),
             SpeechAttrs: this.layoutModel.getConf<Array<string>>('SpeechAttrs'),
             StructCtx: this.layoutModel.getConf<string>('StructCtx'),
-            WideCtxGlobals: this.layoutModel.getConf<Array<[string, string]>>('WideCtxGlobals'),
+            WideCtxGlobals: this.layoutModel.getConf<WideCtxArgs>('WideCtxGlobals'),
             useSafeFont: this.layoutModel.getConf<boolean>('ConcUseSafeFont'),
             supportsSyntaxView: this.layoutModel.pluginTypeIsActive(
                 PluginName.SYNTAX_VIEWER),

@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {PageModel} from '../../app/page';
-import {MultiDict} from '../../multidict';
+import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { Observable } from 'rxjs';
@@ -237,14 +236,13 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     }
 
     private submit(state:QuerySaveAsFormModelState):Observable<boolean> {
-        const args = new MultiDict();
-        args.set('query_id', state.queryId);
-        args.set('name', state.name);
         return this.layoutModel.ajax$<any>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('save_query'),
-            args
+            {
+                query_id: state.queryId,
+                name: state.name
+            }
         );
     }
-
 }

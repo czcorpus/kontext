@@ -163,8 +163,9 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
 
 
 const create:PluginInterfaces.QuerySuggest.Factory = (pluginApi) => {
+    const providersConf = pluginApi.getNestedConf<Array<AnyProviderInfo>>('pluginData', 'query_suggest', 'providers');
     const providers = pipe(
-        pluginApi.getNestedConf<Array<AnyProviderInfo>>('pluginData', 'query_suggest', 'providers'),
+        providersConf || [],
         List.map(item => ({...item}))
     );
     const model = new Model(

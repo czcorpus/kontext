@@ -22,7 +22,6 @@ import { Observable, of as rxOf } from 'rxjs';
 import { Maths, HTTP, pipe, List, tuple, Dict } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../../../app/page';
-import { MultiDict } from '../../../multidict';
 import {
     GeneralFreq2DModel, CTFreqCell, importAvailAlphaLevels,
     GeneralFreq2DModelState } from './generalDisplay';
@@ -345,17 +344,15 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         this.addActionHandler<typeof Actions.FreqctApplyQuickFilter>(
             Actions.FreqctApplyQuickFilter.name,
             action => {
-                this.pageModel.setLocationPost(action.payload.url, []);
+                this.pageModel.setLocationPost(action.payload.url, {});
             }
         );
     }
 
     private pushStateToHistory():void {
-        const args = this.getSubmitArgs();
-        args.remove('format');
         this.pageModel.getHistory().pushState(
             'freqct',
-            args,
+            {...this.getSubmitArgs(), format: undefined},
             {},
             window.document.title
         );
@@ -411,9 +408,10 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
     }
 
     submitDataConversion(format:string):void {
-        const args = new MultiDict();
-        args.set('saveformat', format);
-        args.set('savemode', 'table');
+        const args = {
+            saveformat: format,
+            savemode: 'table'
+        };
         this.pageModel.bgDownload({
             filename: `2d-frequency.${format}`,
             type: DownloadType.FREQ2D,
@@ -578,25 +576,23 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         state.data = state.origData;
     }
 
-    getSubmitArgs():MultiDict<CTFreqServerArgs> {
-        const args = this.pageModel.exportConcArgs() as MultiDict<CTFreqServerArgs>;
-        args.set('ctfcrit1', this.state.ctFcrit1);
-        args.set('ctfcrit2', this.state.ctFcrit2);
-        args.set('ctattr1', this.state.attr1);
-        args.set('ctattr2', this.state.attr2);
-        args.set('ctminfreq', this.state.minFreq);
-        args.set('ctminfreq_type', this.state.minFreqType);
-        return args;
+    getSubmitArgs():CTFreqServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            ctfcrit1: this.state.ctFcrit1,
+            ctfcrit2: this.state.ctFcrit2,
+            ctattr1: this.state.attr1,
+            ctattr2: this.state.attr2,
+            ctminfreq: this.state.minFreq,
+            ctminfreq_type: this.state.minFreqType
+        };
     }
 
     private fetchData():Observable<CTFreqResultResponse> {
-        const args = this.getSubmitArgs();
-        args.set('format', 'json');
         return this.pageModel.ajax$<CTFreqResultResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('freqct'),
-            args
-
+            {...this.getSubmitArgs(), format: 'json'}
         );
     }
 

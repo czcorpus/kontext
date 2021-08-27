@@ -119,10 +119,9 @@ class Actions(Querying):
 
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
-        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
-        conc_args.set('q', [q for q in result.get('Q')])
-        args = {}
-        result['Globals'] = conc_args.update(args)
+        conc_args = self._get_mapped_attrs(ConcArgsMapping)
+        conc_args['q'] = [q for q in result.get('Q')]
+        result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
 
     def _apply_linegroups(self, conc):
@@ -703,7 +702,7 @@ class Actions(Querying):
                 raise UserActionException(ex, code=422)
             else:
                 raise ex
-        ans['conc_args'] = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping)).export()
+        ans['conc_args'] = self._get_mapped_attrs(ConcArgsMapping)
         self._attach_query_overview(ans)
         return ans
 
@@ -970,8 +969,7 @@ class Actions(Querying):
 
         calc_result = freq_calc.calculate_freqs(args)
         result.update(
-            fcrit=[('fcrit', cr) for cr in fcrit],
-            FCrit=[{'fcrit': cr} for cr in fcrit],
+            fcrit=fcrit,
             Blocks=calc_result['data'],
             paging=0,
             concsize=calc_result['conc_size'],
@@ -1824,8 +1822,7 @@ class Actions(Querying):
             ttcrit_attrs = self.corp.get_conf('FREQTTATTRS')
         else:
             ttcrit_attrs = self.corp.get_conf('SUBCORPATTRS')
-        tmp_out['ttcrit'] = [('fcrit', '%s 0' % a)
-                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+        tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
         self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
                                               corpora=self._select_current_aligned_corpora(
@@ -1837,7 +1834,7 @@ class Actions(Querying):
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
-        conc_args = templating.StateGlobals(self._get_mapped_attrs(ConcArgsMapping))
+        conc_args = self._get_mapped_attrs(ConcArgsMapping)
 
         poslist = []
         for tagset in corpus_info.tagsets:

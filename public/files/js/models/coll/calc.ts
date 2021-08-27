@@ -19,9 +19,8 @@
  */
 
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import * as Kontext from '../../types/kontext';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, tuple } from 'cnc-tskit';
 
 
 type WatchdogUpdateCallback = (status:number, err:Error)=>void;
@@ -55,13 +54,13 @@ export class CalcWatchdog {
     }
 
     private checkStatus():void {
-        const args = new MultiDict<{corpname:string; usesubcorp:string; attrname:string; worker_tasks:string}>([
-            ['corpname', this.layoutModel.getCorpusIdent().id],
-            ['usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp],
-            ['attrname', this.layoutModel.getConf<string>('attrname')]
-        ]);
+        const args = [
+            tuple('corpname', this.layoutModel.getCorpusIdent().id),
+            tuple('usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp),
+            tuple('attrname', this.layoutModel.getConf<string>('attrname'))
+        ];
         this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
-            args.add('worker_tasks', taskId);
+            args.push(tuple('worker_tasks', taskId));
         });
         this.layoutModel.ajax$(
             HTTP.Method.GET,

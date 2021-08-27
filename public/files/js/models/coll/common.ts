@@ -49,15 +49,15 @@ export interface CollServerArgs extends ConcServerArgs {
     ctow:string;
     cminfreq:string;
     cminbgr:string;
-    cbgrfns:string;
+    cbgrfns:Array<string>;
     csortfn:string;
     collpage:number;
 }
 
 export interface CollSaveServerArgs extends CollServerArgs {
     saveformat:DataSaveFormat;
-    colheaders:'0'|'1';
-    heading:'0'|'1';
+    colheaders:boolean;
+    heading:boolean;
     from_line:number;
     to_line:number;
 }

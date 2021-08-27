@@ -25,7 +25,6 @@ import { concatMap } from 'rxjs/operators';
 import { validateGzNumber } from '../../models/base';
 import { PageModel } from '../../app/page';
 import { CollFormModel } from '../../models/coll/collForm';
-import { MultiDict } from '../../multidict';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { HTTP, List } from 'cnc-tskit';
@@ -299,14 +298,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    private applyQuickFilter(args:Array<[keyof ConcQuickFilterServerArgs, ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>, blankWindow:boolean) {
-        const submitArgs = this.layoutModel.exportConcArgs() as MultiDict<ConcQuickFilterServerArgs>;
-        submitArgs.remove('q2');
-        args.forEach(item => submitArgs.add(item[0], item[1]));
-        this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs.items()), [], blankWindow);
+    private applyQuickFilter(args:ConcQuickFilterServerArgs, blankWindow:boolean) {
+        const submitArgs = {...this.layoutModel.getConcArgs(), ...args};
+        this.layoutModel.setLocationPost(
+            this.layoutModel.createActionUrl('quick_filter', submitArgs),
+            {}, blankWindow);
     }
 
-    private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, MultiDict<CollSaveServerArgs>]> {
+    private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, CollServerArgs]> {
         return this.suspend({}, (action, syncData) => {
             if (action.name === Actions.FormPrepareSubmitArgsDone.name) {
                 return null;
@@ -324,13 +323,13 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
     }
 
     private dispatchLoad(
-        load:Observable<[AjaxResponse, MultiDict<CollSaveServerArgs>]>,
+        load:Observable<[AjaxResponse, CollServerArgs]>,
         dispatch:SEDispatcher,
         pushHistory:boolean
     ):void {
 
-        load.subscribe(
-            ([data, args]) => {
+        load.subscribe({
+            next: ([data, args]) => {
                 if (data.Items.length === 0) {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
                 }
@@ -347,20 +346,19 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
                     });
                 }
             },
-            (err) => {
+            error: error => {
                 dispatch<typeof Actions.ResultPageLoadDone>({
                     name: Actions.ResultPageLoadDone.name,
-                    error: err
+                    error
                 });
             }
-        );
+        });
     }
 
-    private pushStateToHistory(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):void {
-        formArgs.remove('format');
+    private pushStateToHistory(state:CollResultModelState, formArgs:CollServerArgs):void {
         this.layoutModel.getHistory().pushState(
             'collx',
-            formArgs,
+            {...formArgs, format: undefined},
             {
                 onPopStateAction: {
                     name: Actions.PopHistory.name,
@@ -375,14 +373,14 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
         );
     }
 
-    getSubmitArgs(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):MultiDict<CollServerArgs> {
-        formArgs.set('format', 'json');
-        formArgs.set('csortfn', state.sortFn);
-        formArgs.set('collpage', state.currPage);
-        return formArgs;
+    getSubmitArgs(
+        state:CollResultModelState,
+        formArgs:CollServerArgs
+    ):CollServerArgs {
+        return {...formArgs, format: 'json', csortfn: state.sortFn, collpage: state.currPage};
     }
 
-    private loadData(state:CollResultModelState, formArgs:MultiDict<CollServerArgs>):Observable<AjaxResponse> {
+    private loadData(state:CollResultModelState, formArgs:CollServerArgs|CollSaveServerArgs):Observable<AjaxResponse> {
         const args = this.getSubmitArgs(state, formArgs);
         return this.layoutModel.ajax$<AjaxResponse>(
             HTTP.Method.GET,

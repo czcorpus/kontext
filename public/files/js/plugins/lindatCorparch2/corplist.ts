@@ -18,7 +18,6 @@
 
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
-import { MultiDict } from '../../multidict';
 import * as common from './common';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { StatelessModel, IActionDispatcher, Action, SEDispatcher } from 'kombo';
@@ -27,7 +26,6 @@ import { map } from 'rxjs/operators';
 import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
-import { isFilterFormArgs } from '../../models/query/formArgs';
 
 
 interface SetFavItemResponse extends Kontext.AjaxResponse {
@@ -468,18 +466,13 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         offset:number,
         limit?:number
     ):Observable<CorplistDataResponse> {
-        const args = new MultiDict();
-        args.set('query', query);
-        args.set('offset', offset);
-        if (limit !== undefined) {
-            args.set('limit', limit);
-        }
-        if (filters) {
-            for (let p in filters) {
-                args.set(p, filters[p]);
-            }
-        }
-        args.set('requestable', '1');
+        const args = {
+            query,
+            offset,
+            limit,
+            requestable: true,
+            ...filters
+        };
         return this.pluginApi.ajax$<CorplistDataResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('corpora/ajax_list_corpora'),

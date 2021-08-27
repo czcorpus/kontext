@@ -25,7 +25,6 @@ import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 
 import * as ViewOptions from '../../types/viewOptions';
 import * as PluginInterfaces from '../../types/plugins';
-import { MultiDict } from '../../multidict';
 import { PageModel } from '../../app/page';
 import { ConclineSectionOps } from './line';
 import { AudioPlayer, PlayerStatus} from './media';
@@ -113,7 +112,7 @@ export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
-    viewMode:string;
+    viewMode:'kwic'|'sen'|'align';
 
     attrViewMode:ViewOptions.AttrViewMode;
 
@@ -215,7 +214,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         lineViewProps:ViewConfiguration,
         initialData:Array<ServerLineData>,
     ) {
-        const viewAttrs = layoutModel.exportConcArgs().head('attrs').split(',');
+        const viewAttrs = layoutModel.getConcArgs().attrs;
         super(
             dispatcher,
             {
@@ -841,7 +840,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     getViewAttrs():Array<string> {
-        return this.layoutModel.exportConcArgs().head('attrs').split(',');
+        return this.layoutModel.getConcArgs().attrs;
     }
 
     getNumItemsInLockedGroups():number {
@@ -849,11 +848,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private pushHistoryState(action:typeof Actions.ChangePage|typeof Actions.ReloadConc):void {
-        const args = this.layoutModel.exportConcArgs();
+        const args = this.layoutModel.getConcArgs();
         if (Actions.isChangePage(action)) {
-            args.set('fromp', action.payload.pageNum);
+            args.fromp = action.payload.pageNum;
         }
-        args.set('q', '~' + this.state.concId);
+        args.q = ['~' + this.state.concId];
         const onPopStateAction = {
             name: action.name,
             payload: {...action.payload, isPopState: true}
@@ -890,8 +889,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
      * @return a 2-tuple [concordance ID, actual page number]
      */
     private changePage(
-        action:PaginationActions, pageNumber?:number, concId?:string
+        action:PaginationActions,
+        pageNumber?:number,
+        concId?:string
     ):Observable<[string, number]> {
+
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
@@ -899,13 +901,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 'concview__invalid_page_num_err')));
         }
 
-        const args = this.layoutModel.getConcArgs();
-        args.fromp = pageNum;
-        args.format = 'json';
+        const args = {
+            ...this.layoutModel.getConcArgs(),
+            fromp: pageNum,
+            format: 'json'
+        };
         if (concId) {
-            args.q = concId;
+            args.q = [concId];
         }
-
         return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
@@ -955,18 +958,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private changeViewMode():Observable<any> {
-        let mode:string;
-        if (this.state.corporaColumns.length > 1) {
-            mode = {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode];
-
-        } else {
-            mode = {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
-        }
+        const mode = this.state.corporaColumns.length > 1 ?
+            {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode] :
+            {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
         this.changeState(state => {state.viewMode = mode});
-        this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
-        const args = this.layoutModel.exportConcArgs();
-        args.set('q', '~' + this.state.concId);
-        args.set('format', 'json');
+        this.layoutModel.updateConcArgs({viewmode: this.state.viewMode});
+        const args = this.layoutModel.getConcArgs();
+        args.q = ['~' + this.state.concId];
+        args.format = 'json';
 
         return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.GET,
@@ -989,7 +988,10 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         if (tmp) {
             return this.layoutModel.createActionUrl(
                 endpoint,
-                [['corpname', this.state.baseCorpname], ['chunk', tmp.speechPath]]
+                {
+                    corpname: this.state.baseCorpname,
+                    chunk: tmp.speechPath
+                }
             );
 
         } else {
@@ -998,13 +1000,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private changeMainCorpus(corpusId:string) {
-        const args = this.layoutModel.exportConcArgs() as MultiDict<SwitchMainCorpServerArgs>;
+        const args = this.layoutModel.getConcArgs();
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
-            args.set('maincorp', corpusId);
-            args.set('viewmode', 'align');
-            args.set('q', '~' + this.state.concId);
+            args.maincorp = corpusId;
+            args.viewmode = 'align';
+            args.q = ['~' + this.state.concId];
             this.layoutModel.setLocationPost(
-                this.layoutModel.createActionUrl('switch_main_corp', args.items()), []);
+                this.layoutModel.createActionUrl('switch_main_corp', args), {});
 
         } else {
             throw new Error('Cannot set corpus as main - no KWIC');

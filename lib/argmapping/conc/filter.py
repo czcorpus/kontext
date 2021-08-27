@@ -111,11 +111,13 @@ class SubHitsFilterFormArgs(ConcFormArgs[_SubHitsFilterFormArgs]):
 
     def __init__(self, persist: bool) -> None:
         super().__init__(persist)
+        self.data = _SubHitsFilterFormArgs()
 
 
 @dataclass_json
 @dataclass
 class _FirstHitsFilterFormArgs:
+    doc_struct: str
     form_type: str = 'firsthits'
 
 
@@ -127,7 +129,7 @@ class FirstHitsFilterFormArgs(ConcFormArgs[_FirstHitsFilterFormArgs]):
 
     def __init__(self, persist: bool, doc_struct: str) -> None:
         super().__init__(persist)
-        self.doc_struct: str = doc_struct
+        self.data = _FirstHitsFilterFormArgs(doc_struct=doc_struct)
 
 
 class ContextFilterArgsConv(object):

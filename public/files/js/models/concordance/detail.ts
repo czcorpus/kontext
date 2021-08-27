@@ -23,13 +23,12 @@ import { Observable, of as rxOf, forkJoin } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Color, List, pipe, Dict, HTTP, tuple } from 'cnc-tskit';
 
-import { MultiDict } from '../../multidict';
 import * as PluginInterfaces from '../../types/plugins';
 import { PageModel } from '../../app/page';
 import { AudioPlayer, PlayerStatus } from './media';
 import { Actions as ViewOptionsActions } from '../options/actions';
 import { Actions } from './actions';
-import { AudioPlayerActions, DetailExpandPositions, WideCtx } from './common';
+import { AudioPlayerActions, DetailExpandPositions, WideCtx, WideCtxArgs } from './common';
 
 /**
  *
@@ -101,7 +100,7 @@ export interface ConcDetailModelState {
 
     speakerColors:Array<Color.RGBA>;
 
-    wideCtxGlobals:Array<[string, string]>;
+    wideCtxGlobals:WideCtxArgs;
 
     spkOverlapMode:string;
 
@@ -161,7 +160,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
         dispatcher:IFullActionControl,
         structCtx:string,
         speechOpts:SpeechOptions,
-        wideCtxGlobals:Array<[string, string]>,
+        wideCtxGlobals:WideCtxArgs,
         tokenConnectPlg:PluginInterfaces.TokenConnect.IPlugin
     ) {
         super(
@@ -740,7 +739,7 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      *
      */
     private loadSpeechDetail(expand?:'left'|'right'|'reload'):Observable<boolean> {
-        const structs = this.layoutModel.exportConcArgs().getList('structs');
+        const structs = this.layoutModel.getConcArgs().structs;
         const args = pipe(
                 this.state.speechAttrs,
                 List.map(x => `${this.state.speechOpts.speakerIdAttr[0]}.${x}`),
@@ -809,24 +808,24 @@ export class ConcDetailModel extends StatefulModel<ConcDetailModelState> {
      *
      */
     private loadConcDetail(structs:Array<string>, expand?:'left'|'right'|'reload'):Observable<boolean> {
-        const args = new MultiDict(this.state.wideCtxGlobals);
-        args.set('corpname', this.state.corpusId); // just for sure (is should be already in args)
-        // we must delete 'usesubcorp' as the server API does not need it
-        // and in case of an aligned corpus it even produces an error
-        args.remove('usesubcorp');
-        args.set('pos', String(this.state.kwicTokenNum));
-        args.set('format', 'json');
-        if (this.state.kwicLength && this.state.kwicLength > 1) {
-            args.set('hitlen', this.state.kwicLength);
-        }
-
-        if (structs) {
-            args.set('structs', (args.head('structs') || '').split(',').concat(structs).join(','));
-        }
-
         const [lft, rgt] = this.getExpandArgs(expand);
-        args.set('detail_left_ctx', lft);
-        args.set('detail_right_ctx', rgt);
+        const args = {
+            ...this.state.wideCtxGlobals,
+            corpname: this.state.corpusId, // just for sure (is should be already in args)
+            // we must delete 'usesubcorp' as the server API does not need it
+            // and in case of an aligned corpus it even produces an error
+            usesubcorp: undefined,
+            pos: this.state.kwicTokenNum,
+            detail_left_ctx: lft,
+            detail_right_ctx: rgt,
+            format: 'json'
+        };
+        if (this.state.kwicLength && this.state.kwicLength > 1) {
+            args.hitlen = this.state.kwicLength;
+        }
+        if (structs) {
+            args.structs = args.structs.concat(structs);
+        }
 
         return this.layoutModel.ajax$<WideCtx>(
             HTTP.Method.GET,

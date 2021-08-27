@@ -29,7 +29,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
-import { MultiDict } from '../../multidict';
+import { ConcServerArgs } from '../concordance/common';
 
 
 interface StructAttrsSubmit {
@@ -360,24 +360,28 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             tap(
                 () => {
                     if (state.attrVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC) {
-                        this.layoutModel.replaceConcArg('ctxattrs',
-                                [this.layoutModel.getConf<string>('baseAttr')]);
+                        this.layoutModel.updateConcArgs({
+                            ctxattrs: [this.layoutModel.getConf<string>('baseAttr')]
+                        });
 
                     } else {
-                        this.layoutModel.replaceConcArg(
-                            'ctxattrs', [formArgs.attrs.join(',')]);
+                        this.layoutModel.updateConcArgs({
+                            ctxattrs: [...formArgs.attrs]
+                        });
                     }
-                    this.layoutModel.replaceConcArg('attrs', [formArgs.attrs.join(',')]);
-                    this.layoutModel.replaceConcArg('attr_vmode', [formArgs.attr_vmode]);
-                    this.layoutModel.replaceConcArg('base_viewattr', [formArgs.base_viewattr]);
-                    this.layoutModel.replaceConcArg('structs', [formArgs.structs.join(',')]);
-                    this.layoutModel.replaceConcArg('refs', [formArgs.refs.join(',')]);
-                    this.layoutModel.setConf('QSEnabled', [formArgs.qs_enabled]);
+                    this.layoutModel.updateConcArgs<ConcServerArgs & {QSEnabled: boolean}>({
+                        attrs: formArgs.attrs,
+                        attr_vmode: formArgs.attr_vmode,
+                        base_viewattr: formArgs.base_viewattr,
+                        structs: formArgs.structs,
+                        refs: formArgs.refs,
+                        QSEnabled: formArgs.qs_enabled
+                    });
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )
-        ).subscribe(
-            (data) => {
+        ).subscribe({
+            next: data => {
                 dispatch<typeof Actions.SaveSettingsDone>({
                     name: Actions.SaveSettingsDone.name,
                     payload: {
@@ -392,14 +396,14 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                     this.layoutModel.translate('options__options_saved')
                 );
             },
-            (err) => {
+            error: error => {
                 dispatch<typeof Actions.SaveSettingsDone>({
                     name: Actions.SaveSettingsDone.name,
-                    error: err
+                    error
                 });
-                this.layoutModel.showMessage('error', err);
+                this.layoutModel.showMessage('error', error);
             }
-        );
+        });
     }
 
     private toggleAllAttributes(state:CorpusViewOptionsModelState):void {
@@ -736,13 +740,12 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
     }
 
     private loadData(state:CorpusViewOptionsModelState):Observable<ViewOptions.LoadOptionsResponse> {
-        const args = new MultiDict();
-        args.set('corpname', state.corpusIdent.id);
         return this.layoutModel.ajax$<ViewOptions.LoadOptionsResponse>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('options/viewattrs', args),
+            this.layoutModel.createActionUrl(
+                'options/viewattrs', {corpname: state.corpusIdent.id}
+            ),
             {}
         );
     }
-
 }

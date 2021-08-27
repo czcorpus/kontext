@@ -224,10 +224,10 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'sortx',
-                [
-                    tuple('format', 'json'),
-                    tuple('q', '~' + concId)
-                ]
+                {
+                    format: 'json',
+                    q: '~' + concId
+                }
             ),
             args,
             {
@@ -245,7 +245,7 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             sicase: this.state.sicaseValues[sortId],
             spos: this.state.sposValues[sortId],
             ...this.pageModel.getConcArgs(),
-            q: '~' + concId
+            q: ['~' + concId]
         }
     }
 

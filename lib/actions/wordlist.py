@@ -84,11 +84,10 @@ class Wordlist(Kontext):
 
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
-        conc_args = templating.StateGlobals(
-            self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping))
+        conc_args = self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping)
         q = request.args.get('q')
         if q:
-            conc_args.set('q', [q])
+            conc_args['q'] = [q]
         args = {}
         result['Globals'] = conc_args.update(args)
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
@@ -143,7 +142,7 @@ class Wordlist(Kontext):
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
-        rev = bool(int(request.args.get('reversed', '0')))
+        rev = bool(int(request.args.get('reverse', '0')))
         page = int(request.args.get('wlpage', '1'))
         offset = (page - 1) * self.args.wlpagesize
         total, data = require_existing_wordlist(
@@ -152,7 +151,7 @@ class Wordlist(Kontext):
             collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
 
         result = dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
-                      query_id=self._curr_wlform_args.id, reversed=rev, wlsort=self.args.wlsort, wlpage=page,
+                      query_id=self._curr_wlform_args.id, reverse=rev, wlsort=self.args.wlsort, wlpage=page,
                       wlpagesize=self.args.wlpagesize)
 
         if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':

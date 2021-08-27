@@ -99,7 +99,7 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         return this.pageModel.ajax$<QueryOverviewResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('concdesc_json'),
-            this.pageModel.exportConcArgs(),
+            this.pageModel.getConcArgs(),
             {}
         ).pipe(
             map(

@@ -144,7 +144,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
         const keywords = props.row.keywords.map((k, i) => {
             return <CorpKeywordLink key={i} keyword={k[0]} label={k[1]} />;
         });
-        const link = he.createActionLink('query', [['corpname', props.row.id]]);
+        const link = he.createActionLink('query', {corpname: props.row.id});
         const size = props.row.size_info ? props.row.size_info : '-';
         const pmltq = () => {
             if (props.row.pmltq !== 'no') {
@@ -354,7 +354,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
         const style = props.keyword.color ? {backgroundColor: props.keyword.color} : null;
         if (!props.keyword.selected) {
-            const link = he.createActionLink('corplist', [['keyword', props.keyword.ident]]);
+            const link = he.createActionLink('corplist', {keyword: props.keyword.ident});
             return (
                 <a className="keyword" href={link}
                         onClick={handleClickFn(true)}>

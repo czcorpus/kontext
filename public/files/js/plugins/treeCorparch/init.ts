@@ -170,7 +170,12 @@ export class CorplistPage implements PluginInterfaces.Corparch.ICorplistPage {
             pluginApi.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
             (corpora:Array<string>, subcorpId:string) => {
                 window.location.href = pluginApi.createActionUrl(
-                    'query', [['corpname', corpora]]);
+                    'query',
+                    {
+                        corpname: List.head(corpora),
+                        align: List.tail(corpora)
+                    }
+                );
                 return null; // just to keep the type check cool
             }
         );

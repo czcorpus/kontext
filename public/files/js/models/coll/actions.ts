@@ -19,7 +19,6 @@
  */
 
 import { Action } from 'kombo';
-import { MultiDict } from '../../multidict';
 import { AjaxResponse, CollSaveServerArgs, CollServerArgs, HistoryState } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { DataSaveFormat } from '../../app/navigation/save';
@@ -58,10 +57,7 @@ export class Actions {
     };
 
     static ResultApplyQuickFilter:Action<{
-        args:Array<[
-            keyof ConcQuickFilterServerArgs,
-            ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]
-        ]>;
+        args:ConcQuickFilterServerArgs;
         blankWindow:boolean;
     }> = {
         name: 'COLL_RESULT_APPLY_QUICK_FILTER'
@@ -124,7 +120,7 @@ export class Actions {
     };
 
     static FormPrepareSubmitArgsDone:Action<{
-        args:MultiDict<CollSaveServerArgs>;
+        args:CollServerArgs;
     }> = {
         name: 'COLL_FORM_PREPARE_SUBMIT_ARGS_DONE'
     };
@@ -171,7 +167,7 @@ export class Actions {
         name: 'COLL_SAVE_FORM_SUBMIT_DONE'
     };
 
-    static StatePushToHistory:Action<MultiDict<CollServerArgs>> = {
+    static StatePushToHistory:Action<CollServerArgs> = {
         name: 'COLL_STATE_PUSH_TO_HISTORY'
     };
 

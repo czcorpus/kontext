@@ -21,7 +21,6 @@
 import { Dict } from 'cnc-tskit';
 import { IActionDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { ConcServerArgs } from '../concordance/common';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
@@ -89,10 +88,10 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
     }
 
     private generateNextLink(state:ConcRestoreModelState):void {
-        const args:MultiDict<ConcServerArgs & {[k:string]:string|number}> = this.layoutModel.exportConcArgs();
+        const args = this.layoutModel.getConcArgs();
         Dict.forEach(
             (v, k) => {
-                args.set(k, v);
+                args[k] = v;
             },
             state.nextActionArgs
         )

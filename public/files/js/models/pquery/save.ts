@@ -20,7 +20,6 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { MultiDict } from '../../multidict';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
@@ -187,19 +186,21 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
     }
 
     private submit(pqueryResultArgs:{queryId:string; sort:string; reverse:number}):void {
-        const args = new MultiDict();
-        args.set('q', '~' + pqueryResultArgs.queryId);
-        args.set('sort', pqueryResultArgs.sort);
-        args.set('reverse', pqueryResultArgs.reverse);
-        args.set('saveformat', this.state.saveformat);
-        args.set('colheaders', this.state.includeColHeaders ? '1' : '0');
-        args.set('heading', this.state.includeHeading ? '1' : '0');
-        args.set('from_line', this.state.fromLine.value);
-        args.set('to_line', isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value);
-        args.remove('format'); // cannot risk 'json' here
         this.saveLinkFn(
             `pquery.${this.state.saveformat}`,
-            this.layoutModel.createActionUrl('pquery/download', args.items())
+            this.layoutModel.createActionUrl(
+                'pquery/download',
+                {
+                    q: '~' + pqueryResultArgs.queryId,
+                    sort: pqueryResultArgs.sort,
+                    reverse: pqueryResultArgs.reverse,
+                    saveformat: this.state.saveformat,
+                    colheaders: this.state.includeColHeaders,
+                    heading: this.state.includeHeading,
+                    from_line: this.state.fromLine.value,
+                    to_line: isNaN(parseInt(this.state.toLine.value)) ? '' : this.state.toLine.value
+                }
+            )
         );
     }
 }

@@ -19,12 +19,11 @@
  */
 
 import { IFullActionControl, StatelessModel } from 'kombo';
-import { List } from 'cnc-tskit';
+import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { FreqServerArgs } from './common';
-import { MultiDict } from '../../multidict';
 import { AlignTypes } from './twoDimension/common';
 import { Actions } from './actions';
 
@@ -204,22 +203,33 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
     }
 
     private submit(state:MLFreqFormModelState):void {
-        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
-        args.set('flimit', parseInt(state.flimit.value));
-        state.mlxattr.forEach((item, i) => {
-            args.set(`ml${i+1}attr`, item);
-        });
-        state.mlxicase.forEach((item, i) => {
-            args.set(`ml${i+1}icase`, item ? 'i' : '');
-        });
-        state.mlxctxIndices.forEach((item, i) => {
-            const val = state.alignType[i] === 'left' ?
-                    MLFreqFormModel.POSITION_LA[item] : MLFreqFormModel.POSITION_RA[item];
-            args.set(`ml${i+1}ctx`, val);
-        });
-        args.set('freqlevel', state.mlxattr.length);
-        args.set('freq_sort', state.freqSort);
-        window.location.href = this.pageModel.createActionUrl('freqml', args.items());
+        const args:FreqServerArgs = {
+            ...this.pageModel.getConcArgs(),
+            ftt_include_empty: undefined,
+            flimit: parseInt(state.flimit.value),
+            ...pipe(
+                state.mlxattr,
+                List.map((item, i) => tuple(`ml${i+1}attr`, item)),
+                Dict.fromEntries()
+            ),
+            ... pipe(
+                state.mlxicase,
+                List.map((item, i) => tuple(`ml${i+1}icase`, item ? 'i' : '')),
+                Dict.fromEntries()
+            ),
+            ...pipe(
+                state.mlxctxIndices,
+                List.map((item, i) => {
+                    const val = state.alignType[i] === 'left' ?
+                        MLFreqFormModel.POSITION_LA[item] : MLFreqFormModel.POSITION_RA[item];
+                    return tuple(`ml${i+1}ctx`, val);
+                }),
+                Dict.fromEntries()
+            ),
+            freqlevel: state.mlxattr.length,
+            freq_sort: state.freqSort
+        };
+        window.location.href = this.pageModel.createActionUrl('freqml', args);
     }
 
     getPositionRangeLabels():Array<string> {
@@ -305,12 +315,15 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     }
 
     private submit(state:TTFreqFormModelState):void {
-        const args = this.pageModel.exportConcArgs() as MultiDict<FreqServerArgs>;
-        args.replace('fttattr', state.fttattr);
-        args.set('ftt_include_empty', state.fttIncludeEmpty ? '1' : '0');
-        args.set('flimit', parseInt(state.flimit.value));
-        args.set('freq_sort', state.freqSort);
-        window.location.href = this.pageModel.createActionUrl('freqtt', args.items());
+        const args:FreqServerArgs = {
+            ...this.pageModel.getConcArgs(),
+            fttattr: state.fttattr,
+            ftt_include_empty: state.fttIncludeEmpty,
+            flimit: parseInt(state.flimit.value),
+            freq_sort: state.freqSort,
+            freqlevel: undefined
+        };
+        window.location.href = this.pageModel.createActionUrl('freqtt', args);
     }
 
 }

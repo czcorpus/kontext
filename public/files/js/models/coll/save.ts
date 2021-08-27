@@ -23,7 +23,8 @@ import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { DataSaveFormat, isDataSaveFormat } from '../../app/navigation/save';
+import { DataSaveFormat } from '../../app/navigation/save';
+import { CollSaveServerArgs } from './common';
 
 
 export interface COllResultsSaveModelArgs {
@@ -191,18 +192,20 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
             return syncData;
         }).subscribe(
             action => {
-                const args = (action as typeof Actions.FormPrepareSubmitArgsDone).payload.args;
-                args.remove('format'); // cannot risk format=json and invalid http resp. headers
-                args.set('saveformat', state.saveformat);
-                args.set('colheaders', state.includeColHeaders ? '1' : '0');
-                args.set('heading', state.includeHeading ? '1' : '0');
-                args.set('from_line', parseInt(state.fromLine.value));
-                args.set('to_line', state.toLine.value ?
-                            parseInt(state.toLine.value) :
-                            undefined);
+                const args:CollSaveServerArgs = {
+                    ...(action as typeof Actions.FormPrepareSubmitArgsDone).payload.args,
+                    format: undefined, // cannot risk format=json and invalid http resp. headers
+                    saveformat: state.saveformat,
+                    colheaders: state.includeColHeaders,
+                    heading: state.includeHeading,
+                    from_line: parseInt(state.fromLine.value),
+                    to_line: state.toLine.value ?
+                                parseInt(state.toLine.value) :
+                                undefined
+                };
                 this.saveLinkFn(
                     `collocation.${state.saveformat}`,
-                    this.layoutModel.createActionUrl('savecoll', args.items())
+                    this.layoutModel.createActionUrl('savecoll', args)
                 );
             }
         );

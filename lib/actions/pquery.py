@@ -21,7 +21,8 @@ from typing import Optional, Callable, List, Dict, Any, Tuple
 from controller import exposed
 from controller.kontext import Kontext
 from argmapping.pquery import PqueryFormArgs
-from argmapping.conc.query import QueryFormArgs, FilterFormArgs
+from argmapping.conc.query import QueryFormArgs
+from argmapping.conc.filter import FilterFormArgs
 from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache

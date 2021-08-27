@@ -23,10 +23,8 @@ import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/comm
 
 export interface Item {
     Word:Array<{n:string}>;
-    pfilter:Array<[keyof ConcQuickFilterServerArgs,
-        ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
-    nfilter:Array<[keyof ConcQuickFilterServerArgs,
-        ConcQuickFilterServerArgs[keyof ConcQuickFilterServerArgs]]>;
+    pfilter:ConcQuickFilterServerArgs;
+    nfilter:ConcQuickFilterServerArgs;
     fbar:number;
     freqbar:number;
     rel:number;

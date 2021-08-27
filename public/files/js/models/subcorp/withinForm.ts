@@ -22,10 +22,9 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { CreateSubcorpusWithinArgs, InputMode } from './common';
 import { SubcorpFormModel } from './form';
-import { MultiDict } from '../../multidict';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
-import { List, pipe, HTTP } from 'cnc-tskit';
+import { List, pipe, HTTP, tuple } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -167,7 +166,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                             HTTP.Method.POST,
                             this.pageModel.createActionUrl(
                                 '/subcorpus/create',
-                                MultiDict.fromDict({format: 'json'})
+                                {format: 'json'}
                             ),
                             args,
                             {
@@ -176,15 +175,15 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         ) :
                         throwError(err)
 
-                    ).subscribe(
-                        () => {
+                    ).subscribe({
+                        next: () => {
                             window.location.href = this.pageModel.createActionUrl(
                                 'subcorpus/list');
                         },
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
                         }
-                    );
+                    });
                 }
             }
         );

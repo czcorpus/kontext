@@ -20,7 +20,6 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { MultiDict } from '../../../multidict';
 import { IActionDispatcher } from 'kombo';
 import { init as ftInit, FormattedTextRendererProps } from './formattedText';
 
@@ -110,10 +109,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers) 
         return (
             <p className="keywords">
                 {props.data.map((value, i) => {
-                    const args = new MultiDict();
-                    args.set('corpname', props.corpname);
-                    args.set('qtype', 'simple');
-                    args.set('query', value.word);
+                    const args = {
+                        corpname: props.corpname,
+                        qtype: 'simple',
+                        query: value.word
+                    };
 
                     return <React.Fragment key={value.word}>
                         <a className="keyword" href={he.createActionLink('query_submit', args)}

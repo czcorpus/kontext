@@ -225,14 +225,14 @@ export interface ConcServerArgs {
     viewmode:'kwic'|'sen'|'align';
     format:Kontext.ResponseFormat;
     pagesize:number;
-    attrs:string;
+    attrs:Array<string>;
     attr_vmode:ViewOptions.AttrViewMode;
     base_viewattr:string;
-    ctxattrs:string; // comma-separated values
-    structs:string; // comma-separated values
-    refs:string; //comma-separated values
+    ctxattrs:Array<string>;
+    structs:Array<string>;
+    refs:Array<string>;
     fromp:number;
-    q:string;
+    q:Array<string>;
 }
 
 /**
@@ -257,13 +257,18 @@ export interface ConcSaveServerArgs extends ConcServerArgs {
     align_kwic:'0'|'1';
 }
 
+export interface WideCtxArgs {
+    attrs:Array<string>;
+    structs:Array<string>;
+    refs:Array<string>;
+    hitlen:number;
+}
+
 /**
  * IConcArgsHandler defines an object which is able to
  * provide and update concordance page parameters.
  */
 export interface IConcArgsHandler {
-
-    exportConcArgs():Kontext.IMultiDict<ConcServerArgs>;
 
     getConcArgs():ConcServerArgs;
 
@@ -492,7 +497,7 @@ export interface ViewConfiguration {
      */
     StructCtx:string;
 
-    WideCtxGlobals:Array<[string,string]>;
+    WideCtxGlobals:WideCtxArgs;
 
     supportsSyntaxView:boolean;
 

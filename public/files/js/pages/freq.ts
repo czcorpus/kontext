@@ -21,7 +21,6 @@
 import * as Kontext from '../types/kontext';
 import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
-import { MultiDict } from '../multidict';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
     from '../models/freqs/freqForms';
@@ -43,7 +42,7 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, Dict } from 'cnc-tskit';
+import { List, pipe, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
@@ -284,7 +283,7 @@ class FreqPage {
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
-                    freqCrit: this.layoutModel.getConf<Array<[string, string]>>('FreqCrit'),
+                    freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
@@ -357,8 +356,10 @@ class FreqPage {
 
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ct': {
-                const args = this.ctFreqModel.getSubmitArgs();
-                args.remove('format');
+                const args = {
+                    ...this.ctFreqModel.getSubmitArgs(),
+                    format: undefined
+                };
                 this.layoutModel.getHistory().replaceState(
                     'freqct',
                     args,
@@ -369,8 +370,10 @@ class FreqPage {
             case 'tt':
             case 'ml': {
                 const state = this.freqResultModel.getState(); // no antipattern here
-                const args = this.freqResultModel.getSubmitArgs(state);
-                args.remove('format');
+                const args = {
+                    ...this.freqResultModel.getSubmitArgs(state),
+                    format: undefined
+                };
                 this.layoutModel.getHistory().replaceState(
                     'freqs',
                     args,
@@ -411,30 +414,33 @@ class FreqPage {
                 (action) => {
                     switch (action.name) {
                         case MainMenuActions.ShowFilter.name:
-                            const filterArgs = new MultiDict(Dict.toEntries(action.payload));
                             window.location.replace(
                                 this.layoutModel.createActionUrl(
                                     'view',
-                                    this.layoutModel.exportConcArgs().items()
-                                ) + '#filter/' + this.layoutModel.encodeURLParameters(filterArgs)
+                                    this.layoutModel.getConcArgs()
+                                ) + '#filter/' + pipe(
+                                    action.payload,
+                                    CURL.valueToPairs(),
+                                    List.map(([k, v]) => `${k}=${v}`)
+                                ).join('&')
                             );
                         break;
                         case MainMenuActions.ShowSort.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#sort');
                         break;
                         case MainMenuActions.ShowSample.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#sample');
                         break;
                         case MainMenuActions.ApplyShuffle.name:
                             window.location.replace(this.layoutModel.createActionUrl(
                                 'view',
-                                this.layoutModel.exportConcArgs().items()
+                                this.layoutModel.getConcArgs()
                             ) + '#shuffle');
                         break;
                     }
