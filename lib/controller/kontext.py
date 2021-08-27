@@ -713,8 +713,7 @@ class Kontext(Controller):
             ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')
         else:
             ttcrit_attrs = maincorp.get_conf('SUBCORPATTRS')
-        result['ttcrit'] = [('fcrit', f'{a} 0')
-                            for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+        result['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
         result['interval_chars'] = (
             settings.get('corpora', 'left_interval_char', None),
             settings.get('corpora', 'interval_char', None),

@@ -29,6 +29,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PluginName } from '../../app/plugin';
+import { ConcServerArgs } from '../concordance/common';
 
 
 interface StructAttrsSubmit {
@@ -359,19 +360,23 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
             tap(
                 () => {
                     if (state.attrVmode === ViewOptions.AttrViewMode.VISIBLE_KWIC) {
-                        this.layoutModel.replaceConcArg('ctxattrs',
-                                [this.layoutModel.getConf<string>('baseAttr')]);
+                        this.layoutModel.updateConcArgs({
+                            ctxattrs: [this.layoutModel.getConf<string>('baseAttr')]
+                        });
 
                     } else {
-                        this.layoutModel.replaceConcArg(
-                            'ctxattrs', [formArgs.attrs.join(',')]);
+                        this.layoutModel.updateConcArgs({
+                            ctxattrs: [...formArgs.attrs]
+                        });
                     }
-                    this.layoutModel.replaceConcArg('attrs', [formArgs.attrs.join(',')]);
-                    this.layoutModel.replaceConcArg('attr_vmode', [formArgs.attr_vmode]);
-                    this.layoutModel.replaceConcArg('base_viewattr', [formArgs.base_viewattr]);
-                    this.layoutModel.replaceConcArg('structs', [formArgs.structs.join(',')]);
-                    this.layoutModel.replaceConcArg('refs', [formArgs.refs.join(',')]);
-                    this.layoutModel.setConf('QSEnabled', [formArgs.qs_enabled]);
+                    this.layoutModel.updateConcArgs<ConcServerArgs & {QSEnabled: boolean}>({
+                        attrs: formArgs.attrs,
+                        attr_vmode: formArgs.attr_vmode,
+                        base_viewattr: formArgs.base_viewattr,
+                        structs: formArgs.structs,
+                        refs: formArgs.refs,
+                        QSEnabled: formArgs.qs_enabled
+                    });
                     this.layoutModel.resetMenuActiveItemAndNotify();
                 }
             )

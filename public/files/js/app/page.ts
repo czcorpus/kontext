@@ -432,7 +432,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      * Creates a temporary form with passed args and submits it
      * via POST method.
      */
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+    setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         this.appNavig.setLocationPost(path, args, blankWindow);
     }
 
@@ -484,31 +484,16 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     /**
-     * Replace a specified argument of the current concordance. The action
-     * triggers an event calling all the config change handlers.
+     * Update concordance args with an object containing
+     * subset of ConcServerArgs keys and values.
      */
-    replaceConcArg(name:string, values:Array<string>):void {
-        const tmp = this.getConcArgs();
-        if (name in tmp) {
-            if (Array.isArray(tmp[name])) {
-                tmp[name] = values;
-
-            } else if (!List.empty(values)) {
-                tmp[name] = values[0];
-
-            } else {
-                tmp[name] = undefined;
-            }
-            this.setConf<ConcServerArgs>('currentArgs', tmp);
-
-        } else {
-            throw new Error(`Unknown conc. arg. ${name}`);
-        }
+    updateConcArgs<T extends ConcServerArgs>(obj:Partial<T>):void {
+        this.setConf<ConcServerArgs>('currentArgs', { ...this.getConcArgs(), ...obj});
     }
 
     updateConcPersistenceId(value:string|Array<string>):void {
         if (Array.isArray(value)) {
-            this.replaceConcArg('q', value);
+            this.updateConcArgs({q: value});
             const concIds = pipe(
                 value,
                 List.filter(v => v[0] === '~'),
@@ -519,7 +504,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             }
 
         } else {
-            this.replaceConcArg('q', ['~' + value]);
+            this.updateConcArgs({q: ['~' + value]});
             this.setConf<string>('concPersistenceOpId', value);
         }
         this.dispatcher.dispatch<typeof Actions.ConcArgsUpdated>({

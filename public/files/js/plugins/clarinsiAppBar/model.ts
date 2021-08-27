@@ -76,7 +76,7 @@ export class ClarinSiAppBarModel extends StatelessModel<{menuVisible:boolean}> {
             (state, action, dispatch) => {
                 this.pluginCtx.setLocationPost(
                     this.pluginCtx.createActionUrl('user/switch_language'),
-                    [tuple('language', action.payload.value)]
+                    {language: action.payload.value}
                 );
             }
         );

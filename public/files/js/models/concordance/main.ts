@@ -112,7 +112,7 @@ export interface ConcordanceModelState {
 
     lines:Array<Line>;
 
-    viewMode:string;
+    viewMode:'kwic'|'sen'|'align';
 
     attrViewMode:ViewOptions.AttrViewMode;
 
@@ -889,8 +889,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
      * @return a 2-tuple [concordance ID, actual page number]
      */
     private changePage(
-        action:PaginationActions, pageNumber?:number, concId?:string
+        action:PaginationActions,
+        pageNumber?:number,
+        concId?:string
     ):Observable<[string, number]> {
+
         const pageNum:number = action === 'customPage' ?
             pageNumber : this.state.pagination[action];
         if (!this.pageNumIsValid(pageNum) || !this.pageIsInRange(pageNum)) {
@@ -898,13 +901,14 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 'concview__invalid_page_num_err')));
         }
 
-        const args = this.layoutModel.getConcArgs();
-        args.fromp = pageNum;
-        args.format = 'json';
+        const args = {
+            ...this.layoutModel.getConcArgs(),
+            fromp: pageNum,
+            format: 'json'
+        };
         if (concId) {
             args.q = [concId];
         }
-
         return this.layoutModel.ajax$<AjaxConcResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('view'),
@@ -954,15 +958,11 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private changeViewMode():Observable<any> {
-        let mode:string;
-        if (this.state.corporaColumns.length > 1) {
-            mode = {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode];
-
-        } else {
-            mode = {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
-        }
+        const mode = this.state.corporaColumns.length > 1 ?
+            {'align': 'kwic', 'kwic': 'align'}[this.state.viewMode] :
+            {'sen': 'kwic', 'kwic': 'sen'}[this.state.viewMode];
         this.changeState(state => {state.viewMode = mode});
-        this.layoutModel.replaceConcArg('viewmode', [this.state.viewMode]);
+        this.layoutModel.updateConcArgs({viewmode: this.state.viewMode});
         const args = this.layoutModel.getConcArgs();
         args.q = ['~' + this.state.concId];
         args.format = 'json';
@@ -1006,7 +1006,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             args.viewmode = 'align';
             args.q = ['~' + this.state.concId];
             this.layoutModel.setLocationPost(
-                this.layoutModel.createActionUrl('switch_main_corp', args), []);
+                this.layoutModel.createActionUrl('switch_main_corp', args), {});
 
         } else {
             throw new Error('Cannot set corpus as main - no KWIC');

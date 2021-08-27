@@ -244,13 +244,11 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     state.isBusy = true;
                 });
 
-                this.deleteItem(action.payload.itemIdx).subscribe(
-                    _ => {
-                    },
-                    error => {
+                this.deleteItem(action.payload.itemIdx).subscribe({
+                    error: error => {
                         this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         )
     }
@@ -264,7 +262,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         };
         window.location.href = this.pageModel.createActionUrl(
             actions[item.q_supertype],
-            [tuple('q', `~${item.query_id}`)]
+            {q: `~${item.query_id}`}
         );
     }
 

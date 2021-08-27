@@ -77,7 +77,7 @@ export class UserStatusModel extends StatefulModel<UsersStatusModelState> {
         this.addActionHandler<typeof UserActions.UserLogoutx>(
             UserActions.UserLogoutx.name,
             action => {
-                this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), []);
+                this.pluginApi.setLocationPost(this.pluginApi.createActionUrl('user/logoutx'), {});
             }
         );
     }

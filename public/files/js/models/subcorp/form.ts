@@ -223,7 +223,7 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
                 HTTP.Method.POST,
                 this.pageModel.createActionUrl(
                     '/subcorpus/create',
-                    [tuple('format', 'json')]
+                    {format: 'json'}
                 ),
                 args,
                 {

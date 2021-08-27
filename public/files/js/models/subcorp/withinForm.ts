@@ -166,7 +166,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                             HTTP.Method.POST,
                             this.pageModel.createActionUrl(
                                 '/subcorpus/create',
-                                [tuple('format', 'json')]
+                                {format: 'json'}
                             ),
                             args,
                             {
@@ -175,15 +175,15 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                         ) :
                         throwError(err)
 
-                    ).subscribe(
-                        () => {
+                    ).subscribe({
+                        next: () => {
                             window.location.href = this.pageModel.createActionUrl(
                                 'subcorpus/list');
                         },
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
                         }
-                    );
+                    });
                 }
             }
         );

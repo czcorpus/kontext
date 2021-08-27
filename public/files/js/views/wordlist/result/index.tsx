@@ -57,7 +57,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
         sortKey:string;
         isActive:boolean;
         str:string;
-        reversed:boolean;
+        reverse:boolean;
 
     }> = (props) => {
 
@@ -66,7 +66,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                 name: Actions.WordlistResultSetSortColumn.name,
                 payload: {
                     sortKey: props.sortKey,
-                    reverse: props.isActive ? !props.reversed : false
+                    reverse: props.isActive ? !props.reverse : false
                 }
             });
         };
@@ -79,7 +79,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                         utils.translate('global__click_to_sort')}>
                             {props.str}
                     </a>
-                    {props.isActive ? (props.reversed ?
+                    {props.isActive ? (props.reverse ?
                         <img className="sort-flag" src={utils.createStaticUrl('img/sort_desc.svg')} /> :
                         <img className="sort-flag" src={utils.createStaticUrl('img/sort_asc.svg')} /> ) :
                         null
@@ -348,7 +348,7 @@ export function init({dispatcher, utils, wordlistSaveViews,
                             </th>
                             {List.map(
                                 item => <THSortableColumn key={item.sortKey} str={item.str} sortKey={item.sortKey}
-                                    isActive={props.wlsort === item.sortKey} reversed={props.reversed} />,
+                                    isActive={props.wlsort === item.sortKey} reverse={props.reverse} />,
                                 props.headings
                             )}
                         </tr>

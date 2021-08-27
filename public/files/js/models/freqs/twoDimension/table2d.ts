@@ -344,7 +344,7 @@ export class Freq2DTableModel extends GeneralFreq2DModel<Freq2DTableModelState> 
         this.addActionHandler<typeof Actions.FreqctApplyQuickFilter>(
             Actions.FreqctApplyQuickFilter.name,
             action => {
-                this.pageModel.setLocationPost(action.payload.url, []);
+                this.pageModel.setLocationPost(action.payload.url, {});
             }
         );
     }

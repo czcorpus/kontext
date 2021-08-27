@@ -282,7 +282,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultApplyQuickFilter.name,
             null,
             (state, action, dispatch) => {
-                this.pageModel.setLocationPost(action.payload.url, [], action.payload.blankWindow);
+                this.pageModel.setLocationPost(action.payload.url, {}, action.payload.blankWindow);
             }
         );
     }
@@ -324,8 +324,10 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     private pushStateToHistory(state:FreqDataRowsModelState):void {
-        const args = this.getSubmitArgs(state);
-        args.remove('format');
+        const args = {
+            ...this.getSubmitArgs(state),
+            format: undefined
+        };
         this.pageModel.getHistory().pushState(
             'freqs',
             args,
@@ -356,7 +358,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     getSubmitArgs(state:FreqDataRowsModelState):FreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
-            ...state.freqCrit,
+            fcrit: state.freqCrit,
             flimit: parseInt(state.flimit),
             freq_sort: state.sortColumn,
             // fpage: for client, null means 'multi-block' output, for server '1' must be filled in

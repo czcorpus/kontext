@@ -576,7 +576,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                     if (resp.freq_files_avail) {
                         window.location.href = this.layoutModel.createActionUrl(
                             'wordlist/result',
-                            [tuple('q',  `~${resp.wl_query_id}`)]
+                            {q: `~${resp.wl_query_id}`}
                         );
 
                     } else {

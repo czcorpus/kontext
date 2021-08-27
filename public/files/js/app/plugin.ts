@@ -146,7 +146,7 @@ export class PluginApi implements IPluginApi {
         return this.getHelpLink(ident);
     }
 
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+    setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         this.pageModel.setLocationPost(path, args, blankWindow);
     }
 }

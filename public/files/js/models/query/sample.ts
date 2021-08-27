@@ -170,9 +170,7 @@ export class ConcSampleModel extends StatefulModel<ConcSampleModelState> {
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'reduce',
-                [
-                    tuple('format', 'json')
-                ]
+                {format: 'json'}
             ),
             args
         );

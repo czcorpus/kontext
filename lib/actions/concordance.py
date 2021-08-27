@@ -969,8 +969,7 @@ class Actions(Querying):
 
         calc_result = freq_calc.calculate_freqs(args)
         result.update(
-            fcrit=[('fcrit', cr) for cr in fcrit],
-            FCrit=[{'fcrit': cr} for cr in fcrit],
+            fcrit=fcrit,
             Blocks=calc_result['data'],
             paging=0,
             concsize=calc_result['conc_size'],
@@ -1823,8 +1822,7 @@ class Actions(Querying):
             ttcrit_attrs = self.corp.get_conf('FREQTTATTRS')
         else:
             ttcrit_attrs = self.corp.get_conf('SUBCORPATTRS')
-        tmp_out['ttcrit'] = [('fcrit', '%s 0' % a)
-                             for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+        tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
         self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
                                               corpora=self._select_current_aligned_corpora(

@@ -134,7 +134,7 @@ export class WordlistPage {
                     corpname: this.layoutModel.getCorpusIdent().id,
                     usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
                     queryId: this.layoutModel.getConf<string>('QueryId'),
-                    reversed: this.layoutModel.getConf<boolean>('Reversed'),
+                    reverse: this.layoutModel.getConf<boolean>('Reverse'),
                     wlsort: this.layoutModel.getConf<string>('Wlsort'),
                     page: this.layoutModel.getConf<number>('PageNum'),
                     pageSize: this.layoutModel.getConf<number>('PageSize'),
@@ -177,13 +177,12 @@ export class WordlistPage {
             this.initCorpInfoToolbar();
             this.layoutModel.initKeyShortcuts();
 
-            this.layoutModel.getHistory().setOnPopState((evt:PopStateEvent) => {
-                if (evt.state['pagination']) {
-                    this.layoutModel.dispatcher.dispatch<typeof Actions.WordlistHistoryPopState>({
-                        name: Actions.WordlistHistoryPopState.name,
-                        payload: {
-                            currPageInput: evt.state['page']
-                        }
+            this.layoutModel.getHistory().setOnPopState(
+                (evt:PopStateEvent) => {
+                    if ('wlsort' in evt.state && 'wlpage' in evt.state) {
+                        this.layoutModel.dispatcher.dispatch<typeof Actions.WordlistHistoryPopState>({
+                            name: Actions.WordlistHistoryPopState.name,
+                            payload: {...evt.state}
                     });
                 }
             });

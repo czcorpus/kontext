@@ -309,24 +309,26 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         )
                     )
 
-                ).subscribe(
-                    data => {
-                        dispatch<typeof ConcActions.AddedNewOperation>({
-                            name: ConcActions.AddedNewOperation.name,
-                            payload: {
-                                concId: data.conc_persistence_op_id,
-                                data: data
-                            }
-                        });
+                ).subscribe({
+                    next: data => {
+                        if (data) { // if false then probably window.location.href has been set
+                            dispatch<typeof ConcActions.AddedNewOperation>({
+                                name: ConcActions.AddedNewOperation.name,
+                                payload: {
+                                    concId: data.conc_persistence_op_id,
+                                    data: data
+                                }
+                            });
+                        }
                     },
-                    err => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                         dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
-                            error: err
+                            error
                         });
                     }
-                )
+                });
             }
         );
 
@@ -507,7 +509,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 queryContext, false, false);
                             const url = this.pageModel.createActionUrl(
                                 'query_submit',
-                                [tuple('format', 'json')]
+                                {format: 'json'}
                             );
                             return this.pageModel.ajax$<ConcQueryResponse>(
                                 HTTP.Method.POST,
@@ -593,7 +595,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         } else {
                             return rxOf(null).pipe(
                                 tap(
-                                    () => {
+                                    (data) => {
                                         window.location.href = targetUrl;
                                     }
                                 )
@@ -718,8 +720,13 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
      * function containing a side-effect local action (typically - the last operation contains
      * something like observable.pipe(tap(foo)=>sideEffect(foo)).
      */
-    private branchQuery(state:QueryReplayModelState, queryContext:QueryContextArgs,
-                changedOpIdx:number, dispatch:SEDispatcher):Observable<AjaxConcResponse> {
+    private branchQuery(
+        state:QueryReplayModelState,
+        queryContext:QueryContextArgs,
+        changedOpIdx:number,
+        dispatch:SEDispatcher
+    ):Observable<AjaxConcResponse> {
+
         const args = {
             ...this.pageModel.getConcArgs(),
             q: '~' + state.lastOperationKey

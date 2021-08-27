@@ -57,5 +57,5 @@ export interface BasePlugin {
     getCorpusIdent():Kontext.FullCorpusIdent;
     resetMenuActiveItemAndNotify():void;
     getHelpLink(ident:string):string;
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow?:boolean):void;
+    setLocationPost<T>(path:string, args:T, blankWindow?:boolean):void;
 }

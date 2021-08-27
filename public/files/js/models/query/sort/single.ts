@@ -224,10 +224,10 @@ export class ConcSortModel extends StatefulModel<ConcSortModelState> {
             HTTP.Method.POST,
             this.pageModel.createActionUrl(
                 'sortx',
-                [
-                    tuple('format', 'json'),
-                    tuple('q', '~' + concId)
-                ]
+                {
+                    format: 'json',
+                    q: '~' + concId
+                }
             ),
             args,
             {

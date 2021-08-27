@@ -310,7 +310,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         if (pqTask.status === 'SUCCESS') {
                             window.location.href = this.layoutModel.createActionUrl(
                                 'pquery/result',
-                                [tuple('q', `~${this.state.task.args.query_id}`)]
+                                {q: `~${this.state.task.args.query_id}`}
                             );
 
                         } else if (pqTask.status === 'FAILURE') {
@@ -474,7 +474,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'filter',
-                        [tuple('format', 'json')]
+                        {format: 'json'}
                     ),
                     this.createSubsetCompletentFilterArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
                     {contentType: 'application/json'}
@@ -506,7 +506,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'query_submit',
-                        [tuple('format', 'json')]
+                        {format: 'json'}
                     ),
                     this.createConcSubmitArgs(state, supersetQuery, false),
                     {contentType: 'application/json'}
@@ -566,7 +566,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         HTTP.Method.POST,
                         this.layoutModel.createActionUrl(
                             'query_submit',
-                            [tuple('format', 'json')]
+                            {format: 'json'}
                         ),
                         this.createConcSubmitArgs(state, specQuery, false),
                         {contentType: 'application/json'}
@@ -678,7 +678,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             HTTP.Method.POST,
             this.layoutModel.createActionUrl(
                 'pquery/freq_intersection',
-                []
+                {}
             ),
             args,
             {contentType: 'application/json'}

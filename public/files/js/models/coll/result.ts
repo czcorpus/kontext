@@ -300,7 +300,9 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
 
     private applyQuickFilter(args:ConcQuickFilterServerArgs, blankWindow:boolean) {
         const submitArgs = {...this.layoutModel.getConcArgs(), ...args};
-        this.layoutModel.setLocationPost(this.layoutModel.createActionUrl('quick_filter', submitArgs), [], blankWindow);
+        this.layoutModel.setLocationPost(
+            this.layoutModel.createActionUrl('quick_filter', submitArgs),
+            {}, blankWindow);
     }
 
     private processDataReload(state:CollResultModelState):Observable<[AjaxResponse, CollServerArgs]> {

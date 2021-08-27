@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
@@ -61,16 +61,11 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
         const createLink = () => {
             return he.createActionLink(
                 props.data.action,
-                pipe(
-                    props.concArgs,
-                    Dict.toEntries(),
-                    List.map<[keyof ConcServerArgs, ConcServerArgs[keyof ConcServerArgs]], [string, any]>(
-                        ([key, val]) => tuple(key, val)
-                    ),
-                    List.concat(props.data.args)
-                )
-
-            )
+                {
+                    ...props.concArgs,
+                    ...Dict.fromEntries(props.data.args)
+                }
+            );
         };
 
         return (
@@ -88,7 +83,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
     const StaticItem:React.FC<{
         data:StaticSubmenuItem
     }> = (props) => {
-
         const createLink = () => {
             if (props.data.action) {
                 if (props.data.action.indexOf('http://') === 0 ||

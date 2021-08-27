@@ -348,7 +348,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
         ).pipe(
             tap(d => {
-                this.layoutModel.replaceConcArg('pagesize', [`${state.pageSize.value}`]);
+                this.layoutModel.updateConcArgs({pagesize: state.pageSize.value});
             })
         );
     }

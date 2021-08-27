@@ -138,7 +138,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                                     q2: `p${action2.payload.posLeft} ${posRight} ${alignIdx} ${cqlList.join('')}`
                                 }
                             );
-                            this.layoutModel.setLocationPost(url, [], action.payload.blankWindow);
+                            this.layoutModel.setLocationPost(url, {}, action.payload.blankWindow);
                         }
 
                     },

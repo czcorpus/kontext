@@ -370,8 +370,10 @@ class FreqPage {
             case 'tt':
             case 'ml': {
                 const state = this.freqResultModel.getState(); // no antipattern here
-                const args = this.freqResultModel.getSubmitArgs(state);
-                args.remove('format');
+                const args = {
+                    ...this.freqResultModel.getSubmitArgs(state),
+                    format: undefined
+                };
                 this.layoutModel.getHistory().replaceState(
                     'freqs',
                     args,

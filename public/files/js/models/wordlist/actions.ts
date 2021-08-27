@@ -83,6 +83,7 @@ export class Actions {
 
     static WordlistPageLoadDone:Action<{
         page:number;
+        sortColumn:{wlsort:string; reverse:boolean};
         data:Array<IndexedResultItem>;
     }> = {
         name: 'WORDLIST_PAGE_LOAD_DONE'
@@ -199,7 +200,7 @@ export class Actions {
 
     static WordlistGoToLastPage:Action<{
     }> = {
-        name: 'WORDLIST_FORM_SELECT_ATTR'
+        name: 'WORDLIST_GO_TO_LAST_PAGE'
     };
 
     static WordlistSaveFormHide:Action<{
@@ -242,7 +243,10 @@ export class Actions {
     };
 
     static WordlistHistoryPopState:Action<{
-        currPageInput:string;
+        q:string;
+        wlpage:number;
+        wlsort:string;
+        reverse:boolean;
     }> = {
         name: 'WORDLIST_HISTORY_POP_STATE'
     };

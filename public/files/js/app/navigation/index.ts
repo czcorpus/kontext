@@ -104,7 +104,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
      * @param path
      * @param args
      */
-    setLocationPost(path:string, args:Array<[string,string]>, blankWindow:boolean=false):void {
+    setLocationPost<T>(path:string, args:T, blankWindow:boolean=false):void {
         const body = window.document.getElementsByTagName('body')[0];
         const form = window.document.createElement('form');
         form.setAttribute('method', 'post');
@@ -113,13 +113,18 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             form.setAttribute('target', '_blank');
         }
         body.appendChild(form);
-        (args || []).filter(v => !!v[1]).forEach(item => {
-            const input = window.document.createElement('input');
-            input.setAttribute('type', 'hidden');
-            input.setAttribute('name', item[0]);
-            input.setAttribute('value', item[1]);
-            form.appendChild(input);
-        });
+        pipe(
+            args || {},
+            Dict.toEntries(),
+            List.filter(([,v]) => !!v),
+            List.forEach(item => {
+                const input = window.document.createElement('input');
+                input.setAttribute('type', 'hidden');
+                input.setAttribute('name', item[0]);
+                input.setAttribute('value', item[1]);
+                form.appendChild(input);
+            })
+        );
         form.submit();
         window.onbeforeunload = () => {
             body.removeChild(form);
@@ -155,10 +160,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             urlArgs = pipe(
                 args,
                 URL.valueToPairs(),
-                List.map(
-                    ([key, value]) => encodeURIComponent(key + '') + '=' +
-                            encodeURIComponent(value + '')
-                )
+                List.map(([key, value]) => `${key}=${value}`)
             ).join('&');
         }
         return this.conf.getConf('rootPath') +
@@ -187,7 +189,15 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
         }
 
         function exportValue(v) {
-            return v === null || v === undefined ? '' : encodeURIComponent(v);
+            if (v === null || v === undefined) {
+                return '';
+
+            } else if (typeof v === 'boolean') {
+                return ~~v;
+
+            } else {
+                return encodeURIComponent(v);
+            }
         }
 
         function encodeArgs(obj:{[k:string]:any}):string {

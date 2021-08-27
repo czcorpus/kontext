@@ -264,7 +264,8 @@ export class ViewPage {
         const currAction = this.layoutModel.getConf<string>('currentAction');
         switch (currAction) {
             case 'quick_filter':
-            case 'create_view': {
+            case 'create_view':
+            case 'filter_subhits': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),

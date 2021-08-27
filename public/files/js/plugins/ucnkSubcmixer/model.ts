@@ -346,18 +346,18 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     }
 
     private submitCreateSubcorpus(state:SubcMixerModelState):Observable<Kontext.AjaxResponse & {status: boolean}> {
-        const args = {};
-        args['corpname'] = this.pluginApi.getCorpusIdent().id;
-        args['subcname'] = state.subcname.value;
-        args['publish'] = state.subcIsPublic ? '1' : '0';
-        args['description'] = state.description.value;
-        args['idAttr'] = state.corpusIdAttr;
-        args['ids'] = state.currentResult.ids.join(',');
-        args['structs'] = state.currentResult.structs.join(',');
         return this.pluginApi.ajax$<Kontext.AjaxResponse & {status: boolean}>(
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('subcorpus/subcmixer_create_subcorpus'),
-            args
+            {
+                corpname: this.pluginApi.getCorpusIdent().id,
+                subcname: state.subcname.value,
+                publish: state.subcIsPublic,
+                description: state.description.value,
+                idAttr: state.corpusIdAttr,
+                ids: state.currentResult.ids.join(','),
+                structs: state.currentResult.structs.join(',')
+            }
         );
     }
 
