@@ -28,7 +28,7 @@ import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
-import { Dict, List } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 import { ConcStatus, ExpressionRoleType, PqueryAlignTypes, PqueryExpressionRoles,
     PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
@@ -321,15 +321,18 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         const _renderMainFieldset = () => (
             <S.StylelessFieldset disabled={props.isBusy}>
                 <S.EditorFieldset>
-                    {Dict.mapEntries(
-                        ([sourceId, query]) => (
-                            <EditorDiv key={sourceId} sourceId={sourceId}
-                                    concStatus={props.concWait[sourceId]} corpname={props.corpname}
-                                    numQueries={Dict.size(props.queries)}
-                                    useRichQueryEditor={props.useRichQueryEditor}
-                                    expressionRole={query.expressionRole} />
+                    {pipe(
+                        props.queries,
+                        Dict.mapEntries(
+                            ([sourceId, query]) => (
+                                <EditorDiv key={sourceId} sourceId={sourceId}
+                                        concStatus={props.concWait[sourceId]} corpname={props.corpname}
+                                        numQueries={Dict.size(props.queries)}
+                                        useRichQueryEditor={props.useRichQueryEditor}
+                                        expressionRole={query.expressionRole} />
+                            )
                         ),
-                        props.queries
+                        List.map(([,v]) => v)
                     )}
                     <button type="button" className="util-button add" onClick={addQueryHandler}>
                         <img src={he.createStaticUrl('img/plus.svg')} />
