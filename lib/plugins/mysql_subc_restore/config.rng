@@ -4,10 +4,7 @@
     <start>
         <element name="subc_restore">
             <element name="module">
-                <value>ucnk_subc_restore</value>
-            </element>
-            <element name="db_path">
-                <text />
+                <value>mysql_subc_restore</value>
             </element>
         </element>
     </start>

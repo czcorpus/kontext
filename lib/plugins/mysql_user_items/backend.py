@@ -50,7 +50,6 @@ class Backend:
         self._group_acc_group_attr = group_acc_group_attr
 
     def get_favitems(self, user_id: int):
-        import logging
         with self._db.cursor() as cursor:
             cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '

@@ -24,12 +24,34 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
+from typing import Any, Dict, List, Optional
+from controller.plg import PluginCtx
+from dataclasses import asdict, dataclass
+import datetime
+
+
+@dataclass
+class SubcRestoreRow:
+    id: str
+    user_id: int
+    corpname: str
+    subcname: str
+    cql: str
+    timestamp: datetime.datetime
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Method to get json serializable dict
+        """
+        res = asdict(self)
+        res['timestamp'] = self.timestamp.timestamp()
+        return res
 
 
 class AbstractSubcRestore(abc.ABC):
 
     @abc.abstractmethod
-    def store_query(self, user_id, corpname, subcname, cql):
+    def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
         """
         Store user's subcorpus query. Please note that the method should
         also:
@@ -46,7 +68,7 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_query(self, user_id, corpname, subcname):
+    def delete_query(self, user_id: int, corpname: str, subcname: str):
         """
         Remove a query from archive
 
@@ -60,7 +82,7 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_queries(self, user_id, from_idx, to_idx):
+    def list_queries(self, user_id: int, from_idx: int, to_idx: int) -> List[SubcRestoreRow]:
         """
         List all user subcorpus queries from index from_idx to index to_idx
         (including both ends). The method is not expected to support negative
@@ -72,40 +94,26 @@ class AbstractSubcRestore(abc.ABC):
         to_idx -- values from 0 to num_of_user_queries - 1
 
         returns:
-        a list/tuple of dicts with following structure:
-        {
-            'id': str,
-            'user_id': int,
-            'corpname': str,
-            'subcname': str,
-            'struct_name': str,
-            'condition': str,
-            'timestamp': int
-        }
+        a list/tuple of SubcRestoreRow dataclass
         If nothing is found then an empty list/tuple is returned.
         """
 
     @abc.abstractmethod
-    def get_info(self, user_id, corpname, subcname):
+    def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
         """
         Returns an information about the most recent record matching provided arguments
         """
 
     @abc.abstractmethod
-    def get_query(self, query_id):
+    def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
         """
         Returns a query with ID == query_id
 
         returns:
-        a dict with the following structure:
-        {
-            'id': str,
-            'user_id': int,
-            'corpname': str,
-            'subcname': str,
-            'struct_name': str,
-            'condition': str,
-            'timestamp': int
-        }
+        SubcRestoreRow dataclass
         If nothing is found then None is returned.
         """
+
+    @abc.abstractmethod
+    def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: int, include_cql: bool=False) -> List[Dict[str, Any]]:
+        pass
