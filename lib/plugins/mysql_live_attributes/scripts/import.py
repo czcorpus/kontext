@@ -24,16 +24,34 @@ import sqlite3
 import sys
 import mysql.connector
 import argparse
+from collections import defaultdict
 
 
-def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, dry_run: bool):
+def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, dry_run: bool, batch: int):
     mysql_cursor = mysql_db.cursor()
-
     sqlite_cursor = sqlite_db.cursor()
+
     sqlite_cursor.execute('select count(*) as count from item')
     row_count = sqlite_cursor.fetchone()['count']
+    sqlite_cursor.execute('select distinct corpus_id from item')
+    corpora = [row[0] for row in sqlite_cursor]
 
-    added_struct_attrs = set()
+    present_values = {}
+    mysql_cursor.execute(
+        'select id, corpus_name, structure_name, structattr_name, value from corpus_structattr_value where corpus_name in (%s)',
+        (', '.join(corpora),))
+    for id, *corp_struct_atrr_value in mysql_cursor:
+        present_values[tuple(corp_struct_atrr_value)] = id
+
+    present_corpus_struct_attrs = defaultdict(lambda: set())
+    mysql_cursor.execute(
+        'select corpus_name, structure_name, name from corpus_structattr where corpus_name in (%s)',
+        (', '.join(corpora),))
+    for corp, struct, attr in mysql_cursor:
+        present_corpus_struct_attrs[corp].update(struct)
+        present_corpus_struct_attrs[corp].update(f'{struct}_{attr}')
+
+    foreign_connections = []
     sqlite_cursor.execute('select * from item')
     for i, row in enumerate(sqlite_cursor):
         corpus_name = row['corpus_id']
@@ -50,33 +68,45 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
             if key not in ('id', 'corpus_id', 'poscount', 'wordcount'):
                 struct, attr = key.split('_', 1)
                 # insert structures and structattrs if needed
-                if key not in added_struct_attrs:
-                    mysql_cursor.execute(
-                        'insert ignore into corpus_structure (corpus_name, name) values (%s, %s)',
-                        (corpus_name, struct))
+                if key not in present_corpus_struct_attrs[corpus_name]:
+                    if struct not in present_corpus_struct_attrs[corpus_name]:
+                        mysql_cursor.execute(
+                            'insert ignore into corpus_structure (corpus_name, name) values (%s, %s)',
+                            (corpus_name, struct))
+                        present_corpus_struct_attrs[corpus_name].add(struct)
                     mysql_cursor.execute(
                         'insert ignore into corpus_structattr (corpus_name, structure_name, name) values (%s, %s, %s)',
                         (corpus_name, struct, attr))
-                    added_struct_attrs.add(key)
+                    present_corpus_struct_attrs[corpus_name].add(key)
 
                 # insert structattr values if needed
-                mysql_cursor.execute(
-                    'insert ignore into corpus_structattr_value (corpus_name, structure_name, structattr_name, value) values (%s, %s, %s, %s)',
-                    (corpus_name, struct, attr, row[key]))
-                value_id = mysql_cursor.lastrowid
-                if mysql_cursor.lastrowid == 0:
+                value = row[key]
+                value_index = (corpus_name, struct, attr, value)
+                try:
+                    value_id = present_values[value_index]
+                except KeyError:
                     mysql_cursor.execute(
-                        'select id from corpus_structattr_value where corpus_name = %s and structure_name = %s and structattr_name = %s and value = %s',
-                        (corpus_name, struct, attr, row[key]))
-                    value_id = mysql_cursor.fetchone()[0]
+                        'insert ignore into corpus_structattr_value (corpus_name, structure_name, structattr_name, value) values (%s, %s, %s, %s)',
+                        value_index)
+                    present_values[value_index] = mysql_cursor.lastrowid
+                    value_id = mysql_cursor.lastrowid
 
-                # add mapping of value tuple onto its structattr values
-                mysql_cursor.execute(
-                    'insert ignore into corpus_structattr_value_mapping (value_tuple_id, value_id) values (%s, %s)',
-                    (value_tuple_id, value_id))
+                foreign_connections.append((value_tuple_id, value_id))
 
-        if i % 1000 == 0:
+        if i % batch == 0:
+            # add mapping of value tuple onto its structattr values
+            mysql_cursor.executemany(
+                'insert ignore into corpus_structattr_value_mapping (value_tuple_id, value_id) values (%s, %s)',
+                foreign_connections)
+            foreign_connections = []
+
             print(f'Row {i}/{row_count} imported')
+
+    if foreign_connections:
+        # add mapping of value tuple onto its structattr values
+        mysql_cursor.executemany(
+            'insert ignore into corpus_structattr_value_mapping (value_tuple_id, value_id) values (%s, %s)',
+            foreign_connections)
 
     sqlite_cursor.close()
     mysql_db.commit()
@@ -91,6 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('--mysql-db', type=str, default='kontext')
     parser.add_argument('--mysql-user', type=str, default='kontext')
     parser.add_argument('--mysql-pwd', type=str, default='kontext-secret')
+    parser.add_argument('--batch', type=int, default=1000)
     parser.add_argument('--dry-run', action='store_true',
                         default=False, help='Only print changes')
     args = parser.parse_args()
@@ -101,7 +132,7 @@ if __name__ == '__main__':
         host=args.mysql_host, port=args.mysql_port, user=args.mysql_user, password=args.mysql_pwd, database=args.mysql_db)
 
     try:
-        import_data(sqlite_client, mysql_client, args.dry_run)
+        import_data(sqlite_client, mysql_client, args.dry_run, args.batch)
         if not args.dry_run:
             print('Data imported')
     except Exception as ex:
