@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from typing import Any, Dict, List, Optional, Tuple
+from controller.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 from corplib.corpus import KCorpus
 
@@ -24,15 +26,15 @@ from corplib.corpus import KCorpus
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx, corpname):
+    def is_enabled_for(self, plugin_ctx: PluginCtx, corpname: str) -> bool:
         """
         Return True if live attributes are enabled for selected corpus
         else return False
         """
 
     @abc.abstractmethod
-    def get_attr_values(self, plugin_ctx, corpus: KCorpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
-                        limit_lists=True):
+    def get_attr_values(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str], aligned_corpora: Optional[List[str]]=None, autocomplete_attr: Optional[str]=None,
+                        limit_lists: bool=True) -> Dict[str, Any]:
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -52,7 +54,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     # TODO missing raise NotImplementedError ?
     @abc.abstractmethod
-    def get_subc_size(self, plugin_ctx, corpus: KCorpus, attr_map):
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str]) -> int:
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
@@ -62,7 +64,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_supported_structures(self, plugin_ctx, corpname):
+    def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
         """
         Return a list of structure names the plug-in
         and its data support for the 'corpname' corpus.
@@ -76,13 +78,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_bibliography(self, plugin_ctx, corpus, item_id):
+    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[Tuple[str, str]]:
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
 
     @abc.abstractmethod
-    def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
+    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: str) -> List[Tuple[str, str]]:
         """
         For a list of bibliography item IDs (= typically unique document IDs)
         find respective titles.
