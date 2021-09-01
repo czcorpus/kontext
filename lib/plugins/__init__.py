@@ -183,6 +183,7 @@ def install_plugin(name: str, module, config) -> Any:
     returns:
         an initialized plug-in instance
     """
+    logging.getLogger(__name__).info(f'installing plug-in {name}')
     _plugins[name] = module.create_instance(*(config,))
     return _plugins[name]
 
