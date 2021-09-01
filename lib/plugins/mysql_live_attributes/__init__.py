@@ -26,7 +26,7 @@ from functools import partial
 from collections import defaultdict, OrderedDict
 from dataclasses import astuple
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Union
 from corplib.corpus import KCorpus
 
 import l10n
@@ -36,7 +36,7 @@ from plugins.abstract.corparch import AbstractCorporaArchive
 from plugins.abstract.corparch.corpus import CorpusInfo
 from plugins.abstract.general_storage import KeyValueStorage
 from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse
+from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -322,7 +322,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                 exported.attr_values[struct_attr.key()] = {'length': len(attr_values)}
         return exported
 
-    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[Tuple[str, str]]:
+    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
 
@@ -343,9 +343,9 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             GROUP BY t.id
             ''',
             (corpus, bib_id.struct, bib_id.attr, bib_id.struct, item_id))
-        return [tuple(pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
+        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
 
-    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[Tuple[str, str]]):
+    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
         bib_label = self.import_key(corpus_info.metadata.label_attr)
@@ -374,7 +374,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         ans = []
         for row in cursor:
             data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
-            ans.append((data['doc.id'], data[bib_label.key()]))
+            ans.append(BibTitle(data['doc.id'], data[bib_label.key()]))
         return ans
 
 

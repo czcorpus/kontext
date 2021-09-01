@@ -39,7 +39,7 @@ except ImportError:
 import l10n
 from plugins import inject
 import plugins
-from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse
+from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -361,7 +361,7 @@ class LiveAttributes(AbstractLiveAttributes):
         else:
             ans = self.execute_sql(
                 db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
-        return [(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
+        return [StructAttrValuePair(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
 
     def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         with plugins.runtime.CORPARCH as ca:
@@ -371,7 +371,7 @@ class LiveAttributes(AbstractLiveAttributes):
         pch = ', '.join(['?'] * len(id_list))
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
-        return [(r[0], r[1]) for r in ans]
+        return [BibTitle(r[0], r[1]) for r in ans]
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB)

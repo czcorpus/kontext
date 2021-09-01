@@ -17,13 +17,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Union
 
 from controller.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 from corplib.corpus import KCorpus
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+
+
+class BibTitle(NamedTuple):
+    id: str
+    label: str
+
+
+class StructAttrValuePair(NamedTuple):
+    struct_attr: str
+    value: str
 
 
 class AttrValue(NamedTuple):
@@ -97,13 +107,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[Tuple[str, str]]:
+    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
 
     @abc.abstractmethod
-    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: str) -> List[Tuple[str, str]]:
+    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         """
         For a list of bibliography item IDs (= typically unique document IDs)
         find respective titles.
