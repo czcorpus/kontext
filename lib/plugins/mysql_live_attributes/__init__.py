@@ -17,7 +17,7 @@ Interactive (ad hoc) subcorpus selection.
 Required XML configuration: please see config.rng
 """
 
-from .common import AttrValue, StructAttr
+from .common import AttrValueKey, StructAttr
 import re
 import json
 from functools import wraps
@@ -36,7 +36,7 @@ from plugins.abstract.corparch import AbstractCorporaArchive
 from plugins.abstract.corparch.corpus import CorpusInfo
 from plugins.abstract.general_storage import KeyValueStorage
 from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.live_attributes import AbstractLiveAttributes
+from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -69,12 +69,12 @@ def cached(f):
                                    autocomplete_attr, limit_lists)
             ans = self.from_cache(corpus.corpname, key)
             if ans:
-                return ans
+                return AttrValuesResponse.from_dict(ans)
         ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size,
                                    aligned_corpora, autocomplete_attr, limit_lists)
-            self.to_cache(corpus.corpname, key, ans)
+            self.to_cache(corpus.corpname, key, ans.to_dict())
         return self.export_num_strings(ans)
     return wrapper
 
@@ -174,7 +174,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         return set(StructAttr.get(x) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS')))
 
     @staticmethod
-    def _group_bib_items(data: Dict[str, Any], bib_label: StructAttr):
+    def _group_bib_items(data: Dict[str, Set[AttrValue]], bib_label: StructAttr):
         """
         In bibliography column, items with the same title (column number 2)
         can be set to be grouped together (corpus/metadata/group_duplicates tag).
@@ -187,18 +187,18 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         """
         ans = OrderedDict()
         for item in data[bib_label.key()]:
-            label = item[2]
+            label = item.full_name
             if label not in ans:
                 ans[label] = list(item)
             else:
                 ans[label][3] += 1
-                ans[label][4] += item[4]
+                ans[label][4] += item.poscount
             if ans[label][3] > 1:
                 # use label with special prefix '@' as ID for grouped items
                 # (to be able to distinguish between individual ID-identified and
                 # grouped label-identified items)
                 ans[label][1] = '@' + ans[label][2]
-        data[bib_label.key()] = list(ans.values())
+        data[bib_label.key()] = set(AttrValue(*v) for v in ans.values())
 
     def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
@@ -229,7 +229,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
     @cached
     def get_attr_values(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, Union[str, List[str], Dict[str, Any]]], aligned_corpora: Optional[List[str]]=None, autocomplete_attr: Optional[str]=None,
-                        limit_lists: bool=True) -> Dict[str, Any]:
+                        limit_lists: bool=True) -> AttrValuesResponse:
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -289,21 +289,19 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             for col_key in query_components.selected_attrs:
                 data_key = col_key if isinstance(col_key, str) else col_key.key()
                 if col_key not in query_components.hidden_attrs and data_key in data:
-                    attr_val = AttrValue(
-                        full=data[data_key],
-                        short=shorten_val(data[data_key]),
-                        ident=data[bib_id.key()] if col_key == bib_label else data[data_key],
-                        group=1
+                    attr_val_key = AttrValueKey(
+                        full_name=data[data_key],
+                        short_name=shorten_val(data[data_key]),
+                        ident=data[bib_id.key()] if col_key == bib_label else data[data_key]
                     )
-                    poscounts[col_key][attr_val] += row['poscount']
+                    poscounts[col_key][attr_val_key] += row['poscount']
             total_poscount += row['poscount']
 
         # here we append position count information to the respective items
-        ans: Dict[StructAttr, Set[Tuple[str, str, str, int, int]]] = {
-            attr: set() for attr in srch_attrs}
+        ans: Dict[StructAttr, Set[AttrValue]] = {attr: set() for attr in srch_attrs}
         for struct_attr, attr_value_poscount in poscounts.items():
             for attr_value, poscount in attr_value_poscount.items():
-                ans[struct_attr].add(astuple(attr_value) + (poscount,))
+                ans[struct_attr].add(AttrValue(*astuple(attr_value), 1, poscount))
         # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
         # where num_grouped_items is initialized to 1
         if corpus_info.metadata.group_duplicates:
@@ -313,16 +311,15 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                                         collator_locale=corpus_info.collator_locale,
                                         max_attr_list_size=self.max_attr_list_size if limit_lists else None)
 
-    def _export_attr_values(self, data: Dict[StructAttr, Set[Tuple[str, str, str, int, int]]], total_poscount: int, aligned_corpora: List[str], expand_attrs: List[StructAttr], collator_locale: str, max_attr_list_size: Optional[int]) -> Dict[str, Any]:
-        values = {}
-        exported = dict(attr_values=values, aligned=aligned_corpora)
-        for k, v in data.items():
-            if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
-                out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
-                values[k.key()] = out_data
+    def _export_attr_values(self, data: Dict[StructAttr, Set[AttrValue]], total_poscount: int, aligned_corpora: List[str], expand_attrs: List[StructAttr], collator_locale: str, max_attr_list_size: Optional[int]) -> AttrValuesResponse:
+        exported = AttrValuesResponse(
+            attr_values={}, aligned=aligned_corpora, poscount=total_poscount)
+        for struct_attr, attr_values in data.items():
+            if max_attr_list_size is None or len(attr_values) <= max_attr_list_size or struct_attr in expand_attrs:
+                out_data = l10n.sort(attr_values, collator_locale, key=lambda t: t[0])
+                exported.attr_values[struct_attr.key()] = out_data
             else:
-                values[k.key()] = {'length': len(v)}
-        exported['poscount'] = total_poscount
+                exported.attr_values[struct_attr.key()] = {'length': len(attr_values)}
         return exported
 
     def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[Tuple[str, str]]:

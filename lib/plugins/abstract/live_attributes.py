@@ -17,10 +17,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+
 from controller.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 from corplib.corpus import KCorpus
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
+
+
+class AttrValue(NamedTuple):
+    short_name: str
+    ident: str
+    full_name: str
+    group: int
+    poscount: int
+
+
+@dataclass_json
+@dataclass
+class AttrValuesResponse:
+    attr_values: Dict[str, Union[AttrValue, Dict[str, int], int]]
+    aligned: List[str]
+    poscount: int
 
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
@@ -34,7 +53,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
     def get_attr_values(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str], aligned_corpora: Optional[List[str]]=None, autocomplete_attr: Optional[str]=None,
-                        limit_lists: bool=True) -> Dict[str, Any]:
+                        limit_lists: bool=True) -> AttrValuesResponse:
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
