@@ -136,13 +136,16 @@ export class ConcSummaryModel extends StatelessModel<ConcSummaryModelState> {
                 state.arf = action.payload.arf;
             },
             (state, action, dispatch) => {
+                const concSize = action.payload?.concsize ?
+                    action.payload.concsize :
+                    state.concSize;
                 dispatch<typeof Actions.ConcordanceRecalculationReady>({
                     name: Actions.ConcordanceRecalculationReady.name,
                     payload: {
-                        concSize: action.payload.concsize,
-                        overviewMinFreq: this.getRecommOverviewMinFreq(action.payload.concsize)
+                        concSize,
+                        overviewMinFreq: this.getRecommOverviewMinFreq(concSize)
                     }
-                })
+                });
             }
         ).sideEffectAlsoOn(
             Actions.LoadTTDictOverview.name,

@@ -127,7 +127,7 @@ class DefaultKwicConnect(AbstractKwicConnect):
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch):
-    providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
+    providers, cache_path = setup_providers(settings.get('plugins', 'kwic_connect'))
     plg_conf = settings.get('plugins', 'kwic_connect')
     kwic_conn = DefaultKwicConnect(providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],
                                    load_chunk_size=plg_conf['load_chunk_size'])
