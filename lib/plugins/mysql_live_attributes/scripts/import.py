@@ -27,7 +27,7 @@ import argparse
 from collections import defaultdict
 
 
-def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, dry_run: bool, batch: int):
+def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, batch: int):
     mysql_cursor = mysql_db.cursor()
     sqlite_cursor = sqlite_db.cursor()
 
@@ -122,8 +122,6 @@ if __name__ == '__main__':
     parser.add_argument('--mysql-user', type=str, default='kontext')
     parser.add_argument('--mysql-pwd', type=str, default='kontext-secret')
     parser.add_argument('--batch', type=int, default=1000)
-    parser.add_argument('--dry-run', action='store_true',
-                        default=False, help='Only print changes')
     args = parser.parse_args()
 
     sqlite_client = sqlite3.connect(args.sqlite_path)
@@ -132,9 +130,8 @@ if __name__ == '__main__':
         host=args.mysql_host, port=args.mysql_port, user=args.mysql_user, password=args.mysql_pwd, database=args.mysql_db)
 
     try:
-        import_data(sqlite_client, mysql_client, args.dry_run, args.batch)
-        if not args.dry_run:
-            print('Data imported')
+        import_data(sqlite_client, mysql_client, args.batch)
+        print('Data imported')
     except Exception as ex:
         print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
         sys.exit(1)

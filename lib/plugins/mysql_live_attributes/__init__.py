@@ -289,10 +289,10 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(query_components.sql_template, query_components.where_values)
         for row in cursor:
-            data = json.loads(row['data'])
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
             for col_key in query_components.selected_attrs:
                 data_key = col_key if isinstance(col_key, str) else col_key.key()
-                if col_key not in query_components.hidden_attrs and data_key in data and data[data_key] is not None:
+                if col_key not in query_components.hidden_attrs and data_key in data:
                     attr_val = AttrValue(
                         full=data[data_key],
                         short=shorten_val(str(data[data_key])),
@@ -339,7 +339,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(
             '''
-            SELECT JSON_OBJECTAGG(CONCAT(t_value.structure_name, '.', t_value.structattr_name), t_value.value) as data
+            SELECT GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
             FROM (
                 SELECT DISTINCT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
@@ -353,9 +353,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             GROUP BY t.id
             ''',
             (corpus, bib_id.struct, bib_id.attr, bib_id.struct, item_id))
-
-        data = json.loads(cursor.fetchone()['data'])
-        return list(data.items())
+        return [tuple(pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[Tuple[str, str]]):
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
@@ -365,7 +363,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(
             f'''
-            SELECT t.id, JSON_OBJECTAGG(CONCAT(t_value.structure_name, '.', t_value.structattr_name), t_value.value) as data
+            SELECT t.id, GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
             FROM (
                 SELECT DISTINCT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
@@ -385,8 +383,8 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
         ans = []
         for row in cursor:
-            data = json.loads(row['data'])
-            ans.append(data['doc.id'], data[bib_label.key()])
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
+            ans.append((data['doc.id'], data[bib_label.key()]))
         return ans
 
 
