@@ -24,7 +24,7 @@ from functools import wraps
 from hashlib import md5
 from functools import partial
 from collections import defaultdict, OrderedDict, Iterable
-from dataclasses import dataclass, astuple
+from dataclasses import astuple
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from corplib.corpus import KCorpus
@@ -345,10 +345,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                 SELECT DISTINCT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-                WHERE corpus_name = %s
-                AND structure_name = %s
-                AND structattr_name = %s
-                AND value = %s
+                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value = %s
                 LIMIT 1
             ) as t
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
@@ -374,10 +371,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                 SELECT DISTINCT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-                WHERE corpus_name = %s
-                AND structure_name = %s
-                AND structattr_name = %s
-                AND value IN ({', '.join('%s' for _ in id_list)})
+                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value IN ({', '.join('%s' for _ in id_list)})
             ) as t
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
             JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id

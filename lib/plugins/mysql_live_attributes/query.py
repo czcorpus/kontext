@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-import logging
 from .common import StructAttr
 from typing import Any, Dict, List, Set, Tuple, Union
 
@@ -48,21 +47,10 @@ class AttrArgs:
     def cmp_operator(self, val: str) -> str:
         return 'LIKE' if '%' in val else '='
 
-    def export_where(self, corpus_name: str) -> Tuple[str, List[str]]:
-        """
-        Exports data into a SQL WHERE expression
-
-        arguments:
-        corpus_name -- identifer of the corpus
-
-        returns:
-        a SQL WHERE expression in conjunctive normal form
-        """
-
+    def export_subquery(self, corpus_name: str) -> Tuple[str, List[str]]:
         WHERE_STRUCTATTR = 'structure_name = %s AND structattr_name = %s'
 
-        where = []
-        sql_values = []
+        subqueries, sql_values = [], []
         for key, values in self.data.items():
             if self.autocomplete_attr == self.bib_label and key == self.bib_id:
                 continue
@@ -94,48 +82,22 @@ class AttrArgs:
                 sql_values.extend(key.values() + [self.import_value(values)])
 
             if len(cnf_item) > 0:
-                where.append(f'({" OR ".join(cnf_item)})')
+                subqueries.append(f'''
+                    SELECT value_tuple_id as id
+                    FROM corpus_structattr_value AS t_value
+                    JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+                    WHERE ({" OR ".join(cnf_item)}) AND corpus_name = %s''')
+                sql_values.append(corpus_name)
+
+        if subqueries:
+            return " INTERSECT ".join(subqueries), sql_values
 
         sql_values.append(corpus_name)
-        if where:
-            return f'({" OR ".join(where)}) AND corpus_name = %s', sql_values
-        return 'corpus_name = %s', sql_values
-
-    def export_having(self) -> Tuple[str, List[str]]:
-
-        having = []
-        sql_values = []
-        for key, values in self.data.items():
-            if self.autocomplete_attr == self.bib_label and key == self.bib_id:
-                continue
-
-            cnf_item = []
-            if type(values) in (list, tuple):
-                for value in values:
-                    if len(value) == 0 or value[0] != '@':
-                        cnf_item.append(f'JSON_VALUE(data, %s) {self.cmp_operator(value)} %s')
-                        sql_values.append(f'$."{key.key()}"')
-                        sql_values.append(self.import_value(value))
-                    else:
-                        cnf_item.append(f'JSON_VALUE(data, %s) {self.cmp_operator(value[1:])} %s')
-                        sql_values.append(f'$."{self.bib_label.key()}"')
-                        sql_values.append(self.import_value(value[1:]))
-
-            elif is_range_argument(values):
-                pass  # a range query  TODO
-
-            # values is of type str
-            else:
-                cnf_item.append(f'LOWER(JSON_VALUE(data, %s)) LIKE LOWER(%s)')
-                sql_values.append(f'$."{key.key()}"')
-                sql_values.append(self.import_value(value))
-
-            if len(cnf_item) > 0:
-                having.append(f'({" OR ".join(cnf_item)})')
-
-        if having:
-            return " AND ".join(having), sql_values
-        return '', []
+        return f'''
+            SELECT value_tuple_id as id
+            FROM corpus_structattr_value AS t_value
+            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+            WHERE corpus_name = %s''', sql_values
 
 
 @dataclass
@@ -164,8 +126,7 @@ class QueryBuilder:
                               autocomplete_attr=self.autocomplete_attr,
                               empty_val_placeholder=self.empty_val_placeholder)
 
-        where_sql, where_values = attr_items.export_where(self.corpus_name)
-        having_sql, having_values = attr_items.export_having()
+        subquery_sql, query_values = attr_items.export_subquery(self.corpus_name)
         hidden_attrs = set()
 
         if self.bib_id is not None and self.bib_id not in self.srch_attrs:
@@ -173,18 +134,13 @@ class QueryBuilder:
 
         selected_attrs = tuple(self.srch_attrs.union(hidden_attrs))
         sql_template = f'''
-        SELECT t.id, poscount, JSON_OBJECTAGG(CONCAT(t_value.structure_name, '.', t_value.structattr_name), t_value.value) as data
-        FROM (
-            SELECT DISTINCT value_tuple_id as id
-            FROM corpus_structattr_value AS t_value
-            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-            WHERE {where_sql}
-        ) as t
-        JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
-        JOIN corpus_structattr_value_tuple AS t_value_tuple ON t_value_mapping.value_tuple_id = t_value_tuple.id
-        JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-        {f'GROUP BY t.id HAVING {having_sql}' if having_sql else 'GROUP BY t.id'}
+            SELECT t.id, poscount, JSON_OBJECTAGG(CONCAT(t_value.structure_name, '.', t_value.structattr_name), t_value.value) as data
+            FROM (
+                {subquery_sql}
+            ) as t
+            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
+            JOIN corpus_structattr_value_tuple AS t_value_tuple ON t_value_mapping.value_tuple_id = t_value_tuple.id
+            JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
+            GROUP BY t.id
         '''
-        logging.error(sql_template)
-        logging.error(where_values + having_values)
-        return QueryComponents(sql_template, selected_attrs, hidden_attrs, where_values + having_values)
+        return QueryComponents(sql_template, selected_attrs, hidden_attrs, query_values)
