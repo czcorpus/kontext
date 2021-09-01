@@ -23,7 +23,7 @@ import json
 from functools import wraps
 from hashlib import md5
 from functools import partial
-from collections import defaultdict, OrderedDict, Iterable
+from collections import defaultdict, OrderedDict
 from dataclasses import astuple
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -258,20 +258,16 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             srch_attrs.add(a)
             expand_attrs.add(a)
         # also make sure that range attributes are expanded to full lists
-        for k, v in attr_map.items():
-            if query.is_range_argument(v):
-                expand_attrs.add(self.import_key(k))
-
-        # initialize result dictionary
-        ans: Dict[Union[str, StructAttr], Union[int, Set[Tuple[str, str, str, int, int]]]] = {
-            attr: set() for attr in srch_attrs}
-        ans['poscount'] = 0
+        for attr_value, attr_value_poscount in attr_map.items():
+            if query.is_range_argument(attr_value_poscount):
+                expand_attrs.add(self.import_key(attr_value))
 
         # 1) values collected one by one are collected in tmp_ans and then moved to 'ans' with some exporting tweaks
         # 2) in case of values exceeding max. allowed list size we just accumulate their size directly to ans[attr]
         # {attr_id: {attr_val: num_positions,...},...}
-        tmp_ans: Dict[StructAttr, Dict[AttrValue, int]
-                      ] = defaultdict(lambda: defaultdict(lambda: 0))
+        total_poscount = 0
+        poscounts: Dict[StructAttr, Dict[AttrValue, int]
+                        ] = defaultdict(lambda: defaultdict(lambda: 0))
         shorten_val = partial(self.shorten_value,
                               length=self.calc_max_attr_val_visible_chars(corpus_info))
         bib_id = self.import_key(corpus_info.metadata.id_attr)
@@ -299,37 +295,34 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                         ident=data[bib_id.key()] if col_key == bib_label else data[data_key],
                         group=1
                     )
-                    tmp_ans[col_key][attr_val] += row['poscount']
-            ans['poscount'] += row['poscount']
+                    poscounts[col_key][attr_val] += row['poscount']
+            total_poscount += row['poscount']
 
         # here we append position count information to the respective items
-        for attr, v in tmp_ans.items():
-            for k, c in v.items():
-                ans[attr].add(astuple(k) + (c,))
+        ans: Dict[StructAttr, Set[Tuple[str, str, str, int, int]]] = {
+            attr: set() for attr in srch_attrs}
+        for struct_attr, attr_value_poscount in poscounts.items():
+            for attr_value, poscount in attr_value_poscount.items():
+                ans[struct_attr].add(astuple(attr_value) + (poscount,))
         # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
         # where num_grouped_items is initialized to 1
         if corpus_info.metadata.group_duplicates:
             self._group_bib_items(ans, bib_label)
-        tmp_ans.clear()
-        return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
+        return self._export_attr_values(data=ans, total_poscount=total_poscount, aligned_corpora=aligned_corpora,
                                         expand_attrs=expand_attrs,
                                         collator_locale=corpus_info.collator_locale,
                                         max_attr_list_size=self.max_attr_list_size if limit_lists else None)
 
-    def _export_attr_values(self, data: Dict[Union[str, StructAttr], Union[int, Set[Tuple[str, str, str, int, int]]]], aligned_corpora: List[str], expand_attrs: List[StructAttr], collator_locale: str, max_attr_list_size: Optional[int]) -> Dict[str, Any]:
+    def _export_attr_values(self, data: Dict[StructAttr, Set[Tuple[str, str, str, int, int]]], total_poscount: int, aligned_corpora: List[str], expand_attrs: List[StructAttr], collator_locale: str, max_attr_list_size: Optional[int]) -> Dict[str, Any]:
         values = {}
         exported = dict(attr_values=values, aligned=aligned_corpora)
         for k, v in data.items():
-            export_key = k if isinstance(k, str) else k.key()
-            if isinstance(v, Iterable):
-                if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
-                    out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
-                    values[export_key] = out_data
-                else:
-                    values[export_key] = {'length': len(v)}
+            if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
+                out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
+                values[k.key()] = out_data
             else:
-                values[export_key] = v
-        exported['poscount'] = values['poscount']
+                values[k.key()] = {'length': len(v)}
+        exported['poscount'] = total_poscount
         return exported
 
     def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[Tuple[str, str]]:
