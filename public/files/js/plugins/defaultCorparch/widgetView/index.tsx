@@ -612,6 +612,7 @@ export function init({
     // ------------------------------- <SubcorpSelection /> -----------------------------
 
     const SubcorpSelection:React.FC<{
+        corpusName:string;
         currSubcorpus:string;
         origSubcorpName:string;
         availSubcorpora:Array<Kontext.SubcorpListItem>;
@@ -622,6 +623,7 @@ export function init({
             dispatcher.dispatch<typeof QueryActions.QueryInputSelectSubcorp>({
                 name: QueryActions.QueryInputSelectSubcorp.name,
                 payload: {
+                    corpusName: props.corpusName,
                     subcorp: props.availSubcorpora[evt.target.value].v,
                     pubName: props.availSubcorpora[evt.target.value].pub,
                     foreign: props.availSubcorpora[evt.target.value].foreign
@@ -761,7 +763,9 @@ export function init({
                         {this.props.availableSubcorpora.length > 0 ?
                             (<span>
                                 <strong className="subc-separator">{'\u00a0/\u00a0'}</strong>
-                                <SubcorpSelection currSubcorpus={this.props.corpusIdent.usesubcorp}
+                                <SubcorpSelection
+                                    corpusName={this.props.corpusIdent.id}
+                                    currSubcorpus={this.props.corpusIdent.usesubcorp}
                                     origSubcorpName={this.props.corpusIdent.origSubcorpName}
                                     availSubcorpora={this.props.availableSubcorpora} />
                             </span>) :

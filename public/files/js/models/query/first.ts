@@ -875,12 +875,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         noQueryHistory:boolean
     ):ConcQueryArgs {
 
-        const primaryCorpus = List.head(this.state.corpora);
         const currArgs = this.pageModel.getConcArgs();
         const args:ConcQueryArgs = {
             type: 'concQueryArgs',
-            maincorp: primaryCorpus,
-            usesubcorp: this.state.currentSubcorp || null,
+            usesubcorp: this.state.currentSubcorp || undefined,
             viewmode: 'kwic',
             pagesize: currArgs.pagesize,
             attrs: currArgs.attrs,
@@ -899,7 +897,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         };
 
         if (this.state.corpora.length > 1) {
-            args.maincorp = primaryCorpus;
             args.viewmode = 'align';
         }
 

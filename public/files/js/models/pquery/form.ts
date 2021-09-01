@@ -476,7 +476,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         'filter',
                         {format: 'json'}
                     ),
-                    this.createSubsetCompletentFilterArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
+                    this.createSubsetComplementFilterArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
                     {contentType: 'application/json'}
             ).pipe(
                 tap( _ => {
@@ -706,7 +706,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         const currArgs = this.layoutModel.getConcArgs();
         return {
             type: 'concQueryArgs',
-            maincorp: state.corpname,
             usesubcorp: state.usesubcorp || null,
             viewmode: 'kwic',
             pagesize: currArgs.pagesize,
@@ -726,7 +725,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private createSubsetCompletentFilterArgs(
+    private createSubsetComplementFilterArgs(
         state:PqueryFormModelState,
         query:ParadigmaticQuery,
         concId:string

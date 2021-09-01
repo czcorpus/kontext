@@ -182,9 +182,16 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                 ]).pipe(
                     tap(
                         ([,data]) => {
-                            const args = {corpname: data.corpusIdent.id, usesubcorp: data.corpusIdent.usesubcorp};
-                            this.history.pushState(this.conf.getConf<string>('currentAction'), args);
-
+                            this.history.pushState(
+                                this.conf.getConf<string>('currentAction'),
+                                Dict.filter(
+                                    v => !!v,
+                                    {
+                                        corpname: data.corpusIdent.id,
+                                        usesubcorp: data.corpusIdent.usesubcorp
+                                    }
+                                )
+                            );
                             this.conf.setConf<Kontext.FullCorpusIdent>('corpusIdent', data.corpusIdent);
                             this.conf.setConf<string>('baseAttr', data.baseAttr);
                             this.conf.setConf<Array<[string, string]>>('currentArgs', data.currentArgs);
@@ -214,8 +221,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                         }
                     )
 
-                ).subscribe(
-                    ([storedStates,]) => {
+                ).subscribe({
+                    next: ([storedStates,]) => {
                         List.forEach(
                             group => {
                                 List.forEach(
@@ -240,7 +247,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             }
                         });
                     },
-                    err => {
+                    error: error => {
                         this.changeState(state => {
                             state.isBusy = false;
                         });
@@ -248,15 +255,31 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             name: GlobalActions.MessageAdd.name,
                             payload: {
                                 messageType: 'error',
-                                message: err
+                                message: error
                             }
                         });
                         this._dispatcher.dispatch<typeof Actions.CorpusSwitchModelRestore>({
                             name: Actions.CorpusSwitchModelRestore.name,
-                            error: err
+                            error
                         });
                     }
-                )
+                });
+            }
+        );
+
+        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
+            QueryActions.QueryInputSelectSubcorp.name,
+            action => {
+                this.history.pushState(
+                    this.conf.getConf<string>('currentAction'),
+                    Dict.filter(
+                        v => !!v,
+                        {
+                            corpname: action.payload.corpusName,
+                            usesubcorp: action.payload.subcorp
+                        }
+                    )
+                );
             }
         );
     }

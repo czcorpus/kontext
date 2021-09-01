@@ -1851,7 +1851,7 @@ class Actions(Querying):
             corpusIdent=dict(
                 id=self.args.corpname, name=self._human_readable_corpname(),
                 variant=self._corpus_variant,
-                usesubcorp=self.args.usesubcorp,
+                usesubcorp=self.args.usesubcorp if self.args.usesubcorp else None,
                 origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp),
                 foreignSubcorp=(self.corp.author_id is not None and
                                 self.session_get('user', 'id') != self.corp.author_id)),
