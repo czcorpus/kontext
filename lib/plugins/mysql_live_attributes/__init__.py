@@ -170,7 +170,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         return StructAttr.get(k) if k is not None else k
 
     @staticmethod
-    def _get_subcorp_attrs(corpus: str) -> List[StructAttr]:
+    def _get_subcorp_attrs(corpus: KCorpus) -> List[StructAttr]:
         return set(StructAttr.get(x) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS')))
 
     @staticmethod
@@ -205,7 +205,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpus: str, attr_map: Dict[str, List[str]]) -> int:
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, List[str]]) -> int:
         attr_where = [corpus.corpname]
         attr_where_tmpl = ['corpus_name = %s']
         for k, vlist in attr_map.items():
@@ -331,7 +331,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             '''
             SELECT GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
             FROM (
-                SELECT DISTINCT value_tuple_id as id
+                SELECT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
                 WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value = %s
@@ -339,10 +339,9 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             ) as t
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
             JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-            WHERE structure_name = %s
             GROUP BY t.id
             ''',
-            (corpus, bib_id.struct, bib_id.attr, bib_id.struct, item_id))
+            (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
         return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
@@ -374,7 +373,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         ans = []
         for row in cursor:
             data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
-            ans.append(BibTitle(data['doc.id'], data[bib_label.key()]))
+            ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
         return ans
 
 
