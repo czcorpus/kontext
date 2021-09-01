@@ -134,7 +134,7 @@ class QueryBuilder:
 
         selected_attrs = tuple(self.srch_attrs.union(hidden_attrs))
         sql_template = f'''
-            SELECT t.id, poscount, JSON_OBJECTAGG(CONCAT(t_value.structure_name, '.', t_value.structattr_name), t_value.value) as data
+            SELECT t.id, poscount, GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
             FROM (
                 {subquery_sql}
             ) as t
