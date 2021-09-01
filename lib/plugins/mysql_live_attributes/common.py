@@ -33,8 +33,7 @@ class StructAttr:
 
 
 @dataclass(frozen=True)
-class AttrValue:
-    short: str
+class AttrValueKey:
+    short_name: str
     ident: str
-    full: str
-    group: int
+    full_name: str

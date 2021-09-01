@@ -39,7 +39,7 @@ except ImportError:
 import l10n
 from plugins import inject
 import plugins
-from plugins.abstract.live_attributes import AbstractLiveAttributes
+from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -72,12 +72,12 @@ def cached(f):
                                    autocomplete_attr, limit_lists)
             ans = self.from_cache(corpus.corpname, key)
             if ans:
-                return ans
+                return AttrValuesResponse.from_dict(ans)
         ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size,
                                    aligned_corpora, autocomplete_attr, limit_lists)
-            self.to_cache(corpus.corpname, key, ans)
+            self.to_cache(corpus.corpname, key, ans.to_dict())
         return self.export_num_strings(ans)
     return wrapper
 
@@ -131,7 +131,8 @@ class LiveAttributes(AbstractLiveAttributes):
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
-                self.databases[corpname].create_function('ktx_lower', 1, lambda x: unidecode(x.lower()))
+                self.databases[corpname].create_function(
+                    'ktx_lower', 1, lambda x: unidecode(x.lower()))
             else:
                 self.databases[corpname] = None
         return self.databases[corpname]
@@ -320,14 +321,13 @@ class LiveAttributes(AbstractLiveAttributes):
                 # we rely on proper 'ans' initialization here (in terms of types)
                 ans[col_key] += int(row[col_key])
         # here we append position count information to the respective items
-        for attr, v in list(tmp_ans.items()):
-            for k, c in list(v.items()):
+        for attr, v in tmp_ans.items():
+            for k, c in v.items():
                 ans[attr].add(k + (c,))
         # now each line contains: (shortened_label, identifier, label, num_grouped_items, num_positions)
         # where num_grouped_items is initialized to 1
         if corpus_info.metadata.group_duplicates:
             self._group_bib_items(ans, bib_label)
-        tmp_ans.clear()
         return self._export_attr_values(data=ans, aligned_corpora=aligned_corpora,
                                         expand_attrs=expand_attrs,
                                         collator_locale=corpus_info.collator_locale,
@@ -335,18 +335,16 @@ class LiveAttributes(AbstractLiveAttributes):
 
     def _export_attr_values(self, data, aligned_corpora, expand_attrs, collator_locale, max_attr_list_size):
         values = {}
-        exported = dict(attr_values=values, aligned=aligned_corpora)
-        for k in list(data.keys()):
-            if isinstance(data[k], Iterable):
-                if max_attr_list_size is None or len(data[k]) <= max_attr_list_size or k in expand_attrs:
-                    out_data = l10n.sort(data[k], collator_locale, key=lambda t: t[0])
-                    values[self.export_key(k)] = out_data
+        for k, v in data.items():
+            if isinstance(v, Iterable):
+                if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
+                    out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
+                    values[self.export_key(k)] = AttrValue(*out_data)
                 else:
-                    values[self.export_key(k)] = {'length': len(data[k])}
+                    values[self.export_key(k)] = {'length': len(v)}
             else:
-                values[self.export_key(k)] = data[k]
-        exported['poscount'] = values['poscount']
-        return exported
+                values[self.export_key(k)] = v
+        return AttrValuesResponse(attr_values=values, aligned_corpora=aligned_corpora, poscount=values['poscount'])
 
     def get_bibliography(self, plugin_ctx, corpus, item_id):
         db = self.db(plugin_ctx, corpus.corpname)
@@ -363,7 +361,7 @@ class LiveAttributes(AbstractLiveAttributes):
         else:
             ans = self.execute_sql(
                 db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
-        return [(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
+        return [StructAttrValuePair(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
 
     def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         with plugins.runtime.CORPARCH as ca:
@@ -373,7 +371,7 @@ class LiveAttributes(AbstractLiveAttributes):
         pch = ', '.join(['?'] * len(id_list))
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
-        return [(r[0], r[1]) for r in ans]
+        return [BibTitle(r[0], r[1]) for r in ans]
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
