@@ -371,7 +371,7 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         cursor.execute("SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, "
                        "ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, "
-                       "JSON_ARRAYAGG(CONCAT_WS(',',tpc.tag_search_pattern,tpc.pos)) AS patterns_pos "
+                       "GROUP_CONCAT(CONCAT_WS(',',tpc.tag_search_pattern,tpc.pos) SEPARATOR ',') AS patterns_pos "
                        "FROM tagset AS t "
                        "JOIN corpus_tagset AS ct ON ct.tagset_name = t.name "
                        "LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name "
@@ -388,8 +388,8 @@ class Backend(DatabaseBackend):
                 doc_url_local=row['doc_url_local'],
                 doc_url_en=row['doc_url_en'],
                 pos_category=[
-                    PosCategoryItem(*pattern_pos.split(','))
-                    for pattern_pos in json.loads(row['patterns_pos'])
+                    PosCategoryItem(*pattern_pos)
+                    for pattern_pos in list(zip(row['patterns_pos'].split(',')[::2], row['patterns_pos'].split(',')[1::2]))
                     if pattern_pos
                 ]
             )
