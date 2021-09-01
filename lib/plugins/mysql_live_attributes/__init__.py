@@ -289,8 +289,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(query_components.sql_template, query_components.where_values)
         for row in cursor:
-            # TODO where are those excessive closing }}}}... coming from ?
-            data = json.loads(re.sub(r'\}+', '}', row['data']))
+            data = json.loads(row['data'])
             for col_key in query_components.selected_attrs:
                 data_key = col_key if isinstance(col_key, str) else col_key.key()
                 if col_key not in query_components.hidden_attrs and data_key in data and data[data_key] is not None:
