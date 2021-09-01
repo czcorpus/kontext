@@ -295,7 +295,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                 if col_key not in query_components.hidden_attrs and data_key in data:
                     attr_val = AttrValue(
                         full=data[data_key],
-                        short=shorten_val(str(data[data_key])),
+                        short=shorten_val(data[data_key]),
                         ident=data[bib_id.key()] if col_key == bib_label else data[data_key],
                         group=1
                     )
