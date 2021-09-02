@@ -620,43 +620,6 @@ class Controller(object):
     def is_action(self, action_name: str, metadata: Dict[str, Any]) -> bool:
         return callable(getattr(self, action_name, None)) and '__exposed__' in metadata
 
-    def _normalize_error(self, err: Exception) -> Exception:
-        """
-        This method is intended to extract as much details as possible
-        from a broad range of errors and rephrase them in a more
-        specific ones (including exception object type).
-        It is quite a lame solution but it appears that in case of
-        syntax errors, attribute errors etc. Manatee raises only RuntimeError
-        without further type distinction.
-
-        Please note that some of the decoding is dependent on how Manatee
-        outputs phrases its errors which may change between versions
-        (as it probably happened in 2.150.x).
-
-        arguments:
-        err -- an instance of Exception
-
-        returns:
-        a (possibly different) instance of Exception with
-        (possibly) rephrased error message.
-        """
-        if isinstance(err, UserActionException):
-            return err
-        text = str(err)
-        setattr(err, 'message', text)  # in case we return the original error
-        if 'AttrNotFound' in text:
-            srch = re.match(r'AttrNotFound\s+\(([^)]+)\)', text)
-            if srch:
-                text = translate(f'Attribute "{srch.groups()[0]}" not found.')
-            else:
-                text = translate('Attribute not found.')
-            return UserActionException(text)
-
-        elif 'EvalQueryException' in text:
-            return UserActionException(
-                translate('Failed to evaluate the query. Please check the syntax and used attributes.'))
-        return err
-
     def _run_message_action(
             self, req_args: RequestArgsProxy, action_metadata: Dict[str, Any], message_type: str,
             message: str) -> Tuple[str, Dict[str, Any]]:
