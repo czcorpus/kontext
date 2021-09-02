@@ -528,6 +528,14 @@ class Kontext(Controller):
 
             # now we apply args from URL (highest priority)
             self.args.map_args_to_attrs(req_args)
+
+            # validate self.args.maincorp which is dependent on 'corpname', 'align'
+            if self.args.maincorp and (self.args.maincorp != self.args.corpname and
+                                       self.args.maincorp not in self.args.align):
+                raise UserActionException(
+                    f'Invalid argument value {self.args.maincorp} for "maincorp"',
+                    code=422)
+
         except ValueError as ex:
             raise UserActionException(ex)
 
@@ -860,8 +868,11 @@ class Kontext(Controller):
         if result['last_freq_level'] is None:
             result['last_freq_level'] = 1
 
-        if getattr(self.args, 'maincorp'):
-            thecorp = self.cm.get_corpus(self.args.maincorp)
+        if self.args.maincorp and self.args.maincorp != self.args.corpname:
+            try:
+                thecorp = self.cm.get_corpus(self.args.maincorp)
+            except Exception as ex:
+                thecorp = ErrorCorpus(ex)
         else:
             thecorp = self.corp
         if not action_metadata['skip_corpus_init']:

@@ -35,28 +35,28 @@ export class Actions {
         };
 
     static EditQueryOperation: Action<{
-        operationIdx: number;
-        sourceId: string;
+        operationIdx:number;
+        sourceId:string;
     }> = {
             name: 'EDIT_QUERY_OPERATION'
         };
 
     static EditLastQueryOperation: Action<{
-        sourceId: string;
+        sourceId:string;
     }> = {
             name: 'EDIT_LAST_QUERY_OPERATION'
         };
 
     static EditQueryOperationDone: Action<{
-        operationIdx: number;
-        sourceId: string;
+        operationIdx:number;
+        sourceId:string;
         data: ConcFormArgs;
     }> = {
             name: 'EDIT_QUERY_OPERATION_DONE'
         };
 
     static BranchQuery: Action<{
-        operationIdx: number;
+        operationIdx:number;
     }> = {
             name: 'BRANCH_QUERY'
         };
@@ -65,26 +65,26 @@ export class Actions {
         /*
          * an index of the last operation of the cut query chain
          */
-        operationIdx: number;
+        operationIdx:number;
     }> = {
             name: 'TRIM_QUERY'
         };
 
     static SliceQueryChain: Action<{
-        operationIdx: number;
-        concId: string;
+        operationIdx:number;
+        concId:string;
     }> = {
             name: 'QUERY_REPLAY_SLICE_QUERY_CHAIN'
         };
 
     static QuerySetStopAfterIdx: Action<{
-        value: number;
+        value:number;
     }> = {
             name: 'QUERY_SET_STOP_AFTER_IDX'
         };
 
     static RedirectToEditQueryOperation: Action<{
-        operationIdx: number;
+        operationIdx:number;
     }> = {
             name: 'REDIRECT_TO_EDIT_QUERY_OPERATION'
         };
@@ -100,13 +100,13 @@ export class Actions {
         };
 
     static QueryInputHitVirtualKeyboardKey: Action<{
-        keyCode: number;
+        keyCode:number;
     }> = {
             name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_KEY'
         };
 
     static QueryInputSetVirtualKeyboardLayout: Action<{
-        idx: number;
+        idx:number;
     }> = {
             name: 'QUERY_INPUT_SET_VIRTUAL_KEYBOARD_LAYOUT'
         };
@@ -132,19 +132,19 @@ export class Actions {
         };
 
     static QueryInputHitVirtualKeyboardDeadKey: Action<{
-        deadKeyIndex: number;
+        deadKeyIndex:number;
     }> = {
             name: 'QUERY_INPUT_HIT_VIRTUAL_KEYBOARD_DEAD_KEY'
         };
 
     static QueryContextSetLemwordWsize: Action<{
-        value: [number, number];
+        value:[number, number];
     }> = {
             name: 'QUERY_CONTEXT_SET_LEMWORD_WSIZE'
         };
 
     static QueryContextSetLemword: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'QUERY_CONTEXT_SET_LEMWORD'
         };
@@ -156,14 +156,14 @@ export class Actions {
         };
 
     static QueryContextSetPosWsize: Action<{
-        value: [number, number];
+        value:[number, number];
     }> = {
             name: 'QUERY_CONTEXT_SET_POS_WSIZE'
         };
 
     static QueryContextSetPos: Action<{
-        checked: boolean;
-        value: string;
+        checked:boolean;
+        value:string;
     }> = {
             name: 'QUERY_CONTEXT_SET_POS'
         };
@@ -191,14 +191,14 @@ export class Actions {
         };
 
     static QueryOptionsToggleForm: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
     }> = {
             name: 'QUERY_OPTIONS_TOGGLE_FORM'
         };
 
     static LoadWithinBuilderData: Action<{
-        sourceId: string;
+        sourceId:string;
     }> = {
             name: 'QUERY_INPUT_LOAD_WITHIN_BUILDER_DATA'
         };
@@ -210,124 +210,125 @@ export class Actions {
         };
 
     static SetWithinValue: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'QUERY_INPUT_SET_WITHIN_VALUE'
         };
 
     static SetWithinAttr: Action<{
-        idx: number;
+        idx:number;
     }> = {
             name: 'QUERY_INPUT_SET_WITHIN_ATTR'
         };
 
     static SetActiveInputWidget: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        corpname: string;
-        value: string;
-        appliedQueryRange: [number, number];
+        formType:QueryFormType;
+        sourceId:string;
+        corpname:string;
+        value:string;
+        appliedQueryRange:[number, number];
     }> = {
             name: 'QUERY_INPUT_SET_ACTIVE_WIDGET'
         };
 
     static QueryInputSetQType: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
         queryType: QueryType;
     }> = {
             name: 'QUERY_INPUT_SELECT_TYPE'
         };
 
     static QueryInputSelectSubcorp: Action<{
-        pubName: string;
-        subcorp: string;
-        foreign: boolean;
+        corpusName:string;
+        pubName:string;
+        subcorp:string;
+        foreign:boolean;
     }> = {
             name: 'QUERY_INPUT_SELECT_SUBCORP'
         };
 
     static QueryInputMoveCursor: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        rawAnchorIdx: number;
-        rawFocusIdx: number;
+        formType:QueryFormType;
+        sourceId:string;
+        rawAnchorIdx:number;
+        rawFocusIdx:number;
     }> = {
             name: 'QUERY_INPUT_MOVE_CURSOR'
         };
 
     static QueryInputResetQueryExpansion: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
     }> = {
             name: 'QUERY_INPUT_RESET_QUERY_EXPANSION'
         };
 
     static QueryInputSetQuery: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        query: string;
-        insertRange: [number, number] | null;
-        rawAnchorIdx: number | null;
-        rawFocusIdx: number | null;
+        formType:QueryFormType;
+        sourceId:string;
+        query:string;
+        insertRange:[number, number] | null;
+        rawAnchorIdx:number|null;
+        rawFocusIdx:number|null;
     }> = {
             name: 'QUERY_INPUT_SET_QUERY'
         };
 
     static QueryInputAppendQuery: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        query: string;
-        prependSpace: boolean;
-        closeWhenDone: boolean;
-        triggeredKey?: [number, number];
+        formType:QueryFormType;
+        sourceId:string;
+        query:string;
+        prependSpace:boolean;
+        closeWhenDone:boolean;
+        triggeredKey?:[number, number];
     }> = {
             name: 'QUERY_INPUT_APPEND_QUERY'
         };
 
     static QueryInputInsertAtCursor: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        chunk: string;
+        formType:QueryFormType;
+        sourceId:string;
+        chunk:string;
     }> = {
             name: 'QUERY_INPUT_INSERT_AT_CURSOR'
         };
 
     static QueryInputRemoveLastChar: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
     }> = {
             name: 'QUERY_INPUT_REMOVE_LAST_CHAR'
         };
 
     static QueryInputSetLpos: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        lpos: string;
+        formType:QueryFormType;
+        sourceId:string;
+        lpos:string;
     }> = {
             name: 'QUERY_INPUT_SET_LPOS'
         };
 
     static QueryInputSetMatchCase: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        value: boolean;
+        formType:QueryFormType;
+        sourceId:string;
+        value:boolean;
     }> = {
             name: 'QUERY_INPUT_SET_MATCH_CASE'
         };
 
     static QueryInputSetDefaultAttr: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        value: string;
+        formType:QueryFormType;
+        sourceId:string;
+        value:string;
     }> = {
             name: 'QUERY_INPUT_SET_DEFAULT_ATTR'
         };
 
     static QueryInputToggleAllowRegexp: Action<{
-        formType: QueryFormType;
-        sourceId: string;
-        value: boolean;
+        formType:QueryFormType;
+        sourceId:string;
+        value:boolean;
     }> = {
             name: 'QUERY_INPUT_TOGGLE_ALLOW_REGEXP'
         };
@@ -337,238 +338,238 @@ export class Actions {
     };
 
     static QueryInputAddAlignedCorpus: Action<{
-        corpname: string;
+        corpname:string;
     }> = {
             name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS'
         };
 
     static QueryInputRemoveAlignedCorpus: Action<{
-        corpname: string;
+        corpname:string;
     }> = {
             name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS'
         };
 
     static QueryInputSetPCQPosNeg: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
         value: 'pos' | 'neg';
     }> = {
             name: 'QUERY_INPUT_SET_PCQ_POS_NEG'
         };
 
     static QueryInputSelectText: Action<{
-        sourceId: string;
-        formType: QueryFormType;
-        anchorIdx: number;
-        focusIdx: number;
+        sourceId:string;
+        formType:QueryFormType;
+        anchorIdx:number;
+        focusIdx:number;
     }> = {
             name: 'QUERY_INPUT_SELECT_TEXT'
         };
 
     static FilterInputSetFilfl: Action<{
-        filterId: string;
+        filterId:string;
         value: 'f' | 'l';
     }> = {
             name: 'FILTER_QUERY_SET_FILFL'
         };
 
     static FilterInputSetRange: Action<{
-        filterId: string;
-        value: string;
-        rangeId: string;
+        filterId:string;
+        value:string;
+        rangeId:string;
     }> = {
             name: 'FILTER_QUERY_SET_RANGE'
         };
 
     static FilterInputSetInclKwic: Action<{
-        filterId: string;
-        value: boolean;
+        filterId:string;
+        value:boolean;
     }> = {
             name: 'FILTER_QUERY_SET_INCL_KWIC'
         };
 
     static FilterInputSetFilterType: Action<{
-        filterId: string;
+        filterId:string;
         value: 'p' | 'n';
     }> = {
             name: 'FILTER_INPUT_SET_FILTER_TYPE'
         };
 
     static ApplyFilter: Action<{
-        filterId: string;
+        filterId:string;
     }> = {
             name: 'FILTER_QUERY_APPLY_FILTER'
         };
 
     static QueryInputSetIncludeEmpty: Action<{
-        corpname: string;
-        value: boolean;
+        corpname:string;
+        value:boolean;
     }> = {
             name: 'QUERY_INPUT_SET_INCLUDE_EMPTY'
         };
 
     static QuerySubmit: Action<{
-        noQueryHistory?: boolean;
+        noQueryHistory?:boolean;
     }> = {
             name: 'QUERY_INPUT_SUBMIT'
         };
 
     static FilterFirstHitsSubmit: Action<{
-        opKey: string;
+        opKey:string;
     }> = {
             name: 'FILTER_FIRST_HITS_SUBMIT'
         };
 
     static ToggleQuerySuggestionWidget: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
         tokenIdx: number | null;
     }> = {
             name: 'QUERY_INPUT_TOGGLE_QUERY_SUGGESTION_WIDGET'
         };
 
     static ShowQueryStructureWidget: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
     }> = {
             name: 'QUERY_INPUT_SHOW_QUERY_STRUCTURE_WIDGET'
         };
 
     static HideQueryStructureWidget: Action<{
-        formType: QueryFormType;
-        sourceId: string;
+        formType:QueryFormType;
+        sourceId:string;
     }> = {
             name: 'QUERY_INPUT_HIDE_QUERY_STRUCTURE_WIDGET'
         };
 
     static SampleFormSetRlines: Action<{
-        value: string;
-        sampleId: string;
+        value:string;
+        sampleId:string;
     }> = {
             name: 'SAMPLE_FORM_SET_RLINES'
         };
 
     static SampleFormSubmit: Action<{
-        sampleId: string;
+        sampleId:string;
     }> = {
             name: 'SAMPLE_FORM_SUBMIT'
         };
 
     static SwitchMcFormSubmit: Action<{
-        operationId: string;
+        operationId:string;
     }> = {
             name: 'SWITCH_MC_FORM_SUBMIT'
         };
 
     static SortSetActiveModel: Action<{
-        sortId: string;
-        formAction: string;
+        sortId:string;
+        formAction:string;
     }> = {
             name: 'SORT_SET_ACTIVE_STORE'
         };
 
     static SortFormSubmit: Action<{
-        sortId: string;
+        sortId:string;
     }> = {
             name: 'SORT_FORM_SUBMIT'
         };
 
     static SortFormSetSattr: Action<{
-        sortId: string;
-        value: string;
+        sortId:string;
+        value:string;
     }> = {
             name: 'SORT_FORM_SET_SATTR'
         };
 
     static SortFormSetSkey: Action<{
-        sortId: string;
-        value: string;
+        sortId:string;
+        value:string;
     }> = {
             name: 'SORT_FORM_SET_SKEY'
         };
 
     static SortFormSetSbward: Action<{
-        sortId: string;
-        value: string;
+        sortId:string;
+        value:string;
     }> = {
             name: 'SORT_FORM_SET_SBWARD'
         };
 
     static SortFormSetSicase: Action<{
-        sortId: string;
-        value: string;
+        sortId:string;
+        value:string;
     }> = {
             name: 'SORT_FORM_SET_SICASE'
         };
 
     static SortFormSetSpos: Action<{
-        sortId: string;
-        value: string;
+        sortId:string;
+        value:string;
     }> = {
             name: 'SORT_FORM_SET_SPOS'
         };
 
     static MLSortFormSubmit: Action<{
-        sortId: string;
+        sortId:string;
     }> = {
             name: 'ML_SORT_FORM_SUBMIT'
         };
 
     static MLSortFormAddLevel: Action<{
-        sortId: string;
+        sortId:string;
     }> = {
             name: 'ML_SORT_FORM_ADD_LEVEL'
         };
 
     static MLSortFormRemoveLevel: Action<{
-        sortId: string;
-        levelIdx: number;
+        sortId:string;
+        levelIdx:number;
     }> = {
             name: 'ML_SORT_FORM_REMOVE_LEVEL'
         };
 
     static MLSortFormSetSattr: Action<{
-        sortId: string;
-        levelIdx: number;
-        value: string;
+        sortId:string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'ML_SORT_FORM_SET_SATTR'
         };
 
     static MLSortFormSetSicase: Action<{
-        sortId: string;
-        levelIdx: number;
-        value: string;
+        sortId:string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'ML_SORT_FORM_SET_SICASE'
         };
 
     static MLSortFormSetSbward: Action<{
-        sortId: string;
-        levelIdx: number;
-        value: string;
+        sortId:string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'ML_SORT_FORM_SET_SBWARD'
         };
 
     static MLSortFormSetCtxAlign: Action<{
-        sortId: string;
-        levelIdx: number;
-        value: string;
+        sortId:string;
+        levelIdx:number;
+        value:string;
     }> = {
             name: 'ML_SORT_FORM_SET_CTX_ALIGN'
         };
 
     static MLSortFormSetCtx: Action<{
-        sortId: string;
-        levelIdx: number;
-        index: number;
+        sortId:string;
+        levelIdx:number;
+        index:number;
     }> = {
             name: 'ML_SORT_FORM_SET_CTX'
         };
 
     static SaveAsFormSetName: Action<{
-        value: string;
+        value:string;
     }> = {
             name: 'QUERY_SAVE_AS_FORM_SET_NAME'
         };
@@ -589,20 +590,20 @@ export class Actions {
         };
 
     static GetConcArchivedStatusDone: Action<{
-        isArchived: boolean;
-        willBeArchived: boolean;
+        isArchived:boolean;
+        willBeArchived:boolean;
     }> = {
             name: 'QUERY_GET_CONC_ARCHIVED_STATUS_DONE'
         };
 
     static MakeConcordancePermanent: Action<{
-        revoke: boolean;
+        revoke:boolean;
     }> = {
             name: 'QUERY_MAKE_CONCORDANCE_PERMANENT'
         };
 
     static MakeConcordancePermanentDone: Action<{
-        revoked: boolean;
+        revoked:boolean;
     }> = {
             name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
         };
@@ -611,10 +612,10 @@ export class Actions {
      * This is an action a tag-helper plug-in should be able to respond to
      */
     static QueryTaghelperPresetPattern: Action<{
-        sourceId: string;
-        tagsetId: string;
-        formType: QueryFormType;
-        pattern: string;
+        sourceId:string;
+        tagsetId:string;
+        formType:QueryFormType;
+        pattern:string;
     }> = {
             name: 'TAGHELPER_PRESET_PATTERN'
         };

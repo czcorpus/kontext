@@ -68,8 +68,7 @@ export interface QueryContextArgs {
 
 export interface ConcQueryArgs {
     queries:Array<AnyQuerySubmit>;
-    maincorp:string|null;
-    usesubcorp:string|null;
+    usesubcorp:string|undefined;
     viewmode:'kwic'|'sen'|'align';
     pagesize:number;
     shuffle:0|1;
@@ -100,6 +99,7 @@ export interface FirstHitsServerArgs extends ConcServerArgs {
 }
 
 export interface FilterServerArgs extends ConcServerArgs {
+    maincorp:string;
     pnfilter:string;
     filfl:string;
     filfpos:string;

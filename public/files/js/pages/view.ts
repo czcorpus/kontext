@@ -265,7 +265,8 @@ export class ViewPage {
         switch (currAction) {
             case 'quick_filter':
             case 'create_view':
-            case 'filter_subhits': {
+            case 'filter_subhits':
+            case 'switch_main_corp': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
