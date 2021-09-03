@@ -79,8 +79,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         this.layoutModel = layoutModel;
         this.syncInitialArgs = syncInitialArgs;
 
-        this.addActionHandler<typeof MainMenuActions.ShowSwitchMc>(
-            MainMenuActions.ShowSwitchMc.name,
+        this.addActionHandler(
+            MainMenuActions.ShowSwitchMc,
             action => {
                 this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
                     error: err => {
@@ -91,8 +91,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.ReplayChangeMainCorp>(
-            Actions.ReplayChangeMainCorp.name,
+        this.addActionHandler(
+            Actions.ReplayChangeMainCorp,
             action => {
                 this.changeState(
                     state => {
@@ -103,8 +103,8 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         );
 
 
-        this.addActionHandler<typeof Actions.SwitchMcFormSubmit>(
-            Actions.SwitchMcFormSubmit.name,
+        this.addActionHandler(
+            Actions.SwitchMcFormSubmit,
             action => {
                 const concId = List.head(this.layoutModel.getConcArgs().q).substr(1);
 
