@@ -59,6 +59,7 @@ import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { IPluginApi } from '../types/plugins/common';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export enum DownloadType {
