@@ -23,7 +23,6 @@ import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
 import { PageModel } from '../../app/page';
-import { FirstHitsServerArgs } from './common';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
@@ -75,9 +74,11 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
             Actions.FilterFirstHitsSubmit.name,
             action => {
                 const concId = List.head(this.layoutModel.getConcArgs().q).substr(1);
-                this.submitForm(action.payload.opKey, concId)
-                .subscribe(
-                    data => {
+                this.submitForm(
+                    action.payload.opKey, concId
+
+                ).subscribe({
+                    next: data => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             payload: {
@@ -86,13 +87,13 @@ export class FirstHitsModel extends StatefulModel<FirstHitsModelState> {
                             }
                         });
                     },
-                    error => {
+                    error: error => {
                         dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
                             name: ConcActions.AddedNewOperation.name,
                             error
                         });
                     }
-                )
+                });
             }
         );
     }

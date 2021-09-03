@@ -36,7 +36,6 @@ import { CorpColumn, ViewConfiguration, AudioPlayerActions, AjaxConcResponse,
 import { Actions, ConcGroupChangePayload,
     PublishLineSelectionPayload } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { SwitchMainCorpServerArgs } from '../query/common';
 
 /**
  *
@@ -1002,11 +1001,15 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     private changeMainCorpus(corpusId:string) {
         const args = this.layoutModel.getConcArgs();
         if (this.state.kwicCorps.indexOf(corpusId) > -1) {
-            args.maincorp = corpusId;
+            args.maincorp = undefined;
             args.viewmode = 'align';
             args.q = ['~' + this.state.concId];
             this.layoutModel.setLocationPost(
-                this.layoutModel.createActionUrl('switch_main_corp', args), {});
+                this.layoutModel.createActionUrl('switch_main_corp', args),
+                {
+                    maincorp: corpusId
+                }
+            );
 
         } else {
             throw new Error('Cannot set corpus as main - no KWIC');

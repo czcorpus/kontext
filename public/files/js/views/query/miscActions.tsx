@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
-import { Keyboard } from 'cnc-tskit';
+import { Keyboard, List, pipe } from 'cnc-tskit';
 import { ConcSampleModel, ConcSampleModelState } from '../../models/query/sample';
 import { SwitchMainCorpModel, SwitchMainCorpModelState } from '../../models/query/switchmc';
 import { Actions } from '../../models/query/actions';
@@ -72,7 +72,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------------------ <SampleForm /> --------------------------------
 
-    class SampleForm extends React.PureComponent<SampleFormProps & ConcSampleModelState> {
+    class _SampleForm extends React.PureComponent<SampleFormProps & ConcSampleModelState> {
 
         constructor(props) {
             super(props);
@@ -129,7 +129,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const BoundSampleForm = BoundWithProps<SampleFormProps, ConcSampleModelState>(SampleForm, sampleModel);
+    const SampleForm = BoundWithProps<SampleFormProps, ConcSampleModelState>(_SampleForm, sampleModel);
 
     // ------------------------ <ShuffleForm /> --------------------------------
 
@@ -209,11 +209,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     /**
      *
      */
-    class SwitchMainCorpForm extends React.PureComponent<SwitchMainCorpFormProps & SwitchMainCorpModelState> {
+    class _SwitchMainCorpForm extends React.PureComponent<SwitchMainCorpFormProps & SwitchMainCorpModelState> {
 
         constructor(props) {
             super(props);
             this._handleSubmitEvent = this._handleSubmitEvent.bind(this);
+            this._handleValueChange = this._handleValueChange.bind(this);
         }
 
         _handleSubmitEvent(evt) {
@@ -227,9 +228,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 } else {
                     dispatcher.dispatch<typeof Actions.SwitchMcFormSubmit>({
                         name: Actions.SwitchMcFormSubmit.name,
-                        payload: {
-                            operationId: this.props.opKey
-                        }
+                        payload: {operationId: this.props.opKey}
                     });
                 }
                 evt.preventDefault();
@@ -237,13 +236,27 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             }
         }
 
+        _handleValueChange(evt:React.ChangeEvent<HTMLSelectElement>) {
+            dispatcher.dispatch<typeof Actions.ReplayChangeMainCorp>({
+                name: Actions.ReplayChangeMainCorp.name,
+                payload: {
+                    sourceId: this.props.opKey,
+                    value: evt.target.value
+                }
+            });
+        }
+
         render() {
             return (
                 <div>
                     <p>
                         <label>{he.translate('query__set_main_corp_to_label')}</label>:{'\u00a0'}
-                        <input type="text" readOnly={true} value={this.props.maincorpValues[this.props.opKey]}
-                                title={he.translate('query__value_cannot_be_changed')} />
+                        <select value={this.props.maincorpValues[this.props.opKey]} onChange={this._handleValueChange}>
+                            {pipe(
+                                this.props.corpora,
+                                List.map(({n, label}) => <option value={n} key={n}>{label}</option>)
+                            )}
+                        </select>
                     </p>
                     <p>
                         <button type="button" className="default-button"
@@ -256,12 +269,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const BoundSwitchMainCorpForm = BoundWithProps<SwitchMainCorpFormProps, SwitchMainCorpModelState>(SwitchMainCorpForm, switchMcModel);
+    const SwitchMainCorpForm = BoundWithProps<SwitchMainCorpFormProps, SwitchMainCorpModelState>(_SwitchMainCorpForm, switchMcModel);
 
     return {
-        SampleForm: BoundSampleForm,
-        ShuffleForm: ShuffleForm,
-        SwitchMainCorpForm: BoundSwitchMainCorpForm
+        SampleForm,
+        ShuffleForm,
+        SwitchMainCorpForm
     };
 
 }

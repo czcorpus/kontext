@@ -41,7 +41,11 @@ import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
 import { ConcSortModel } from '../sort/single';
 import { MultiLevelConcSortModel } from '../sort/multi';
-import { ConcFormArgs, ConcFormArgsResponse, FilterFormArgs, FilterFormArgsResponse, FirstHitsFormArgs, QueryFormArgs, QueryFormArgsResponse, SampleFormArgs, SampleFormArgsResponse, SortFormArgs, SortFormArgsResponse, SwitchMainCorpArgs } from '../formArgs';
+import {
+    ConcFormArgs, ConcFormArgsResponse, FilterFormArgs, FilterFormArgsResponse, FirstHitsFormArgs,
+    QueryFormArgs, QueryFormArgsResponse, SampleFormArgs, SampleFormArgsResponse, SortFormArgs,
+    SortFormArgsResponse, SwitchMainCorpArgs
+} from '../formArgs';
 
 
 /*
@@ -223,8 +227,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.editedOperationIdx = action.payload.operationIdx;
             },
             (state, action, dispatch) => {
-                this.syncFormData(state, action.payload.operationIdx).subscribe(
-                    ([data, sourceId]) => {
+                this.syncFormData(state, action.payload.operationIdx).subscribe({
+                    next: ([data, sourceId]) => {
                         dispatch<typeof Actions.EditQueryOperationDone>({
                             name: Actions.EditQueryOperationDone.name,
                             payload: {
@@ -234,14 +238,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             }
                         });
                     },
-                    (err) => {
+                    error: error => {
                         dispatch<typeof Actions.EditQueryOperationDone>({
                             name: Actions.EditQueryOperationDone.name,
-                            error: err
+                            error
                         });
-                        this.pageModel.showMessage('error', err);
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
@@ -362,20 +366,20 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         }
                     )
 
-                ).subscribe(
-                    data => {
+                ).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.QueryOverviewEditorClose>({
                             name: Actions.QueryOverviewEditorClose.name
                         });
                     },
-                    err => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                         dispatch<typeof Actions.QueryOverviewEditorClose>({
                             name: Actions.QueryOverviewEditorClose.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
@@ -481,6 +485,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         op,
         pipeOp
     }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
+
         const prepareFormData:Observable<[ConcFormArgs|null, string]> = changedOpIdx !== opIdx ?
                 this.syncFormData(state, opIdx) : rxOf(null);
         if (opIdx === 0) {
@@ -606,26 +611,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             );
 
         } else if (pipeOp.form_args.form_type === Kontext.ConcFormTypes.SWITCHMC) {
-            return rxOf(this.switchMcModel.getSubmitUrl(pipeOp.id, baseOnConcId)).pipe(
+            return prepareFormData.pipe(
                 concatMap(
-                    (url) => {
-                        if (opIdx < numOps - 1) {
-                            return this.pageModel.ajax$<AjaxConcResponse>(
-                                HTTP.Method.GET,
-                                url,
-                                {format: 'json'}
-                            );
-
-                        } else {
-                            return rxOf(null).pipe(
-                                tap(
-                                    () => {
-                                        window.location.href = url;
-                                    }
-                                )
-                            );
-                        }
-                    }
+                    () => this.switchMcModel.submitQuery(pipeOp.id, baseOnConcId)
                 )
             );
 
@@ -726,7 +714,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         changedOpIdx:number,
         dispatch:SEDispatcher
     ):Observable<AjaxConcResponse> {
-
         const args = {
             ...this.pageModel.getConcArgs(),
             q: '~' + state.lastOperationKey
@@ -956,8 +943,11 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             );
     }
 
-    private syncSwitchMcForm(state:QueryReplayModelState,
-            opIdx:number):Observable<ConcFormArgs> {
+    private syncSwitchMcForm(
+        state:QueryReplayModelState,
+        opIdx:number
+    ):Observable<ConcFormArgs> {
+
         const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
         return queryKey !== undefined ?
             this.switchMcModel.syncFrom(
@@ -980,6 +970,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         state:QueryReplayModelState,
         opIdx:number
     ):Observable<[ConcFormArgs|null, string]> {
+
         const formType = state.currEncodedOperations[opIdx].formType;
         if (formType === Kontext.ConcFormTypes.QUERY) {
             return this.syncQueryForm(state, opIdx).pipe(
