@@ -39,7 +39,7 @@ export interface DynamicSubmenuItem extends Kontext.SubmenuItem {
 
 export interface StaticSubmenuItem extends Kontext.SubmenuItem {
     action:string;
-    args:Array<[string, string]>;
+    args:{[key:string]:string};
     keyCode:number;
     keyMod:string;
     currConc:boolean;
