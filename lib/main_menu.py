@@ -137,7 +137,7 @@ class AbstractMenuItem(object):
         self._ident = ident
         self._label = label
         self._hint = hint  # an additional info (typically visible on mouse-over)
-        self._args = []
+        self._args = {}
         self._indirect = False
         self._corpus_dependent = False
         self._disabled = False
@@ -146,11 +146,12 @@ class AbstractMenuItem(object):
         """
         By a single argument here we understand a 2-tuple (name, value)
         """
-        self._args += args
+        for arg in args:
+            self._args[arg[0]] = arg[1]
         return self
 
     def filter_empty_args(self):
-        self._args = [x for x in self._args if x[1] is not None and x[1] != '']
+        self._args = {k: v for k, v in self._args.items() if v not in (None, '')}
         return self
 
     def mark_indirect(self):
@@ -299,7 +300,6 @@ class EventTriggeringItem(HideOnCustomCondItem):
     def create(self, out_data):
         ans = super(EventTriggeringItem, self).create(out_data)
         ans['message'] = self._message
-        ans['args'] = dict(ans['args'])
         ans['keyCode'] = self._key_code
         ans['keyMod'] = self._key_mod
         ans.pop('action')

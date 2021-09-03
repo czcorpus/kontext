@@ -188,8 +188,8 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs() as FreqServerArgs)
             ),
             concatMap(([reduceAns, args]) => {  // TODO side effects here
-                this.state.ttCrit.forEach(([key, value]) => args.add(key, value));
                 this.state.flimit = flimit;
+                args.fcrit = this.state.ttCrit
                 args.ml = 0;
                 args.flimit = this.state.flimit;
                 args.force_cache = '1';

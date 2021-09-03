@@ -63,7 +63,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                 props.data.action,
                 {
                     ...props.concArgs,
-                    ...Dict.fromEntries(props.data.args)
+                    ...props.data.args,
                 }
             );
         };
@@ -88,9 +88,6 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                 if (props.data.action.indexOf('http://') === 0 ||
                             props.data.action.indexOf('https://') === 0) {
                     return props.data.action;
-
-                } else if (props.data.action && typeof props.data.args === 'string') {
-                    return he.createActionLink(props.data.action + '?' + props.data.args);
 
                 } else {
                     return he.createActionLink(props.data.action, props.data.args);
