@@ -587,11 +587,15 @@ export class ViewPage {
     private initSwitchMainCorpForm():void {
         const concFormsArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs');
-        const fetchArg = <T>(key:(item:formArgs.SwitchMainCorpArgs)=>T):Array<[string, T]>=>
+        const fetchArg = <T>(key:(item:formArgs.SwitchMainCorpArgs)=>T):Array<[string, T]> =>
             fetchSwitchMainCorpFormArgs(concFormsArgs, key);
 
         const switchMainCorpProps:SwitchMainCorpFormProperties = {
-            maincorp: fetchArg<string>(item => item.maincorp)
+            maincorp: fetchArg<string>(item => item.maincorp),
+            corpora: List.push(
+                {n: this.layoutModel.getCorpusIdent().id, label: this.layoutModel.getCorpusIdent().name},
+                [...this.layoutModel.getConf<Array<{n:string; label:string}>>('availableAlignedCorpora')]
+            )
         };
 
         this.queryModels.switchMcModel = new SwitchMainCorpModel(

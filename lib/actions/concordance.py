@@ -397,9 +397,9 @@ class Actions(Querying):
 
     @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
     def query(self, _):
-        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sent-switch'))
+        self.disabled_menu_items = (
+            MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+            MainMenu.VIEW('kwic-sent-switch'))
         out = {'aligned_corpora': self.args.align}
         tt_data = self.tt.export_with_norms(ret_nums=True)
         out['Normslist'] = tt_data['Normslist']
@@ -729,7 +729,7 @@ class Actions(Querying):
 
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_result=True)
     def switch_main_corp(self, request):
-        maincorp = request.args['maincorp']
+        maincorp = request.form['maincorp']
         self.args.q.append('x-{0}'.format(maincorp))
         ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
         self.add_conc_form_args(ksargs)

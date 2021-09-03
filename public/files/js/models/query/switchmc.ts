@@ -22,18 +22,20 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import * as Kontext from '../../types/kontext';
-import { Dict } from 'cnc-tskit';
+import { Dict, HTTP, List } from 'cnc-tskit';
 
 import { PageModel } from '../../app/page';
-import { SwitchMainCorpServerArgs } from './common';
 import { Actions as MainMenuActions } from '../../models/mainMenu/actions';
+import { Actions as ConcActions } from '../../models/concordance/actions';
 import { Actions } from './actions';
 import { ConcFormArgs, SwitchMainCorpArgs } from './formArgs';
+import { AjaxConcResponse } from '../concordance/common';
 
 
 
 export interface SwitchMainCorpFormProperties {
     maincorp:Array<[string, string]>;
+    corpora:Array<{n:string; label:string}>;
 }
 
 
@@ -51,6 +53,7 @@ export function fetchSwitchMainCorpFormArgs<T>(args:{[ident:string]:ConcFormArgs
 
 export interface SwitchMainCorpModelState {
     maincorpValues:{[key:string]:string};
+    corpora:Array<{n:string; label:string}>;
 }
 
 
@@ -64,12 +67,13 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
         dispatcher:IFullActionControl,
         layoutModel:PageModel,
         data:SwitchMainCorpFormProperties,
-        syncInitialArgs:SwitchMainCorpArgs
+        syncInitialArgs:SwitchMainCorpArgs,
     ) {
         super(
             dispatcher,
             {
-                maincorpValues: Dict.fromEntries(data.maincorp)
+                maincorpValues: Dict.fromEntries(data.maincorp),
+                corpora: data.corpora
             }
         );
         this.layoutModel = layoutModel;
@@ -87,26 +91,60 @@ export class SwitchMainCorpModel extends StatefulModel<SwitchMainCorpModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.SwitchMcFormSubmit>(
-            Actions.SwitchMcFormSubmit.name,
+        this.addActionHandler<typeof Actions.ReplayChangeMainCorp>(
+            Actions.ReplayChangeMainCorp.name,
             action => {
-                window.location.href = this.getSubmitUrl(
-                    action.payload.operationId,
-                    action.payload.operationId
+                this.changeState(
+                    state => {
+                        state.maincorpValues[action.payload.sourceId] = action.payload.value;
+                    }
                 );
             }
         );
+
+
+        this.addActionHandler<typeof Actions.SwitchMcFormSubmit>(
+            Actions.SwitchMcFormSubmit.name,
+            action => {
+                const concId = List.head(this.layoutModel.getConcArgs().q).substr(1);
+
+                this.submitQuery(action.payload.operationId, concId).subscribe({
+                    next: data => {
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
+                            payload: {
+                                concId: data.conc_persistence_op_id,
+                                data
+                            }
+                        });
+                    },
+                    error: error => {
+                        dispatcher.dispatch<typeof ConcActions.AddedNewOperation>({
+                            name: ConcActions.AddedNewOperation.name,
+                            error
+                        });
+                    }
+                });
+            }
+        )
     }
 
-    getSubmitUrl(opId:string, concId:string):string {
-        return this.layoutModel.createActionUrl(
-            'switch_main_corp',
+    submitQuery(concId:string, basedOnConcId:string):Observable<AjaxConcResponse> {
+        return this.layoutModel.ajax$(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl(
+                'switch_main_corp',
+                {
+                    ...this.layoutModel.getConcArgs(),
+                    maincorp: undefined,
+                    q: ['~' + basedOnConcId],
+                    format: 'json'
+                }
+            ),
             {
-                ...this.layoutModel.getConcArgs(),
-                q: ['~' + concId],
-                maincorp: this.state.maincorpValues[opId]
+                maincorp: this.state.maincorpValues[concId]
             }
-        );
+        )
     }
 
     syncFrom(
