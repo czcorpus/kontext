@@ -809,17 +809,16 @@ class Controller(object):
             self, methodname: str, template: str, result: ResultType, action_metadata: Dict[str, Any],
             return_type: str) -> Union[str, bytes]:
         """
-        Renders a response body out of a provided data resource along with which can
-        required target data type.
-
+        Renders a response body out of a provided data. The concrete form of data transformation
+        depends mainly on the 'return_type' argument.
         The data source can be:
-        1) a callable object returning a string or bytes
-        2) a dictionary
-        3) str or bytes
+        1) a dictionary
+        2) str or bytes
+        3) a callable object returning either 1) or 2) (this can be used for lazy evaluation)
         """
         if callable(result):
-            return result()
-        elif return_type == 'json':
+            result = result()
+        if return_type == 'json':
             try:
                 if isinstance(result, DataClassJsonMixin):
                     return result.to_json()

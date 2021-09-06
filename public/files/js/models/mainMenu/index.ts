@@ -174,8 +174,12 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
     private readonly pageModel:PageModel;
 
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, initialData:InitialMenuData,
-            concArgs:ConcServerArgs) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pageModel:PageModel,
+        initialData:InitialMenuData,
+        concArgs:ConcServerArgs) {
+
         super(
             dispatcher,
             {
@@ -321,7 +325,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                     targetCorp
                 );
             }
-        )
+        );
 
         this.addActionHandler(
             QueryActions.QueryInputSelectSubcorp,
@@ -353,12 +357,12 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         corpname:string
 
     ):void {
-        const subcItem = this.findMenuItem(state, menuSection, menuItem);
-        if (!subcItem) {
+        const submenuItem = this.findMenuItem(state, menuSection, menuItem);
+        if (!submenuItem) {
             throw new Error(`Menu item "${menuSection}"->"${menuItem}" not found. Probably a broken installation`);
         }
-        if (!subcItem.disabled && isStaticItem(subcItem)) {
-            subcItem.args['corpname'] = corpname;
+        if (!submenuItem.disabled && isStaticItem(submenuItem)) {
+            submenuItem.args['corpname'] = corpname;
         }
     }
 

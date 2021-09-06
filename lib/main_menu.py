@@ -20,7 +20,7 @@ from translation import ugettext as te
 import plugins
 
 
-class MainMenuItemId(object):
+class MainMenuItemId:
     """
     A special menu item identifier used
     mainly to define menu items disabled
@@ -67,7 +67,7 @@ class MainMenuItemId(object):
                                               len(self.items) == 0 and len(item_id.items) == 0)
 
 
-class MainMenu(object):
+class MainMenu:
     """
     Specifies main menu items on KonText page. Items themselves are used
     to disable parts of the menu (whole sections or individual submenu items).
@@ -93,7 +93,7 @@ def create_item(item_prototype):
     return MainMenuItemId(item_prototype.name)
 
 
-class OutData(object):
+class OutData:
     """
     A simple wrapper for accessing both
     HTML template data dictionary and
@@ -122,7 +122,7 @@ class OutData(object):
             return default
 
 
-class AbstractMenuItem(object):
+class AbstractMenuItem:
     """
     A general menu item without specified
     action/URL
