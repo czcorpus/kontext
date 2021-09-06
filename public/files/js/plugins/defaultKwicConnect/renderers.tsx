@@ -20,7 +20,7 @@
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import { IActionDispatcher } from 'kombo';
-import { List, pipe, tuple } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 import { Actions as QueryActions } from '../../models/query/actions';
 
 
