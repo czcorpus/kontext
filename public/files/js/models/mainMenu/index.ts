@@ -193,30 +193,30 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         );
         this.pageModel = pageModel;
 
-        this.addActionHandler<typeof Actions.UndoLastQueryOp>(
-            Actions.UndoLastQueryOp.name,
+        this.addActionHandler(
+            Actions.UndoLastQueryOp,
             null,
             (state, action, dispatch) => {
                 window.history.back();
             }
         );
 
-        this.addActionHandler<typeof Actions.SetVisibleSubmenu>(
-            Actions.SetVisibleSubmenu.name,
+        this.addActionHandler(
+            Actions.SetVisibleSubmenu,
             (state, action) => {
                 state.visibleSubmenu = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.ClearVisibleSubmenu>(
-            Actions.ClearVisibleSubmenu.name,
+        this.addActionHandler(
+            Actions.ClearVisibleSubmenu,
             (state, action) => {
                 state.visibleSubmenu = null;
             }
         );
 
-        this.addActionHandler<typeof Actions.ClearActiveItem>(
-            Actions.ClearActiveItem.name,
+        this.addActionHandler(
+            Actions.ClearActiveItem,
             (state, action) => {
                 state.activeItem = null;
             }
@@ -224,8 +224,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             ConcActions.AddedNewOperation.name
         );
 
-        this.addActionHandler<typeof Actions.ShowSort>(
-            Actions.ShowSort.name,
+        this.addActionHandler(
+            Actions.ShowSort,
             (state, action) => {
                 state.activeItem = {
                     actionName: action.name,
@@ -251,8 +251,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             Actions.ShowQueryHistory.name
         );
 
-        this.addActionHandler<typeof Actions.ShowFilter>(
-            Actions.ShowFilter.name,
+        this.addActionHandler(
+            Actions.ShowFilter,
             (state, action) => {
                 state.activeItem = {
                     actionName: action.name,
@@ -266,8 +266,8 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleDisabled>(
-            Actions.ToggleDisabled.name,
+        this.addActionHandler(
+            Actions.ToggleDisabled,
             (state, action) => {
                 this.toggleMenuItem(
                     state,
@@ -278,28 +278,88 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
             }
         );
 
-        this.addActionHandler<typeof GeneralOptsActions.GeneralSubmitDone>(
-            GeneralOptsActions.GeneralSubmitDone.name,
+        this.addActionHandler(
+            GeneralOptsActions.GeneralSubmitDone,
             (state, action) => {
                 state.activeItem = null;
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.ConcArgsUpdated>(
-            GlobalActions.ConcArgsUpdated.name,
+        this.addActionHandler(
+            GlobalActions.ConcArgsUpdated,
             (state, action) => {
                 state.concArgs = action.payload.args
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
+            (state, action) => {
+                const targetCorp = action.payload.corpora[0][1];
+                this.updateStaticMenuItemTargetCorpus(
+                    state,
+                    'menu-corpora',
+                    'create-subcorpus',
+                    targetCorp
+                );
+                this.updateStaticMenuItemTargetCorpus(
+                    state,
+                    'menu-new-query',
+                    'new-query',
+                    targetCorp
+                );
+                this.updateStaticMenuItemTargetCorpus(
+                    state,
+                    'menu-new-query',
+                    'paradigmatic-query',
+                    targetCorp
+                );
+                this.updateStaticMenuItemTargetCorpus(
+                    state,
+                    'menu-new-query',
+                    'wordlist',
+                    targetCorp
+                );
+            }
+        )
+
+        this.addActionHandler(
+            QueryActions.QueryInputSelectSubcorp,
             (state, action) => {
                 state.usesubcorp = action.payload.pubName ? action.payload.pubName : action.payload.subcorp;
                 state.origSubcorpName = action.payload.pubName ? action.payload.subcorp : null;
                 state.foreignSubcorp = action.payload.foreign;
             }
         );
+    }
+
+    private findMenuItem(
+        state:MainMenuModelState,
+        menuSection:string,
+        menuItem:string
+    ):Kontext.SubmenuItem|undefined {
+
+        const [,section] = List.find(([id,]) => id === menuSection, state.data);
+        if (!section) {
+            return undefined;
+        }
+        return List.find(item => item.ident === menuItem, section.items);
+    }
+
+    private updateStaticMenuItemTargetCorpus(
+        state:MainMenuModelState,
+        menuSection:string,
+        menuItem:string,
+        corpname:string
+
+    ):void {
+        const subcItem = this.findMenuItem(state, menuSection, menuItem);
+        if (!subcItem) {
+            throw new Error(`Menu item "${menuSection}"->"${menuItem}" not found. Probably a broken installation`);
+        }
+        if (!subcItem.disabled && isStaticItem(subcItem)) {
+            subcItem.args['corpname'] = corpname;
+        }
     }
 
     private toggleMenuItem(
