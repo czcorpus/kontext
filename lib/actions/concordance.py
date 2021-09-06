@@ -1788,9 +1788,9 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST')
     def ajax_switch_corpus(self, _):
-        self.disabled_menu_items = (MainMenu.FILTER, MainMenu.FREQUENCY,
-                                    MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-                                    MainMenu.VIEW('kwic-sent-switch'))
+        self.disabled_menu_items = (
+            MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+            MainMenu.VIEW('kwic-sent-switch'))
 
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
@@ -1841,7 +1841,6 @@ class Actions(Querying):
             if tagset.ident == corpus_info.default_tagset:
                 poslist = tagset.pos_category
                 break
-
         ans = dict(
             corpname=self.args.corpname,
             subcorpname=self.corp.subcname if self.corp.is_subcorpus else None,
@@ -1863,11 +1862,6 @@ class Actions(Querying):
             queryOverview=[],
             numQueryOps=0,
             textTypesData=self.tt.export_with_norms(ret_nums=True),
-            menuData=MenuGenerator(tmp_out, self.args, self._plugin_ctx).generate(
-                disabled_items=self.disabled_menu_items,
-                save_items=self._save_menu,
-                corpus_dependent=tmp_out['uses_corp_instance'],
-                ui_lang=self.ui_lang),
             Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
             AttrList=tmp_out['AttrList'],
             StructAttrList=tmp_out['StructAttrList'],
@@ -1881,11 +1875,19 @@ class Actions(Querying):
             structsAndAttrs=self._get_structs_and_attrs(),
             DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
             SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
-            QSEnabled=self.args.qs_enabled
+            QSEnabled=self.args.qs_enabled,
         )
         self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)
-        return ans
+
+        def rtrn():
+            ans['menuData'] = MenuGenerator(tmp_out, self.args, self._plugin_ctx).generate(
+                disabled_items=self.disabled_menu_items,
+                save_items=self._save_menu,
+                corpus_dependent=tmp_out['uses_corp_instance'],
+                ui_lang=self.ui_lang)
+            return ans
+        return rtrn
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, _):
