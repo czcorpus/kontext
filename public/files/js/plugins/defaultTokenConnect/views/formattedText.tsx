@@ -60,7 +60,7 @@ class TreeNode {
                 }
 
                 acc.push(curr instanceof TreeNode ? curr.renderNode(i) : curr);
-                if (i !== this.children.length - 1) {
+                if (i < this.children.length - 1) {
                     if (curr instanceof TreeNode && ['doc', 'text'].includes(curr.element)) {
                         return acc;
                     }

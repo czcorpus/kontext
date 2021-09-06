@@ -167,10 +167,9 @@ def get_detail_context(corp: KCorpus, pos, hitlen=1, detail_left_ctx=40, detail_
         detail_left_ctx = pos
     query_attrs = 'word' if attrs is None else ','.join(attrs)
     cr = manatee.CorpRegion(corp.unwrap(), query_attrs, structs)
-    region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos))
+    region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos + 1))[:-1]
     region_kwic = tokens2strclass(cr.region(pos, pos + hitlen))
-    region_right = tokens2strclass(cr.region(pos + hitlen,
-                                             pos + hitlen + detail_right_ctx))
+    region_right = tokens2strclass(cr.region(pos + hitlen - 1, pos + hitlen + detail_right_ctx))[1:]
     for seg in region_left + region_kwic + region_right:
         seg['str'] = seg['str'].replace('===NONE===', '')
     for seg in region_kwic:
