@@ -272,6 +272,7 @@ export const FilterForm = styled.div`
     fieldset {
         display: flex;
         flex-wrap: nowrap;
+        align-items: center;
         border: 1px solid ${theme.colorLightFrame};
         border-radius: ${theme.borderRadiusDefault};
         padding: ${theme.defaultFieldsetPadding};
@@ -293,4 +294,25 @@ export const FilterForm = styled.div`
 export const RemoveFromHistoryButton = styled.button`
 
     margin-right: 1em;
+`;
+
+
+// ---------------------- <CurrentCorpCheckbox /> ----------------------
+
+export const CurrentCorpCheckbox = styled.span`
+    margin-left: 0.2em;
+`;
+
+
+// ---------------------- <ArchivedOnlyCheckbox /> ----------------------
+
+export const ArchivedOnlyCheckbox = styled.span`
+    margin-left: 0.2em;
+`;
+
+
+// ---------------------- <SearchKindSelector /> ----------------------
+
+export const SearchKindSelector = styled.select`
+    margin-left: 0.2em;
 `;

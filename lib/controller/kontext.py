@@ -102,18 +102,21 @@ class Kontext(Controller):
     """
     # main menu items disabled for public users (this is applied automatically during
     # post_dispatch())
-    ANON_FORBIDDEN_MENU_ITEMS = (MainMenu.NEW_QUERY('history', 'wordlist'),
-                                 MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
-                                 MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
-                                 MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
+    ANON_FORBIDDEN_MENU_ITEMS = (
+        MainMenu.NEW_QUERY('history', 'wordlist'),
+        MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
+        MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
+        MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
-    CONCORDANCE_ACTIONS = (MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
-                           MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch'),
-                           MainMenu.CORPORA('create-subcorpus'))
+    CONCORDANCE_ACTIONS = (
+        MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
+        MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch'),
+        MainMenu.CORPORA('create-subcorpus'))
 
-    GENERAL_OPTIONS = ('pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-                       'shuffle', 'citemsperpage', 'pqueryitemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
-                       'rich_query_editor')
+    GENERAL_OPTIONS = (
+        'pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
+        'shuffle', 'citemsperpage', 'pqueryitemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
+        'rich_query_editor')
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 

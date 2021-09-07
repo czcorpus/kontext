@@ -67,3 +67,10 @@ export interface HistoryState {
     currPageInput:string;
     sortFn:string;
 }
+
+export interface StatusRequestArgs {
+    corpname:string;
+    usesubcorp:string|undefined;
+    attrname:string;
+    worker_tasks:Array<string>;
+}

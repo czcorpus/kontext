@@ -403,32 +403,33 @@ export class UDTagBuilderModel extends StatefulModel<UDTagBuilderModelState> {
         useFilter:boolean,
         sourceId:string
     ) {
-        const baseArgs:Array<[string, string]> = [
-            tuple('corpname', this.state.data[sourceId].corpname),
-            tuple('tagset', this.state.tagsetInfo.ident)
-        ];
-        const queryArgs:Array<[string, string]> = pipe(
+        const baseArgs = {
+            corpname: this.state.data[sourceId].corpname,
+            tagset: this.state.tagsetInfo.ident
+        };
+        const queryArgs = pipe(
             this.state.data[sourceId].filterFeaturesHistory,
             List.last(),
-            List.map(x => x.getKeyval())
+            List.map(x => x.getKeyval()),
+            Dict.fromEntries()
         );
 
         this.pluginApi.ajax$<DataResponse>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl(
                 'corpora/ajax_get_tag_variants',
-                useFilter ? baseArgs.concat(queryArgs) : baseArgs
+                useFilter ? {...baseArgs, ...queryArgs} : baseArgs
             ),
             {}
 
-        ).subscribe(
-            (result) => {
+        ).subscribe({
+            next: result => {
                 this.dispatchSideEffect<Action<U>>(actionFactory(result.keyval_tags));
             },
-            (error) => {
+            error: error => {
                 this.dispatchSideEffect(actionFactory(null, error));
             }
-        );
+        });
     }
 
     private updateFeatures(sourceId:string):void {

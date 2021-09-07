@@ -184,28 +184,28 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'archive_concordance',
-                        [
-                            tuple('code', state.queryId),
-                            tuple('revoke', action.payload.revoke ? '1' : '0')
-                        ]
+                        {
+                            code: state.queryId,
+                            revoke: action.payload.revoke
+                        }
                     ),
                     {}
 
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.MakeConcordancePermanentDone>({
                             name: Actions.MakeConcordancePermanentDone.name,
                             payload: {revoked: data.revoked}
                         });
 
                     },
-                    (err) => {
+                    error: error => {
                         dispatch<typeof Actions.MakeConcordancePermanentDone>({
                             name: Actions.MakeConcordancePermanentDone.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
