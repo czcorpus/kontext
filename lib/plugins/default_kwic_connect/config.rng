@@ -10,6 +10,33 @@
             <element name="js_module">
                 <value>defaultKwicConnect</value>
             </element>
+            <element name="providers_conf">
+                <a:documentation>
+                    A path to a JSON file containing different 'providers'. The structure is
+                    as follows:
+
+                    <![CDATA[
+                        [
+                          {
+                            "ident": "wiktionary_for_ic_9_en",
+                            "heading": {
+                              "en_US": "Wiktionary",
+                              "cs_CZ": "Wiktionary"
+                            },
+                            "backend": "plugins.default_token_connect.backends.HTTPBackend",
+                            "frontend": "plugins.default_token_connect.frontends.RawHtmlFrontend",
+                            "conf": {
+                              "server": "en.wiktionary.org",
+                              "path": "/w/index.php?title={lemma}&action=render",
+                              "ssl": true,
+                              "port": 443
+                            }
+                          }
+                        ]
+                    ]]>
+                </a:documentation>
+                <text />
+            </element>
             <element name="max_kwic_words">
                 <a:documentation>
                     The plug-in will take this number of most frequent
