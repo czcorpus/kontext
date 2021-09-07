@@ -339,12 +339,12 @@ class LiveAttributes(AbstractLiveAttributes):
             if isinstance(v, Iterable):
                 if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
                     out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
-                    values[self.export_key(k)] = AttrValue(*out_data)
+                    values[self.export_key(k)] = [AttrValue(*av) for av in out_data]
                 else:
                     values[self.export_key(k)] = {'length': len(v)}
             else:
                 values[self.export_key(k)] = v
-        return AttrValuesResponse(attr_values=values, aligned_corpora=aligned_corpora, poscount=values['poscount'])
+        return AttrValuesResponse(attr_values=values, aligned=aligned_corpora, poscount=values['poscount'])
 
     def get_bibliography(self, plugin_ctx, corpus, item_id):
         db = self.db(plugin_ctx, corpus.corpname)
