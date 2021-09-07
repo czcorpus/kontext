@@ -22,19 +22,28 @@ Script to import ucnk_live_attributes data from sqlite to mysql
 
 import sqlite3
 import sys
+from typing import Optional
 import mysql.connector
 import argparse
 from collections import defaultdict
 
 
-def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, batch: int):
+def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, batch: int, corpus_id: Optional[str] = None):
     mysql_cursor = mysql_db.cursor()
     sqlite_cursor = sqlite_db.cursor()
 
-    sqlite_cursor.execute('select count(*) as count from item')
+    if corpus_id is not None:
+        sqlite_cursor.execute(
+            'select count(*) as count from item where corpus_id = ?', (corpus_id,))
+    else:
+        sqlite_cursor.execute('select count(*) as count from item')
     row_count = sqlite_cursor.fetchone()['count']
-    sqlite_cursor.execute('select distinct corpus_id from item')
-    corpora = [row[0] for row in sqlite_cursor]
+
+    if corpus_id is None:
+        sqlite_cursor.execute('select distinct corpus_id from item')
+        corpora = [row[0] for row in sqlite_cursor]
+    else:
+        corpora = [corpus_id]
 
     present_values = {}
     mysql_cursor.execute(
@@ -52,7 +61,10 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
         present_corpus_struct_attrs[corp].update(f'{struct}_{attr}')
 
     foreign_connections = []
-    sqlite_cursor.execute('select * from item')
+    if corpus_id is not None:
+        sqlite_cursor.execute('select * from item where corpus_id = ?', (corpus_id,))
+    else:
+        sqlite_cursor.execute('select * from item')
     for i, row in enumerate(sqlite_cursor):
         corpus_name = row['corpus_id']
         poscount = row['poscount']
@@ -122,6 +134,7 @@ if __name__ == '__main__':
     parser.add_argument('--mysql-user', type=str, default='kontext')
     parser.add_argument('--mysql-pwd', type=str, default='kontext-secret')
     parser.add_argument('--batch', type=int, default=1000)
+    parser.add_argument('--corpus-id', type=str, default=None)
     args = parser.parse_args()
 
     sqlite_client = sqlite3.connect(args.sqlite_path)
@@ -130,7 +143,7 @@ if __name__ == '__main__':
         host=args.mysql_host, port=args.mysql_port, user=args.mysql_user, password=args.mysql_pwd, database=args.mysql_db)
 
     try:
-        import_data(sqlite_client, mysql_client, args.batch)
+        import_data(sqlite_client, mysql_client, args.batch, args.corpus_id)
         print('Data imported')
     except Exception as ex:
         print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
