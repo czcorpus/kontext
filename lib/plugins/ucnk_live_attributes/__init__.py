@@ -28,6 +28,7 @@ from functools import partial
 from collections import defaultdict, OrderedDict, Iterable
 import sqlite3
 import logging
+from typing import List
 try:
     from unidecode import unidecode
 except ImportError:
@@ -91,6 +92,14 @@ def filter_attributes(self, request):
                                      aligned_corpora=aligned)
 
 
+@exposed(return_type='json', skip_corpus_init=True)
+def initial_data_size(self, request):
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        corpora = request.args.getlist('corpus')
+        size = lattr.get_subc_size(self._plugin_ctx, corpora, {})
+        return dict(size=size, corpora=corpora)
+
+
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
@@ -115,7 +124,8 @@ class LiveAttributes(AbstractLiveAttributes):
         self._max_attr_visible_chars = max_attr_visible_chars
 
     def export_actions(self):
-        return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
+        return {
+            concordance.Actions: [filter_attributes, attr_val_autocomplete, initial_data_size]}
 
     def db(self, plugin_ctx: PluginCtx, corpname):
         """
@@ -238,18 +248,26 @@ class LiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx, corpus, attr_map):
-        db = self.db(plugin_ctx, corpus.corpname)
-        attr_where = [corpus.corpname]
-        attr_where_tmpl = ['corpus_id = ?']
+    def get_subc_size(self, plugin_ctx, corpora, attr_map):
+        db = self.db(plugin_ctx, corpora[0])
+        join_sql = []
+        where_sql = ['t1.corpus_id = ?']
+        where_values = [corpora[0]]
+        i = 2
+        for item in corpora[1:]:
+            join_sql.append(f'JOIN item AS t{i} ON t1.item_id = t{i}.item_id')
+            where_sql.append(f't{i}.corpus_id = ?')
+            where_values.append(item)
         for k, vlist in list(attr_map.items()):
             tmp = []
             for v in vlist:
-                attr_where.append(v)
-                tmp.append('%s = ?' % (self.import_key(k), ))  # TODO escape the 'k'
-            attr_where_tmpl.append('({0})'.format(' OR '.join(tmp)))
-        cur = self.execute_sql(db, 'SELECT SUM(poscount) FROM item WHERE {0}'.format(' AND '.join(attr_where_tmpl)),
-                               attr_where)
+                where_values.append(v)
+                tmp.append(f't1.{self.import_key(k)} = ?')  # TODO escape the 'k'
+            where_sql.append('({})'.format(' OR '.join(tmp)))
+        cur = self.execute_sql(
+            db,
+            'SELECT SUM(t1.poscount) FROM item AS t1 {} WHERE {}'.format(
+                ' '.join(join_sql), ' AND '.join(where_sql)), where_values)
         return cur.fetchone()[0]
 
     @cached
@@ -339,12 +357,12 @@ class LiveAttributes(AbstractLiveAttributes):
             if isinstance(v, Iterable):
                 if max_attr_list_size is None or len(v) <= max_attr_list_size or k in expand_attrs:
                     out_data = l10n.sort(v, collator_locale, key=lambda t: t[0])
-                    values[self.export_key(k)] = AttrValue(*out_data)
+                    values[self.export_key(k)] = [AttrValue(*av) for av in out_data]
                 else:
                     values[self.export_key(k)] = {'length': len(v)}
             else:
                 values[self.export_key(k)] = v
-        return AttrValuesResponse(attr_values=values, aligned_corpora=aligned_corpora, poscount=values['poscount'])
+        return AttrValuesResponse(attr_values=values, aligned=aligned_corpora, poscount=values['poscount'])
 
     def get_bibliography(self, plugin_ctx, corpus, item_id):
         db = self.db(plugin_ctx, corpus.corpname)

@@ -81,14 +81,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         a dictionary containing matching attributes and values
         """
 
-    # TODO missing raise NotImplementedError ?
     @abc.abstractmethod
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str]) -> int:
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, str]) -> int:
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
         plugin_ctx --
-        corpus --
+        corpora -- aligned corpora
         attr_map -- a dict containing selected attributes and respective values
         """
 

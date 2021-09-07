@@ -170,6 +170,7 @@ export class Actions {
 
     static FilterWholeSelection:Action<{
         poscount:number;
+        alignedBasesizes:{[k:string]:number};
         filterData:SelectionFilterMap;
         selectedTypes:TextTypes.ExportedSelection;
         bibAttrValsAreListed:boolean;

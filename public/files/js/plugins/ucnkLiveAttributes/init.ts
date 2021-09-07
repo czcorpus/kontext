@@ -83,8 +83,14 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
  * @param bibAttr an attribute used to identify a bibliographic item (e.g. something like 'doc.id')
  */
 const create:PluginInterfaces.LiveAttributes.Factory = (
-        pluginApi, isEnabled, controlsAlignedCorpora, args) => {
+        pluginApi,
+        isEnabled,
+        controlsAlignedCorpora,
+        args
+) => {
+
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
+    const firstCorpus = pluginApi.getCorpusIdent().id;
     const alignedCorpora = List.map(
         item => ({
             value: item.n,
@@ -102,7 +108,9 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             selectionSteps: [],
             selectionTypes: {},
             lastRemovedStep: null,
-            alignedCorpora: alignedCorpora,
+            corpIntersectionSizesCache: {},
+            firstCorpus,
+            alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
             bibliographyAttribute: args.bibAttr,
             bibliographyIds: [],
