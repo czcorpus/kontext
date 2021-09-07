@@ -3,6 +3,7 @@ CREATE TABLE corpus_structattr_value_tuple (
   corpus_name varchar(63) NOT NULL,
   poscount int NOT NULL,
   wordcount int NOT NULL,
+  item_id varchar(255),
   CONSTRAINT corpus_structatrr_value_tuple_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
