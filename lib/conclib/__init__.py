@@ -169,21 +169,20 @@ def get_detail_context(corp: KCorpus, pos, hitlen=1, detail_left_ctx=40, detail_
 
     # we get left and right overlapping regions with kwic region to get also structures between regions
     cr = manatee.CorpRegion(corp.unwrap(), query_attrs, structs)
-    region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos + hitlen))
+    region_left = tokens2strclass(cr.region(pos - detail_left_ctx, pos + 1))
     region_kwic = tokens2strclass(cr.region(pos, pos + hitlen))
-    region_right = tokens2strclass(cr.region(pos, pos + hitlen + detail_right_ctx))
+    region_right = tokens2strclass(cr.region(pos + hitlen - 1, pos + hitlen + detail_right_ctx))
     for seg in region_left + region_kwic + region_right:
         seg['str'] = seg['str'].replace('===NONE===', '')
 
     # here we subtract kwic region from left and right regions...
-    for i, kwic_part in enumerate(region_kwic):
-        kwic_part_len = len(kwic_part['str'])
-        left_part = region_left[len(region_left) - len(region_kwic) + i]
-        if left_part['str'].endswith(kwic_part['str']):
-            left_part['str'] = left_part['str'][:-kwic_part_len]
-        right_part = region_right[i]
-        if right_part['str'].startswith(kwic_part['str']):
-            right_part['str'] = right_part['str'][kwic_part_len:]
+    left_kwic_part = tokens2strclass(cr.region(pos, pos + 1))[0]['str']
+    if region_left[-1]['str'].endswith(left_kwic_part):
+        region_left[-1]['str'] = region_left[-1]['str'].rsplit(left_kwic_part, 1)[0]
+    right_kwic_part = tokens2strclass(cr.region(pos + hitlen - 1, pos + hitlen))[0]['str']
+    if region_right[0]['str'].startswith(right_kwic_part):
+        region_right[0]['str'] = region_right[0]['str'].split(right_kwic_part, 1)[1]
+
     # ...and remove empty strings
     region_left = [v for v in region_left if v['str']]
     region_right = [v for v in region_right if v['str']]
