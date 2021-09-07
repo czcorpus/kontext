@@ -88,6 +88,14 @@ def filter_attributes(self, request):
                                      aligned_corpora=aligned)
 
 
+@exposed(return_type='json', skip_corpus_init=True)
+def initial_data_size(self, request):
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        corpora = request.args.getlist('corpus')
+        size = lattr.get_subc_size(self._plugin_ctx, corpora, {})
+        return dict(size=size, corpora=corpora)
+
+
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
@@ -205,8 +213,8 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, List[str]]) -> int:
-        attr_where = [corpus.corpname]
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpora, attr_map: Dict[str, List[str]]) -> int:
+        attr_where = [corpora[0]]
         attr_where_tmpl = ['corpus_name = %s']
         for k, vlist in attr_map.items():
             struct_attr = self.import_key(k)

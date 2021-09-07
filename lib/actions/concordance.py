@@ -1775,7 +1775,8 @@ class Actions(Querying):
             # a faster solution based on liveattrs
             with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
                 attr_map = TextTypeCollector(self.corp, request.json['text_types']).get_attrmap()
-                size = liveatt.get_subc_size(self._plugin_ctx, self.corp, attr_map)
+                involved_corpora = [self.args.corpname] + self.args.align[:]
+                size = liveatt.get_subc_size(self._plugin_ctx, involved_corpora, attr_map)
                 return dict(total=size)
         else:
             tt_query = TextTypeCollector(self.corp, request.json['text_types']).get_query()

@@ -19,7 +19,7 @@
  */
 
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { concatMap, map } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
@@ -79,6 +79,8 @@ export function isAlignedSelectionStep(v:TTSelectionStep|AlignedLangSelectionSte
 export interface LiveAttrsModelState {
     selectionSteps:Array<TTSelectionStep|AlignedLangSelectionStep>;
     lastRemovedStep:TTSelectionStep|AlignedLangSelectionStep|null;
+    firstCorpus:string;
+    corpIntersectionSizesCache:{[key:string]:number};
     alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     initialAlignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     bibliographyAttribute:string;
@@ -124,7 +126,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
-
         this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
             PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
             (state, action) => {
@@ -150,27 +151,28 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                             }
                         }
                     )
-                ).subscribe(
-                    ([selections, data]) => {
+                ).subscribe({
+                    next: ([baseSize, selections, data]) => {
                         const filterData = this.importFilter(data.attr_values, dispatch);
                         dispatch<typeof TTActions.FilterWholeSelection>({
                             name: TTActions.FilterWholeSelection.name,
                             payload: {
                                 poscount: data.poscount,
+                                alignedBasesizes: baseSize,
                                 filterData: filterData,
                                 selectedTypes: selections,
                                 bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
                             }
                         });
                     },
-                    (err) => {
-                        this.pluginApi.showMessage('error', err);
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
                         dispatch<typeof TTActions.FilterWholeSelection>({
                             name: TTActions.FilterWholeSelection.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
@@ -187,6 +189,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         })),
                         List.filter(item=>item.locked)
                     );
+                    state.corpIntersectionSizesCache = {
+                        ...state.corpIntersectionSizesCache,
+                        ...action.payload.alignedBasesizes
+                    };
                     this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
                     if (action.payload.bibAttrValsAreListed) {
                         this.attachBibData(state, action.payload.filterData);
@@ -496,16 +502,17 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         const selectedAligned = state.alignedCorpora.filter(item=>item.selected);
 
         if (List.empty(state.selectionSteps) && !List.empty(selectedAligned)) {
-            const mainLang = this.pluginApi.getCorpusIdent().id;
-            state.alignedCorpora.splice(0, 0, {
-                value: mainLang,
-                label: mainLang,
-                selected: true,
-                locked: true
-            });
+            state.alignedCorpora = List.map(v => ({...v, locked: true}), state.alignedCorpora);
+            const involvedCorpora = pipe(
+                state.alignedCorpora,
+                List.filter(v => v.selected),
+                List.map(v => v.value),
+                List.unshift(state.firstCorpus)
+            );
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
-                numPosInfo: newAttrs.length > 0 ? 0 : poscount,
+                numPosInfo: state.corpIntersectionSizesCache[
+                    this.corporaIntersectionCacheKey(involvedCorpora)],
                 attributes : [],
                 languages : pipe(
                     state.alignedCorpora,
@@ -635,27 +642,54 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
     }
 
+    private corporaIntersectionCacheKey(corpora:Array<string>):string {
+        return corpora.join('#');
+    }
+
     private loadFilteredData(
         state:LiveAttrsModelState,
         selections:TextTypes.ExportedSelection
-    ):Observable<[TextTypes.ExportedSelection, ServerRefineResponse]> {
-
+    ):Observable<[{[k:string]:number}, TextTypes.ExportedSelection, ServerRefineResponse]> {
         const aligned = pipe(
             state.alignedCorpora,
-            List.filter(item=>item.selected),
-            List.map((item)=>item.value)
+            List.filter(item => item.selected),
+            List.map(item => item.value)
         );
-        return this.pluginApi.ajax$<ServerRefineResponse>(
-            HTTP.Method.POST,
-            this.pluginApi.createActionUrl('filter_attributes'),
-            {
-                corpname: this.pluginApi.getCorpusIdent().id,
-                attrs: JSON.stringify(selections),
-                aligned: JSON.stringify(aligned)
-            }
-        ).pipe(
+        const involvedCorpora = pipe(
+            state.alignedCorpora,
+            List.filter(v => v.selected),
+            List.map(v => v.value),
+            List.unshift(state.firstCorpus)
+        );
+        const baseSizeCacheKey = this.corporaIntersectionCacheKey(involvedCorpora);
+        const cachedBaseSize = state.corpIntersectionSizesCache[baseSizeCacheKey];
+        return forkJoin([
+            List.empty(state.selectionSteps) && !List.empty(aligned) ?
+                this.pluginApi.ajax$<{corpora:Array<string>, size:number}>(
+                    HTTP.Method.GET,
+                    this.pluginApi.createActionUrl(
+                        'initial_data_size',
+                        {
+                            corpus: involvedCorpora
+                        }
+                    ),
+                    {}
+                 ).pipe(
+                     map(v => ({[this.corporaIntersectionCacheKey(v.corpora)]: v.size}))
+                 ) :
+                rxOf({[baseSizeCacheKey]:cachedBaseSize}),
+            this.pluginApi.ajax$<ServerRefineResponse>(
+                HTTP.Method.POST,
+                this.pluginApi.createActionUrl('filter_attributes'),
+                {
+                    corpname: this.pluginApi.getCorpusIdent().id,
+                    attrs: JSON.stringify(selections),
+                    aligned: JSON.stringify(aligned)
+                }
+            )
+        ]).pipe(
             map(
-                (resp) => {
+                ([sizes, resp]) => {
                     const fixedAttrVals = {};
                     Object.keys(resp.attr_values).forEach(k => {
                         if (Array.isArray(resp.attr_values[k])) {
@@ -663,6 +697,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         }
                     });
                     return tuple(
+                        sizes,
                         selections,
                         {
                             error: resp.error,
