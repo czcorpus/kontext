@@ -141,6 +141,13 @@ class QueryBuilder:
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
             JOIN corpus_structattr_value_tuple AS t_value_tuple ON t_value_mapping.value_tuple_id = t_value_tuple.id
             JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
+            WHERE (
+                {'OR'.join('(t_value.structure_name = %s AND t_value.structattr_name = %s)' for _ in selected_attrs)}
+            )
             GROUP BY t.id
         '''
+        for sel in selected_attrs:
+            query_values.append(sel.struct)
+            query_values.append(sel.attr)
+
         return QueryComponents(sql_template, selected_attrs, hidden_attrs, query_values)
