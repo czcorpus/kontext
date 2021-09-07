@@ -23,8 +23,8 @@ from plugins.abstract.auth import SignUpNeedsUpdateException
 import settings
 
 
-USER_ACTIONS_DISABLED_ITEMS = (MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE,
-                               MainMenu.CONCORDANCE, MainMenu.VIEW)
+USER_ACTIONS_DISABLED_ITEMS = (
+    MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.VIEW)
 
 
 class User(Kontext):

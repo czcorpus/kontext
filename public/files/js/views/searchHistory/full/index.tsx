@@ -77,7 +77,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <select value={props.value} onChange={handleChange}>
+            <S.SearchKindSelector value={props.value} onChange={handleChange}>
                 <option value="">
                     {he.translate('qhistory__qs_any')}
                 </option>
@@ -85,7 +85,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     v => <option key={v} value={v}>{supertypeToHuman(v)}</option>,
                     ['conc', 'pquery', 'wlist'] as Array<Kontext.QuerySupertype>
                 )}
-            </select>
+            </S.SearchKindSelector>
         );
     };
 
@@ -104,8 +104,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 }
             });
         };
-        return <input type="checkbox" checked={props.value} onChange={handleChange}
-                    style={{verticalAlign: 'middle'}} />;
+        return (
+            <S.CurrentCorpCheckbox>
+                 <input type="checkbox" checked={props.value} onChange={handleChange}
+                        style={{verticalAlign: 'middle'}} />
+            </S.CurrentCorpCheckbox>
+        );
     };
 
     // -------------------- <ArchivedOnlyCheckbox /> ------------------------
@@ -123,8 +127,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         };
 
-        return <input type="checkbox" checked={props.value} onChange={handleChange}
-                    style={{verticalAlign: 'middle'}} />;
+        return (
+            <S.ArchivedOnlyCheckbox>
+               <input type="checkbox" checked={props.value} onChange={handleChange}
+                        style={{verticalAlign: 'middle'}} />
+            </S.ArchivedOnlyCheckbox>
+        )
     }
 
 
@@ -144,15 +152,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('qhistory__filter_legend')}
                     </legend>
                     <label>
-                        {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:{'\u00a0'}
+                        {he.translate('qhistory__curr_corp_only_label_{corpus}', {corpus: props.corpname})}:
                         <CurrentCorpCheckbox value={props.currentCorpusOnly} />
                     </label>
                     <label>
-                        {he.translate('qhistory__query_supertype_sel')}:{'\u00a0'}
+                        {he.translate('qhistory__query_supertype_sel')}:
                         <SearchKindSelector value={props.querySupertype} />
                     </label>
                     <label>
-                        {he.translate('qhistory__checkbox_archived_only')}:{'\u00a0'}
+                        {he.translate('qhistory__checkbox_archived_only')}:
                         <ArchivedOnlyCheckbox value={props.archivedOnly} />
                     </label>
                 </fieldset>

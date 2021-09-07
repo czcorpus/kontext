@@ -322,10 +322,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         return this.pageModel.ajax$<any>(
             HTTP.Method.POST,
             this.pageModel.createActionUrl('delete_query'),
-            [
-                tuple('query_id', item.query_id),
-                tuple('created', item.created)
-            ]
+            {
+                query_id: item.query_id,
+                created: item.created
+            }
 
         ).pipe(
             tap(

@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { HTTP } from 'cnc-tskit';
+
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
-import { HTTP, tuple } from 'cnc-tskit';
+import { StatusRequestArgs } from './common';
 
 
 type WatchdogUpdateCallback = (status:number, err:Error)=>void;
@@ -54,21 +56,19 @@ export class CalcWatchdog {
     }
 
     private checkStatus():void {
-        const args = [
-            tuple('corpname', this.layoutModel.getCorpusIdent().id),
-            tuple('usesubcorp', this.layoutModel.getCorpusIdent().usesubcorp),
-            tuple('attrname', this.layoutModel.getConf<string>('attrname'))
-        ];
-        this.layoutModel.getConf<Array<string>>('workerTasks').forEach(taskId => {
-            args.push(tuple('worker_tasks', taskId));
-        });
-        this.layoutModel.ajax$(
+        const args:StatusRequestArgs = {
+            corpname: this.layoutModel.getCorpusIdent().id,
+            usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
+            attrname: this.layoutModel.getConf<string>('attrname'),
+            worker_tasks: [...this.layoutModel.getConf<Array<string>>('workerTasks')]
+        };
+        this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('wordlist_process'),
             args
 
-        ).subscribe(
-            (data:Kontext.AjaxResponse) => {
+        ).subscribe({
+            next: data => {
                 if (data['status'] === 100) {
                         this.stopWatching(); // just for sure
 
@@ -81,10 +81,10 @@ export class CalcWatchdog {
                 this.lastStatus = data['status'];
                 this.onUpdate(this.lastStatus, null);
             },
-            (err) => {
+            error: error => {
                 this.onUpdate(null, new Error(this.layoutModel.translate('global__bg_calculation_failed')));
             }
-        );
+        });
     }
 
     startWatching():void {

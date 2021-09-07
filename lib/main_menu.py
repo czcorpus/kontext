@@ -324,7 +324,7 @@ class MenuGenerator(object):
         )
 
         self.recent_queries = (
-            EventTriggeringItem(MainMenu.VIEW('history'), te('Recent queries'),
+            EventTriggeringItem(MainMenu.NEW_QUERY('history'), te('Recent queries'),
                                 'MAIN_MENU_SHOW_QUERY_HISTORY', key_code=72, key_mod='shift')  # key = 'h'
             .mark_indirect()
         )
