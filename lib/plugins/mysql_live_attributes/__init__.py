@@ -229,7 +229,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             args.append(corpora[0])
 
         sql_inner = [
-            f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON t{i}.item_id = t.item_id AND t{i}.corpus_name = %s'
+            f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON t{i}.item_id = tuple.item_id AND t{i}.corpus_name = %s'
             for i, _ in enumerate(corpora[1:])
         ]
         args.extend(corpora[1:])
@@ -237,11 +237,11 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(
             f'''
-                SELECT SUM(t.poscount)
+                SELECT SUM(tuple.poscount)
                 FROM (
                     {" INTERSECT ".join(sql_sub)}
-                ) as s
-                JOIN corpus_structattr_value_tuple AS t ON s.value_tuple_id = t.id
+                ) as t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
                 {" ".join(sql_inner)}
             ''',
             args
