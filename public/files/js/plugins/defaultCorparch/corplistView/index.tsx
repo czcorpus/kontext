@@ -97,7 +97,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                 }
             });
         };
-        const imgUrl = props.favId !== null ?
+        const imgUrl = props.favId ?
             he.createStaticUrl('img/starred.svg') :
             he.createStaticUrl('img/starred_grey.svg');
         return <img className="starred" src={imgUrl} onClick={handleClick} />;
