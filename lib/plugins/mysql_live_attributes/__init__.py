@@ -88,14 +88,6 @@ def filter_attributes(self, request):
                                      aligned_corpora=aligned)
 
 
-@exposed(return_type='json', skip_corpus_init=True)
-def initial_data_size(self, request):
-    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        corpora = request.args.getlist('corpus')
-        size = lattr.get_subc_size(self._plugin_ctx, corpora, {})
-        return dict(size=size, corpora=corpora)
-
-
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))

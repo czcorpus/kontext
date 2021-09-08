@@ -186,6 +186,7 @@ export class Actions {
     };
 
     static QueryTextTypesToggleForm: Action<{
+        visible:boolean;
     }> = {
         name: 'QUERY_TEXT_TYPES_TOGGLE_FORM'
     };

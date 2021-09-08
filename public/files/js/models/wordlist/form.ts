@@ -202,9 +202,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 this.layoutModel.setConf<Kontext.FullCorpusIdent>(
                     'corpusIdent',
                     {
-                        id: corpIdent.id,
-                        name: corpIdent.name,
-                        variant: corpIdent.variant,
+                        ...corpIdent,
                         usesubcorp: state.currentSubcorpus,
                         origSubcorpName: state.origSubcorpName,
                         foreignSubcorp: state.isForeignSubcorp

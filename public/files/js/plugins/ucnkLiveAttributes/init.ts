@@ -46,7 +46,11 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
         return true;
     }
 
-    getViews(subcMixerView:PluginInterfaces.SubcMixer.View, textTypesModel:TextTypesModel):PluginInterfaces.LiveAttributes.Views {
+    getViews(
+        subcMixerView:PluginInterfaces.SubcMixer.View,
+        textTypesModel:TextTypesModel
+    ):PluginInterfaces.LiveAttributes.Views {
+
         const views = viewInit({
             dispatcher: this.pluginApi.dispatcher(),
             he: this.pluginApi.getComponentHelpers(),
@@ -91,6 +95,8 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
 
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
     const firstCorpus = pluginApi.getCorpusIdent().id;
+    const initialCorpusSize = List.empty(currAligned) ? pluginApi.getCorpusIdent().size : undefined;
+    // note: for aligned corpora, we have to recalculate individual attr sizes (=> undefined above)
     const alignedCorpora = List.map(
         item => ({
             value: item.n,
@@ -108,7 +114,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             selectionSteps: [],
             selectionTypes: {},
             lastRemovedStep: null,
-            corpIntersectionSizesCache: {},
+            initialCorpusSize,
             firstCorpus,
             alignedCorpora,
             initialAlignedCorpora: alignedCorpora,

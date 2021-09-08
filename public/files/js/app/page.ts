@@ -463,7 +463,13 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
     }
 
     getCorpusIdent():Kontext.FullCorpusIdent {
-        return this.conf.getConf('corpusIdent') || {id: null, variant: '', name: null};
+        return this.conf.getConf('corpusIdent') || {
+            id: null,
+            variant: '',
+            name: null,
+            size: 0,
+            searchSize: 0
+        };
     }
 
     getConcArgs():ConcServerArgs {

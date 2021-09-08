@@ -170,9 +170,10 @@ export function init({
         }
 
         _handleTextTypesFormVisibility() {
-            dispatcher.dispatch<typeof Actions.QueryTextTypesToggleForm>({
-                name: Actions.QueryTextTypesToggleForm.name
-            });
+            dispatcher.dispatch(
+                Actions.QueryTextTypesToggleForm,
+                {visible: !this.props.textTypesFormVisible}
+            );
         }
 
         _handleContextFormVisibility() {

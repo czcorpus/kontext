@@ -413,7 +413,7 @@ class Actions(Querying):
         if qf_args is None:
             qf_args = QueryFormArgs(
                 plugin_ctx=self._plugin_ctx,
-                corpora=[self.args.corpname],
+                corpora=[self.args.corpname] + self.args.align,
                 persist=False)
         self.add_conc_form_args(qf_args)
         self._attach_query_params(out)

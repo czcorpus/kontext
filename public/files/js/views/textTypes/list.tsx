@@ -208,7 +208,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                         itemIsSelected={item.selected}
                                         itemIsLocked={item.locked}
                                             /></td>
-                                <td className="num">{item.availItems ? he.formatNumber(item.availItems) : ''}</td>
+                                <td className="num">
+                                    {item.availItems > -1 ?
+                                        he.formatNumber(item.availItems || 0) :
+                                        '??'
+                                    }
+                                </td>
                                 <td className="extended-info">
                                 {props.hasExtendedInfo ?
                                     <commonViews.ExtendedInfoButton ident={item.ident} attrName={props.attrObj.name}

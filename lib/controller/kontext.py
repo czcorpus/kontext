@@ -701,7 +701,9 @@ class Kontext(Controller):
             name=self._human_readable_corpname(),
             usesubcorp=self.args.usesubcorp,
             origSubcorpName=self.corp.orig_subcname,
-            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id)
+            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id,
+            size=self.corp.size,
+            searchSize=self.corp.search_size)
         if self.corp.is_subcorpus:
             result['subcorp_size'] = self.corp.search_size
         else:

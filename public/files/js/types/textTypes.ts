@@ -156,3 +156,7 @@ export interface AlignedLanguageItem {
 }
 
 export type ExtendedInfo = Array<[string, string]>|{__message__:string};
+
+export interface ValueDomainsSizes {
+    [key:string]:{length:number}|Array<[string, string, string, number, number]>
+}
