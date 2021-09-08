@@ -61,6 +61,7 @@ class CorpusListItem:
     featured: bool = False
     found_in: List[str] = field(default_factory=list)
     keywords: List[str] = field(default_factory=list)
+    fav_id: int = None
 
     def __post_init__(self):
         self.size_info = l10n.simplify_num(self.size)
