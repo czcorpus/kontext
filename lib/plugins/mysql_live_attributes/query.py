@@ -129,11 +129,22 @@ class QueryBuilder:
         sql_sub, args = attr_items.export_subquery(self.corpus_name)
         hidden_attrs = set()
 
-        sql_inner = [
-            f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON t{i}.item_id = tuple.item_id AND t{i}.corpus_name = %s'
-            for i, _ in enumerate(self.aligned_corpora)
-        ]
-        args.extend(self.aligned_corpora)
+        if self.aligned_corpora:
+            aligned_corpus_select = 'SELECT item_id FROM corpus_structattr_value_tuple WHERE corpus_name = %s'
+            sql_sub = f'''
+                SELECT t1.value_tuple_id
+                FROM (
+                    SELECT t1.item_id
+                    FROM ({sql_sub}) t
+                    JOIN corpus_structattr_value_tuple AS t1 ON t.value_tuple_id = t1.id
+                    INTERSECT
+                    {" INTERSECT ".join(aligned_corpus_select for _ in self.aligned_corpora)}
+                )
+                JOIN corpus_structattr_value_tuple AS t1 ON t1.item_id = t.item_id
+                WHERE corpus_name = %s
+            '''
+            args.extend(self.aligned_corpora)
+            args.append(self.corpus_name)
 
         if self.bib_id is not None and self.bib_id not in self.srch_attrs:
             hidden_attrs.add(self.bib_id)
@@ -145,7 +156,6 @@ class QueryBuilder:
                 {sql_sub}
             ) as t
             JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.id
-            {" ".join(sql_inner)}
             JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = t.id
             JOIN corpus_structattr_value AS value ON value.id = map.value_id
             WHERE (

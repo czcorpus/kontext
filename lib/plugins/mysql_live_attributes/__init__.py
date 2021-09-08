@@ -207,9 +207,9 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
     def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, List[str]]) -> int:
         args = []
-        sql_sub = []
+        tmp = []
         for key, values in attr_map.items():
-            sql_sub.append(f'''
+            tmp.append(f'''
                 SELECT t2.value_tuple_id
                 FROM corpus_structattr_value as t1
                 JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
@@ -219,33 +219,42 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             args.extend([corpora[0], struct_attr.struct, struct_attr.attr])
             args.extend(values)
 
-        if not sql_sub:
-            sql_sub = ['''
+        if tmp:
+            sql_sub = ' INTERSECT '.join(tmp)
+        else:
+            sql_sub = '''
                 SELECT t2.value_tuple_id
                 FROM corpus_structattr_value as t1
                 JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
                 WHERE t1.corpus_name = %s
-            ''']
+            '''
             args.append(corpora[0])
 
-        sql_inner = [
-            f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON t{i}.item_id = tuple.item_id AND t{i}.corpus_name = %s'
-            for i, _ in enumerate(corpora[1:])
-        ]
-        args.extend(corpora[1:])
+        if len(corpora) > 1:
+            aligned_corpus_select = 'SELECT item_id FROM corpus_structattr_value_tuple WHERE corpus_name = %s'
+            sql = f'''
+                SELECT sum(tuple.poscount)
+                FROM (
+                    SELECT tuple.item_id
+                    FROM ({sql_sub}) t
+                    JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+                    INTERSECT
+                    {" INTERSECT ".join(aligned_corpus_select for _ in corpora[1:])}
+                ) t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.item_id = t.item_id
+                WHERE corpus_name = %s
+            '''
+            args.extend(corpora[1:])
+            args.append(corpora[0])
+        else:
+            sql = f'''
+                SELECT SUM(tuple.poscount)
+                FROM ({sql_sub}) t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+            '''
 
         cursor = self.integ_db.cursor()
-        cursor.execute(
-            f'''
-                SELECT SUM(tuple.poscount)
-                FROM (
-                    {" INTERSECT ".join(sql_sub)}
-                ) as t
-                JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
-                {" ".join(sql_inner)}
-            ''',
-            args
-        )
+        cursor.execute(sql, args)
         return cursor.fetchone()[0]
 
     @cached
