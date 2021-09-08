@@ -205,25 +205,46 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpora, attr_map: Dict[str, List[str]]) -> int:
-        attr_where = [corpora[0]]
-        attr_where_tmpl = ['corpus_name = %s']
-        for k, vlist in attr_map.items():
-            struct_attr = self.import_key(k)
-            attr_where_tmpl.append(
-                f'structure_name = %s AND structattr_name = %s AND value IN ({",".join("%s" for _ in vlist)})')
-            attr_where.extend([struct_attr.struct, struct_attr.attr])
-            attr_where.extend(vlist)
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, List[str]]) -> int:
+        args = []
+        sql_sub = []
+        for key, values in attr_map.items():
+            sql_sub.append(f'''
+                SELECT t2.value_tuple_id
+                FROM corpus_structattr_value as t1
+                JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
+                WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s AND value = IN ({",".join("%s" for _ in values)})
+            ''')
+            struct_attr = self.import_key(key)
+            args.extend([corpora[0], struct_attr.struct, struct_attr.attr])
+            args.extend(values)
+
+        if not sql_sub:
+            sql_sub = ['''
+                SELECT t2.value_tuple_id
+                FROM corpus_structattr_value as t1
+                JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
+                WHERE t1.corpus_name = %s
+            ''']
+            args.append(corpora[0])
+
+        sql_inner = [
+            f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON t{i}.item_id = t.item_id AND t{i}.corpus_name = %s'
+            for i, _ in enumerate(corpora[1:])
+        ]
+        args.extend(corpora[1:])
+
         cursor = self.integ_db.cursor()
         cursor.execute(
             f'''
-                SELECT SUM(poscount)
-                FROM corpus_structattr_value_tuple
-                JOIN corpus_structattr_value_mapping ON corpus_structattr_value_tuple.id = value_tuple_id
-                JOIN corpus_structattr_value_mapping ON corpus_structattr_value.id = value_id
-                WHERE {' AND '.join(attr_where_tmpl)}
+                SELECT SUM(t.poscount)
+                FROM (
+                    {" INTERSECT ".join(sql_sub)}
+                ) as s
+                JOIN corpus_structattr_value_tuple AS t ON s.value_tuple_id = t.id
+                {" ".join(sql_inner)}
             ''',
-            attr_where
+            args
         )
         return cursor.fetchone()[0]
 
