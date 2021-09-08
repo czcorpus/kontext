@@ -286,7 +286,7 @@ class WriteBackend(DatabaseWriteBackend):
         new_posattrs = {}
         for new_posattr in registry_conf.posattrs:
             new_posattrs[new_posattr.name] = new_posattr
-        added_posattrs = set(new_posattrs.keys())  # added or updated
+        added_posattrs = new_posattrs.keys()  # added or updated; NOTE: the keys() order works for Py 3.7+ !!
 
         removed_structattrs = curr_posattrs - set(new_posattrs.keys())
         for rma in removed_structattrs:
