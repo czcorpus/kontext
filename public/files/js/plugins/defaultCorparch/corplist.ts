@@ -402,8 +402,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     }
 
     private changeFavStatus(corpusId:string, favId:string):Observable<[string, 'add'|'remove']> {
-        return favId === null ?
-             this.pluginApi.ajax$<SetFavItemResponse>(
+        return favId ?
+            this.pluginApi.ajax$<SetFavItemResponse>(
+                HTTP.Method.POST,
+                this.pluginApi.createActionUrl('user/unset_favorite_item'),
+                {id: favId}
+
+            ).pipe(map(v => tuple(v.id, 'remove'))) :
+            this.pluginApi.ajax$<SetFavItemResponse>(
                 HTTP.Method.POST,
                 this.pluginApi.createActionUrl('user/set_favorite_item'),
                 {
@@ -411,13 +417,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     subcorpus_orig_id: null,
                     corpora:[corpusId]
                 }
-            ).pipe(map(v => tuple(v.id, 'add'))) :
-            this.pluginApi.ajax$<SetFavItemResponse>(
-                HTTP.Method.POST,
-                this.pluginApi.createActionUrl('user/unset_favorite_item'),
-                {id: favId}
-
-            ).pipe(map(v => tuple(v.id, 'remove')));
+            ).pipe(map(v => tuple(v.id, 'add')));
     }
 
     private loadCorpusInfo(corpusId:string):Observable<CorpusInfoResponse> {
@@ -463,7 +463,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
     isFav(state:CorplistTableModelState, corpusId:string):boolean {
         return state.rows.some((item:CorplistItem) => {
             if (item.id === corpusId) {
-                return item.fav_id !== null;
+                return !!item.fav_id;
             }
             return false;
         });
