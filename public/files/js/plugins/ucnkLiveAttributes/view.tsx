@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, Bound, IModel } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
@@ -140,7 +140,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         );
 
         return (
-            <div className="steps">
+            <S.LiveAttributesSteps>
             {props.items.map((item, i) => {
                 return (
                     <div className="step-block" key={i}>
@@ -163,7 +163,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                 );
             })}
             {props.isLoading ? <StepLoader idx={props.items.length + 1} /> : null}
-            </div>
+            </S.LiveAttributesSteps>
         );
     };
 
@@ -333,7 +333,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                     {props.isTTListMinimized ?
                         <div /> :
                         <>
-                            <div className="note">
+                            <S.MinimizedTTBoxNote>
                                 <p>
                                     {renderHint()}
                                 </p>
@@ -342,29 +342,33 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                     null :
                                     <p>{he.translate('ucnkLA__aligned_lang_cannot_be_set_here')}</p>
                                 }
-                            </div>
-                            <div className="data-rows">
+                            </S.MinimizedTTBoxNote>
+                            <S.CustomizedDataRows className="data-rows">
                                 <div className="scrollable">
                                     <table>
                                         <tbody>
-                                            {props.alignedCorpora.map((item, i) => {
-                                                return (
-                                                    <tr key={item.value}>
-                                                        <td>
-                                                            {props.manualAlignCorporaMode || item.selected ?
-                                                                <AlignedLangItem item={item} itemIdx={i} /> :
-                                                                null
-                                                            }
-                                                        </td>
-                                                        <td />
-                                                    </tr>
-                                                );
-                                            })}
-                                            {!props.manualAlignCorporaMode && !props.alignedCorpora.some(x => x.selected) ?
+                                            {pipe(
+                                                props.alignedCorpora,
+                                                List.filter(v => v.selected),
+                                                List.map(
+                                                    (item, i) => (
+                                                        <tr key={item.value}>
+                                                            <td>
+                                                                {props.manualAlignCorporaMode || item.selected ?
+                                                                    <AlignedLangItem item={item} itemIdx={i} /> :
+                                                                    null
+                                                                }
+                                                            </td>
+                                                            <td />
+                                                        </tr>
+                                                    )
+                                                )
+                                            )}
+                                            {!props.manualAlignCorporaMode && !List.some(x => x.selected, props.alignedCorpora) ?
                                                 (
                                                     <tr>
                                                         <td>
-                                                            <p style={{maxWidth: '18em'}}>{he.translate('ucnkLA__no_aligned_corpora_yet')}</p>
+                                                            <p>{he.translate('ucnkLA__no_aligned_corpora_yet')}</p>
                                                         </td>
                                                     </tr>
                                                  ) : null
@@ -372,7 +376,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </S.CustomizedDataRows>
                             <div className="hidden-values" />
                             <TTS.LastLine>
                                 {'\u00a0'}

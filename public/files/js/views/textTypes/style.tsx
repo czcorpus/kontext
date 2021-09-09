@@ -172,27 +172,6 @@ export const TableTextTypeAttribute = styled.div`
         text-align: center;
     }
 
-    &.aligned {
-
-        div {
-            input[type="checkbox"] {
-                padding-left: 1em;
-            }
-        }
-
-        .note {
-            p {
-                max-width: 17em;
-                padding: 0;
-                margin: 0.4em 0 0 0;
-            }
-            color: ${theme.colorLightText};
-            white-space: normal;
-            font-size: 0.8em;
-            padding: 0.4em 1em;
-        }
-    }
-
     &.locked {
         border: 1px solid ${theme.colorLockedAttrsBgColor};
 

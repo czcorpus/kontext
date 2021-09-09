@@ -43,46 +43,79 @@ export const LiveAttributes = styled.div`
         li:not(:last-of-type) {
             margin-right: 0.7em;
         }
-    }
 
-    div.steps {
-        margin: 0.7em 0 0.7em 0;
-        text-align: left;
-        display: flex;
-        align-content: center;
-
-        .step-block {
-            margin-top: 0.6em;
-            display: inline-block;
-        }
-
-        .step-block:not(:first-child) {
-            margin-left: 0.3em;
-        }
-
-        span.arrow {
-            display: inline-block;
-            vertical-align: middle;
-            color: ${theme.colorWidgetOrange};
-        }
-        table.step {
-            min-height: 3.5em;
-            border-spacing: 0;
-            border: 1px solid ${theme.colorWidgetOrange};
-            border-radius: ${theme.borderRadiusDefault};
-            box-shadow: ${theme.portalBoxShadow};
-            background-color: #FFFFFF;
-        }
-        table.step .num {
-            background-color: ${theme.colorWidgetOrange};
-            color: #FFFFFF;
-            padding: 8px;
-        }
-        table.step .data {
-            padding: 4px 8px;
+        .util-button {
+           margin-top: 12px;
         }
     }
-    .util-button {
-        margin-top: 12px;
+`;
+
+// --------------- <LiveAttributesSteps /> --------------
+
+export const LiveAttributesSteps = styled.div`
+
+    margin: 0.7em 0 0.7em 0;
+    text-align: left;
+    display: flex;
+    align-content: center;
+
+    .step-block {
+        margin-top: 0.6em;
+        display: inline-block;
     }
+
+    .step-block:not(:first-child) {
+        margin-left: 0.3em;
+    }
+
+    span.arrow {
+        display: inline-block;
+        vertical-align: middle;
+        color: ${theme.colorWidgetOrange};
+    }
+
+    table.step {
+        min-height: 3.5em;
+        border-spacing: 0;
+        border: 1px solid ${theme.colorWidgetOrange};
+        border-radius: ${theme.borderRadiusDefault};
+        box-shadow: ${theme.portalBoxShadow};
+        background-color: #FFFFFF;
+    }
+
+    table.step .num {
+        background-color: ${theme.colorWidgetOrange};
+        color: #FFFFFF;
+        padding: 8px;
+    }
+
+    table.step .data {
+        padding: 4px 8px;
+    }
+`;
+
+// ----------------- <MinimizedTTBoxNote /> --------------
+
+export const MinimizedTTBoxNote = styled.div`
+
+    color: ${theme.colorLightText};
+    white-space: normal;
+    font-size: 0.8em;
+    padding: 0.4em 1.4em;
+
+    p {
+        max-width: 24em;
+        padding: 0;
+        margin: 0.4em 0 0 0;
+    }
+
+`;
+
+
+export const CustomizedDataRows = styled.div`
+
+    td, th {
+        padding: 0.4em 1em;
+    }
+
 `;
