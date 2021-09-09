@@ -19,8 +19,8 @@
  */
 
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
-import { forkJoin, Observable, of as rxOf } from 'rxjs';
-import { concatMap, map } from 'rxjs/operators';
+import { Observable, of as rxOf } from 'rxjs';
+import { concatMap, map, tap } from 'rxjs/operators';
 import { pipe, List, Dict, tuple, HTTP } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
@@ -35,13 +35,12 @@ import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
 
 
+
 interface ServerRefineResponse extends Kontext.AjaxResponse {
     error?:string;
     aligned:Array<string>;
     poscount:number;
-    attr_values:{
-        [key:string]:{poscount:number}|Array<[string, string, string, number, number]>
-    };
+    attr_values:TextTypes.ValueDomainsSizes;
 }
 
 interface ServerBibInfoResponse extends Kontext.AjaxResponse {
@@ -77,10 +76,10 @@ export function isAlignedSelectionStep(v:TTSelectionStep|AlignedLangSelectionSte
 }
 
 export interface LiveAttrsModelState {
+    initialCorpusSize:number|undefined; // if undefined then we need to load the info
     selectionSteps:Array<TTSelectionStep|AlignedLangSelectionStep>;
     lastRemovedStep:TTSelectionStep|AlignedLangSelectionStep|null;
     firstCorpus:string;
-    corpIntersectionSizesCache:{[key:string]:number};
     alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     initialAlignedCorpora:Array<TextTypes.AlignedLanguageItem>;
     bibliographyAttribute:string;
@@ -126,8 +125,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
         this.controlsAlignedCorpora = controlsAlignedCorpora;
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
-            PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked,
             (state, action) => {
                 state.isBusy = true;
             },
@@ -152,13 +152,12 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         }
                     )
                 ).subscribe({
-                    next: ([baseSize, selections, data]) => {
+                    next: ([selections, data]) => {
                         const filterData = this.importFilter(data.attr_values, dispatch);
                         dispatch<typeof TTActions.FilterWholeSelection>({
                             name: TTActions.FilterWholeSelection.name,
                             payload: {
                                 poscount: data.poscount,
-                                alignedBasesizes: baseSize,
                                 filterData: filterData,
                                 selectedTypes: selections,
                                 bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
@@ -176,8 +175,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof TTActions.FilterWholeSelection>(
-            TTActions.FilterWholeSelection.name,
+        this.addActionHandler(
+            TTActions.FilterWholeSelection,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -189,10 +188,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         })),
                         List.filter(item=>item.locked)
                     );
-                    state.corpIntersectionSizesCache = {
-                        ...state.corpIntersectionSizesCache,
-                        ...action.payload.alignedBasesizes
-                    };
                     this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
                     if (action.payload.bibAttrValsAreListed) {
                         this.attachBibData(state, action.payload.filterData);
@@ -201,8 +196,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ResetClicked>(
-            PluginInterfaces.LiveAttributes.Actions.ResetClicked.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.ResetClicked,
             (state, action) => {
                 state.resetConfirmed = window.confirm(this.pluginApi.translate('ucnkLA__are_you_sure_to_reset'));
                 if (state.resetConfirmed) {
@@ -218,8 +213,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.UndoClicked>(
-            PluginInterfaces.LiveAttributes.Actions.UndoClicked.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.UndoClicked,
             (state, action) => {
                 state.lastRemovedStep = List.last(state.selectionSteps);
                 state.selectionSteps.pop();
@@ -233,29 +228,29 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof TTActions.MinimizeAll>(
-            TTActions.MinimizeAll.name,
+        this.addActionHandler(
+            TTActions.MinimizeAll,
             (state, action) => {
                 state.isTTListMinimized = true;
             }
         );
 
-        this.addActionHandler<typeof TTActions.MaximizeAll>(
-            TTActions.MaximizeAll.name,
+        this.addActionHandler(
+            TTActions.MaximizeAll,
             (state, action) => {
                 state.isTTListMinimized = false;
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList>(
-            PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.ToggleMinimizeAlignedLangList,
             (state, action) => {
                 state.isTTListMinimized = !state.isTTListMinimized;
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged,
             (state, action) => {
                 const item = state.alignedCorpora[action.payload.idx];
                 if (item) {
@@ -271,8 +266,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
+        this.addActionHandler(
+            QueryActions.QueryTextTypesToggleForm,
+            null,
+            (state, action, dispatch) => {
+                if (!state.initialCorpusSize) {
+                    this.reloadSizes(state, dispatch);
+                }
+            },
+        )
+
+        this.addActionHandler(
+            QueryActions.QueryInputAddAlignedCorpus,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(
@@ -285,11 +290,14 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     })
                 );
                 state.controlsEnabled = state.controlsEnabled || this.hasSelectedLanguages(state);
+            },
+            (state, action, dispatch) => {
+                this.reloadSizes(state, dispatch);
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
+        this.addActionHandler(
+            QueryActions.QueryInputRemoveAlignedCorpus,
             (state, action) => {
                 this.reset(state);
                 this.updateAlignedItem(
@@ -302,19 +310,22 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         selected: false
                     })
                 );
+            },
+            (state, action, dispatch) => {
+                this.reloadSizes(state, dispatch);
             }
         );
 
-        this.addActionHandler<typeof TTActions.SelectionChanged>(
-            TTActions.SelectionChanged.name,
+        this.addActionHandler(
+            TTActions.SelectionChanged,
             (state, action) => {
                 state.controlsEnabled = action.payload.hasSelectedItems ||
                         List.some(v => v.selected, state.alignedCorpora);
             }
         );
 
-        this.addActionHandler<typeof TTActions.AttributeTextInputChanged>(
-            TTActions.AttributeTextInputChanged.name,
+        this.addActionHandler(
+            TTActions.AttributeTextInputChanged,
             (state, action) => {
                 // we must gather information about selection types involved in refined selection
                 // to be able to present properly rendered selection steps (if some attributes
@@ -326,8 +337,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof TTActions.AttributeTextInputAutocompleteRequest>(
-            TTActions.AttributeTextInputAutocompleteRequest.name,
+        this.addActionHandler(
+            TTActions.AttributeTextInputAutocompleteRequest,
             null,
             (state, action, dispatch) => {
                 this.suspend({}, (action, syncData) => {
@@ -383,14 +394,14 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof TTActions.ExtendedInformationRequest>(
-            TTActions.ExtendedInformationRequest.name,
+        this.addActionHandler(
+            TTActions.ExtendedInformationRequest,
             null,
             (state, action, dispatch) => {
                 const ident:string = action.payload.ident;
                 if (List.some(v => v === ident, state.bibliographyIds)) {
-                    this.loadBibInfo(ident).subscribe(
-                        (serverData) => {
+                    this.loadBibInfo(ident).subscribe({
+                        next: serverData => {
                             dispatch<typeof TTActions.ExtendedInformationRequestDone>({
                                 name: TTActions.ExtendedInformationRequestDone.name,
                                 payload: {
@@ -400,15 +411,14 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                 }
                             })
                         },
-                        (err:Error) => {
-                            this.pluginApi.showMessage('error', err);
+                        error: error => {
+                            this.pluginApi.showMessage('error', error);
                             dispatch<typeof TTActions.ExtendedInformationRequestDone>({
                                 name: TTActions.ExtendedInformationRequestDone.name,
-                                error: err
+                                error
                             });
-
                         }
-                    );
+                    });
 
                 } else {
                     return this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__item_not_found'));
@@ -416,21 +426,22 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged>(
-            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged,
             null,
             (state, action, dispatch) => {
                 dispatch<typeof SubcActions.FormSetAlignedCorpora>({
                     name: SubcActions.FormSetAlignedCorpora.name,
                     payload: {
-                        alignedCorpora: state.alignedCorpora.filter(v => v.selected)
+                        alignedCorpora: List.filter(v => v.selected, state.alignedCorpora)
                     }
                 });
+                this.reloadSizes(state, dispatch);
             }
         );
 
-        this.addActionHandler<typeof TTActions.AttributeTextInputAutocompleteRequestDone>(
-            TTActions.AttributeTextInputAutocompleteRequestDone.name,
+        this.addActionHandler(
+            TTActions.AttributeTextInputAutocompleteRequestDone,
             (state, action) => {
                 if (Array.isArray(action.payload.filterData[state.bibliographyAttribute])) {
                     this.attachBibData(state, action.payload.filterData);
@@ -438,11 +449,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+        this.addActionHandler(
+            TTActions.ValueDomainsSizesChanged,
+            (state, action) => {
+                state.initialCorpusSize = action.payload.total;
+            }
+        );
+
+        this.addActionHandler(
             GlobalActions.SwitchCorpus.name,
             null,
             (state, action, dispatch) => {
-                dispatch<typeof GlobalActions.SwitchCorpusReady>({
+                dispatch({
                     name: GlobalActions.SwitchCorpusReady.name,
                     payload: {
                         modelId: this.getRegistrationId(),
@@ -455,6 +473,50 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     getRegistrationId():string {
         return 'ucnk-live-attributes-plugin';
+    }
+
+    private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
+        rxOf(null).pipe(
+            tap(
+                _ => {
+                    dispatch(
+                        TTActions.SetWaitingForValueDomainsSizes
+                    )
+                }
+            ),
+            concatMap(
+                () => this.pluginApi.ajax$<ServerRefineResponse>(
+                    HTTP.Method.POST,
+                    this.pluginApi.createActionUrl('filter_attributes'),
+                    {
+                        corpname: this.pluginApi.getCorpusIdent().id,
+                        attrs: JSON.stringify({}),
+                        aligned: JSON.stringify(pipe(
+                            state.alignedCorpora,
+                            List.filter(v =>  v.selected),
+                            List.map(v => v.value)
+                        ))
+                    }
+                )
+            )
+
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    TTActions.ValueDomainsSizesChanged,
+                    {
+                        sizes: data.attr_values,
+                        total: data.poscount
+                    }
+                );
+            },
+            error: error => {
+                dispatch(
+                    TTActions.ValueDomainsSizesChanged,
+                    error
+                );
+            }
+        });
     }
 
     private updateAlignedItem(
@@ -503,16 +565,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
         if (List.empty(state.selectionSteps) && !List.empty(selectedAligned)) {
             state.alignedCorpora = List.map(v => ({...v, locked: true}), state.alignedCorpora);
-            const involvedCorpora = pipe(
-                state.alignedCorpora,
-                List.filter(v => v.selected),
-                List.map(v => v.value),
-                List.unshift(state.firstCorpus)
-            );
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
-                numPosInfo: state.corpIntersectionSizesCache[
-                    this.corporaIntersectionCacheKey(involvedCorpora)],
+                numPosInfo: state.initialCorpusSize,
                 attributes : [],
                 languages : pipe(
                     state.alignedCorpora,
@@ -600,34 +655,37 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
 
     private importFilter(data:ServerRefineResponse['attr_values'], dispatch:SEDispatcher):SelectionFilterMap {
         let ans:SelectionFilterMap = {};
-        for (let k in data) {
-            if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
-                const item = data[k];
-                if (Array.isArray(item)) {
-                    ans[k] = item.map((v) => {
-                        return {
-                            ident: v[1],
-                            v: v[2], // [0] contains shortened version - cannot use here
-                            lock: false,
-                            availItems: v[4],
-                            numGrouped: v[3]
-                        };
-                    });
-                    this.setAttrSummary(k, null, dispatch);
+        Dict.forEach(
+            (item, k) => {
+                if (k.indexOf('.') > 0) { // is the key an attribute? (there are other values there too)
+                    if (Array.isArray(item)) {
+                        ans[k] = List.map(
+                            ([,ident, v, numGrouped, availItems]) => ({
+                                ident,
+                                v,
+                                lock: false,
+                                availItems,
+                                numGrouped
+                            }),
+                            item
+                        );
+                        this.setAttrSummary(k, null, dispatch);
 
-                } else if (item.poscount) {
-                    this.setAttrSummary(
-                        k,
-                        {
-                            text: this.pluginApi.translate('query__tt_{num}_items',
-                                {num: item.poscount}),
-                            help: this.pluginApi.translate('ucnkLA__bib_list_warning')
-                        },
-                        dispatch
-                    );
+                    } else if (item.length) {
+                        this.setAttrSummary(
+                            k,
+                            {
+                                text: this.pluginApi.translate('query__tt_{num}_items',
+                                    {num: item.length}),
+                                help: this.pluginApi.translate('ucnkLA__bib_list_warning')
+                            },
+                            dispatch
+                        );
+                    }
                 }
-            }
-        }
+            },
+            data
+        );
         return ans;
     }
 
@@ -642,14 +700,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
     }
 
-    private corporaIntersectionCacheKey(corpora:Array<string>):string {
-        return corpora.join('#');
-    }
-
     private loadFilteredData(
         state:LiveAttrsModelState,
         selections:TextTypes.ExportedSelection
-    ):Observable<[{[k:string]:number}, TextTypes.ExportedSelection, ServerRefineResponse]> {
+    ):Observable<[TextTypes.ExportedSelection, ServerRefineResponse]> {
         const aligned = pipe(
             state.alignedCorpora,
             List.filter(item => item.selected),
@@ -661,35 +715,17 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             List.map(v => v.value),
             List.unshift(state.firstCorpus)
         );
-        const baseSizeCacheKey = this.corporaIntersectionCacheKey(involvedCorpora);
-        const cachedBaseSize = state.corpIntersectionSizesCache[baseSizeCacheKey];
-        return forkJoin([
-            List.empty(state.selectionSteps) && !List.empty(aligned) ?
-                this.pluginApi.ajax$<{corpora:Array<string>, size:number}>(
-                    HTTP.Method.GET,
-                    this.pluginApi.createActionUrl(
-                        'initial_data_size',
-                        {
-                            corpus: involvedCorpora
-                        }
-                    ),
-                    {}
-                 ).pipe(
-                     map(v => ({[this.corporaIntersectionCacheKey(v.corpora)]: v.size}))
-                 ) :
-                rxOf({[baseSizeCacheKey]:cachedBaseSize}),
-            this.pluginApi.ajax$<ServerRefineResponse>(
-                HTTP.Method.POST,
-                this.pluginApi.createActionUrl('filter_attributes'),
-                {
-                    corpname: this.pluginApi.getCorpusIdent().id,
-                    attrs: JSON.stringify(selections),
-                    aligned: JSON.stringify(aligned)
-                }
-            )
-        ]).pipe(
+        return this.pluginApi.ajax$<ServerRefineResponse>(
+            HTTP.Method.POST,
+            this.pluginApi.createActionUrl('filter_attributes'),
+            {
+                corpname: this.pluginApi.getCorpusIdent().id,
+                attrs: JSON.stringify(selections),
+                aligned: JSON.stringify(aligned)
+            }
+        ).pipe(
             map(
-                ([sizes, resp]) => {
+                resp => {
                     const fixedAttrVals = {};
                     Object.keys(resp.attr_values).forEach(k => {
                         if (Array.isArray(resp.attr_values[k])) {
@@ -697,7 +733,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         }
                     });
                     return tuple(
-                        sizes,
                         selections,
                         {
                             error: resp.error,
@@ -709,7 +744,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     )
                 }
             )
-        )
+        );
     }
 
     private loadAutocompleteHint(
@@ -736,4 +771,5 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             }
         );
     }
+
 }

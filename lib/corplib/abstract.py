@@ -103,6 +103,11 @@ class AbstractKCorpus(ABC):
     @property
     @abstractmethod
     def search_size(self) -> int:
+        """
+        Actual searchable size. This matters mainly in case of
+        a subcorpus where the 'size' reports parent corpus size
+        while 'search_size' gives actual size of the subcorpus.
+        """
         pass
 
     @abstractmethod

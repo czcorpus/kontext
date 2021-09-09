@@ -173,20 +173,19 @@ export function importInitialData(data:TTInitialData,
                 };
 
             } else {
-                const values:Array<TextTypes.AttributeValue> = attrItem.Values.map(
-                    (valItem:{v:string, xcnt:number}) => {
-                        return {
-                            value: valItem.v,
-                            ident: valItem.v, // TODO what about bib items?
-                            selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) ?
-                                true : false,
-                            locked:false,
-                            availItems:valItem.xcnt,
-                            // TODO here we expect that initial data
-                            // do not have any name duplicities
-                            numGrouped: 1
-                        };
-                    }
+                const values:Array<TextTypes.AttributeValue> = List.map(
+                    valItem => ({
+                        value: valItem.v,
+                        ident: valItem.v, // TODO what about bib items?
+                        selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) ?
+                            true : false,
+                        locked:false,
+                        availItems:valItem.xcnt,
+                        // TODO here we expect that initial data
+                        // do not have any name duplicities
+                        numGrouped: 1
+                    }),
+                    attrItem.Values
                 );
                 return {
                     name: attrItem.name,

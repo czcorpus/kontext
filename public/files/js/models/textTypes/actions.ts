@@ -25,6 +25,19 @@ import { SelectionFilterMap } from './common';
 
 export class Actions {
 
+    static SetWaitingForValueDomainsSizes:Action<{
+
+    }> = {
+        name: 'TT_SET_WAITING_FOR_VALUE_DOMAINS_SIZES'
+    }
+
+    static ValueDomainsSizesChanged:Action<{
+        sizes:TextTypes.ValueDomainsSizes;
+        total:number;
+    }> = {
+        name: 'TT_VALUE_DOMAINS_SIZES_CHANGED'
+    }
+
     static SelectionChanged:Action<{
         hasSelectedItems:boolean;
         attributes:Array<TextTypes.AnyTTSelection>;
@@ -170,7 +183,6 @@ export class Actions {
 
     static FilterWholeSelection:Action<{
         poscount:number;
-        alignedBasesizes:{[k:string]:number};
         filterData:SelectionFilterMap;
         selectedTypes:TextTypes.ExportedSelection;
         bibAttrValsAreListed:boolean;

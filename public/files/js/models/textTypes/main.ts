@@ -33,6 +33,7 @@ import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
+import { Actions as QueryActions } from '../query/actions';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
@@ -77,7 +78,7 @@ export interface TextTypesModelState {
 
     textInputPlaceholder:string;
 
-    busyAttribute:string|undefined;
+    busyAttributes:{[attr:string]:boolean};
 
     autoCompleteSupport:boolean;
 
@@ -95,7 +96,6 @@ export interface TextTypesModelState {
     firstDayOfWeek:'mo'|'su'|'sa';
 
     isLiveAttrsActive:boolean;
-
 }
 
 
@@ -142,19 +142,19 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 selectAll: pipe(
                     attributes,
                     List.map(
-                        (item:TextTypes.AnyTTSelection) => tuple(item.name, false)
+                        item => tuple(item.name, false)
                     ),
                     Dict.fromEntries()
                 ),
                 metaInfo: {},
                 textInputPlaceholder: null,
-                busyAttribute: undefined,
+                busyAttributes: {},
                 minimizedBoxes: pipe(
                     attributes,
                     List.map(v => tuple(v.name, false)),
                     Dict.fromEntries()
                 ),
-                // the autocomplete is enabled by outside conditions (e.g. liveattrs plug-in
+                // the autocomplete is enabled by external conditions (e.g. liveattrs plug-in
                 // is enabled) so it must be turned on via enableAutoCompleteSupport() by the
                 // user of this model.
                 autoCompleteSupport: false,
@@ -175,17 +175,17 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
 
         // kind of anti-pattern but for now we have no other choice
         this.notifySelectionChange = ():void => {
-            dispatcher.dispatch<typeof Actions.SelectionChanged>({
-                name: Actions.SelectionChanged.name,
-                payload: {
+            dispatcher.dispatch(
+                Actions.SelectionChanged,
+                {
                     attributes: this._getAttributes(this.state),
                     hasSelectedItems: this.findHasSelectedItems(this.state)
                 }
-            });
+            );
         }
 
-        this.addActionSubtypeHandler<typeof Actions.ValueCheckboxClicked>(
-            Actions.ValueCheckboxClicked.name,
+        this.addActionSubtypeHandler(
+            Actions.ValueCheckboxClicked,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -199,8 +199,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.SelectAllClicked>(
-            Actions.SelectAllClicked.name,
+        this.addActionSubtypeHandler(
+            Actions.SelectAllClicked,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -210,8 +210,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.RangeButtonClicked>(
-            Actions.RangeButtonClicked.name,
+        this.addActionSubtypeHandler(
+            Actions.RangeButtonClicked,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -228,8 +228,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.ToggleRangeMode>(
-            Actions.ToggleRangeMode.name,
+        this.addActionSubtypeHandler(
+            Actions.ToggleRangeMode,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -239,11 +239,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.ExtendedInformationRequest>(
-            Actions.ExtendedInformationRequest.name,
+        this.addActionHandler(
+            Actions.ExtendedInformationRequest,
             action => {
                 this.changeState(state => {
-                    state.busyAttribute = action.payload.attrName;
+                    state.busyAttributes[action.payload.attrName] = true;
                     const attrIdx = this.getAttributeIdx(state, action.payload.attrName);
                     if (attrIdx > -1) {
                         const ident = action.payload.ident;
@@ -272,11 +272,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.ExtendedInformationRequestDone>(
-            Actions.ExtendedInformationRequestDone.name,
+        this.addActionHandler(
+            Actions.ExtendedInformationRequestDone,
             action => {
                 this.changeState(state => {
-                    state.busyAttribute = undefined;
+                    state.busyAttributes[action.payload.attrName] = false;
                     this.setExtendedInfo(
                         state,
                         action.payload.attrName,
@@ -288,8 +288,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.ExtendedInformationRemoveRequest>(
-            Actions.ExtendedInformationRemoveRequest.name,
+        this.addActionHandler(
+            Actions.ExtendedInformationRemoveRequest,
             action => {
                 this.changeState(state => {
                     this.clearExtendedInfo(
@@ -301,8 +301,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AttributeAutoCompleteHintClicked>(
-            Actions.AttributeAutoCompleteHintClicked.name,
+        this.addActionSubtypeHandler(
+            Actions.AttributeAutoCompleteHintClicked,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -325,8 +325,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputChanged>(
-            Actions.AttributeTextInputChanged.name,
+        this.addActionSubtypeHandler(
+            Actions.AttributeTextInputChanged,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -340,8 +340,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AttributeAutoCompleteReset>(
-            Actions.AttributeAutoCompleteReset.name,
+        this.addActionSubtypeHandler(
+            Actions.AttributeAutoCompleteReset,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -350,58 +350,58 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputAutocompleteRequest>(
-            Actions.AttributeTextInputAutocompleteRequest.name,
+        this.addActionSubtypeHandler(
+            Actions.AttributeTextInputAutocompleteRequest,
             _ => !this.readonlyMode,
             action => {
                 if (action.payload.value.length > 2) {
                     this.changeState(state => {
-                        state.busyAttribute = action.payload.attrName;
+                        state.busyAttributes[action.payload.attrName] = true;
                     });
-                    this.dispatchSideEffect<typeof Actions.AttributeTextInputAutocompleteReady>({
-                        name: Actions.AttributeTextInputAutocompleteReady.name,
-                        payload: {
+                    this.dispatchSideEffect(
+                        Actions.AttributeTextInputAutocompleteReady,
+                        {
                             ...action.payload,
                             selections: this.exportSelections(false)
                         }
-                    });
+                    );
                 }
             }
         );
 
-        this.addActionHandler<typeof ConcActions.CalculateIpmForAdHocSubc>(
-            ConcActions.CalculateIpmForAdHocSubc.name,
+        this.addActionHandler(
+            ConcActions.CalculateIpmForAdHocSubc,
             action => {
-                this.dispatchSideEffect<typeof ConcActions.CalculateIpmForAdHocSubcReady>({
-                    name: ConcActions.CalculateIpmForAdHocSubcReady.name,
-                    payload: {
+                this.dispatchSideEffect(
+                    ConcActions.CalculateIpmForAdHocSubcReady,
+                    {
                         ttSelection: this.exportSelections(false)
                     }
-                });
+                );
             }
         );
 
-        this.addActionHandler<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>(
-            PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.RefineClicked,
             action => {
                 this.changeState(state => {
-                    state.busyAttribute = '#'; // # is a pseudo-value to keep model in busy state
+                    this.setAllAttributesBusy(state, true);
                 });
-                this.dispatchSideEffect<typeof PluginInterfaces.LiveAttributes.Actions.RefineReady>({
-                    name: PluginInterfaces.LiveAttributes.Actions.RefineReady.name,
-                    payload: {
+                this.dispatchSideEffect(
+                    PluginInterfaces.LiveAttributes.Actions.RefineReady,
+                    {
                         selections: this.exportSelections(false)
                     }
-                });
+                );
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.AttributeTextInputAutocompleteRequestDone>(
-            Actions.AttributeTextInputAutocompleteRequestDone.name,
+        this.addActionSubtypeHandler(
+            Actions.AttributeTextInputAutocompleteRequestDone,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
-                    state.busyAttribute = undefined;
+                    state.busyAttributes[action.payload.attrName] = false;
                     this.setAutoComplete(
                         state,
                         action.payload.attrName,
@@ -411,8 +411,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.MinimizeAll>(
-            Actions.MinimizeAll.name,
+        this.addActionHandler(
+            Actions.MinimizeAll,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes = Dict.map(
@@ -423,8 +423,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.MaximizeAll>(
-            Actions.MaximizeAll.name,
+        this.addActionHandler(
+            Actions.MaximizeAll,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes = Dict.map(
@@ -435,8 +435,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleMinimizeItem>(
-            Actions.ToggleMinimizeItem.name,
+        this.addActionHandler(
+            Actions.ToggleMinimizeItem,
             action => {
                 this.changeState(state => {
                     state.minimizedBoxes[action.payload.ident] =
@@ -445,8 +445,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.UndoState>(
-            Actions.UndoState.name,
+        this.addActionSubtypeHandler(
+            Actions.UndoState,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -457,8 +457,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.ResetState>(
-            Actions.ResetState.name,
+        this.addActionSubtypeHandler(
+            Actions.ResetState,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -468,8 +468,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.LockSelected>(
-            Actions.LockSelected.name,
+        this.addActionSubtypeHandler(
+            Actions.LockSelected,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -497,8 +497,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.FilterWholeSelection>(
-            Actions.FilterWholeSelection.name,
+        this.addActionSubtypeHandler(
+            Actions.FilterWholeSelection,
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
@@ -513,8 +513,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof Actions.SetAttrSummary>(
-            Actions.SetAttrSummary.name,
+        this.addActionHandler(
+            Actions.SetAttrSummary,
             action => {
                 this.changeState(state => {
                     state.metaInfo[action.payload.attrName] = action.payload.value;
@@ -522,16 +522,40 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
-            GlobalActions.SwitchCorpus.name,
+        this.addActionHandler(
+            Actions.SetWaitingForValueDomainsSizes,
             action => {
-                dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
-                    name: GlobalActions.SwitchCorpusReady.name,
-                    payload: {
+                this.changeState(
+                    state => {
+                        this.setAllAttributesBusy(state, true);
+                        this.clearInitialSizes(state);
+                    }
+                );
+            }
+        )
+
+        this.addActionHandler(
+            Actions.ValueDomainsSizesChanged,
+            action => {
+                this.changeState(
+                    state => {
+                        this.updateInitialSizes(state, action.payload.sizes);
+                        this.setAllAttributesBusy(state, false);
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
+            action => {
+                dispatcher.dispatch(
+                    GlobalActions.SwitchCorpusReady,
+                    {
                         modelId: this.getRegistrationId(),
                         data: {}
                     }
-                });
+                );
             }
         );
     }
@@ -886,8 +910,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private mapItems(state:TextTypesModelState, attrName:string, mapFn:(v:TextTypes.AttributeValue,
-            i?:number)=>TextTypes.AttributeValue):void {
+    private mapItems(
+        state:TextTypesModelState,
+        attrName:string,
+        mapFn:(v:TextTypes.AttributeValue, i?:number)=>TextTypes.AttributeValue
+    ):void {
+
         const attrIdx = this.getAttributeIdx(state, attrName);
         if (attrIdx > -1) {
             // in case of raw text input (produced initially due to large num of items)
@@ -1190,5 +1218,74 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         } else {
             throw new Error('Failed to find attribute ' + attrName);
         }
+    }
+
+    private clearInitialSizes(
+        state:TextTypesModelState
+    ):void {
+        List.forEach(
+            attr => {
+                if (attr.type === 'full') {
+                    List.forEach(
+                        item => {
+                            item.availItems = -1;
+                        },
+                        attr.values
+                    )
+                }
+            },
+            state.attributes
+        );
+    }
+
+    private updateInitialSizes(
+        state:TextTypesModelState,
+        newValues:TextTypes.ValueDomainsSizes
+
+    ):void {
+        const nwLookup = pipe(
+            newValues,
+            Dict.map(v => {
+                if (Array.isArray(v)) {
+                    return pipe(
+                        v,
+                        List.map(
+                            ([,ident,,,size]) => tuple(ident, size)
+                        ),
+                        Dict.fromEntries()
+                    );
+
+                } else {
+                    return v.length;
+                }
+            })
+        );
+        List.forEach(
+            attr => {
+                if (attr.type === 'full') {
+                    const sizes = nwLookup[attr.name];
+                    List.forEach(
+                        item => {
+                            if (typeof sizes === 'object') {
+                                item.availItems = sizes[item.ident] || 0;
+
+                            } else {
+                                item.availItems = 0;
+                            }
+                        },
+                        attr.values
+                    )
+                }
+            },
+            state.attributes
+        );
+    }
+
+    private setAllAttributesBusy(state:TextTypesModelState, val:boolean):void {
+        state.busyAttributes = pipe(
+            state.attributes,
+            List.map(v => tuple(v.name, val)),
+            Dict.fromEntries()
+        );
     }
 }

@@ -141,6 +141,17 @@ export interface FullCorpusIdent {
     usesubcorp?:string;
     origSubcorpName?:string;
     foreignSubcorp?:boolean;
+
+    /**
+     * Main corpus size (even for subcorpora)
+     */
+    size:number;
+
+    /**
+     * Actual searchable size - i.e. for a subcorpus
+     * this is the actual size of the subcorpus.
+     */
+    searchSize:number;
 }
 
 export interface ICorpusInfoModel extends IEventEmitter {

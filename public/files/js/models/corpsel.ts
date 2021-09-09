@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action, IFullActionControl, StatefulModel } from 'kombo';
+import { IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../types/kontext';
 import { PageModel } from '../app/page';
@@ -82,9 +82,7 @@ export class NonQueryCorpusSelectionModel extends StatefulModel<NonQueryCorpusSe
                 this.layoutModel.setConf<Kontext.FullCorpusIdent>(
                     'corpusIdent',
                     {
-                        id: corpIdent.id,
-                        name: corpIdent.name,
-                        variant: corpIdent.variant,
+                        ... corpIdent,
                         usesubcorp: this.state.currentSubcorp,
                         origSubcorpName: this.state.origSubcorpName,
                         foreignSubcorp: this.state.isForeignSubcorp

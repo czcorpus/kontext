@@ -415,7 +415,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                 metaInfoHelpVisible={props.metaInfoHelpVisible}
                                 hasExtendedInfo={props.bibLabelAttr === attrObj.name}
                                 metaInfo={props.metaInfo[attrObj.name]}
-                                isBusy={props.busyAttribute === attrObj.name}
+                                isBusy={props.busyAttributes[attrObj.name]}
                                 textInputPlaceholder={props.textInputPlaceholder}
                                 firstDayOfWeek={props.firstDayOfWeek}
                                 isAutocompleteActive={props.isLiveAttrsActive} />

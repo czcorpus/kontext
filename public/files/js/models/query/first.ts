@@ -410,9 +410,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     this.pageModel.setConf<Kontext.FullCorpusIdent>(
                         'corpusIdent',
                         {
-                            id: corpIdent.id,
-                            name: corpIdent.name,
-                            variant: corpIdent.variant,
+                            ...corpIdent,
                             usesubcorp: state.currentSubcorp,
                             origSubcorpName: state.origSubcorpName,
                             foreignSubcorp: state.isForeignSubcorpus
