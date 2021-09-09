@@ -83,7 +83,7 @@ class AttrArgs:
 
             if len(cnf_item) > 0:
                 subqueries.append(f'''
-                    SELECT value_tuple_id as id
+                    SELECT value_tuple_id
                     FROM corpus_structattr_value AS t1
                     JOIN corpus_structattr_value_mapping AS t2 ON t1.id = t2.value_id
                     WHERE ({" OR ".join(cnf_item)}) AND corpus_name = %s''')
@@ -94,7 +94,7 @@ class AttrArgs:
 
         sql_values.append(corpus_name)
         return f'''
-            SELECT value_tuple_id as id
+            SELECT value_tuple_id
             FROM corpus_structattr_value AS t1
             JOIN corpus_structattr_value_mapping AS t2 ON t1.id = t2.value_id
             WHERE corpus_name = %s''', sql_values
@@ -132,15 +132,15 @@ class QueryBuilder:
         if self.aligned_corpora:
             aligned_corpus_select = 'SELECT item_id FROM corpus_structattr_value_tuple WHERE corpus_name = %s'
             sql_sub = f'''
-                SELECT t1.value_tuple_id
+                SELECT tuple.id AS value_tuple_id
                 FROM (
-                    SELECT t1.item_id
+                    SELECT tuple.item_id
                     FROM ({sql_sub}) t
-                    JOIN corpus_structattr_value_tuple AS t1 ON t.value_tuple_id = t1.id
+                    JOIN corpus_structattr_value_tuple AS tuple ON t.value_tuple_id = tuple.id
                     INTERSECT
                     {" INTERSECT ".join(aligned_corpus_select for _ in self.aligned_corpora)}
-                )
-                JOIN corpus_structattr_value_tuple AS t1 ON t1.item_id = t.item_id
+                ) t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.item_id = t.item_id
                 WHERE corpus_name = %s
             '''
             args.extend(self.aligned_corpora)
@@ -151,17 +151,17 @@ class QueryBuilder:
 
         selected_attrs = tuple(self.srch_attrs.union(hidden_attrs))
         sql_template = f'''
-            SELECT t.id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
+            SELECT tuple.id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
             FROM (
                 {sql_sub}
             ) as t
-            JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.id
-            JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = t.id
+            JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+            JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = t.value_tuple_id
             JOIN corpus_structattr_value AS value ON value.id = map.value_id
             WHERE (
                 {" OR ".join("(value.structure_name = %s AND value.structattr_name = %s)" for _ in selected_attrs)}
             )
-            GROUP BY t.id
+            GROUP BY tuple.id
         '''
         for sel in selected_attrs:
             args.append(sel.struct)

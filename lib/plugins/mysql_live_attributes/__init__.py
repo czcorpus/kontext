@@ -112,7 +112,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         self._max_attr_visible_chars = max_attr_visible_chars
 
     def export_actions(self):
-        return {concordance.Actions: [filter_attributes, attr_val_autocomplete, initial_data_size]}
+        return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
 
     def is_enabled_for(self, plugin_ctx: PluginCtx, corpname: str) -> bool:
         """
