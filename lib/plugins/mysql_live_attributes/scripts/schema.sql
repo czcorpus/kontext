@@ -1,10 +1,17 @@
+CREATE TABLE corpus_parallel_item (
+  id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  item varchar(255) NOT NULL,
+  CONSTRAINT unique_item UNIQUE (item)
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
 CREATE TABLE corpus_structattr_value_tuple (
   id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   corpus_name varchar(63) NOT NULL,
   poscount int NOT NULL,
   wordcount int NOT NULL,
-  item_id varchar(255),
-  CONSTRAINT corpus_structatrr_value_tuple_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name)
+  item_id int,
+  CONSTRAINT corpus_structatrr_value_tuple_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
+  CONSTRAINT corpus_structatrr_value_tuple_item_id_fk FOREIGN KEY (corpus_name) REFERENCES corpus_parallel_item(id)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE corpus_structattr_value (
