@@ -457,18 +457,26 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
 
         this.addActionHandler(
-            GlobalActions.SwitchCorpus.name,
+            GlobalActions.SwitchCorpus,
             null,
             (state, action, dispatch) => {
-                dispatch({
-                    name: GlobalActions.SwitchCorpusReady.name,
-                    payload: {
+                dispatch(
+                    GlobalActions.SwitchCorpusReady,
+                    {
                         modelId: this.getRegistrationId(),
                         data: {}
                     }
-                });
+                );
             }
         );
+
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
+            null,
+            (state, action, dispatch) => {
+                this.reloadSizes(state, dispatch);
+            }
+        )
     }
 
     getRegistrationId():string {
@@ -476,6 +484,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
+        if (List.empty(state.alignedCorpora)) {
+            return; // in such case, server is able to provide full text type value sizes
+        }
         rxOf(null).pipe(
             tap(
                 _ => {

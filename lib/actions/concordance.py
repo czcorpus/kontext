@@ -1854,7 +1854,9 @@ class Actions(Querying):
                 usesubcorp=self.args.usesubcorp if self.args.usesubcorp else None,
                 origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp),
                 foreignSubcorp=(self.corp.author_id is not None and
-                                self.session_get('user', 'id') != self.corp.author_id)),
+                                self.session_get('user', 'id') != self.corp.author_id),
+                size=self.corp.size,
+                searchSize=self.corp.search_size),
             currentArgs=conc_args,
             concPersistenceOpId=None,
             alignedCorpora=self.args.align,
