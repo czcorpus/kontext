@@ -242,7 +242,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                     {" INTERSECT ".join(aligned_corpus_select for _ in corpora[1:])}
                 ) t
                 JOIN corpus_structattr_value_tuple AS tuple ON tuple.item_id = t.item_id
-                WHERE corpus_name = %s
+                WHERE tuple.corpus_name = %s
             '''
             args.extend(corpora[1:])
             args.append(corpora[0])
@@ -315,7 +315,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(query_components.sql_template, query_components.where_values)
         for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
             for col_key in query_components.selected_attrs:
                 data_key = col_key if isinstance(col_key, str) else col_key.key()
                 if col_key not in query_components.hidden_attrs and data_key in data:
@@ -372,7 +372,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             GROUP BY t.id
             ''',
             (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
-        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
+        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
@@ -402,7 +402,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
         ans = []
         for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
             ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
         return ans
 
