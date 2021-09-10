@@ -5,10 +5,10 @@
     <start>
         <element name="live_attributes">
             <element name="module">
-                <value>ucnk_live_attributes</value>
+                <value>sqlite_live_attributes</value>
             </element>
             <element name="js_module">
-                <value>ucnkLiveAttributes</value>
+                <value>mysqlLiveAttributes</value>
             </element>
             <element name="max_attr_visible_chars">
                 <a:documentation>
