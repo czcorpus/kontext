@@ -49,7 +49,7 @@ module.exports = (env) => merge(common.wpConf(env), {
             publicPath: (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH)
         },
         client: {
-              webSocketURL: 'ws://localhost:8080/ws',
+              webSocketURL: 'ws://localhost:8080/wds-ws',
         },
         liveReload: false,
         onAfterSetupMiddleware: function (devServer) {
