@@ -20,8 +20,6 @@ Required XML configuration: please see config.rng
 from .common import AttrValueKey, StructAttr
 import re
 import json
-from functools import wraps
-from hashlib import md5
 from functools import partial
 from collections import defaultdict, OrderedDict
 from dataclasses import astuple
@@ -36,47 +34,13 @@ from plugins.abstract.corparch import AbstractCorporaArchive
 from plugins.abstract.corparch.corpus import CorpusInfo
 from plugins.abstract.general_storage import KeyValueStorage
 from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair
+from plugins.abstract.live_attributes import (
+    CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
 from actions import concordance
 from . import query
-
-
-CACHE_MAIN_KEY = 'liveattrs_cache:%s'
-
-
-def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr, limit_lists):
-    """
-    Generates a cache key based on the relevant parameters.
-    Returned value is hashed.
-    """
-    return md5(f'{attr_map}{max_attr_list_size}{aligned_corpora}{autocomplete_attr}{limit_lists}'.encode('utf-8')).hexdigest()
-
-
-def cached(f):
-    """
-    A decorator which tries to look for a key in cache before
-    actual storage is invoked. If cache miss in encountered
-    then the value is stored to the cache to be available next
-    time.
-    """
-    @wraps(f)
-    def wrapper(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
-                                   autocomplete_attr, limit_lists)
-            ans = self.from_cache(corpus.corpname, key)
-            if ans:
-                return AttrValuesResponse.from_dict(ans)
-        ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
-        if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size,
-                                   aligned_corpora, autocomplete_attr, limit_lists)
-            self.to_cache(corpus.corpname, key, ans.to_dict())
-        return self.export_num_strings(ans)
-    return wrapper
 
 
 @exposed(return_type='json', http_method='POST')
@@ -99,12 +63,13 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
-class MysqlLiveAttributes(AbstractLiveAttributes):
+class MysqlLiveAttributes(CachedLiveAttributes):
 
-    def __init__(self, corparch: AbstractCorporaArchive, db: KeyValueStorage, integ_db: IntegrationDatabase, max_attr_list_size, empty_val_placeholder,
-                 max_attr_visible_chars):
+    def __init__(
+            self, corparch: AbstractCorporaArchive, db: KeyValueStorage, integ_db: IntegrationDatabase,
+            max_attr_list_size, empty_val_placeholder, max_attr_visible_chars):
+        super().__init__(db)
         self.corparch = corparch
-        self.kvdb = db
         self.integ_db = integ_db
         self.max_attr_list_size = max_attr_list_size
         self.empty_val_placeholder = empty_val_placeholder
@@ -137,33 +102,6 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
                 if type(data[k]) is str and data[k].isdigit():
                     data[k] = int(data[k])
         return data
-
-    def from_cache(self, corpname: str, key: str) -> Optional[Dict[str, Any]]:
-        """
-        Loads a value from cache. The key is whole attribute_map as selected
-        by a user. But there is no guarantee that all the keys and values will be
-        used as a key.
-
-        arguments:
-        key -- a cache key
-
-        returns:
-        a stored value matching provided argument or None if nothing is found
-        """
-        v = self.kvdb.hash_get(CACHE_MAIN_KEY % (corpname,), key)
-        return MysqlLiveAttributes.export_num_strings(v) if v else None
-
-    def to_cache(self, corpname: str, key: str, values: str):
-        """
-        Stores a data object "values" into the cache. The key is whole attribute_map as selected
-        by a user. But there is no guarantee that all the keys and values will be
-        used as a key.
-
-        arguments:
-        key -- a cache key
-        values -- a dictionary with arbitrary nesting level
-        """
-        self.kvdb.hash_set(CACHE_MAIN_KEY % (corpname,), key, values)
 
     @staticmethod
     def import_key(k: Optional[str]) -> Optional[StructAttr]:
@@ -258,8 +196,10 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         return cursor.fetchone()[0]
 
     @cached
-    def get_attr_values(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, Union[str, List[str], Dict[str, Any]]], aligned_corpora: Optional[List[str]]=None, autocomplete_attr: Optional[str]=None,
-                        limit_lists: bool=True) -> AttrValuesResponse:
+    def get_attr_values(
+            self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, Union[str, List[str], Dict[str, Any]]],
+            aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
+            limit_lists: bool = True) -> AttrValuesResponse:
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -408,7 +348,9 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
-def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStorage, integ_db: IntegrationDatabase) -> MysqlLiveAttributes:
+def create_instance(
+        settings, corparch: AbstractCorporaArchive, db: KeyValueStorage,
+        integ_db: IntegrationDatabase) -> MysqlLiveAttributes:
     """
     creates an instance of the plugin
 
@@ -420,13 +362,14 @@ def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStor
     if integ_db.is_active:
         logging.getLogger(__name__).info(
             f'mysql_live_attributes uses integration_db[{integ_db.info}]')
-        return MysqlLiveAttributes(corparch=corparch,
-                                   db=db,
-                                   integ_db=integ_db,
-                                   max_attr_list_size=settings.get_int(
-                                       'global', 'max_attr_list_size'),
-                                   empty_val_placeholder=settings.get(
-                                       'corpora', 'empty_attr_value_placeholder'),
-                                   max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
+        return MysqlLiveAttributes(
+            corparch=corparch,
+            db=db,
+            integ_db=integ_db,
+            max_attr_list_size=settings.get_int(
+               'global', 'max_attr_list_size'),
+            empty_val_placeholder=settings.get(
+               'corpora', 'empty_attr_value_placeholder'),
+            max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
     else:
         logging.getLogger(__name__).error('mysql_live_attributes integration db not provided')

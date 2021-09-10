@@ -17,13 +17,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Union, Any
+from functools import wraps
+from hashlib import md5
 
 from controller.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 from corplib.corpus import KCorpus
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+from plugins.abstract.general_storage import KeyValueStorage
 
 
 class BibTitle(NamedTuple):
@@ -62,8 +65,10 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_attr_values(self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str], aligned_corpora: Optional[List[str]]=None, autocomplete_attr: Optional[str]=None,
-                        limit_lists: bool=True) -> AttrValuesResponse:
+    def get_attr_values(
+            self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str],
+            aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
+            limit_lists: bool = True) -> AttrValuesResponse:
         """
         Find all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -120,3 +125,84 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         Returns a list of pairs (bib_id, bib_title) where bib_id is the original
         provided ID
         """
+
+
+CACHE_MAIN_KEY = 'liveattrs_cache:{}'
+
+
+def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr, limit_lists):
+    """
+    Generates a cache key based on the relevant parameters.
+    Returned value is hashed.
+    """
+    return md5(f'{attr_map}{max_attr_list_size}{aligned_corpora}{autocomplete_attr}{limit_lists}'.encode('utf-8')).hexdigest()
+
+
+def cached(f):
+    """
+    A decorator which tries to look for a key in cache before
+    actual storage is invoked. If cache miss in encountered
+    then the value is stored to the cache to be available next
+    time.
+    """
+    @wraps(f)
+    def wrapper(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+        if len(attr_map) < 2:
+            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
+                                   autocomplete_attr, limit_lists)
+            ans = self.from_cache(corpus.corpname, key)
+            if ans:
+                return AttrValuesResponse.from_dict(ans)
+        ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
+        if len(attr_map) < 2:
+            key = create_cache_key(attr_map, self.max_attr_list_size,
+                                   aligned_corpora, autocomplete_attr, limit_lists)
+            self.to_cache(corpus.corpname, key, ans.to_dict())
+        return self.export_num_strings(ans)
+    return wrapper
+
+
+class CachedLiveAttributes(AbstractLiveAttributes):
+
+    def __init__(self, db: KeyValueStorage):
+        self._kvdb = db
+
+    @staticmethod
+    def export_num_strings(data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Transform strings representing integer numbers to ints
+        """
+        if type(data) is dict:
+            for k in list(data.keys()):
+                if type(data[k]) is str and data[k].isdigit():
+                    data[k] = int(data[k])
+        return data
+
+    def from_cache(self, corpname: str, key: str) -> Optional[Dict[str, Any]]:
+        """
+        Loads a value from cache. The key is whole attribute_map as selected
+        by a user. But there is no guarantee that all the keys and values will be
+        used as a key.
+
+        arguments:
+        key -- a cache key
+
+        returns:
+        a stored value matching provided argument or None if nothing is found
+        """
+        v = self._kvdb.hash_get(CACHE_MAIN_KEY.format(corpname), key)
+        import logging
+        logging.getLogger(__name__).debug('from cache: {}'.format(v))
+        return CachedLiveAttributes.export_num_strings(v) if v else None
+
+    def to_cache(self, corpname: str, key: str, values: str):
+        """
+        Stores a data object "values" into the cache. The key is whole attribute_map as selected
+        by a user. But there is no guarantee that all the keys and values will be
+        used as a key.
+
+        arguments:
+        key -- a cache key
+        values -- a dictionary with arbitrary nesting level
+        """
+        self._kvdb.hash_set(CACHE_MAIN_KEY.format(corpname), key, values)
