@@ -45,12 +45,14 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
     else:
         corpora = [corpus_id]
 
-    present_values = {}
     mysql_cursor.execute(
         'select id, corpus_name, structure_name, structattr_name, value from corpus_structattr_value where corpus_name in (%s)',
         (', '.join(corpora),))
-    for id, *corp_struct_atrr_value in mysql_cursor:
-        present_values[tuple(corp_struct_atrr_value)] = id
+    present_values = {tuple(corp_struct_atrr_value): id for id, *
+                      corp_struct_atrr_value in mysql_cursor}
+
+    mysql_cursor.execute('select item, id from corpus_parallel_items')
+    present_items = {item: id for item, id in mysql_cursor}
 
     present_corpus_struct_attrs = defaultdict(lambda: set())
     mysql_cursor.execute(
@@ -70,14 +72,31 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
         poscount = row['poscount']
         wordcount = row['wordcount']
 
+        try:
+            item = row['item_id']
+        except IndexError:
+            item_id = None
+        else:
+            try:
+                item_id = present_items[item]
+            except KeyError:
+                mysql_cursor.execute(
+                    'insert ignore into corpus_parallel_item (item) values (%s)', (item,))
+                item_id = mysql_cursor.lastrowid
+                if item_id == 0:
+                    mysql_cursor.execute(
+                        'select id from corpus_parallel_item where item = %s', (item,))
+                    item_id = mysql_cursor.fetchone()[0]
+                present_items[item] = item_id
+
         # add new structattr value tuple
         mysql_cursor.execute(
-            'insert into corpus_structattr_value_tuple (corpus_name, poscount, wordcount) values (%s, %s, %s)',
-            (corpus_name, poscount, wordcount))
+            'insert into corpus_structattr_value_tuple (corpus_name, poscount, wordcount, item_id) values (%s, %s, %s, %s)',
+            (corpus_name, poscount, wordcount, item_id))
         value_tuple_id = mysql_cursor.lastrowid
 
         for key in row.keys():
-            if key not in ('id', 'corpus_id', 'poscount', 'wordcount'):
+            if key not in ('id', 'corpus_id', 'poscount', 'wordcount', 'item_id'):
                 struct, attr = key.split('_', 1)
                 # insert structures and structattrs if needed
                 if key not in present_corpus_struct_attrs[corpus_name]:

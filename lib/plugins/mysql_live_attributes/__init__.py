@@ -205,26 +205,56 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpora, attr_map: Dict[str, List[str]]) -> int:
-        attr_where = [corpora[0]]
-        attr_where_tmpl = ['corpus_name = %s']
-        for k, vlist in attr_map.items():
-            struct_attr = self.import_key(k)
-            attr_where_tmpl.append(
-                f'structure_name = %s AND structattr_name = %s AND value IN ({",".join("%s" for _ in vlist)})')
-            attr_where.extend([struct_attr.struct, struct_attr.attr])
-            attr_where.extend(vlist)
+    def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, List[str]]) -> int:
+        args = []
+        tmp = []
+        for key, values in attr_map.items():
+            tmp.append(f'''
+                SELECT t2.value_tuple_id
+                FROM corpus_structattr_value as t1
+                JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
+                WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s AND value = IN ({",".join("%s" for _ in values)})
+            ''')
+            struct_attr = self.import_key(key)
+            args.extend([corpora[0], struct_attr.struct, struct_attr.attr])
+            args.extend(values)
+
+        if tmp:
+            sql_sub = ' INTERSECT '.join(tmp)
+        else:
+            sql_sub = '''
+                SELECT t2.value_tuple_id
+                FROM corpus_structattr_value as t1
+                JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
+                WHERE t1.corpus_name = %s
+            '''
+            args.append(corpora[0])
+
+        if len(corpora) > 1:
+            aligned_corpus_select = 'SELECT item_id FROM corpus_structattr_value_tuple WHERE corpus_name = %s'
+            sql = f'''
+                SELECT sum(tuple.poscount)
+                FROM (
+                    SELECT tuple.item_id
+                    FROM ({sql_sub}) t
+                    JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+                    INTERSECT
+                    {" INTERSECT ".join(aligned_corpus_select for _ in corpora[1:])}
+                ) t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.item_id = t.item_id
+                WHERE tuple.corpus_name = %s
+            '''
+            args.extend(corpora[1:])
+            args.append(corpora[0])
+        else:
+            sql = f'''
+                SELECT SUM(tuple.poscount)
+                FROM ({sql_sub}) t
+                JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+            '''
+
         cursor = self.integ_db.cursor()
-        cursor.execute(
-            f'''
-                SELECT SUM(poscount)
-                FROM corpus_structattr_value_tuple
-                JOIN corpus_structattr_value_mapping ON corpus_structattr_value_tuple.id = value_tuple_id
-                JOIN corpus_structattr_value_mapping ON corpus_structattr_value.id = value_id
-                WHERE {' AND '.join(attr_where_tmpl)}
-            ''',
-            attr_where
-        )
+        cursor.execute(sql, args)
         return cursor.fetchone()[0]
 
     @cached
@@ -285,7 +315,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
         cursor = self.integ_db.cursor()
         cursor.execute(query_components.sql_template, query_components.where_values)
         for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
             for col_key in query_components.selected_attrs:
                 data_key = col_key if isinstance(col_key, str) else col_key.key()
                 if col_key not in query_components.hidden_attrs and data_key in data:
@@ -342,7 +372,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
             GROUP BY t.id
             ''',
             (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
-        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].splitlines()]
+        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
@@ -372,7 +402,7 @@ class MysqlLiveAttributes(AbstractLiveAttributes):
 
         ans = []
         for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].splitlines())
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
             ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
         return ans
 

@@ -83,9 +83,9 @@ class AttrArgs:
 
             if len(cnf_item) > 0:
                 subqueries.append(f'''
-                    SELECT value_tuple_id as id
-                    FROM corpus_structattr_value AS t_value
-                    JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+                    SELECT value_tuple_id
+                    FROM corpus_structattr_value AS t1
+                    JOIN corpus_structattr_value_mapping AS t2 ON t1.id = t2.value_id
                     WHERE ({" OR ".join(cnf_item)}) AND corpus_name = %s''')
                 sql_values.append(corpus_name)
 
@@ -94,9 +94,9 @@ class AttrArgs:
 
         sql_values.append(corpus_name)
         return f'''
-            SELECT value_tuple_id as id
-            FROM corpus_structattr_value AS t_value
-            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+            SELECT value_tuple_id
+            FROM corpus_structattr_value AS t1
+            JOIN corpus_structattr_value_mapping AS t2 ON t1.id = t2.value_id
             WHERE corpus_name = %s''', sql_values
 
 
@@ -111,7 +111,7 @@ class QueryComponents:
 @dataclass
 class QueryBuilder:
     corpus_name: str
-    aligned_corpora: List[str]  # TODO, not implemented
+    aligned_corpora: List[str]
     attr_map: Dict[StructAttr, Union[str, List[str], Dict[str, Any]]]
     srch_attrs: Set[StructAttr]
     bib_id: StructAttr
@@ -119,28 +119,89 @@ class QueryBuilder:
     autocomplete_attr: StructAttr
     empty_val_placeholder: Any
 
+    def initial_sql(self) -> Tuple[str, List[str]]:
+        if self.aligned_corpora:
+            aligned_corpora_joins = [
+                f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON tuple.item_id = t{i}.item_id AND t{i}.corpus_name = %s'
+                for i, _ in enumerate(self.aligned_corpora)
+            ]
+            sql_template = f'''
+                SELECT tuple.id as id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
+                FROM corpus_structattr_value_tuple AS tuple
+                {' '.join(aligned_corpora_joins)}
+                JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = tuple.id
+                JOIN corpus_structattr_value AS value ON value.id = map.value_id
+                WHERE tuple.corpus_name = %s
+                GROUP BY id
+            '''
+            args = (*self.aligned_corpora, self.corpus_name)
+
+        else:
+            sql_template = '''
+                SELECT tuple.id as id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
+                FROM corpus_structattr_value_tuple AS tuple
+                JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = tuple.id
+                JOIN corpus_structattr_value AS value ON value.id = map.value_id
+                WHERE tuple.corpus_name = %s
+                GROUP BY id
+            '''
+            args = (self.corpus_name,)
+
+        return sql_template, args
+
     def create_sql(self) -> QueryComponents:
-        attr_items = AttrArgs(data=self.attr_map,
-                              bib_id=self.bib_id,
-                              bib_label=self.bib_label,
-                              autocomplete_attr=self.autocomplete_attr,
-                              empty_val_placeholder=self.empty_val_placeholder)
-
-        subquery_sql, query_values = attr_items.export_subquery(self.corpus_name)
         hidden_attrs = set()
-
         if self.bib_id is not None and self.bib_id not in self.srch_attrs:
             hidden_attrs.add(self.bib_id)
-
         selected_attrs = tuple(self.srch_attrs.union(hidden_attrs))
-        sql_template = f'''
-            SELECT t.id, poscount, GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
-            FROM (
-                {subquery_sql}
-            ) as t
-            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
-            JOIN corpus_structattr_value_tuple AS t_value_tuple ON t_value_mapping.value_tuple_id = t_value_tuple.id
-            JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-            GROUP BY t.id
-        '''
-        return QueryComponents(sql_template, selected_attrs, hidden_attrs, query_values)
+
+        if self.attr_map:
+            attr_items = AttrArgs(data=self.attr_map,
+                                  bib_id=self.bib_id,
+                                  bib_label=self.bib_label,
+                                  autocomplete_attr=self.autocomplete_attr,
+                                  empty_val_placeholder=self.empty_val_placeholder)
+            sql_sub, args = attr_items.export_subquery(self.corpus_name)
+
+            if self.aligned_corpora:
+                aligned_corpora_joins = [
+                    f'INNER JOIN corpus_structattr_value_tuple AS t{i} ON tuple.item_id = t{i}.item_id AND t{i}.corpus_name = %s'
+                    for i, _ in enumerate(self.aligned_corpora)
+                ]
+                sql_template = f'''
+                    SELECT tuple.id as id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
+                    FROM ({sql_sub}) t
+                    JOIN corpus_structattr_value_tuple AS tuple ON t.value_tuple_id = tuple.id
+                    {' '.join(aligned_corpora_joins)}
+                    JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = tuple.id
+                    JOIN corpus_structattr_value AS value ON value.id = map.value_id
+                    WHERE (
+                        {" OR ".join("(value.structure_name = %s AND value.structattr_name = %s)" for _ in selected_attrs)}
+                    )
+                    GROUP BY id
+                '''
+                args.extend(self.aligned_corpora)
+
+            else:
+                sql_template = f'''
+                    SELECT tuple.id as id, tuple.poscount, GROUP_CONCAT(CONCAT(value.structure_name, '.', value.structattr_name, '=', value.value) SEPARATOR '\n') as data
+                    FROM (
+                        {sql_sub}
+                    ) as t
+                    JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
+                    JOIN corpus_structattr_value_mapping AS map ON map.value_tuple_id = t.value_tuple_id
+                    JOIN corpus_structattr_value AS value ON value.id = map.value_id
+                    WHERE (
+                        {" OR ".join("(value.structure_name = %s AND value.structattr_name = %s)" for _ in selected_attrs)}
+                    )
+                    GROUP BY id
+                '''
+
+            for sel in selected_attrs:
+                args.append(sel.struct)
+                args.append(sel.attr)
+
+        else:
+            sql_template, args = self.initial_sql()
+
+        return QueryComponents(sql_template, selected_attrs, hidden_attrs, args)
