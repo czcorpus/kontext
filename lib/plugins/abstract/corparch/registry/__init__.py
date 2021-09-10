@@ -240,14 +240,15 @@ class RegistryConf(object):
                         self._corpus_id, pos.name, fromattr_id, mapto_id)
 
             # structures >>>
-            for struct in self.structs:
+            for i, struct in enumerate(self.structs):
                 self._backend.save_corpus_structure(
-                    corpus_id=self._corpus_id, name=struct.name, values=[
+                    corpus_id=self._corpus_id, name=struct.name, position=i, values=[
                         (x.name, x.value) for x in struct.simple_items])
 
-                for structattr in struct.attributes:
-                    self._backend.save_corpus_structattr(self._corpus_id, struct.name, structattr.name,
-                                                         [(x.name, x.value) for x in structattr.attrs])
+                for i, structattr in enumerate(struct.attributes):
+                    self._backend.save_corpus_structattr(
+                        self._corpus_id, struct.name, structattr.name,
+                        i, [(x.name, x.value) for x in structattr.attrs])
 
             for i, sc in enumerate(self.subcorpattrs):
                 struct, attr = sc.split('.')
