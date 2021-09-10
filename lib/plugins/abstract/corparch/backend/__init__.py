@@ -186,11 +186,12 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_structure(self, corpus_id: str, name: str, values: List[Tuple[str, str]]):
+    def save_corpus_structure(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]):
         pass
 
     @abc.abstractmethod
-    def save_corpus_structattr(self, corpus_id: str, struct_id: int, name: str, values: List[Tuple[str, Any]]):
+    def save_corpus_structattr(
+            self, corpus_id: str, struct_id: int, name: str, position: int, values: List[Tuple[str, Any]]):
         pass
 
     @abc.abstractmethod

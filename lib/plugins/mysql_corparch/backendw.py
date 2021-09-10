@@ -18,6 +18,7 @@
 
 
 import datetime
+from collections import OrderedDict
 import pytz
 import logging
 import mysql.connector
@@ -283,7 +284,7 @@ class WriteBackend(DatabaseWriteBackend):
         cursor.execute(
             'SELECT name FROM corpus_posattr WHERE corpus_name = %s', (install_json.ident,))
         curr_posattrs = set(row['name'] for row in cursor.fetchall())
-        new_posattrs = {}
+        new_posattrs = OrderedDict()
         for new_posattr in registry_conf.posattrs:
             new_posattrs[new_posattr.name] = new_posattr
         added_posattrs = new_posattrs.keys()  # added or updated; NOTE: the keys() order works for Py 3.7+ !!
@@ -303,11 +304,11 @@ class WriteBackend(DatabaseWriteBackend):
             'FROM corpus_structattr '
             'WHERE corpus_name = %s', (install_json.ident,))
         curr_structattrs = set(row['name'] for row in cursor.fetchall())
-        new_structattrs = {}
+        new_structattrs = OrderedDict()
         for new_structattr in registry_conf.structs:
             for x in new_structattr.attributes:
                 new_structattrs[f'{new_structattr.name}.{x.name}'] = x
-        added_structattrs = set(new_structattrs.keys())  # added or updated
+        added_structattrs = new_structattrs.keys()  # added or updated
         # we must wait with adding of structattrs for structures to be ready
         removed_structattrs = curr_structattrs - set(new_structattrs.keys())
 
@@ -320,12 +321,13 @@ class WriteBackend(DatabaseWriteBackend):
         # structures
         cursor.execute('SELECT name FROM corpus_structure WHERE corpus_name = %s', (install_json.ident,))
         curr_structs = set(row['name'] for row in cursor.fetchall())
-        new_structs = {}
+        new_structs = OrderedDict()
         for struct in registry_conf.structs:
             new_structs[struct.name] = struct
-        for struct in set(new_structs.keys()):
+        for i, struct in enumerate(new_structs.keys()):
             self.save_corpus_structure(
-                install_json.ident, struct, [(a.name, a.value) for a in new_structs[struct].simple_items])
+                install_json.ident, struct, i,
+                [(a.name, a.value) for a in new_structs[struct].simple_items])
         removed_structures = curr_structs - set(new_structs.keys())
 
         # clear references to structures to be removed
@@ -335,10 +337,10 @@ class WriteBackend(DatabaseWriteBackend):
                     f'UPDATE {self._corp_table} SET {prop} = NULL WHERE name = %s', (install_json.ident,))
 
         # add new structural attributes (depended on structures)
-        for item in added_structattrs:
+        for i, item in enumerate(added_structattrs):
             s, a = item.split('.')
             props = [(x.name, x.value) for x in new_structattrs[item].attrs]
-            self.save_corpus_structattr(install_json.ident, s, a, props)
+            self.save_corpus_structattr(install_json.ident, s, a, i, props)
 
         for structattr in removed_structattrs:
             struct, attr = structattr.split('.')
@@ -431,8 +433,6 @@ class WriteBackend(DatabaseWriteBackend):
             else:
                 ucols = ', '.join(f'{v} = %s' for v in cols)
                 sql = 'UPDATE corpus_posattr SET {0} WHERE corpus_name = %s AND name = %s'.format(ucols)
-                print(ucols)
-                print(vals)
                 cursor.execute(sql, vals + [corpus_id, name])
         except mysql.connector.errors.Error as ex:
             logging.getLogger(__name__).error(
@@ -461,25 +461,27 @@ class WriteBackend(DatabaseWriteBackend):
                     'Failed to insert values {0}, {1}'.format(corpus_id, aid))
                 raise ex
 
-    def save_corpus_structure(self, corpus_id, name, values):
+    def save_corpus_structure(self, corpus_id, name, position: int, values):
         base_cols = [STRUCT_COLS_MAP[k] for k, v in values if k in STRUCT_COLS_MAP]
         base_vals = [v for k, v in values if k in STRUCT_COLS_MAP]
         cursor = self._db.cursor()
 
         cursor.execute(
-            'SELECT COUNT(*) AS cnt FROM corpus_structure '
+            'SELECT position FROM corpus_structure '
             'WHERE corpus_name = %s AND name = %s LIMIT 1', (corpus_id, name))
         row = cursor.fetchone()
-        if row and row['cnt'] == 1:
-            if len(base_vals) > 0:
-                uexpr = ', '.join(f'{c} = %s' for c in base_cols)
+        if row:
+            if len(base_vals) > 0 or row['position'] != position:
+                cols = ['position'] + base_cols
+                vals = [position] + base_vals
+                uexpr = ', '.join(f'{c} = %s' for c in cols)
                 sql = 'UPDATE corpus_structure SET {0} WHERE corpus_name = %s AND name = %s'.format(
                     uexpr)
-                vals = base_vals + [corpus_id, name]
+                vals = vals + [corpus_id, name]
                 cursor.execute(sql, vals)
         else:
-            cols = ['corpus_name', 'name'] + base_cols
-            vals = [corpus_id, name] + base_vals
+            cols = ['corpus_name', 'name', 'position'] + base_cols
+            vals = [corpus_id, name, position] + base_vals
             sql = 'INSERT INTO corpus_structure ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(['%s'] * len(vals)))
             cursor.execute(sql, vals)
@@ -492,13 +494,13 @@ class WriteBackend(DatabaseWriteBackend):
         row = cursor.fetchone()
         return row['cnt'] == 1 if row else False
 
-    def save_corpus_structattr(self, corpus_id, struct_id, name, values):
+    def save_corpus_structattr(self, corpus_id, struct_id, name, position, values):
         """
         """
         if self._structattr_exists(corpus_id, struct_id, name):
-            cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP]
+            cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP] + ['position']
             if len(cols) > 0:
-                vals = [v for k, v in values if k in SATTR_COLS_MAP] + [corpus_id, struct_id, name]
+                vals = [v for k, v in values if k in SATTR_COLS_MAP] + [position, corpus_id, struct_id, name]
                 sql = ('UPDATE corpus_structattr '
                        'SET {0} '
                        'WHERE corpus_name = %s AND structure_name = %s AND name = %s').format(
