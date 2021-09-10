@@ -502,6 +502,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             _ => !this.readonlyMode,
             action => {
                 this.changeState(state => {
+                    this.setAllAttributesBusy(state, false);
                     if (action.error) {
                         this.reset(state);
 
