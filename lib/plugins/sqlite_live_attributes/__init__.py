@@ -22,65 +22,28 @@ It is recommended to install Unidecode package (pip install Unidecode)
 
 import re
 import json
-from functools import wraps
-from hashlib import md5
 from functools import partial
 from collections import defaultdict, OrderedDict, Iterable
 import sqlite3
 import logging
-from typing import List
 try:
     from unidecode import unidecode
 except ImportError:
     logging.getLogger(__name__).warning(
-        'Package unidecode not found - you can improve ucnk_live_attributes search abilities by installing it.')
+        'Package unidecode not found - you can improve sqlite_live_attributes search abilities by installing it.')
 
     def unidecode(v): return v
 
 import l10n
 from plugins import inject
 import plugins
-from plugins.abstract.live_attributes import AbstractLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair
+from plugins.abstract.live_attributes import (
+    CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
 from actions import concordance
 from . import query
-
-
-CACHE_MAIN_KEY = 'liveattrs_cache:%s'
-
-
-def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr, limit_lists):
-    """
-    Generates a cache key based on the relevant parameters.
-    Returned value is hashed.
-    """
-    return md5(f'{attr_map}{max_attr_list_size}{aligned_corpora}{autocomplete_attr}{limit_lists}'.encode('utf-8')).hexdigest()
-
-
-def cached(f):
-    """
-    A decorator which tries to look for a key in cache before
-    actual storage is invoked. If cache miss in encountered
-    then the value is stored to the cache to be available next
-    time.
-    """
-    @wraps(f)
-    def wrapper(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
-                                   autocomplete_attr, limit_lists)
-            ans = self.from_cache(corpus.corpname, key)
-            if ans:
-                return AttrValuesResponse.from_dict(ans)
-        ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
-        if len(attr_map) < 2:
-            key = create_cache_key(attr_map, self.max_attr_list_size,
-                                   aligned_corpora, autocomplete_attr, limit_lists)
-            self.to_cache(corpus.corpname, key, ans.to_dict())
-        return self.export_num_strings(ans)
-    return wrapper
 
 
 @exposed(return_type='json', http_method='POST')
@@ -103,10 +66,11 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
-class LiveAttributes(AbstractLiveAttributes):
+class LiveAttributes(CachedLiveAttributes):
 
     def __init__(self, corparch, db, max_attr_list_size, empty_val_placeholder,
                  max_attr_visible_chars):
+        super().__init__(db)
         self.corparch = corparch
         self.kvdb = db
         self.max_attr_list_size = max_attr_list_size
@@ -166,33 +130,6 @@ class LiveAttributes(AbstractLiveAttributes):
                 if type(data[k]) is str and data[k].isdigit():
                     data[k] = int(data[k])
         return data
-
-    def from_cache(self, corpname, key):
-        """
-        Loads a value from cache. The key is whole attribute_map as selected
-        by a user. But there is no guarantee that all the keys and values will be
-        used as a key.
-
-        arguments:
-        key -- a cache key
-
-        returns:
-        a stored value matching provided argument or None if nothing is found
-        """
-        v = self.kvdb.hash_get(CACHE_MAIN_KEY % (corpname,), key)
-        return LiveAttributes.export_num_strings(v) if v else None
-
-    def to_cache(self, corpname, key, values):
-        """
-        Stores a data object "values" into the cache. The key is whole attribute_map as selected
-        by a user. But there is no guarantee that all the keys and values will be
-        used as a key.
-
-        arguments:
-        key -- a cache key
-        values -- a dictionary with arbitrary nesting level
-        """
-        self.kvdb.hash_set(CACHE_MAIN_KEY % (corpname,), key, values)
 
     @staticmethod
     def export_key(k):
@@ -393,9 +330,10 @@ def create_instance(settings, corparch, db):
     corparch -- corparch plugin
     """
     la_settings = settings.get('plugins', 'live_attributes')
-    return LiveAttributes(corparch=corparch,
-                          db=db,
-                          max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
-                          empty_val_placeholder=settings.get(
-                              'corpora', 'empty_attr_value_placeholder'),
-                          max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
+    return LiveAttributes(
+        corparch=corparch,
+        db=db,
+        max_attr_list_size=settings.get_int('global', 'max_attr_list_size'),
+        empty_val_placeholder=settings.get(
+            'corpora', 'empty_attr_value_placeholder'),
+        max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
