@@ -30,7 +30,7 @@ try:
     from unidecode import unidecode
 except ImportError:
     logging.getLogger(__name__).warning(
-        'Package unidecode not found - you can improve ucnk_live_attributes search abilities by installing it.')
+        'Package unidecode not found - you can improve sqlite_live_attributes search abilities by installing it.')
 
     def unidecode(v): return v
 
