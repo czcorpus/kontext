@@ -51,17 +51,22 @@ def parse_registry(
     tokens = tokenize()
     parse = Parser(corpus_id, variant, tokens, wbackend)
     registry_conf = parse()
-    corp = corp_factory(infile.name)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
 
+    try:
+        corp = corp_factory(infile.name)
+        csize = corp.size()
+    except Exception as ex:
+        print('WARNING: {}'.format(ex))
+        csize = 0
     tst = rbackend.load_corpus(corpus_id)
     if tst is None:
-        wbackend.save_corpus_config(iconf, registry_conf, corp.size())
+        wbackend.save_corpus_config(iconf, registry_conf, csize)
     elif update_if_exists:
         logging.getLogger(__file__).warning(
             f'Corpus {corpus_id} already in database - registry-related data will be updated based '
             'on the provided registry file')
-        wbackend.update_corpus_config(iconf, registry_conf, corp.size())
+        wbackend.update_corpus_config(iconf, registry_conf, csize)
     else:
         raise Exception(f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
     return registry_conf.save()
