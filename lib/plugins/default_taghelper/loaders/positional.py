@@ -90,7 +90,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             ]
         }
         """
-        path = f'{self.cache_dir}/initial-values.{lang}.json'
+        path = os.path.join(self.cache_dir, f'initial-values.{lang}.json')
         char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
         tagset = self._load_tag_descriptions(self.tagset_name, lang)
         if tagset is None:
@@ -110,7 +110,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 cache_path_items.insert(0, './')
             tst_path = ''
             for s in cache_path_items:
-                tst_path += '%s/' % s
+                tst_path += f'{s}/'
                 if not os.path.exists(tst_path):
                     os.mkdir(tst_path, 0o775)
             ans = [set() for _ in range(tagset['num_pos'])]
@@ -123,8 +123,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                             ans[i].add(('-', ''))
                         elif i < len(tagset['values']):
                             if line[i] in translation_table[i]:
-                                ans[i].add((value, '%s - %s' %
-                                            (line[i], translation_table[i][line[i]])))
+                                ans[i].add((value, f'{line[i]} - {translation_table[i][line[i]]}'))
 
             ans_sorted = []
             for i in range(len(ans)):
