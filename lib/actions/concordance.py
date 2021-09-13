@@ -1579,7 +1579,7 @@ class Actions(Querying):
 
         return None
 
-    @exposed(access_level=0)
+    @exposed(access_level=0, return_type='plain')
     def audio(self, request):
         """
         Provides access to audio-files containing speech segments.
@@ -1590,7 +1590,6 @@ class Actions(Querying):
         if rpath is None:
             self.set_not_found()
             return lambda: None
-
         with open(rpath, 'rb') as f:
             play_from, play_to = self._parse_range(request)
             if play_from > 0:
@@ -1602,8 +1601,7 @@ class Actions(Querying):
             if self.environ.get('HTTP_RANGE', None):
                 self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
                     os.path.getsize(rpath) - 1, os.path.getsize(rpath))
-            ans = f.read() if not play_to else f.read(play_to - play_from)
-            return lambda: ans
+            return f.read() if not play_to else f.read(play_to - play_from)
 
     @exposed(return_type='json', access_level=0)
     def audio_waveform(self, request):
