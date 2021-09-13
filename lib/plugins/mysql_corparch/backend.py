@@ -369,14 +369,15 @@ class Backend(DatabaseBackend):
 
     def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         cursor = self._db.cursor()
-        cursor.execute("SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, "
-                       "ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, "
-                       "GROUP_CONCAT(CONCAT_WS(',',tpc.tag_search_pattern,tpc.pos) SEPARATOR ',') AS patterns_pos "
-                       "FROM tagset AS t "
-                       "JOIN corpus_tagset AS ct ON ct.tagset_name = t.name "
-                       "LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name "
-                       "WHERE ct.corpus_name = %s "
-                       "GROUP BY tagset_name", (corpus_id, ))
+        cursor.execute(
+            'SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, '
+            'ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, '
+            'GROUP_CONCAT(CONCAT_WS(\',\',tpc.tag_search_pattern,tpc.pos) SEPARATOR \',\') AS patterns_pos '
+            'FROM tagset AS t '
+            'JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
+            'LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name '
+            'WHERE ct.corpus_name = %s '
+            'GROUP BY tagset_name', (corpus_id, ))
         return [
             TagsetInfo(
                 ident=row['tagset_name'],
