@@ -838,7 +838,7 @@ class Controller(object):
                 if k not in result:
                     result[k] = getattr(self.args, k)
             return template_object.render(result)
-        raise RuntimeError('Unknown source or return type')
+        raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
     # mypy error: missing return statement
     def user_is_anonymous(self) -> bool:  # type: ignore
