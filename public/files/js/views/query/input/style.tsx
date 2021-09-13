@@ -269,6 +269,8 @@ export const QueryHints = styled.div`
 
 export const QueryToolbox = styled.div`
 
+    position: relative; /* to keep absolutely positioned stuff inside properly placed */
+
     > ul {
         list-style-type: none;
         margin: 0;
