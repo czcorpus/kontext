@@ -31,6 +31,7 @@ REG_COLS_MAP: Dict[str, str] = OrderedDict(
     DOCSTRUCTURE='docstructure',
     SHORTREF='shortref',
     FREQTTATTRS='freqttattrs',
+    SUBCORPATTRS='subcorpattrs',
     TAGSETDOC='tagsetdoc',
     WPOSLIST='wposlist',
     WSDEF='wsdef',
