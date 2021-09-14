@@ -220,24 +220,25 @@ class RegistryConf(object):
         created_rt = self._backend.save_registry_table(
             self._corpus_id, self._variant, [(x.name, x.value) for x in self.simple_items])
 
+        # now we fill in self references MAPTO, FROMATTR
+        for pos in self.posattrs:
+            fromattr_id = None
+            mapto_id = None
+            self._backend.update_corpus_posattr_references(self._corpus_id, pos.name, fromattr_id, mapto_id)
+            for pitem in pos.attrs:
+                if pitem.name == 'FROMATTR':
+                    fromattr_id = pitem.value
+                elif pitem.name == 'MAPTO':
+                    mapto_id = pitem.value
+            if fromattr_id is not None or mapto_id is not None:
+                self._backend.update_corpus_posattr_references(
+                    self._corpus_id, pos.name, fromattr_id, mapto_id)
+
         if created_rt:
             # positional attributes
             for pos in self.posattrs:
                 self._backend.save_corpus_posattr(
                     self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
-
-            # now we fill in self references
-            for pos in self.posattrs:
-                fromattr_id = None
-                mapto_id = None
-                for pitem in pos.attrs:
-                    if pitem.name == 'FROMATTR':
-                        fromattr_id = pitem.value
-                    elif pitem.name == 'MAPTO':
-                        mapto_id = pitem.value
-                if fromattr_id is not None or mapto_id is not None:
-                    self._backend.update_corpus_posattr_references(
-                        self._corpus_id, pos.name, fromattr_id, mapto_id)
 
             # structures >>>
             for i, struct in enumerate(self.structs):

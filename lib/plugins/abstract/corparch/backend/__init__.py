@@ -178,7 +178,12 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def update_corpus_posattr_references(self, corpus_id: str, posattr_id: int, fromattr_id: int, mapto_id: int):
+    def update_corpus_posattr_references(
+            self, corpus_id: str, posattr_id: int, fromattr_id: Optional[int], mapto_id: Optional[int]):
+        """
+        Define FROMATTR and/or MAPTO. If None is passed for any of the two then NULL is inserted
+        to the database.
+        """
         pass
 
     @abc.abstractmethod

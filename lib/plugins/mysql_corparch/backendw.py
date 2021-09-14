@@ -21,6 +21,7 @@ import datetime
 from collections import OrderedDict
 import pytz
 import logging
+import re
 import mysql.connector
 from plugins.abstract.corparch.backend import DatabaseWriteBackend
 from plugins.mysql_corparch.backend import (
@@ -381,20 +382,40 @@ class WriteBackend(DatabaseWriteBackend):
         row = cursor.fetchone()
         return row['cnt'] == 1 if row else False
 
+    @staticmethod
+    def normalize_raw_attrlist(s):
+        return re.sub(r'\s+', '', s.replace('|', ','))
+
     def save_registry_table(self, corpus_id, variant, values):
         values = dict(values)
         self._create_struct_if_none(corpus_id, values.get('DOCSTRUCTURE', None))
         cursor = self._db.cursor()
+        t1 = datetime.datetime.now(
+            tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
 
         if self._registry_table_exists(corpus_id):
+            cols = ['updated'] + [REG_COLS_MAP[k] for k, v in list(values.items()) if k in REG_COLS_MAP]
+            vals = [t1]
+            for k, v in values.items():
+                if k in ('SUBCORPATTRS', 'FREQTTATTRS'):
+                    vals.append(self.normalize_raw_attrlist(v))
+                elif k in REG_COLS_MAP:
+                    vals.append(v)
+            vals.append(corpus_id)
+            sql = 'UPDATE registry_conf SET {0} WHERE corpus_name = %s'.format(
+                ', '.join(f'{c} = %s' for c in cols))
+            cursor.execute(sql, vals)
             created = False
         else:
-            t1 = datetime.datetime.now(tz=pytz.timezone('Europe/Prague')
-                                       ).strftime("%Y-%m-%dT%H:%M:%S%z")
+
             cols = ['corpus_name', 'created', 'updated'] + [REG_COLS_MAP[k]
                                                             for k, v in list(values.items()) if k in REG_COLS_MAP]
-            vals = [corpus_id, t1, t1] + \
-                [v for k, v in list(values.items()) if k in REG_COLS_MAP]
+            vals = [corpus_id, t1, t1]
+            for k, v in values.items():
+                if k in ('SUBCORPATTRS', 'FREQTTATTRS'):
+                    vals.append(self.normalize_raw_attrlist(v))
+                elif k in REG_COLS_MAP:
+                    vals.append(v)
             sql = 'INSERT INTO registry_conf ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(len(cols) * ['%s']))
             cursor.execute(sql, vals)
