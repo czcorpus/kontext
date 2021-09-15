@@ -54,3 +54,34 @@ export const AudioLinkDisabled = styled.span`
 
 `;
 
+
+// ---- <ManualSelectionTd /> ------------------------
+
+export const ManualSelectionTd = styled.td`
+
+    padding-right: 0.2em;
+    width: 3em;
+    text-align: right;
+
+    input {
+        font-size: 0.9em;
+        margin: 0;
+    }
+
+    input[type="checkbox"] {
+        margin-right: 0.5em;
+        vertical-align: middle;
+    }
+
+    input.error {
+        background-color: ${theme.colorLogoPink};
+    }
+
+    > span {
+        display: block;
+        border-radius: ${theme.inputBorderRadius};
+        text-align: center;
+    }
+
+`;
+

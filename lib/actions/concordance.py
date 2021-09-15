@@ -1757,13 +1757,13 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='plain', http_method='POST')
     def export_line_groups_chart(self, request):
         with plugins.runtime.CHART_EXPORT as ce:
-            format = request.args.get('cformat')
+            format = request.json.get('cformat')
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._headers['Content-Type'] = ce.get_content_type(format)
             self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
-            data = sorted(json.loads(request.form.get('data', '{}')), key=lambda x: int(x[0]))
-            total = sum(x[1] for x in data)
-            data = [('#{0} ({1}%)'.format(x[0], round(x[1] / float(total) * 100, 1)), x[1])
+            data = sorted(request.json.get('data', {}), key=lambda x: int(x['groupId']))
+            total = sum(x['count'] for x in data)
+            data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
                     for x in data]
             return ce.export_pie_chart(data=data, title=request.form.get('title', '??'), format=format)
 

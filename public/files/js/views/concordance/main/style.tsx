@@ -31,7 +31,7 @@ export const ConcordanceDashboard = styled.div`
     grid-column-gap: 1em;
 
     &.collapsed {
-        grid-template-columns: 1.3em auto;
+        grid-template-columns: 1.5em auto;
         grid-column-gap: 0.5em;
 
         .ConcExtendedInfo {
@@ -171,26 +171,28 @@ export const ConcTopBar = styled(ConcVerticalBar)`
         padding: 0.4em 1em;
         clear: both;
 
-        .lines-selection-controls {
-
-            display: inline-block;
-
-            .lines-selection {
-                white-space: nowrap;
-
-                img {
-                    padding-left: 0.4em;
-                    vertical-align: middle;
-                    width: 1em;
-                }
-            }
-        }
-
         .conc-toolbar {
             display: inline-block;
         }
     }
 
+`;
+
+// -------- <LineSelectionOps /> -------------------
+
+export const LineSelectionOps = styled.div`
+
+    display: inline-block;
+
+    .lines-selection {
+        white-space: nowrap;
+
+        img {
+            padding-left: 0.4em;
+            vertical-align: middle;
+            width: 1em;
+        }
+    }
 `;
 
 

@@ -41,8 +41,13 @@ export interface LineSelectionViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            lineSelectionModel:LineSelectionModel):LineSelectionViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    lineSelectionModel:LineSelectionModel
+):LineSelectionViews {
+
+    const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
@@ -120,17 +125,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 switchHandler={actionChangeHandler} />;
         }
 
-        let heading;
-        if (props.mode === 'simple') {
-            heading = he.translate('linesel__unsaved_line_selection_heading');
-
-        } else if (props.mode === 'groups') {
-            heading = he.translate('linesel__unsaved_line_groups_heading');
-        }
-
         return (
             <div id="selection-actions">
-                <h3>{heading}</h3>
                 {he.translate('global__actions')}:{'\u00A0'}
                 {switchComponent}
                 {props.isBusy ?
@@ -289,7 +285,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <fieldset className="generated-link">
+            <S.SelectionLinkAndToolsFieldset>
                 <legend>{he.translate('linesel__line_selection_link_heading')}</legend>
                 <input className="conc-link" type="text" readOnly={true}
                         onClick={(e)=> (e.target as HTMLInputElement).select()}
@@ -301,7 +297,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             emailChangeHandler={props.emailChangeHandler} /> :
                     renderEmailButton()
                 }
-            </fieldset>
+            </S.SelectionLinkAndToolsFieldset>
         );
     };
 
@@ -326,20 +322,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
 
         return (
-            <fieldset className="chart-area" ref={ref}>
-                {ref.current ?
-                    null :
-                    <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                        title={he.translate('global__loading')} />
-                }
-            </fieldset>
+            <S.LockedLineGroupsChartFieldset className="chart-area" ref={ref}>
+                {ref.current ? null : <layoutViews.AjaxLoaderBarImage />}
+            </S.LockedLineGroupsChartFieldset>
         );
     };
 
 
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
-    class LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps & LineSelectionModelState> {
+    class _LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps & LineSelectionModelState> {
 
         constructor(props) {
             super(props);
@@ -420,8 +412,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         render() {
             return (
                 <S.LockedLineGroupsMenu>
-                    <h3>{he.translate('linesel__saved_line_groups_heading')}</h3>
-
                     {this.props.renameLabelDialogVisible ?
                         <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
                         <ActionSwitch waiting={this.props.isBusy} changeHandler={this._actionSwitchHandler} />}
@@ -440,10 +430,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     }
 
-    const BoundLockedLineGroupsMenu = BoundWithProps<LockedLineGroupsMenuProps, LineSelectionModelState>(LockedLineGroupsMenu, lineSelectionModel);
+    const LockedLineGroupsMenu = BoundWithProps<LockedLineGroupsMenuProps, LineSelectionModelState>(
+        _LockedLineGroupsMenu, lineSelectionModel);
 
     return {
-        UnsavedLineSelectionMenu: UnsavedLineSelectionMenu,
-        LockedLineGroupsMenu: BoundLockedLineGroupsMenu
+        UnsavedLineSelectionMenu,
+        LockedLineGroupsMenu
     };
 }

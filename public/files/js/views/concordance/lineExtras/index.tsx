@@ -181,11 +181,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const TdLineSelection:LineExtrasViews['TdLineSelection'] = (props) => {
 
+        const css = {
+            color: props.groupTextColor,
+            backgroundColor: props.groupColor
+        }
+
         const renderInput = () => {
             if (props.isEditLocked) {
                 if (props.lockedGroupId) {
                     const groupLabel = props.lockedGroupId >= 0 ? `#${props.lockedGroupId}` : '';
-                    return <span className="group-id">{groupLabel}</span>;
+                    return <span className="group-id" style={css}>{groupLabel}</span>;
 
                 } else {
                     return null;
@@ -199,15 +204,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             }
             return null;
         };
-        const css = {
-            color: props.groupTextColor,
-            backgroundColor: props.groupColor
-        }
 
         return (
-            <td className="manual-selection" style={css}>
+            <S.ManualSelectionTd>
                 {renderInput()}
-            </td>
+            </S.ManualSelectionTd>
         );
     };
 

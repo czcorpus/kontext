@@ -186,44 +186,35 @@ export class LineSelGroupsRatiosChart {
 
     private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any>, corpusId:string) {
         if (this.exportFormats.length > 0) {
-            const div = rootElm.append('div');
-            div.attr('class', 'footer');
-            const sElm = div.append('span');
-            sElm.text('export: '); // TODO
+            const fieldset = rootElm.append('fieldset');
+            fieldset.attr('class', 'footer');
+            const sElm = fieldset.append('legend');
+            sElm.text(this.layoutModel.translate('linesel__export_btn'));
+            const ul = fieldset.append('ul');
+            ul.attr('class', 'export');
 
-            this.exportFormats.forEach((ef, i) => {
-                if (i > 0) {
-                    const sep = div.append('span');
-                    sep.text(', ');
-                }
-                const aElm = div.append('a')
-                aElm.attr('class', 'export');
-                aElm.text(ef);
-                aElm.on('click', () => {
-                    this.layoutModel.bgDownload({
-                        filename: 'line-selection-overview.xlsx',
-                        type: DownloadType.LINE_SELECTION,
-                        url: this.layoutModel.createActionUrl(
-                            'export_line_groups_chart',
-                            Dict.toEntries({
-                                corpname: corpusId,
-                                cformat: ef
-                            })
-                        ),
-                        contentType: 'multipart/form-data',
-                        args: {
-                            data: pipe(
+            List.forEach(
+                ef => {
+                    const li = ul.append('li');
+                    const aElm = li.append('a');
+                    aElm.text(ef);
+                    aElm.on('click', () => {
+                        this.layoutModel.bgDownload({
+                            filename: 'line-selection-overview.xlsx',
+                            type: DownloadType.LINE_SELECTION,
+                            url: this.layoutModel.createActionUrl('export_line_groups_chart'),
+                            contentType: 'application/json',
+                            args: {
                                 data,
-                                List.map(({groupId, count}) => tuple(
-                                    groupId, count
-                                )),
-                                (data) => JSON.stringify(data)
-                            ),
-                            title: this.layoutModel.translate('linesel__saved_line_groups_heading')
-                        }
+                                corpname: corpusId,
+                                cformat: ef,
+                                title: this.layoutModel.translate('linesel__saved_line_groups_heading')
+                            }
+                        });
                     });
-                });
-            });
+                },
+                this.exportFormats
+            );
         }
     }
 
