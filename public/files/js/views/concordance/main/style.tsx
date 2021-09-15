@@ -31,7 +31,7 @@ export const ConcordanceDashboard = styled.div`
     grid-column-gap: 1em;
 
     &.collapsed {
-        grid-template-columns: 1.3em auto;
+        grid-template-columns: 1.5em auto;
         grid-column-gap: 0.5em;
 
         .ConcExtendedInfo {

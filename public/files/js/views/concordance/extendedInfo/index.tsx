@@ -122,58 +122,52 @@ export function init({dispatcher, he, ttDistModel, dashboardModel, usageTipsMode
 
     // ---------------------- <ConcExtendedInfo /> ----------------------------------------
 
-    class ConcExtendedInfo extends React.PureComponent<ConcExtendedInfoProps & ConcDashboardState> {
+    const ConcExtendedInfo:React.FC<ConcExtendedInfoProps & ConcDashboardState> = (props) => {
 
-        constructor(props) {
-            super(props);
-        }
+        const hasKwicConnectView = () => props.kwicConnectView !== null;
 
-        private hasKwicConnectView() {
-            return this.props.kwicConnectView !== null;
-        }
+        React.useEffect(
+            () => {
+                if (!props.expanded) { // we are doing a pre-load here
+                    dispatcher.dispatch(
+                        Actions.LoadTTDictOverview
+                    );
+                }
+            },
+            []
+        );
 
-        componentDidMount() {
-            if (!this.props.expanded) { // we are doing a pre-load here
-                dispatcher.dispatch<typeof Actions.LoadTTDictOverview>({
-                    name: Actions.LoadTTDictOverview.name,
-                    payload: {}
-                });
-            }
-        }
-
-        render() {
-            return (
-                <S.ConcExtendedInfo>
-                    <header>
-                        <MinimizeIcon minimized={!this.props.expanded} />
-                    </header>
-                    {this.props.expanded ?
-                        <div className="contents">
-                            {this.props.showFreqInfo ?
-                                <div className="box">
-                                    <ttDistViews.TextTypesDist />
-                                </div> :
-                                null
-                            }
+        return (
+            <S.ConcExtendedInfo className={props.expanded ? null : 'collapsed'}>
+                <header>
+                    <MinimizeIcon minimized={!props.expanded} />
+                </header>
+                {props.expanded ?
+                    <div className="contents">
+                        {props.showFreqInfo ?
                             <div className="box">
-                                {this.hasKwicConnectView() ? <this.props.kwicConnectView /> : null}
-                            </div>
-                            <div className="box">
-                                <h3 className="block">
-                                    {he.translate('concview__tips_heading')}
-                                    <img src={he.createStaticUrl('img/lightbulb.svg')}
-                                            alt={he.translate('global__lightbulb_icon')}
-                                            className="lightbulb" />
-                                </h3>
-                                <hr />
-                                <BoundUsageTips />
-                            </div>
-                        </div> :
-                        <div></div>
-                    }
-                </S.ConcExtendedInfo>
-            );
-        }
+                                <ttDistViews.TextTypesDist />
+                            </div> :
+                            null
+                        }
+                        <div className="box">
+                            {hasKwicConnectView() ? <props.kwicConnectView /> : null}
+                        </div>
+                        <div className="box">
+                            <h3 className="block">
+                                {he.translate('concview__tips_heading')}
+                                <img src={he.createStaticUrl('img/lightbulb.svg')}
+                                        alt={he.translate('global__lightbulb_icon')}
+                                        className="lightbulb" />
+                            </h3>
+                            <hr />
+                            <BoundUsageTips />
+                        </div>
+                    </div> :
+                    <div></div>
+                }
+            </S.ConcExtendedInfo>
+        );
     }
 
 

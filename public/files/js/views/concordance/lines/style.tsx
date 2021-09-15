@@ -32,26 +32,6 @@ export const ConcLines = styled.table`
     padding-bottom: 20px;
     width: 100%;
 
-    td.manual-selection {
-        padding-right: 0.2em;
-        width: 3em;
-        text-align: right;
-    }
-
-    td.manual-selection input {
-        font-size: 0.80em;
-        margin: 0;
-    }
-
-    td.manual-selection input[type="checkbox"] {
-        margin-right: 0.5em;
-        vertical-align: middle;
-    }
-
-    td.manual-selection input.error {
-        background-color: ${theme.colorLogoPink};
-    }
-
     .line-num {
         text-align: right;
         color: ${theme.colorLightText};
@@ -200,3 +180,4 @@ export const ConcLines = styled.table`
     }
 
 `;
+

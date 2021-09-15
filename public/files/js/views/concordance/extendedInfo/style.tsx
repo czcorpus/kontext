@@ -40,7 +40,10 @@ export const ConcExtendedInfo = styled(ConcordanceView)`
             flex-grow: 9;
             margin: 0;
         }
+    }
 
+    &.collapsed header {
+        padding: 0.1em;
     }
 
     background-color: #FFFFFF;

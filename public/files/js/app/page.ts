@@ -288,8 +288,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             method: method(),
             contentType,
             args
-        }).subscribe(
-            () => {
+        }).subscribe({
+            next: () => {
                 this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
                     name: ATActions.InboxUpdateAsyncTask.name,
                     payload: {
@@ -298,7 +298,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     }
                 });
             },
-            error => {
+            error: error => {
                 this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
                     name: ATActions.InboxUpdateAsyncTask.name,
                     payload: {
@@ -308,7 +308,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                     error
                 });
             }
-        );
+        });
     }
 
     /**

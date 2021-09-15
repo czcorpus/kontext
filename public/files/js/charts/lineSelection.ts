@@ -202,22 +202,12 @@ export class LineSelGroupsRatiosChart {
                         this.layoutModel.bgDownload({
                             filename: 'line-selection-overview.xlsx',
                             type: DownloadType.LINE_SELECTION,
-                            url: this.layoutModel.createActionUrl(
-                                'export_line_groups_chart',
-                                Dict.toEntries({
-                                    corpname: corpusId,
-                                    cformat: ef
-                                })
-                            ),
-                            contentType: 'multipart/form-data',
+                            url: this.layoutModel.createActionUrl('export_line_groups_chart'),
+                            contentType: 'application/json',
                             args: {
-                                data: pipe(
-                                    data,
-                                    List.map(({groupId, count}) => tuple(
-                                        groupId, count
-                                    )),
-                                    (data) => JSON.stringify(data)
-                                ),
+                                data,
+                                corpname: corpusId,
+                                cformat: ef,
                                 title: this.layoutModel.translate('linesel__saved_line_groups_heading')
                             }
                         });

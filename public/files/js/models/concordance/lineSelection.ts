@@ -78,6 +78,8 @@ export interface LineSelectionModelState {
     lastCheckpointUrl:string;
 
     renameLabelDialogVisible:boolean;
+
+    isLeavingPage:boolean;
 }
 
 export interface LineSelectionModelArgs {
@@ -139,6 +141,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             maxGroupId: layoutModel.getConf<number>('concLineMaxGroupNum'),
             isLocked: layoutModel.getConf<number>('NumLinesInGroups') > 0,
             isBusy: false,
+            isLeavingPage: false,
             emailDialogCredentials: null,
             data: {},
             queryHash: '',
@@ -230,6 +233,11 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         this.addActionHandler<typeof Actions.RemoveSelectedLines>(
             Actions.RemoveSelectedLines.name,
             action => {
+                this.changeState(
+                    state => {
+                        state.isLeavingPage = true;
+                    }
+                );
                 // we leave the page here
                 this.removeLines(this.state, 'n');
             }
@@ -238,6 +246,11 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         this.addActionHandler<typeof Actions.RemoveNonSelectedLines>(
             Actions.RemoveNonSelectedLines.name,
             action => {
+                this.changeState(
+                    state => {
+                        state.isLeavingPage = true;
+                    }
+                );
                  // we leave the page here
                 this.removeLines(this.state, 'p');
             }
@@ -290,6 +303,11 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         this.addActionHandler<typeof Actions.RemoveLinesNotInGroups>(
             Actions.RemoveLinesNotInGroups.name,
             action => {
+                this.changeState(
+                    state => {
+                        state.isLeavingPage = true;
+                    }
+                );
                 this.removeNonGroupLines(); // we leave the page here ...
             }
         );
@@ -529,7 +547,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
     }
 
     reasonNotLeave():string|null {
-        return LineSelectionModel.numSelectedItems(this.getState()) > 0 ?
+        return (LineSelectionModel.numSelectedItems(this.getState()) > 0 && !this.state.isLeavingPage) ?
             this.layoutModel.translate('linesel__current_sel_not_saved_confirm') : null;
     }
 
