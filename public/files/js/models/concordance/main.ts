@@ -464,8 +464,8 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.LineSelectionResetOnServerDone>(
-            Actions.LineSelectionResetOnServerDone.name,
+        this.addActionHandler(
+            Actions.LineSelectionResetOnServerDone,
             action => {
                 this.changeState(state => {
                     state.lineSelOptionsVisible = false;
@@ -743,13 +743,13 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
             action => {
                 if (!action.error) {
                     this.loadConcPage(action.payload.data.conc_persistence_op_id).subscribe(
-                        (data) => {
+                        data => {
                             this.changeState(state => {
-                                state.lineSelOptionsVisible = false;
+                                state.lineSelOptionsVisible = true;
                                 state.lineGroupIds = action.payload.groupIds;
                             });
                         },
-                        (err) => {
+                        err => {
                             this.layoutModel.showMessage('error', err);
                         }
                     );

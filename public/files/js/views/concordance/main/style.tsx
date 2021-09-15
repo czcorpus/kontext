@@ -171,26 +171,28 @@ export const ConcTopBar = styled(ConcVerticalBar)`
         padding: 0.4em 1em;
         clear: both;
 
-        .lines-selection-controls {
-
-            display: inline-block;
-
-            .lines-selection {
-                white-space: nowrap;
-
-                img {
-                    padding-left: 0.4em;
-                    vertical-align: middle;
-                    width: 1em;
-                }
-            }
-        }
-
         .conc-toolbar {
             display: inline-block;
         }
     }
 
+`;
+
+// -------- <LineSelectionOps /> -------------------
+
+export const LineSelectionOps = styled.div`
+
+    display: inline-block;
+
+    .lines-selection {
+        white-space: nowrap;
+
+        img {
+            padding-left: 0.4em;
+            vertical-align: middle;
+            width: 1em;
+        }
+    }
 `;
 
 
