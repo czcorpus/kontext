@@ -51,7 +51,7 @@ class SimpleAttr(object):
         return '({0} => {1})'.format(self.name, self.value)
 
 
-class Attribute(object):
+class Attribute:
     """
     An attribute used to define either
     positional attributes or structural attributes.
@@ -74,6 +74,23 @@ class Attribute(object):
     @property
     def non_empty_items(self):
         return [attr for attr in self.attrs if attr.value is not None]
+
+    def find_property(self, name: str) -> Optional['Attribute']:
+        for attr in self.attrs:
+            if attr.name == name:
+                return attr
+        return None
+
+    def clear_property(self, name: str) -> Optional[str]:
+        """
+        Set property to None. Return previous value.
+        """
+        for i, attr in enumerate(self.attrs):
+            if attr.name == name:
+                prev = attr.value
+                attr.value = None
+                return prev
+        return None
 
 
 class PosAttribute(Attribute):
@@ -138,7 +155,16 @@ class RegistryConf(object):
     def simple_items(self):
         return (x for x in self._items if isinstance(x, SimpleAttr))
 
-    def get_simple_attr(self, name) -> Optional[str]:
+    def set_simple_item(self, name: str, value: str) -> Optional[str]:
+        for item in self.simple_items:
+            if item.name == name:
+                old_v = item.value
+                item.value = value
+                return old_v
+        self._items.append(SimpleAttr(name, value))
+        return None
+
+    def find_simple_attr(self, name) -> Optional[str]:
         for item in self._items:
             if isinstance(item, SimpleAttr) and item.name == name:
                 return item.value

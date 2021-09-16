@@ -18,7 +18,7 @@
 
 
 import datetime
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import pytz
 import logging
 import re
@@ -264,7 +264,7 @@ class WriteBackend(DatabaseWriteBackend):
             install_json.web,
             install_json.collator_locale,
             install_json.use_safe_font,
-            registry_conf.get_simple_attr('INFO'),
+            registry_conf.find_simple_attr('INFO'),
             corp_size,
             install_json.ident)
         cursor.execute(
@@ -281,6 +281,27 @@ class WriteBackend(DatabaseWriteBackend):
             'WHERE name = %s',
             vals1)
 
+        # normalize LOCALE
+        misc_locales = defaultdict(lambda: 0)
+        for struct in registry_conf.structs:
+            for attr in struct.attributes:
+                loc = attr.find_property('LOCALE')
+                if loc:
+                    rm = attr.clear_property('LOCALE')
+                    misc_locales[rm] += 1
+        if len(misc_locales) > 0:
+            print('WARNING: found attr-defined locales used in the file: {}'.format(misc_locales.keys()))
+            max_k = None
+            max_v = 0
+            for k, v in misc_locales.items():
+                if v > max_v:
+                    max_k = k
+                    max_v = v
+            glob_locale = registry_conf.find_simple_attr('LOCALE')
+            if not glob_locale:
+                print('INFO: main LOCALE not set')
+                print('INFO: using the most frequent particular locale {}'.format(max_k))
+                registry_conf.set_simple_item('LOCALE', max_k)
         # positional attributes
         cursor.execute(
             'SELECT name FROM corpus_posattr WHERE corpus_name = %s', (install_json.ident,))
@@ -522,10 +543,11 @@ class WriteBackend(DatabaseWriteBackend):
             cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP] + ['position']
             if len(cols) > 0:
                 vals = [v for k, v in values if k in SATTR_COLS_MAP] + [position, corpus_id, struct_id, name]
-                sql = ('UPDATE corpus_structattr '
-                       'SET {0} '
-                       'WHERE corpus_name = %s AND structure_name = %s AND name = %s').format(
-                    ', '.join('{0} = %s'.format(c) for c in cols))
+                sql = (
+                    'UPDATE corpus_structattr '
+                    'SET {0} '
+                    'WHERE corpus_name = %s AND structure_name = %s AND name = %s').format(
+                        ', '.join('{0} = %s'.format(c) for c in cols))
             else:
                 sql = None
         else:
