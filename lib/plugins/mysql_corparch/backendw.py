@@ -283,7 +283,7 @@ class WriteBackend(DatabaseWriteBackend):
 
         # normalize LOCALE
         misc_locales = defaultdict(lambda: 0)
-        for struct in registry_conf.structs:
+        for struct in registry_conf.structs + registry_conf.posattrs:
             for attr in struct.attributes:
                 loc = attr.find_property('LOCALE')
                 if loc:
