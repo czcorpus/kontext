@@ -283,12 +283,17 @@ class WriteBackend(DatabaseWriteBackend):
 
         # normalize LOCALE
         misc_locales = defaultdict(lambda: 0)
-        for struct in list(registry_conf.structs) + list(registry_conf.posattrs):
+        for struct in registry_conf.structs:
             for attr in struct.attributes:
                 loc = attr.find_property('LOCALE')
                 if loc:
                     rm = attr.clear_property('LOCALE')
                     misc_locales[rm] += 1
+        for pa in registry_conf.posattrs:
+            loc = pa.find_property('LOCALE')
+            if loc:
+                rm = pa.clear_property('LOCALE')
+                misc_locales[rm] += 1
         if len(misc_locales) > 0:
             print('WARNING: found attr-defined locales used in the file: {}'.format(misc_locales.keys()))
             max_k = None
