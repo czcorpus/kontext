@@ -35,10 +35,11 @@ services:
       - ./public/files/themes:/opt/kontext/public/files/themes
       - corpora-data:/var/lib/manatee
       - corpora-cache:/var/local/corpora
+      - ./webpack.dev.js:/opt/kontext/webpack.dev.js
     networks:
       - databases
       - kontext
-    depends_on: 
+    depends_on:
       - redis
 
   rq-worker:
@@ -73,7 +74,7 @@ services:
     command: rqscheduler --host kontext_redis_1 --db 2 -i 10
     networks:
       - databases
-    depends_on: 
+    depends_on:
       - redis
 
   redis:
