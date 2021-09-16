@@ -72,4 +72,5 @@ SATTR_COLS_MAP: Dict[str, str] = OrderedDict(
 STRUCT_COLS_MAP: Dict[str, str] = OrderedDict(
     TYPE='type',
     DISPLAYTAG='displaytag',
-    DISPLAYBEGIN='displaybegin')
+    DISPLAYBEGIN='displaybegin',
+    DISPLAYEND='displayend')
