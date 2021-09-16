@@ -176,6 +176,7 @@ CREATE TABLE corpus_structure (
   position INT NOT NULL DEFAULT 0,
   displaytag enum('0','1'),
   displaybegin varchar(255),
+  displayend varchar(255),
   PRIMARY KEY (corpus_name, name),
   CONSTRAINT corpus_structure_corpus_name_fkey FOREIGN KEY (corpus_name) references kontext_corpus(name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
