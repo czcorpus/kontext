@@ -28,14 +28,18 @@ R = TypeVar('R')
 class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     """
     The default integration database is designed to make sure no plug-in will try to
-    use integration_db without proper status check. It means that a corrent plug-in
-    must first test if integration_db.is_active is True. Otherwise it should use
-    its own database connection mechanism or report that it requires a working
-    installation of integration_db.
+    use integration_db without proper status check. It means that a correct plug-in
+    depending on the integration_db must first test if integration_db.is_active is True.
+    In case False is provided then the plug-in should use its own database connection mechanism
+    or report that it requires a working installation of integration_db.
 
     This plug-in version throws PluginCompatibilityException on each method call
     and logs some more information for an administrator to be able to handle the problem.
     """
+
+    @property
+    def is_autocommit(self):
+        return True
 
     @staticmethod
     def _err_msg():
