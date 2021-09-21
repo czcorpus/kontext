@@ -190,13 +190,13 @@ class QueryHistory(AbstractQueryHistory):
                     return True
             return False
 
-        corpora = CorpusCache(corpus_manager)
         data = self.db.list_get(self._mk_key(user_id))
         if limit is None:
             limit = len(data)
-        data = [v for v in reversed(data)][offset:(offset + limit)]
+        data = list(reversed(data))[offset:(offset + limit)]
         full_data = []
 
+        corpora = CorpusCache(corpus_manager)
         for item in data:
             if 'query_id' in item:
                 item_qs = item.get('q_supertype', item.get('qtype'))
