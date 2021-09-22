@@ -888,7 +888,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             fromp: currArgs.fromp || 0,
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
-            text_types: this.textTypesModel.UNSAFE_exportSelections(false),
+            text_types: this.disableRestrictSearch(this.state) ? {} : this.textTypesModel.UNSAFE_exportSelections(false),
             context: contextFormArgs,
             async,
             no_query_history: noQueryHistory
@@ -947,6 +947,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 )
             )
         );
+    }
+
+    disableRestrictSearch(state:QueryFormModelState):boolean {
+        return !!state.currentSubcorp
     }
 
 }

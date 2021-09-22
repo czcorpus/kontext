@@ -240,8 +240,9 @@ export function init({
                                     wPoSList={this.props.wPoSList} />
                         </inputViews.AdvancedFormFieldset>
                         <inputViews.AdvancedFormFieldset
-                            uniqId="section-specify-text-types"
+                                    uniqId="section-specify-text-types"
                                     formVisible={this.props.textTypesFormVisible}
+                                    formDisabled={queryModel.disableRestrictSearch(this.props)}
                                     handleClick={this._handleTextTypesFormVisibility}
                                     title={he.translate('query__specify_tt')}
                                     htmlClass="specify-text-types"
