@@ -109,7 +109,7 @@ export interface QueryReplayModelState {
      */
     stopAfterOpIdx:number|null;
 
-    editIsLocked:boolean;
+    groupsSelected:boolean;
 
     overviewVisible:boolean;
 }
@@ -182,7 +182,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 branchReplayIsRunning: false,
                 editedOperationIdx: null,
                 stopAfterOpIdx: null,
-                editIsLocked: pageModel.getConf<number>('NumLinesInGroups') > 0,
+                groupsSelected: pageModel.getConf<number>('NumLinesInGroups') > 0,
                 overviewVisible: false
             }
         );
@@ -210,14 +210,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler<typeof ConcActions.MarkLinesDone>(
             ConcActions.MarkLinesDone.name,
             (state, action) => {
-                state.editIsLocked = true;
+                state.groupsSelected = true;
             }
         );
 
         this.addActionHandler<typeof ConcActions.LineSelectionResetOnServerDone>(
             ConcActions.LineSelectionResetOnServerDone.name,
             (state, action) => {
-                state.editIsLocked = false;
+                state.groupsSelected = false;
             }
         );
 

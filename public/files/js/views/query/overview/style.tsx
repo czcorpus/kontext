@@ -67,3 +67,26 @@ export const ExecutionOptionsFieldset = styled.div`
     }
 
 `;
+
+// -------------------------- <GroupIndicator /> -------------------
+
+export const Rect = styled.div<{color:string}>`
+    background-color: ${props => props.color};
+`;
+
+export const GroupIndicator = styled.div`
+    display: inline-flexbox;
+    flex-wrap: wrap;
+    vertical-align: middle;
+    justify-content: space-between;
+    align-content: space-between;
+    
+    width: 1.2em;
+    height: 1.2em;
+
+    ${Rect} {
+        width: 45%;
+        height: 45%;
+        border-radius: 30%;
+    }
+`;
