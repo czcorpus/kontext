@@ -27,6 +27,7 @@ from werkzeug import Request
 from collections import defaultdict
 
 from controller.kontext import Kontext
+from main_menu import MainMenu
 from texttypes import TextTypesCache
 import plugins
 from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
@@ -126,6 +127,10 @@ class Querying(Kontext):
             tpl_data['Q'] = getattr(self.args, 'q')[:]
         tpl_data['num_lines_in_groups'] = len(self._lines_groups)
         tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
+
+        if len(self._lines_groups) > 0:
+            self.disabled_menu_items += (MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
+                                         MainMenu.CONCORDANCE('shuffle'), MainMenu.CONCORDANCE('sample'))
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
         super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
