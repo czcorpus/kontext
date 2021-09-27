@@ -1289,4 +1289,5 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     getRegistrationId():string {
         return this.ident;
     }
+
 }

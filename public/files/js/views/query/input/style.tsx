@@ -62,6 +62,21 @@ export const AdvancedFormFieldset = styled.section`
         }
     }
 
+    &.disabled {
+        a, button, span {
+            color: ${theme.colorSuperlightText};
+            border-color: ${theme.colorSuperlightText};
+            background-color: transparent;
+        }
+
+        a:hover, button:hover {
+            cursor: default;
+            color: ${theme.colorSuperlightText};
+            text-decoration: none;
+            background-color: transparent;
+        }
+    }
+
     padding: 0.2em 0 1.6em 0;
 
     .contents {
@@ -174,7 +189,7 @@ export const AdvancedFormFieldset = styled.section`
                 width: 25em;
             }
         }
-        }
+    }
 
 
     ${theme.mediaPhone} {

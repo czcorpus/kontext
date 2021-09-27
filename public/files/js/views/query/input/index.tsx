@@ -99,6 +99,7 @@ export interface AdvancedFormFieldsetProps {
     closedStateDesc?:string; // raw HTML
     isNested?:boolean;
     htmlClass?:string;
+    formDisabled?:boolean;
     handleClick:()=>void;
 }
 
@@ -173,21 +174,26 @@ export function init({
     const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
 
         const htmlClasses = [];
-        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+        if (props.formDisabled) htmlClasses.push('disabled');
+        if (props.isNested) htmlClasses.push('nested');
+        if (props.htmlClass) {
+            htmlClasses.push(props.htmlClass);
+            if (!props.formVisible || props.formDisabled) htmlClasses.push('closed');
+        }
 
         return (
-            <S.AdvancedFormFieldset className={`${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+            <S.AdvancedFormFieldset className={htmlClasses.join(' ')}
                     role="group" aria-labelledby={props.uniqId}>
                 <SC.ExpandableSectionLabel id={props.uniqId}>
-                    <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
-                        <a onClick={props.handleClick}>{props.title}</a>
-                    {props.formVisible ? null : props.closedStateHint}
-                    {props.formVisible || !props.closedStateDesc ?
+                    <layoutViews.ExpandButton isExpanded={!props.formDisabled && props.formVisible} onClick={props.handleClick} />
+                    <a onClick={props.formDisabled ? null : props.handleClick}>{props.title}</a>
+                    {!props.formDisabled && props.formVisible ? null : props.closedStateHint}
+                    {(!props.formDisabled && props.formVisible) || !props.closedStateDesc ?
                         null :
                         <AdvancedFormFieldsetDesc html={props.closedStateDesc} />
                     }
                 </SC.ExpandableSectionLabel>
-                {props.formVisible ?
+                {!props.formDisabled && props.formVisible ?
                     <div className="contents">
                         {props.children}
                     </div> :
