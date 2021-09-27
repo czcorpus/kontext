@@ -589,23 +589,23 @@ class Actions(Querying):
             """
             return next idx of a new acknowledged auto-operation idx (to be able to continue
             with appending of other ops). I.e. if the last operation appended
-            here has idx of 7 then the returned value will be 8.
+            here has idx = 7 then the returned value will be 8.
             """
             if not items:
                 return idx
             if fctxtype == 'any':
-                self.args.q.append('P%s [%s]' %
-                                   (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                self.args.q.append('P{} [{}]'.format(
+                    ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
                 append_form_filter_op(idx, attrname, items, ctx, fctxtype)
                 return idx + 1
             elif fctxtype == 'none':
-                self.args.q.append('N%s [%s]' %
-                                   (ctx_to_str(ctx), '|'.join(['%s="%s"' % (attrname, i) for i in items])))
+                self.args.q.append('N{} [{}]'.format(
+                    ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
                 append_form_filter_op(idx, attrname, items, ctx, fctxtype)
                 return idx + 1
             elif fctxtype == 'all':
                 for i, v in enumerate(items):
-                    self.args.q.append('P%s [%s="%s"]' % (ctx_to_str(ctx), attrname, v))
+                    self.args.q.append('P{} [{}="{}"]'.format(ctx_to_str(ctx), attrname, v))
                     append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
                 return idx + len(items)
 
@@ -627,7 +627,7 @@ class Actions(Querying):
 
         texttypes = TextTypeCollector(self.corp, form.data.selected_text_types).get_query()
         if texttypes:
-            ttquery = ' '.join(['within <%s %s />' % nq for nq in texttypes])
+            ttquery = ' '.join([f'within <{attr} {expr} />' for attr, expr in texttypes])
         else:
             ttquery = ''
         par_query = ''
@@ -636,24 +636,25 @@ class Actions(Querying):
             wnot = '' if form.data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
             pq = self._compile_query(corpus=al_corpname, form=form)
             if pq:
-                par_query += 'within%s %s:%s' % (wnot, al_corpname, pq)
+                par_query += f'within{wnot} {al_corpname}:{pq}'
             if not pq or wnot:
                 nopq.append(al_corpname)
 
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
-
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
-        ag_op_idx = append_filter(ag_op_idx,
-                                  lemmaattr,
-                                  form.data.fc_lemword.split(),
-                                  (form.data.fc_lemword_wsize[0], form.data.fc_lemword_wsize[1], 1),
-                                  form.data.fc_lemword_type)
-        append_filter(ag_op_idx,
-                      'tag',
-                      [wposlist.get(t, '') for t in form.data.fc_pos],
-                      (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
-                      form.data.fc_pos_type)
+        ag_op_idx = append_filter(
+            ag_op_idx,
+            lemmaattr,
+            form.data.fc_lemword.split(),
+            (form.data.fc_lemword_wsize[0], form.data.fc_lemword_wsize[1], 1),
+            form.data.fc_lemword_type)
+        append_filter(
+            ag_op_idx,
+            'tag',
+            [wposlist.get(t, '') for t in form.data.fc_pos],
+            (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
+            form.data.fc_pos_type)
 
         for al_corpname in corpora[1:]:
             if al_corpname in nopq and not int(form.data.curr_include_empty_values[al_corpname]):
@@ -743,9 +744,10 @@ class Actions(Querying):
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
-        ff_args = FilterFormArgs(plugin_ctx=self._plugin_ctx,
-                                 maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-                                 persist=True)
+        ff_args = FilterFormArgs(
+            plugin_ctx=self._plugin_ctx,
+            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
+            persist=True)
         ff_args.update_by_user_query(request.json)
         err = ff_args.validate()
         if err is not None:

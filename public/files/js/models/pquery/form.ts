@@ -756,7 +756,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
             filfpos: '0',
             filtpos: `${List.size(query.parsedAttrs) - 1}`,
-            inclkwic: 1,
+            inclkwic: true,
             within: false,
             format: 'json',
             q: ['~' + concId],

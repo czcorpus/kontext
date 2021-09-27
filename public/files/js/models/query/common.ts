@@ -98,13 +98,19 @@ export interface FirstHitsServerArgs extends ConcServerArgs {
     fh_struct:string;
 }
 
+/**
+ * Defines positive and negative filters either
+ * including kwic (p/n) or excluding kwic (P/N)
+ */
+export type FilterTypes = 'p' | 'P' | 'n' | 'N';
+
 export interface FilterServerArgs extends ConcServerArgs {
     maincorp:string;
-    pnfilter:string;
+    pnfilter:FilterTypes;
     filfl:string;
     filfpos:string;
     filtpos:string;
-    inclkwic:0|1;
+    inclkwic:boolean;
     qtype:QueryType;
     query:string;
     queryParsed:SubmitEncodedSimpleTokens|undefined;

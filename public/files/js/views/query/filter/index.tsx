@@ -35,6 +35,7 @@ import { Keyboard } from 'cnc-tskit';
 import * as QS from '../first/style';
 import * as S from './style';
 import { SearchHistoryModel } from '../../../models/searchHistory';
+import { FilterTypes } from '../../../models/query/common';
 
 
 
@@ -222,7 +223,8 @@ export function init({
     // --------- <FilterTypeSelector /> ----------------------------------
 
     const FilterTypeSelector:React.FC<{
-        value:'p'|'n';
+        value:FilterTypes;
+        inclKwic:boolean;
         sourceId:string;
 
     }> = (props) => {
@@ -232,7 +234,7 @@ export function init({
                 name: Actions.FilterInputSetFilterType.name,
                 payload: {
                     filterId: props.sourceId,
-                    value: evt.target.value as 'p'|'n'
+                    value: evt.target.value as FilterTypes
                 }
             });
         };
@@ -240,8 +242,8 @@ export function init({
         return (
             <S.FilterTypeSelector>
                 <select  value={props.value} onChange={handleChange}>
-                    <option value="p">{he.translate('query__qfilter_pos')}</option>
-                    <option value="n">{he.translate('query__qfilter_neg')}</option>
+                    <option value={props.inclKwic ? 'p' : 'P'}>{he.translate('query__qfilter_pos')}</option>
+                    <option value={props.inclKwic ? 'n' : 'N'}>{he.translate('query__qfilter_neg')}</option>
                 </select>
             </S.FilterTypeSelector>
         );
@@ -365,6 +367,7 @@ export function init({
                             {this.props.filterId === '__new__' ?
                                 null :
                                 <FilterTypeSelector value={this.props.pnFilterValues[this.props.filterId]}
+                                        inclKwic={this.props.inclkwicValues[this.props.filterId]}
                                         sourceId={this.props.filterId} />
                             }
                             <div>
