@@ -70,17 +70,18 @@ export const ExecutionOptionsFieldset = styled.div`
 
 // -------------------------- <GroupIndicator /> -------------------
 
-export const Rect = styled.div<{color:string}>`
+export const Rect = styled.span<{color:string}>`
     background-color: ${props => props.color};
+    display: block;
 `;
 
-export const GroupIndicator = styled.div`
+export const GroupIndicator = styled.a`
     display: inline-flexbox;
     flex-wrap: wrap;
     vertical-align: middle;
     justify-content: space-between;
     align-content: space-between;
-    
+
     width: 1.2em;
     height: 1.2em;
 

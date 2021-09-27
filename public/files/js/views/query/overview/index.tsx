@@ -434,6 +434,12 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             });
         };
 
+        const handleGroupsClick = () => {
+            dispatcher.dispatch(
+                ConcActions.ToggleLineSelOptions
+            );
+        };
+
         const getSourceId = (opIdx:number, opId:string):string|undefined => {
             if (['a', 'q'].indexOf(opId) > -1) {
                 return props.queryFormProps.corpname;
@@ -549,7 +555,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     )}
                     {props.groupsSelected ? '\u00a0' : null}
                     {props.groupsSelected ?
-                        < S.GroupIndicator >
+                        <S.GroupIndicator onClick={handleGroupsClick} aria-label={he.translate('concview__op_result_has_groups')}
+                                title={he.translate('concview__op_result_has_groups')}>
                             <S.Rect color='red' />
                             <S.Rect color='green' />
                             <S.Rect color='blue' />

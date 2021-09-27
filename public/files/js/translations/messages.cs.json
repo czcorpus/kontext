@@ -507,6 +507,7 @@
         "concview__translat_not_avail": "Překlad není k dispozici",
         "concview__waiting_for_data": "Čekám na data. Berte prosím na vědomí, že v některých případech může trvat výpočet až několik minut.",
         "concview__waiting_elapsed_time": "uplynulý čas",
+        "concview__op_result_has_groups": "Na výsledku jsou definovány uživatelské skupiny řádků. Klikněte pro přístup k nim.",
         "concRestore__please_wait_msg": "Počkejte prosím. Připravuje se zdrojová konkordance.",
         "concRestore__conc_ready": "Zdrojová konkordance je připravena. Nyní se zpracovává požadovaná operace.",
         "concRestore__result_link": "V případě, že by nedošlo k přesměrování na stránku výsledku ani po několika minutách, zkuste použít tento odkaz",
