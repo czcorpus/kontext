@@ -20,7 +20,7 @@
 from functools import partial
 import collections
 from .cache import TextTypesCache
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 
 
 class StructNormsCalc(object):
@@ -29,7 +29,7 @@ class StructNormsCalc(object):
     An instance is always bound to a concrete structure and required value type.
     """
 
-    def __init__(self, corpus: KCorpus, structname, subcnorm):
+    def __init__(self, corpus: AbstractKCorpus, structname, subcnorm):
         """
         arguments:
         corpus --
@@ -84,7 +84,7 @@ class CachedStructNormsCalc(StructNormsCalc):
     store values.
     """
 
-    def __init__(self, corpus: KCorpus, structname, subcnorm, tt_cache: TextTypesCache):
+    def __init__(self, corpus: AbstractKCorpus, structname, subcnorm, tt_cache: TextTypesCache):
         """
         arguments:
         corpus --

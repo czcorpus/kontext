@@ -29,10 +29,9 @@ import logging
 from typing import List, Tuple
 from functools import reduce
 
-import manatee
 from strings import escape_attr_val
 from werkzeug.wrappers import Request
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 import settings
 import plugins
 from translation import ugettext as _
@@ -45,7 +44,7 @@ class TextTypeCollector(object):
 
     EMPTY_VAL_PLACEHOLDER = settings.get('corpora', 'empty_attr_value_placeholder', '-')
 
-    def __init__(self, corpus: KCorpus, src_obj):
+    def __init__(self, corpus: AbstractKCorpus, src_obj):
         """
         arguments:
         corpus --
@@ -100,7 +99,7 @@ class TextTypesException(Exception):
 
 class TextTypes(object):
 
-    def __init__(self, corp: KCorpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
+    def __init__(self, corp: AbstractKCorpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
         """
         arguments:
         corp --
