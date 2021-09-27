@@ -206,7 +206,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         </select>
                         {props.expressionRole.type === 'specification' ? null :
                             <span>
-                                <S.VerticalSeparator/>
+                                <S.VerticalSeparator />
                                 <label htmlFor={`roleRatio-${props.sourceId}`}>{he.translate('pquery__expression_role_ratio')}</label>:{'\u00a0'}
                                 <input id={`roleRatio-${props.sourceId}`}
                                         onChange={handleExpressionRoleRatioChange}

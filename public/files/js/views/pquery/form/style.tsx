@@ -156,7 +156,7 @@ export const StylelessFieldset = styled(BorderlessFieldset)`
 export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
     display: flex;
     align-items: center;
-    margin: 2px 0px;
+    margin: 0.6em 0 0.4em 0;
 
     input {
         width: 3em;
