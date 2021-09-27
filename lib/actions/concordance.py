@@ -1834,6 +1834,7 @@ class Actions(Querying):
         plg_status = {}
         self._setup_optional_plugins_js(plg_status)
         conc_args = self._get_mapped_attrs(ConcArgsMapping)
+        conc_args['q'] = []
 
         poslist = []
         for tagset in corpus_info.tagsets:
