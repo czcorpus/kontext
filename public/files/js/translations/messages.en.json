@@ -507,6 +507,7 @@
         "concview__translat_not_avail": "Translation not available",
         "concview__waiting_for_data": "Waiting for data. Please note that in some cases, the calculation can take several minutes to complete.",
         "concview__waiting_elapsed_time": "elapsed time",
+        "concview__op_result_has_groups": "The result has attached user-defined line groups. Click the icon to access them.",
         "concRestore__please_wait_msg": "Please wait. A source concordance is being prepared.",
         "concRestore__conc_ready": "The source concordance is ready. Now the required operation is being processed.",
         "concRestore__result_link": "In case you are not redirected to a result page in a few minutes at most, please try to use the following link",

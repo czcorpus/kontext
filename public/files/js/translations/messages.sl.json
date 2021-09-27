@@ -544,6 +544,7 @@
         "concview__translat_not_avail": "Prevod ni na voljo",
         "concview__waiting_for_data": "Čakanje na podatke. Računanje lahko traja nekaj minut.",
         "concview__waiting_elapsed_time": "pretečeni čas",
+        "concview__op_result_has_groups": "The result has attached user-defined line groups. Click the icon to access them. UNTRANSLATED",
         "concRestore__please_wait_msg": "Prosimo, počakajte. Izvorne konkordance so v pripravi.",
         "concRestore__conc_ready": "Izvorne konkordance so pripravljene. Zahtevana operacija je v obdelavi.",
         "concRestore__result_link": "Če v nekaj minutah niste preusmerjeni na stran z rezultati, poskusite uporabiti naslednjo povezavo",
