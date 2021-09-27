@@ -28,7 +28,7 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
+    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport, FilterTypes } from './common';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -103,7 +103,7 @@ export interface FilterFormModelState extends QueryFormModelState {
 
     lposValues:{[key:string]:string};
 
-    pnFilterValues:{[key:string]:'p'|'n'};
+    pnFilterValues:{[key:string]:FilterTypes};
 
     /**
      * Highlighted token FIRST/LAST. Specifies which token is highlighted.
@@ -273,6 +273,23 @@ function determineFilterTagWidgets(
 }
 
 /**
+ * Transform current filter type code based on whether we want to include
+ * or exclude kwic.
+ */
+function pnfilterInclKwicConv(v:FilterTypes, inclKwic:boolean):FilterTypes {
+    return ({
+        'p+k': 'p',
+        'P+k': 'p',
+        'n+k': 'n',
+        'N+k': 'n',
+        'p-k': 'P',
+        'P-k': 'P',
+        'n-k': 'N',
+        'N-k': 'N'
+    } as {[key:string]:FilterTypes})[`${v}${inclKwic ? '+' : '-'}k`];
+}
+
+/**
  * FilterFormModel handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
  * plug-in to store it). Please note that it does not know the order of filters
@@ -437,6 +454,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             action => {
                 this.changeState(state => {
                     state.inclkwicValues[action.payload.filterId] = action.payload.value;
+                    state.pnFilterValues[action.payload.filterId] = pnfilterInclKwicConv(
+                        state.pnFilterValues[action.payload.filterId],
+                        action.payload.value
+                    );
                 });
             }
         );
@@ -656,7 +677,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             filfl: this.state.filflValues[filterId],
             filfpos: this.state.filfposValues[filterId].value,
             filtpos: this.state.filtposValues[filterId].value,
-            inclkwic: this.state.inclkwicValues[filterId] ? 1 : 0,
+            inclkwic: this.state.inclkwicValues[filterId],
             within: this.state.withinArgs[filterId],
             ...this.pageModel.getConcArgs(),
             q: ['~' + concId]

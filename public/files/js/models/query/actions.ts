@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import * as Kontext from '../../types/kontext';
-import { WithinBuilderData, QueryContextArgs, CtxLemwordType } from './common';
+import { WithinBuilderData, QueryContextArgs, CtxLemwordType, FilterTypes } from './common';
 import { ConcFormArgs } from './formArgs';
 import { QueryType } from './query';
 
@@ -391,7 +391,7 @@ export class Actions {
 
     static FilterInputSetFilterType: Action<{
         filterId:string;
-        value: 'p' | 'n';
+        value:FilterTypes;
     }> = {
         name: 'FILTER_INPUT_SET_FILTER_TYPE'
     };
