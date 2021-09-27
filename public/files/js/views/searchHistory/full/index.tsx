@@ -267,8 +267,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         };
 
         return (
-            <S.QueryInfoDiv>
-                <S.QueryAndTypeDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryInfoDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
+                <S.QueryAndTypeDiv>
                     {
                         props.query_sh ?
                         <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :

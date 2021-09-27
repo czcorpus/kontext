@@ -319,7 +319,14 @@ export class QueryPage {
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
                 'ConcFormsArgs'
             );
-            const queryFormArgs = concFormsArgs['__new__'] as QueryFormArgs;
+    
+            let queryId = '__new__';
+            const q = this.layoutModel.getNestedConf<string>('currentArgs', 'q');
+            if (q.length > 0) {
+                queryId = q[0].replace('~', '');
+            }
+            
+            const queryFormArgs = concFormsArgs[queryId] as QueryFormArgs;
             this.queryContextModel = new QueryContextModel(
                 this.layoutModel.dispatcher,
                 queryFormArgs
