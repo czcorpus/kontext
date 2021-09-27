@@ -137,7 +137,7 @@ class Kontext(Controller):
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
-        self.disabled_menu_items: List[str] = []
+        self.disabled_menu_items: Tuple[str, ...] = ()
 
         # menu items - they should not be handled directly
         self._save_menu: List[AbstractMenuItem] = []
@@ -701,7 +701,8 @@ class Kontext(Controller):
             name=self._human_readable_corpname(),
             usesubcorp=self.args.usesubcorp,
             origSubcorpName=self.corp.orig_subcname,
-            foreignSubcorp=self.corp.author_id is not None and self.session_get('user', 'id') != self.corp.author_id,
+            foreignSubcorp=self.corp.author_id is not None and self.session_get(
+                'user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)
         if self.corp.is_subcorpus:

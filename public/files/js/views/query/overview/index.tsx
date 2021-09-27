@@ -224,7 +224,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         corpname:string;
         opKey:string;
         operationId:string;
-        editIsLocked:boolean;
+        groupsSelected:boolean;
         operationIdx:number;
         editorProps:AnyEditorProps;
         operationFormType:string;
@@ -250,7 +250,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             if (props.isLoading) {
                 return <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} />;
 
-            } else if (!props.opKey || props.editIsLocked) {
+            } else if (!props.opKey || props.groupsSelected) {
                 return (
                     <div>
                         <p>
@@ -345,7 +345,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         item:ExtendedQueryOperation;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
-        editIsLocked:boolean;
+        groupsSelected:boolean;
         isLoading:boolean;
         modeRunFullQuery:boolean;
         shuffleMinResultWarning:number;
@@ -397,7 +397,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                         numOps={props.numOps}
                         shuffleMinResultWarning={props.shuffleMinResultWarning}
                         resultSize={props.item.size}
-                        editIsLocked={props.editIsLocked} />
+                        groupsSelected={props.groupsSelected} />
                     : null}
             </li>
         );
@@ -543,10 +543,20 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 isLoading={props.branchReplayIsRunning}
                                 modeRunFullQuery={props.stopAfterOpIdx === null}
                                 shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
-                                editIsLocked={props.editIsLocked} />
+                                groupsSelected={props.groupsSelected} />
                         ),
                         props.currEncodedOperations
                     )}
+                    {props.groupsSelected ? '\u00a0' : null}
+                    {props.groupsSelected ?
+                        < S.GroupIndicator >
+                            <S.Rect color='red' />
+                            <S.Rect color='green' />
+                            <S.Rect color='blue' />
+                            <S.Rect color='orange' />
+                        </S.GroupIndicator> :
+                        null
+                    }
                 </Style_QueryOverviewBarUL>
             </div>
         );
@@ -603,7 +613,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             isLoading={false}
                             modeRunFullQuery={false}
                             shuffleMinResultWarning={null}
-                            editIsLocked={true} />,
+                            groupsSelected={true} />,
                         props.ops
                     )}
             </Style_QueryOverviewBarUL>
