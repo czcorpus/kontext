@@ -246,7 +246,7 @@ class ParadigmaticQuery(Kontext):
         self.on_conc_store = on_conc_store
         return {}
 
-    @exposed(http_method='GET', return_type='json', skip_corpus_init=True)
+    @exposed(http_method='GET', return_type='json')
     def get_results(self, request):
         page_id = int(request.args['page']) - 1
         sort = request.args['sort']
@@ -257,7 +257,7 @@ class ParadigmaticQuery(Kontext):
             self._curr_pquery_args, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
         return dict(rows=freqs)
 
-    @exposed(access_level=1, func_arg_mapped=True, skip_corpus_init=True, return_type='plain')
+    @exposed(access_level=1, func_arg_mapped=True, return_type='plain')
     def download(self, sort='value', reverse='0', saveformat='', from_line=1, to_line='',
                  colheaders=0, heading=0):
         """
