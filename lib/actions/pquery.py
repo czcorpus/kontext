@@ -18,25 +18,25 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Optional, Callable, List, Dict, Any, Tuple
+import time
+import sys
+from werkzeug import Request
 from controller import exposed
 from controller.kontext import Kontext
+from controller.errors import UserActionException, NotFoundException
 from argmapping.pquery import PqueryFormArgs
 from argmapping.conc.query import QueryFormArgs
 from argmapping.conc.filter import FilterFormArgs
-from werkzeug import Request
 import plugins
 from texttypes import TextTypesCache
 import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
-import settings
 from bgcalc import AsyncTaskStatus
 from controller.plg import PluginCtx
-import time
 from translation import ugettext as translate
-from controller.errors import UserActionException
-import sys
 from main_menu import MainMenu, EventTriggeringItem
+import settings
 
 
 """
@@ -229,15 +229,12 @@ class ParadigmaticQuery(Kontext):
         shortened_q = f'{shortened_q} -> {self._curr_pquery_args.attr}'
 
         def on_conc_store(query_ids, stored_history, result):
-            task_args = dict(query_id=query_ids[0], last_update=time.time())
-            result_url = self.create_url('pquery/result',
-                                         dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
-                                              query_id=query_ids[0]))
-            async_task = AsyncTaskStatus(status=task_status.status, ident=task_status.id,
-                                         category=AsyncTaskStatus.CATEGORY_PQUERY,
-                                         label=shortened_q,
-                                         args=task_args,
-                                         url=result_url)
+            async_task = AsyncTaskStatus(
+                status=task_status.status, ident=task_status.id,
+                category=AsyncTaskStatus.CATEGORY_PQUERY,
+                label=shortened_q,
+                args=dict(query_id=query_ids[0], last_update=time.time()),
+                url=self.create_url('pquery/result', dict(q=f'~{query_ids[0]}')))
             self._store_async_task(async_task)
             result['task'] = async_task.to_dict()
             if stored_history:
@@ -266,9 +263,12 @@ class ParadigmaticQuery(Kontext):
         from_line = int(from_line) - 1
         to_line = int(to_line) if to_line else sys.maxsize
         corp_info = self.get_corpus_info(self.args.corpname)
-        _, freqs = require_existing_pquery(
-            self._curr_pquery_args, from_line, to_line - from_line,
-            corp_info.collator_locale, sort, bool(int(reverse)))
+        try:
+            _, freqs = require_existing_pquery(
+                self._curr_pquery_args, from_line, to_line - from_line,
+                corp_info.collator_locale, sort, bool(int(reverse)))
+        except PqueryResultNotFound:
+            raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
 
         def mkfilename(suffix):
             return f'{self.args.corpname}-pquery.{suffix}'

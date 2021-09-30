@@ -206,6 +206,7 @@
         "global__tip": "tip",
         "global__advice": "advice",
         "global__human_readable_502": "The server failed to process the required operation. This can be caused either by a too large concordance or by a too complex query. Please try to use a suitable subset of data (subcorpus, random sample).",
+        "global__result_no_more_avail_for_download_pls_update": "The result is no more available for immediate download. Please reload the page first. UNTRANSLATED",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
         "linesel__clear_the_selection": "Wysnŏż wybōr",
