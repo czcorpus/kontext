@@ -225,19 +225,16 @@ class QueryHistory(AbstractQueryHistory):
                         else:
                             for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
                                 q_join.append(f'{{ {qs} }}')
-
                     q_subset = stored.get('form', {}).get('conc_subset_complements', None)
                     if q_subset is not None:
-                        logging.error(q_subset)
                         for q in q_subset.get('conc_ids', []):
                             max_ratio = q_subset.get('max_non_matching_ratio', 0)
                             stored_q = self._query_persistence.open(q)
-                            logging.error(stored_q)
-                            if stored_q is None:
+                            if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
                                 logging.getLogger(__name__).warning(
                                     'Missing conc for pquery subset: {}'.format(q))
                             else:
-                                query = stored_q['lastop_form']['query']
+                                query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
                                 q_join.append(f'!{max_ratio if max_ratio else ""}{{ {query} }}')
 
                     q_superset = stored.get('form', {}).get('conc_superset', None)

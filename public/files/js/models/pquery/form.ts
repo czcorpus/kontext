@@ -463,21 +463,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private mkFilterStream(
+    private mkSubsetStream(
         state:PqueryFormModelState,
-        concResponse:ConcQueryResponse
-    ):Observable<[ConcQueryResponse, ConcQueryResponse, number]> {
+    ):Observable<[ConcQueryResponse, number]> {
 
         if (Dict.some(v => v.expressionRole.type === 'subset', state.queries)) {
             const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === 'subset', state.queries);
             return this.layoutModel.ajax$<ConcQueryResponse>(
-                    HTTP.Method.POST,
-                    this.layoutModel.createActionUrl(
-                        'filter',
-                        {format: 'json'}
-                    ),
-                    this.createSubsetComplementFilterArgs(state, subsetQuery, concResponse.conc_persistence_op_id),
-                    {contentType: 'application/json'}
+                HTTP.Method.POST,
+                this.layoutModel.createActionUrl(
+                    'query_submit',
+                    {format: 'json'}
+                ),
+                this.createConcSubmitArgs(state, subsetQuery, false),
+                {contentType: 'application/json'}
             ).pipe(
                 tap( _ => {
                     this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
@@ -487,7 +486,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 }),
                 concatMap(
                     concSubsetResponse => rxOf(tuple(
-                        concResponse,
                         concSubsetResponse,
                         parseFloat(state.queries[subsetSourceId].expressionRole.maxNonMatchingRatio.value)
                     ))
@@ -495,7 +493,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             )
 
         } else {
-            return rxOf(tuple(concResponse, null, 0))
+            return rxOf(tuple(null, 0));
         }
     }
 
@@ -600,36 +598,30 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         }
                     }
                 ),
-                concatMap(
-                    ([,concResponse, error]) => {
-                        if (error) {
-                            throw error;
-                        }
-                        return this.mkFilterStream(state, concResponse);
-                    }
-                ),
                 reduce(
-                    (acc, respTuple) => List.push(respTuple, acc),
-                    [] as Array<[ConcQueryResponse, ConcQueryResponse, number]>
+                    (acc, [,resp,]) => List.push(resp, acc),
+                    [] as Array<ConcQueryResponse>
                 )
             ),
+            this.mkSubsetStream(state),
             this.mkSupersetStream(state)
 
         ]).pipe(
             concatMap(
-                ([specAndSubsets, [supersetResponse, supersetsMNMRatio]]) => this.submitFreqIntersection(
+                ([
+                    specification,
+                    [subsetResponse, subsetMNMRatio],
+                    [supersetResponse, supersetsMNMRatio]
+                ]) => this.submitFreqIntersection(
                     state,
                     List.map(
-                        ([spec,]) => spec.conc_persistence_op_id,
-                        specAndSubsets
+                        (spec) => spec.conc_persistence_op_id,
+                        specification
                     ),
-                    List.every(([,v,]) => v !== null, specAndSubsets) ?
+                    subsetResponse ?
                         {
-                            conc_ids: List.map(
-                                ([,subs,]) => subs ? subs.conc_persistence_op_id : null,
-                                specAndSubsets
-                            ),
-                            max_non_matching_ratio: specAndSubsets[0][2]
+                            conc_ids: [subsetResponse.conc_persistence_op_id],
+                            max_non_matching_ratio: subsetMNMRatio
                         } :
                         null,
                     supersetResponse ?
