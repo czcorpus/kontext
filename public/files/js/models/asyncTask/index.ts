@@ -27,7 +27,8 @@ import * as Kontext from '../../types/kontext';
 import { concatMap, map, takeWhile, tap } from 'rxjs/operators';
 import { Actions } from './actions';
 import { taskCheckTimer } from './common';
-import { DownloadType, PageModel } from '../../app/page';
+import { DownloadType, isDownloadType, PageModel } from '../../app/page';
+import { AjaxError } from 'rxjs/ajax';
 
 
 function taskIsActive(t:Kontext.AsyncTaskInfo):boolean {
@@ -108,16 +109,18 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
         this.addActionHandler<typeof Actions.AsyncTasksChecked>(
             Actions.AsyncTasksChecked.name,
             action => {
-                const updatedList:Array<Kontext.AsyncTaskInfo> = [];
-                List.forEach(
-                    newTask => {
-                        const updated = List.find(t => t.ident === newTask.ident, this.state.asyncTasks);
-                        updatedList.push(updated ? updated : newTask);
-                    },
-                    action.payload.tasks
-                );
                 this.changeState(state => {
-                    state.asyncTasks = updatedList;
+                    const updatedList:Array<Kontext.AsyncTaskInfo> = [
+                        ...List.filter(v => isDownloadType(v.category), state.asyncTasks)];
+                    List.forEach(
+                        newTask => {
+                            const updated = List.find(t => t.ident === newTask.ident, this.state.asyncTasks);
+                            updatedList.push(updated ? updated : newTask);
+                        },
+                        action.payload.tasks
+                    );
+
+                        state.asyncTasks = updatedList;
                 });
             }
         );
@@ -147,25 +150,25 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     this.deleteFinishedTaskInfo() :
                     rxOf(this.state.asyncTasks)
 
-                ).subscribe(
-                    (data) => {
+                ).subscribe({
+                    next: data => {
                         this.changeState(state => {
                             this.updateMessageList(state, data);
                             state.overviewVisible = false;
                         });
                     },
-                    (err) => {
+                    error: error => {
                         this.changeState(state => {
                             state.overviewVisible = false;
                         });
-                        this.pageModel.showMessage('error', err);
+                        this.pageModel.showMessage('error', error);
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.InboxAddAsyncTask>(
-            Actions.InboxAddAsyncTask.name,
+        this.addActionHandler(
+            Actions.InboxAddAsyncTask,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -188,8 +191,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.InboxUpdateAsyncTask>(
-            Actions.InboxUpdateAsyncTask.name,
+        this.addActionHandler(
+            Actions.InboxUpdateAsyncTask,
             action => {
                 this.changeState(state => {
                     const srchIdx = List.findIndex(
@@ -202,6 +205,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                             ...old,
                             status: action.payload.status,
                             ident: action.payload.ident,
+                            error: action.error ? this.decodeError(old, action.error) : undefined
                         };
                         if ((old.status === 'PENDING' || old.status === 'STARTED')
                                 && (state.asyncTasks[srchIdx].status === 'FAILURE' ||
@@ -212,6 +216,15 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                 });
             }
         );
+    }
+
+    private decodeError(status:Kontext.AsyncTaskInfo, error:Error):string {
+        if (isDownloadType(status.category) &&
+                error instanceof AjaxError &&
+                error.status === HTTP.Status.NotFound) {
+            return this.pageModel.translate('global__result_no_more_avail_for_download_pls_update');
+        }
+        return error.message;
     }
 
     private updateMessageList(state:AsyncTaskCheckerState, data:Array<Kontext.AsyncTaskInfo>) {
@@ -265,7 +278,7 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     const ans = {...curr};
                     const idx = List.findIndex(incom => incom.ident === curr.ident, incoming);
                     if (idx === -1 && !Dict.hasValue(ans.category, DownloadType)) {
-                        ans.status = "FAILURE";
+                        ans.status = 'FAILURE';
                     }
                     return ans;
                 }
@@ -290,7 +303,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     const ans = {...curr};
                     const item = List.find(incom => incom.ident === curr.ident, incoming);
                     if (item === undefined && !Dict.hasValue(ans.category, DownloadType)) {
-                        ans.status = "FAILURE";
+                        ans.status = 'FAILURE';
+
                     } else {
                         ans.status = item.status;
                         ans.error = item.error;
@@ -313,8 +327,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
     private checkCurrentTasks():void {
         if (this.pageModel.supportsWebSocket()) {
             const [checkTasks$, statusSocket] = this.pageModel.openWebSocket<Array<string>, Array<Kontext.AsyncTaskInfo>>('job_status');
-            statusSocket.subscribe(
-                data => {
+            statusSocket.subscribe({
+                next: data => {
                     this.changeState(state => {
                         const finished = this.updateTasksStatusWS(state, data);
                         if (!List.empty(finished)) {
@@ -330,10 +344,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         });
                     });
                 },
-                error => {
+                error: error => {
                     console.log('error: ', error);
                 }
-            );
+            });
             checkTasks$.next(
                 pipe(
                     this.state.asyncTasks,
@@ -363,8 +377,8 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                         this.triggerUpdateAction(data)
                     }
                 )
-            ).subscribe(
-                (data) => {
+            ).subscribe({
+                next: data => {
                     this.changeState(state => {
                         const finished = this.updateTasksStatusAjax(state, data.data);
                         if (!List.empty(finished)) {
@@ -375,10 +389,10 @@ export class AsyncTaskChecker extends StatefulModel<AsyncTaskCheckerState> {
                     });
 
                 },
-                (err) => {
-                    this.pageModel.showMessage('error', err);
+                error: error => {
+                    this.pageModel.showMessage('error', error);
                 }
-            );
+            });
         }
     }
 

@@ -86,6 +86,7 @@
         "global__task_result": "Prikaži rezultate",
         "global__remove_finished_tasks_info": "Po izhodu iz pregleda izbriši informacije o zaključenih opravilih.",
         "global__warning": "Opozorilo",
+        "global__result_no_more_avail_for_download_pls_update": "The result is no more available for immediate download. Please reload the page first. UNTRANSLATED",
         "linesel__remove_selected_lines": "Odstrani izbrane vrstice",
         "linesel__remove_all_but_selected_lines": "Obdrži samo izbrane vrstice",
         "linesel__clear_the_selection": "Počisti izbor",

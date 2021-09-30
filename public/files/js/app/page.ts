@@ -59,7 +59,6 @@ import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { IPluginApi } from '../types/plugins/common';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 
 export enum DownloadType {
@@ -72,6 +71,11 @@ export enum DownloadType {
     PQUERY = 'pquery_download'
 }
 
+export function isDownloadType(s:string):s is DownloadType {
+    return s === DownloadType.CONCORDANCE || s === DownloadType.COLL  ||
+        s === DownloadType.FREQ || s === DownloadType.FREQ2D || s === DownloadType.WORDLIST ||
+        s === DownloadType.LINE_SELECTION || s === DownloadType.PQUERY;
+}
 
 /**
  * PageEnvironment represents a core functionality which must be initialized
@@ -266,22 +270,24 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
         }):void {
 
         const taskId = `${new Date().getTime()}:${url}`;
-        const method = () => {
-            if (type === DownloadType.FREQ2D || type === DownloadType.LINE_SELECTION ||
-                        type === DownloadType.WORDLIST) {
+        const method = () => { // TODO this is an antipattern (should be part of download types)
+            if (
+                    type === DownloadType.FREQ2D ||
+                    type === DownloadType.LINE_SELECTION ||
+                    type === DownloadType.WORDLIST) {
                 return HTTP.Method.POST;
             }
             return HTTP.Method.GET;
         };
 
-        this.dispatcher.dispatch<typeof ATActions.InboxAddAsyncTask>({
-            name: ATActions.InboxAddAsyncTask.name,
-            payload: {
+        this.dispatcher.dispatch(
+            ATActions.InboxAddAsyncTask,
+            {
                 ident: taskId,
                 label: filename,
-                category: type
+                category: type as string
             }
-        });
+        );
         this.appNavig.bgDownload<T>({
             filename,
             url,
@@ -290,23 +296,23 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             args
         }).subscribe({
             next: () => {
-                this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
-                    name: ATActions.InboxUpdateAsyncTask.name,
-                    payload: {
+                this.dispatcher.dispatch(
+                    ATActions.InboxUpdateAsyncTask,
+                    {
                         ident: taskId,
                         status: 'SUCCESS'
                     }
-                });
+                );
             },
             error: error => {
-                this.dispatcher.dispatch<typeof ATActions.InboxUpdateAsyncTask>({
-                    name: ATActions.InboxUpdateAsyncTask.name,
-                    payload: {
+                this.dispatcher.dispatch(
+                    ATActions.InboxUpdateAsyncTask,
+                    {
                         ident: taskId,
                         status: 'FAILURE'
                     },
                     error
-                });
+                );
             }
         });
     }

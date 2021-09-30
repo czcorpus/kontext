@@ -634,6 +634,9 @@ class Controller(object):
         elif action_metadata['return_type'] == 'xml':
             tpl_path, method_ans = self.process_action('message_xml', req_args)
             action_metadata.update(self._get_method_metadata('message_xml'))
+        elif action_metadata['return_type'] == 'plain':
+            tpl_path, method_ans = self.process_action('message_json', req_args)
+            action_metadata.update(self._get_method_metadata('message_json'))
         else:
             tpl_path, method_ans = self.process_action('message', req_args)
             action_metadata.update(self._get_method_metadata('message'))
@@ -733,8 +736,9 @@ class Controller(object):
         headers += self.output_headers(action_metadata['return_type'])
 
         if (self._status < 300 or self._status >= 400) and (tmpl is not None and result is not None):
-            ans_body = self.output_result(methodname, tmpl, result, action_metadata,
-                                          return_type=action_metadata['return_type'])
+            ans_body = self.output_result(
+                methodname, tmpl, result, action_metadata,
+                return_type=action_metadata['return_type'])
         else:
             ans_body = ''
         return self._export_status(), headers, self._uses_valid_sid, ans_body
