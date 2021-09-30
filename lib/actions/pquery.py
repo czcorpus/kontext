@@ -95,7 +95,7 @@ class ParadigmaticQuery(Kontext):
             if self._curr_pquery_args.conc_subset_complements:
                 s_forms, _ = _load_conc_queries(
                     self._plugin_ctx, self._curr_pquery_args.conc_subset_complements.conc_ids,
-                    self.args.corpname, 'filter')
+                    self.args.corpname, 'query')
                 result['conc_forms'].update(s_forms)
             if self._curr_pquery_args.conc_superset:
                 s_forms, _ = _load_conc_queries(
@@ -206,7 +206,7 @@ class ParadigmaticQuery(Kontext):
             self._plugin_ctx, self._curr_pquery_args.conc_ids, self.args.corpname, 'query')
         if self._curr_pquery_args.conc_subset_complements:
             conc_forms2, raw_queries2 = _load_conc_queries(
-                self._plugin_ctx, self._curr_pquery_args.conc_subset_complements.conc_ids, self.args.corpname, 'filter')
+                self._plugin_ctx, self._curr_pquery_args.conc_subset_complements.conc_ids, self.args.corpname, 'query')
             raw_queries.update(raw_queries2)
         if self._curr_pquery_args.conc_superset:
             conc_forms3, raw_queries3 = _load_conc_queries(
