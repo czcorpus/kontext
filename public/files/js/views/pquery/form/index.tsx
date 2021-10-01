@@ -360,20 +360,22 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                     className={props.minFreq.isInvalid ? 'error' : null} />
                         </S.MinFreqField>
                     </S.ParametersFieldset>
-                    <S.ParametersFieldset>
-                        <S.ParameterField>
-                            <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
-                            <layoutViews.KwicRangeSelector
-                                initialLeft={props.posLeft}
-                                initialRight={props.posRight}
-                                isKwicExcluded={false}
-                                rangeSize={6}
-                                onClick={handleKwicRangeSelection}>
-                            </layoutViews.KwicRangeSelector>
-                            <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
-                            <PosAlignmentSelect alignType={props.posAlign}/>
-                        </S.ParameterField>
-                    </S.ParametersFieldset>
+                    {props.posRangeNotSupported ? null :
+                        <S.ParametersFieldset>
+                            <S.ParameterField>
+                                <label htmlFor="pos">{he.translate('pquery__pos_input')}:</label>
+                                <layoutViews.KwicRangeSelector
+                                    initialLeft={props.posLeft}
+                                    initialRight={props.posRight}
+                                    isKwicExcluded={false}
+                                    rangeSize={6}
+                                    onClick={handleKwicRangeSelection}>
+                                </layoutViews.KwicRangeSelector>
+                                <label htmlFor="align">{he.translate('pquery__node_start_at')}</label>
+                                <PosAlignmentSelect alignType={props.posAlign} />
+                            </S.ParameterField>
+                        </S.ParametersFieldset>
+                    }
                 </AdvancedFormFieldset>
 
                 <S.BorderlessFieldset>

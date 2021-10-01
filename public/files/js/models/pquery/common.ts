@@ -128,6 +128,7 @@ export interface PqueryFormModelState {
     attrs:Array<Kontext.AttrItem>;
     structAttrs:Array<Kontext.AttrItem>;
     paramsVisible:boolean;
+    posRangeNotSupported:boolean;  // for structural attributes pos range makes no sense
 }
 
 /**
@@ -202,6 +203,7 @@ export function newModelState(
         attrs,
         structAttrs,
         paramsVisible: true,
+        posRangeNotSupported: defaultAttr.includes('.')
     };
 }
 
@@ -311,6 +313,7 @@ export function storedQueryToModel(
         attrs,
         structAttrs,
         paramsVisible: true,
+        posRangeNotSupported: sq.attr.includes('.')
     }
 }
 

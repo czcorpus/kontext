@@ -254,6 +254,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             action => {
                 this.changeState(state => {
                     state.attr = action.payload.value;
+                    state.posRangeNotSupported = action.payload.value.includes('.')
                 });
             }
         );
@@ -393,7 +394,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private getPositionRange(state: PqueryFormModelState): string {
-        if (state.attr.includes('.')) {
+        if (state.posRangeNotSupported) {
             return '0'
         }
 
