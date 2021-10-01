@@ -20,7 +20,7 @@
 
 import { tap, concatMap, map } from 'rxjs/operators';
 import { forkJoin, Observable, of as rxOf } from 'rxjs';
-import { IFullActionControl, StatefulModel } from 'kombo';
+import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
@@ -133,7 +133,11 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 this.changeState(state => {
                     state.isBusy = true
                 });
-                this.performLoadAction(action.name === Actions.ToggleQueryHistoryWidget.name);
+                if (this.isToggleWidgetAction(action)) {
+                    this.performLoadAction(true, action.payload.querySupertype);
+                } else {
+                    this.performLoadAction();
+                }
             }
         );
 
@@ -253,6 +257,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         )
     }
 
+    private isToggleWidgetAction(action:Action): action is typeof Actions.ToggleQueryHistoryWidget {
+        return action.name === Actions.ToggleQueryHistoryWidget.name
+    }
+
     private openQueryForm(idx:number):void {
         const item = List.find(v => v.idx === idx, this.state.data);
         const actions:{[k in Kontext.QuerySupertype]:string} = {
@@ -266,8 +274,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private performLoadAction(widgetMode:boolean=false):void {
-        this.loadData(widgetMode).subscribe(
+    private performLoadAction(widgetMode:boolean=false, querySupertype?:Kontext.QuerySupertype):void {
+        this.loadData(widgetMode, querySupertype).subscribe(
             () => {
                 this.changeState(state => {
                     state.isBusy = false
@@ -282,14 +290,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private loadData(widgetMode:boolean=false):Observable<GetHistoryResponse> {
+    private loadData(widgetMode:boolean=false, querySupertype?:Kontext.QuerySupertype): Observable<GetHistoryResponse> {
+        // widget mode loads all history for all corpora
         return this.pageModel.ajax$<GetHistoryResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('user/ajax_query_history'),
             {
                 offset: this.state.offset,
                 limit: this.state.limit + 1,
-                query_supertype: this.state.querySupertype,
+                query_supertype: querySupertype === undefined ? this.state.querySupertype : querySupertype,
                 corpname: !widgetMode && this.state.currentCorpusOnly ?
                     this.pageModel.getCorpusIdent().id : undefined,
                 archived_only: !widgetMode && this.state.archivedOnly
