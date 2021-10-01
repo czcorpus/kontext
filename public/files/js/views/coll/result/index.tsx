@@ -56,8 +56,8 @@ export function init(
     // ---------------- <TDPosNegFilterLink /> ------------------------
 
     const TDPosNegFilterLink:React.FC<{
-        pfilter:Array<[string, string]>;
-        nfilter:Array<[string, string]>;
+        pfilter: {[key:string]:string};
+        nfilter: {[key:string]:string};
 
     }> = (props) => {
 

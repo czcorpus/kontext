@@ -28,10 +28,10 @@ interface FreqItem {
     freq:number;
     freqbar:number;
     nbar:number;
-    nfilter:Array<[string, string]>;
+    nfilter:{[key:string]:string};
     norel:number;
     norm:number;
-    pfilter:Array<[string, string]>;
+    pfilter:{[key:string]:string};
     rel:number;
     relbar:number;
 }
