@@ -89,7 +89,7 @@ export function asyncTaskIsPquery(t:Kontext.AsyncTaskInfo):t is Kontext.AsyncTas
     return t.category === 'pquery' && t.args['conc_id'] !== undefined;
 }
 
-export type ConcStatus = 'none'|'running'|'finished';
+export type ConcStatus = 'none' | 'running' | 'finished' | 'failed';
 
 export interface HistoryArgs {
     corpname:string;

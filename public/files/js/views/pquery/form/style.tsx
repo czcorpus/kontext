@@ -85,6 +85,20 @@ export const QueryRowDiv = styled.div`
         width: 1em;
         height: 1em;
     }
+
+    .query-type {
+        color: ${theme.colorLogoBlue};
+    }
+
+    .query-error {
+
+        margin-left: 0.2em;
+
+        img {
+            width: 1.1em;
+            display: block;
+        }
+    }
 `;
 
 
@@ -171,6 +185,9 @@ export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
 // ---------------- <VerticalSeparator /> -------------
 
 export const VerticalSeparator = styled.span`
+    display: inline-block;
+    width: 1px;
+    height: 1.2em;
     margin: 0 1em;
     border-style: solid;
     border-color: ${theme.colorLogoBlue};

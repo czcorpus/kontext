@@ -143,11 +143,11 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
     }> = (props) => {
 
-        const removeQueryHandler = (sourceId) => () => {
-            dispatcher.dispatch<typeof Actions.RemoveQueryItem>({
-                name: Actions.RemoveQueryItem.name,
-                payload: {sourceId: sourceId}
-            });
+        const removeQueryHandler = (sourceId:string) => () => {
+            dispatcher.dispatch(
+                Actions.RemoveQueryItem,
+                {sourceId}
+            );
         };
 
         if (props.concLoadingStatus === 'none' && props.numQueries > 2) {
@@ -158,7 +158,10 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             return <layoutViews.AjaxLoaderBarImage htmlClass="loader"/>;
 
         } else if (props.concLoadingStatus && props.concLoadingStatus === 'finished') {
-            return <span>{'\u2713'}</span>
+            return <span>{'\u2713'}</span>;
+
+        } else if (props.concLoadingStatus && props.concLoadingStatus === 'failed') {
+            return <layoutViews.StatusIcon status="error" htmlClass="query-error" />;
         }
         return null;
     }
@@ -216,6 +219,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             </span>
                         }
                     </S.ExpressionRoleFieldset>
+                    <S.VerticalSeparator />
+                    <span className="query-type">{he.translate('query__qt_advanced')}{'\u00a0\u2713'}</span>
                 </S.QueryRowDiv>
                 <S.QueryRowDiv>
                 {props.useRichQueryEditor ?

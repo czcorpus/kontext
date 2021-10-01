@@ -824,8 +824,8 @@
         "pquery__parameters_form": "Paradigmatic query parameters UNTRANSLATED",
         "pquery__align_type_whole_kwic": "whole KWIC as one word UNTRANSLATED",
         "pquery__expression_role_specification": "Type realization UNTRANSLATED",
-        "pquery__expression_role_never": "Exclude cases matching the query UNTRANSLATED",
-        "pquery__expression_role_always": "In this concordance, no other realizations should be found UNTRANSLATED",
+        "pquery__expression_role_never": "Exclude cases found in \u2026 UNTRANSLATED",
+        "pquery__expression_role_always": "No extra realizations should be found in \u2026 UNTRANSLATED",
         "pquery__expression_role_ratio": "max. ratio of exceptions UNTRANSLATED"
     }
 }

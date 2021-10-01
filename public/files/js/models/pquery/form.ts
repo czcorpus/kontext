@@ -43,6 +43,7 @@ import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSo
 import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
+import { AjaxError } from 'rxjs/ajax';
 
 
 interface PqueryFormModelSwitchPreserve {
@@ -76,8 +77,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         this.attrHelper = attrHelper;
         this.hintListener = this.hintListener.bind(this);
 
-        this.addActionHandler<typeof Actions.SubmitQuery>(
-            Actions.SubmitQuery.name,
+        this.addActionHandler(
+            Actions.SubmitQuery,
             action => {
                 const validationErr = this.validateQueries();
                 if (validationErr) {
@@ -100,25 +101,28 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             },
                         });
                     },
-                    error: error => {
+                    error: (error:Error) => {
                         this.layoutModel.showMessage('error', error);
-                        this.dispatchSideEffect<typeof Actions.SubmitQueryDone>({
-                            name: Actions.SubmitQueryDone.name,
+                        this.dispatchSideEffect(
+                            Actions.SubmitQueryDone,
                             error
-                        });
+                        );
                     }
                 })
             }
         );
 
-        this.addActionHandler<typeof Actions.SubmitQueryDone>(
-            Actions.SubmitQueryDone.name,
+        this.addActionHandler(
+            Actions.SubmitQueryDone,
             action => {
-                if (!action.error) {
-                    this.changeState(state => {
+                this.changeState(state => {
+                    if (action.error) {
+                        state.isBusy = false;
+
+                    } else {
                         state.task = action.payload.task;
-                    });
-                }
+                    }
+                });
             }
         );
 
@@ -329,13 +333,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.ConcordanceReady>(
-            Actions.ConcordanceReady.name,
+        this.addActionHandler(
+            Actions.ConcordanceReady,
             action => {
                 this.changeState(state => {
                     if (action.error) {
-                        state.concWait = Dict.map(_ => 'none', state.concWait);
-                        state.isBusy = false;
+                        state.concWait[action.payload.sourceId] = 'failed';
 
                     } else {
                         state.concWait[action.payload.sourceId] = 'finished';
@@ -580,7 +583,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         ),
                         catchError(
                             err => {
-                                console.log('catching error: ', err);
                                 return rxOf(tuple<string, ConcQueryResponse, Error>(sourceId, undefined, err))
                             }
                         )
@@ -589,23 +591,23 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 tap(
                     ([sourceId,, error]) => {
                         if (error) {
-                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
-                                name: Actions.ConcordanceReady.name,
-                                payload: {sourceId},
+                            this.dispatchSideEffect(
+                                Actions.ConcordanceReady,
+                                {sourceId},
                                 error
-                            });
+                            );
 
                         } else {
-                            this.dispatchSideEffect<typeof Actions.ConcordanceReady>({
-                                name: Actions.ConcordanceReady.name,
-                                payload: {sourceId}
-                            });
+                            this.dispatchSideEffect(
+                                Actions.ConcordanceReady,
+                                {sourceId}
+                            );
                         }
                     }
                 ),
                 reduce(
-                    (acc, [,resp,]) => List.push(resp, acc),
-                    [] as Array<ConcQueryResponse>
+                    (acc, data) => List.push(data, acc),
+                    [] as Array<[string, ConcQueryResponse, Error]>
                 )
             ),
             this.mkSubsetStream(state),
@@ -617,36 +619,46 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     specification,
                     [subsetResponse, subsetMNMRatio],
                     [supersetResponse, supersetsMNMRatio]
-                ]) => this.submitFreqIntersection(
-                    state,
-                    List.map(
-                        (spec) => spec.conc_persistence_op_id,
-                        specification
-                    ),
-                    subsetResponse ?
-                        {
-                            conc_ids: [subsetResponse.conc_persistence_op_id],
-                            max_non_matching_ratio: subsetMNMRatio
-                        } :
-                        null,
-                    supersetResponse ?
-                        {
-                            conc_id: supersetResponse.conc_persistence_op_id,
-                            max_non_matching_ratio: supersetsMNMRatio
-                        } :
-                        null
-                )
+                ]) => {
+                    const firstErrData = List.find(([,,err]) => !!err, specification);
+                    if (firstErrData) {
+                        const [,,err] = firstErrData;
+                        if (err instanceof AjaxError) {
+                            throw new Error(err.response['messages'][0][1]);
+                        }
+                        throw new Error(err.message);
+                    }
+                    return this.submitFreqIntersection(
+                        state,
+                        List.map(
+                            ([,spec,]) => spec.conc_persistence_op_id,
+                            specification
+                        ),
+                        subsetResponse ?
+                            {
+                                conc_ids: [subsetResponse.conc_persistence_op_id],
+                                max_non_matching_ratio: subsetMNMRatio
+                            } :
+                            null,
+                        supersetResponse ?
+                            {
+                                conc_id: supersetResponse.conc_persistence_op_id,
+                                max_non_matching_ratio: supersetsMNMRatio
+                            } :
+                            null
+                    );
+                }
             ),
             tap(
-                (fiResponse) => {
-                    this.dispatchSideEffect<typeof ATActions.InboxAddAsyncTask>({
+                fiResponse => {
+                    this.dispatchSideEffect({
                         name: ATActions.InboxAddAsyncTask.name,
                         payload: fiResponse.task
-                    })
+                    });
                 }
             ),
             map(
-                (fiResponse) => fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>
+                fiResponse => fiResponse.task as Kontext.AsyncTaskInfo<AsyncTaskArgs>
             )
         );
     }
