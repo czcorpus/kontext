@@ -33,7 +33,6 @@ import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
-import { Actions as QueryActions } from '../query/actions';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
