@@ -94,6 +94,7 @@ export class Actions {
     static ToggleQueryHistoryWidget:Action<{
         formType:QueryFormType;
         sourceId:string;
+        querySupertype?:Kontext.QuerySupertype
     }> = {
         name: 'QUERY_INPUT_TOGGLE_QUERY_HISTORY_WIDGET'
     };

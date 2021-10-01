@@ -912,7 +912,8 @@ export function init({
                 name: HistoryActions.ToggleQueryHistoryWidget.name,
                 payload: {
                     formType: this.props.formType,
-                    sourceId: this.props.sourceId
+                    sourceId: this.props.sourceId,
+                    querySupertype: 'conc',
                 }
             });
             if (!this.props.historyVisible[this.props.sourceId] && this._queryInputElement.current) {
