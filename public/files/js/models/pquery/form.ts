@@ -392,7 +392,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         );
     }
 
-    private getPositionRange(state:PqueryFormModelState):string {
+    private getPositionRange(state: PqueryFormModelState): string {
+        if (state.attr.includes('.')) {
+            return '0'
+        }
+
         switch (state.posAlign) {
             case AlignTypes.LEFT:
                 return `${state.posLeft}<0~${state.posRight}<0`
