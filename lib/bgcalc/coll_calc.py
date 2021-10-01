@@ -109,8 +109,8 @@ def calculate_colls_bg(coll_args: CollCalcArgs):
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
                                cminbgr=coll_args.cminbgr, max_lines=conc.size())
         for item in collocs['Items']:
-            item['pfilter'] = [('q2', item['pfilter'])]
-            item['nfilter'] = [('q2', item['nfilter'])]
+            item['pfilter'] = {'q2': item['pfilter']}
+            item['nfilter'] = {'q2': item['nfilter']}
         return dict(data=collocs, processing=0, tasks=[])
     except MissingSubCorpFreqFile:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
