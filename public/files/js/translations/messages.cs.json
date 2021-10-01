@@ -825,8 +825,8 @@
         "pquery__parameters_form": "Parametry paradigmatického dotazu",
         "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo",
         "pquery__expression_role_specification": "Realizace typu",
-        "pquery__expression_role_never": "Vyloučit případy vyhovující dotazu",
-        "pquery__expression_role_always": "V této konkordanci nepřipustit žádné další realizace",
+        "pquery__expression_role_never": "Vyloučit případy nalezené v \u2026",
+        "pquery__expression_role_always": "Nepřipustit žádné další realizace v \u2026",
         "pquery__expression_role_ratio": "max. poměr výjimek"
     }
 }
