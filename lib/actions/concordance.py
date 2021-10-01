@@ -997,8 +997,8 @@ class Actions(Querying):
 
             for b in result['Blocks']:
                 for item in b['Items']:
-                    item['pfilter'] = []
-                    item['nfilter'] = []
+                    item['pfilter'] = {}
+                    item['nfilter'] = {}
                     # generating positive and negative filter references
             for b_index, block in enumerate(result['Blocks']):
                 curr_fcrit = fcrit[b_index]
@@ -1032,9 +1032,9 @@ class Actions(Querying):
                                         escape_attr_val(item['Word'][0]['n']))
                         if not item['freq']:
                             continue
-                        item['pfilter'].append(('q2', 'p%s' % fquery))
+                        item['pfilter']['q2'] = f'p{fquery}'
                         if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
-                            item['nfilter'].append(('q2', 'n%s' % fquery))
+                            item['nfilter']['q2'] = f'n{fquery}'
                             # adding no error, no correction (originally for CUP)
             errs, corrs, err_block, corr_block = 0, 0, -1, -1
             for b_index, block in enumerate(result['Blocks']):
@@ -1049,16 +1049,16 @@ class Actions(Querying):
                         corrs += item['freq']
             freq = calc_result['conc_size'] - errs - corrs
             if freq > 0 and err_block > -1 and corr_block > -1:
-                pfilter = [('q', 'p0 0 1 ([] within ! <err/>) within ! <corr/>')]
+                pfilter = {'q': 'p0 0 1 ([] within ! <err/>) within ! <corr/>'}
                 cc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                               q=self.args.q + [pfilter[0][1]], fromp=self.args.fromp,
                               pagesize=self.args.pagesize, asnc=False)
                 freq = cc.size()
-                err_nfilter, corr_nfilter = '', ''
+                err_nfilter, corr_nfilter = {}, {}
                 if freq != calc_result['conc_size']:
                     # TODO err/corr stuff is untested
-                    err_nfilter = ('q', 'p0 0 1 ([] within <err/>) within ! <corr/>')
-                    corr_nfilter = ('q', 'p0 0 1 ([] within ! <err/>) within <corr/>')
+                    err_nfilter = {'q': 'p0 0 1 ([] within <err/>) within ! <corr/>'}
+                    corr_nfilter = {'q': 'p0 0 1 ([] within ! <err/>) within <corr/>'}
                 result['Blocks'][err_block]['Items'].append(
                     {'Word': [{'n': 'no error'}], 'freq': freq,
                      'pfilter': pfilter, 'nfilter': err_nfilter,

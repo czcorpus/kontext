@@ -24,8 +24,8 @@ import { DataSaveFormat } from '../../app/navigation/save';
 
 
 export interface CollResultRow {
-    pfilter:Array<[string, string]>;
-    nfilter:Array<[string, string]>;
+    pfilter: { [key: string]: string };
+    nfilter: { [key: string]: string };
     freq:number;
     Stats:Array<{s:string}>;
     str:string;
