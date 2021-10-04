@@ -408,7 +408,11 @@ export const QueryArea = styled.div`
         }
 
         .sh-operator {
-            color: #005d83;
+            color: #bd42ee;
+        }
+
+        .rg-look-operator > span {
+            color: #bd42ee;
         }
 
         .sh-error {

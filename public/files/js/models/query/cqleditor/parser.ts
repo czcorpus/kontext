@@ -294,94 +294,103 @@ class RuleCharMap {
             )
         );
 
-        this.nonTerminals.reverse().forEach(v => {
-            switch (v.rule) {
-                case 'Position':
-                    this.findSubRuleIn('AttVal', v.from, v.to).forEach(attVal => {
-                        this.findSubRuleIn('AttName', attVal.from, attVal.to).forEach(pa => {
-                            const range = this.convertRange(pa.from, pa.to, chunks);
-                            const posAttrName = this.ruleToSubstring(pa);
-                            if (this.attrHelper.attrExists(posAttrName)) {
-                                inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
+        pipe(
+            this.nonTerminals,
+            List.reversed(),
+            List.forEach(nonTerm => {
+                switch (nonTerm.rule) {
+                    case 'Position':
+                        this.findSubRuleIn('AttVal', nonTerm.from, nonTerm.to).forEach(attVal => {
+                            this.findSubRuleIn('AttName', attVal.from, attVal.to).forEach(pa => {
+                                const range = this.convertRange(pa.from, pa.to, chunks);
+                                const posAttrName = this.ruleToSubstring(pa);
+                                if (this.attrHelper.attrExists(posAttrName)) {
+                                    inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
+                                    inserts[range[1]+1].push('</span>');
+
+                                } else {
+                                    errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
+                                }
+
+                                const posAttrValueRule = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
+                                if (posAttrValueRule.length > 0) {
+                                    if (this.attrHelper.isTagAttr(posAttrName)) {
+                                        const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
+                                        inserts[range[0]].push(this.createClickableTag(
+                                            'tag',
+                                            {
+                                                leftIdx: posAttrValueRule[1].from,
+                                                rightIdx: posAttrValueRule[1].to
+                                            },
+                                            this.he.translate('query__click_to_edit_tag')
+                                        ));
+                                        inserts[range[1]+1].push('</a>');
+
+                                    } else if (this.wrapRange) {
+                                        const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
+                                        const [begTag, endTag] = this.wrapRange(posAttrValueRule[1].from + 1, posAttrValueRule[1].to - 1);
+                                        if (begTag && endTag) {
+                                            inserts[range[0]].push(begTag);
+                                            inserts[range[1]+1].push(endTag);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        if (this.wrapLongQuery && this.posCounter % 3 == 0) {
+                            const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
+                            if (Array.isArray(inserts[range[0]]) && List.size(inserts[range[0]]) > 0) {
+                                inserts[range[0]].push('<br />');
+                            }
+                        }
+                        this.posCounter += 1;
+                    break;
+                    case 'Structure':
+                        const attrNamesInStruct = this.findSubRuleIn('AttName', nonTerm.from, nonTerm.to);
+                        const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
+                        const structRange = this.convertRange(structTmp.from, structTmp.to, chunks);
+                        const structName = this.ruleToSubstring(structTmp);
+                        if (this.attrHelper.structExists(structName)) {
+                            inserts[structRange[0]].push(`<span title="${this.he.translate('query__structure')}">`);
+                            inserts[structRange[1]+1].push('</span>');
+                        }
+                        attrNamesInStruct.reverse();
+                        attrNamesInStruct.slice(1).forEach((sa, i, arr) => {
+                            const range = this.convertRange(sa.from, sa.to, chunks);
+                            const structAttrName = this.ruleToSubstring(sa);
+                            if (this.attrHelper.structAttrExists(structName, structAttrName)) {
+                                inserts[range[0]].push(`<span title="${this.he.translate('query__structattr')}">`);
                                 inserts[range[1]+1].push('</span>');
 
                             } else {
-                                errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
-                            }
-
-                            const posAttrValueRule = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
-                            if (posAttrValueRule.length > 0) {
-                                if (this.attrHelper.isTagAttr(posAttrName)) {
-                                    const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
-                                    inserts[range[0]].push(this.createClickableTag(
-                                        'tag',
-                                        {
-                                            leftIdx: posAttrValueRule[1].from,
-                                            rightIdx: posAttrValueRule[1].to
-                                        },
-                                        this.he.translate('query__click_to_edit_tag')
-                                    ));
-                                    inserts[range[1]+1].push('</a>');
-
-                                } else if (this.wrapRange) {
-                                    const range = this.convertRange(posAttrValueRule[1].from, posAttrValueRule[1].to, chunks);
-                                    const [begTag, endTag] = this.wrapRange(posAttrValueRule[1].from + 1, posAttrValueRule[1].to - 1);
-                                    if (begTag && endTag) {
-                                        inserts[range[0]].push(begTag);
-                                        inserts[range[1]+1].push(endTag);
-                                    }
-                                }
+                                errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
                             }
                         });
-                    });
-                    if (this.wrapLongQuery && this.posCounter % 3 == 0) {
-                        const range = this.convertRange(v.from, v.to, chunks);
-                        if (Array.isArray(inserts[range[0]]) && List.size(inserts[range[0]]) > 0) {
+                    break;
+                    case 'WithinContainingPart':
+                        if (this.wrapLongQuery) {
+                            const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
                             inserts[range[0]].push('<br />');
                         }
-                    }
-                    this.posCounter += 1;
-                break;
-                case 'Structure':
-                    const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
-                    const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
-                    const structRange = this.convertRange(structTmp.from, structTmp.to, chunks);
-                    const structName = this.ruleToSubstring(structTmp);
-                    if (this.attrHelper.structExists(structName)) {
-                        inserts[structRange[0]].push(`<span title="${this.he.translate('query__structure')}">`);
-                        inserts[structRange[1]+1].push('</span>');
-                    }
-                    attrNamesInStruct.reverse();
-                    attrNamesInStruct.slice(1).forEach((sa, i, arr) => {
-                        const range = this.convertRange(sa.from, sa.to, chunks);
-                        const structAttrName = this.ruleToSubstring(sa);
-                        if (this.attrHelper.structAttrExists(structName, structAttrName)) {
-                            inserts[range[0]].push(`<span title="${this.he.translate('query__structattr')}">`);
-                            inserts[range[1]+1].push('</span>');
-
-                        } else {
-                            errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
+                    break;
+                    case 'OpenStructTag':
+                    case 'CloseStructTag': {
+                        const attrNamesInStruct = this.findSubRuleIn('AttName', nonTerm.from, nonTerm.to);
+                        const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
+                        const structName = this.ruleToSubstring(structTmp);
+                        if (!this.attrHelper.structExists(structName)) {
+                            errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
                         }
-                    });
-                break;
-                case 'WithinContainingPart':
-                    if (this.wrapLongQuery) {
-                        const range = this.convertRange(v.from, v.to, chunks);
-                        inserts[range[0]].push('<br />');
                     }
-                break;
-                case 'OpenStructTag':
-                case 'CloseStructTag': {
-                    const attrNamesInStruct = this.findSubRuleIn('AttName', v.from, v.to);
-                    const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
-                    const structName = this.ruleToSubstring(structTmp);
-                    if (!this.attrHelper.structExists(structName)) {
-                        errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
+                    case 'RgLookOperator': {
+                        const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
+                        inserts[range[0]].push(`<span class="rg-look-operator">`);
+                        inserts[range[1]+1].push('</span>');
                     }
+                    break;
                 }
-                break;
-            }
-        });
+            })
+        );
         if (errors.length > 0) {
             this.onHintChange('<strong>\u26A0</strong>\u00a0' + errors.join('<br />'));
 
