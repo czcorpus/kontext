@@ -114,13 +114,21 @@ RegExp =
     QUOT RegExpRaw QUOT / QUOT QUOT
 
 RegExpRaw =
-    (RgGrouped / RgSimple)+
+    (RgLook / RgGrouped / RgSimple)+
 
 RgGrouped =
     LPAREN RegExpRaw RPAREN
 
 RgSimple =
     (RgRange / RgChar / RgAlt)+
+
+// negative/positive lookbehind/lookahead
+RgLook =
+    LPAREN RgLookOperator RegExpRaw RPAREN
+
+RgLookOperator =
+    QUEST LSTRUCT NOT / QUEST LSTRUCT EQ / QUEST NOT / QUEST EQ
+
 
 RgAlt =
     LBRACKET (RgChar / DASH)+ RBRACKET
