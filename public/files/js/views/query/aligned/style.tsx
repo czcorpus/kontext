@@ -21,13 +21,6 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
-// ---------------- <AlignedLangWidget /> -----------------------------
-
-export const AlignedLangWidget = styled.div`
-
-    text-align: center;
-    margin-top: 1em;
-`;
 
 // ---------------- <AlignedCorpora /> -----------------------------
 
@@ -40,6 +33,20 @@ export const AlignedCorpora = styled.section`
             margin: 0;
             padding: 0;
         }
+    }
+`;
+
+// ---------------- <HeadingListOfAlignedCorpora /> ---------------------
+
+export const HeadingListOfAlignedCorpora = styled.span`
+    display: inline-block;
+    margin-left: 0.2em;
+    font-size: 0.952em;
+
+    .corp {
+        padding-left: 0.1em;
+        padding-right: 0.1em;
+        color: ${theme.colorDefaultText};
     }
 `;
 
@@ -64,42 +71,6 @@ export const AlignedCorpBlock = styled.div`
         }
     }
 
-    .heading {
-
-        border: 1px solid #C7E7B2;
-        background-color: ${theme.colorLightFrame};
-        padding: 0.2em 1em;
-        border-radius: ${theme.borderRadiusDefault};
-        margin: 1em 0 1em 0;
-
-        .icons {
-            float: right;
-
-            a {
-                display: inline-block;
-
-                img {
-                    width: 1em;
-                    vertical-align: middle;
-                }
-            }
-
-            a:not(:last-child) {
-                margin-right: 0.7em;
-            }
-
-            a.make-primary img {
-                margin-bottom: 0.1em;
-            }
-        }
-
-        h3 {
-            display: inline-block;
-            font-weight: normal;
-            margin: 0;
-        }
-    }
-
     .close-button {
 
         float: right;
@@ -112,4 +83,50 @@ export const AlignedCorpBlock = styled.div`
             width: 1em;
         }
     }
+`;
+
+// ---------------- <AlignedCorpBlockHeading /> -----------------------
+
+
+export const AlignedCorpBlockHeading = styled.div`
+
+    border: 1px solid #C7E7B2;
+    background-color: ${theme.colorLightFrame};
+    padding: 0.2em 1em;
+    border-radius: ${theme.borderRadiusDefault};
+    margin: 1em 0 1em 0;
+
+    .icons {
+        float: right;
+
+        a {
+            display: inline-block;
+
+            img {
+                width: 1em;
+                vertical-align: middle;
+            }
+        }
+
+        a:not(:last-child) {
+            margin-right: 0.7em;
+        }
+
+        a.make-primary img {
+            margin-bottom: 0.1em;
+        }
+    }
+
+    h3 {
+        display: inline-block;
+        font-weight: normal;
+        margin: 0;
+    }
+`;
+
+// -------------- <NewAlignedCorpBlock /> --------------------------------------
+
+export const NewAlignedCorpBlock = styled.div`
+    margin-left: 2.5em;
+
 `;

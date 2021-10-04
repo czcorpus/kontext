@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { List, pipe } from 'cnc-tskit';
+import { List, pipe, tuple } from 'cnc-tskit';
 import { IActionDispatcher } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
@@ -118,7 +118,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         render() {
             return (
                 <S.AlignedCorpBlock>
-                    <div className="heading">
+                    <S.AlignedCorpBlockHeading>
                         <h3>{this.props.label}</h3>
                         <span className="icons">
                             <a className="make-primary" title={he.translate('query__make_corpus_primary')}
@@ -132,7 +132,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                         alt={he.translate('query__close_icon')} />
                             </a>
                         </span>
-                    </div>
+                    </S.AlignedCorpBlockHeading>
                     <div className="form">
                         <inputViews.TRQueryInputField
                             sourceId={this.props.corpname}
@@ -164,6 +164,27 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             );
         }
     }
+
+    // ------------------ <HeadingListOfAlignedCorpora /> ------------------
+
+    const HeadingListOfAlignedCorpora:React.FC<{
+        corpora:Array<string>;
+
+    }> = (props) => {
+        const maxVisibleItems = 3;
+        const suff = props.corpora.length > maxVisibleItems ? ', \u2026' : '';
+        return (
+            <S.HeadingListOfAlignedCorpora>
+            {pipe(
+                props.corpora,
+                List.slice(0, maxVisibleItems),
+                List.map(v => <span key={`i:${v}`} className="corp">{v}</span>),
+                List.join(i => <span key={`s:${i}`}>, </span>)
+            )
+            }{suff}
+            </S.HeadingListOfAlignedCorpora>
+        );
+    };
 
     // ------------------ <AlignedCorpora /> -----------------------------
 
@@ -215,7 +236,11 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                     <layoutViews.ExpandButton isExpanded={props.sectionVisible} onClick={handleVisibilityChange} />
                     <a onClick={handleVisibilityChange}>
                         {he.translate('query__aligned_corpora_hd')}
-                        {List.empty(props.alignedCorpora) || props.sectionVisible ? null : '\u00a0\u2713'}
+                        {List.empty(props.alignedCorpora) || props.sectionVisible ?
+                            null :
+                            <>{':\u00a0'}<HeadingListOfAlignedCorpora
+                                corpora={List.map(c => findCorpusLabel(c), props.alignedCorpora)} /></>
+                        }
                     </a>
 
                 </SC.ExpandableSectionLabel>
@@ -241,19 +266,24 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 onChangePrimaryCorp={handleMainCorpChange} />,
                             props.alignedCorpora
                         )}
-                        <S.AlignedLangWidget>
-                            <select onChange={handleAddAlignedCorpus} value="">
-                                <option value="" disabled={true}>
-                                    {`-- ${he.translate('query__add_a_corpus')} --`}</option>
-                                {pipe(
-                                    props.availableCorpora,
-                                    List.filter(item => corpIsUnused(item.n)),
-                                    List.map(item => {
-                                        return <option key={item.n} value={item.n}>{item.label}</option>;
-                                    })
-                                )}
-                            </select>
-                        </S.AlignedLangWidget>
+                        {props.alignedCorpora.length < props.availableCorpora.length ?
+                            <S.NewAlignedCorpBlock>
+                                <S.AlignedCorpBlockHeading>
+                                    <select onChange={handleAddAlignedCorpus} value="">
+                                        <option value="" disabled={true}>
+                                            {`-- ${he.translate('query__add_a_corpus')} --`}</option>
+                                        {pipe(
+                                            props.availableCorpora,
+                                            List.filter(item => corpIsUnused(item.n)),
+                                            List.map(item => {
+                                                return <option key={item.n} value={item.n}>{item.label}</option>;
+                                            })
+                                        )}
+                                    </select>
+                                </S.AlignedCorpBlockHeading>
+                            </S.NewAlignedCorpBlock> :
+                            null
+                        }
                     </> :
                     null
                 }
