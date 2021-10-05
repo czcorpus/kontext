@@ -211,7 +211,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = (props) => {
 
         const getAccess = () => {
-            if (props.data.subCorpusName !== props.data.origSubCorpusName) {
+            if (props.data.published) {
                 return <>
                     {he.translate('global__published_subcorp')}
                     {'\u00a0'}
@@ -225,7 +225,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <S.SubcorpusInfo>
                 <h2 className="subcorpus-name">
-                    {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.origSubCorpusName}</strong>
+                    {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.published ? props.data.origSubCorpusName : props.data.subCorpusName}</strong>
                 </h2>
 
                 <dl>

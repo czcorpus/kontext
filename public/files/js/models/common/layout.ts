@@ -257,6 +257,7 @@ export interface SubcorpusInfoResponse {
     origSubCorpusName:string;
     subCorpusSize:string; // formatted num
     description:string; // a desc. for public corpora
+    published:boolean;
 }
 
 export interface SubcorpusInfo extends SubcorpusInfoResponse {

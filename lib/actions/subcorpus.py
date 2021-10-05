@@ -351,14 +351,15 @@ class Subcorpus(Querying):
         if not self.corp.is_subcorpus:
             raise UserActionException('Not a subcorpus')
         ans = dict(
-            corpusId=self.args.corpname,
+            corpusId=self.corp.corpname,
             corpusName=self._human_readable_corpname(),
-            subCorpusName=self.args.subcname,
+            subCorpusName=self.corp.subcname,
             origSubCorpusName=self.corp.orig_subcname,
             corpusSize=self.corp.size,
             subCorpusSize=self.corp.search_size,
             created=time.mktime(self.corp.created.timetuple()),
             description=self.corp.description,
+            published=self.corp.is_published,
             extended_info={}
         )
 
