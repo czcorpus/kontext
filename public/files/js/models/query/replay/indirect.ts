@@ -24,6 +24,7 @@ import * as Kontext from '../../../types/kontext';
 import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';
+import { Actions as ConcActions } from '../../concordance/actions';
 import { List } from 'cnc-tskit';
 
 
@@ -62,6 +63,13 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
                         this.pageModel.getConcArgs()
                     ) + '#edit_op/operationIdx=' + action.payload.operationIdx
                 );
+            }
+        );
+
+        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
+            ConcActions.AsyncCalculationUpdated.name,
+            (state, action) => {
+                List.last(state.currEncodedOperations).size = action.payload.concsize;
             }
         );
     }
