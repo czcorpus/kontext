@@ -74,10 +74,10 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         );
         this.autoSubmitTrigger = new Subject<string>();
         this.autoSubmitTrigger.pipe(
-            debounceTime(300)
+            debounceTime(Kontext.TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
-        ).subscribe(
-            query => {
+        ).subscribe({
+            next: query => {
                 dispatcher.dispatch<typeof Actions.SubmitSearchQuery>({
                     name: Actions.SubmitSearchQuery.name,
                     payload: {
@@ -85,14 +85,14 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     }
                 });
             },
-            (err) => {
-                this.pageModel.showMessage('error', err);
+            error: error => {
+                this.pageModel.showMessage('error', error);
                 dispatcher.dispatch<typeof Actions.SubmitSearchQuery>({
                     name: Actions.SubmitSearchQuery.name,
-                    error: err
+                    error
                 });
             }
-        );
+        });
 
         this.pageModel = pageModel;
 

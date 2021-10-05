@@ -50,16 +50,17 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
     const PageCounter:React.FC<{
         maxPage:number;
         currPage:number;
+        currPageInput:Kontext.FormValue<string>;
 
     }> = (props) => {
 
-        const setPage = (page) => () => {
-            dispatcher.dispatch<typeof Actions.SetPage>({
-                name: Actions.SetPage.name,
-                payload: {
-                    value: page > props.maxPage ? props.maxPage : page < 1 ? 1 : page
+        const setPage = (page:string|number) => () => {
+            dispatcher.dispatch(
+                Actions.SetPageInput,
+                {
+                    value: typeof page === 'string' ? page : page + ''
                 }
-            });
+            );
         };
 
         return <S.PageCounter>
@@ -67,7 +68,8 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                 <img src={he.createStaticUrl('img/prev-page.svg')} />
             </a>
             <span className="num-input">
-                <input type="text" value={props.currPage} onChange={e => setPage(parseInt(e.target.value))()} /> / {props.maxPage}
+                <input type="text" className={props.currPageInput.isInvalid ? 'error' : null} value={props.currPageInput.value}
+                    onChange={e => setPage(e.target.value)()} /> / {props.maxPage}
             </span>
             <a className={props.currPage === props.maxPage ? "inactive" : null} onClick={props.currPage < props.maxPage ? setPage(props.currPage+1) : null}>
                 <img src={he.createStaticUrl('img/next-page.svg')} />
@@ -157,18 +159,25 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
         };
 
         const renderContent = () => {
-            if (props.isBusy) {
-                return <layoutViews.AjaxLoaderImage />;
-
-            } else if (props.numLines === 0) {
+            if (props.numLines === 0) {
                 return <S.NoResultPar>{he.translate('pquery__no_result')}</S.NoResultPar>;
 
             } else {
                 return (
                     <>
-                        <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
-                        <PageCounter maxPage={Math.ceil(props.numLines/props.pageSize)} currPage={props.page} />
-                        <table className="data">
+                        <section className="heading">
+                            <div className="controls">
+                                <p>{he.translate('pquery__avail_label')}: {props.numLines}</p>
+                                <PageCounter
+                                    maxPage={Math.ceil(props.numLines/props.pageSize)}
+                                    currPage={props.page}
+                                    currPageInput={props.pageInput} />
+                            </div>
+                            <div className="loader">
+                                {props.isBusy ? <layoutViews.AjaxLoaderImage /> : <div />}
+                            </div>
+                        </section>
+                        <table className={`data${props.isBusy ? ' busy' : ''}`}>
                             <thead>
                                 <tr>
                                     <th colSpan={2} />
@@ -244,7 +253,7 @@ export function init({dispatcher, he, resultModel, saveModel}:PqueryFormViewsArg
                         {props.saveFormActive ?
                         <saveViews.SavePqueryForm onClose={_handleSaveFormClose} /> :
                         null
-                    }
+                        }
                     </>
                 );
             }

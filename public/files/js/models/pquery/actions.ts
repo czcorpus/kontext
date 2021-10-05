@@ -102,9 +102,15 @@ export class Actions {
     }
 
     static SetPage:Action<{
-        value: number;
+        value:number;
     }> = {
         name: 'PQUERY_SET_PAGE'
+    }
+
+    static SetPageInput:Action<{
+        value:string;
+    }> = {
+        name: 'PQUERY_SET_PAGE_INPUT'
     }
 
     static ToggleModalForm:Action<{

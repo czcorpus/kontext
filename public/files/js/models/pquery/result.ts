@@ -26,6 +26,9 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { PqueryResult } from './common';
 import { AlignTypes } from '../freqs/twoDimension/common';
+import { FormValue, TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
+import { validateGzNumber } from '../../models/base';
+import { debounceTime, Subject } from 'rxjs';
 
 
 export interface PqueryResultModelState {
@@ -36,6 +39,7 @@ export interface PqueryResultModelState {
     sortColumn:SortColumn;
     numLines:number;
     page:number;
+    pageInput:FormValue<string>;
     pageSize:number;
     saveFormActive:boolean;
 }
@@ -61,9 +65,23 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     private readonly layoutModel:PageModel;
 
+    private readonly pageInput$:Subject<number>;
+
     constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel) {
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
+        this.pageInput$ = new Subject();
+        this.pageInput$.pipe(
+            debounceTime(TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: (value:number) => {
+                dispatcher.dispatch(
+                    Actions.SetPage,
+                    {value}
+                );
+            }
+        });
 
         this.addActionHandler<typeof Actions.SortLines>(
             Actions.SortLines.name,
@@ -76,13 +94,45 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SetPage>(
-            Actions.SetPage.name,
+        this.addActionHandler(
+            Actions.SetPage,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = true;
+                        state.page = action.payload.value;
+                        this.reloadData();
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SetPageInput,
             action => {
                 this.changeState(state => {
-                    state.page = isNaN(action.payload.value) ? state.page : action.payload.value;
+                    state.pageInput.value = action.payload.value;
+                    if (validateGzNumber(state.pageInput.value)) {
+                        if (this.isProperPageRange(state, parseInt(action.payload.value))) {
+                            state.pageInput.isInvalid = false;
+                            state.pageInput.errorDesc = undefined;
+                            this.pageInput$.next(parseInt(action.payload.value));
+
+                        } else {
+                            state.pageInput.isInvalid = true;
+                            state.pageInput.errorDesc = this.layoutModel.translate(
+                                'global__number_must_be_less_or_eq_than_{val}',
+                                {val: Math.ceil(state.numLines / state.pageSize)});
+                        }
+
+                    } else {
+                        state.pageInput.isInvalid = true;
+                        state.pageInput.errorDesc = this.layoutModel.translate('global__invalid_number_format');
+                    }
                 });
-                this.reloadData();
+                if (this.state.pageInput.errorDesc) {
+                    this.layoutModel.showMessage('error', this.state.pageInput.errorDesc);
+                }
             }
         );
 
@@ -150,6 +200,10 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         );
     }
 
+    private isProperPageRange(state:PqueryResultModelState, v:number):boolean {
+        return v <= Math.ceil(state.numLines / state.pageSize);
+    }
+
     reloadData():void {
         const args = {
             q: `~${this.state.queryId}`,
@@ -165,13 +219,13 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
         ).subscribe(
             resp => {
-                this.dispatchSideEffect<typeof MainMenuActions.ToggleDisabled>({
-                    name: MainMenuActions.ToggleDisabled.name,
-                    payload: {
+                this.dispatchSideEffect(
+                    MainMenuActions.ToggleDisabled,
+                    {
                         menuId: 'menu-save',
                         disabled: List.empty(resp.rows)
                     }
-                });
+                );
                 this.changeState(state => {
                     state.data = resp.rows;
                     state.isBusy = false;
