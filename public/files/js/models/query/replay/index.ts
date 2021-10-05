@@ -476,7 +476,14 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     }
                 );
             }
-        )
+        );
+
+        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
+            ConcActions.AsyncCalculationUpdated.name,
+            (state, action) => {
+                List.last(state.currEncodedOperations).size = action.payload.concsize;
+            }
+        );
     }
 
     private getActualCorpname():string {
