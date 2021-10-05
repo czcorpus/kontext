@@ -65,7 +65,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly pageInput$:Subject<number>;
+    private readonly pageInput$:Subject<string>;
 
     constructor(dispatcher:IFullActionControl, initState:PqueryResultModelState, layoutModel:PageModel) {
         super(dispatcher, initState);
@@ -75,7 +75,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             debounceTime(TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
         ).subscribe({
-            next: (value:number) => {
+            next: (value:string) => {
                 dispatcher.dispatch(
                     Actions.SetPage,
                     {value}
@@ -99,11 +99,30 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             action => {
                 this.changeState(
                     state => {
-                        state.isBusy = true;
-                        state.page = action.payload.value;
-                        this.reloadData();
+                        if (validateGzNumber(state.pageInput.value)) {
+                            if (this.isProperPageRange(state, parseInt(action.payload.value))) {
+                                state.pageInput.isInvalid = false;
+                                state.pageInput.errorDesc = undefined;
+                                state.isBusy = true;
+                                state.page = parseInt(action.payload.value);
+                                this.reloadData();
+
+                            } else {
+                                state.pageInput.isInvalid = true;
+                                state.pageInput.errorDesc = this.layoutModel.translate(
+                                    'global__number_must_be_less_or_eq_than_{val}',
+                                    {val: Math.ceil(state.numLines / state.pageSize)});
+                            }
+
+                        } else {
+                            state.pageInput.isInvalid = true;
+                            state.pageInput.errorDesc = this.layoutModel.translate('global__invalid_number_format');
+                        }
                     }
                 );
+                if (this.state.pageInput.errorDesc) {
+                    this.layoutModel.showMessage('error', this.state.pageInput.errorDesc);
+                }
             }
         );
 
@@ -112,27 +131,9 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
             action => {
                 this.changeState(state => {
                     state.pageInput.value = action.payload.value;
-                    if (validateGzNumber(state.pageInput.value)) {
-                        if (this.isProperPageRange(state, parseInt(action.payload.value))) {
-                            state.pageInput.isInvalid = false;
-                            state.pageInput.errorDesc = undefined;
-                            this.pageInput$.next(parseInt(action.payload.value));
+                    this.pageInput$.next(action.payload.value);
 
-                        } else {
-                            state.pageInput.isInvalid = true;
-                            state.pageInput.errorDesc = this.layoutModel.translate(
-                                'global__number_must_be_less_or_eq_than_{val}',
-                                {val: Math.ceil(state.numLines / state.pageSize)});
-                        }
-
-                    } else {
-                        state.pageInput.isInvalid = true;
-                        state.pageInput.errorDesc = this.layoutModel.translate('global__invalid_number_format');
-                    }
                 });
-                if (this.state.pageInput.errorDesc) {
-                    this.layoutModel.showMessage('error', this.state.pageInput.errorDesc);
-                }
             }
         );
 

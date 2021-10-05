@@ -102,7 +102,7 @@ export class Actions {
     }
 
     static SetPage:Action<{
-        value:number;
+        value:string;
     }> = {
         name: 'PQUERY_SET_PAGE'
     }
