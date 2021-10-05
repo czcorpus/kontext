@@ -239,15 +239,14 @@ class QueryHistory(AbstractQueryHistory):
 
                     q_superset = stored.get('form', {}).get('conc_superset', None)
                     if q_superset is not None:
-                        for q in q_superset.get('conc_ids', []):
-                            max_ratio = q_superset.get('max_non_matching_ratio', 0)
-                            stored_q = self._query_persistence.open(q)
-                            if stored_q is None:
-                                logging.getLogger(__name__).warning(
-                                    'Missing conc for pquery superset: {}'.format(q))
-                            else:
-                                query = stored_q['lastop_form']['query']
-                                q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
+                        max_ratio = q_superset.get('max_non_matching_ratio', 0)
+                        stored_q = self._query_persistence.open(q_superset['conc_id'])
+                        if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
+                            logging.getLogger(__name__).warning(
+                                'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
+                        else:
+                            query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
+                            q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
 
                     tmp['query'] = ' && '.join(q_join)
                     tmp.update(item)
