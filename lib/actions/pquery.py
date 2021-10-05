@@ -250,8 +250,11 @@ class ParadigmaticQuery(Kontext):
         reverse = bool(int(request.args['reverse']))
         offset = page_id * self.args.pqueryitemsperpage
         corp_info = self.get_corpus_info(self.args.corpname)
-        total_num_lines, freqs = require_existing_pquery(
-            self._curr_pquery_args, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
+        try:
+            total_num_lines, freqs = require_existing_pquery(
+                self._curr_pquery_args, offset, self.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
+        except PqueryResultNotFound:
+            raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
         return dict(rows=freqs)
 
     @exposed(access_level=1, func_arg_mapped=True, return_type='plain')

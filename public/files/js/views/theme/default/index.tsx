@@ -68,6 +68,7 @@ export const colorDataTableFooter = '#DCEDD0';
 export const colorWidgetOrange = '#F76B0B';
 export const colorButtonDefault = '#F0FAFF';
 export const colorButtonHover = '#F9FDFF';
+export const colorErrorInputBg = '#f8b6a6';
 
 export const colorHeatmap = [
     '#ffffff', '#fff7f3',

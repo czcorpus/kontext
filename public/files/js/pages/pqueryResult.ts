@@ -110,6 +110,7 @@ class ParadigmaticQueryPage {
                     sortColumn: {type: 'freq', reverse: true},
                     numLines: this.layoutModel.getConf<number>('TotalNumLines'),
                     page: 1,
+                    pageInput: Kontext.newFormValue('1', true),
                     pageSize: this.layoutModel.getConf<number>('Pagesize'),
                     saveFormActive: false
                 },

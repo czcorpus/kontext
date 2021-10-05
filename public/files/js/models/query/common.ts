@@ -837,7 +837,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private subscribeAutoSuggest(dispatcher:IFullActionControl):Subscription {
         return this.autoSuggestTrigger.pipe(
-            debounceTime(500)
+            debounceTime(Kontext.TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
         ).subscribe(
             ([sourceId,,]) => {
                 const queryObj = this.state.queries[sourceId];

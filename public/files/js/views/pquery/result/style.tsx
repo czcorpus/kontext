@@ -43,6 +43,24 @@ export const PqueryResultSection = styled.section`
         }
     }
 
+    table.data.busy tr td, table.data.busy tr th,
+    table.data.busy tr td a, table.data.busy tr th a {
+        color: ${theme.colorLightText} !important;
+    }
+
+    section.heading {
+        display: flex;
+        align-items: center;
+
+        .controls {
+            flex-grow: 1;
+        }
+
+        .loader {
+            padding-right: 2em;
+        }
+    }
+
 `;
 
 // ---------------- <PageCounter /> ----------------------------
@@ -56,6 +74,10 @@ export const PageCounter = styled.section`
 
         input {
             width: 2em;
+        }
+
+        input.error {
+            background-color: ${theme.colorErrorInputBg};
         }
     }
 

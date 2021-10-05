@@ -24,6 +24,7 @@ import { debounceTime } from 'rxjs/operators';
 import { LineSelections, LineSelectionModes, ConcLineSelection } from './common';
 import { IActionDispatcher } from 'kombo';
 import { Actions } from './actions';
+import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
 
 
 
@@ -49,15 +50,13 @@ export class ConcLinesStorage<T extends StorageUsingState> {
 
     public static DEFAULT_GROUP_ID = 1;
 
-    private static WRITE_THROTTLE_INTERVAL = 400;
-
     private writeEvents:Subject<number>;
 
     constructor(dispatcher:IActionDispatcher, errorHandler:(err:Error)=>void) {
         this.errorHandler = errorHandler;
         this.writeEvents = new Subject<number>();
         this.writeEvents.pipe(
-            debounceTime(ConcLinesStorage.WRITE_THROTTLE_INTERVAL)
+            debounceTime(TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
         ).subscribe(
             () => {

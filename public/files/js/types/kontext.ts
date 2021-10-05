@@ -98,6 +98,8 @@ export const resetFormValue = <T>(formValue:FormValue<T>, val:T) => ({
     errorDesc: undefined
 });
 
+export const TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS = 400;
+
 // ----------------
 
 export type UserMessageTypes = 'info'|'warning'|'error'|'mail'|'plain';
