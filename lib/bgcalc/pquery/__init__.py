@@ -198,7 +198,9 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             cond2_freqs = defaultdict(
                 lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=SUBTASK_TIMEOUT_SECS))))
             for k in list(merged.keys()):
-                if cond2_freqs[k] > sum(merged[k]):  # if there are extra instances in the superset
+                if cond2_freqs[k] == 0:  # => not in superset
+                    del merged[k]
+                elif cond2_freqs[k] > sum(merged[k]):  # if there are extra instances in the superset
                     ratio = 100 - sum(merged[k]) / cond2_freqs[k] * 100
                     if ratio > pquery.conc_superset.max_non_matching_ratio:
                         del merged[k]
