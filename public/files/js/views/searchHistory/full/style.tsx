@@ -195,7 +195,6 @@ export const QueryAndTypeDiv = styled.div`
     }
 
     .query {
-        overflow: hidden;
         padding: 0.3em 0.7em 0 0;
         font-family: ${theme.monospaceFontFamily};
         background-color: transparent;
@@ -206,10 +205,6 @@ export const QueryAndTypeDiv = styled.div`
 
     .blank {
         font-style: italic;
-    }
-
-    span.query {
-        white-space: nowrap;
     }
 
     pre.query {
