@@ -88,6 +88,12 @@ export const QueryRowDiv = styled.div`
 
     .query-type {
         color: ${theme.colorLogoBlue};
+        display: flex;
+        align-items: center;
+
+        label {
+            margin-right: 0.4em;
+        }
     }
 
     .query-error {
