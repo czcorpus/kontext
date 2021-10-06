@@ -220,7 +220,10 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         }
                     </S.ExpressionRoleFieldset>
                     <S.VerticalSeparator />
-                    <span className="query-type">{he.translate('query__qt_advanced')}{'\u00a0\u2713'}</span>
+                    <span className="query-type">
+                        <label>{he.translate('query__qt_advanced')}</label>
+                        <layoutViews.ToggleSwitch checked={true} disabled={true} />
+                    </span>
                 </S.QueryRowDiv>
                 <S.QueryRowDiv>
                 {props.useRichQueryEditor ?
