@@ -223,6 +223,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                     <span className="query-type">
                         <label>{he.translate('query__qt_advanced')}</label>
                         <layoutViews.ToggleSwitch checked={true} disabled={true} />
+                        <span>
+                            <layoutViews.InlineHelp noSuperscript={true}
+                                    customStyle={{maxWidth: '30em'}}>
+                                {he.translate('query__tip_09')}
+                            </layoutViews.InlineHelp>
+                        </span>
                     </span>
                 </S.QueryRowDiv>
                 <S.QueryRowDiv>

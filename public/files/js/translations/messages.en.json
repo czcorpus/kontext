@@ -399,6 +399,7 @@
         "query__tip_06": "A color highlighted token with the question mark symbol in a simple query means there is an additional specification available. Use CTRL/Command + click to activate.",
         "query__tip_07": "Case sensitivity can be disabled for individual words using the (?i) modifier: Václav Havel --> (?i)Václav (?i)Havel",
         "query__tip_08": "A color highlighted token with the gear symbol in a simple query means the token has an additional specification given by your interaction. Please use the 'query interpretation' function for more information.",
+        "query__tip_09": "A paradigmatic query can by written only in CQL language",
         "query__contains_selected_text_types": "Some text types are selected",
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
         "query__suggestions_available": "Query suggestions",

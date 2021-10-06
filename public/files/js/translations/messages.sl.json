@@ -459,6 +459,7 @@
         "query__tip_06": "Obarvana pojavnica s simbolom vprašaja pri osnovnem iskanju pomeni, da je voljo dodatna specifikacija. Za aktivacijo uporabite CTRL/Command in kliknite.",
         "query__tip_07": "Ločevanje velikih/malih črk lahko onemogočite za posamezne besede z operatorjem (?i): Václav Havel --> (?i)Václav (?i)Havel",
         "query__tip_08": "Obarvana pojavnica s simbolom kolesca pri osnovnem iskanju pomeni, da ima pojavnica dodatno specifikacijo. Za več informacij izberite funkcijo 'Interpretacija poizvedbe'.\"",
+        "query__tip_09": "A paradigmatic query can by written only in CQL language UNTRANSLATED",
         "query__contains_selected_text_types": "Izbrane so nekatere vrste besedil",
         "query__chain_no_op_msg": "V parametrih konkordanc ni sprememb - prikazani so prvotni rezultati",
         "query__suggestions_available": "Predlogi za poizvedbo",

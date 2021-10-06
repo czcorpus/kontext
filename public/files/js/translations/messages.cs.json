@@ -399,6 +399,7 @@
         "query__tip_06": "Barevně zvýrazněný token s otazníkem v jednoduchém dotazu znamená možnost upřesnit jeho interpretaci. Použijte CTRL/Command a klik pro aktivaci.",
         "query__tip_07": "Velikost písmen lze v regulárním výrazu ignorovat individuálně u každého slova pomocí modifikátoru (?i): Václav Havel --> (?i)Václav (?i)Havel",
         "query__tip_08": "Barevně zvýrazněný token se symbolem ozubeného kolečka má pozměněné parametry na základě vaší interakce. Použijte funkci 'interpretace dotazu' pro podrobnější informace.",
+        "query__tip_09": "Paradigmatický dotaz je možné zadávat pouze v jazyce CQL",
         "query__contains_selected_text_types": "Některé typy textu jsou vybrány",
         "query__chain_no_op_msg": "Žádná změna v parametrech konkordance - zobrazuji původní výsledek",
         "query__suggestions_available": "Rady k dotazu",
