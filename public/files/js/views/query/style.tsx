@@ -113,3 +113,50 @@ export const PoSFilter = styled.div`
     }
 
 `;
+
+// ---------------- <SyntaxHighlight /> ----------------------------------------
+
+export const SyntaxHighlight = styled.pre`
+
+    .sh-regexp {
+        color: #920040;
+    }
+
+    .sh-attr {
+        color: ${theme.colorLogoPink};
+    }
+
+    .sh-keyword {
+        color: #48872b;
+    }
+
+    .sh-operator {
+        color: #bd42ee;
+    }
+
+    .rg-look-operator > span {
+        color: #bd42ee;
+    }
+
+    .sh-error {
+        padding-left: 0.4em;
+        padding-right: 0.4em;
+        color: #FFFFFF;
+        background-color: ${theme.colorLogoPink};
+    }
+
+    .sh-value-warning {
+        text-decoration: underline;
+    }
+
+    .sh-value-clickable {
+        text-decoration: none;
+        background-color: #e1e5f6;
+    }
+
+    .sh-value-clickable:hover {
+        color: ${theme.colorLogoBlue};
+        text-decoration: underline;
+    }
+
+`;
