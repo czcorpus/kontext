@@ -50,6 +50,7 @@ export interface ResultItem {
 export interface ResultHeader {
     s:string;
     n:string;
+    isPosTag:boolean;
 }
 
 export interface ResultBlock {
@@ -82,13 +83,26 @@ export interface FreqDataRowsModelState {
     saveFormActive:boolean;
 }
 
+function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
+    return List.reduce(
+        (acc, curr) => {
+            if (curr['type'] === 'positional') {
+                return [...acc, curr['featAttr']];
+            }
+            return acc
+        }, [],
+        pageModel.getNestedConf('ConcFormsArgs', pageModel.getConf('concPersistenceOpId'), 'tagsets', pageModel.getCorpusIdent().id)
+    );
+}
+
 export function importData(
     pageModel:PageModel,
     data:Array<response.Block>,
     pageSize:number,
     currentPage:number
-):Array<ResultBlock> {
+): Array<ResultBlock> {
 
+    const posTagAttrs = getPositionalTagAttrs(pageModel);
     return List.map(item => ({
         Items: List.map((item, i) => ({
             idx: i + (currentPage - 1) * pageSize,
@@ -104,7 +118,10 @@ export function importData(
             norm: item.norm,
             norel: item.norel
         }), item.Items),
-        Head: item.Head,
+        Head: List.map(item => ({
+            ...item,
+            isPosTag: List.some(v => v === item.n ,posTagAttrs)
+        }), item.Head),
         TotalPages: item.TotalPages,
         Total: item.Total,
         SkippedEmpty: item.SkippedEmpty
