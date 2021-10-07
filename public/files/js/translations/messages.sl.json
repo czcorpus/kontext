@@ -827,9 +827,9 @@
         "wordlist__pfilter_label": "Positive filter words UNTRANSLATED",
         "wordlist__nfilter_label": "Negative filter words UNTRANSLATED",
         "wordlist__pn_filter_lists": "Wordlist positive and and negative filter words must be UTF-8 plain text, one item per line. The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input. UNTRANSLATED",
-        "pquery__expression_role_specification": "Type realization UNTRANSLATED",
-        "pquery__expression_role_never": "Exclude cases found in \u2026 UNTRANSLATED",
-        "pquery__expression_role_always": "No extra realizations should be found in \u2026 UNTRANSLATED",
+        "pquery__expression_role_specification": "Partial query/specification UNTRANSLATED",
+        "pquery__expression_role_never": "Exclude (the \"never\" condition) UNTRANSLATED",
+        "pquery__expression_role_always": "Restrict search to (the \"always\" condition) UNTRANSLATED",
         "pquery__expression_role_ratio": "max. ratio of exceptions UNTRANSLATED"
     }
 }

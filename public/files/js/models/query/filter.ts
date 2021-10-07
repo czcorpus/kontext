@@ -158,11 +158,11 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                 filter => {
                     if (src.currQueryTypes[filter] === 'advanced') {
                         const query = src.currQueries[filter] || '';
-                        const [queryHtml,] = highlightSyntaxStatic(
+                        const [queryHtml,] = highlightSyntaxStatic({
                             query,
-                            'advanced',
-                            {translate: id}
-                        );
+                            querySuperType: 'conc',
+                            he: {translate: id}
+                        });
                         return tuple<string, AdvancedQuery>(
                             filter,
                             {
@@ -210,11 +210,11 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
 
     } else if (sourceId && formArgs.isFilterFormArgs(src)) {
         const query = src.query || '';
-        const [queryHtml,] = highlightSyntaxStatic(
+        const [queryHtml,] = highlightSyntaxStatic({
             query,
-            'advanced',
-            {translate: id}
-        );
+            querySuperType: 'conc',
+            he: {translate: id}
+        });
         return {
             [sourceId]: src.query_type === 'advanced' ?
                 {

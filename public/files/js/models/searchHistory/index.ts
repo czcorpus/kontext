@@ -42,7 +42,11 @@ export interface InputBoxHistoryItem {
 
 const attachSh = (he:Kontext.ComponentHelpers, item:QueryHistoryItem) => {
     if (item.query_type === 'advanced') {
-        [item.query_sh,] = highlightSyntaxStatic(item.query, item.query_type, he);
+        [item.query_sh,] = highlightSyntaxStatic({
+            query: item.query,
+            querySuperType: item.q_supertype,
+            he
+        });
     }
     return item;
 };

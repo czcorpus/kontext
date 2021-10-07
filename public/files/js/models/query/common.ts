@@ -39,7 +39,7 @@ import {
     AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
     TokenSuggestions } from './query';
-import { highlightSyntax, ParsedAttr } from './cqleditor/parser';
+import { getApplyRules, highlightSyntax, ParsedAttr } from './cqleditor/parser';
 import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions } from '../searchHistory/actions';
@@ -999,12 +999,12 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         const queryObj = state.queries[sourceId];
         let newAttrs:Array<ParsedAttr>;
         if (queryObj.qtype === 'advanced') {
-            [queryObj.queryHtml, newAttrs] = highlightSyntax(
-                queryObj.query,
-                'advanced',
-                this.pageModel.getComponentHelpers(),
-                this.attrHelper,
-                (startIdx, endIdx) => {
+            [queryObj.queryHtml, newAttrs] = highlightSyntax({
+                query: queryObj.query,
+                querySuperType: 'conc',
+                he: this.pageModel.getComponentHelpers(),
+                attrHelper: this.attrHelper,
+                wrapRange: (startIdx, endIdx) => {
                     const matchingAttr = updateCurrAttrs ?
                         undefined :
                         List.find(
@@ -1019,8 +1019,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     }
                     return tuple(null, null);
                 },
-                (msg) => this.hintListener(state, sourceId, msg)
-            );
+                onHintChange: msg => this.hintListener(state, sourceId, msg)
+            });
             queryObj.focusedAttr = this.findFocusedAttr(queryObj);
 
             if (updateCurrAttrs) {
@@ -1219,7 +1219,13 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             switch (queryType) {
                 case 'advanced':
                     return parseQuery.bind(
-                        null, query + ';', {tracer: this.queryTracer});
+                        null,
+                        query,
+                        {
+                            startRule: List.head(getApplyRules('conc')),
+                            tracer: this.queryTracer
+                        }
+                    );
                 default:
                     return () => {};
             }

@@ -827,9 +827,9 @@
         "pquery__save_form_label": "Save paradigmatic query results",
         "pquery__parameters_form": "Paradigmatic query parameters",
         "pquery__align_type_whole_kwic": "whole KWIC as one word",
-        "pquery__expression_role_specification": "Type realization",
-        "pquery__expression_role_never": "Exclude cases found in \u2026",
-        "pquery__expression_role_always": "No extra realizations should be found in \u2026",
+        "pquery__expression_role_specification": "Partial query/specification",
+        "pquery__expression_role_never": "Exclude (the \"never\" condition)",
+        "pquery__expression_role_always": "Restrict search to (the \"always\" condition)",
         "pquery__expression_role_ratio": "max. ratio of exceptions"
     }
 }

@@ -11,7 +11,7 @@
  */
 
 Query =
-    Sequence (_ BINAND _ GlobPart)? (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)* SEMI
+    Sequence (_ BINAND _ GlobPart)? (_ NOT? (KW_WITHIN / KW_CONTAINING) _ WithinContainingPart)*
 
 GlobPart =
     GlobCond (_ BINAND _ GlobCond)*
@@ -152,6 +152,25 @@ RgRangeSpec =
 AnyLetter =
     LETTER / LETTER_PHON
 
+// ------------------------- paradigmatic query -------------------------
+
+PQType =
+    LBRACE _ Query _ RBRACE
+
+PQLimit =
+    NUMBER DOT NUMBER / DOT NUMBER / NUMBER
+
+PQAlways =
+    QUEST LBRACE _ Query _ RBRACE / QUEST PQLimit LBRACE _ Query _ RBRACE
+
+PQNever =
+    NOT LBRACE _ Query _ RBRACE / NOT PQLimit LBRACE _ Query _ RBRACE
+
+PQSet =
+    PQType / PQAlways / PQNever
+
+PQuery =
+    PQSet (_ BINAND BINAND _ PQSet)*
 
 // ------------------------------- tokens -------------------------------
 

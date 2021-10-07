@@ -166,13 +166,13 @@ function importUserQueries(
             const query = data.currQueries[corpus] || '';
 
             if (qtype === 'advanced') {
-                const [queryHtml, parsedAttrs] = highlightSyntaxStatic(
+                const [queryHtml, parsedAttrs] = highlightSyntaxStatic({
                     query,
-                    'advanced',
-                    {
+                    querySuperType: 'conc',
+                    he: {
                         translate: (s:string, values?:any) => s
                     }
-                );
+                });
                 return tuple<string, AdvancedQuery>(
                     corpus,
                     {

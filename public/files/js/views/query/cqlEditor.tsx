@@ -59,7 +59,7 @@ export interface CQLEditorViews {
 }
 
 interface CQLEditorCoreState {
-    queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}; // pquery block -> query
+    queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}|unknown; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:string};
 }

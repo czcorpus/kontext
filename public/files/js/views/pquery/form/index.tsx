@@ -166,9 +166,9 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         return null;
     }
 
-    // ------------ <EditorDiv /> -------------------------------------
+    // ------------ <PartialEditorDiv /> -------------------------------------
 
-    const EditorDiv:React.FC<{
+    const PartialEditorDiv:React.FC<{
         sourceId:string;
         corpname:string;
         useRichQueryEditor:boolean;
@@ -260,6 +260,49 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         );
     };
 
+    // ------------ <FullEditorDiv /> -------------------------------------
+
+    const FullEditorDiv:React.FC<{
+        sourceId:string;
+        corpname:string;
+        useRichQueryEditor:boolean;
+        numQueries:number;
+        concStatus:ConcStatus;
+    }> = (props) => {
+
+        const queryInputElement = React.useRef();
+
+        return (
+            <QS.QueryArea>
+                <S.QueryRowDiv>
+                {props.useRichQueryEditor ?
+                    <cqlEditorViews.CQLEditor
+                            formType={Kontext.ConcFormTypes.QUERY}
+                            sourceId={props.sourceId}
+                            corpname={props.corpname}
+                            takeFocus={false}
+                            onReqHistory={() => undefined}
+                            onEsc={() => undefined}
+                            hasHistoryWidget={false}
+                            historyIsVisible={false}
+                            inputRef={queryInputElement} /> :
+                    <cqlEditorViews.CQLEditorFallback
+                            formType={Kontext.ConcFormTypes.QUERY}
+                            sourceId={props.sourceId}
+                            inputRef={queryInputElement}
+                            onReqHistory={() => undefined}
+                            onEsc={() => undefined}
+                            hasHistoryWidget={false}
+                            historyIsVisible={false} />
+                    }
+                    <QueryStatusIcon numQueries={props.numQueries}
+                            concLoadingStatus={props.concStatus}
+                            sourceId={props.sourceId} />
+                </S.QueryRowDiv>
+            </QS.QueryArea>
+        );
+    }
+
     // ---------------------- <PosAlignmentSelect /> ---------------------
 
     const PosAlignmentSelect:React.FC<{
@@ -281,6 +324,26 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                 <option value={PqueryAlignTypes.WHOLE_KWIC}>{he.translate('pquery__align_type_whole_kwic')}</option>
             </select>
         );
+    };
+
+    // ---------------------- <QTypeSwitch /> ---------------------
+
+    const QTypeSwitch:React.FC<{
+        qtype:'full'|'split';
+
+    }> = (props) => {
+
+        const handleSelect = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch(
+                Actions.ChangePQueryType,
+                {qtype: evt.target.value}
+            );
+        }
+
+        return <select value={props.qtype} onChange={handleSelect}>
+            <option value="full">full</option>
+            <option value="split">split</option>
+        </select>;
     };
 
     // ---------------------- <PqueryForm /> ---------------------
@@ -338,13 +401,16 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                     {pipe(
                         props.queries,
                         Dict.mapEntries(
-                            ([sourceId, query]) => (
-                                <EditorDiv key={sourceId} sourceId={sourceId}
+                            ([sourceId, query]) => query.type === 'partial-query' ?
+                                    <PartialEditorDiv key={sourceId} sourceId={sourceId}
+                                            concStatus={props.concWait[sourceId]} corpname={props.corpname}
+                                            numQueries={Dict.size(props.queries)}
+                                            useRichQueryEditor={props.useRichQueryEditor}
+                                            expressionRole={query.expressionRole} /> :
+                                    <FullEditorDiv key={sourceId} sourceId={sourceId}
                                         concStatus={props.concWait[sourceId]} corpname={props.corpname}
                                         numQueries={Dict.size(props.queries)}
-                                        useRichQueryEditor={props.useRichQueryEditor}
-                                        expressionRole={query.expressionRole} />
-                            )
+                                        useRichQueryEditor={props.useRichQueryEditor}/>
                         ),
                         List.map(([,v]) => v)
                     )}
@@ -405,6 +471,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <S.PqueryFormSection>
                 {props.corparchWidget ? <props.corparchWidget /> : null}
                 <S.PqueryForm>
+                    <QTypeSwitch qtype={props.pqueryType} />
                     {_renderMainFieldset()}
                 </S.PqueryForm>
             </S.PqueryFormSection>

@@ -67,6 +67,12 @@ export interface ParsedAttr {
     suggestions:TokenSuggestions|null;
 }
 
+export interface ParsedPQItem {
+    query:string;
+    limit:number;
+    type:Kontext.PqueryExpressionRoles;
+}
+
 /**
  * RuleCharMap applies individual rules to character ranges within
  * the original query. It is perfectly safe to apply different rules
@@ -146,7 +152,7 @@ class RuleCharMap {
         }
     }
 
-    generate():[string, Array<ParsedAttr>] {
+    generate():[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
         const chunks = pipe(
             this.data,
             Dict.values(),
@@ -164,8 +170,8 @@ class RuleCharMap {
         // from 'inserts' is inserted before 0th item from 'result'
         // and n-th item from 'inserts' is inserted to the end
         const inserts = List.repeat(_ => [], chunks.length + 1);
-        const [codeTokens, parsedAttrs] = this.applyNonTerminals(chunks, inserts);
-        return tuple(codeTokens.join(''), parsedAttrs);
+        const [codeTokens, parsedAttrs, pqItems] = this.applyNonTerminals(chunks, inserts);
+        return tuple(codeTokens.join(''), parsedAttrs, pqItems);
     }
 
     /**
@@ -230,18 +236,27 @@ class RuleCharMap {
         return s.substring(1, s.length - 1);
     }
 
+    private extractPQLimit(r:CharsRule):number {
+        const rule = this.findSubRuleIn('PQLimit', r.from, r.to);
+        if (!List.empty(rule)) {
+            return parseFloat(this.ruleToSubstring(List.head(rule)));
+        }
+        return 0;
+    }
+
     private applyNonTerminals(
         chunks:Array<StyledChunk>,
         inserts:Array<Array<string>>
-    ):[Array<string>, Array<ParsedAttr>] {
+    ):[Array<string>, Array<ParsedAttr>, Array<ParsedPQItem>] {
 
         const accInit:{
             parsedAttrs:Array<ParsedAttr>;
             lastAttName:CharsRule|null;
-        } = {parsedAttrs: [], lastAttName: null};
+            pqItems:Array<ParsedPQItem>;
+        } = {parsedAttrs: [], lastAttName: null, pqItems: []};
         const errors:Array<string> = [];
 
-        const {parsedAttrs} = pipe(
+        const {parsedAttrs, pqItems} = pipe(
             this.nonTerminals,
             List.foldl(
                 (acc, curr) => {
@@ -275,7 +290,7 @@ class RuleCharMap {
                             return acc.lastAttName ?
                                 {
                                     ...acc,
-                                    parsedAttrs: acc.parsedAttrs.concat([{
+                                    parsedAttrs: List.push({
                                         name: this.ruleToSubstring(acc.lastAttName),
                                         value: this.ruleToSubstring(curr),
                                         type: 'posattr',
@@ -283,9 +298,53 @@ class RuleCharMap {
                                         rangeAttr: tuple(acc.lastAttName.from, acc.lastAttName.to),
                                         rangeAll: tuple(acc.lastAttName.from, curr.to),
                                         suggestions: null
-                                    }])
+                                    }, acc.parsedAttrs)
                                 } :
                                 {...acc};
+                        case 'PQType':
+                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            return !List.empty(q) ?
+                                {
+                                    ...acc,
+                                    pqItems: List.push(
+                                        {
+                                            query: this.ruleToSubstring(List.head(q)),
+                                            limit: undefined,
+                                            type: 'specification'
+                                        },
+                                        acc.pqItems)
+                                } :
+                                acc;
+                        case 'PQAlways': {
+                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            return !List.empty(q) ?
+                                {
+                                    ...acc,
+                                    pqItems: List.push<ParsedPQItem>(
+                                        {
+                                            query: this.ruleToSubstring(List.head(q)),
+                                            limit: this.extractPQLimit(curr),
+                                            type: 'superset'
+                                        },
+                                        acc.pqItems)
+                                } :
+                                acc;
+                        }
+                        case 'PQNever': {
+                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            return !List.empty(q) ?
+                                {
+                                    ...acc,
+                                    pqItems: List.push<ParsedPQItem>(
+                                        {
+                                            query: this.ruleToSubstring(List.head(q)),
+                                            limit: this.extractPQLimit(curr),
+                                            type: 'subset'
+                                        },
+                                        acc.pqItems)
+                                } :
+                                acc;
+                        }
                         default:
                             return acc;
                     }
@@ -403,7 +462,7 @@ class RuleCharMap {
             ans.push(chunks[i].htmlValue);
         }
         inserts[inserts.length - 1].forEach(v => ans.push(v));
-        return tuple(ans, parsedAttrs);
+        return tuple(ans, parsedAttrs, pqItems);
     }
 
     private emitTerminal(rule:string, startIdx:number, endIdx:number):string {
@@ -558,12 +617,13 @@ interface HSArgs {
 
 
 function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
-            wrapLongQuery, wrapRange, onHintChange}:HSArgs):[string, Array<ParsedAttr>] {
+            wrapLongQuery, wrapRange, onHintChange}:HSArgs):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
 
     const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange, onHintChange);
     const stack = new ParserStack(rcMap);
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
         if (numParserRecover === 0 && error) {
+            console.log('err: ', error)
             const title = he.translate(
                 'query__unrecognized_input_{wrongChar}{position}',
                 {
@@ -579,7 +639,7 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
 
     let parseError:SyntaxError = null;
     try {
-        parseQuery(query + (applyRules[0] === 'Query' ? ';' : ''), {
+        parseQuery(query, {
             startRule: applyRules[0],
             tracer: {
                 trace: (v) => {
@@ -606,10 +666,10 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     }
 
     const lastPos = stack.getLastPos();
-    const [ans, parsedAttrs] = rcMap.generate();
+    const [ans, parsedAttrs, pqItems] = rcMap.generate();
 
     if (query.length === 0) {
-        return tuple('', []);
+        return tuple('', [], []);
 
     } else if (lastPos < query.length && applyRules.length > 1) {
         // try to apply a partial rule to the rest of the query
@@ -629,22 +689,26 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
 
             return tuple(
                 ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial,
-                parsedAttrs
+                parsedAttrs,
+                pqItems
             );
         }
     }
     return tuple(
         ans + (query.substr(lastPos).length > 0 ? wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError) : ''),
-        parsedAttrs
+        parsedAttrs,
+        pqItems
     );
 }
 
-function getApplyRules(queryType:QueryType):Array<string> {
-    switch (queryType) {
-        case 'advanced':
+export function getApplyRules(querySuperType:Kontext.QuerySupertype):Array<string> {
+    switch (querySuperType) {
+        case 'pquery':
+            return ['PQuery', 'Query', 'WithinContainingPart', 'Sequence', 'RegExpRaw'];
+        case 'conc':
             return ['Query', 'WithinContainingPart', 'Sequence', 'RegExpRaw'];
-        default:
-            throw new Error(`No parsing rule for type ${queryType}`);
+        case 'wlist':
+            return ['RegExpRaw'];
     }
 }
 
@@ -654,16 +718,20 @@ function getApplyRules(queryType:QueryType):Array<string> {
  * the resulting string.
  */
 export function highlightSyntax(
+    {
+        query, querySuperType, he, attrHelper, wrapRange, onHintChange
+    }:{
         query:string,
-        queryType:QueryType,
+        querySuperType:Kontext.QuerySupertype,
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         wrapRange:((startIdx:number, endIdx:number)=>[string, string])|undefined,
-        onHintChange:(message:string)=>void):[string, Array<ParsedAttr>] {
+        onHintChange:(message:string)=>void
+    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
 
     return _highlightSyntax({
         query: query,
-        applyRules: getApplyRules(queryType),
+        applyRules: getApplyRules(querySuperType),
         he: he,
         ignoreErrors: true,
         attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
@@ -675,12 +743,15 @@ export function highlightSyntax(
 }
 
 export function highlightSyntaxStatic(
+    {query, querySuperType, he}:{
         query:string,
-        queryType:QueryType,
-        he:Kontext.Translator):[string, Array<ParsedAttr>] {
+        querySuperType:Kontext.QuerySupertype,
+        he:Kontext.Translator
+    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
+
     return _highlightSyntax({
         query: query,
-        applyRules: getApplyRules(queryType),
+        applyRules: getApplyRules(querySuperType),
         he: he,
         ignoreErrors: true,
         attrHelper: new NullAttrHelper(),

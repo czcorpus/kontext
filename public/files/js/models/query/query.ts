@@ -167,7 +167,11 @@ export function findTokenIdxByFocusIdx(q:AnyQuery, focusIdx:number):number {
  */
 export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):AdvancedQuery {
     const query = q.query.trim();
-    const [queryHtml, parsedAttrs] = highlightSyntaxStatic(query, 'advanced', {translate: id});
+    const [queryHtml, parsedAttrs] = highlightSyntaxStatic({
+        query,
+        querySuperType: 'conc',
+        he: {translate: id}
+    });
     return {
         corpname: q.corpname,
         qtype: 'advanced',

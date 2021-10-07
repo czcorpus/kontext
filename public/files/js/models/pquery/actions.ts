@@ -46,6 +46,12 @@ export class Actions {
         return a.name === Actions.SubmitQueryDone.name;
     }
 
+    static ChangePQueryType:Action<{
+        qtype:'split'|'full';
+    }> = {
+        name: 'PQUERY_CHANGE_PQUERY_TYPE'
+    }
+
     static AddQueryItem:Action<{}> = {
         name: 'PQUERY_ADD_QUERY_ITEM'
     }

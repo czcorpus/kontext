@@ -827,9 +827,9 @@
         "pquery__save_form_label": "Uložit výsledky paradigmatického dotazu",
         "pquery__parameters_form": "Parametry paradigmatického dotazu",
         "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo",
-        "pquery__expression_role_specification": "Realizace typu",
-        "pquery__expression_role_never": "Vyloučit případy nalezené v \u2026",
-        "pquery__expression_role_always": "Nepřipustit žádné další realizace v \u2026",
+        "pquery__expression_role_specification": "Dílčí dotaz/specifikace",
+        "pquery__expression_role_never": " Vyloučit (podmínka \"nikdy\")",
+        "pquery__expression_role_always": "Omezit hledání na (podmínka \"vždy\")",
         "pquery__expression_role_ratio": "max. poměr výjimek"
     }
 }

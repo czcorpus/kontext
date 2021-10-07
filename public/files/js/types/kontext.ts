@@ -47,6 +47,8 @@ export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 
 export type QuerySupertype = 'conc'|'pquery'|'wlist';
 
+export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
+
 
 export interface FormValue<T> {
 
