@@ -32,6 +32,8 @@ import { SearchHistoryModel } from '../../../models/searchHistory';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
 
+import * as QS from '../../query/style';
+
 
 export interface HistoryViews {
     RecentQueriesPageList:React.ComponentClass<{}>;
@@ -271,7 +273,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <S.QueryAndTypeDiv>
                     {
                         props.query_sh ?
-                        <pre className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                        <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
                         <span className="query">{props.query}</span>
                     }
                 </S.QueryAndTypeDiv>

@@ -31,6 +31,14 @@ export const DataRowTR = styled.tr`
     }
 `;
 
+// -------------- <ValueTD /> --------------
+
+export const ValueTD = styled.td<{ monospace: boolean }>`
+
+    font-family: ${props => props.monospace ? theme.monospaceFontFamily : theme.defaultFontFamily};
+
+`;
+
 // -------------- <DataTableDiv /> -------------
 
 export const DataTable = styled.div`

@@ -159,7 +159,7 @@ export const PostagDisplayBox = styled.input`
     padding: 0.2em 0.4em 0.2em 1.2em;
     font-size: 1.3em;
     margin-bottom: 0.7em;
-    font-family: "Courier New", Courier, monospace;
+    font-family: ${theme.monospaceFontFamily};
     background-color: #ffffff;
     border: 1px solid #DADADA;
     border-radius: ${theme.inputBorderRadius};

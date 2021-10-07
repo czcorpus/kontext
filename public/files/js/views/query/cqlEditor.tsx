@@ -20,6 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
+import * as S from './style';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, tuple } from 'cnc-tskit';
 
@@ -362,7 +363,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         render() {
             return (
                 <div>
-                    <pre contentEditable={true}
+                    <S.SyntaxHighlight
+                                contentEditable={true}
                                 spellCheck={false}
                                 onInput={(evt) => this.handleInputChange()}
                                 onClick={this.handleEditorClick}
