@@ -96,16 +96,17 @@ export function init(
     // ----------------------- <DataRow /> --------------------------------
 
     interface DataRowProps {
-        data:ResultItem;
-    }
+        data: ResultItem;
+        monospaceCols: Array<boolean>;
+    }    
 
-    const DataRow:React.FC<DataRowProps> = (props) => {
+    const DataRow: React.FC<DataRowProps> = (props) => {
 
         return (
             <S.DataRowTR>
                 <td className="num">{props.data.idx + 1}</td>
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-                {props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
+                {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
                 <td className="num">{props.data.freq}</td>
                 <td className="num">{props.data.rel}</td>
                 <td>
@@ -118,7 +119,8 @@ export function init(
     // ----------------------- <DataRowNoRel /> --------------------------------
 
     interface DataRowNoRelProps {
-        data:ResultItem;
+        data: ResultItem;
+        monospaceCols: Array<boolean>;
     }
 
     const DataRowNoRel:React.FC<DataRowNoRelProps> = (props) => {
@@ -127,7 +129,7 @@ export function init(
             <tr>
                 <td className="num">{props.data.idx + 1}</td>
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-                {props.data.Word.map((w, i) => <td key={i}>{w}</td>)}
+                {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
                 <td className="num">{props.data.freq}</td>
                 <td>
                     <div className="bar" style={{height: '10px', width: `${props.data.fbar}px`}} />
@@ -185,7 +187,7 @@ export function init(
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable:React.FC<DataTableProps> = (props) => {
+    const DataTable: React.FC<DataTableProps> = (props) => {     
 
         const getBarChartTitle = () => {
             if (props.head.length > 0) {
@@ -195,15 +197,17 @@ export function init(
         };
 
         const renderRows = () => {
+            const monospaceCols = List.map(v => v.isPosTag, props.head)
+
             if (props.rows.length === 0 || props.rows[0].relbar) {
                 return List.map(
-                    item => <DataRow key={`${item.Word}:${item.idx}`} data={item} />,
+                    item => <DataRow key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols} />,
                     props.rows
                 );
 
             } else {
                 return List.map(
-                    item => <DataRowNoRel key={`${item.Word}:${item.idx}`} data={item} />,
+                    item => <DataRowNoRel key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols}/>,
                     props.rows
                 );
             }
