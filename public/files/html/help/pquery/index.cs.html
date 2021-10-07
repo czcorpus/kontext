@@ -1,0 +1,34 @@
+<section>
+    <h2>Paradigmatický dotaz</h2>
+
+    <p>Paradigmatické dotazy (na rozdíl od běžných dotazů) neslouží k vyhledání
+        výskytů/<a target="_blank" href="https://wiki.korpus.cz/doku.php/pojmy:token">tokenů</a>, které se zobrazí v konkordanci, ale k
+        vyhledávání <em><a target="_blank" href="https://wiki.korpus.cz/doku.php/pojmy:typ">typů</a></em> (např. lemmat, která zahrnují určité slovní tvary).
+        Paradigmatický dotaz se specifikuje minimálně dvěma standardními (syntagmatickými) dotazy, které jsou vyhodnoceny pomocí frekvenční
+        distribuce na zvoleném atributu, a výsledek je pak tvořen průnikem těchto frekvenčních seznamů. Podorbněji viz
+        <a target="_blank" href="https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz#paradigmaticky_dotaz">zde</a>.</p>
+
+    <h3>Příklad:</h3>
+
+    <p>Dotaz, jenž hledá v korpusu SYN2020 všechna lemmata, která v jedné ze svých realizací končí na <em>-ý</em>, v jiné na <em>-á</em>
+        a ještě v jiné na <em>-é</em>, vymezuje zhruba skupinu slov se složeným (adjektivním) skloňováním typu <em>mladý</em>,
+        která mají v korpusu doloženy tvary pro nom. sg. pro všechny rody (<em>mladý</em>, <em>mladá</em> i <em>mladé</em>).
+        Dílčí dotazy lze zadávat pouze pomocí <a target="_blank" href="https://wiki.korpus.cz/doku.php/pojmy:dotazovaci_jazyk">CQL</a>:</p>
+
+    <ol>
+        <li><code>[word=".+ý"]</code></li>
+        <li><code>[word=".+á"]</code></li>
+        <li><code>[word=".+é"]</code></li>
+    </ol>
+
+    <p>Atribut (rovina zobecnění): lemma<br />Minimální frekvence realizace: 5</p>
+
+    <p>Ve výsledcích najdeme adjektiva jako <em>nový</em>, <em>celý</em>, <em>velký</em>, dále zájmena a číslovky s
+        adjektivním skloňováním <em>každý</em>, <em>druhý</em>, <em>který</em>, ale také slova s jiným skloňováním, např.
+        <em>svůj</em> (do jehož paradigmatu patří mj. tvary <em>svý</em>, <em>svá</em>, <em>své</em>). Nenajdou se
+        naopak lemmata, která jeden z tvarů doložen nemají (např. <em>šestatřicetiletý</em> nemá doložen tvar <em>šestatřicetileté</em>,
+        resp. má ho v korpusu doložen pouze třikrát, což je pod stanovenou mezí minimální frekvence).</p>
+
+    <p>Další podrobnosti o paradigmatických dotazech jsou k dispozici v naší
+        <a target="_blank" href="https://wiki.korpus.cz/doku.php/manualy:kontext:novy_dotaz#paradigmaticky_dotaz">wiki</a>.</p>
+</section>

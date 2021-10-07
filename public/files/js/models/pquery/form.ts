@@ -1072,5 +1072,4 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             type: 'partial-query'
         }
     }
-
 }

@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes, PqueryExpressionRoles } from './common';
+import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common';
 import { SortColumn } from './result';
 import { DataSaveFormat } from '../../app/navigation/save';
 
@@ -197,7 +197,7 @@ export class Actions {
 
     static SetExpressionRoleType:Action<{
         sourceId:string;
-        value:PqueryExpressionRoles;
+        value:Kontext.PqueryExpressionRoles;
     }> = {
         name: 'PQUERY_SET_EXPRESSION_ROLE_TYPE'
     }
