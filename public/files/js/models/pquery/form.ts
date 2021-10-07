@@ -39,8 +39,9 @@ import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSo
     PqueryAlignTypes,
     ParadigmaticQuery,
     SubsetComplementsAndRatio,
-    SupersetAndRatio} from './common';
-import { highlightSyntax, ParsedAttr } from '../query/cqleditor/parser';
+    SupersetAndRatio,
+    ParadigmaticPartialQuery} from './common';
+import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AjaxError } from 'rxjs/ajax';
@@ -111,6 +112,130 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 })
             }
         );
+
+        this.addActionHandler(
+            Actions.ChangePQueryType,
+            action => {
+                this.changeState(
+                    state => {
+                        if (action.payload.qtype === 'split') {
+                            const fullQuery = state.queries['full'];
+                            if (fullQuery.type === 'full-query') {
+                                state.pqueryType = 'split';
+                                state.queries = pipe(
+                                    fullQuery.pqItems,
+                                    List.map<ParsedPQItem, [string, ParadigmaticPartialQuery]>(
+                                        (item, idx) => tuple(
+                                            createSourceId(idx),
+                                            {
+                                                corpname: state.corpname,
+                                                qtype: 'advanced',
+                                                query: item.query,
+                                                parsedAttrs: [],
+                                                focusedAttr: undefined,
+                                                rawAnchorIdx: 0,
+                                                rawFocusIdx: 0,
+                                                queryHtml: '',
+                                                pcq_pos_neg: 'pos',
+                                                include_empty: true,
+                                                default_attr: null,
+                                                expressionRole: {
+                                                    type: item.type,
+                                                    maxNonMatchingRatio: Kontext.newFormValue(item.limit + '', true)
+                                                },
+                                                type: 'partial-query'
+                                            }
+                                        )
+                                    ),
+                                    Dict.fromEntries(),
+                                    Dict.forEach((query, sourceId) => {
+                                        this.setRawQuery(
+                                            state,
+                                            query,
+                                            sourceId,
+                                            query.query,
+                                            null
+                                        );
+                                    })
+                                );
+
+                            } else {
+                                throw new Error('Expected full query');
+                            }
+                            // parse query and fill in all the particular data
+
+                        } else {
+                            state.pqueryType = 'full';
+                            // TODO join particular queries into a single one,
+                            // remove all particular stuff in state.queries
+                            // and replace it with a single item in state.queries
+                            const items:Array<string> = pipe(
+                                state.queries,
+                                Dict.toEntries(),
+                                List.filter(([,v]) => v.query !== ''),
+                                List.sortedAlphaBy(([k,]) => k),
+                                List.map(([,query]) => {
+                                    if (query.type === 'partial-query') {
+                                        switch (query.expressionRole.type) {
+                                            case 'specification':
+                                                return ['{ ', query.query, ' }'];
+                                            case 'subset':
+                                                return [
+                                                    '!',
+                                                    parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
+                                                        query.expressionRole.maxNonMatchingRatio.value :
+                                                        '',
+                                                    '{ ',
+                                                    query.query,
+                                                    ' }'
+                                                ];
+                                            case 'superset':
+                                                return [
+                                                    '?',
+                                                    parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
+                                                        query.expressionRole.maxNonMatchingRatio.value :
+                                                        '',
+                                                    '{ ',
+                                                    query.query,
+                                                    ' }'
+                                                ];
+                                            default:
+                                                return [];
+                                        }
+                                    }
+                                    return [];
+                                }),
+                                List.join(_ => [' && ']),
+                                List.flatMap(v => v)
+                            );
+                            const fullQuery:ParadigmaticQuery = {
+                                corpname: state.corpname,
+                                qtype: 'advanced',
+                                query: items.join(''),
+                                parsedAttrs: [],
+                                pqItems: [],
+                                focusedAttr: undefined,
+                                rawAnchorIdx: 0,
+                                rawFocusIdx: 0,
+                                queryHtml: '',
+                                pcq_pos_neg: 'pos',
+                                include_empty: true,
+                                default_attr: null,
+                                type: 'full-query'
+                            }
+                            state.queries = {full: fullQuery};
+                            this.setRawQuery(
+                                state,
+                                fullQuery,
+                                'full',
+                                fullQuery.query,
+                                null
+                            );
+                        }
+                    }
+                )
+            }
+        )
 
         this.addActionHandler(
             Actions.SubmitQueryDone,
@@ -216,7 +341,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(state => {
                     state.queries = this.removeItem(state.queries, action.payload.sourceId);
                     state.concWait = this.removeItem(state.concWait, action.payload.sourceId);
-                    if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                    if (!Dict.some((v, _) => v.type === 'partial-query'
+                            && v.expressionRole.type === 'specification', state.queries)) {
                         this.addSpecificationQueryItem(state);
                     }
                 });
@@ -352,14 +478,18 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             action => {
                 if (action.payload.value !== 'specification' &&
                         Dict.some(
-                            (v, _) => v.expressionRole.type === action.payload.value, this.state.queries
+                            (v, _) => v.type === 'partial-query' && v.expressionRole.type === action.payload.value, this.state.queries
                         )) {
                     this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
 
                 } else {
                     this.changeState(state => {
-                        state.queries[action.payload.sourceId].expressionRole.type = action.payload.value
-                        if (!Dict.some((v, _) => v.expressionRole.type === 'specification', state.queries)) {
+                        const query = state.queries[action.payload.sourceId];
+                        if (query.type === 'partial-query') {
+                            query.expressionRole.type = action.payload.value
+                        }
+                        if (!Dict.some((v, _) => v.type === 'partial-query' &&
+                                v.expressionRole.type === 'specification', state.queries)) {
                             this.addSpecificationQueryItem(state);
                         }
                     });
@@ -371,9 +501,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             Actions.SetExpressionRoleRatio.name,
             action => {
                 this.changeState(state => {
-                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.value = action.payload.value;
-                    const tst = new Number(action.payload.value);
-                    state.queries[action.payload.sourceId].expressionRole.maxNonMatchingRatio.isInvalid = isNaN(tst.valueOf());
+                    const query = state.queries[action.payload.sourceId];
+                    if (query.type === 'partial-query') {
+                        query.expressionRole.maxNonMatchingRatio.value = action.payload.value;
+                        const tst = new Number(action.payload.value);
+                        query.expressionRole.maxNonMatchingRatio.isInvalid = isNaN(tst.valueOf());
+
+                    } else {
+                        throw new Error(`Expecting partial query for ${action.payload.sourceId}`);
+                    }
                 });
             }
         );
@@ -475,8 +611,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         state:PqueryFormModelState,
     ):Observable<[ConcQueryResponse, number]> {
 
-        if (Dict.some(v => v.expressionRole.type === 'subset', state.queries)) {
-            const [subsetSourceId, subsetQuery] = Dict.find(v => v.expressionRole.type === 'subset', state.queries);
+        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'subset', state.queries)) {
+            const [subsetSourceId, subsetQuery] = Dict.find(
+                v => v.type === 'partial-query' && v.expressionRole.type === 'subset', state.queries);
             return this.layoutModel.ajax$<ConcQueryResponse>(
                 HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
@@ -493,10 +630,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     })
                 }),
                 concatMap(
-                    concSubsetResponse => rxOf(tuple(
-                        concSubsetResponse,
-                        parseFloat(state.queries[subsetSourceId].expressionRole.maxNonMatchingRatio.value)
-                    ))
+                    concSubsetResponse => {
+                        const query = state.queries[subsetSourceId];
+                        if (query.type === 'partial-query') {
+                            return rxOf(tuple(
+                                concSubsetResponse,
+                                parseFloat(query.expressionRole.maxNonMatchingRatio.value)
+                            ));
+                        }
+                        throw new Error(`Expecting partial query for ${subsetSourceId}`);
+                    }
                 )
             )
 
@@ -506,8 +649,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private mkSupersetStream(state:PqueryFormModelState):Observable<[ConcQueryResponse, number]> {
-        if (Dict.some(v => v.expressionRole.type === 'superset', state.queries)) {
-            const [sourceId, supersetQuery] = Dict.find(v => v.expressionRole.type === 'superset', state.queries);
+        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'superset', state.queries)) {
+            const [sourceId, supersetQuery] = Dict.find(
+                v => v.type === 'partial-query' && v.expressionRole.type === 'superset', state.queries);
             return this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
@@ -546,10 +690,16 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         if (error) {
                             throw error;
                         }
-                        return tuple(
-                            resp,
-                            parseFloat(state.queries[sourceId].expressionRole.maxNonMatchingRatio.value)
-                        );
+                        const query = state.queries[sourceId];
+                        if (query.type === 'partial-query') {
+                            return tuple(
+                                resp,
+                                parseFloat(query.expressionRole.maxNonMatchingRatio.value)
+                            );
+
+                        } else {
+                            throw new Error(`Expecting partial query for ${sourceId}`);
+                        }
                     }
                 )
             );
@@ -559,10 +709,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         }
     }
 
+    private partializeQueries(state:PqueryFormModelState):{[sourceId:string]:ParadigmaticPartialQuery} {
+        return Dict.filter(v => v.type === 'partial-query', state.queries) as {[sourceId:string]:ParadigmaticPartialQuery};
+    }
+
     private submitForm(state:PqueryFormModelState):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
         return forkJoin([
             rxOf(...pipe(
-                state.queries,
+                this.partializeQueries(state),
                 Dict.toEntries(),
                 List.filter(([_, query]) => query.expressionRole.type === 'specification')
 
@@ -796,18 +950,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
      * @todo partially duplicated code (models/query/common)
      */
     private reparseAdvancedQuery(
-        queryObj:AdvancedQuery,
+        queryObj:ParadigmaticQuery|ParadigmaticPartialQuery,
+        pqueryType:'full'|'split',
         sourceId:string,
         updateCurrAttrs:boolean
     ):void {
 
         let newAttrs:Array<ParsedAttr>;
-        [queryObj.queryHtml, newAttrs] = highlightSyntax(
-            queryObj.query,
-            'advanced',
-            this.layoutModel.getComponentHelpers(),
-            this.attrHelper,
-            (startIdx, endIdx) => {
+        let pqItems:Array<ParsedPQItem>;
+        [queryObj.queryHtml, newAttrs, pqItems] = highlightSyntax({
+            query: queryObj.query,
+            querySuperType: pqueryType === 'full' ? 'pquery' : 'conc',
+            he: this.layoutModel.getComponentHelpers(),
+            attrHelper: this.attrHelper,
+            wrapRange: (startIdx, endIdx) => {
                 const matchingAttr = updateCurrAttrs ?
                     undefined :
                     List.find(
@@ -822,12 +978,15 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 }
                 return tuple(null, null);
             },
-            (msg) => this.hintListener(sourceId, msg)
-        );
+            onHintChange: msg => this.hintListener(sourceId, msg)
+        });
         queryObj.focusedAttr = this.findFocusedAttr(queryObj);
 
         if (updateCurrAttrs) {
             queryObj.parsedAttrs = newAttrs;
+            if (queryObj.type === 'full-query') {
+                queryObj.pqItems = pqItems;
+            }
         }
     }
 
@@ -852,7 +1011,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
      */
     protected setRawQuery(
         state:PqueryFormModelState,
-        queryObj:AdvancedQuery,
+        queryObj:ParadigmaticPartialQuery|ParadigmaticQuery,
         sourceId:string,
         query:string,
         insertRange:[number, number]|null
@@ -868,7 +1027,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(queryObj);
 
-        this.reparseAdvancedQuery(queryObj, sourceId, true);
+        this.reparseAdvancedQuery(queryObj, state.pqueryType, sourceId, true);
     }
 
     private pushStateToHistory(state:PqueryFormModelState, queryId:string):void {
@@ -909,8 +1068,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             expressionRole: {
                 type: 'specification',
                 maxNonMatchingRatio: Kontext.newFormValue('0', true)
-            }
+            },
+            type: 'partial-query'
         }
     }
-
 }

@@ -76,15 +76,20 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                                     props.queries,
                                     Dict.toEntries(),
                                     List.map(([,item]) => {
-                                        const query = `{ ${Strings.shortenText(item.query, 10)} }`
-                                        const perc = parseInt(item.expressionRole.maxNonMatchingRatio.value);
-                                        switch (item.expressionRole.type) {
-                                            case 'subset':
-                                                return perc > 0 ? `!${perc}${query}` : `!${query}`
-                                            case 'superset':
-                                                return perc > 0 ? `?${perc}${query}` : `?${query}`
-                                            default:
-                                                return query
+                                        if (item.type === 'partial-query') {
+                                            const query = `{ ${Strings.shortenText(item.query, 10)} }`
+                                            const perc = parseInt(item.expressionRole.maxNonMatchingRatio.value);
+                                            switch (item.expressionRole.type) {
+                                                case 'subset':
+                                                    return perc > 0 ? `!${perc}${query}` : `!${query}`
+                                                case 'superset':
+                                                    return perc > 0 ? `?${perc}${query}` : `?${query}`
+                                                default:
+                                                    return query
+                                            }
+
+                                        } else {
+                                            return item.query;
                                         }
                                     }),
                                     List.join(() => ' && ')

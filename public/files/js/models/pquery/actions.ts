@@ -22,7 +22,7 @@
 import { Action } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { AlignTypes } from '../freqs/twoDimension/common';
-import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes, PqueryExpressionRoles } from './common';
+import { AsyncTaskArgs, HistoryArgs, PqueryAlignTypes } from './common';
 import { SortColumn } from './result';
 import { DataSaveFormat } from '../../app/navigation/save';
 
@@ -44,6 +44,12 @@ export class Actions {
 
     static isSubmitQueryDone(a:Action):a is typeof Actions.SubmitQueryDone {
         return a.name === Actions.SubmitQueryDone.name;
+    }
+
+    static ChangePQueryType:Action<{
+        qtype:'split'|'full';
+    }> = {
+        name: 'PQUERY_CHANGE_PQUERY_TYPE'
     }
 
     static AddQueryItem:Action<{}> = {
@@ -191,7 +197,7 @@ export class Actions {
 
     static SetExpressionRoleType:Action<{
         sourceId:string;
-        value:PqueryExpressionRoles;
+        value:Kontext.PqueryExpressionRoles;
     }> = {
         name: 'PQUERY_SET_EXPRESSION_ROLE_TYPE'
     }
