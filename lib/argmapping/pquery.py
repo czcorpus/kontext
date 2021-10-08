@@ -49,6 +49,7 @@ class PqueryFormArgs:
     pos_align: str = field(default='left')
     form_type: str = field(default='pquery')
     conc_ids: List[str] = field(default_factory=list)
+    pquery_type: str = field(default='split')
     conc_subset_complements: Optional[SubsetComplementsAndRatio] = field(default=None)
     conc_superset: Optional[SupersetAndRatio] = field(default=None)
 
@@ -71,6 +72,7 @@ class PqueryFormArgs:
                 data['conc_superset']['max_non_matching_ratio'])
         self.attr = data['attr']
         self.conc_ids = data['conc_ids']
+        self.pquery_type = data['pquery_type']
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

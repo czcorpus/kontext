@@ -830,6 +830,7 @@
         "pquery__expression_role_specification": "Partial query/specification UNTRANSLATED",
         "pquery__expression_role_never": "Exclude (the \"never\" condition) UNTRANSLATED",
         "pquery__expression_role_always": "Restrict search to (the \"always\" condition) UNTRANSLATED",
-        "pquery__expression_role_ratio": "max. ratio of exceptions UNTRANSLATED"
+        "pquery__expression_role_ratio": "max. ratio of exceptions UNTRANSLATED",
+        "pquery__pquery_type_split": "Enter as partial sub-queries UNTRANSLATED"
     }
 }

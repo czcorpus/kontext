@@ -40,6 +40,7 @@ export interface CQLEditorProps {
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLPreElement>;
+    minHeightEm?:number;
     onReqHistory:()=>void;
     onEsc:()=>void;
 }
@@ -50,6 +51,7 @@ export interface CQLEditorFallbackProps {
     hasHistoryWidget:boolean;
     historyIsVisible:boolean;
     inputRef:React.RefObject<HTMLTextAreaElement>;
+    minHeightEm?:number;
     onReqHistory:()=>void;
     onEsc:()=>void;
 }
@@ -130,7 +132,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onChange={this.handleInputChange}
                                 onKeyDown={this.handleKeyDown}
                                 onKeyUp={this.inputKeyUpHandler}
-                                spellCheck={false} />;
+                                spellCheck={false}
+                                style={this.props.minHeightEm ?
+                                    { minHeight: `${this.props.minHeightEm}em` } : null} />;
         }
     }
 
@@ -374,7 +378,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     {__html: this.props.queries[this.props.sourceId].queryHtml || ''}}
                                 onKeyDown={this.inputKeyDownHandler}
                                 onKeyUp={this.inputKeyUpHandler}
-                                onSelect={this.handleSelect} />
+                                onSelect={this.handleSelect}
+                                style={this.props.minHeightEm ?
+                                        { minHeight: `${this.props.minHeightEm}em` } : null} />
                     <div className="cql-editor-messages">
                         {
                             this.props.cqlEditorMessages[this.props.sourceId] ?

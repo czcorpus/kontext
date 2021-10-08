@@ -89,7 +89,6 @@ class ParadigmaticQueryPage {
     init():void {
         this.layoutModel.init(true, [], () => {
 
-            const storedForm = this.layoutModel.getConf<FreqIntersectionArgs>('FormData');
             const attrHelper = new AttrHelper(
                 this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
                 this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
@@ -99,7 +98,7 @@ class ParadigmaticQueryPage {
             const pqForm = this.layoutModel.getConf<FreqIntersectionArgs>('FormData');
             const formModel = new PqueryFormModel(
                 this.layoutModel.dispatcher,
-                storedForm ?
+                pqForm ?
                     storedQueryToModel(
                         pqForm,
                         importConcQueries(
