@@ -33,14 +33,16 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { ConcQueryResponse } from '../concordance/common';
 import { catchError, concatMap, map, reduce, tap } from 'rxjs/operators';
-import { ConcQueryArgs, FilterServerArgs, QueryContextArgs } from '../query/common';
+import { ConcQueryArgs, QueryContextArgs } from '../query/common';
 import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
     PqueryFormModelState,
     PqueryAlignTypes,
     ParadigmaticQuery,
     SubsetComplementsAndRatio,
     SupersetAndRatio,
-    ParadigmaticPartialQuery} from './common';
+    ParadigmaticPartialQuery,
+    splitFullQuery,
+    joinPartialQueries} from './common';
 import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -93,14 +95,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
                 this.submitForm(this.state).subscribe({
                     next: task => {
-                        this.dispatchSideEffect<typeof Actions.SubmitQueryDone>({
-                            name: Actions.SubmitQueryDone.name,
-                            payload: {
+                        this.dispatchSideEffect(
+                            Actions.SubmitQueryDone,
+                            {
                                 corpname: this.state.corpname,
                                 usesubcorp: this.state.usesubcorp,
                                 task
                             },
-                        });
+                        );
                     },
                     error: (error:Error) => {
                         this.layoutModel.showMessage('error', error);
@@ -119,49 +121,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 this.changeState(
                     state => {
                         if (action.payload.qtype === 'split') {
-                            const fullQuery = state.queries['full'];
-                            if (fullQuery.type === 'full-query') {
-                                state.pqueryType = 'split';
-                                state.queries = pipe(
-                                    fullQuery.pqItems,
-                                    List.map<ParsedPQItem, [string, ParadigmaticPartialQuery]>(
-                                        (item, idx) => tuple(
-                                            createSourceId(idx),
-                                            {
-                                                corpname: state.corpname,
-                                                qtype: 'advanced',
-                                                query: item.query,
-                                                parsedAttrs: [],
-                                                focusedAttr: undefined,
-                                                rawAnchorIdx: 0,
-                                                rawFocusIdx: 0,
-                                                queryHtml: '',
-                                                pcq_pos_neg: 'pos',
-                                                include_empty: true,
-                                                default_attr: null,
-                                                expressionRole: {
-                                                    type: item.type,
-                                                    maxNonMatchingRatio: Kontext.newFormValue(item.limit + '', true)
-                                                },
-                                                type: 'partial-query'
-                                            }
-                                        )
-                                    ),
-                                    Dict.fromEntries(),
-                                    Dict.forEach((query, sourceId) => {
-                                        this.setRawQuery(
-                                            state,
-                                            query,
-                                            sourceId,
-                                            query.query,
-                                            null
-                                        );
-                                    })
-                                );
-
-                            } else {
-                                throw new Error('Expected full query');
-                            }
+                            state.pqueryType = 'split';
+                            state.queries = splitFullQuery(state.queries, state.corpname);
+                            Dict.forEach(
+                                (query, sourceId) => {
+                                    this.setRawQuery(
+                                        state,
+                                        query,
+                                        sourceId,
+                                        query.query,
+                                        null
+                                    );
+                                },
+                                state.queries
+                            );
                             // parse query and fill in all the particular data
 
                         } else {
@@ -169,60 +142,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             // TODO join particular queries into a single one,
                             // remove all particular stuff in state.queries
                             // and replace it with a single item in state.queries
-                            const items:Array<string> = pipe(
-                                state.queries,
-                                Dict.toEntries(),
-                                List.filter(([,v]) => v.query !== ''),
-                                List.sortedAlphaBy(([k,]) => k),
-                                List.map(([,query]) => {
-                                    if (query.type === 'partial-query') {
-                                        switch (query.expressionRole.type) {
-                                            case 'specification':
-                                                return ['{ ', query.query, ' }'];
-                                            case 'subset':
-                                                return [
-                                                    '!',
-                                                    parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
-                                                        query.expressionRole.maxNonMatchingRatio.value :
-                                                        '',
-                                                    '{ ',
-                                                    query.query,
-                                                    ' }'
-                                                ];
-                                            case 'superset':
-                                                return [
-                                                    '?',
-                                                    parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
-                                                        query.expressionRole.maxNonMatchingRatio.value :
-                                                        '',
-                                                    '{ ',
-                                                    query.query,
-                                                    ' }'
-                                                ];
-                                            default:
-                                                return [];
-                                        }
-                                    }
-                                    return [];
-                                }),
-                                List.join(_ => [' && ']),
-                                List.flatMap(v => v)
-                            );
-                            const fullQuery:ParadigmaticQuery = {
-                                corpname: state.corpname,
-                                qtype: 'advanced',
-                                query: items.join(''),
-                                parsedAttrs: [],
-                                pqItems: [],
-                                focusedAttr: undefined,
-                                rawAnchorIdx: 0,
-                                rawFocusIdx: 0,
-                                queryHtml: '',
-                                pcq_pos_neg: 'pos',
-                                include_empty: true,
-                                default_attr: null,
-                                type: 'full-query'
-                            }
+                            const fullQuery = joinPartialQueries(state.queries, state.corpname);
                             state.queries = {full: fullQuery};
                             this.setRawQuery(
                                 state,
@@ -293,8 +213,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputSetQuery>(
-            QueryActions.QueryInputSetQuery.name,
+        this.addActionHandler(
+            QueryActions.QueryInputSetQuery,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -532,7 +452,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         );
     }
 
-    private getPositionRange(state: PqueryFormModelState): string {
+    private getPositionRange(state:PqueryFormModelState): string {
         if (state.posRangeNotSupported) {
             return '0'
         }
@@ -710,7 +630,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private partializeQueries(state:PqueryFormModelState):{[sourceId:string]:ParadigmaticPartialQuery} {
-        return Dict.filter(v => v.type === 'partial-query', state.queries) as {[sourceId:string]:ParadigmaticPartialQuery};
+        return state.pqueryType === 'split' ?
+            Dict.filter(v => v.type === 'partial-query', state.queries) as {[sourceId:string]:ParadigmaticPartialQuery} :
+            splitFullQuery(state.queries, state.corpname);
     }
 
     private submitForm(state:PqueryFormModelState):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
@@ -828,6 +750,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             corpname: state.corpname,
             usesubcorp: state.usesubcorp,
             conc_ids: concIds,
+            pquery_type: state.pqueryType,
             conc_subset_complements: concSubsetComplements,
             conc_superset: concSuperset,
             min_freq: parseInt(state.minFreq.value),
@@ -886,45 +809,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             async,
             no_query_history: true
         };
-    }
-
-    private createSubsetComplementFilterArgs(
-        state:PqueryFormModelState,
-        query:ParadigmaticQuery,
-        concId:string
-    ):FilterServerArgs {
-
-        const currArgs = this.layoutModel.getConcArgs();
-
-        return {
-            type: 'filterQueryArgs',
-            maincorp: state.corpname,
-            viewmode: 'kwic',
-            pagesize: 1,
-            attrs: [], // TODO
-            attr_vmode: currArgs.attr_vmode,
-            base_viewattr: currArgs.base_viewattr,
-            ctxattrs: [],
-            structs: [],
-            refs: [],
-            fromp: 1,
-            qtype: 'advanced',
-            query: query.query,
-            queryParsed: undefined,
-            default_attr: query.default_attr,
-            qmcase: false,
-            use_regexp: false,
-            pnfilter: 'p',
-            // position `whole kwic as one word` is handled as `first`
-            filfl: state.posAlign === AlignTypes.RIGHT ? 'l' : 'f',
-            filfpos: '0',
-            filtpos: `${List.size(query.parsedAttrs) - 1}`,
-            inclkwic: true,
-            within: false,
-            format: 'json',
-            q: ['~' + concId],
-            no_query_history: true
-        }
     }
 
     private hintListener(sourceId:string, msg:string):void {

@@ -26,6 +26,7 @@ import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { FilterFormArgs, isQueryFormArgs, QueryFormArgs } from '../query/formArgs';
 
+const MAX_NUM_PARTIAL_QUERIES = 15;
 
 /**
  * PqueryResult is a result of a Paradigmatic query
@@ -58,6 +59,7 @@ export interface FreqIntersectionArgs {
     corpname:string;
     usesubcorp:string;
     conc_ids:Array<string>;
+    pquery_type:Kontext.PqueryType;
     conc_subset_complements:SubsetComplementsAndRatio|null;
     conc_superset:SupersetAndRatio|null;
     min_freq:number;
@@ -117,13 +119,16 @@ export interface ParadigmaticQuery extends AdvancedQuery {
     type:'full-query';
 }
 
+type ParadigmaticQueriesStorage = {[sourceId:string]:ParadigmaticPartialQuery|ParadigmaticQuery};
+
 export interface PqueryFormModelState {
     isBusy:boolean;
     modalVisible:boolean;
     corpname:string;
     usesubcorp:string;
-    pqueryType:'full'|'split';
-    queries:{[sourceId:string]:ParadigmaticPartialQuery|ParadigmaticQuery}; // pquery block -> query
+    pqueryType:Kontext.PqueryType;
+    maxNumQueries:number;
+    queries:ParadigmaticQueriesStorage; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
     cqlEditorMessages:{[sourceId:string]:string};
     useRichQueryEditor:boolean;
@@ -165,6 +170,7 @@ export function newModelState(
         corpname,
         usesubcorp,
         pqueryType: 'split',
+        maxNumQueries: MAX_NUM_PARTIAL_QUERIES,
         queries: pipe(
             List.repeat<[string, ParadigmaticPartialQuery]>(
                 idx => tuple(
@@ -218,6 +224,107 @@ export function newModelState(
     };
 }
 
+export function splitFullQuery(
+    queries:ParadigmaticQueriesStorage,
+    corpname:string
+):{[sourceId:string]:ParadigmaticPartialQuery} {
+
+    const fullQuery = queries['full'];
+    if (fullQuery.type === 'full-query') {
+        return pipe(
+            fullQuery.pqItems,
+            List.map<ParsedPQItem, [string, ParadigmaticPartialQuery]>(
+                (item, idx) => tuple(
+                    createSourceId(idx),
+                    {
+                        corpname,
+                        qtype: 'advanced',
+                        query: item.query,
+                        parsedAttrs: [],
+                        focusedAttr: undefined,
+                        rawAnchorIdx: 0,
+                        rawFocusIdx: 0,
+                        queryHtml: '',
+                        pcq_pos_neg: 'pos',
+                        include_empty: true,
+                        default_attr: null,
+                        expressionRole: {
+                            type: item.type,
+                            maxNonMatchingRatio: Kontext.newFormValue(item.limit + '', true)
+                        },
+                        type: 'partial-query'
+                    }
+                )
+            ),
+            Dict.fromEntries()
+        );
+
+    } else {
+        throw new Error('No full query defined');
+    }
+}
+
+export function joinPartialQueries(
+    queries:ParadigmaticQueriesStorage,
+    corpname:string
+):ParadigmaticQuery {
+
+    const items:Array<string> = pipe(
+        queries,
+        Dict.toEntries(),
+        List.filter(([,v]) => v.query !== ''),
+        List.sortedAlphaBy(([k,]) => k),
+        List.map(([,query]) => {
+            if (query.type === 'partial-query') {
+                switch (query.expressionRole.type) {
+                    case 'specification':
+                        return ['{ ', query.query, ' }'];
+                    case 'subset':
+                        return [
+                            '!',
+                            parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
+                                query.expressionRole.maxNonMatchingRatio.value :
+                                '',
+                            '{ ',
+                            query.query,
+                            ' }'
+                        ];
+                    case 'superset':
+                        return [
+                            '?',
+                            parseFloat(query.expressionRole.maxNonMatchingRatio.value || '0') > 0 ?
+                                query.expressionRole.maxNonMatchingRatio.value :
+                                '',
+                            '{ ',
+                            query.query,
+                            ' }'
+                        ];
+                    default:
+                        return [];
+                }
+            }
+            return [];
+        }),
+        List.join(_ => [' &&\n']),
+        List.flatMap(v => v)
+    );
+    return {
+        corpname,
+        qtype: 'advanced',
+        query: items.join(''),
+        parsedAttrs: [],
+        pqItems: [],
+        focusedAttr: undefined,
+        rawAnchorIdx: 0,
+        rawFocusIdx: 0,
+        queryHtml: '',
+        pcq_pos_neg: 'pos',
+        include_empty: true,
+        default_attr: null,
+        type: 'full-query'
+    };
+}
+
 function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries) {
 
     function findQuery(concId:string):[Kontext.PqueryExpressionRoles, number]  {
@@ -245,18 +352,11 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
         allConcIds.push(pqueryForm.conc_superset.conc_id);
     }
 
-    return pipe(
+    const splitQueries = pipe(
         allConcIds,
         List.map(concId => concQueries[concId]),
         List.map<StoredAdvancedQuery, [string, ParadigmaticPartialQuery]>(
             (query, i) => {
-                const [queryHtml, parsedAttrs] = highlightSyntaxStatic({
-                    query: query.query,
-                    querySuperType: 'conc', // partial queries => list of conc CQL
-                    he: {
-                        translate: (s:string, values?:any) => s
-                    }
-                });
                 const [qRole, maxNonMatchingRatio] = findQuery(query.conc_id);
                 return tuple(
                     createSourceId(i),
@@ -264,11 +364,11 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                         corpname: query.corpname,
                         qtype: 'advanced',
                         query: query.query,
-                        parsedAttrs: parsedAttrs,
+                        parsedAttrs: [],
                         focusedAttr: null,
                         rawAnchorIdx: 0,
                         rawFocusIdx: 0,
-                        queryHtml,
+                        queryHtml: '',
                         pcq_pos_neg: 'pos',
                         include_empty: query.include_empty,
                         default_attr: query.default_attr,
@@ -282,6 +382,31 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
             }
         )
     );
+
+    const actualQueries:Array<[string, ParadigmaticPartialQuery|ParadigmaticQuery]> =
+        pqueryForm.pquery_type === 'split' ?
+            splitQueries :
+            [tuple('full', joinPartialQueries(Dict.fromEntries(splitQueries), pqueryForm.corpname))];
+
+    List.forEach(
+        ([,query]) => {
+            const [queryHtml, parsedAttrs, pqItems] = highlightSyntaxStatic({
+                query: query.query,
+                querySuperType: pqueryForm.pquery_type === 'full' ? 'pquery' : 'conc',
+                he: {
+                    translate: (s:string, values?:any) => s
+                }
+            });
+            query.queryHtml = queryHtml;
+            query.parsedAttrs = parsedAttrs;
+            if (query.type === 'full-query') {
+                query.pqItems = pqItems;
+            }
+        },
+        actualQueries
+    );
+
+    return actualQueries;
 }
 
 export function storedQueryToModel(
@@ -297,7 +422,8 @@ export function storedQueryToModel(
         modalVisible: false,
         corpname: sq.corpname,
         usesubcorp: sq.usesubcorp,
-        pqueryType: 'split',
+        pqueryType: sq.pquery_type,
+        maxNumQueries: MAX_NUM_PARTIAL_QUERIES,
         queries: Dict.fromEntries(queries),
         downArrowTriggersHistory: pipe(
             queries,
@@ -312,7 +438,7 @@ export function storedQueryToModel(
         useRichQueryEditor,
         concWait: pipe(
             queries,
-            List.map<[string, ParadigmaticPartialQuery], [string, ConcStatus]>(
+            List.map<[string, ParadigmaticPartialQuery|ParadigmaticQuery], [string, ConcStatus]>(
                 (v, i) => tuple(createSourceId(i), 'none')
             ),
             Dict.fromEntries()

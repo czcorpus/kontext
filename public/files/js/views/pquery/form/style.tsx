@@ -199,3 +199,10 @@ export const VerticalSeparator = styled.span`
     border-color: ${theme.colorLogoBlue};
     border-width: 0 1px 0 0;
 `;
+
+// ----------------- <QTypeSwitchLabel /> --------------
+
+export const QTypeSwitchLabel = styled.label`
+    display: flex;
+    align-items: center;
+`;

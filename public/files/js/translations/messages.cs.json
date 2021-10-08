@@ -830,6 +830,7 @@
         "pquery__expression_role_specification": "Dílčí dotaz/specifikace",
         "pquery__expression_role_never": " Vyloučit (podmínka \"nikdy\")",
         "pquery__expression_role_always": "Omezit hledání na (podmínka \"vždy\")",
-        "pquery__expression_role_ratio": "max. poměr výjimek"
+        "pquery__expression_role_ratio": "max. poměr výjimek",
+        "pquery__pquery_type_split": "Zapisovat po dílčích dotazech"
     }
 }

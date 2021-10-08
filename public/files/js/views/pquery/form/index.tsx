@@ -285,7 +285,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             onEsc={() => undefined}
                             hasHistoryWidget={false}
                             historyIsVisible={false}
-                            inputRef={queryInputElement} /> :
+                            inputRef={queryInputElement}
+                            minHeightEm={10} /> :
                     <cqlEditorViews.CQLEditorFallback
                             formType={Kontext.ConcFormTypes.QUERY}
                             sourceId={props.sourceId}
@@ -293,7 +294,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             onReqHistory={() => undefined}
                             onEsc={() => undefined}
                             hasHistoryWidget={false}
-                            historyIsVisible={false} />
+                            historyIsVisible={false}
+                            minHeightEm={10} />
                     }
                     <QueryStatusIcon numQueries={props.numQueries}
                             concLoadingStatus={props.concStatus}
@@ -333,17 +335,19 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
     }> = (props) => {
 
-        const handleSelect = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+        const handleSelect = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch(
                 Actions.ChangePQueryType,
-                {qtype: evt.target.value}
+                {qtype: props.qtype === 'split' ? 'full' : 'split'}
             );
         }
 
-        return <select value={props.qtype} onChange={handleSelect}>
-            <option value="full">Single query input method</option>
-            <option value="split">Split queries input method</option>
-        </select>;
+        return (
+            <S.QTypeSwitchLabel>
+                {he.translate('pquery__pquery_type_split')}
+                <input type="checkbox" checked={props.qtype === 'split'} value="split" onChange={handleSelect} />
+            </S.QTypeSwitchLabel>
+        );
     };
 
     // ---------------------- <PqueryForm /> ---------------------
@@ -414,10 +418,13 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                         ),
                         List.map(([,v]) => v)
                     )}
-                    <button type="button" className="util-button add" onClick={addQueryHandler}>
-                        <img src={he.createStaticUrl('img/plus.svg')} />
-                        {he.translate('pquery__add_btn')}
-                    </button>
+                    {Dict.size(props.queries) < props.maxNumQueries && props.pqueryType === 'split' ?
+                        <button type="button" className="util-button add" onClick={addQueryHandler}>
+                            <img src={he.createStaticUrl('img/plus.svg')} />
+                            {he.translate('pquery__add_btn')}
+                        </button> :
+                        null
+                    }
                 </S.EditorFieldset>
 
                 <AdvancedFormFieldset

@@ -49,6 +49,12 @@ export type QuerySupertype = 'conc'|'pquery'|'wlist';
 
 export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
 
+/**
+ * full = pquery entered as a single query (PCQL)
+ * split = pquery entered as a list of CQL queries (along with additional parameters)
+ */
+export type PqueryType = 'full'|'split';
+
 
 export interface FormValue<T> {
 
