@@ -240,7 +240,7 @@ export function splitFullQuery(
                         limit: 0,
                         type: 'specification'
                     } as ParsedPQItem),
-                    Math.abs(2 - List.size(fullQuery.pqItems))
+                    Math.max(0, 2 - List.size(fullQuery.pqItems))
                 )
             ),
             List.map<ParsedPQItem, [string, ParadigmaticPartialQuery]>(
