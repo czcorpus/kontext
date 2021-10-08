@@ -40,8 +40,8 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he:Kontext.ComponentHelpers, item:QueryHistoryItem) => {
-    if (item.query_type === 'advanced') {
+const attachSh = (he: Kontext.ComponentHelpers, item: QueryHistoryItem) => {
+    if (item.query_type !== 'simple') {
         [item.query_sh,] = highlightSyntaxStatic({
             query: item.query,
             querySuperType: item.q_supertype,
