@@ -233,6 +233,16 @@ export function splitFullQuery(
     if (fullQuery.type === 'full-query') {
         return pipe(
             fullQuery.pqItems,
+            List.concat(
+                List.repeat(
+                    _ => ({
+                        query: '',
+                        limit: 0,
+                        type: 'specification'
+                    } as ParsedPQItem),
+                    Math.abs(2 - List.size(fullQuery.pqItems))
+                )
+            ),
             List.map<ParsedPQItem, [string, ParadigmaticPartialQuery]>(
                 (item, idx) => tuple(
                     createSourceId(idx),
