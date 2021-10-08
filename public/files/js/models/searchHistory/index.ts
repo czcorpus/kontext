@@ -40,8 +40,8 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he:Kontext.ComponentHelpers, item:QueryHistoryItem) => {
-    if (item.query_type === 'advanced') {
+const attachSh = (he: Kontext.ComponentHelpers, item: QueryHistoryItem) => {
+    if (item.query_type !== 'simple') {
         [item.query_sh,] = highlightSyntaxStatic({
             query: item.query,
             querySuperType: item.q_supertype,
@@ -216,16 +216,16 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.saveItem(action.payload.itemIdx).subscribe(
-                        (msg) => {
-                            this.changeState(state => {state.isBusy = false});
+                    this.saveItem(action.payload.itemIdx).subscribe({
+                        next: (msg) => {
+                            this.changeState(state => { state.isBusy = false });
                             this.pageModel.showMessage('info', msg);
                         },
-                        (err) => {
-                            this.changeState(state => {state.isBusy = false});
+                        error: (err) => {
+                            this.changeState(state => { state.isBusy = false });
                             this.pageModel.showMessage('error', err);
                         }
-                    );
+                    });
                 }
             }
         );
@@ -253,8 +253,10 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 });
 
                 this.deleteItem(action.payload.itemIdx).subscribe({
+                    next: () => this.changeState(state => {state.isBusy = false}),
                     error: error => {
                         this.pageModel.showMessage('error', error);
+                        this.changeState(state => { state.isBusy = false });
                     }
                 });
             }
@@ -278,20 +280,20 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private performLoadAction(widgetMode:boolean=false, querySupertype?:Kontext.QuerySupertype):void {
-        this.loadData(widgetMode, querySupertype).subscribe(
-            () => {
+    private performLoadAction(widgetMode: boolean = false, querySupertype?: Kontext.QuerySupertype): void {
+        this.loadData(widgetMode, querySupertype).subscribe({
+            next: () => {
                 this.changeState(state => {
                     state.isBusy = false
                 });
             },
-            (err) => {
+            error: (err) => {
                 this.changeState(state => {
                     state.isBusy = false
                 });
                 this.pageModel.showMessage('error', err);
-            }
-        );
+            },
+        });
     }
 
     private loadData(widgetMode:boolean=false, querySupertype?:Kontext.QuerySupertype): Observable<GetHistoryResponse> {
