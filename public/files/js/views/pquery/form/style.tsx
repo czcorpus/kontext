@@ -86,16 +86,6 @@ export const QueryRowDiv = styled.div`
         height: 1em;
     }
 
-    .query-type {
-        color: ${theme.colorLogoBlue};
-        display: flex;
-        align-items: center;
-
-        label {
-            margin-right: 0.4em;
-        }
-    }
-
     .query-error {
 
         margin-left: 0.2em;
@@ -107,6 +97,22 @@ export const QueryRowDiv = styled.div`
     }
 `;
 
+// ----------------- < /> ------------------------
+
+export const PQTypeFrozenSwitchSpan = styled.span`
+
+    color: ${theme.colorLogoBlue};
+    display: flex;
+    align-items: center;
+
+    label {
+        margin-right: 0.4em;
+
+        .toggle-img {
+            margin-left: 0.3em;
+        }
+    }
+`;
 
 // ---------------- <ParametersFieldset /> -------------
 
@@ -194,15 +200,28 @@ export const VerticalSeparator = styled.span`
     display: inline-block;
     width: 1px;
     height: 1.2em;
-    margin: 0 1em;
+    margin: 0 1em 0 1.3em;
     border-style: solid;
     border-color: ${theme.colorLogoBlue};
     border-width: 0 1px 0 0;
 `;
 
-// ----------------- <QTypeSwitchLabel /> --------------
+// ----------------- <PQTypeSwitchLabel /> --------------
 
-export const QTypeSwitchLabel = styled.label`
+export const PQTypeSwitchLabel = styled.span`
     display: flex;
     align-items: center;
+
+    .toggle-img {
+        margin-left: 0.4em;
+    }
+`;
+
+// ----------------- <PQueryToolbar /> -----------------
+
+export const PQueryToolbar = styled.div`
+    display: flex;
+    align-items: center;
+
+    padding-left: 1em;
 `;
