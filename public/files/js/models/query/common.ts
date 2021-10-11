@@ -194,7 +194,7 @@ export interface QueryFormModelState {
 
     queries:{[sourceId:string]:AnyQuery}; // corpname|filter_id -> query
 
-    cqlEditorMessages:{[sourceId:string]:string};
+    cqlEditorMessages:{[sourceId:string]:Array<string>};
 
     useRichQueryEditor:boolean;
 
@@ -330,7 +330,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             dispatcher,
             initState
         );
-        this.hintListener = this.hintListener.bind(this);
         this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
@@ -990,6 +989,34 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         return queryObj;
     }
 
+    private validateSemantics(
+        state:QueryFormModelState,
+        sourceId:string,
+        attrs:Array<ParsedAttr>
+    ):void {
+
+        state.cqlEditorMessages[sourceId] = pipe(
+            attrs,
+            List.map(
+                ({name, type}) => {
+                    if (type === 'posattr' && !this.attrHelper.attrExists(name)) {
+                        return `${this.pageModel.translate('query__attr_does_not_exist')}: <strong>${name}</strong>`;
+                    }
+
+                    if (type === 'structattr' && !this.attrHelper.structAttrExists(name, '0' /* TODO */)) {
+                        return `${this.pageModel.translate('query__structattr_does_not_exist')}: <strong>${name}.${name}</strong>`;
+                    }
+
+                    if (type === 'struct' && !this.attrHelper.structExists(name)) {
+                        return `${this.pageModel.translate('query__struct_does_not_exist')}: <strong>${name}</strong>`;
+                    }
+                    return null;
+                }
+            ),
+            List.filter(v => v !== null)
+        );
+    }
+
     protected reparseAdvancedQuery(
         state:QueryFormModelState,
         sourceId:string,
@@ -997,9 +1024,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     ):void {
 
         const queryObj = state.queries[sourceId];
-        let newAttrs:Array<ParsedAttr>;
         if (queryObj.qtype === 'advanced') {
-            [queryObj.queryHtml, newAttrs] = highlightSyntax({
+            const [queryHtml, newAttrs, _, syntaxErr] = highlightSyntax({
                 query: queryObj.query,
                 querySuperType: 'conc',
                 he: this.pageModel.getComponentHelpers(),
@@ -1018,13 +1044,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                         )
                     }
                     return tuple(null, null);
-                },
-                onHintChange: msg => this.hintListener(state, sourceId, msg)
+                }
             });
+            this.validateSemantics(state, sourceId, newAttrs);
             queryObj.focusedAttr = this.findFocusedAttr(queryObj);
-
+            queryObj.queryHtml = queryHtml;
             if (updateCurrAttrs) {
                 queryObj.parsedAttrs = newAttrs;
+            }
+            if (syntaxErr) {
+                state.cqlEditorMessages[sourceId].push(syntaxErr);
             }
         }
     }
@@ -1086,10 +1115,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             return queryObj.parsedAttrs[tokIdx].suggestions ?
                     queryObj.parsedAttrs[tokIdx].suggestions.timeReq : -1;
         }
-    }
-
-    private hintListener(state:QueryFormModelState, sourceId:string, msg:string):void {
-        state.cqlEditorMessages[sourceId] = msg;
     }
 
     private shouldDownArrowTriggerHistory(state:QueryFormModelState, sourceId:string):boolean {

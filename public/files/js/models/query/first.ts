@@ -281,7 +281,7 @@ export interface FirstQueryFormModelSwitchPreserve {
     queries:{[sourceId:string]:AnyQuery};
     lposValues:{[key:string]:string};
     alignedCorporaVisible:boolean;
-    cqlEditorMessage:{[key:string]:string};
+    cqlEditorMessages:{[key:string]:Array<string>};
 }
 
 
@@ -669,7 +669,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 Dict.fromEntries()
             ),
             alignedCorporaVisible: state.alignedCorporaVisible,
-            cqlEditorMessage:  pipe(
+            cqlEditorMessages: pipe(
                 commonCorps,
                 List.map(
                     ([oldCorp, newCorp]) => tuple(newCorp, state.cqlEditorMessages[getSrcCorp(oldCorp)])
@@ -699,7 +699,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         }
         state.queries[corp] = newQuery;
         this.setRawQuery(state, corp, oldQuery.query, null);
-        state.cqlEditorMessages[corp] = '';
+        state.cqlEditorMessages[corp] = [];
         if (!isAligned) {
             state.queries[corp].include_empty = false; // this is rather a formal stuff
         }

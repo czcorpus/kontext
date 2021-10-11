@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import * as S from './style';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Keyboard, tuple } from 'cnc-tskit';
+import { Keyboard, List, tuple } from 'cnc-tskit';
 
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
@@ -64,7 +64,7 @@ export interface CQLEditorViews {
 interface CQLEditorCoreState {
     queries:{[sourceId:string]:AdvancedQuery|SimpleQuery}|unknown; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
-    cqlEditorMessages:{[sourceId:string]:string};
+    cqlEditorMessages:{[sourceId:string]:Array<string>};
 }
 
 
@@ -383,11 +383,11 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                         { minHeight: `${this.props.minHeightEm}em` } : null} />
                     <div className="cql-editor-messages">
                         {
-                            this.props.cqlEditorMessages[this.props.sourceId] ?
+                            List.empty(this.props.cqlEditorMessages[this.props.sourceId]) ?
+                                null :
                                 <div className="cql-editor-message"
                                     dangerouslySetInnerHTML={
-                                        {__html: this.props.cqlEditorMessages[this.props.sourceId]}} /> :
-                                null
+                                        {__html: this.props.cqlEditorMessages[this.props.sourceId].join('<br />')}} />
                         }
                     </div>
                 </div>

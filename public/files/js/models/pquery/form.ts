@@ -78,7 +78,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         super(dispatcher, initState);
         this.layoutModel = layoutModel;
         this.attrHelper = attrHelper;
-        this.hintListener = this.hintListener.bind(this);
 
         this.addActionHandler(
             Actions.SubmitQuery,
@@ -811,12 +810,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    private hintListener(sourceId:string, msg:string):void {
-        this.changeState(state => {
-            state.cqlEditorMessages[sourceId] = msg;
-        });
-    }
-
     /**
      *
      * @todo duplicated code (models/query/common)
@@ -834,17 +827,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
      * @todo partially duplicated code (models/query/common)
      */
     private reparseAdvancedQuery(
+        state:PqueryFormModelState,
         queryObj:ParadigmaticQuery|ParadigmaticPartialQuery,
-        pqueryType:'full'|'split',
         sourceId:string,
         updateCurrAttrs:boolean
     ):void {
-
-        let newAttrs:Array<ParsedAttr>;
-        let pqItems:Array<ParsedPQItem>;
-        [queryObj.queryHtml, newAttrs, pqItems] = highlightSyntax({
+        const [queryHtml, newAttrs, pqItems, syntaxErr] = highlightSyntax({
             query: queryObj.query,
-            querySuperType: pqueryType === 'full' ? 'pquery' : 'conc',
+            querySuperType: state.pqueryType === 'full' ? 'pquery' : 'conc',
             he: this.layoutModel.getComponentHelpers(),
             attrHelper: this.attrHelper,
             wrapRange: (startIdx, endIdx) => {
@@ -861,9 +851,9 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     )
                 }
                 return tuple(null, null);
-            },
-            onHintChange: msg => this.hintListener(sourceId, msg)
+            }
         });
+        queryObj.queryHtml = queryHtml;
         queryObj.focusedAttr = this.findFocusedAttr(queryObj);
 
         if (updateCurrAttrs) {
@@ -871,6 +861,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             if (queryObj.type === 'full-query') {
                 queryObj.pqItems = pqItems;
             }
+        }
+        this.validateSemantics(state, sourceId, newAttrs, pqItems);
+        if (syntaxErr) {
+            state.cqlEditorMessages[sourceId].push(syntaxErr);
         }
     }
 
@@ -885,6 +879,35 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         } else {
             return false;
         }
+    }
+
+    private validateSemantics(
+        state:PqueryFormModelState,
+        sourceId:string,
+        attrs:Array<ParsedAttr>,
+        pqItems:Array<ParsedPQItem>
+    ):void {
+        state.cqlEditorMessages[sourceId] = pipe(
+            attrs,
+            List.map(
+                ({name, type,}) => {
+                    if (type === 'posattr' && !this.attrHelper.attrExists(name)) {
+                        return `${this.layoutModel.translate('query__attr_does_not_exist')}: <strong>${name}</strong>`;
+                    }
+
+                    if (type === 'structattr' && !this.attrHelper.structAttrExists(name, '0' /* TODO */)) {
+                        return `${this.layoutModel.translate('query__structattr_does_not_exist')}: <strong>${name}.${name}</strong>`;
+                    }
+
+                    if (type === 'struct' && !this.attrHelper.structExists(name)) {
+                        return `${this.layoutModel.translate('query__struct_does_not_exist')}: <strong>${name}</strong>`;
+                    }
+                    return null;
+                }
+            ),
+            List.filter(v => v !== null)
+        );
+        // TODO calculate num of "always" / "never" and report possible errors too
     }
 
     /**
@@ -911,7 +934,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
         state.downArrowTriggersHistory[sourceId] = this.shouldDownArrowTriggerHistory(queryObj);
 
-        this.reparseAdvancedQuery(queryObj, state.pqueryType, sourceId, true);
+        this.reparseAdvancedQuery(state, queryObj, sourceId, true);
     }
 
     private pushStateToHistory(state:PqueryFormModelState, queryId:string):void {
