@@ -130,7 +130,7 @@ export interface PqueryFormModelState {
     maxNumQueries:number;
     queries:ParadigmaticQueriesStorage; // pquery block -> query
     downArrowTriggersHistory:{[sourceId:string]:boolean};
-    cqlEditorMessages:{[sourceId:string]:string};
+    cqlEditorMessages:{[sourceId:string]:Array<string>};
     useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
@@ -203,7 +203,7 @@ export function newModelState(
             Dict.fromEntries()
         ),
         cqlEditorMessages: pipe(
-            List.repeat(idx => tuple(createSourceId(idx), ''), 2),
+            List.repeat(idx => tuple(createSourceId(idx), []), 2),
             Dict.fromEntries()
         ),
         useRichQueryEditor,
@@ -442,7 +442,7 @@ export function storedQueryToModel(
         ),
         cqlEditorMessages: pipe(
             queries,
-            List.map((q, i) => tuple(createSourceId(i), '')),
+            List.map((q, i) => tuple(createSourceId(i), [])),
             Dict.fromEntries()
         ),
         useRichQueryEditor,

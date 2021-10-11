@@ -22,7 +22,7 @@ import * as Kontext from '../../../types/kontext';
 import { parse as parseQuery, SyntaxError } from 'cqlParser/parser';
 import { IAttrHelper, NullAttrHelper } from './attrs';
 import { List, tuple, pipe, Dict } from 'cnc-tskit';
-import { QueryType, TokenSuggestions } from '../query';
+import { TokenSuggestions } from '../query';
 
 /**
  * CharsRule represents a pointer to the original
@@ -61,6 +61,7 @@ export interface ParsedAttr {
     name:string;
     value:string;
     type:'posattr'|'struct'|'structattr';
+    children:Array<ParsedAttr>;
     rangeVal:[number, number];
     rangeAttr:[number, number]|null; // if null then simplified form is expected (e.g. "foo")
     rangeAll:[number, number];
@@ -95,8 +96,6 @@ class RuleCharMap {
 
     private posCounter:number;
 
-    private readonly onHintChange:(message:string)=>void;
-
     private readonly wrapRange:(startIdx:number, endIdx:number)=>[string, string];
 
     constructor(
@@ -105,7 +104,6 @@ class RuleCharMap {
         attrHelper:IAttrHelper,
         wrapLongQuery:boolean,
         wrapRange:(startIdx:number, endIdx:number)=>[string, string],
-        onHintChange:(message:string)=>void
     ) {
 
         this.query = query;
@@ -115,7 +113,6 @@ class RuleCharMap {
         this.attrHelper = attrHelper;
         this.wrapLongQuery = wrapLongQuery;
         this.wrapRange = wrapRange;
-        this.onHintChange = onHintChange;
         this.posCounter = 0;
     }
 
@@ -194,7 +191,7 @@ class RuleCharMap {
         return [ansLeft, ansRight];
     }
 
-    private findSubRuleIn(rule:string, i1:number, i2:number):Array<CharsRule> {
+    private findRuleInRange(rule:string, i1:number, i2:number):Array<CharsRule> {
         const ans:Array<CharsRule> = [];
         for (let i = 0; i < this.nonTerminals.length; i += 1) {
             if (this.nonTerminals[i].rule === rule &&
@@ -237,7 +234,7 @@ class RuleCharMap {
     }
 
     private extractPQLimit(r:CharsRule):number {
-        const rule = this.findSubRuleIn('PQLimit', r.from, r.to);
+        const rule = this.findRuleInRange('PQLimit', r.from, r.to);
         if (!List.empty(rule)) {
             return parseFloat(this.ruleToSubstring(List.head(rule)));
         }
@@ -251,58 +248,82 @@ class RuleCharMap {
 
         const accInit:{
             parsedAttrs:Array<ParsedAttr>;
-            lastAttName:CharsRule|null;
             pqItems:Array<ParsedPQItem>;
-        } = {parsedAttrs: [], lastAttName: null, pqItems: []};
-        const errors:Array<string> = [];
+        } = {parsedAttrs: [], pqItems: []};
 
         const {parsedAttrs, pqItems} = pipe(
             this.nonTerminals,
             List.foldl(
                 (acc, curr) => {
                     switch (curr.rule) {
-                        case 'AtomQuery':
-                            const regexp = List.find(
-                                v => this.ruleToSubstring(v) === this.ruleToSubstring(curr),
-                                this.findSubRuleIn('RegExp', curr.from, curr.to)
+                        case 'OnePosition':
+                            return {
+                                ...acc,
+                                parsedAttrs: pipe(
+                                    this.findRuleInRange('AttVal', curr.from, curr.to),
+                                    List.map(paRule => {
+                                        const nameSrch = this.findRuleInRange('AttName', paRule.from, paRule.to);
+                                        const valSrch = this.findRuleInRange('RegExpRaw', paRule.from, paRule.to);
+                                        if (List.size(nameSrch) === 1 && List.size(valSrch) === 1) {
+                                            return tuple(List.head(nameSrch), List.head(valSrch));
+                                        }
+                                        return null;
+                                    }),
+                                    List.map<[CharsRule, CharsRule], ParsedAttr>(([nameRule, valueRule]) => ({
+                                        name: this.ruleToSubstring(nameRule),
+                                        value: this.ruleToSubstring(valueRule),
+                                        type: 'posattr',
+                                        children: [],
+                                        rangeVal: tuple(valueRule.from, valueRule.to),
+                                        rangeAttr: tuple(nameRule.from, nameRule.to),
+                                        rangeAll: tuple(nameRule.from, valueRule.to),
+                                        suggestions: null
+                                    })),
+                                    List.concatr(acc.parsedAttrs)
+                                )
+                            };
+                        case 'Structure': {
+                            const children = pipe(
+                                this.findRuleInRange('AttVal', curr.from, curr.to),
+                                List.map(
+                                    saRule => {
+                                        const nameSrch = this.findRuleInRange('AttName', saRule.from, saRule.to);
+                                        const valSrch = this.findRuleInRange('RegExpRaw', saRule.from, saRule.to);
+                                        if (List.size(nameSrch) === 1 && List.size(valSrch) === 1) {
+                                            return tuple(List.head(nameSrch), List.head(valSrch));
+                                        }
+                                        return null;
+                                    }
+                                ),
+                                List.filter(v => v !== null),
+                                List.map<[CharsRule, CharsRule], ParsedAttr>(([nameRule, valueRule]) => ({
+                                    name: this.ruleToSubstring(nameRule),
+                                    value: this.ruleToSubstring(valueRule),
+                                    type: 'structattr',
+                                    children: [],
+                                    rangeVal: tuple(valueRule.from, valueRule.to),
+                                    rangeAttr: tuple(nameRule.from, nameRule.to),
+                                    rangeAll: tuple(nameRule.from, valueRule.to),
+                                    suggestions: null
+                                }))
                             );
-                            return regexp ?
-                                {
-                                    ...acc,
-                                    parsedAttrs: acc.parsedAttrs.concat([{
-                                        name: null,
-                                        value: this.stripFirstAndLast(this.ruleToSubstring(curr)),
-                                        type: 'posattr',
-                                        rangeVal: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
-                                        rangeAll: tuple(regexp.from + 1, regexp.to - 1), // +/- 1 <- quotes
-                                        rangeAttr: null,
-                                        suggestions: null
-                                    }])
-                                } :
-                                {...acc};
-                        case 'Structure':
-                            return {...acc, lastAttName: null};
-                        case 'Repetition':
-                            return {...acc, lastAttName: null};
-                        case 'AttName':
-                            return {...acc, lastAttName: curr};
-                        case 'RegExpRaw':
-                            return acc.lastAttName ?
-                                {
-                                    ...acc,
-                                    parsedAttrs: List.push({
-                                        name: this.ruleToSubstring(acc.lastAttName),
-                                        value: this.ruleToSubstring(curr),
-                                        type: 'posattr',
-                                        rangeVal: tuple(curr.from, curr.to),
-                                        rangeAttr: tuple(acc.lastAttName.from, acc.lastAttName.to),
-                                        rangeAll: tuple(acc.lastAttName.from, curr.to),
-                                        suggestions: null
-                                    }, acc.parsedAttrs)
-                                } :
-                                {...acc};
+                            const nameSrch = this.findRuleInRange('AttName', curr.from, curr.to);
+                            return {
+                                ...acc,
+                                parsedAttrs: List.push({
+                                    name: this.ruleToSubstring(List.head(nameSrch)),
+                                    value: null,
+                                    type: 'struct',
+                                    children,
+                                    rangeVal: null,
+                                    rangeAttr: tuple(curr.from, curr.to),
+                                    rangeAll: tuple(curr.from, curr.to),
+                                    suggestions: null
+                                }, acc.parsedAttrs)
+                            };
+                        }
                         case 'PQType':
-                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            const q = this.findRuleInRange('Query', curr.from, curr.to);
                             return !List.empty(q) ?
                                 {
                                     ...acc,
@@ -316,7 +337,7 @@ class RuleCharMap {
                                 } :
                                 acc;
                         case 'PQAlways': {
-                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            const q = this.findRuleInRange('Query', curr.from, curr.to);
                             return !List.empty(q) ?
                                 {
                                     ...acc,
@@ -331,7 +352,7 @@ class RuleCharMap {
                                 acc;
                         }
                         case 'PQNever': {
-                            const q = this.findSubRuleIn('Query', curr.from, curr.to);
+                            const q = this.findRuleInRange('Query', curr.from, curr.to);
                             return !List.empty(q) ?
                                 {
                                     ...acc,
@@ -359,16 +380,13 @@ class RuleCharMap {
             List.forEach(nonTerm => {
                 switch (nonTerm.rule) {
                     case 'Position':
-                        this.findSubRuleIn('AttVal', nonTerm.from, nonTerm.to).forEach(attVal => {
-                            this.findSubRuleIn('AttName', attVal.from, attVal.to).forEach(pa => {
+                        this.findRuleInRange('AttVal', nonTerm.from, nonTerm.to).forEach(attVal => {
+                            this.findRuleInRange('AttName', attVal.from, attVal.to).forEach(pa => {
                                 const range = this.convertRange(pa.from, pa.to, chunks);
                                 const posAttrName = this.ruleToSubstring(pa);
                                 if (this.attrHelper.attrExists(posAttrName)) {
                                     inserts[range[0]].push(`<span title="${this.he.translate('query__posattr')}">`);
                                     inserts[range[1]+1].push('</span>');
-
-                                } else {
-                                    errors.push(`${this.he.translate('query__attr_does_not_exist')}: <strong>${posAttrName}</strong>`);
                                 }
 
                                 const posAttrValueRule = this.findSubRuleSeqIn(['AttName', 'RegExp'], attVal.from, attVal.to);
@@ -405,7 +423,7 @@ class RuleCharMap {
                         this.posCounter += 1;
                     break;
                     case 'Structure':
-                        const attrNamesInStruct = this.findSubRuleIn('AttName', nonTerm.from, nonTerm.to);
+                        const attrNamesInStruct = this.findRuleInRange('AttName', nonTerm.from, nonTerm.to);
                         const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
                         const structRange = this.convertRange(structTmp.from, structTmp.to, chunks);
                         const structName = this.ruleToSubstring(structTmp);
@@ -420,9 +438,6 @@ class RuleCharMap {
                             if (this.attrHelper.structAttrExists(structName, structAttrName)) {
                                 inserts[range[0]].push(`<span title="${this.he.translate('query__structattr')}">`);
                                 inserts[range[1]+1].push('</span>');
-
-                            } else {
-                                errors.push(`${this.he.translate('query__structattr_does_not_exist')}: <strong>${structName}.${structAttrName}</strong>`);
                             }
                         });
                     break;
@@ -432,15 +447,6 @@ class RuleCharMap {
                             inserts[range[0]].push('<br />');
                         }
                     break;
-                    case 'OpenStructTag':
-                    case 'CloseStructTag': {
-                        const attrNamesInStruct = this.findSubRuleIn('AttName', nonTerm.from, nonTerm.to);
-                        const structTmp = attrNamesInStruct[attrNamesInStruct.length - 1];
-                        const structName = this.ruleToSubstring(structTmp);
-                        if (!this.attrHelper.structExists(structName)) {
-                            errors.push(`${this.he.translate('query__struct_does_not_exist')}: <strong>${structName}</strong>`);
-                        }
-                    }
                     case 'RgLookOperator': {
                         const range = this.convertRange(nonTerm.from, nonTerm.to, chunks);
                         inserts[range[0]].push(`<span class="rg-look-operator">`);
@@ -450,12 +456,6 @@ class RuleCharMap {
                 }
             })
         );
-        if (errors.length > 0) {
-            this.onHintChange('<strong>\u26A0</strong>\u00a0' + errors.join('<br />'));
-
-        } else {
-            this.onHintChange(null);
-        }
         const ans:Array<string> = [];
         for (let i = 0; i < chunks.length; i += 1) {
             inserts[i].forEach(v => ans.push(v));
@@ -611,17 +611,17 @@ interface HSArgs {
     attrHelper:IAttrHelper;
     parserRecoverIdx:number;
     wrapLongQuery:boolean;
-    onHintChange:(message:string)=>void;
     wrapRange:(startIdx:number, endIdx:number)=>[string, string];
 }
 
 
 function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, parserRecoverIdx,
-            wrapLongQuery, wrapRange, onHintChange}:HSArgs):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
+            wrapLongQuery, wrapRange}:HSArgs):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
 
-    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange, onHintChange);
+    const rcMap = new RuleCharMap(query, he, attrHelper, wrapLongQuery, wrapRange);
     const stack = new ParserStack(rcMap);
-    const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
+
+    const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):[string, string|undefined] => {
         if (numParserRecover === 0 && error) {
             const title = he.translate(
                 'query__unrecognized_input_{wrongChar}{position}',
@@ -631,9 +631,13 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 }
             );
             const style = 'text-decoration: underline dotted red';
-            return `<span title="${escapeQuery(title)}" style="${style}">` + escapeQuery(v) + '</span>';
+            return tuple(
+                `<span title="${escapeQuery(title)}" style="${style}">` + escapeQuery(v) + '</span>',
+                title
+            );
+
         }
-        return escapeQuery(v);
+        return tuple(escapeQuery(v), undefined);
     }
 
     let parseError:SyntaxError = null;
@@ -668,7 +672,7 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     const [ans, parsedAttrs, pqItems] = rcMap.generate();
 
     if (query.length === 0) {
-        return tuple('', [], []);
+        return tuple('', [], [], undefined);
 
     } else if (lastPos < query.length && applyRules.length > 1) {
         // try to apply a partial rule to the rest of the query
@@ -682,21 +686,24 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
                 attrHelper,
                 wrapLongQuery: false,
                 wrapRange,
-                onHintChange,
                 parserRecoverIdx: parserRecoverIdx + 1
             });
 
+            const [subQueryHighlight, err] = wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError);
             return tuple(
-                ans + wrapUnrecognizedPart(srch[1] + srch[2], parserRecoverIdx, parseError) + partial,
+                ans + subQueryHighlight + partial,
                 parsedAttrs,
-                pqItems
+                pqItems,
+                err
             );
         }
     }
+    const [subQueryHighlight, err] = wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError);
     return tuple(
-        ans + (query.substr(lastPos).length > 0 ? wrapUnrecognizedPart(query.substr(lastPos), parserRecoverIdx, parseError) : ''),
+        ans + (query.substr(lastPos).length > 0 ? subQueryHighlight : ''),
         parsedAttrs,
-        pqItems
+        pqItems,
+        query.length > lastPos ? err : undefined
     );
 }
 
@@ -715,18 +722,19 @@ export function getApplyRules(querySuperType:Kontext.QuerySupertype):Array<strin
  * highlightSyntax generates a syntax highlighting
  * for a query by embedding an HTML markup into
  * the resulting string.
+ *
+ * @return a 4-tuple (highlighted query, list of detected attributes, list of detected Paradigm. query blocks, syntax error)
  */
 export function highlightSyntax(
     {
-        query, querySuperType, he, attrHelper, wrapRange, onHintChange
+        query, querySuperType, he, attrHelper, wrapRange
     }:{
         query:string,
         querySuperType:Kontext.QuerySupertype,
         he:Kontext.ComponentHelpers,
         attrHelper:IAttrHelper,
         wrapRange:((startIdx:number, endIdx:number)=>[string, string])|undefined,
-        onHintChange:(message:string)=>void
-    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
+    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
 
     return _highlightSyntax({
         query: query,
@@ -736,17 +744,20 @@ export function highlightSyntax(
         attrHelper: attrHelper ? attrHelper : new NullAttrHelper(),
         wrapLongQuery: false,
         wrapRange,
-        onHintChange: onHintChange ? onHintChange : _ => undefined,
         parserRecoverIdx: 0
     });
 }
 
+/**
+ *
+ * @return a 4-tuple (highlighted query, list of detected attributes, list of detected Paradigm. query blocks, syntax error)
+ */
 export function highlightSyntaxStatic(
     {query, querySuperType, he}:{
         query:string,
         querySuperType:Kontext.QuerySupertype,
         he:Kontext.Translator
-    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>] {
+    }):[string, Array<ParsedAttr>, Array<ParsedPQItem>, string] {
 
     return _highlightSyntax({
         query: query,
@@ -756,7 +767,6 @@ export function highlightSyntaxStatic(
         attrHelper: new NullAttrHelper(),
         wrapLongQuery: true,
         wrapRange: undefined,
-        onHintChange: _ => undefined,
         parserRecoverIdx: 0
     });
 }
