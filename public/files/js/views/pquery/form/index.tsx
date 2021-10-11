@@ -219,17 +219,6 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             </span>
                         }
                     </S.ExpressionRoleFieldset>
-                    <S.VerticalSeparator />
-                    <span className="query-type">
-                        <label>{he.translate('query__qt_advanced')}</label>
-                        <layoutViews.ToggleSwitch checked={true} disabled={true} />
-                        <span>
-                            <layoutViews.InlineHelp noSuperscript={true}
-                                    customStyle={{maxWidth: '30em'}}>
-                                {he.translate('query__tip_09')}
-                            </layoutViews.InlineHelp>
-                        </span>
-                    </span>
                 </S.QueryRowDiv>
                 <S.QueryRowDiv>
                 {props.useRichQueryEditor ?
@@ -330,12 +319,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
     // ---------------------- <QTypeSwitch /> ---------------------
 
-    const QTypeSwitch:React.FC<{
+    const PQTypeSwitch:React.FC<{
         qtype:'full'|'split';
 
     }> = (props) => {
 
-        const handleSelect = (evt:React.ChangeEvent<HTMLInputElement>) => {
+        const handleSelect = () => {
             dispatcher.dispatch(
                 Actions.ChangePQueryType,
                 {qtype: props.qtype === 'split' ? 'full' : 'split'}
@@ -343,12 +332,31 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         }
 
         return (
-            <S.QTypeSwitchLabel>
-                {he.translate('pquery__pquery_type_split')}
-                <input type="checkbox" checked={props.qtype === 'split'} value="split" onChange={handleSelect} />
-            </S.QTypeSwitchLabel>
+            <S.PQTypeSwitchLabel>
+                <label htmlFor="pqtype-switch">{he.translate('pquery__pquery_type_split')}</label>
+                <layoutViews.ToggleSwitch onChange={handleSelect} checked={props.qtype === 'split'}
+                                id="pqtype-switch" />
+            </S.PQTypeSwitchLabel>
         );
     };
+
+    // ---------------------- <QTypeFrozenSwitch /> -------------------
+
+    const PQTypeFrozenSwitch:React.FC<{
+    }> = () => (
+        <S.PQTypeFrozenSwitchSpan>
+            <label>
+                {he.translate('query__qt_advanced')}
+                <layoutViews.ToggleSwitch checked={true} disabled={true} />
+            </label>
+            <span>
+                <layoutViews.InlineHelp noSuperscript={true}
+                        customStyle={{maxWidth: '30em'}}>
+                    {he.translate('query__tip_09')}
+                </layoutViews.InlineHelp>
+            </span>
+        </S.PQTypeFrozenSwitchSpan>
+    );
 
     // ---------------------- <PqueryForm /> ---------------------
 
@@ -478,7 +486,11 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             <S.PqueryFormSection>
                 {props.corparchWidget ? <props.corparchWidget /> : null}
                 <S.PqueryForm>
-                    <QTypeSwitch qtype={props.pqueryType} />
+                    <S.PQueryToolbar>
+                        <PQTypeSwitch qtype={props.pqueryType} />
+                        <S.VerticalSeparator />
+                        <PQTypeFrozenSwitch />
+                    </S.PQueryToolbar>
                     {_renderMainFieldset()}
                 </S.PqueryForm>
             </S.PqueryFormSection>

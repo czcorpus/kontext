@@ -623,7 +623,6 @@ function _highlightSyntax({query, applyRules, he, ignoreErrors, attrHelper, pars
     const stack = new ParserStack(rcMap);
     const wrapUnrecognizedPart = (v:string, numParserRecover:number, error:SyntaxError):string => {
         if (numParserRecover === 0 && error) {
-            console.log('err: ', error)
             const title = he.translate(
                 'query__unrecognized_input_{wrongChar}{position}',
                 {
