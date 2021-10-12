@@ -22,7 +22,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
-import { InputMode, BaseSubcorpFormState, CreateSubcorpusArgs, BaseSubcorpFormModel } from './common';
+import { InputMode, BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { ITranslator, IFullActionControl } from 'kombo';
 import { List } from 'cnc-tskit';
 import { Actions } from './actions';
@@ -81,7 +81,7 @@ export interface SubcorpFormModelState {
 }
 
 
-export class SubcorpFormModel extends BaseSubcorpFormModel<SubcorpFormModelState> implements IUnregistrable {
+export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelState> implements IUnregistrable {
 
     constructor(
         dispatcher:IFullActionControl,
@@ -129,20 +129,20 @@ export class SubcorpFormModel extends BaseSubcorpFormModel<SubcorpFormModelState
             Actions.FormSubmit.name,
             action => {
                 if (this.state.inputMode === 'gui') {
-                    this.changeState(state => {state.isBusy = true});
-                    this.submit(this.getSubmitArgs(), () => this.validateForm(true)).subscribe(
-                        () => {
+                    this.changeState(state => { state.isBusy = true });
+                    this.submit(this.getSubmitArgs(), (args) => this.validateForm(true)).subscribe({
+                        next: () => {
                             this.changeState(state => {
                                 state.isBusy = false
                             });
                             window.location.href = this.pageModel.createActionUrl(
                                 'subcorpus/list');
                         },
-                        (err) => {
-                            this.changeState(state => {state.isBusy = false});
+                        error: (err) => {
+                            this.changeState(state => { state.isBusy = false });
                             this.pageModel.showMessage('error', err);
                         }
-                    );
+                    });
 
                 } else if (this.state.inputMode === 'within') {
                     this.validateForm(false);

@@ -44,6 +44,7 @@ import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from './cqleditor/attrs';
 import { highlightSyntaxStatic } from './cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
+import { QuickSubcorpModel } from '../subcorp/quickSubcorp';
 
 
 export interface QueryFormUserEntries {
@@ -273,7 +274,9 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      */
     shuffleForbidden:boolean;
 
-    alignedCorporaVisible:boolean;
+    alignedCorporaVisible: boolean;
+
+    quickSubcorpVisible: boolean;
 }
 
 
@@ -289,12 +292,15 @@ export interface FirstQueryFormModelSwitchPreserve {
  *
  */
 export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
-        implements IUnregistrable {
+    implements IUnregistrable {
+    
+    protected readonly quickSubcorpModel:QuickSubcorpModel;
 
     constructor(
             dispatcher:IFullActionControl,
             pageModel:PageModel,
-            textTypesModel:TextTypesModel,
+            textTypesModel: TextTypesModel,
+            quickSubcorpModel:QuickSubcorpModel,
             queryContextModel:QueryContextModel,
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:QueryFormProperties
@@ -389,8 +395,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 alignedCorporaVisible: List.size(corpora) > 1,
-                isLocalUiLang: props.isLocalUiLang
+                isLocalUiLang: props.isLocalUiLang,
+                quickSubcorpVisible: false,
         });
+        this.quickSubcorpModel = quickSubcorpModel;
 
         this.addActionHandler<typeof Actions.QueryInputSelectSubcorp>(
             Actions.QueryInputSelectSubcorp.name,
@@ -606,6 +614,24 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
                     queryObj.pcq_pos_neg = action.payload.value;
+                });
+            }
+        );
+
+        this.addActionHandler<typeof Actions.QueryShowQuickSubcorpWidget>(
+            Actions.QueryShowQuickSubcorpWidget.name,
+            action => {
+                this.changeState(state => {
+                    state.quickSubcorpVisible = true;
+                });
+            }
+        );
+
+        this.addActionHandler<typeof Actions.QueryHideQuickSubcorpWidget>(
+            Actions.QueryHideQuickSubcorpWidget.name,
+            action => {
+                this.changeState(state => {
+                    state.quickSubcorpVisible = false;
                 });
             }
         );

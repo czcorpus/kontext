@@ -214,4 +214,15 @@ export class Actions {
     }> = {
         name: 'SUBCORP_FORM_HIDE_RAW_WITHIN_HINT'
     };
+
+    static QuickSubcorpSubmit:Action<{
+    }> = {
+        name: 'QUICK_SUBCORP_SUBMIT'
+    };
+
+    static QuickSubcorpChangeName: Action<{
+        value: string;
+    }> = {
+        name: 'QUICK_SUBCORP_CHANGE_NAME'
+    };
 }

@@ -90,13 +90,11 @@ export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
 }
 
-export class BaseSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
+export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 
-    // TODO make these private in subclasses somehow
-    pageModel:PageModel;
-    
-    textTypesModel: TextTypesModel;
+    readonly pageModel:PageModel;
 
+    readonly textTypesModel: TextTypesModel;
 
     constructor(
         dispatcher: IFullActionControl,
@@ -112,8 +110,8 @@ export class BaseSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
         this.textTypesModel = textTypesModel;
     }
 
-    submit(args:CreateSubcorpusArgs, validator: () => Error|null):Observable<any> {
-        const err = validator();
+    submit(args:CreateSubcorpusArgs, validator: (args) => Error|null):Observable<any> {
+        const err = validator(args);
         if (!err) {
             return this.pageModel.ajax$<any>(
                 HTTP.Method.POST,

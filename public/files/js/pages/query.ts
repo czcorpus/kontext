@@ -44,6 +44,7 @@ import liveAttributes from 'plugins/liveAttributes/init';
 import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
+import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 
 
 /**
@@ -93,7 +94,9 @@ export class QueryPage {
 
     private queryModel:FirstQueryFormModel;
 
-    private textTypesModel:TextTypesModel;
+    private textTypesModel: TextTypesModel;
+    
+    private quickSubcorpModel: QuickSubcorpModel;
 
     private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
@@ -154,6 +157,12 @@ export class QueryPage {
             queryFormArgs.bib_mapping
         );
 
+        this.quickSubcorpModel = new QuickSubcorpModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.textTypesModel,
+        );
+
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
@@ -196,6 +205,7 @@ export class QueryPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.textTypesModel,
+            this.quickSubcorpModel,
             this.queryContextModel,
             this.layoutModel.qsuggPlugin,
             {
@@ -266,6 +276,7 @@ export class QueryPage {
             CorparchWidget: corparchWidget,
             queryModel: this.queryModel,
             textTypesModel: this.textTypesModel,
+            quickSubcorpModel: this.quickSubcorpModel,
             queryHintModel: this.queryHintModel,
             withinBuilderModel: this.withinBuilderModel,
             virtualKeyboardModel: this.virtualKeyboardModel,

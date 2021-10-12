@@ -20,15 +20,18 @@
 
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
-import { CreateSubcorpusArgs, BaseSubcorpFormModel } from './common';
+import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { IFullActionControl } from 'kombo';
+import { Actions } from './actions';
+import { Dict } from 'cnc-tskit';
 
 
 export interface QuickSubcorpModelState {
+    subcname: string;
 }
 
 
-export class QuickSubcorpModel extends BaseSubcorpFormModel<QuickSubcorpModelState> {
+export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelState> {
 
     constructor(
         dispatcher:IFullActionControl,
@@ -39,28 +42,48 @@ export class QuickSubcorpModel extends BaseSubcorpFormModel<QuickSubcorpModelSta
             dispatcher,
             pageModel,
             textTypesModel,
-            {},
+            {
+                subcname: '',
+            },
+        );
+
+        this.addActionHandler<typeof Actions.QuickSubcorpSubmit>(
+            Actions.QuickSubcorpSubmit.name,
+            action => {
+                const args = {
+                    corpname: pageModel.getNestedConf('corpusIdent', 'id'),
+                    subcname: this.state.subcname,
+                    publish: false,
+                    description: '',
+                    aligned_corpora: pageModel.getConf('alignedCorpora'),
+                    text_types: this.textTypesModel.UNSAFE_exportSelections(false),
+                    form_type: 'tt-sel'
+                } as CreateSubcorpusArgs;
+
+                this.submit(args, this.validate).subscribe({
+                    next: data => {
+                        this.pageModel.showMessage('info', 'TODO - subcorpus created');
+                    },
+                    error: error => this.pageModel.showMessage('error', error)
+                });
+            }
+        );
+
+        this.addActionHandler<typeof Actions.QuickSubcorpChangeName>(
+            Actions.QuickSubcorpChangeName.name,
+            action => {
+                this.changeState(state => {
+                    state.subcname = action.payload.value;
+                });
+            }
         );
 
     }
 
-    getRegistrationId():string {
-        return 'quick-subcorp-model';
-    }
-
-    private getSubmitArgs():CreateSubcorpusArgs {
-        return {
-            corpname: '',
-            subcname: '',
-            publish: false,
-            description: '',
-            aligned_corpora: [],
-            text_types: this.textTypesModel.UNSAFE_exportSelections(false),
-            form_type: 'tt-sel'
-        };
-    }
-
-    validate():Error|null {
+    validate(args: CreateSubcorpusArgs): Error | null {
+        if (Dict.size(args.text_types) === 0) {
+            return Error('TODO - no text types selected, can not create subcorpus');
+        }
         return null;
     }
 
