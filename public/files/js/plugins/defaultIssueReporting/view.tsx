@@ -23,15 +23,12 @@ import * as Kontext from '../../types/kontext';
 import { IssueReportingModel, IssueReportingModelState } from './init';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from './actions';
+import * as CoreViews from '../../types/coreViews';
 
-
-export interface IssueReportingWidgetProps {
-
-}
 
 
 export interface Views {
-    IssueReportingWidget:React.ComponentClass<IssueReportingWidgetProps>;
+    IssueReportingWidget:React.ComponentClass<CoreViews.IssueReportingLink.Props>;
 }
 
 
@@ -106,7 +103,7 @@ export function init(
 
     // -------------- <IssueReportingWidget /> -------------------------------------
 
-    class IssueReportingWidget extends React.Component<IssueReportingWidgetProps & IssueReportingModelState> {
+    class IssueReportingWidget extends React.Component<CoreViews.IssueReportingLink.Props & IssueReportingModelState> {
 
         constructor(props) {
             super(props);
@@ -149,7 +146,7 @@ export function init(
 
 
     return {
-        IssueReportingWidget: BoundWithProps<IssueReportingWidgetProps, IssueReportingModelState>(IssueReportingWidget, reportingModel)
+        IssueReportingWidget: BoundWithProps<CoreViews.IssueReportingLink.Props, IssueReportingModelState>(IssueReportingWidget, reportingModel)
     };
 
 }

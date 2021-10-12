@@ -20,13 +20,14 @@
 
 import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit } from './view';
+import * as CoreViews from '../../types/coreViews';
 
 
 export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {
 
-    private view:React.FC<{}>;
+    private view:React.FC<CoreViews.IssueReportingLink.Props>;
 
-    constructor(view:React.FC<{}>) {
+    constructor(view:React.FC<CoreViews.IssueReportingLink.Props>) {
         this.view = view;
     }
 
@@ -34,7 +35,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
         return true;
     }
 
-    getWidgetView():React.FC<{}> {
+    getWidgetView():React.FC<CoreViews.IssueReportingLink.Props> {
         return this.view;
     }
 }
