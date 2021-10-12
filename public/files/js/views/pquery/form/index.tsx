@@ -141,7 +141,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         concLoadingStatus:ConcStatus|undefined;
         numQueries:number;
 
-    }> = (props) => {
+    }> = ({sourceId, concLoadingStatus, numQueries}) => {
 
         const removeQueryHandler = (sourceId:string) => () => {
             dispatcher.dispatch(
@@ -150,17 +150,17 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             );
         };
 
-        if (props.concLoadingStatus === 'none' && props.numQueries > 2) {
+        if (concLoadingStatus === 'none' && numQueries > 2) {
             return <layoutViews.DelItemIcon title={he.translate('pquery__remove_btn')}
-                        onClick={removeQueryHandler(props.sourceId)} />;
+                        onClick={removeQueryHandler(sourceId)} />;
 
-        } else if (props.concLoadingStatus && props.concLoadingStatus === 'running') {
+        } else if (concLoadingStatus && concLoadingStatus === 'running') {
             return <layoutViews.AjaxLoaderBarImage htmlClass="loader"/>;
 
-        } else if (props.concLoadingStatus && props.concLoadingStatus === 'finished') {
+        } else if (concLoadingStatus && concLoadingStatus === 'finished') {
             return <span>{'\u2713'}</span>;
 
-        } else if (props.concLoadingStatus && props.concLoadingStatus === 'failed') {
+        } else if (concLoadingStatus && concLoadingStatus === 'failed') {
             return <layoutViews.StatusIcon status="error" htmlClass="query-error" />;
         }
         return null;

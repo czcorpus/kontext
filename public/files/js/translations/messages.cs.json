@@ -831,6 +831,9 @@
         "pquery__expression_role_never": " Vyloučit (podmínka \"nikdy\")",
         "pquery__expression_role_always": "Omezit hledání na (podmínka \"vždy\")",
         "pquery__expression_role_ratio": "max. poměr výjimek",
-        "pquery__pquery_type_split": "Zapisovat po dílčích dotazech"
+        "pquery__pquery_type_split": "Zapisovat po dílčích dotazech",
+        "pquery__only_one_field_can_be_of_{type}": "Typ \"{type}\" může mít pouze jeden dílčí dotaz",
+        "pquery__condition_never": "nikdy",
+        "pquery__condition_always": "vždy"
     }
 }

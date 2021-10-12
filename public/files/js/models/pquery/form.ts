@@ -124,6 +124,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             state.queries = splitFullQuery(state.queries, state.corpname);
                             Dict.forEach(
                                 (query, sourceId) => {
+                                    state.concWait[sourceId] = 'none';
                                     this.setRawQuery(
                                         state,
                                         query,
@@ -143,6 +144,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             // and replace it with a single item in state.queries
                             const fullQuery = joinPartialQueries(state.queries, state.corpname);
                             state.queries = {full: fullQuery};
+                            state.concWait['full'] = 'none';
                             this.setRawQuery(
                                 state,
                                 fullQuery,
@@ -399,7 +401,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         Dict.some(
                             (v, _) => v.type === 'partial-query' && v.expressionRole.type === action.payload.value, this.state.queries
                         )) {
-                    this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
+                    const type = action.payload.value === 'subset' ?
+                            this.layoutModel.translate('pquery__condition_never') :
+                            this.layoutModel.translate('pquery__condition_always');
+                    this.layoutModel.showMessage(
+                        'warning', this.layoutModel.translate('pquery__only_one_field_can_be_of_{type}', {type}))
 
                 } else {
                     this.changeState(state => {

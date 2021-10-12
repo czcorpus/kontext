@@ -831,6 +831,9 @@
         "pquery__expression_role_never": "Exclude (the \"never\" condition)",
         "pquery__expression_role_always": "Restrict search to (the \"always\" condition)",
         "pquery__expression_role_ratio": "max. ratio of exceptions",
-        "pquery__pquery_type_split": "Enter as partial sub-queries"
+        "pquery__pquery_type_split": "Enter as partial sub-queries",
+        "pquery__only_one_field_can_be_of_{type}": "Only a single sub-query can be of the \"{type}\" type",
+        "pquery__condition_never": "never",
+        "pquery__condition_always": "always"
     }
 }
