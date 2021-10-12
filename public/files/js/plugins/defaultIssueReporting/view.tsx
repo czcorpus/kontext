@@ -35,14 +35,18 @@ export interface Views {
 }
 
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            reportingModel:IssueReportingModel):Views {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    reportingModel:IssueReportingModel
+
+):Views {
 
     const layoutViews = he.getLayoutViews();
 
     // -------------- <SubmitButton /> -------------------------------------
 
-    const SubmitButton:React.SFC<{
+    const SubmitButton:React.FC<{
         waitingForModel:boolean;
 
     }> = (props) => {
@@ -70,7 +74,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------- <IssueReportingForm /> -------------------------------------
 
-    const IssueReportingForm:React.SFC<{
+    const IssueReportingForm:React.FC<{
         value:string;
         waitingForModel:boolean;
         closeClickHandler:()=>void;
@@ -145,7 +149,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
 
     return {
-        IssueReportingWidget: BoundWithProps(IssueReportingWidget, reportingModel)
+        IssueReportingWidget: BoundWithProps<IssueReportingWidgetProps, IssueReportingModelState>(IssueReportingWidget, reportingModel)
     };
 
 }

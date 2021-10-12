@@ -24,9 +24,9 @@ import { init as viewInit } from './view';
 
 export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPlugin {
 
-    private view:React.SFC<{}>;
+    private view:React.FC<{}>;
 
-    constructor(view:React.SFC<{}>) {
+    constructor(view:React.FC<{}>) {
         this.view = view;
     }
 
@@ -34,7 +34,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
         return true;
     }
 
-    getWidgetView():React.SFC<{}> {
+    getWidgetView():React.FC<{}> {
         return this.view;
     }
 }
