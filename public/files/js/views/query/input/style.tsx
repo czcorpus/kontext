@@ -437,15 +437,6 @@ export const QueryArea = styled.div`
         font-family: ${theme.monospaceFontFamily};
     }
 
-    .cql-editor-messages {
-        padding: 0.3em;
-
-        .cql-editor-message {
-            color: ${theme.colorLogoPink};
-            border-radius: ${theme.inputBorderRadius};
-        }
-    }
-
     ${theme.mediaPhone} {
 
         border-radius: ${theme.inputBorderRadius};

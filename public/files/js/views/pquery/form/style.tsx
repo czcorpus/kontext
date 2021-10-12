@@ -42,10 +42,6 @@ export const PqueryFormSection = styled.section`
 
     margin: ${theme.pageFormMargin};
 
-    form >* {
-        margin-top: 1em;
-    }
-
     .loader {
         margin: 0 1em;
     }
@@ -63,7 +59,7 @@ export const PqueryFormSection = styled.section`
 
 export const PqueryForm = styled.form`
 
-    margin-top: 1.5em;
+    margin-top: 2.7em;
 
     .ExpandableArea > fieldset {
         margin-top: 1em;
@@ -163,7 +159,7 @@ export const BorderlessFieldset = styled.fieldset`
 // ---------------- <EditorFieldset /> -------------
 
 export const EditorFieldset = styled.fieldset`
-    border: none;
+    padding: 0;
 `;
 
 
@@ -211,6 +207,7 @@ export const VerticalSeparator = styled.span`
 export const PQTypeSwitchLabel = styled.span`
     display: flex;
     align-items: center;
+    color: ${theme.colorLogoBlue};
 
     .toggle-img {
         margin-left: 0.4em;
@@ -222,6 +219,6 @@ export const PQTypeSwitchLabel = styled.span`
 export const PQueryToolbar = styled.div`
     display: flex;
     align-items: center;
-
-    padding-left: 1em;
+    padding-left: 0.6em;
+    margin-bottom: 0.4em;
 `;

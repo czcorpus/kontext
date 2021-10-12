@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import * as S from './style';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Keyboard, List, tuple } from 'cnc-tskit';
+import { Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
 import { QueryFormModelState } from '../../models/query/common';
 import { QueryFormModel } from '../../models/query/common';
@@ -381,15 +381,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 onSelect={this.handleSelect}
                                 style={this.props.minHeightEm ?
                                         { minHeight: `${this.props.minHeightEm}em` } : null} />
-                    <div className="cql-editor-messages">
-                        {
-                            List.empty(this.props.cqlEditorMessages[this.props.sourceId]) ?
-                                null :
-                                <div className="cql-editor-message"
-                                    dangerouslySetInnerHTML={
-                                        {__html: this.props.cqlEditorMessages[this.props.sourceId].join('<br />')}} />
-                        }
-                    </div>
+                    {
+                        List.empty(this.props.cqlEditorMessages[this.props.sourceId]) ?
+                            null :
+                            <S.CQLEditorMessagesUL>
+                            {
+                                pipe(
+                                    this.props.cqlEditorMessages[this.props.sourceId],
+                                    List.map(
+                                        (msg, i) => (
+                                            <React.Fragment key={`msg:${i}`}>
+                                                <li dangerouslySetInnerHTML={{__html: msg}} />
+                                                {i < List.size(this.props.cqlEditorMessages[this.props.sourceId]) - 1 ?
+                                                    ', ' : ''}
+                                            </React.Fragment>
+                                        )
+                                    )
+                                )
+                            }
+                            </S.CQLEditorMessagesUL>
+                    }
                 </div>
             );
         }
