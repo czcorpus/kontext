@@ -34,15 +34,11 @@ import * as TextTypes from '../../types/textTypes';
 import { ConcQueryResponse } from '../concordance/common';
 import { catchError, concatMap, map, reduce, tap } from 'rxjs/operators';
 import { ConcQueryArgs, QueryContextArgs } from '../query/common';
-import { AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
-    PqueryFormModelState,
-    PqueryAlignTypes,
-    ParadigmaticQuery,
-    SubsetComplementsAndRatio,
-    SupersetAndRatio,
-    ParadigmaticPartialQuery,
-    splitFullQuery,
-    joinPartialQueries} from './common';
+import {
+    AsyncTaskArgs, FreqIntersectionArgs, FreqIntersectionResponse, createSourceId,
+    PqueryFormModelState, PqueryAlignTypes, ParadigmaticQuery, SubsetComplementsAndRatio,
+    SupersetAndRatio, ParadigmaticPartialQuery, splitFullQuery, joinPartialQueries, ConcStatus
+} from './common';
 import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../query/cqleditor/parser';
 import { AttrHelper } from '../query/cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
@@ -87,12 +83,14 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     this.layoutModel.showMessage('error', validationErr);
                     return;
                 }
+                const partialQueries = this.partializeQueries(this.state);
                 this.changeState(state => {
                     state.isBusy = true;
-                    state.concWait = Dict.map(v => 'running', state.concWait);
+                    state.calcProgress = 0;
+                    state.concWait = Dict.map(_ => 'running', partialQueries);
                 });
 
-                this.submitForm(this.state).subscribe({
+                this.submitForm(this.state, partialQueries).subscribe({
                     next: task => {
                         this.dispatchSideEffect(
                             Actions.SubmitQueryDone,
@@ -122,8 +120,10 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         if (action.payload.qtype === 'split') {
                             state.pqueryType = 'split';
                             state.queries = splitFullQuery(state.queries, state.corpname);
-                            Dict.forEach(
-                                (query, sourceId) => {
+                            state.concWait = pipe(
+                                state.queries,
+                                Dict.forEach(
+                                    (query, sourceId) => {
                                     this.setRawQuery(
                                         state,
                                         query,
@@ -131,8 +131,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                                         query.query,
                                         null
                                     );
-                                },
-                                state.queries
+                                }),
+                                Dict.map(() => 'none' as ConcStatus),
                             );
                             // parse query and fill in all the particular data
 
@@ -143,6 +143,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             // and replace it with a single item in state.queries
                             const fullQuery = joinPartialQueries(state.queries, state.corpname);
                             state.queries = {full: fullQuery};
+                            state.concWait = {full: 'none'};
                             this.setRawQuery(
                                 state,
                                 fullQuery,
@@ -154,7 +155,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     }
                 )
             }
-        )
+        );
 
         this.addActionHandler(
             Actions.SubmitQueryDone,
@@ -358,6 +359,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     } else {
                         const pqTask = task as Kontext.AsyncTaskInfo<AsyncTaskArgs>; // TODO type
                         if (pqTask.status === 'SUCCESS') {
+                            this.changeState(state => {
+                                state.task = pqTask;
+                                state.isBusy = false;
+                                state.calcProgress = 100;
+                            });
                             window.location.href = this.layoutModel.createActionUrl(
                                 'pquery/result',
                                 {q: `~${this.state.task.args.query_id}`}
@@ -367,6 +373,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             this.changeState(state => {
                                 state.task = pqTask;
                                 state.isBusy = false;
+                                state.calcProgress = 100;
                             });
                             this.layoutModel.showMessage(
                                 'error',
@@ -388,6 +395,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     } else {
                         state.concWait[action.payload.sourceId] = 'finished';
                     }
+                    state.calcProgress += 100 * 1 / (Dict.size(state.concWait) + 1); // +1 for the freq merge op
                 });
             }
         );
@@ -399,7 +407,11 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         Dict.some(
                             (v, _) => v.type === 'partial-query' && v.expressionRole.type === action.payload.value, this.state.queries
                         )) {
-                    this.layoutModel.showMessage('warning', `TODO Only one field ca be of type '${action.payload.value}'`)
+                    const type = action.payload.value === 'subset' ?
+                            this.layoutModel.translate('pquery__condition_never') :
+                            this.layoutModel.translate('pquery__condition_always');
+                    this.layoutModel.showMessage(
+                        'warning', this.layoutModel.translate('pquery__only_one_field_can_be_of_{type}', {type}))
 
                 } else {
                     this.changeState(state => {
@@ -634,10 +646,13 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             splitFullQuery(state.queries, state.corpname);
     }
 
-    private submitForm(state:PqueryFormModelState):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
+    private submitForm(
+        state:PqueryFormModelState,
+        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
+    ):Observable<Kontext.AsyncTaskInfo<AsyncTaskArgs>> {
         return forkJoin([
             rxOf(...pipe(
-                this.partializeQueries(state),
+                partialQueries,
                 Dict.toEntries(),
                 List.filter(([_, query]) => query.expressionRole.type === 'specification')
 

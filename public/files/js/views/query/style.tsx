@@ -160,3 +160,23 @@ export const SyntaxHighlight = styled.pre`
     }
 
 `;
+
+// --------------- <CQLEditorMessagesUL /> ---------------------------
+
+export const CQLEditorMessagesUL = styled.ul`
+
+    list-style-type: none;
+    padding: 0.3em;
+    display: flex;
+    margin: 0;
+
+    li {
+        color: ${theme.colorLogoPink};
+        border-radius: ${theme.inputBorderRadius};
+    }
+
+    li:not(:first-child) {
+        margin-left: 0.4em;
+    }
+
+`;
