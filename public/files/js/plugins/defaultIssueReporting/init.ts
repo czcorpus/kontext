@@ -40,7 +40,7 @@ export class IssueReportingModel extends StatelessModel<IssueReportingModelState
         super(
             pluginApi.dispatcher(),
             {
-                issueBody: null,
+                issueBody: '',
                 isBusy: false,
                 isActive: false
             }
