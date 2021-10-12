@@ -388,8 +388,8 @@ export const QueryArea = styled.div`
     }
 
     pre.cql-input {
-
         font-size: 1.3em;
+        line-height: 1.5em;
         min-height: 5em;
         overflow: hidden;
         resize: vertical;
