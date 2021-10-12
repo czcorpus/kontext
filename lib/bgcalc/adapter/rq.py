@@ -84,7 +84,9 @@ class ResultWrapper:
 
     @property
     def status(self):
-        return ResultWrapper.status_map[self._job.get_status()] if self._job else 'FAILURE'
+        if self._job and self._job.get_status():
+            return ResultWrapper.status_map[self._job.get_status()]
+        return 'FAILURE'
 
     @property
     def id(self):

@@ -133,6 +133,7 @@ export interface PqueryFormModelState {
     cqlEditorMessages:{[sourceId:string]:Array<string>};
     useRichQueryEditor:boolean;
     concWait:{[sourceId:string]:ConcStatus};
+    calcProgress:number|undefined; // 0-100%, just a rough estimate
     task:Kontext.AsyncTaskInfo<AsyncTaskArgs>|undefined;
     minFreq:Kontext.FormValue<string>;
     posLeft:number;
@@ -211,6 +212,7 @@ export function newModelState(
             List.repeat<[string, ConcStatus]>(idx => tuple(createSourceId(idx), 'none'), 2),
             Dict.fromEntries()
         ),
+        calcProgress: undefined,
         task: undefined,
         minFreq: Kontext.newFormValue('5', true),
         posLeft: 0,
@@ -453,6 +455,7 @@ export function storedQueryToModel(
             ),
             Dict.fromEntries()
         ),
+        calcProgress: undefined,
         task: undefined,
         minFreq: Kontext.newFormValue('' + sq.min_freq, true),
         posLeft: sq.pos_left,

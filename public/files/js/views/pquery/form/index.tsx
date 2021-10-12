@@ -28,7 +28,7 @@ import { Actions } from '../../../models/pquery/actions';
 import * as S from './style';
 import * as QS from '../../query/input/style';
 import * as SC from '../../query/style';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { ConcStatus, ExpressionRoleType, PqueryAlignTypes,
     PqueryFormModelState } from '../../../models/pquery/common';
 import { init as cqlEditoInit } from '../../query/cqlEditor';
@@ -150,21 +150,40 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             );
         };
 
-        if (concLoadingStatus === 'none' && numQueries > 2) {
-            return <layoutViews.DelItemIcon title={he.translate('pquery__remove_btn')}
-                        onClick={removeQueryHandler(sourceId)} />;
+        return (
+            <S.QueryStatusSpan>
+                {(() => {
+                    if (concLoadingStatus === 'none' && numQueries > 2) {
+                        return <layoutViews.DelItemIcon title={he.translate('pquery__remove_btn')}
+                                    onClick={removeQueryHandler(sourceId)} />;
 
-        } else if (concLoadingStatus && concLoadingStatus === 'running') {
-            return <layoutViews.AjaxLoaderBarImage htmlClass="loader"/>;
+                    } else if (concLoadingStatus && concLoadingStatus === 'running') {
+                        return <layoutViews.AjaxLoaderBarImage htmlClass="loader"/>;
 
-        } else if (concLoadingStatus && concLoadingStatus === 'finished') {
-            return <span>{'\u2713'}</span>;
+                    } else if (concLoadingStatus && concLoadingStatus === 'finished') {
+                        return <span>{'\u2713'}</span>;
 
-        } else if (concLoadingStatus && concLoadingStatus === 'failed') {
-            return <layoutViews.StatusIcon status="error" htmlClass="query-error" />;
-        }
-        return null;
+                    } else if (concLoadingStatus && concLoadingStatus === 'failed') {
+                        return <layoutViews.StatusIcon status="error" htmlClass="query-error" />;
+                    }
+                    return null;
+                })()}
+            </S.QueryStatusSpan>
+        );
     }
+
+    // ------------ <FullQueryProgressIcon /> --------------------------------
+
+    const FullQueryProgressIcon:React.FC<{
+        calcProgress:number;
+
+    }> = ({calcProgress}) => (
+        <S.FullQueryProgressSpan>
+            {calcProgress !== undefined ? Maths.roundToPos(calcProgress, 0) + '%'
+            : ''
+            }
+        </S.FullQueryProgressSpan>
+    );
 
     // ------------ <PartialEditorDiv /> -------------------------------------
 
@@ -257,10 +276,10 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         useRichQueryEditor:boolean;
         numQueries:number;
         concStatus:ConcStatus;
+        calcProgress:number;
     }> = (props) => {
 
         const queryInputElement = React.useRef();
-
         return (
             <QS.QueryArea>
                 <S.QueryRowDiv>
@@ -286,9 +305,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             historyIsVisible={false}
                             minHeightEm={10} />
                     }
-                    <QueryStatusIcon numQueries={props.numQueries}
-                            concLoadingStatus={props.concStatus}
-                            sourceId={props.sourceId} />
+                    <FullQueryProgressIcon calcProgress={props.calcProgress} />
                 </S.QueryRowDiv>
             </QS.QueryArea>
         );
@@ -420,7 +437,9 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                             useRichQueryEditor={props.useRichQueryEditor}
                                             expressionRole={query.expressionRole} /> :
                                     <FullEditorDiv key={sourceId} sourceId={sourceId}
-                                        concStatus={props.concWait[sourceId]} corpname={props.corpname}
+                                        corpname={props.corpname}
+                                        concStatus={props.concWait[sourceId]}
+                                        calcProgress={props.calcProgress}
                                         numQueries={Dict.size(props.queries)}
                                         useRichQueryEditor={props.useRichQueryEditor}/>
                         ),

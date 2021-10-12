@@ -222,3 +222,17 @@ export const PQueryToolbar = styled.div`
     padding-left: 0.6em;
     margin-bottom: 0.4em;
 `;
+
+// ----------------- <FullQueryProgressSpan /> --------------
+
+export const FullQueryProgressSpan = styled.span`
+    margin-left: 0.2em;
+    width: 4em;
+`;
+
+// ----------------- <QueryStatusSpan /> -----------------------
+
+export const QueryStatusSpan = styled.span`
+    margin-left: 0.2em;
+    width: 2em;
+`;
