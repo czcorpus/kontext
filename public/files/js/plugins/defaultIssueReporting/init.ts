@@ -24,6 +24,7 @@ import { StatelessModel } from 'kombo';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
+import * as CoreViews from '../../types/coreViews';
 
 
 export interface IssueReportingModelState {
@@ -117,9 +118,9 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
 
     private model:IssueReportingModel;
 
-    private view:React.ComponentClass;
+    private view:React.ComponentClass<CoreViews.IssueReportingLink.Props>;
 
-    constructor(model:IssueReportingModel, view:React.ComponentClass) {
+    constructor(model:IssueReportingModel, view:React.ComponentClass<CoreViews.IssueReportingLink.Props>) {
         this.model = model;
         this.view = view;
     }
@@ -128,7 +129,7 @@ export class IssueReportingPlugin implements PluginInterfaces.IssueReporting.IPl
         return true;
     }
 
-    getWidgetView():React.ComponentClass {
+    getWidgetView():React.ComponentClass<CoreViews.IssueReportingLink.Props> {
         return this.view;
     }
 }

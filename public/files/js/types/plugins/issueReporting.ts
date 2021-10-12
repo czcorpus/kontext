@@ -19,6 +19,7 @@
  */
 
 import { BasePlugin, IPluginApi } from './common';
+import * as CoreViews from '../../types/coreViews';
 
 // ------------------------------------------------------------------------
 // ------------------------- [issue_reporting] plug-in --------------------
@@ -26,7 +27,7 @@ import { BasePlugin, IPluginApi } from './common';
 
 export interface IPlugin extends BasePlugin {
 
-    getWidgetView():React.ComponentClass|React.FC<{}>;
+    getWidgetView():React.ComponentClass<CoreViews.IssueReportingLink.Props>|React.FC<CoreViews.IssueReportingLink.Props>;
 }
 
 export interface Factory {
