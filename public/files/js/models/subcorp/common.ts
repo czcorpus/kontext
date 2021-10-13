@@ -94,7 +94,7 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 
     readonly pageModel:PageModel;
 
-    readonly textTypesModel: TextTypesModel;
+    readonly textTypesModel:TextTypesModel;
 
     constructor(
         dispatcher: IFullActionControl,
