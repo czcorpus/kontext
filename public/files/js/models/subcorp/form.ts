@@ -105,7 +105,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                 otherValidationError: null
             }
         );
-        this.textTypesModel = textTypesModel;
 
         this.addActionHandler<typeof Actions.FormSetInputMode>(
             Actions.FormSetInputMode.name,
