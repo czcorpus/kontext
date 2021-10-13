@@ -401,6 +401,7 @@ export class ViewPage {
             this.layoutModel.dispatcher,
             this.layoutModel,
             this.queryModels.textTypesModel,
+            undefined,
             this.queryModels.queryContextModel,
             this.layoutModel.qsuggPlugin,
             queryFormProps
@@ -412,6 +413,7 @@ export class ViewPage {
             CorparchWidget: null, // no corpus selection widget here
             queryModel: this.queryModels.queryModel,
             textTypesModel: this.queryModels.textTypesModel,
+            quickSubcorpModel: undefined,
             queryHintModel: this.queryModels.queryHintModel,
             withinBuilderModel: this.queryModels.withinBuilderModel,
             virtualKeyboardModel: this.queryModels.virtualKeyboardModel,

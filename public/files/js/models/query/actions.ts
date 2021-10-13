@@ -627,6 +627,16 @@ export class Actions {
     }> = {
         name: 'QUERY_REPLAY_CHANGE_MAIN_CORP'
     }
+    
+    static QueryShowQuickSubcorpWidget:Action<{
+    }> = {
+        name: 'QUERY_SHOW_QUICK_SUBCORP_WIDGET'
+    };
+    
+    static QueryHideQuickSubcorpWidget:Action<{
+    }> = {
+        name: 'QUERY_HIDE_QUICK_SUBCORP_WIDGET'
+    };
 }
 
 export function isSetActiveInputWidgetAction(a: Action): a is typeof Actions.SetActiveInputWidget {

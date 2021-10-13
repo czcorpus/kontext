@@ -22,10 +22,9 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
-import { InputMode, BaseSubcorFormState, CreateSubcorpusArgs } from './common';
-import { ITranslator, IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, throwError } from 'rxjs';
-import { List, HTTP, tuple } from 'cnc-tskit';
+import { InputMode, BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
+import { ITranslator, IFullActionControl } from 'kombo';
+import { List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -36,7 +35,7 @@ import { IUnregistrable } from '../common/common';
  *
  */
 export function validateSubcProps(
-        state:BaseSubcorFormState,
+        state:BaseSubcorpFormState,
         mustHaveTTSelection:boolean,
         hasSelectedTTItems:boolean,
         translator:ITranslator
@@ -82,11 +81,7 @@ export interface SubcorpFormModelState {
 }
 
 
-export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> implements IUnregistrable {
-
-    private pageModel:PageModel;
-
-    private textTypesModel:TextTypesModel;
+export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelState> implements IUnregistrable {
 
     constructor(
         dispatcher:IFullActionControl,
@@ -97,6 +92,8 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
     ) {
         super(
             dispatcher,
+            pageModel,
+            textTypesModel,
             {
                 corpname,
                 inputMode,
@@ -108,7 +105,6 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
                 otherValidationError: null
             }
         );
-        this.pageModel = pageModel;
         this.textTypesModel = textTypesModel;
 
         this.addActionHandler<typeof Actions.FormSetInputMode>(
@@ -133,20 +129,20 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
             Actions.FormSubmit.name,
             action => {
                 if (this.state.inputMode === 'gui') {
-                    this.changeState(state => {state.isBusy = true});
-                    this.submit().subscribe(
-                        () => {
+                    this.changeState(state => { state.isBusy = true });
+                    this.submit(this.getSubmitArgs(), (args) => this.validateForm(true)).subscribe({
+                        next: () => {
                             this.changeState(state => {
                                 state.isBusy = false
                             });
                             window.location.href = this.pageModel.createActionUrl(
                                 'subcorpus/list');
                         },
-                        (err) => {
-                            this.changeState(state => {state.isBusy = false});
+                        error: (err) => {
+                            this.changeState(state => { state.isBusy = false });
                             this.pageModel.showMessage('error', err);
                         }
-                    );
+                    });
 
                 } else if (this.state.inputMode === 'within') {
                     this.validateForm(false);
@@ -213,27 +209,6 @@ export class SubcorpFormModel extends StatefulModel<SubcorpFormModelState> imple
             );
         });
         return err;
-    }
-
-    submit():Observable<any> {
-        const args = this.getSubmitArgs();
-        const err = this.validateForm(true);
-        if (!err) {
-            return this.pageModel.ajax$<any>(
-                HTTP.Method.POST,
-                this.pageModel.createActionUrl(
-                    '/subcorpus/create',
-                    {format: 'json'}
-                ),
-                args,
-                {
-                    contentType: 'application/json'
-                }
-            );
-
-        } else {
-            return throwError(err);
-        }
     }
 
     getCorpname():string {

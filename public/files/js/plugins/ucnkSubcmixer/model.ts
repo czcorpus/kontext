@@ -33,11 +33,11 @@ import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
-import { BaseSubcorFormState } from '../../models/subcorp/common';
+import { BaseSubcorpFormState } from '../../models/subcorp/common';
 import { IPluginApi } from '../../types/plugins/common';
 
 
-export interface SubcMixerModelState extends BaseSubcorFormState {
+export interface SubcMixerModelState extends BaseSubcorpFormState {
     shares:Array<SubcMixerExpression>;
     currentResult:CalculationResults|null;
     corpusIdAttr:string;

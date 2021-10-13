@@ -18,12 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { HTTP } from 'cnc-tskit';
+import { IFullActionControl, StatefulModel } from 'kombo';
+import { Observable, throwError } from 'rxjs';
+import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
+import { TextTypesModel } from '../textTypes/main';
 
 export type InputMode = 'gui'|'within';
 
-export interface BaseSubcorFormState {
+export interface BaseSubcorpFormState {
     subcname:Kontext.FormValue<string>;
     description:Kontext.FormValue<string>;
     otherValidationError:Error|null;
@@ -83,4 +88,45 @@ export interface SubcorpList extends Kontext.AjaxResponse {
 
 export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
+}
+
+export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
+
+    readonly pageModel:PageModel;
+
+    readonly textTypesModel: TextTypesModel;
+
+    constructor(
+        dispatcher: IFullActionControl,
+        pageModel: PageModel,
+        textTypesModel: TextTypesModel,
+        initState: T
+    ) {
+        super(
+            dispatcher,
+            initState
+        );
+        this.pageModel = pageModel;
+        this.textTypesModel = textTypesModel;
+    }
+
+    submit(args:CreateSubcorpusArgs, validator: (args) => Error|null):Observable<any> {
+        const err = validator(args);
+        if (!err) {
+            return this.pageModel.ajax$<any>(
+                HTTP.Method.POST,
+                this.pageModel.createActionUrl(
+                    '/subcorpus/create',
+                    {format: 'json'}
+                ),
+                args,
+                {
+                    contentType: 'application/json'
+                }
+            );
+
+        } else {
+            return throwError(err);
+        }
+    }
 }

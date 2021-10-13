@@ -27,6 +27,7 @@ import { init as inputInit } from '../input';
 import { init as alignedInit } from '../aligned';
 import { init as contextInit } from '../context';
 import { init as ttViewsInit } from '../../textTypes';
+import { init as quickSubcorpViewsInit } from '../../subcorp/quickSubcorp';
 import * as Kontext from '../../../types/kontext';
 import * as TextTypes from '../../../types/textTypes';
 import * as PluginInterfaces from '../../../types/plugins';
@@ -42,6 +43,7 @@ import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 import { SearchHistoryModel } from '../../../models/searchHistory';
+import { QuickSubcorpModel } from 'public/files/js/models/subcorp/quickSubcorp';
 
 
 export interface MainModuleArgs {
@@ -49,7 +51,8 @@ export interface MainModuleArgs {
     he:Kontext.ComponentHelpers;
     CorparchWidget:PluginInterfaces.Corparch.WidgetView;
     queryModel:FirstQueryFormModel;
-    textTypesModel:TextTypesModel;
+    textTypesModel: TextTypesModel;
+    quickSubcorpModel:QuickSubcorpModel;
     queryHintModel:UsageTipsModel;
     withinBuilderModel:WithinBuilderModel;
     virtualKeyboardModel:VirtualKeyboardModel;
@@ -91,7 +94,7 @@ export interface MainViews {
 
 export function init({
     dispatcher, he, CorparchWidget, queryModel,
-    textTypesModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
+    textTypesModel, quickSubcorpModel, queryHintModel, withinBuilderModel, virtualKeyboardModel,
     queryContextModel, querySuggest, queryHelpModel, searchHistoryModel}:MainModuleArgs):MainViews {
 
     const inputViews = inputInit({
@@ -111,6 +114,7 @@ export function init({
     });
     const contextViews = contextInit(dispatcher, he, queryContextModel);
     const ttViews = ttViewsInit(dispatcher, he, textTypesModel);
+    const quickSubcorpViews = quickSubcorpModel ? quickSubcorpViewsInit({ dispatcher, he, quickSubcorpModel }) : null;
     const layoutViews = he.getLayoutViews();
 
 
@@ -149,6 +153,8 @@ export function init({
             this._handleContextFormVisibility = this._handleContextFormVisibility.bind(this);
             this._handleTextTypesFormVisibility = this._handleTextTypesFormVisibility.bind(this);
             this._keyEventHandler = this._keyEventHandler.bind(this);
+            this._handleShowQuickSubcorpWidget = this._handleShowQuickSubcorpWidget.bind(this);
+            this._handleHideQuickSubcorpWidget = this._handleHideQuickSubcorpWidget.bind(this);
         }
 
         _handleSubmit() {
@@ -179,6 +185,18 @@ export function init({
         _handleContextFormVisibility() {
             dispatcher.dispatch<typeof Actions.QueryContextToggleForm>({
                 name: Actions.QueryContextToggleForm.name
+            });
+        }
+
+        _handleShowQuickSubcorpWidget() {
+            dispatcher.dispatch<typeof Actions.QueryShowQuickSubcorpWidget>({
+                name: Actions.QueryShowQuickSubcorpWidget.name
+            });
+        }
+
+        _handleHideQuickSubcorpWidget() {
+            dispatcher.dispatch<typeof Actions.QueryHideQuickSubcorpWidget>({
+                name: Actions.QueryHideQuickSubcorpWidget.name
             });
         }
 
@@ -247,7 +265,8 @@ export function init({
                                     title={he.translate('query__specify_tt')}
                                     htmlClass="specify-text-types"
                                     closedStateHint={<BoundTextTypesFieldsetHint />}
-                                    closedStateDesc={this.props.textTypesNotes}>
+                            closedStateDesc={this.props.textTypesNotes}>
+                                <button onClick={this._handleShowQuickSubcorpWidget} type="button">TODO - Quick subcorp</button>
                                 <ttViews.TextTypesPanel
                                         LiveAttrsView={this.props.LiveAttrsView}
                                         LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
@@ -261,6 +280,7 @@ export function init({
                             }
                         </div>
                     </div>
+                    {quickSubcorpViews && this.props.quickSubcorpVisible ? <quickSubcorpViews.Widget onClose={this._handleHideQuickSubcorpWidget} /> : null}
                 </S.QueryForm>
             );
         }
