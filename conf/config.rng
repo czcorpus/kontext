@@ -820,6 +820,11 @@
                         <ref name="plugin_common" />
                         <ref name="customPluginConfiguration" />
                     </element>
+                    <element name="audio_provider">
+                        <a:documentation>Handles providing spoken corpora audio data in a form readable by browser</a:documentation>
+                        <ref name="plugin_common" />
+                        <ref name="customPluginConfiguration" />
+                    </element>
                     <element name="subcmixer">
                         <optional>
                             <a:documentation>Generates subcorpora with defined text type ratios (experimental)</a:documentation>

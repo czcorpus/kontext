@@ -121,6 +121,9 @@ class PluginCtx(object):
     def set_not_found(self):
         return self._controller.set_not_found()
 
+    def set_respose_status(self, status: int):
+        self._controller.set_respose_status(status)
+
     def add_system_message(self, msg_type, text):
         self._controller.add_system_message(msg_type, text)
 

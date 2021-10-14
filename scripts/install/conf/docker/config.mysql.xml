@@ -149,6 +149,9 @@
             <module>default_menu_items</module>
             <data_path>/opt/kontext/conf/main-menu.sample.json</data_path>
         </menu_items>
+        <audio_provider>
+            <module>default_audio_provider</module>
+        </audio_provider>
         <query_history>
             <module>default_query_history</module>
             <page_num_records>10</page_num_records>

@@ -203,6 +203,9 @@ class Controller(object):
             *settings.get('global', 'redirect_safe_domains', ())
         )
 
+    def set_respose_status(self, status: int):
+        self._status = status
+
     def init_session(self) -> None:
         """
         Starts/reloads user's web session data. It can be called even
