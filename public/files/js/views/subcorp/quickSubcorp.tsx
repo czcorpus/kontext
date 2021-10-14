@@ -56,9 +56,9 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                 }
             });
         };
-        
+
         const submitAction = () => {
-            props.onClose();            
+            props.onClose();
             dispatcher.dispatch<typeof Actions.QuickSubcorpSubmit>({
                 name: Actions.QuickSubcorpSubmit.name,
                 payload: {}
@@ -67,11 +67,9 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
 
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
-                <layoutViews.CloseableFrame onCloseClick={props.onClose} label="TODO - quick subcorp" scrollable={true}>
-                    <div onSubmit={submitAction}>
-                        <input name="subcorpName" onChange={changeName} value={props.subcname}/>
-                        <button type="button" onClick={submitAction}>TODO - Create</button>
-                    </div>
+                <layoutViews.CloseableFrame onCloseClick={props.onClose} label={he.translate('subc__quick_subcorpus')} scrollable={true}>
+                    <input name="subcorpName" style={{marginRight: '1em'}} placeholder={he.translate('subc__quick_subcorpus_name')} onChange={changeName} value={props.subcname}/>
+                    <button type="button" className="default-button" onClick={submitAction}>{he.translate('subc__quick_subcorpus_create')}</button>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );

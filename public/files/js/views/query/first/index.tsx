@@ -266,7 +266,9 @@ export function init({
                                     htmlClass="specify-text-types"
                                     closedStateHint={<BoundTextTypesFieldsetHint />}
                             closedStateDesc={this.props.textTypesNotes}>
-                                <button onClick={this._handleShowQuickSubcorpWidget} type="button">TODO - Quick subcorp</button>
+                                <S.QuickSubcorpWrapper>
+                                    <button onClick={this._handleShowQuickSubcorpWidget} type="button" className="default-button">{he.translate('subc__quick_subcorpus')}</button>
+                                </S.QuickSubcorpWrapper>
                                 <ttViews.TextTypesPanel
                                         LiveAttrsView={this.props.LiveAttrsView}
                                         LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />

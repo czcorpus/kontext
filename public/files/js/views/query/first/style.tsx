@@ -125,5 +125,11 @@ export const QueryHelp = styled.div`
             }
         }
     }
+`;
 
+// ---------------- <QuickSubcorpWrapper /> --------------------------------------
+
+export const QuickSubcorpWrapper = styled.div`
+    display: flex;
+    justify-content: flex-end;
 `;

@@ -62,7 +62,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
 
                 this.submit(args, this.validate).subscribe({
                     next: data => {
-                        this.pageModel.showMessage('info', 'TODO - subcorpus created');
+                        this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
                     },
                     error: error => this.pageModel.showMessage('error', error)
                 });
