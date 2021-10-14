@@ -65,6 +65,12 @@ export const TextTypesPanel = styled.div`
             border: 1px solid ${theme.colorLogoOrange};
         }
     }
+
+    .plugin-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 `;
 
 // ----------- <TableTextTypeAttribute /> ----------------------------

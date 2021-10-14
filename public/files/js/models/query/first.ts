@@ -34,6 +34,7 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
 import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
+import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
@@ -277,6 +278,8 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     alignedCorporaVisible: boolean;
 
     quickSubcorpVisible: boolean;
+
+    quickSubcorpActive: boolean;
 }
 
 
@@ -293,7 +296,7 @@ export interface FirstQueryFormModelSwitchPreserve {
  */
 export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
     implements IUnregistrable {
-    
+
     protected readonly quickSubcorpModel:QuickSubcorpModel;
 
     constructor(
@@ -397,6 +400,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 alignedCorporaVisible: List.size(corpora) > 1,
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
+                quickSubcorpActive: Dict.size(textTypesModel.UNSAFE_exportSelections(false)) > 0,
         });
         this.quickSubcorpModel = quickSubcorpModel;
 
@@ -632,6 +636,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.quickSubcorpVisible = false;
+                });
+            }
+        );
+
+        this.addActionHandler<typeof TTActions.SelectionChanged>(
+            TTActions.SelectionChanged.name,
+            action => {
+                this.changeState(state => {
+                    state.quickSubcorpActive = action.payload.hasSelectedItems
                 });
             }
         );

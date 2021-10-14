@@ -189,9 +189,11 @@ export function init({
         }
 
         _handleShowQuickSubcorpWidget() {
-            dispatcher.dispatch<typeof Actions.QueryShowQuickSubcorpWidget>({
-                name: Actions.QueryShowQuickSubcorpWidget.name
-            });
+            if (this.props.quickSubcorpActive) {
+                dispatcher.dispatch<typeof Actions.QueryShowQuickSubcorpWidget>({
+                    name: Actions.QueryShowQuickSubcorpWidget.name
+                });
+            }
         }
 
         _handleHideQuickSubcorpWidget() {
@@ -266,12 +268,12 @@ export function init({
                                     htmlClass="specify-text-types"
                                     closedStateHint={<BoundTextTypesFieldsetHint />}
                             closedStateDesc={this.props.textTypesNotes}>
-                                <S.QuickSubcorpWrapper>
-                                    <button onClick={this._handleShowQuickSubcorpWidget} type="button" className="util-button">{he.translate('subc__quick_subcorpus')}</button>
-                                </S.QuickSubcorpWrapper>
                                 <ttViews.TextTypesPanel
                                         LiveAttrsView={this.props.LiveAttrsView}
-                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT} />
+                                        LiveAttrsCustomTT={this.props.LiveAttrsCustomTT}
+                                        controls={
+                                            <button onClick={this._handleShowQuickSubcorpWidget} type="button" className={"util-button" + (this.props.quickSubcorpActive ? "" : " disabled")}>{he.translate('subc__quick_subcorpus')}</button>
+                                        }/>
                         </inputViews.AdvancedFormFieldset>
                         <div className="buttons">
                             {this.props.isBusy ?

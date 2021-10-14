@@ -81,9 +81,6 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
     }
 
     validate(args: CreateSubcorpusArgs): Error | null {
-        if (Dict.size(args.text_types) === 0) {
-            return Error('TODO - no text types selected, can not create subcorpus');
-        }
         return null;
     }
 
