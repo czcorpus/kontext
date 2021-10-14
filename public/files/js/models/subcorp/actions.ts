@@ -23,6 +23,7 @@ import { SubcListFilter } from './list';
 import { InputMode } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
+import * as Kontext from '../../types/kontext';
 
 
 export class Actions {

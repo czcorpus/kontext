@@ -23,7 +23,7 @@ import { TextTypesModel } from '../../models/textTypes/main';
 import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
-import { Dict } from 'cnc-tskit';
+import { Actions as QueryActions } from '../query/actions';
 
 
 export interface QuickSubcorpModelState {
@@ -63,6 +63,14 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                 this.submit(args, this.validate).subscribe({
                     next: data => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
+                        this.dispatchSideEffect<typeof QueryActions.QueryAddSubcorp>({
+                            name: QueryActions.QueryAddSubcorp.name,
+                            payload: {
+                                n: args.subcname,
+                                v: args.subcname,
+                                pub: null,
+                            }
+                        });
                     },
                     error: error => this.pageModel.showMessage('error', error)
                 });

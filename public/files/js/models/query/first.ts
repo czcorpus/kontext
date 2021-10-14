@@ -35,6 +35,7 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
 import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
+import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
@@ -645,6 +646,15 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.quickSubcorpActive = action.payload.hasSelectedItems
+                });
+            }
+        );
+
+        this.addActionHandler<typeof Actions.QueryAddSubcorp>(
+            Actions.QueryAddSubcorp.name,
+            action => {
+                this.changeState(state => {
+                    state.subcorpList.push(action.payload);
                 });
             }
         );

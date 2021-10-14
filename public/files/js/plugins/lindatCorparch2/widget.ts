@@ -639,6 +639,13 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 }
             }
         );
+
+        this.addActionHandler<typeof QueryActions.QueryAddSubcorp>(
+            QueryActions.QueryAddSubcorp.name,
+            (state, action) => {
+                state.availableSubcorpora.push(action.payload);
+            }
+        );
     }
 
     handleSearchDelay(state:CorplistWidgetModelState, action:Action, dispatch:SEDispatcher) {
