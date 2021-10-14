@@ -267,7 +267,7 @@ export function init({
                                     closedStateHint={<BoundTextTypesFieldsetHint />}
                             closedStateDesc={this.props.textTypesNotes}>
                                 <S.QuickSubcorpWrapper>
-                                    <button onClick={this._handleShowQuickSubcorpWidget} type="button" className="default-button">{he.translate('subc__quick_subcorpus')}</button>
+                                    <button onClick={this._handleShowQuickSubcorpWidget} type="button" className="util-button">{he.translate('subc__quick_subcorpus')}</button>
                                 </S.QuickSubcorpWrapper>
                                 <ttViews.TextTypesPanel
                                         LiveAttrsView={this.props.LiveAttrsView}

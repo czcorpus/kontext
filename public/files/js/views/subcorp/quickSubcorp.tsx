@@ -24,6 +24,7 @@ import * as Kontext from '../../types/kontext';
 import { Actions } from '../../models/subcorp/actions';
 
 import { QuickSubcorpModel, QuickSubcorpModelState } from '../../models/subcorp/quickSubcorp';
+import { Keyboard } from 'cnc-tskit';
 
 
 export interface QuickSubcorpWidgetArgs {
@@ -65,11 +66,17 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
             });
         };
 
+        const keyPressHandler = (e) => {
+            if (e.key === Keyboard.Value.ENTER && props.subcname) {
+                submitAction();
+            }
+        };
+
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
                 <layoutViews.CloseableFrame onCloseClick={props.onClose} label={he.translate('subc__quick_subcorpus')} scrollable={true}>
-                    <input name="subcorpName" style={{marginRight: '1em'}} placeholder={he.translate('subc__quick_subcorpus_name')} onChange={changeName} value={props.subcname}/>
-                    <button type="button" className="default-button" onClick={submitAction}>{he.translate('subc__quick_subcorpus_create')}</button>
+                    <input name="subcorpName" style={{marginRight: '1em'}} placeholder={he.translate('subc__quick_subcorpus_name')} onChange={changeName} value={props.subcname} onKeyPress={keyPressHandler}/>
+                    <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={props.subcname ? submitAction : null}>{he.translate('subc__quick_subcorpus_create')}</button>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
