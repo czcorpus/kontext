@@ -62,7 +62,6 @@ import mailing
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
-import pydub
 
 
 class Actions(Querying):
@@ -1551,36 +1550,6 @@ class Actions(Querying):
                 del (self._headers['Content-Disposition'])
             raise e
 
-    @staticmethod
-    def _parse_range(request):
-        """
-        Parse HTTP Range header value for obtaining
-        partial chunk of data.
-        """
-        rng = request.headers.get('range')
-        if not rng:
-            return 0, None
-        srch = re.match(r'^[bB]ytes=(\d+)-(\d*)$', rng)
-        lft, rgt = 0, None
-        if srch:
-            lft = int(srch.group(1))
-            if srch.group(2):
-                rgt = int(srch.group(2))
-        else:
-            logging.getLogger(__name__).warning(f'Invalid value for HTTP header Range: {rng}')
-        return lft, rgt
-
-    def _create_audio_file_path(self, corpname: str, chunk: str) -> Optional[str]:
-        rpath = os.path.realpath(os.path.join(
-            settings.get('corpora', 'speech_files_path'), corpname, chunk
-        ))
-        # check correct base path for security measures
-        basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
-        if os.path.isfile(rpath) and rpath.startswith(basepath):
-            return rpath
-
-        return None
-
     @exposed(access_level=0, return_type='plain')
     def audio(self, request):
         """
@@ -1588,51 +1557,15 @@ class Actions(Querying):
         Access rights are per-corpus (i.e. if a user has a permission to
         access corpus 'X' then all related audio files are accessible).
         """
-        rpath = self._create_audio_file_path(self.args.corpname, request.args.get('chunk', ''))
-        if rpath is None:
-            self.set_not_found()
-            return lambda: None
-        with open(rpath, 'rb') as f:
-            play_from, play_to = self._parse_range(request)
-            if play_from > 0:
-                f.seek(play_from)
-            self._headers['Content-Type'] = 'audio/mpeg'
-            self._headers['Content-Length'] = str(os.path.getsize(rpath))
-            self._headers['Accept-Ranges'] = 'bytes'
-            self._status = 206
-            if self.environ.get('HTTP_RANGE', None):
-                self._headers['Content-Range'] = 'bytes 0-%s/%s' % (
-                    os.path.getsize(rpath) - 1, os.path.getsize(rpath))
-            return f.read() if not play_to else f.read(play_to - play_from)
+        with plugins.runtime.AUDIO_PROVIDER as audiop:
+            headers, ans = audiop.get_audio(self._plugin_ctx, request)
+            self._headers.update(headers)
+            return ans
 
     @exposed(return_type='json', access_level=0)
     def audio_waveform(self, request):
-        rpath = self._create_audio_file_path(self.args.corpname, request.args.get('chunk', ''))
-        if rpath is None:
-            self.set_not_found()
-            return []
-
-        play_from, play_to = self._parse_range(request)
-        if not play_to:
-            # TODO requires ffmpeg
-            sound = pydub.AudioSegment.from_file(rpath)
-        else:
-            with open(rpath, 'rb') as f:
-                if play_from > 0:
-                    f.seek(play_from)
-
-                # TODO reads only wav
-                sound = pydub.AudioSegment(
-                    data=f.read() if not play_to else f.read(play_to - play_from))
-
-        def audio_slices(snd, N):
-            slice = int(len(snd) / N)
-            for i in range(0, (N - 2) * slice, slice):
-                yield snd[i:i + slice]
-            yield snd[(N - 2) * slice:]
-
-        loudness = [snd.max / sound.max for snd in audio_slices(sound, 200)]
-        return loudness
+        with plugins.runtime.AUDIO_PROVIDER as audiop:
+            return audiop.get_waveform(self._plugin_ctx, request)
 
     def _collect_conc_next_url_params(self, query_id):
         params = {

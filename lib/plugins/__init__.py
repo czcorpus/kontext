@@ -45,6 +45,7 @@ from .abstract.token_connect import AbstractTokenConnect
 from .abstract.kwic_connect import AbstractKwicConnect
 from .abstract.query_suggest import AbstractQuerySuggest
 from .abstract.action_log import AbstractActionLog
+from .abstract.audio_provider import AbstractAudioProvider
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
@@ -147,6 +148,7 @@ class _Names(object):
     EXPORT_FREQ2D: _ID[LoaderFreq2d] = _ID('export_freq2d')
     USER_ITEMS: _ID[AbstractUserItems] = _ID('user_items')
     MENU_ITEMS: _ID[AbstractMenuItems] = _ID('menu_items')
+    AUDIO_PROVIDER: _ID[AbstractAudioProvider] = _ID('audio_provider')
 
     GETLANG: _ID[AbstractGetLang] = _ID('getlang', optional=True)
     CORPARCH: _ID[AbstractCorporaArchive] = _ID('corparch')
@@ -167,12 +169,13 @@ class _Names(object):
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
-        return iter([self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
-                     self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-                     self.MENU_ITEMS, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY, self.APPLICATION_BAR,
-                     self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER, self.SYNTAX_VIEWER,
-                     self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT, self.KWIC_CONNECT,
-                     self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
+        return iter([
+            self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
+            self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
+            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY,
+            self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER,
+            self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
+            self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
 
 
 runtime: _Names = _Names()
