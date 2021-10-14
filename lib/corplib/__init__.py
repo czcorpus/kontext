@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, Any, Optional, Tuple, Dict, Union
-from manatee import Corpus, SubCorpus, Concordance, StrVector, PosAttr
+from manatee import SubCorpus, Concordance, StrVector
 from array import array
 import logging
 from .corpus import KCorpus, KSubcorpus
@@ -35,6 +35,9 @@ from plugins.abstract.corparch.corpus import DefaultManateeCorpusInfo
 from functools import cmp_to_key
 from .corpus import _PublishedSubcMetadata
 from .errors import MissingSubCorpFreqFile
+
+TYPO_CACHE_KEY = 'cached_registry_typos'
+TYPO_CACHE_TTL = 3600 * 24 * 7
 
 
 def _cmp(a, b):
@@ -158,7 +161,7 @@ class CorpusManager:
             subcpath: a list of paths where user corpora are located
         """
         self.subcpath: List[str] = list(subcpath)
-        self._cache: Dict[Tuple[str, str, str, Optional[str]], KCorpus] = {}
+        self._cache: Dict[Tuple[str, str, Optional[str]], KCorpus] = {}
 
     def get_subc_public_name(self, corpname: str, subcname: str) -> Optional[str]:
         if len(self.subcpath) > 0:
@@ -176,11 +179,10 @@ class CorpusManager:
                           sees only a 'legal' chunk.
         """
         public_subcname = self.get_subc_public_name(corpname, subcname)
-        cache_key = (corpname, corp_variant, subcname, public_subcname)
+        registry_file = self._ensure_reg_file(corpname, corp_variant)
+        cache_key = (registry_file, subcname, public_subcname)
         if cache_key in self._cache:
             return self._cache[cache_key]
-        registry_file = os.path.join(corp_variant, corpname) if corp_variant else corpname
-        self._ensure_reg_file(registry_file, corp_variant)
         corp = manatee.Corpus(registry_file)
 
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
@@ -210,13 +212,25 @@ class CorpusManager:
             logging.getLogger(__name__).warning(ex)
         return DefaultManateeCorpusInfo(corp, corpus_id)
 
-    def _ensure_reg_file(self, rel_path: str, variant: str):
-        fullpath = os.path.join(os.environ['MANATEE_REGISTRY'], rel_path)
-        if not os.path.isfile(fullpath):
-            with plugins.runtime.CORPARCH as ca:
-                fn = getattr(ca, 'rebuild_registry', None)
-                if callable(fn):
-                    fn(fullpath, variant, proc_aligned=True)
+    @staticmethod
+    def _ensure_reg_file(corpname: str, variant: Optional[str]) -> str:
+        full_corpname = os.path.join(variant, corpname) if variant else corpname
+        reg_root = os.environ['MANATEE_REGISTRY']
+        if variant:
+            reg_root = os.path.join(reg_root, variant)
+        fullpath = os.path.join(reg_root, full_corpname)
+        with plugins.runtime.DB as db, plugins.runtime.AUTH as auth:
+            if not os.path.isfile(fullpath) and auth.ignores_corpora_names_case():
+                cached = db.hash_get(TYPO_CACHE_KEY, full_corpname)
+                if cached:
+                    return cached
+                for item in os.listdir(reg_root):
+                    fp = os.path.join(reg_root, item)
+                    if os.path.isfile(fp) and item.lower() == corpname.lower():
+                        db.hash_set(TYPO_CACHE_KEY, full_corpname, fp)
+                        db.set_ttl(TYPO_CACHE_KEY, TYPO_CACHE_TTL)
+                        return fp
+        return fullpath
 
     def subc_files(self, corpname: str) -> List[str]:
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files

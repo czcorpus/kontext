@@ -335,22 +335,6 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             }
         }
 
-    def rebuild_registry(self, registry_path, variant, proc_aligned=False):
-        logging.getLogger(__name__).info('Rebuilding registry {0}'.format(registry_path))
-        rc = RegistryConf(corpus_id=os.path.basename(registry_path),
-                          variant=variant,
-                          backend=self._backend)
-        rc.load()
-        if not os.path.exists(os.path.dirname(registry_path)):
-            os.makedirs(os.path.dirname(registry_path))
-        s = RegModelSerializer(add_heading=True)
-        with open(registry_path, 'w') as fw:
-            fw.write(s.serialize(rc).encode(rc.encoding))
-        if proc_aligned:
-            for aligned in rc.aligned:
-                self.rebuild_registry(os.path.join(
-                    os.path.dirname(registry_path), aligned), variant)
-
     def export_actions(self):
         return {actions.user.User: [get_favorite_corpora]}
 
