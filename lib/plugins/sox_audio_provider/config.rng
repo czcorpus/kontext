@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    <start>
+        <element name="audio_provider">
+            <element name="module">
+                <value>sox_audio_provider</value>
+            </element>
+        </element>
+    </start>
+</grammar>
