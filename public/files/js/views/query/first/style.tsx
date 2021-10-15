@@ -125,5 +125,4 @@ export const QueryHelp = styled.div`
             }
         }
     }
-
 `;

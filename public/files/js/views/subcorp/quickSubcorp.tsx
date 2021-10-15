@@ -24,6 +24,7 @@ import * as Kontext from '../../types/kontext';
 import { Actions } from '../../models/subcorp/actions';
 
 import { QuickSubcorpModel, QuickSubcorpModelState } from '../../models/subcorp/quickSubcorp';
+import { Keyboard } from 'cnc-tskit';
 
 
 export interface QuickSubcorpWidgetArgs {
@@ -56,22 +57,28 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                 }
             });
         };
-        
+
         const submitAction = () => {
-            props.onClose();            
-            dispatcher.dispatch<typeof Actions.QuickSubcorpSubmit>({
-                name: Actions.QuickSubcorpSubmit.name,
-                payload: {}
-            });
+            if (props.subcname) {
+                props.onClose();
+                dispatcher.dispatch<typeof Actions.QuickSubcorpSubmit>({
+                    name: Actions.QuickSubcorpSubmit.name,
+                    payload: {}
+                });
+            }
+        };
+
+        const keyPressHandler = (e) => {
+            if (e.key === Keyboard.Value.ENTER) {
+                submitAction();
+            }
         };
 
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
-                <layoutViews.CloseableFrame onCloseClick={props.onClose} label="TODO - quick subcorp" scrollable={true}>
-                    <div onSubmit={submitAction}>
-                        <input name="subcorpName" onChange={changeName} value={props.subcname}/>
-                        <button type="button" onClick={submitAction}>TODO - Create</button>
-                    </div>
+                <layoutViews.CloseableFrame onCloseClick={props.onClose} label={he.translate('subc__quick_subcorpus')} scrollable={true}>
+                    <input name="subcorpName" style={{marginRight: '1em'}} placeholder={he.translate('subc__quick_subcorpus_name')} onChange={changeName} value={props.subcname} onKeyPress={keyPressHandler}/>
+                    <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>{he.translate('subc__quick_subcorpus_create')}</button>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );

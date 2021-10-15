@@ -627,15 +627,21 @@ export class Actions {
     }> = {
         name: 'QUERY_REPLAY_CHANGE_MAIN_CORP'
     }
-    
+
     static QueryShowQuickSubcorpWidget:Action<{
     }> = {
         name: 'QUERY_SHOW_QUICK_SUBCORP_WIDGET'
     };
-    
+
     static QueryHideQuickSubcorpWidget:Action<{
     }> = {
         name: 'QUERY_HIDE_QUICK_SUBCORP_WIDGET'
+    };
+
+    static QueryAddSubcorp: Action<
+        Kontext.SubcorpListItem
+    > = {
+        name: 'QUERY_ADD_SUBCORP'
     };
 }
 
