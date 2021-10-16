@@ -190,9 +190,12 @@ export function init({
 
         _handleShowQuickSubcorpWidget() {
             if (this.props.quickSubcorpActive) {
-                dispatcher.dispatch<typeof Actions.QueryShowQuickSubcorpWidget>({
-                    name: Actions.QueryShowQuickSubcorpWidget.name
-                });
+                dispatcher.dispatch(
+                    PluginInterfaces.LiveAttributes.Actions.RefineClicked
+                );
+                dispatcher.dispatch(
+                    Actions.QueryShowQuickSubcorpWidget
+                );
             }
         }
 
@@ -271,9 +274,13 @@ export function init({
                                 <ttViews.TextTypesPanel
                                         LiveAttrsView={this.props.LiveAttrsView}
                                         LiveAttrsCustomTT={this.props.LiveAttrsCustomTT}
-                                        controls={
-                                            <button onClick={this._handleShowQuickSubcorpWidget} type="button" className={"util-button" + (this.props.quickSubcorpActive ? "" : " disabled")}>{he.translate('subc__quick_subcorpus')}</button>
-                                        }/>
+                                        controls={[
+                                            <a onClick={this._handleShowQuickSubcorpWidget}
+                                                className={"util-button" + (this.props.quickSubcorpActive ? "" : " disabled")}>
+                                                    {he.translate('subc__quick_subcorpus')}
+                                            </a>
+                                            ]}
+                                        />
                         </inputViews.AdvancedFormFieldset>
                         <div className="buttons">
                             {this.props.isBusy ?
@@ -284,7 +291,9 @@ export function init({
                             }
                         </div>
                     </div>
-                    {quickSubcorpViews && this.props.quickSubcorpVisible ? <quickSubcorpViews.Widget onClose={this._handleHideQuickSubcorpWidget} /> : null}
+                    {quickSubcorpViews && this.props.quickSubcorpVisible ?
+                        <quickSubcorpViews.Widget onClose={this._handleHideQuickSubcorpWidget} /> :
+                        null}
                 </S.QueryForm>
             );
         }

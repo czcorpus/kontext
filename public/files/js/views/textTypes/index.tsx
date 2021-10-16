@@ -39,7 +39,7 @@ import * as S from './style';
 export interface TextTypesPanelProps {
     LiveAttrsView:PluginInterfaces.LiveAttributes.View;
     LiveAttrsCustomTT:PluginInterfaces.LiveAttributes.CustomAttribute;
-    controls?:JSX.Element;
+    controls?:Array<JSX.Element>;
 }
 
 
@@ -395,18 +395,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
     const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => (
         <S.TextTypesPanel>
-            <div className="plugin-controls">
-                <div className="liveattrs-controls">
+            <div className="tt-controls">
+                <div className="general-controls">
+                    {props.controls
+                        ? (
+                            <ul className="controls">
+                                {List.map(
+                                    (c, i) => <li key={`gc:${i}`}>{c}</li>,
+                                    props.controls,
+                                )}
+                            </ul>
+                        )
+                        : null
+                    }
+                </div>
                 {props.LiveAttrsView
                     ? <props.LiveAttrsView />
-                    : null}
-                </div>
-                <div className="general-controls">
-                {props.controls
-                    ? props.controls
-                    : null
-                }
-                </div>
+                    : <div style={{gridRowStart: 1}} />}
+                <div style={{gridRowStart: 1}} />
             </div>
             <div className="text-type-top-bar">
                 <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />

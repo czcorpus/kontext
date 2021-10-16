@@ -276,11 +276,11 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
      */
     shuffleForbidden:boolean;
 
-    alignedCorporaVisible: boolean;
+    alignedCorporaVisible:boolean;
 
-    quickSubcorpVisible: boolean;
+    quickSubcorpVisible:boolean;
 
-    quickSubcorpActive: boolean;
+    quickSubcorpActive:boolean;
 }
 
 
@@ -655,6 +655,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             action => {
                 this.changeState(state => {
                     state.subcorpList.push(action.payload);
+                    state.quickSubcorpVisible = false;
                 });
             }
         );

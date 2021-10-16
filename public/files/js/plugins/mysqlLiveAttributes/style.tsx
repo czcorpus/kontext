@@ -21,33 +21,12 @@
 import styled from 'styled-components';
 import * as theme from '../../views/theme/default';
 
-export const LiveAttributes = styled.div`
+// ---------------- <LiveAttributesControlsUL /> ---------------
 
-    ul.controls {
-        list-style-type: none;
-        margin: 0 0 1em 0;
-        padding: 0;
+export const LiveAttributesControlsUL = styled.ul`
 
-        li {
-            margin: 0;
-            padding: 0;
-            display: inline-block;
-            vertical-align: middle;
-
-            a.util-button {
-                display: inline-block;
-                vertical-align: middle;
-            }
-        }
-
-        li:not(:last-of-type) {
-            margin-right: 0.7em;
-        }
-
-        .util-button {
-           margin-top: 12px;
-        }
-    }
+    grid-column-start: 2;
+    grid-row-start: 1;
 `;
 
 // --------------- <LiveAttributesSteps /> --------------
@@ -55,6 +34,8 @@ export const LiveAttributes = styled.div`
 export const LiveAttributesSteps = styled.div`
 
     margin: 0.7em 0 0.7em 0;
+    grid-row-start: 2;
+    grid-column: 1 / 3;
     text-align: left;
     display: flex;
     align-content: center;

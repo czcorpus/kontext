@@ -24,10 +24,15 @@ import { CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
+import { Actions as TTActions } from '../textTypes/actions';
+import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
 
 
 export interface QuickSubcorpModelState {
     subcname: string;
+    estimatedSubcSize:number|undefined;
+    liveAttrsEnabled:boolean;
+    isBusy:boolean;
 }
 
 
@@ -35,8 +40,9 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
 
     constructor(
         dispatcher:IFullActionControl,
-        pageModel: PageModel,
+        pageModel:PageModel,
         textTypesModel:TextTypesModel,
+        liveAttrsEnabled:boolean
     ) {
         super(
             dispatcher,
@@ -44,13 +50,55 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
             textTypesModel,
             {
                 subcname: '',
+                estimatedSubcSize: undefined,
+                isBusy: false,
+                liveAttrsEnabled
             },
         );
 
-        this.addActionHandler<typeof Actions.QuickSubcorpSubmit>(
-            Actions.QuickSubcorpSubmit.name,
+        this.addActionHandler(
+            QueryActions.QueryShowQuickSubcorpWidget,
             action => {
-                const args = {
+                if (this.state.liveAttrsEnabled) {
+                    this.changeState(state => {
+                        state.isBusy = true;
+                    });
+                }
+            }
+        )
+
+        this.addActionHandler(
+            TTActions.FilterWholeSelection,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                        state.estimatedSubcSize = action.payload.poscount;
+                    }
+                );
+            }
+        );
+
+        this.addActionHandler(
+            QueryActions.QueryAddSubcorp,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                    }
+                )
+            }
+        )
+
+        this.addActionHandler(
+            Actions.QuickSubcorpSubmit,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = true;
+                    }
+                )
+                const args:CreateSubcorpusArgs = {
                     corpname: pageModel.getNestedConf('corpusIdent', 'id'),
                     subcname: this.state.subcname,
                     publish: false,
@@ -58,8 +106,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     aligned_corpora: pageModel.getConf('alignedCorpora'),
                     text_types: this.textTypesModel.UNSAFE_exportSelections(false),
                     form_type: 'tt-sel'
-                } as CreateSubcorpusArgs;
-
+                };
                 this.submit(args, this.validate).subscribe({
                     next: data => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
@@ -77,8 +124,8 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
             }
         );
 
-        this.addActionHandler<typeof Actions.QuickSubcorpChangeName>(
-            Actions.QuickSubcorpChangeName.name,
+        this.addActionHandler(
+            Actions.QuickSubcorpChangeName,
             action => {
                 this.changeState(state => {
                     state.subcname = action.payload.value;

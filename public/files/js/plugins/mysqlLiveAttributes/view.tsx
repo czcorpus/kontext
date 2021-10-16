@@ -254,8 +254,8 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         };
 
         return (
-            <S.LiveAttributes className="live-attributes">
-                <ul className="controls">
+            <>
+                <S.LiveAttributesControlsUL className="controls">
                     <li>
                         <RefineButton enabled={props.controlsEnabled} clickHandler={handleRefine} />
                     </li>
@@ -270,9 +270,9 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                             <SubcmixerComponent isActive={widgetIsActive()} />
                         </li>)
                     : null}
-                </ul>
+                </S.LiveAttributesControlsUL>
                 <SelectionSteps items={props.selectionSteps} isLoading={props.isBusy} />
-            </S.LiveAttributes>
+            </>
         );
     }
 
