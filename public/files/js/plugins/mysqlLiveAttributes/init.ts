@@ -23,6 +23,7 @@ import * as liveAttrsModel from './models';
 import { init as viewInit } from './view';
 import { List } from 'cnc-tskit';
 import { IPluginApi } from '../../types/plugins/common';
+import { PluginName } from '../../app/plugin';
 
 
 export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPlugin {
@@ -43,7 +44,7 @@ export class LiveAttributesPlugin implements PluginInterfaces.LiveAttributes.IPl
     }
 
     isActive():boolean {
-        return true;
+        return this.pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES);
     }
 
     getViews(

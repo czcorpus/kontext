@@ -60,7 +60,6 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
 
         const submitAction = () => {
             if (props.subcname) {
-                props.onClose();
                 dispatcher.dispatch<typeof Actions.QuickSubcorpSubmit>({
                     name: Actions.QuickSubcorpSubmit.name,
                     payload: {}
@@ -76,9 +75,21 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
 
         return (
             <layoutViews.ModalOverlay onCloseKey={props.onClose}>
-                <layoutViews.CloseableFrame onCloseClick={props.onClose} label={he.translate('subc__quick_subcorpus')} scrollable={true}>
-                    <input name="subcorpName" style={{marginRight: '1em'}} placeholder={he.translate('subc__quick_subcorpus_name')} onChange={changeName} value={props.subcname} onKeyPress={keyPressHandler}/>
-                    <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>{he.translate('subc__quick_subcorpus_create')}</button>
+                <layoutViews.CloseableFrame onCloseClick={props.onClose}
+                        label={he.translate('subc__quick_subcorpus_form_hd')} scrollable={true}>
+                    {props.estimatedSubcSize ?
+                        <p>{he.translate('global__size_in_tokens')}: {he.formatNumber(props.estimatedSubcSize)}</p> :
+                        null}
+                    <input name="subcorpName" style={{marginRight: '1em'}}
+                        placeholder={he.translate('subc__quick_subcorpus_name')}
+                        onChange={changeName} value={props.subcname}
+                        onKeyPress={keyPressHandler}/>
+                    {props.isBusy ?
+                        <layoutViews.AjaxLoaderBarImage /> :
+                        <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>
+                            {he.translate('subc__quick_subcorpus_create')}
+                        </button>
+                    }
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );

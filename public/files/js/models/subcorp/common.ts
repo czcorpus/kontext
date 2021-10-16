@@ -126,7 +126,7 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
             );
 
         } else {
-            return throwError(err);
+            return throwError(() => err);
         }
     }
 }

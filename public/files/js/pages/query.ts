@@ -94,9 +94,9 @@ export class QueryPage {
 
     private queryModel:FirstQueryFormModel;
 
-    private textTypesModel: TextTypesModel;
-    
-    private quickSubcorpModel: QuickSubcorpModel;
+    private textTypesModel:TextTypesModel;
+
+    private quickSubcorpModel:QuickSubcorpModel;
 
     private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
@@ -157,12 +157,6 @@ export class QueryPage {
             queryFormArgs.bib_mapping
         );
 
-        this.quickSubcorpModel = new QuickSubcorpModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.textTypesModel,
-        );
-
         this.liveAttrsPlugin = liveAttributes(
             this.layoutModel.pluginApi(),
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
@@ -190,6 +184,14 @@ export class QueryPage {
                 LiveAttrsView: null
             };
         }
+
+        this.quickSubcorpModel = new QuickSubcorpModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.textTypesModel,
+            this.liveAttrsPlugin.isActive()
+        );
+
         return {
             ...liveAttrsViews,
             formType: Kontext.ConcFormTypes.QUERY,
@@ -330,13 +332,13 @@ export class QueryPage {
             const concFormsArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
                 'ConcFormsArgs'
             );
-    
+
             let queryId = '__new__';
             const q = this.layoutModel.getNestedConf<string>('currentArgs', 'q');
             if (q.length > 0) {
                 queryId = q[0].replace('~', '');
             }
-            
+
             const queryFormArgs = concFormsArgs[queryId] as QueryFormArgs;
             this.queryContextModel = new QueryContextModel(
                 this.layoutModel.dispatcher,
@@ -412,7 +414,8 @@ export class QueryPage {
                 this.queryContextModel,
                 this.withinBuilderModel,
                 this.virtualKeyboardModel,
-                this.liveAttrsPlugin
+                this.liveAttrsPlugin,
+                this.quickSubcorpModel
             );
         });
     }

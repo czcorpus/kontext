@@ -66,10 +66,37 @@ export const TextTypesPanel = styled.div`
         }
     }
 
-    .plugin-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .tt-controls {
+        grid-template-columns: auto auto auto;
+        display: inline-grid;
+
+        .general-controls {
+            margin-right: 0.7em;
+            grid-column-start: 1;
+            grid-row-start: 1;
+        }
+
+        ul.controls {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+
+            li {
+                margin: 0;
+                padding: 0;
+                display: inline-block;
+                vertical-align: middle;
+
+                a.util-button {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+
+            li:not(:last-child) {
+                margin-right: 0.7em;
+            }
+        }
     }
 `;
 
