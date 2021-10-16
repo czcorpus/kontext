@@ -25,7 +25,8 @@ import { IFullActionControl } from 'kombo';
 import { Actions } from './actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as TTActions } from '../textTypes/actions';
-import { TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
+import { IUnregistrable } from '../common/common';
+import { Actions as GlobalActions } from '../common/actions';
 
 
 export interface QuickSubcorpModelState {
@@ -36,7 +37,7 @@ export interface QuickSubcorpModelState {
 }
 
 
-export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelState> {
+export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelState> implements IUnregistrable {
 
     constructor(
         dispatcher:IFullActionControl,
@@ -54,6 +55,19 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                 isBusy: false,
                 liveAttrsEnabled
             },
+        );
+
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
+            action => {
+                dispatcher.dispatch(
+                    GlobalActions.SwitchCorpusReady,
+                    {
+                        modelId: this.getRegistrationId(),
+                        data: {}
+                    }
+                );
+            }
         );
 
         this.addActionHandler(
@@ -132,11 +146,14 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                 });
             }
         );
-
     }
 
     validate(args: CreateSubcorpusArgs): Error | null {
         return null;
+    }
+
+    getRegistrationId():string {
+        return 'quick-subcorpus-model';
     }
 
 }

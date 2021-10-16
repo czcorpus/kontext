@@ -35,7 +35,6 @@ import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
 import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
-import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';

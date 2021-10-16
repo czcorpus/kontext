@@ -190,9 +190,11 @@ export function init({
 
         _handleShowQuickSubcorpWidget() {
             if (this.props.quickSubcorpActive) {
-                dispatcher.dispatch(
-                    PluginInterfaces.LiveAttributes.Actions.RefineClicked
-                );
+                if (this.props.LiveAttrsView) {
+                    dispatcher.dispatch(
+                        PluginInterfaces.LiveAttributes.Actions.RefineClicked
+                    );
+                }
                 dispatcher.dispatch(
                     Actions.QueryShowQuickSubcorpWidget
                 );

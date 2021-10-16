@@ -414,7 +414,8 @@ export class QueryPage {
                 this.queryContextModel,
                 this.withinBuilderModel,
                 this.virtualKeyboardModel,
-                this.liveAttrsPlugin
+                this.liveAttrsPlugin,
+                this.quickSubcorpModel
             );
         });
     }
