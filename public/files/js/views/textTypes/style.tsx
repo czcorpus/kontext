@@ -72,7 +72,6 @@ export const TextTypesPanel = styled.div`
 
         .general-controls {
             margin-right: 0.7em;
-            grid-column-start: 1;
             grid-row-start: 1;
         }
 

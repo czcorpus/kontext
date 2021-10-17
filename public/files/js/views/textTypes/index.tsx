@@ -396,7 +396,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => (
         <S.TextTypesPanel>
             <div className="tt-controls">
-                <div className="general-controls">
+            <div className="general-controls">
                     {props.controls
                         ? (
                             <ul className="controls">
@@ -412,7 +412,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 {props.LiveAttrsView
                     ? <props.LiveAttrsView />
                     : <div style={{gridRowStart: 1}} />}
-                <div style={{gridRowStart: 1}} />
             </div>
             <div className="text-type-top-bar">
                 <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />

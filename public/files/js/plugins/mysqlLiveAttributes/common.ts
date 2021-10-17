@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Action } from 'kombo';
+
 /**
  * A minimal interface required by RangeSelector to cooperate with
  * text types checkboxes.
@@ -49,4 +51,3 @@ export interface AttributesMap {
     aligned?: Array<string>;
     //[attr: string]: AvailAttrValues;
 }
-

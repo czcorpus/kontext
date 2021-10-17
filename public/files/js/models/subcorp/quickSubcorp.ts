@@ -27,6 +27,7 @@ import { Actions as QueryActions } from '../query/actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
+import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
 
 
 export interface QuickSubcorpModelState {
@@ -94,6 +95,18 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
         );
 
         this.addActionHandler(
+            LiveattrsActions.RefineCancelled,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                        state.estimatedSubcSize = action.payload.currentSubcorpSize;
+                    }
+                );
+            }
+        )
+
+        this.addActionHandler(
             QueryActions.QueryAddSubcorp,
             action => {
                 this.changeState(
@@ -133,7 +146,13 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                             }
                         });
                     },
-                    error: error => this.pageModel.showMessage('error', error)
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
+                        this.dispatchSideEffect(
+                            QueryActions.QueryAddSubcorp,
+                            error
+                        );
+                    }
                 });
             }
         );

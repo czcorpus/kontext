@@ -144,7 +144,13 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     concatMap(
                         (action) => {
                             if (PluginInterfaces.LiveAttributes.Actions.isRefineReady(action)) {
-                                return this.loadFilteredData(state, action.payload.selections)
+                                if (!List.empty(action.payload.newSelections)) {
+                                    return this.loadFilteredData(state, action.payload.selections);
+
+                                } else {
+                                    return rxOf<[TextTypes.ExportedSelection, ServerRefineResponse]>(tuple({}, null));
+
+                                }
 
                             } else {
                                 throw new Error('Not an instance of RefineReady');
@@ -153,16 +159,28 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     )
                 ).subscribe({
                     next: ([selections, data]) => {
-                        const filterData = this.importFilter(data.attr_values, dispatch);
-                        dispatch<typeof TTActions.FilterWholeSelection>({
-                            name: TTActions.FilterWholeSelection.name,
-                            payload: {
-                                poscount: data.poscount,
-                                filterData: filterData,
-                                selectedTypes: selections,
-                                bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
-                            }
-                        });
+                        if (data) {
+                            const filterData = this.importFilter(data.attr_values, dispatch);
+                            dispatch(
+                                TTActions.FilterWholeSelection,
+                                {
+                                    poscount: data.poscount,
+                                    filterData: filterData,
+                                    selectedTypes: selections,
+                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
+                                }
+                            );
+
+                        } else {
+                            dispatch(
+                                PluginInterfaces.LiveAttributes.Actions.RefineCancelled,
+                                {
+                                    currentSubcorpSize: List.empty(state.selectionSteps) ?
+                                        undefined :
+                                        List.head(state.selectionSteps).numPosInfo
+                                }
+                            );
+                        }
                     },
                     error: error => {
                         this.pluginApi.showMessage('error', error);
@@ -176,6 +194,13 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         );
 
         this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.RefineCancelled,
+            (state, action) => {
+                state.isBusy = false;
+            }
+        );
+
+        this.addActionHandler(
             TTActions.FilterWholeSelection,
             (state, action) => {
                 state.isBusy = false;
@@ -184,7 +209,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         state.alignedCorpora,
                         List.map((value) => ({
                             ...value,
-                            locked: value.selected ? true : false
+                            locked: value.selected
                         })),
                         List.filter(item=>item.locked)
                     );
@@ -719,12 +744,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             state.alignedCorpora,
             List.filter(item => item.selected),
             List.map(item => item.value)
-        );
-        const involvedCorpora = pipe(
-            state.alignedCorpora,
-            List.filter(v => v.selected),
-            List.map(v => v.value),
-            List.unshift(state.firstCorpus)
         );
         return this.pluginApi.ajax$<ServerRefineResponse>(
             HTTP.Method.POST,

@@ -389,9 +389,19 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.dispatchSideEffect(
                     PluginInterfaces.LiveAttributes.Actions.RefineReady,
                     {
-                        selections: this.exportSelections(false)
+                        selections: this.exportSelections(false),
+                        newSelections: this.getUnlockedSelections(this.state)
                     }
                 );
+            }
+        );
+
+        this.addActionHandler(
+            PluginInterfaces.LiveAttributes.Actions.RefineCancelled,
+            action => {
+                this.changeState(state => {
+                    this.setAllAttributesBusy(state, false);
+                });
             }
         );
 
@@ -758,14 +768,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         keepCurrent:boolean
     ):void {
         this._applyRange(state, attrName, fromVal, toVal, strictInterval, keepCurrent)
-            .subscribe(
-                (newSelection:TextTypes.AnyTTSelection) => {
+            .subscribe({
+                next: (newSelection:TextTypes.AnyTTSelection) => {
                     this.emitChange();
                 },
-                (err) => {
-                    this.pluginApi.showMessage('error', err);
+                error: error => {
+                    this.pluginApi.showMessage('error', error);
                 }
-            );
+            });
     }
 
     private applySelectAll(state:TextTypesModelState, ident:string) {
@@ -1287,5 +1297,24 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             List.map(v => tuple(v.name, val)),
             Dict.fromEntries()
         );
+    }
+
+    private getUnlockedSelections(state:TextTypesModelState):Array<[string, string]> {
+        return pipe(
+            state.attributes,
+            List.flatMap(attr => {
+                if (attr.type === 'regexp' && !attr.isLocked && attr.textFieldValue) {
+                    return [tuple(attr.name, attr.textFieldValue)];
+
+                } else if (attr.type === 'full' && !List.some(v => v.locked, attr.values)) {
+                    return pipe(
+                        attr.values,
+                        List.filter(val => val.selected),
+                        List.map(val => tuple(attr.name, val.value))
+                    );
+                }
+                return [];
+            })
+        )
     }
 }
