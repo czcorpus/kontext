@@ -41,12 +41,25 @@ export class Actions {
 
     static RefineReady:Action<{
         selections:ExportedSelection;
+        newSelections:Array<[string, string]>; // 2-tuples (attr name, attr_value)
     }> = {
         name: 'LIVE_ATTRIBUTES_REFINE_READY'
     };
 
     static isRefineReady(a:Action<{}>):a is typeof Actions.RefineReady {
         return a.name === Actions.RefineReady.name;
+    }
+
+    /**
+     * RefineCancelled is used in case we want to
+     * perform an "empty" refine action (e.g. nothing really changed
+     * from the last refine but the whole machinery already running).
+     * In such case we just pass empty data and dispatch this action.
+     */
+     static RefineCancelled:Action<{
+         currentSubcorpSize:number;
+     }> = {
+        name: 'LIVE_ATTRIBUTES_REFINE_CANCELLED'
     }
 
     static ResetClicked:Action<{

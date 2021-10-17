@@ -363,3 +363,13 @@ export const Filter = styled.fieldset`
         margin-bottom: 0;
     }
 `;
+
+// ---------------- <QuickSubcLABEL /> --------------------------------------
+
+export const QuickSubcLABEL = styled.label`
+
+    input {
+        margin-left: 0.7em;
+    }
+
+`

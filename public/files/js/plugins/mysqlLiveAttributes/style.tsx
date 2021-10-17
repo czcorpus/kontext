@@ -24,8 +24,6 @@ import * as theme from '../../views/theme/default';
 // ---------------- <LiveAttributesControlsUL /> ---------------
 
 export const LiveAttributesControlsUL = styled.ul`
-
-    grid-column-start: 2;
     grid-row-start: 1;
 `;
 
@@ -35,7 +33,7 @@ export const LiveAttributesSteps = styled.div`
 
     margin: 0.7em 0 0.7em 0;
     grid-row-start: 2;
-    grid-column: 1 / 3;
+    grid-column: 1 / 4;
     text-align: left;
     display: flex;
     align-content: center;

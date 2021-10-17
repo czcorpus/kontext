@@ -25,6 +25,7 @@ import { Actions } from '../../models/subcorp/actions';
 
 import { QuickSubcorpModel, QuickSubcorpModelState } from '../../models/subcorp/quickSubcorp';
 import { Keyboard } from 'cnc-tskit';
+import * as S from './style';
 
 
 export interface QuickSubcorpWidgetArgs {
@@ -78,12 +79,14 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                 <layoutViews.CloseableFrame onCloseClick={props.onClose}
                         label={he.translate('subc__quick_subcorpus_form_hd')} scrollable={true}>
                     {props.estimatedSubcSize ?
-                        <p>{he.translate('global__size_in_tokens')}: {he.formatNumber(props.estimatedSubcSize)}</p> :
+                        <p>{he.translate('global__size_in_tokens')}: <strong>{he.formatNumber(props.estimatedSubcSize)}</strong></p> :
                         null}
-                    <input name="subcorpName" style={{marginRight: '1em'}}
-                        placeholder={he.translate('subc__quick_subcorpus_name')}
-                        onChange={changeName} value={props.subcname}
-                        onKeyPress={keyPressHandler}/>
+                    <S.QuickSubcLABEL>
+                        {he.translate('subc__quick_subcorpus_name')}:
+                        <input name="subcorpName" style={{marginRight: '1em'}}
+                            onChange={changeName} value={props.subcname}
+                            onKeyPress={keyPressHandler}/>
+                    </S.QuickSubcLABEL>
                     {props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
                         <button type="button" className={"util-button" + (props.subcname ? "" : " disabled")} onClick={submitAction}>
