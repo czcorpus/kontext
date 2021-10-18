@@ -322,19 +322,6 @@ class SetupGunicorn(InstallationStep):
         subprocess.check_call(['systemctl', 'enable', 'gunicorn'], stdout=self.stdout)
 
 
-class SetupFFMpeg(InstallationStep):
-    def is_done(self):
-        pass
-
-    def abort(self):
-        pass
-
-    def run(self):
-        print('Installing ffmpeg...')
-        subprocess.check_call(['sh', os.path.join(
-            self.kontext_path, 'scripts/install/install-min-ffmpeg.sh')], stdout=self.stdout)
-
-
 class SetupDefaultUsers(InstallationStep):
     def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379):
         super().__init__(kontext_path, stdout, stderr)
@@ -395,9 +382,6 @@ if __name__ == "__main__":
     elif args.step_name == 'SetupManatee':
         obj = SetupManatee(*init_step_args, True)
         obj.run(args.step_args[0], args.step_args[1], bool(int(args.step_args[2])))
-    elif args.step_name == 'SetupFFMpeg':
-        obj = SetupFFMpeg(*init_step_args)
-        obj.run()
     else:
         raise Exception(f'Unknown action: {args.step_name}')
 

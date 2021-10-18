@@ -4,7 +4,7 @@
     <start>
         <element name="audio_provider">
             <element name="module">
-                <value>sox_audio_provider</value>
+                <value>teitok_audio_provider</value>
             </element>
         </element>
     </start>

@@ -19,14 +19,14 @@
 from typing import Optional, Tuple
 import os
 import settings
-import subprocess
 import re
-import logging
 from plugins.abstract.audio_provider import AbstractAudioProvider
 from plugins import inject
+import sox
+import numpy as np
 
 
-class SoxAudioProvider(AbstractAudioProvider):
+class TeitokAudioProvider(AbstractAudioProvider):
 
     @staticmethod
     def _create_audio_file_paths(corpname: str, chunk: str) -> Tuple[Optional[str], Optional[str]]:
@@ -43,8 +43,9 @@ class SoxAudioProvider(AbstractAudioProvider):
 
     def get_audio(self, plugin_ctx, req):
         chunk = req.args.get('chunk', '')
-        start = req.args.get('start', '0')
-        end = req.args.get('end', '')
+        start = float(req.args.get('start', '0'))
+        end = req.args.get('end', None)
+        end = None if end is None else float(end)
 
         orig_rpath, speechpath = self._create_audio_file_paths(
             plugin_ctx.current_corpus.corpname, chunk)
@@ -55,19 +56,12 @@ class SoxAudioProvider(AbstractAudioProvider):
         m = re.search(r'(.*)\.(.*)', chunk)
         name = m.group(1)
         ext = m.group(2)
-        if ext and start and end:
-            length = float(end) - float(start)
+        if ext and (start or end):
             rpath = os.path.join(speechpath, f'{name}?start={start}&end={end}.{ext}')
             if not os.path.isfile(rpath):
-                process = subprocess.Popen([
-                    '/usr/bin/sox',
-                    orig_rpath,
-                    rpath,
-                    'trim',
-                    start,
-                    str(length),
-                ])
-                process.communicate()
+                tfm = sox.Transformer()
+                tfm.trim(start, end)
+                tfm.build(input_filepath=orig_rpath, output_filepath=rpath)
         else:
             rpath = orig_rpath
 
@@ -83,12 +77,37 @@ class SoxAudioProvider(AbstractAudioProvider):
             return headers, f.read()
 
     def get_waveform(self, plugin_ctx, req):
-        logging.warning('get_waveform not implemented')
-        return [0 for _ in range(200)]  # TODO
+        chunk = req.args.get('chunk', '')
+        start = float(req.args.get('start', '0'))
+        end = req.args.get('end', None)
+        end = None if end is None else float(end)
+
+        orig_rpath, speechpath = self._create_audio_file_paths(
+            plugin_ctx.current_corpus.corpname, chunk)
+        if orig_rpath is None:
+            plugin_ctx.set_not_found()
+            return []
+
+        m = re.search(r'(.*)\.(.*)', chunk)
+        name = m.group(1)
+        ext = m.group(2)
+        tfm = sox.Transformer()
+        if ext and (start or end):
+            rpath = os.path.join(speechpath, f'{name}?start={start}&end={end}.{ext}')
+            if not os.path.isfile(rpath):
+                tfm.trim(start, end)
+                rpath = orig_rpath
+        else:
+            rpath = orig_rpath
+
+        snd_data = np.absolute(tfm.build_array(input_filepath=rpath))
+        max = np.amax(snd_data)
+        snd_chunks = np.array_split(snd_data, 200)
+        return [float(np.amax(snd) / max) for snd in snd_chunks]
 
 
 @inject()
 def create_instance(_):
     """
     """
-    return SoxAudioProvider()
+    return TeitokAudioProvider()

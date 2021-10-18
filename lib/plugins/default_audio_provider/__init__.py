@@ -23,12 +23,8 @@ import re
 import logging
 from plugins.abstract.audio_provider import AbstractAudioProvider
 from plugins import inject
-try:
-    import pydub
-except ImportError:
-    logging.getLogger(__name__).warning(
-        'Module pydub not installed. KonText audio capabilities can be enhanced by installing it.')
-    pydub = None
+import sox
+import numpy as np
 
 
 class DefaultAudioProvider(AbstractAudioProvider):
@@ -65,7 +61,8 @@ class DefaultAudioProvider(AbstractAudioProvider):
         return lft, rgt
 
     def get_audio(self, plugin_ctx, req):
-        rpath = self._create_audio_file_path(plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
+        rpath = self._create_audio_file_path(
+            plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
         if rpath is None:
             plugin_ctx.set_not_found()
             return {}, None
@@ -86,34 +83,23 @@ class DefaultAudioProvider(AbstractAudioProvider):
             return headers, f.read() if not play_to else f.read(play_to - play_from)
 
     def get_waveform(self, plugin_ctx, req):
-        if pydub is None:
-            return None
-
-        rpath = self._create_audio_file_path(plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
+        rpath = self._create_audio_file_path(
+            plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
         if rpath is None:
             plugin_ctx.set_not_found()
             return []
 
+        tfm = sox.Transformer()
         play_from, play_to = self._parse_range(req)
-        if not play_to:
-            # TODO requires ffmpeg
-            sound = pydub.AudioSegment.from_file(rpath)
-        else:
-            with open(rpath, 'rb') as f:
-                if play_from > 0:
-                    f.seek(play_from)
+        if play_to:
+            # in case of variable this might not be very precise
+            bitrate = sox.file_info.bitrate(rpath)
+            tfm.trim(play_from / bitrate, play_to / bitrate)
 
-                # TODO reads only wav
-                sound = pydub.AudioSegment(
-                    data=f.read() if not play_to else f.read(play_to - play_from))
-
-        def audio_slices(snd, num_slices):
-            slice = int(len(snd) / num_slices)
-            for i in range(0, (num_slices - 2) * slice, slice):
-                yield snd[i:i + slice]
-            yield snd[(num_slices - 2) * slice:]
-
-        return [snd.max / sound.max for snd in audio_slices(sound, 200)]
+        snd_data = np.absolute(tfm.build_array(input_filepath=rpath))
+        max = np.amax(snd_data)
+        snd_chunks = np.array_split(snd_data, 200)
+        return [float(np.amax(snd) / max) for snd in snd_chunks]
 
 
 @inject()
