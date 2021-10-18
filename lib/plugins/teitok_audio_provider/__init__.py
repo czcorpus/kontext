@@ -26,7 +26,7 @@ import sox
 import numpy as np
 
 
-class SoxAudioProvider(AbstractAudioProvider):
+class TeitokAudioProvider(AbstractAudioProvider):
 
     @staticmethod
     def _create_audio_file_paths(corpname: str, chunk: str) -> Tuple[Optional[str], Optional[str]]:
@@ -110,4 +110,4 @@ class SoxAudioProvider(AbstractAudioProvider):
 def create_instance(_):
     """
     """
-    return SoxAudioProvider()
+    return TeitokAudioProvider()
