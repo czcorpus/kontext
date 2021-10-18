@@ -130,8 +130,8 @@ class KonTextCookie(http.cookies.BaseCookie):
         return strval, quote(strval)
 
 
-@jinja2.contextfilter
-def translat_filter(context, s):
+@jinja2.pass_context
+def translat_filter(_, s):
     return ugettext(s)
 
 
