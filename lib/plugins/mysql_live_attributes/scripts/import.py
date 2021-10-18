@@ -51,7 +51,7 @@ def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLCo
     present_values = {tuple(corp_struct_atrr_value): id for id, *
                       corp_struct_atrr_value in mysql_cursor}
 
-    mysql_cursor.execute('select item, id from corpus_parallel_items')
+    mysql_cursor.execute('select item, id from corpus_parallel_item')
     present_items = {item: id for item, id in mysql_cursor}
 
     present_corpus_struct_attrs = defaultdict(lambda: set())

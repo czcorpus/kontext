@@ -11,7 +11,7 @@ CREATE TABLE corpus_structattr_value_tuple (
   wordcount int NOT NULL,
   item_id int,
   CONSTRAINT corpus_structatrr_value_tuple_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),
-  CONSTRAINT corpus_structatrr_value_tuple_item_id_fk FOREIGN KEY (corpus_name) REFERENCES corpus_parallel_item(id)
+  CONSTRAINT corpus_structatrr_value_tuple_item_id_fk FOREIGN KEY (item_id) REFERENCES corpus_parallel_item(id)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE corpus_structattr_value (
