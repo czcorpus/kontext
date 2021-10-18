@@ -19,11 +19,11 @@
 from typing import Optional, Tuple
 import os
 import settings
-import subprocess
 import re
 import logging
 from plugins.abstract.audio_provider import AbstractAudioProvider
 from plugins import inject
+import sox
 
 
 class SoxAudioProvider(AbstractAudioProvider):
@@ -43,8 +43,9 @@ class SoxAudioProvider(AbstractAudioProvider):
 
     def get_audio(self, plugin_ctx, req):
         chunk = req.args.get('chunk', '')
-        start = req.args.get('start', '0')
-        end = req.args.get('end', '')
+        start = float(req.args.get('start', '0'))
+        end = req.args.get('end', None)
+        end = None if end is None else float(end)
 
         orig_rpath, speechpath = self._create_audio_file_paths(
             plugin_ctx.current_corpus.corpname, chunk)
@@ -55,19 +56,12 @@ class SoxAudioProvider(AbstractAudioProvider):
         m = re.search(r'(.*)\.(.*)', chunk)
         name = m.group(1)
         ext = m.group(2)
-        if ext and start and end:
-            length = float(end) - float(start)
+        if ext and (start or end):
             rpath = os.path.join(speechpath, f'{name}?start={start}&end={end}.{ext}')
             if not os.path.isfile(rpath):
-                process = subprocess.Popen([
-                    '/usr/bin/sox',
-                    orig_rpath,
-                    rpath,
-                    'trim',
-                    start,
-                    str(length),
-                ])
-                process.communicate()
+                tfm = sox.Transformer()
+                tfm.trim(start, end)
+                tfm.build(input_filepath=orig_rpath, output_filepath=rpath)
         else:
             rpath = orig_rpath
 
