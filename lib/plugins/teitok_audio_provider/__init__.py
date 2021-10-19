@@ -20,13 +20,28 @@ from typing import Optional, Tuple
 import os
 import settings
 import re
+import logging
 from plugins.abstract.audio_provider import AbstractAudioProvider
 from plugins import inject
-import sox
-import numpy as np
+try:
+    import sox
+except ImportError:
+    sox = None
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 class TeitokAudioProvider(AbstractAudioProvider):
+
+    def __init__(self):
+        if sox is None:
+            logging.getLogger(__name__).warning(
+                'Sox not installed - the get_waveform function will be disabled')
+        if np is None:
+            logging.getLogger(__name__).warning(
+                'Numpy not installed - the get_waveform function will be disabled')
 
     @staticmethod
     def _create_audio_file_paths(corpname: str, chunk: str) -> Tuple[Optional[str], Optional[str]]:
@@ -77,6 +92,8 @@ class TeitokAudioProvider(AbstractAudioProvider):
             return headers, f.read()
 
     def get_waveform(self, plugin_ctx, req):
+        if sox is None or np is None:
+            return None
         chunk = req.args.get('chunk', '')
         start = float(req.args.get('start', '0'))
         end = req.args.get('end', None)
