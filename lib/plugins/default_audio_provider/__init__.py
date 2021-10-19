@@ -23,11 +23,25 @@ import re
 import logging
 from plugins.abstract.audio_provider import AbstractAudioProvider
 from plugins import inject
-import sox
-import numpy as np
+try:
+    import sox
+except ImportError:
+    sox = None
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 class DefaultAudioProvider(AbstractAudioProvider):
+
+    def __init__(self):
+        if sox is None:
+            logging.getLogger(__name__).warning(
+                'Sox not installed - the get_waveform function will be disabled')
+        if np is None:
+            logging.getLogger(__name__).warning(
+                'Numpy not installed - the get_waveform function will be disabled')
 
     @staticmethod
     def _create_audio_file_path(corpname: str, chunk: str) -> Optional[str]:
@@ -83,6 +97,8 @@ class DefaultAudioProvider(AbstractAudioProvider):
             return headers, f.read() if not play_to else f.read(play_to - play_from)
 
     def get_waveform(self, plugin_ctx, req):
+        if sox is None or np is None:
+            return None
         rpath = self._create_audio_file_path(
             plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
         if rpath is None:
