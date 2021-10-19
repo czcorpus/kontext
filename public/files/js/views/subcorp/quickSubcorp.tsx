@@ -48,7 +48,13 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
 
     // ------------------------------------------- <QuickSubcorpWidget /> ----------------------------
 
-    const QuickSubcorpWidget:React.FC<QuickSubcorpWidgetProps & QuickSubcorpModelState> = (props) => {
+    const QuickSubcorpWidget: React.FC<QuickSubcorpWidgetProps & QuickSubcorpModelState> = (props) => {
+        
+        const inputRef = React.createRef<HTMLInputElement>();
+        React.useLayoutEffect(
+            () => inputRef.current.focus(),
+            [inputRef.current]
+        );
 
         const changeName = (e) => {
             dispatcher.dispatch<typeof Actions.QuickSubcorpChangeName>({
@@ -83,9 +89,10 @@ export function init({ dispatcher, he, quickSubcorpModel }: QuickSubcorpWidgetAr
                         null}
                     <S.QuickSubcLABEL>
                         {he.translate('subc__quick_subcorpus_name')}:
-                        <input name="subcorpName" style={{marginRight: '1em'}}
+                        <input name="subcorpName" style={{ marginRight: '1em' }}
                             onChange={changeName} value={props.subcname}
-                            onKeyPress={keyPressHandler}/>
+                            onKeyPress={keyPressHandler}
+                            ref={inputRef} />
                     </S.QuickSubcLABEL>
                     {props.isBusy ?
                         <layoutViews.AjaxLoaderBarImage /> :
