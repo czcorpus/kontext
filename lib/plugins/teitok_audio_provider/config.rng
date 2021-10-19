@@ -6,6 +6,14 @@
             <element name="module">
                 <value>teitok_audio_provider</value>
             </element>
+            <element name="audio_cache_path">
+                <a:documentation>
+                    A filesystem path where temporary chunks served out of the original audio files are stored.
+                    Such a directory should be regularly emptied (e.g. using CRON or via KonText's own
+                    task scheduler.
+                </a:documentation>
+                <text />
+            </element>
         </element>
     </start>
 </grammar>
