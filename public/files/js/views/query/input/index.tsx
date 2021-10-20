@@ -1028,73 +1028,67 @@ export function init({
             }
         }
 
-        _renderInputOptions() {
+        _renderCustomOptions() {
             const customOpts = this.props.customOptions || [];
+            return !List.empty(customOpts) ?
+                <>
+                    {List.map(
+                        (opt, i) => (
+                            <div className="option custom" key={`item:${i}`}
+                                    style={{gridColumnEnd: `span ${opt.props.span || 1}`}}>
+                                {opt}
+                            </div>
+                        ),
+                        customOpts
+                    )}
+                </> :
+                null
+            ;
+        }
+
+        _renderInputOptions() {
             const query = this.props.queries[this.props.sourceId];
 
             switch (query.qtype) {
                 case 'simple':
                     return (
                         <>
-                            {!List.empty(customOpts) ?
-                                <>
-                                    {List.map(
-                                        (opt, i) => (
-                                            <div className="option custom" key={`item:${i}`}
-                                                    style={{gridColumnEnd: `span ${opt.props.span || 1}`}}>
-                                                {opt}
-                                            </div>
-                                        ),
-                                        customOpts
-                                    )}
-                                </> :
-                                null
-                            }
-                            <>
-                                <div className={`option${query.use_regexp ? ' disabled' : ''}`}>
-                                    <MatchCaseSelector matchCaseValue={query.qmcase || query.use_regexp}
-                                        sourceId={this.props.sourceId}
-                                        formType={this.props.formType}
-                                        disabled={query.use_regexp} />
-                                    <span style={query.use_regexp ? {} : {visibility: 'hidden'}}>
-                                        <layoutViews.InlineHelp noSuperscript={true}
-                                                customStyle={{maxWidth: '30em'}}>
-                                            {he.translate('query__tip_07')}
-                                        </layoutViews.InlineHelp>
-                                    </span>
-                                </div>
-                                <div className={"option"}>
-                                    <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
-                                            value={query.use_regexp} />
-                                </div>
-                                <div className="option">
-                                    <DefaultAttrSelector
-                                        label={he.translate('query__default_attr')}
-                                        sourceId={this.props.sourceId}
-                                        defaultAttr={Array.isArray(query.default_attr) ? undefined : query.default_attr}
-                                        forcedAttr={this.props.forcedAttr}
-                                        attrList={this.props.attrList}
-                                        simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
-                                        formType={this.props.formType}
-                                        queryType={this.props.queries[this.props.sourceId].qtype}
-                                        tagsets={this.props.tagsets}
-                                        isLocalUiLang={this.props.isLocalUiLang} />
-                                </div>
-                            </>
+                            {this._renderCustomOptions()}
+                            <div className={`option${query.use_regexp ? ' disabled' : ''}`}>
+                                <MatchCaseSelector matchCaseValue={query.qmcase || query.use_regexp}
+                                    sourceId={this.props.sourceId}
+                                    formType={this.props.formType}
+                                    disabled={query.use_regexp} />
+                                <span style={query.use_regexp ? {} : {visibility: 'hidden'}}>
+                                    <layoutViews.InlineHelp noSuperscript={true}
+                                            customStyle={{maxWidth: '30em'}}>
+                                        {he.translate('query__tip_07')}
+                                    </layoutViews.InlineHelp>
+                                </span>
+                            </div>
+                            <div className={"option"}>
+                                <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}
+                                        value={query.use_regexp} />
+                            </div>
+                            <div className="option">
+                                <DefaultAttrSelector
+                                    label={he.translate('query__default_attr')}
+                                    sourceId={this.props.sourceId}
+                                    defaultAttr={Array.isArray(query.default_attr) ? undefined : query.default_attr}
+                                    forcedAttr={this.props.forcedAttr}
+                                    attrList={this.props.attrList}
+                                    simpleQueryDefaultAttrs={this.props.simpleQueryDefaultAttrs[this.props.sourceId]}
+                                    formType={this.props.formType}
+                                    queryType={this.props.queries[this.props.sourceId].qtype}
+                                    tagsets={this.props.tagsets}
+                                    isLocalUiLang={this.props.isLocalUiLang} />
+                            </div>
                         </>
                     );
                 case 'advanced':
                     return (
                         <>
-                            {!List.empty(customOpts) ?
-                                <div className="option-list-custom">
-                                    {List.map(
-                                        (opt, i) => <div key={`item:${i}`}>{opt}</div>,
-                                        customOpts
-                                    )}
-                                </div> :
-                                null
-                            }
+                            {this._renderCustomOptions()}
                             <div className="option-list">
                                 <DefaultAttrSelector
                                     label={he.translate('query__default_attr')}
