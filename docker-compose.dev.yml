@@ -13,6 +13,8 @@ services:
     ports:
       # kontext debug port
       - "5678:5678"
+      # webpack dev server port
+      - "9000:9000"
     volumes:
       - ${KONTEXT_CONFIG}:/opt/kontext/conf/config.xml
       # we have to bind folders separatelly
