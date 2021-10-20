@@ -88,8 +88,7 @@ class Wordlist(Kontext):
         q = request.args.get('q')
         if q:
             conc_args['q'] = [q]
-        args = {}
-        result['Globals'] = conc_args.update(args)
+        result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
 
     @exposed(access_level=1, page_model='wordlistForm')

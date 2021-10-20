@@ -464,7 +464,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
         formSubmitArgs:WordlistSubmitArgs,
         word:string
     ):ConcQueryArgs {
-        const primaryCorpus = formSubmitArgs.corpname;
         const currArgs = this.layoutModel.getConcArgs();
         const args:ConcQueryArgs = {
             type:'concQueryArgs',
