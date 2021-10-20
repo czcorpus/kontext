@@ -70,7 +70,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                     {props.queryId ?
                         <li>
                             {'\u00a0 | '}
-                            <strong>{he.translate('pquery_overview_title')}: </strong>
+                            <strong>{he.translate('pquery__overview_title')}: </strong>
                             <a className="args" onClick={handleQueryClick}>{
                                 pipe(
                                     props.queries,
@@ -101,7 +101,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <layoutViews.ModalOverlay onCloseKey={handleModalClose}>
                             <layoutViews.CloseableFrame onCloseClick={handleModalClose}
                                     scrollable={true}
-                                    label={he.translate('pquery_overview_title')}>
+                                    label={he.translate('pquery__overview_title')}>
                                 <PqueryViews.PqueryForm corparchWidget={undefined} />
                             </layoutViews.CloseableFrame>
                         </layoutViews.ModalOverlay> :

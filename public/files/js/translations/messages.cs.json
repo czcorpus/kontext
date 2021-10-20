@@ -828,7 +828,7 @@
         "pquery__all_the_queries_must_be_filled": "Jeden či více dotazů není vyplněno.",
         "pquery__avail_label": "Celkem",
         "pquery__no_result": "Hledání nemá žádný výsledek. Zkontrolujte prosím jednotlivé dotazy a parametry.",
-        "pquery_overview_title": "Paradigmatický dotaz",
+        "pquery__overview_title": "Paradigmatický dotaz",
         "pquery__save_form_label": "Uložit výsledky paradigmatického dotazu",
         "pquery__parameters_form": "Parametry paradigmatického dotazu",
         "pquery__align_type_whole_kwic": "celý KWIC jako jedno slovo",

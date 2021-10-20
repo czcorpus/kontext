@@ -824,7 +824,7 @@
         "pquery__all_the_queries_must_be_filled": "Ena ali več poizvedb je praznih",
         "pquery__avail_label": "Skupaj",
         "pquery__no_result": "Ni zadetkov. Prosimo, preverite poizvedbe in parametre poizvedb.",
-        "pquery_overview_title": "Paradigmatična poizvedba",
+        "pquery__overview_title": "Paradigmatična poizvedba",
         "pquery__save_form_label": "Shrani rezultate paradigmatične poizvedbe",
         "pquery__parameters_form": "Parametri paradigmatične poizvedbe",
         "pquery__align_type_whole_kwic": "celoten KWIC kot ena beseda",
