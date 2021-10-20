@@ -138,9 +138,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
 
                         } else {
                             state.pqueryType = 'full';
-                            // TODO join particular queries into a single one,
-                            // remove all particular stuff in state.queries
-                            // and replace it with a single item in state.queries
                             const fullQuery = joinPartialQueries(state.queries, state.corpname);
                             state.queries = {full: fullQuery};
                             state.concWait = {full: 'none'};
@@ -922,6 +919,37 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             ),
             List.filter(v => v !== null)
         );
+        state.cqlEditorMessages[sourceId] = List.concat(
+            pipe(
+                pqItems,
+                List.foldl(
+                    (acc, {type}) => {
+                        if (type === 'superset') {
+                            return {...acc, numSuperset: acc.numSuperset + 1};
+
+                        } else if (type === 'subset') {
+                            return {...acc, numSubset: acc.numSubset + 1};
+                        }
+                        return acc
+                    },
+                    {numSubset: 0, numSuperset: 0}
+                ),
+                ({numSubset, numSuperset}) => {
+                    const ans:Array<string> = [];
+                    if (numSubset > 1) {
+                        const type = this.layoutModel.translate('pquery__condition_never');
+                        ans.push(this.layoutModel.translate('pquery__only_one_field_can_be_of_{type}', {type}));
+                    }
+                    if (numSuperset > 1) {
+                        const type = this.layoutModel.translate('pquery__condition_always');
+                        ans.push(this.layoutModel.translate('pquery__only_one_field_can_be_of_{type}', {type}));
+                    }
+                    return ans;
+                }
+            ),
+            state.cqlEditorMessages[sourceId]
+        )
+
         // TODO calculate num of "always" / "never" and report possible errors too
     }
 
