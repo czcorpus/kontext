@@ -810,6 +810,7 @@
         "wordlist__create_filter_list": "Create",
         "wordlist__use_ctrl_enter_for_newline": "To enter a new line, use Ctrl+ENTER",
         "wordlist__pattern_empty_err": "Search pattern and/or filter words must be entered UNTRANSLATED",
+        "wordlist__ask_empty_pattern": "An empty query will return all the words from the corpus. Continue? UNTRANSLATED",
         "wordlist__failed_to_precalculate": "Failed to create auxiliary data required for the frequency distribution calculation. Please try again later or contact system administrator. UNTRANSLATED",
         "wordlist__aux_data_must_be_precalculated": "KonText must prepare auxiliary data for the frequency distribution calculation. The calculation should take at most a few minutes to complete. UNTRANSLATED",
         "wordlist__remove_attribute": "Remove attribute UNTRANSLATED",
