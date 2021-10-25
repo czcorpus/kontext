@@ -116,8 +116,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------------------- <PlaybackIcon /> ---------------------------
 
     class PlaybackIcon extends React.Component<{
-        isPlaying:boolean;
-        audioPlayerStatus:PlayerStatus;
+        isPlaying: boolean;
+        allowPlayer:boolean;
+        audioPlayerStatus: PlayerStatus;
         setFocusFn:(v:boolean)=>void;
         handleClick:()=>void;
     }> {
@@ -139,13 +140,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         render() {
             return (
                 this.props.isPlaying && this.props.audioPlayerStatus ?
-                    <div>
-                        <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
-                    </div> :
-                    <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
-                        <img src={he.createStaticUrl(`img/audio-3w.svg`)} title={he.translate('concview__click_to_play_audio')}
-                            onClick={this.props.handleClick} />
-                    </span>
+                    this.props.allowPlayer ?
+                        <div>
+                            <mediaViews.AudioPlayer playerId={ConcDetailModel.AUDIO_PLAYER_ID} status={this.props.audioPlayerStatus} />
+                        </div> :
+                        null :
+                <span className="play-audio" onMouseOver={this._handleMouseOver} onMouseOut={this._handleMouseOut}>
+                    <img src={he.createStaticUrl(`img/audio-3w.svg`)} title={he.translate('concview__click_to_play_audio')}
+                        onClick={this.props.handleClick} />
+                </span>
             );
         }
     }
@@ -157,7 +160,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         bulletColor:string;
         canStartPlayback:boolean;
         isPlaying:boolean;
-        data:Array<{class:string; str:string}>;
+        data: Array<{ class: string; str: string }>;
+        allowPlayer:boolean;
         audioPlayerStatus:PlayerStatus;
         handleClick:()=>void;
     },
@@ -186,6 +190,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <PlaybackIcon handleClick={this.props.handleClick}
                                 isPlaying={this.props.isPlaying}
                                 setFocusFn={this._setFocus}
+                                allowPlayer={this.props.allowPlayer}
                                 audioPlayerStatus={this.props.audioPlayerStatus} />
                     : null}
                 </div>
@@ -223,6 +228,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             handleClick={props.handlePlayClick}
                             isPlaying={props.isPlaying}
                             canStartPlayback={props.canStartPlayback}
+                            allowPlayer={true}
                             audioPlayerStatus={props.audioPlayerStatus} />
                 </td>
             </tr>
@@ -270,6 +276,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 handleClick={props.handlePlayClick}
                                 isPlaying={props.isPlaying}
                                 canStartPlayback={props.canStartPlayback}
+                                allowPlayer={i === List.size(props.speeches)-1}
                                 audioPlayerStatus={props.audioPlayerStatus} />)}
                 </td>
             </tr>

@@ -25,7 +25,6 @@ import { validateNumber } from '../base';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { ConcSaveServerArgs } from './common';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 

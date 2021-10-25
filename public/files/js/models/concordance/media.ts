@@ -197,8 +197,13 @@ export class AudioPlayer {
         this.itemsToPlay = [];
     }
 
-    setPosition(offset:number):void {
+    setPosition(offset: number): void {
+        const lastPlayback = this.status.playback
         this.soundManager.setPosition(this.playSessionId, offset);
+        if (lastPlayback === 'pause') {
+            this.soundManager.pause(this.playSessionId);
+            this.status = {...this.status, playback: 'pause'};
+        }
     }
 
     getStatus():PlayerStatus {
