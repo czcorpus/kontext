@@ -34,9 +34,8 @@ export class Actions {
         name: 'CLEAR_QUERY_OVERVIEW_DATA'
     };
 
-    static EditQueryOperation: Action<{
+    static EditQueryOperation:Action<{
         operationIdx:number;
-        sourceId:string;
     }> = {
         name: 'EDIT_QUERY_OPERATION'
     };

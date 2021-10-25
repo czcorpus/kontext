@@ -117,6 +117,13 @@ interface RenderLinesDeps {
 }
 
 
+type HashedActionsTypes = typeof MainMenuActions.ShowFilter |
+            typeof MainMenuActions.ShowSort |
+            typeof MainMenuActions.ShowSort |
+            typeof MainMenuActions.ShowSample |
+            typeof MainMenuActions.ApplyShuffle |
+            typeof QueryActions.EditQueryOperation;
+
 
 /**
  * This is the concordance viewing and operating model with
@@ -180,42 +187,59 @@ export class ViewPage {
         this.hitReloader = new HitReloader(this.layoutModel);
     }
 
-    private deserializeHashAction(v:string):Action {
-        const [action, rawArgs] = (v || '').substr(1).split('/');
-        return this.createFormAction(action, parseUrlArgs(rawArgs || ''));
-    }
+    private deserializeHashAction(v:string):HashedActionsTypes {
+        const [actionName, rawArgs] = (v || '').substr(1).split('/');
+        const args = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
 
-    private createFormAction(actionName:string, args:{}):Action {
-        switch (actionName) {
-            case 'filter':
-                return {
-                    name: MainMenuActions.ShowFilter.name,
-                    payload: args
-                };
-            case 'sort':
-            case 'sortx':
-                return {
-                    name: MainMenuActions.ShowSort.name,
-                    payload: args
-                };
-            case 'sample':
-                return {
-                    name: MainMenuActions.ShowSample.name,
-                    payload: args
-                };
-            case 'shuffle':
-                return {
-                    name: MainMenuActions.ApplyShuffle.name,
-                    payload: args
-                };
-            case 'edit_op':
-                return {
-                    name: QueryActions.EditQueryOperation.name,
-                    payload: {operationIdx: Number(args['operationIdx'])} // TODO untyped property
-                };
-            default:
-                return null;
-        }
+            function fetchRequired(k:string):string {
+                if (k in args) {
+                    return args[k];
+                }
+                throw new Error(`Missing hashed action argument ${k}`);
+            }
+
+            switch (actionName) {
+                case 'filter': {
+                    return {
+                        ...MainMenuActions.ShowFilter,
+                        payload: {
+                            within: fetchRequired('within'),
+                            maincorp: fetchRequired('maincorp'),
+                            pnfilter: args['pnfilter']
+                        }
+                    };
+                }
+                case 'sort':
+                case 'sortx': {
+                    return {
+                        ...MainMenuActions.ShowSort
+                    };
+                }
+                case 'sample': {
+                    return {
+                        ...MainMenuActions.ShowSample
+                    };
+                }
+                case 'shuffle': {
+                    return {
+                        ...MainMenuActions.ApplyShuffle
+                    };
+                }
+                case 'edit_op': {
+                    const operationIdx = parseInt(fetchRequired('operationIdx'));
+                    if (isNaN(operationIdx)) {
+                        throw new Error(`Invalid operationIdx for edit_op: ${fetchRequired('operationIdx')}`);
+                    }
+                    return {
+                        ...QueryActions.EditQueryOperation,
+                        payload: {
+                            operationIdx
+                        }
+                    };
+                }
+                default:
+                    throw new Error(`Unknown hashed action ${actionName}`);
+            }
     }
 
     /**
