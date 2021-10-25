@@ -30,6 +30,8 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { ajaxErrorMapped } from '../../app/navigation';
 import * as response from './response';
+import { ConcFormArgs, isFilterFormArgs, isQueryFormArgs } from '../query/formArgs';
+import { TagsetInfo } from '../../types/plugins/tagHelper';
 
 
 export interface ResultItem {
@@ -86,12 +88,13 @@ export interface FreqDataRowsModelState {
 function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
     return List.reduce(
         (acc, curr) => {
-            if (curr['type'] === 'positional') {
-                return [...acc, curr['featAttr']];
+            if (curr.type === 'positional') {
+                return [...acc, curr.featAttr];
             }
             return acc
-        }, [],
-        pageModel.getNestedConf('ConcFormsArgs', pageModel.getConf('concPersistenceOpId'), 'tagsets', pageModel.getCorpusIdent().id)
+        },
+        [],
+        pageModel.getNestedConf<Array<TagsetInfo>>('pluginData', 'taghelper', 'corp_tagsets') || []
     );
 }
 
@@ -118,10 +121,13 @@ export function importData(
             norm: item.norm,
             norel: item.norel
         }), item.Items),
-        Head: List.map(item => ({
-            ...item,
-            isPosTag: List.some(v => v === item.n ,posTagAttrs)
-        }), item.Head),
+        Head: List.map(
+            item => ({
+                ...item,
+                isPosTag: List.some(v => v === item.n, posTagAttrs)
+            }),
+            item.Head
+        ),
         TotalPages: item.TotalPages,
         Total: item.Total,
         SkippedEmpty: item.SkippedEmpty
