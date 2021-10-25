@@ -424,12 +424,11 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const QueryOverview:React.FC<QueryOverviewProps & QueryReplayModelState> = (props) => {
 
 
-        const handleEditClick = (idx:number, opId:string) => () => {
+        const handleEditClick = (operationIdx:number) => () => {
             dispatcher.dispatch<typeof Actions.EditQueryOperation>({
                 name: Actions.EditQueryOperation.name,
                 payload: {
-                    operationIdx: idx,
-                    sourceId: getSourceId(idx, opId)
+                    operationIdx
                 }
             });
         };
@@ -438,19 +437,6 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             dispatcher.dispatch(
                 ConcActions.ToggleLineSelOptions
             );
-        };
-
-        const getSourceId = (opIdx:number, opId:string):string|undefined => {
-            if (['a', 'q'].indexOf(opId) > -1) {
-                return props.queryFormProps.corpname;
-
-            } else if (['p', 'P', 'n', 'N'].indexOf(opId) > -1) {
-                return props.filterFormProps.filterId;
-
-            } else if (opId === 'r') {
-                return props.sampleFormProps.sampleId;
-            }
-            return undefined;
         };
 
         const getEditorProps = (opIdx:number, opId:string):AnyEditorProps => {
@@ -521,7 +507,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
             <div>
                 {props.currentQueryOverview ?
                         <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
-                            onEditClick={handleEditClick(0, '')} /> :
+                            onEditClick={handleEditClick(0)} /> :
                         null}
                 {props.branchReplayIsRunning ? <QueryReplayView /> : null}
 
@@ -542,7 +528,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 idx={i}
                                 item={item}
                                 numOps={List.size(props.currEncodedOperations)}
-                                clickHandler={handleEditClick(i, item.opid)}
+                                clickHandler={handleEditClick(i)}
                                 hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
                                 editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
                                 closeEditorHandler={handleEditorClose}

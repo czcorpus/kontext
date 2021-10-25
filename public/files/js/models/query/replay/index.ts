@@ -196,8 +196,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.textTypesModel = replayModelDeps.textTypesModel;
         this.firstHitsModel = replayModelDeps.firstHitsModel;
 
-        this.addActionHandler<typeof ConcActions.AddedNewOperation>(
-            ConcActions.AddedNewOperation.name,
+        this.addActionHandler(
+            ConcActions.AddedNewOperation,
             (state, action) => {
                 state.branchReplayIsRunning = false;
                 if (!action.error) {
@@ -208,56 +208,56 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof ConcActions.MarkLinesDone>(
-            ConcActions.MarkLinesDone.name,
+        this.addActionHandler(
+            ConcActions.MarkLinesDone,
             (state, action) => {
                 state.groupsSelected = true;
             },
             (state, action, dispatch) => {
-                List.forEach(([menu, submenu]) => {
+                List.forEach(([menuId, submenuId]) => {
                     dispatch<typeof MainMenuActions.ToggleDisabled>({
                         name: MainMenuActions.ToggleDisabled.name,
                         payload: {
-                            menuId: menu,
-                            submenuId: submenu,
+                            menuId,
+                            submenuId,
                             disabled: true
                         }
                     });
                 }, [
-                    ['menu-filter', null],
-                    ['menu-concordance', 'shuffle'],
-                    ['menu-concordance', 'sorting'],
-                    ['menu-concordance', 'sample']
+                    tuple('menu-filter', null),
+                    tuple('menu-concordance', 'shuffle'),
+                    tuple('menu-concordance', 'sorting'),
+                    tuple('menu-concordance', 'sample')
                 ]);
             }
         );
 
-        this.addActionHandler<typeof ConcActions.LineSelectionResetOnServerDone>(
-            ConcActions.LineSelectionResetOnServerDone.name,
+        this.addActionHandler(
+            ConcActions.LineSelectionResetOnServerDone,
             (state, action) => {
                 state.groupsSelected = false;
             },
             (state, action, dispatch) => {
-                List.forEach(([menu, submenu]) => {
+                List.forEach(([menuId, submenuId]) => {
                     dispatch<typeof MainMenuActions.ToggleDisabled>({
                         name: MainMenuActions.ToggleDisabled.name,
                         payload: {
-                            menuId: menu,
-                            submenuId: submenu,
+                            menuId,
+                            submenuId,
                             disabled: false
                         }
                     });
                 }, [
-                    ['menu-filter', null],
-                    ['menu-concordance', 'shuffle'],
-                    ['menu-concordance', 'sorting'],
-                    ['menu-concordance', 'sample']
+                    tuple('menu-filter', null),
+                    tuple('menu-concordance', 'shuffle'),
+                    tuple('menu-concordance', 'sorting'),
+                    tuple('menu-concordance', 'sample')
                 ]);
             }
         );
 
-        this.addActionHandler<typeof Actions.EditQueryOperation>(
-            Actions.EditQueryOperation.name,
+        this.addActionHandler(
+            Actions.EditQueryOperation,
             (state, action) => {
                 state.editedOperationIdx = action.payload.operationIdx;
             },
@@ -284,9 +284,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-
-        this.addActionHandler<typeof Actions.EditLastQueryOperation>(
-            Actions.EditLastQueryOperation.name,
+        this.addActionHandler(
+            Actions.EditLastQueryOperation,
             (state, action) => {
                 state.editedOperationIdx = state.currEncodedOperations.length - 1;
             },
@@ -313,8 +312,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.EditQueryOperationDone>(
-            Actions.EditQueryOperationDone.name,
+        this.addActionHandler(
+            Actions.EditQueryOperationDone,
             (state, action) => {
                 if (action.error) {
                     state.editedOperationIdx = null;
@@ -327,8 +326,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.BranchQuery>(
-            Actions.BranchQuery.name,
+        this.addActionHandler(
+            Actions.BranchQuery,
             (state, action) => {
                 state.editedOperationIdx = null;
                 state.branchReplayIsRunning = true;
@@ -371,8 +370,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.TrimQuery>(
-            Actions.TrimQuery.name,
+        this.addActionHandler(
+            Actions.TrimQuery,
             (state, action) => {
                 state.branchReplayIsRunning = true;
             },
@@ -418,23 +417,23 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SliceQueryChain>(
-            Actions.SliceQueryChain.name,
+        this.addActionHandler(
+            Actions.SliceQueryChain,
             (state, action) => {
                 state.currEncodedOperations = state.currEncodedOperations.slice(0, action.payload.operationIdx + 1);
                 state.lastOperationKey = action.payload.concId;
             }
         );
 
-        this.addActionHandler<typeof Actions.QuerySetStopAfterIdx>(
-            Actions.QuerySetStopAfterIdx.name,
+        this.addActionHandler(
+            Actions.QuerySetStopAfterIdx,
             (state, action) => {
                 state.stopAfterOpIdx = action.payload.value
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryOverviewEditorClose>(
-            Actions.QueryOverviewEditorClose.name,
+        this.addActionHandler(
+            Actions.QueryOverviewEditorClose,
             (state, action) => {
                 state.editedOperationIdx = null;
                 state.branchReplayIsRunning = false;
@@ -442,8 +441,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof ConcActions.ReloadConc>(
-            ConcActions.ReloadConc.name,
+        this.addActionHandler(
+            ConcActions.ReloadConc,
             null,
             (state, action, dispatch) => {
                 const args = {
@@ -478,8 +477,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             }
         );
 
-        this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
-            ConcActions.AsyncCalculationUpdated.name,
+        this.addActionHandler(
+            ConcActions.AsyncCalculationUpdated,
             (state, action) => {
                 List.last(state.currEncodedOperations).size = action.payload.concsize;
             }
