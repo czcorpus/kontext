@@ -242,8 +242,8 @@ export class Actions {
     };
 
     static PlaySpeech:Action<{
-        rowIdx:number;
-        segments:Array<string>;
+        rowIdx: number;
+        segments: Array<string>;
     }> = {
         name: 'CONCORDANCE_PLAY_SPEECH'
     };
