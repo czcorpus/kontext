@@ -18,7 +18,6 @@ from typing import Optional, Callable, List, Dict, Any, Union
 from corplib.errors import MissingSubCorpFreqFile
 from controller import exposed
 from controller.kontext import Kontext
-from controller.errors import ImmediateRedirectException
 from main_menu import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
@@ -31,7 +30,6 @@ from argmapping import log_mapping
 from argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
-import templating
 from argmapping import WordlistArgsMapping, ConcArgsMapping
 from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy
 
@@ -141,20 +139,21 @@ class Wordlist(Kontext):
                                     MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
-        rev = bool(int(request.args.get('reverse', '0')))
+        wlsort = request.args.get('wlsort', 'f')
+        rev = bool(int(request.args.get('reverse', '1')))
         page = int(request.args.get('wlpage', '1'))
         offset = (page - 1) * self.args.wlpagesize
         total, data = require_existing_wordlist(
             form=self._curr_wlform_args, reverse=rev, offset=offset,
-            limit=self.args.wlpagesize, wlsort=request.args.get('wlsort'),
+            limit=self.args.wlpagesize, wlsort=wlsort,
             collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
 
         result = dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
-                      query_id=self._curr_wlform_args.id, reverse=rev, wlsort=self.args.wlsort, wlpage=page,
+                      query_id=self._curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
                       wlpagesize=self.args.wlpagesize)
 
         if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
-            self.args.wlsort = ''
+            self.args.wlsort = 'attr'
         try:
             result['wlattr_label'] = (self.corp.get_conf(self._curr_wlform_args.wlattr + '.LABEL') or
                                       self._curr_wlform_args.wlattr)
