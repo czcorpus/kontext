@@ -185,3 +185,14 @@ export const FileEditor = styled.div`
         margin-bottom: 1em;
     }
 `;
+
+// ---------------------- <HeadingListOfFilters /> -----------------------------------
+
+export const HeadingListOfFilters = styled.span`
+    display: inline-block;
+    .filters {
+        margin-left: 0.2em;
+        font-size: 0.952em;
+        color: ${theme.colorDefaultText};
+    }
+`;

@@ -391,6 +391,37 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         );
     };
 
+    // --------------------- <FilterWordCount /> ----------------------
+
+    const FilterWordCount:React.FC<{
+        pfilterWords:string;
+        nfilterWords:string;
+
+    }> = (props) => {
+
+        const pcount = List.size(List.filter(v => !!v, props.pfilterWords.split(/\r?\n/)));
+        const ncount = List.size(List.filter(v => !!v, props.nfilterWords.split(/\r?\n/)));
+
+        return (
+            <S.HeadingListOfFilters>
+                {pcount || ncount ? ':' : null}
+                <span className="filters">
+                    {pcount > 0 ?
+                        pcount === 1 ?
+                            he.translate('wordlist__positive_1') :
+                            he.translate('wordlist__positive_{pcount}', {pcount})
+                        : null}
+                    {pcount && ncount ? ', ' : null}
+                    {ncount > 0 ?
+                        ncount === 1 ?
+                            he.translate('wordlist__negative_1') :
+                            he.translate('wordlist__negative_{ncount}', {ncount})
+                        : null}
+                </span>
+            </S.HeadingListOfFilters>
+        );
+    };
+
     // --------------------- <FieldsetFilterOptions /> -----------------------------
 
     const FieldsetFilterOptions:React.FC<{
@@ -409,6 +440,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         <a onClick={props.handleClick}>
                             {he.translate('wordlist__filter_opts_fieldset_legend')}
                         </a>
+                    {!props.formVisible ? <FilterWordCount pfilterWords={props.pfilterWords} nfilterWords={props.nfilterWords} /> : null}
                 </SC.ExpandableSectionLabel>
                 {props.formVisible ?
                     <div className="contents">
