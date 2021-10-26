@@ -174,5 +174,14 @@ export const FileFormatHint = styled.div`
         width: 1.3em;
         margin-right: 0.3em;
     }
+`;
 
+// ---------------------- <FileEditor /> -----------------------------------
+
+export const FileEditor = styled.div`
+
+    button {
+        margin-top: 0.9em;
+        margin-bottom: 1em;
+    }
 `;

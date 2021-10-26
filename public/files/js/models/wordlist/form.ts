@@ -445,7 +445,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             (state, action) => {
                 this.validateForm(state);
                 if (state.wlpat === '' && window.confirm(this.layoutModel.translate('wordlist__ask_empty_pattern'))) {
-                    state.wlpat = '.+';
+                    state.wlpat = '.*';
                 }
                 state.isBusy = true; // TODO in side-effect, dispatch some new action setting busy to false
             },

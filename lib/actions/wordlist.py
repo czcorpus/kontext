@@ -151,9 +151,6 @@ class Wordlist(Kontext):
         result = dict(data=data, total=total, form=self._curr_wlform_args.to_dict(),
                       query_id=self._curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
                       wlpagesize=self.args.wlpagesize)
-
-        if hasattr(self, 'wlfile') and self._curr_wlform_args.wlpat == '.*':
-            self.args.wlsort = 'attr'
         try:
             result['wlattr_label'] = (self.corp.get_conf(self._curr_wlform_args.wlattr + '.LABEL') or
                                       self._curr_wlform_args.wlattr)
