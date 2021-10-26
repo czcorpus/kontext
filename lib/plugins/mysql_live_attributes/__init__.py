@@ -63,6 +63,18 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
+@exposed(return_type='json', http_method='POST')
+def fill_in_attrs(self, request):
+    search_attr = request.form.get('search_attr')
+    search_values = json.loads(request.form.get('values', '[]'))
+    fill_attr = request.form.get('fill_attr')
+
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
+                                     aligned_corpora=aligned,
+                                     autocomplete_attr=request.form['patternAttr'])
+
+
 class MysqlLiveAttributes(CachedLiveAttributes):
 
     def __init__(
