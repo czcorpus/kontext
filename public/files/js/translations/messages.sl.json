@@ -832,6 +832,8 @@
         "qhistory__curr_corp_only_label_{corpus}": "{corpus} only UNTRANSLATED",
         "wordlist__pfilter_label": "Positive filter words UNTRANSLATED",
         "wordlist__nfilter_label": "Negative filter words UNTRANSLATED",
+        "wordlist__positive_{pcount}": "positive {pcount, plural, one{# word} other{# words}} UNTRANSLATED",
+        "wordlist__negative_{ncount}": "negative {ncount, plural, one{# word} other{# words}} UNTRANSLATED",
         "wordlist__pn_filter_lists": "Wordlist positive and and negative filter words must be UTF-8 plain text, one item per line. The items must correspond to the selected attribute, so, eg, if 'lemma' is selected from the attribute menu, then the list should be a list of lemmas. We use exact matching, not regular-expression matching, for file input. UNTRANSLATED",
         "pquery__expression_role_specification": "Partial query/specification UNTRANSLATED",
         "pquery__expression_role_never": "Exclude (the \"never\" condition) UNTRANSLATED",
