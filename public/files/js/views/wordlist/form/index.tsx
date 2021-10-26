@@ -644,6 +644,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                         </p>
                         <textarea rows={30} cols={80} value={props.data.data} onChange={handleWriting}
                             onKeyDown={handleKeyDown} ref={item => item ? item.focus() : null} />
+                        <br/>
                         <button className="default-button" onClick={handleClose}>
                             {he.translate('global__ok')}
                         </button>
