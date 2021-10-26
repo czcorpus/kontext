@@ -143,7 +143,7 @@ export class WordlistPage {
                 [
                     {
                         str: this.layoutModel.getConf<string>('wlattrLabel'),
-                        sortKey: ''
+                        sortKey: 'wlattr'
                     },
                     {
                         str: this.layoutModel.getConf<string>('freqFigure'),

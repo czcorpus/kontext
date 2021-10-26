@@ -21,7 +21,7 @@
 import { Observable, Observer, of as rxOf } from 'rxjs';
 import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { List, Ident, HTTP, tuple } from 'cnc-tskit';
+import { List, Ident, HTTP } from 'cnc-tskit';
 
 
 import * as Kontext from '../../types/kontext';
