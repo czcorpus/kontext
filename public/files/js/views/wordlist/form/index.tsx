@@ -125,6 +125,15 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             });
         };
 
+        const ref = React.useRef<HTMLInputElement>();
+
+        React.useLayoutEffect(
+            () => {
+                ref.current.focus();
+            },
+            [ref.current]
+        );
+
         return (
             <>
                 <label title={he.translate('wordlist__re_pattern_title')}
@@ -132,7 +141,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     {he.translate('wordlist__re_pattern_label')}:
                 </label>
                 <S.WlpatternInput>
-                    <input id="wl-pattern-input" type="text" value={props.wlpat} onChange={handleChange}
+                    <input id="wl-pattern-input" ref={ref} type="text" value={props.wlpat} onChange={handleChange}
                             style={{width: '20em'}} />
                 </S.WlpatternInput>
             </>
@@ -601,14 +610,16 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
             <layoutViews.ModalOverlay onCloseKey={handleClose}>
                 <layoutViews.CloseableFrame onCloseClick={handleClose}
                         label={props.data.fileName}>
-                    <p className="note">
-                        {he.translate('wordlist__use_ctrl_enter_for_newline')}
-                    </p>
-                    <textarea rows={30} cols={80} value={props.data.data} onChange={handleWriting}
-                        onKeyDown={handleKeyDown} ref={item => item ? item.focus() : null} />
-                    <button className="default-button" onClick={handleClose}>
-                        {he.translate('global__ok')}
-                    </button>
+                    <S.FileEditor>
+                        <p className="note">
+                            {he.translate('wordlist__use_ctrl_enter_for_newline')}
+                        </p>
+                        <textarea rows={30} cols={80} value={props.data.data} onChange={handleWriting}
+                            onKeyDown={handleKeyDown} ref={item => item ? item.focus() : null} />
+                        <button className="default-button" onClick={handleClose}>
+                            {he.translate('global__ok')}
+                        </button>
+                    </S.FileEditor>
                 </layoutViews.CloseableFrame>
             </layoutViews.ModalOverlay>
         );
@@ -771,6 +782,6 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
     return {
         WordListForm: Bound(WordListForm, wordlistFormModel),
-        CorpInfoToolbar: CorpInfoToolbar
+        CorpInfoToolbar
     };
 }

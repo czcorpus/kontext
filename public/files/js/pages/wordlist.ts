@@ -32,10 +32,6 @@ import { ResultItem, WordlistSaveArgs } from '../models/wordlist/common';
 import { Actions } from '../models/wordlist/actions';
 
 
-interface AsyncProcessResponse {
-    status:number;
-}
-
 /**
  *
  */

@@ -21,7 +21,7 @@
 import { Observable, throwError } from 'rxjs';
 import { IActionDispatcher, StatelessModel, SEDispatcher } from 'kombo';
 import { concatMap, tap, map } from 'rxjs/operators';
-import { List, HTTP, tuple, Dict } from 'cnc-tskit';
+import { List, HTTP, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import { validateGzNumber } from '../base';
@@ -355,14 +355,6 @@ export class WordlistResultModel extends StatelessModel<WordlistResultModelState
 
     private createPQuery(s:string, wlattr:string):string {
         return `[${wlattr}="${s.replace(/([.?+*\[\]{}$^|])/g, '\\$1')}"]`;
-    }
-
-    private exportReloadArgs(state:WordlistResultModelState):{q:string; wlpage: string; wlsort:string} {
-        return {
-            q: `~${state.queryId}`,
-            wlpage: state.currPage.toString(),
-            wlsort: state.wlsort
-        };
     }
 
     private processPageLoad(
