@@ -81,7 +81,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         const setPosition = (e) => {
-            let position = props.status.duration*(e.nativeEvent.layerX - ref.current.clientLeft)/ref.current.offsetWidth;
+            let position = props.status.duration*(e.nativeEvent.offsetX - ref.current.clientLeft)/ref.current.offsetWidth;
             if (position < 0) {
                 position = 0;
 
