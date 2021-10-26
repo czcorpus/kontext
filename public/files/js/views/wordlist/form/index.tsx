@@ -407,16 +407,12 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 {pcount || ncount ? ':' : null}
                 <span className="filters">
                     {pcount > 0 ?
-                        pcount === 1 ?
-                            he.translate('wordlist__positive_1') :
-                            he.translate('wordlist__positive_{pcount}', {pcount})
-                        : null}
+                        he.translate('wordlist__positive_{pcount}', {pcount}) :
+                        null}
                     {pcount && ncount ? ', ' : null}
                     {ncount > 0 ?
-                        ncount === 1 ?
-                            he.translate('wordlist__negative_1') :
-                            he.translate('wordlist__negative_{ncount}', {ncount})
-                        : null}
+                        he.translate('wordlist__negative_{ncount}', {ncount}) :
+                        null}
                 </span>
             </S.HeadingListOfFilters>
         );
