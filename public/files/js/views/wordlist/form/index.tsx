@@ -618,7 +618,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         const handleKeyDown = (evt:React.KeyboardEvent<{}>) => {
             if (evt.key === Keyboard.Value.ENTER) {
-                if (evt.shiftKey) {
+                if (evt.ctrlKey) {
                     dispatcher.dispatch<typeof Actions.WordlistFormUpdateEditor>({
                         name: Actions.WordlistFormUpdateEditor.name,
                         payload: {
