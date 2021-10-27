@@ -26,6 +26,7 @@ from functools import partial
 from collections import defaultdict, OrderedDict, Iterable
 import sqlite3
 import logging
+from typing import Dict, List
 try:
     from unidecode import unidecode
 except ImportError:
@@ -66,6 +67,16 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
+@exposed(return_type='json', http_method='POST')
+def fill_attrs(self, request):
+    search = request.json['search']
+    values = request.json['values']
+    fill = request.json['fill']
+
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+
+
 class LiveAttributes(CachedLiveAttributes):
 
     def __init__(self, corparch, db, max_attr_list_size, empty_val_placeholder,
@@ -81,7 +92,7 @@ class LiveAttributes(CachedLiveAttributes):
 
     def export_actions(self):
         return {
-            concordance.Actions: [filter_attributes, attr_val_autocomplete]}
+            concordance.Actions: [filter_attributes, attr_val_autocomplete, fill_attrs]}
 
     def db(self, plugin_ctx: PluginCtx, corpname):
         """
@@ -319,6 +330,9 @@ class LiveAttributes(CachedLiveAttributes):
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
         return [BibTitle(r[0], r[1]) for r in ans]
+
+    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+        raise NotImplementedError()
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB)

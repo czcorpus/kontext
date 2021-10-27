@@ -126,6 +126,14 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         provided ID
         """
 
+    @abc.abstractmethod
+    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+        """
+        For a structattr and its values find values structattrs specified in fill list
+
+        Returns a dict of dicts {search_attr_value: {attr: value}}
+        """
+
 
 CACHE_MAIN_KEY = 'liveattrs_cache:{}'
 

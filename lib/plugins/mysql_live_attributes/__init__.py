@@ -71,7 +71,7 @@ def fill_attrs(self, request):
     fill = request.json['fill']
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.find_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+        return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
 
 
 class MysqlLiveAttributes(CachedLiveAttributes):
@@ -359,7 +359,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
         return ans
 
-    def find_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
 
