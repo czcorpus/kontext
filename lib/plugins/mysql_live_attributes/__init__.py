@@ -20,6 +20,7 @@ Required XML configuration: please see config.rng
 from .common import AttrValueKey, StructAttr
 import re
 import json
+from itertools import chain
 from functools import partial
 from collections import defaultdict, OrderedDict
 from dataclasses import astuple
@@ -63,6 +64,16 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
+@exposed(return_type='json', http_method='POST')
+def fill_attrs(self, request):
+    search = request.json['search']
+    values = request.json['values']
+    fill = request.json['fill']
+
+    with plugins.runtime.LIVE_ATTRIBUTES as lattr:
+        return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+
+
 class MysqlLiveAttributes(CachedLiveAttributes):
 
     def __init__(
@@ -77,7 +88,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         self._max_attr_visible_chars = max_attr_visible_chars
 
     def export_actions(self):
-        return {concordance.Actions: [filter_attributes, attr_val_autocomplete]}
+        return {concordance.Actions: [filter_attributes, attr_val_autocomplete, fill_attrs]}
 
     def is_enabled_for(self, plugin_ctx: PluginCtx, corpname: str) -> bool:
         """
@@ -314,11 +325,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
         return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
 
-    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
-        bib_id = self.import_key(corpus_info.metadata.id_attr)
-        bib_label = self.import_key(corpus_info.metadata.label_attr)
-
+    def _find_attrs(self, corpus_id: str, search: StructAttr, values: List[str], fill: List[StructAttr]):
         cursor = self.integ_db.cursor()
         cursor.execute(
             f'''
@@ -327,23 +334,41 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 SELECT DISTINCT value_tuple_id as id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value IN ({', '.join('%s' for _ in id_list)})
+                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value IN ({', '.join('%s' for _ in values)})
             ) as t
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
             JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-            WHERE (
-                t_value.structure_name = %s AND t_value.structattr_name = %s
-            ) OR (
-                t_value.structure_name = %s AND t_value.structattr_name = %s
-            )
+            WHERE {
+                ' OR '.join(['(t_value.structure_name = %s AND t_value.structattr_name = %s)']*(1 + len(fill)))
+            }
             GROUP BY t.id
             ''',
-            (corpus_id, bib_id.struct, bib_id.attr, *id_list, bib_id.struct, bib_id.attr, bib_label.struct, bib_label.attr))
+            (corpus_id, search.struct, search.attr, *values, search.struct, search.attr, *list(chain(*[[f.struct, f.attr] for f in fill]))))
+        return cursor
+
+    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
+        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
+        bib_id = self.import_key(corpus_info.metadata.id_attr)
+        bib_label = self.import_key(corpus_info.metadata.label_attr)
+
+        cursor = self._find_attrs(corpus_id, bib_id, id_list, [bib_label])
 
         ans = []
         for row in cursor:
             data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
             ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
+        return ans
+
+    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+        search_structattr = self.import_key(search)
+        fill_structattrs = [self.import_key(f) for f in fill]
+
+        cursor = self._find_attrs(corpus_id, search_structattr, values, fill_structattrs)
+
+        ans = {}
+        for row in cursor:
+            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+            ans[data[search]] = data
         return ans
 
 
@@ -367,9 +392,9 @@ def create_instance(
             db=db,
             integ_db=integ_db,
             max_attr_list_size=settings.get_int(
-               'global', 'max_attr_list_size'),
+                'global', 'max_attr_list_size'),
             empty_val_placeholder=settings.get(
-               'corpora', 'empty_attr_value_placeholder'),
+                'corpora', 'empty_attr_value_placeholder'),
             max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
     else:
         logging.getLogger(__name__).error('mysql_live_attributes integration db not provided')
