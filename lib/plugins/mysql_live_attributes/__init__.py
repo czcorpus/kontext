@@ -339,11 +339,11 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
             JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
             WHERE {
-                ' OR '.join(['(t_value.structure_name = %s AND t_value.structattr_name = %s)']*(1 + len(fill)))
+                ' OR '.join('(t_value.structure_name = %s AND t_value.structattr_name = %s)' for _ in fill)
             }
             GROUP BY t.id
             ''',
-            (corpus_id, search.struct, search.attr, *values, search.struct, search.attr, *list(chain(*[[f.struct, f.attr] for f in fill]))))
+            (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
         return cursor
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
@@ -351,7 +351,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         bib_id = self.import_key(corpus_info.metadata.id_attr)
         bib_label = self.import_key(corpus_info.metadata.label_attr)
 
-        cursor = self._find_attrs(corpus_id, bib_id, id_list, [bib_label])
+        cursor = self._find_attrs(corpus_id, bib_id, id_list, [bib_id, bib_label])
 
         ans = []
         for row in cursor:
@@ -363,13 +363,14 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
 
-        cursor = self._find_attrs(corpus_id, search_structattr, values, fill_structattrs)
+        cursor = self._find_attrs(corpus_id, search_structattr, values, [
+                                  search_structattr, *fill_structattrs])
 
         ans = {}
         for row in cursor:
             data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
-            ans[data[search]] = data
-        return ans
+            ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
+        return {'data': ans}
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
