@@ -98,7 +98,7 @@ export function init(
     interface DataRowProps {
         data: ResultItem;
         monospaceCols: Array<boolean>;
-    }    
+    }
 
     const DataRow: React.FC<DataRowProps> = (props) => {
 
@@ -187,7 +187,7 @@ export function init(
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable: React.FC<DataTableProps> = (props) => {     
+    const DataTable: React.FC<DataTableProps> = (props) => {
 
         const getBarChartTitle = () => {
             if (props.head.length > 0) {
@@ -216,7 +216,7 @@ export function init(
         return (
             <S.DataTable>
                 <table className="data">
-                    <tbody>
+                    <thead>
                         <tr>
                             <th />
                             <th>{he.translate('freq__ct_filter_th')}</th>
@@ -226,6 +226,8 @@ export function init(
                             )}
                             <th title={getBarChartTitle()} />
                         </tr>
+                    </thead>
+                    <tbody>
                         {List.empty(props.rows) ?
                             <tr><td colSpan={3 + List.size(props.head)}>{'\u00a0'}</td></tr> :
                             renderRows()

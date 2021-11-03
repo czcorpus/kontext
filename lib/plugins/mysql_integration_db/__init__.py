@@ -87,18 +87,22 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
         return f'{self.connection.server_host}/{self.connection.database}'
 
     def wait_for_environment(self):
-        t = time.time()
-        while (time.time() - t) * 1000 < self._environment_wait_sec:
+        t0 = time.time()
+        logging.getLogger(__name__).info(
+            'Going to wait {}s for integration environment'.format(self._environment_wait_sec))
+        while (time.time() - t0) < self._environment_wait_sec:
             try:
                 cursor = self.connection.cursor(dictionary=False, buffered=False)
                 cursor.execute('SELECT COUNT(*) FROM kontext_integration_env LIMIT 1')
                 row = cursor.fetchone()
                 if row and row[0] == 1:
                     return None
-            except Exception:
-                pass
+            except Exception as ex:
+                logging.getLogger(__name__).warning(f'Integration environment still not available. Reason: {ex}')
             time.sleep(0.5)
-        return Exception('No confirmed environment installation. Please check table kontext_integration_env')
+        return Exception(
+            'Unable to confirm integration environment within defined interval {}s.'.format(self._environment_wait_sec),
+            'Please check table kontext_integration_env')
 
     def execute(self, sql, args):
         cursor = self.cursor()
