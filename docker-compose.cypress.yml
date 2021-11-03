@@ -1,0 +1,34 @@
+version: '3.7'
+
+services:
+  mariadb:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.mariadb-cypress
+    environment:
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+      - MYSQL_ROOT_PASSWORD
+    volumes:
+      - kontext_testdb:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - databases
+
+  kontext:
+    volumes:
+      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
+    depends_on:
+      - mariadb
+
+  rq-scheduler:
+    depends_on:
+      - mariadb
+
+  rq-worker:
+    depends_on:
+      - mariadb
+
+volumes:
+  kontext_testdb: {}

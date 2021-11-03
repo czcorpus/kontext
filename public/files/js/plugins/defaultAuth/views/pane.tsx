@@ -93,7 +93,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
      }> = (props) => {
 
         if (props.isAnonymous) {
-            return <a onClick={props.onLoginClick}>{he.translate('user__login_btn')}</a>;
+            return <a className="sign-in" onClick={props.onLoginClick}>{he.translate('user__login_btn')}</a>;
 
         } else {
             return (
@@ -108,7 +108,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const SignUpButton:React.FC<{
 
     }> = (props) => {
-        return <a href={he.createActionLink('user/sign_up_form')}>{he.translate('user__signup_btn')}</a>;
+        return <a className="sign-up" href={he.createActionLink('user/sign_up_form')}>{he.translate('user__signup_btn')}</a>;
     }
 
     // -------------------------- <UserPane /> ---------------------------------
