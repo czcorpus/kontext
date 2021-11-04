@@ -30,8 +30,10 @@ describe('Word List', () => {
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 4);
 
+        // wait for history response
         cy.wait(1000)
 
+        // load query from previous test
         cy.get('#query-history-mount .history-entries').contains('.*ining').click();
 
         // test page
