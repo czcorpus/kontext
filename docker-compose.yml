@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3"
 
 services:
   kontext:
@@ -19,7 +19,7 @@ services:
     networks:
       - databases
       - kontext
-    depends_on: 
+    depends_on:
       - redis
 
   rq-scheduler:
@@ -29,7 +29,7 @@ services:
     command: rqscheduler --host kontext_redis_1 --db 2 -i 10
     networks:
       - databases
-    depends_on: 
+    depends_on:
       - redis
 
   rq-worker:
