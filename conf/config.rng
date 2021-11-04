@@ -204,12 +204,12 @@
                         </choice>
                     </element>
                     <optional>
-                        <element name="ui_testing_flag">
+                        <element name="integration_testing_env">
                             <a:documentation>
-                                If true/1 then KonText adds a special attribute 'data-kontext-init' to
-                                the 'body' element once everything is set-up. This serves CasperJS to
-                                be able to watch for the element as a sign that the application
-                                is completely ready.
+                                If true/1 then KonText adds some support for integration
+                                testing automation to make some hard to perform actions
+                                easier or avoid them completely (e.g. menu naviation without
+                                mouseover).
                             </a:documentation>
                             <ref name="boolValues" />
                         </element>

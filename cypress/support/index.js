@@ -21,7 +21,13 @@ Cypress.Commands.add('hoverNthMenuItem', (n) => {
 
 
 Cypress.Commands.add('clickMenuItem', (m, n) => {
-    cy.get(`#main-menu-mount li:nth-child(${m}) a`).realHover();
+    const submenus = [
+        'menu-new-query', 'menu-corpora', 'menu-save', 'menu-concordance', 'menu-filter',
+        'menu-frequency', 'menu-collocations', 'menu-view', 'menu-help'
+    ];
+    cy.window().then((win) => {
+        win.integrationTesting.showSubmenu(submenus[m-1]);
+    });
     cy.get(`#main-menu-mount li:nth-child(${m}) .submenu li:nth-child(${n})`).should('be.visible').click();
     cy.get(`body`).realHover();
 });

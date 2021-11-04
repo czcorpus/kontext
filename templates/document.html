@@ -109,7 +109,9 @@ __conf.ShuffleMinResultWarning = {{ shuffle_min_result_warning|to_json }};
 __conf.multilevelFreqDistMaxLevels = {{ multilevel_freq_dist_max_levels|to_json }};
 __conf.canSendMail = {{ can_send_mail|to_json }};
 __conf.issueReportingAction = {{ issue_reporting_action|to_json }};
-__conf.uiTestingFlag = {{ ui_testing_flag|to_json }};
+{% if integration_testing_env %}
+__conf.integrationTestingEnv = {{ integration_testing_env|to_json }};
+{% endif %}
 __conf.helpLinks = {{ help_links|to_json }};
 __conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
 __conf.LoginUrl = {{ login_url|to_json }};
