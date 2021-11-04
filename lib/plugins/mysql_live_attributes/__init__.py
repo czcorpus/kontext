@@ -114,6 +114,10 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                     data[k] = int(data[k])
         return data
 
+    def on_soft_reset(self):
+        logging.getLogger(__name__).warning('soft reset, cleaning all liveattrs caches')
+        self.clear_cache()
+
     @staticmethod
     def import_key(k: Optional[str]) -> Optional[StructAttr]:
         return StructAttr.get(k) if k is not None else k

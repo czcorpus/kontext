@@ -137,6 +137,11 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
 CACHE_MAIN_KEY = 'liveattrs_cache:{}'
 
+# here we store all the cached corpora liveattrs so we can handle them as a set
+CACHE_REG_CORPORA_KEY = 'liveattrs_cached_corpora'
+
+CACHE_MAX_TTL = 3600 * 24 * 10
+
 
 def create_cache_key(attr_map, max_attr_list_size, aligned_corpora, autocomplete_attr, limit_lists):
     """
@@ -199,8 +204,7 @@ class CachedLiveAttributes(AbstractLiveAttributes):
         a stored value matching provided argument or None if nothing is found
         """
         v = self._kvdb.hash_get(CACHE_MAIN_KEY.format(corpname), key)
-        import logging
-        logging.getLogger(__name__).debug('from cache: {}'.format(v))
+        self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
         return CachedLiveAttributes.export_num_strings(v) if v else None
 
     def to_cache(self, corpname: str, key: str, values: str):
@@ -214,3 +218,16 @@ class CachedLiveAttributes(AbstractLiveAttributes):
         values -- a dictionary with arbitrary nesting level
         """
         self._kvdb.hash_set(CACHE_MAIN_KEY.format(corpname), key, values)
+        self._kvdb.hash_set(CACHE_REG_CORPORA_KEY, corpname, True)
+        self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
+
+    def clear_cache(self):
+        """
+        Remove all the cached liveattrs
+        """
+        corpora = list(self._kvdb.hash_get_all(CACHE_REG_CORPORA_KEY).keys())
+        self._kvdb.remove(CACHE_REG_CORPORA_KEY)  # now other workers may set values again and we don't care much
+        for corp in corpora:
+            self._kvdb.remove(CACHE_MAIN_KEY.format(corp))
+
+
