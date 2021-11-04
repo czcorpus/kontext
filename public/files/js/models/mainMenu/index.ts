@@ -197,6 +197,17 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         );
         this.pageModel = pageModel;
 
+        if (this.pageModel.getConf('integrationTestingEnv')) {
+            window['integrationTesting'] = {
+                showSubmenu : (value:string) => {
+                    dispatcher.dispatch(
+                        Actions.SetVisibleSubmenu,
+                        {value}
+                    )
+                }
+            }
+        }
+
         this.addActionHandler(
             Actions.UndoLastQueryOp,
             null,
