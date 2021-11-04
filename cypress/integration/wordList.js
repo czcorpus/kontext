@@ -3,11 +3,12 @@
 
 describe('Word List', () => {
 
-    before(() => {
+    beforeEach(() => {
         cy.actionLogin();
     });
 
     it('defines a simple word list query and submits', () => {
+
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 3);
 
@@ -24,4 +25,21 @@ describe('Word List', () => {
         cy.get('.corpus-and-query ul li strong').contains('Word list');
     });
 
+    it('open last query', () => {
+
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 4);
+
+        cy.wait(1000)
+
+        cy.get('#query-history-mount .history-entries').contains('.*ining').click();
+
+        // test page
+        cy.url().should('include', '/wordlist/form');
+
+        // test form
+        cy.get('#wl-attr-selector').should('have.value', 'word');
+        cy.get('#wl-pattern-input').should('have.value', '.*ining');
+        cy.get('#wl-min-freq-input').should('have.value', '10');
+    });
 });

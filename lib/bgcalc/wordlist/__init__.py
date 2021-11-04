@@ -30,7 +30,7 @@ import settings
 
 def _create_cache_path(form: WordlistFormArgs) -> str:
     key = (f'{form.corpname}:{form.usesubcorp}:{form.wlattr}:{form.wlpat}:{form.pfilter_words}:{form.nfilter_words}:'
-           f'{form.include_nonwords}:{form.wltype}:{form.wlnums}')
+           f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.csv')
 
@@ -64,7 +64,7 @@ def cached(f):
         if os.path.exists(path):  # TODO we do not use this branch
             with open(path, 'r') as fr:
                 csv_reader = csv.reader(fr)
-                next(csv_reader) # skip __total__ info
+                next(csv_reader)  # skip __total__ info
                 return [item for item in csv_reader]
         else:
             ans = f(corp, args, sys.maxsize)
