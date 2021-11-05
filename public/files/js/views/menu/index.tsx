@@ -262,7 +262,7 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.PopupBox onCloseClick={props.closeClickHandler} customClass="async-task-list">
                     <table>
-                        <tbody>
+                        <thead>
                             <tr>
                                 <th>{he.translate('global__task_category')}</th>
                                 <th>{he.translate('global__task_label')}</th>
@@ -270,6 +270,8 @@ export function init({dispatcher, he, mainMenuModel, asyncTaskModel}:MenuModuleA
                                 <th>{he.translate('global__task_status')}</th>
                                 <th></th>
                             </tr>
+                        </thead>
+                        <tbody>
                             {List.map(
                                 item => (
                                     <tr key={item.ident}>
