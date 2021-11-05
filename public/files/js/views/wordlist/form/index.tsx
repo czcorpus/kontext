@@ -318,7 +318,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                     <ul className="wl-option-list">
                         <li>
                             <label>
-                                <input type="radio" value="simple" checked={props.wltype === 'simple'}
+                                <input type="radio" value="simple" checked={props.wltype === 'simple' }
                                         onChange={handleOutTypeChange} />
                                 {he.translate('wordlist__out_type_single_label')}
                             </label>
