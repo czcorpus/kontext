@@ -31,3 +31,12 @@ Cypress.Commands.add('clickMenuItem', (m, n) => {
     cy.get(`#main-menu-mount li:nth-child(${m}) .submenu li:nth-child(${n})`).should('be.visible').click();
     cy.get(`body`).realHover();
 });
+
+
+Cypress.Commands.add('popUpNotifications', () => {
+    cy.get('#main-menu-mount .notifications a.envelope').click();
+});
+
+Cypress.Commands.add('closeNotifications', () => {
+    cy.get('.async-task-list .header button.close-link').click();
+});

@@ -70,6 +70,9 @@ export const colorButtonDefault = '#F0FAFF';
 export const colorButtonHover = '#F9FDFF';
 export const colorErrorInputBg = '#f8b6a6';
 
+export const colorInputBorder = '#333333';
+export const colorInputBorderDisabled = '#888888';
+
 export const colorHeatmap = [
     '#ffffff', '#fff7f3',
     '#fde0dd', '#fcc5c0',

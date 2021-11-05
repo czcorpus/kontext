@@ -23,7 +23,7 @@ from typing import Dict, List
 import settings
 import csv
 from .errors import PqueryResultNotFound, PqueryArgumentError
-from typing import Tuple
+from typing import Tuple, Optional
 from argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
 
@@ -111,8 +111,9 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
             raise PqueryArgumentError(f'Invalid sort argument: {sort}')
 
 
-def create_freq_calc_args(pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, str], subcpath: str,
-                          user_id: int, collator_locale: str) -> FreqCalsArgs:
+def create_freq_calc_args(
+        pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, str], subcpath: str,
+        user_id: int, collator_locale: str, flimit_override: Optional[int] = None) -> FreqCalsArgs:
     args = FreqCalsArgs()
     attr = pquery.attr
     args.fcrit = [f'{attr} {pquery.position}']
@@ -124,7 +125,7 @@ def create_freq_calc_args(pquery: PqueryFormArgs, conc_id: str, raw_queries: Dic
     args.pagesize = 10000  # TODO
     args.fmaxitems = 10000
     args.samplesize = 0
-    args.flimit = pquery.min_freq
+    args.flimit = flimit_override if flimit_override is not None else pquery.min_freq
     args.q = raw_queries[conc_id]
     args.collator_locale = collator_locale
     args.rel_mode = 0 if '.' in attr else 1
@@ -158,7 +159,7 @@ def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]],
             for conc_id in pquery.conc_subset_complements.conc_ids:
                 cond1_tasks.append(create_freq_calc_args(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
-                    collator_locale=collator_locale))
+                    collator_locale=collator_locale, flimit_override=1))
             cond1_done = pool.map_async(calculate_freqs_bg, cond1_tasks)
         else:
             cond1_done = None

@@ -78,6 +78,12 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         }
     };
 
+    // ------------------- <FullQuerySymbol /> --------------------------------------
+
+    const FullQuerySymbol:React.FC<{}> = (props) => {
+        return <S.PqueryInputTypeSpan>{'{\u2026} && \u2026'}</S.PqueryInputTypeSpan>;
+    };
+
     // ------------------- <AdvancedFormFieldsetDesc /> -----------------------------
 
     const AdvancedFormFieldsetDesc:React.FC<{
@@ -109,11 +115,19 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
 
     const AdvancedFormFieldset:React.FC<AdvancedFormFieldsetProps> = (props) => {
 
-        const htmlClasses = [];
-        htmlClasses.push(props.formVisible ? 'collapse' : 'expand');
+        const htmlClasses = ['options', props.formVisible ? 'collapse' : 'expand'];
+        if (props.htmlClass) {
+            htmlClasses.push(props.htmlClass);
+        }
+        if (props.formVisible) {
+            htmlClasses.push('closed');
+        }
+        if (props.isNested) {
+            htmlClasses.push('nested');
+        }
 
         return (
-            <QS.AdvancedFormFieldset className={`${props.isNested ? ' nested' : ''} ${props.htmlClass}${props.formVisible && props.htmlClass ? '' : ' closed'}`}
+            <QS.AdvancedFormFieldset className={htmlClasses.join(' ')}
                     role="group" aria-labelledby={props.uniqId}>
                 <SC.ExpandableSectionLabel id={props.uniqId}>
                     <layoutViews.ExpandButton isExpanded={props.formVisible} onClick={props.handleClick} />
@@ -192,6 +206,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         corpname:string;
         useRichQueryEditor:boolean;
         numQueries:number;
+        minFreq:Kontext.FormValue<string>;
         concStatus:ConcStatus;
         expressionRole:ExpressionRoleType;
 
@@ -214,11 +229,20 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         };
 
+        const handleFreqChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChange>({
+                name: Actions.FreqChange.name,
+                payload: {
+                    value: e.target.value
+                }
+            });
+        };
+
         const queryInputElement = React.useRef();
 
         return (
             <QS.QueryArea>
-                <S.QueryRowDiv>
+                <S.QueryBlock>
                     <S.ExpressionRoleFieldset>
                         <PqueryInputTypeSymbol roleType={props.expressionRole.type} />
                         <select value={props.expressionRole.type} id={`roleType-${props.sourceId}`} onChange={handleExpressionRoleTypeChange}>
@@ -226,44 +250,56 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                             <option value="subset">{he.translate('pquery__expression_role_never')}</option>
                             <option value="superset">{he.translate('pquery__expression_role_always')}</option>
                         </select>
-                        {props.expressionRole.type === 'specification' ? null :
-                            <span>
-                                <S.VerticalSeparator />
-                                <label htmlFor={`roleRatio-${props.sourceId}`}>{he.translate('pquery__expression_role_ratio')}</label>:{'\u00a0'}
-                                <input id={`roleRatio-${props.sourceId}`}
-                                        onChange={handleExpressionRoleRatioChange}
-                                        value={props.expressionRole.maxNonMatchingRatio.value}
-                                        className={props.expressionRole.maxNonMatchingRatio.isInvalid ? 'error' : null} />
-                                {'\u00a0%'}
-                            </span>
-                        }
                     </S.ExpressionRoleFieldset>
-                </S.QueryRowDiv>
-                <S.QueryRowDiv>
-                {props.useRichQueryEditor ?
-                    <cqlEditorViews.CQLEditor
-                            formType={Kontext.ConcFormTypes.QUERY}
-                            sourceId={props.sourceId}
-                            corpname={props.corpname}
-                            takeFocus={false}
-                            onReqHistory={() => undefined}
-                            onEsc={() => undefined}
-                            hasHistoryWidget={false}
-                            historyIsVisible={false}
-                            inputRef={queryInputElement} /> :
-                    <cqlEditorViews.CQLEditorFallback
-                            formType={Kontext.ConcFormTypes.QUERY}
-                            sourceId={props.sourceId}
-                            inputRef={queryInputElement}
-                            onReqHistory={() => undefined}
-                            onEsc={() => undefined}
-                            hasHistoryWidget={false}
-                            historyIsVisible={false} />
-                    }
+                    <S.MinFreqField>
+                        {props.expressionRole.type === 'specification' ?
+                            <>
+                                <label htmlFor={`freq_${props.sourceId}`}>{he.translate('pquery__min_fq_input')}:</label>
+                                <input id={`freq_${props.sourceId}`} onChange={handleFreqChange} value={props.minFreq.value}
+                                        className={props.minFreq.isInvalid ? 'error' : null} />
+                                <span>
+                                    <layoutViews.InlineHelp noSuperscript={true}
+                                            customStyle={{maxWidth: '30em'}}>
+                                        {he.translate('query__tip_10')}
+                                    </layoutViews.InlineHelp>
+                                </span>
+                            </> :
+                            <>
+                            <label htmlFor={`roleRatio-${props.sourceId}`}>{he.translate('pquery__expression_role_ratio')}:</label>
+                                <input id={`roleRatio-${props.sourceId}`}
+                                    onChange={handleExpressionRoleRatioChange}
+                                    value={props.expressionRole.maxNonMatchingRatio.value}
+                                    className={props.expressionRole.maxNonMatchingRatio.isInvalid ? 'error' : null} />
+                            </>
+                        }
+                    </S.MinFreqField>
+                    <div />
+                    <div className="query">
+                        {props.useRichQueryEditor ?
+                            <cqlEditorViews.CQLEditor
+                                    formType={Kontext.ConcFormTypes.QUERY}
+                                    sourceId={props.sourceId}
+                                    corpname={props.corpname}
+                                    takeFocus={false}
+                                    onReqHistory={() => undefined}
+                                    onEsc={() => undefined}
+                                    hasHistoryWidget={false}
+                                    historyIsVisible={false}
+                                    inputRef={queryInputElement} /> :
+                            <cqlEditorViews.CQLEditorFallback
+                                    formType={Kontext.ConcFormTypes.QUERY}
+                                    sourceId={props.sourceId}
+                                    inputRef={queryInputElement}
+                                    onReqHistory={() => undefined}
+                                    onEsc={() => undefined}
+                                    hasHistoryWidget={false}
+                                    historyIsVisible={false} />
+                            }
+                    </div>
                     <QueryStatusIcon numQueries={props.numQueries}
                             concLoadingStatus={props.concStatus}
                             sourceId={props.sourceId} />
-                </S.QueryRowDiv>
+                </S.QueryBlock>
             </QS.QueryArea>
         );
     };
@@ -275,38 +311,66 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
         corpname:string;
         useRichQueryEditor:boolean;
         numQueries:number;
+        minFreq:Kontext.FormValue<string>;
         concStatus:ConcStatus;
         calcProgress:number;
     }> = (props) => {
 
+        const handleFreqChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChange>({
+                name: Actions.FreqChange.name,
+                payload: {
+                    value: e.target.value
+                }
+            });
+        };
+
         const queryInputElement = React.useRef();
+
         return (
             <QS.QueryArea>
-                <S.QueryRowDiv>
-                {props.useRichQueryEditor ?
-                    <cqlEditorViews.CQLEditor
-                            formType={Kontext.ConcFormTypes.QUERY}
-                            sourceId={props.sourceId}
-                            corpname={props.corpname}
-                            takeFocus={false}
-                            onReqHistory={() => undefined}
-                            onEsc={() => undefined}
-                            hasHistoryWidget={false}
-                            historyIsVisible={false}
-                            inputRef={queryInputElement}
-                            minHeightEm={10} /> :
-                    <cqlEditorViews.CQLEditorFallback
-                            formType={Kontext.ConcFormTypes.QUERY}
-                            sourceId={props.sourceId}
-                            inputRef={queryInputElement}
-                            onReqHistory={() => undefined}
-                            onEsc={() => undefined}
-                            hasHistoryWidget={false}
-                            historyIsVisible={false}
-                            minHeightEm={10} />
-                    }
+                <S.QueryBlock>
+                    <S.ExpressionRoleFieldset>
+                        <FullQuerySymbol />
+                    </S.ExpressionRoleFieldset>
+                    <S.MinFreqField>
+                        <label htmlFor="freq">{he.translate('pquery__min_fq2_input')}:</label>
+                        <input id="freq" onChange={handleFreqChange} value={props.minFreq.value}
+                            className={props.minFreq.isInvalid ? 'error' : null} />
+                        <span>
+                            <layoutViews.InlineHelp noSuperscript={true}
+                                    customStyle={{maxWidth: '30em'}}>
+                                {he.translate('query__tip_10')}
+                            </layoutViews.InlineHelp>
+                        </span>
+                    </S.MinFreqField>
+                    <div />
+                    <div className="query">
+                        {props.useRichQueryEditor ?
+                            <cqlEditorViews.CQLEditor
+                                    formType={Kontext.ConcFormTypes.QUERY}
+                                    sourceId={props.sourceId}
+                                    corpname={props.corpname}
+                                    takeFocus={false}
+                                    onReqHistory={() => undefined}
+                                    onEsc={() => undefined}
+                                    hasHistoryWidget={false}
+                                    historyIsVisible={false}
+                                    inputRef={queryInputElement}
+                                    minHeightEm={10} /> :
+                            <cqlEditorViews.CQLEditorFallback
+                                    formType={Kontext.ConcFormTypes.QUERY}
+                                    sourceId={props.sourceId}
+                                    inputRef={queryInputElement}
+                                    onReqHistory={() => undefined}
+                                    onEsc={() => undefined}
+                                    hasHistoryWidget={false}
+                                    historyIsVisible={false}
+                                    minHeightEm={10} />
+                            }
+                    </div>
                     <FullQueryProgressIcon calcProgress={props.calcProgress} />
-                </S.QueryRowDiv>
+                </S.QueryBlock>
             </QS.QueryArea>
         );
     }
@@ -393,15 +457,6 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
             });
         };
 
-        const handleFreqChange = (e) => {
-            dispatcher.dispatch<typeof Actions.FreqChange>({
-                name: Actions.FreqChange.name,
-                payload: {
-                    value: e.target.value
-                }
-            });
-        };
-
         const handleAttrChange = (e) => {
             dispatcher.dispatch<typeof Actions.AttrChange>({
                 name: Actions.AttrChange.name,
@@ -435,13 +490,15 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                             concStatus={props.concWait[sourceId]} corpname={props.corpname}
                                             numQueries={Dict.size(props.queries)}
                                             useRichQueryEditor={props.useRichQueryEditor}
-                                            expressionRole={query.expressionRole} /> :
+                                            expressionRole={query.expressionRole}
+                                            minFreq={props.minFreq} /> :
                                     <FullEditorDiv key={sourceId} sourceId={sourceId}
                                         corpname={props.corpname}
                                         concStatus={props.concWait[sourceId]}
                                         calcProgress={props.calcProgress}
                                         numQueries={Dict.size(props.queries)}
-                                        useRichQueryEditor={props.useRichQueryEditor}/>
+                                        useRichQueryEditor={props.useRichQueryEditor}
+                                        minFreq={props.minFreq} />
                         ),
                         List.map(([,v]) => v)
                     )}
@@ -468,11 +525,6 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                                 {List.map(item => <option key={item.n}>{item.n}</option>, props.structAttrs)}
                             </select>
                         </S.ParameterField>
-                        <S.MinFreqField>
-                            <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
-                                <input id="freq" onChange={handleFreqChange} value={props.minFreq.value}
-                                    className={props.minFreq.isInvalid ? 'error' : null} />
-                        </S.MinFreqField>
                     </S.ParametersFieldset>
                     {props.posRangeNotSupported ? null :
                         <S.ParametersFieldset>

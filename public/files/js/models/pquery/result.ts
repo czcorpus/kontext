@@ -97,29 +97,31 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
         this.addActionHandler(
             Actions.SetPage,
             action => {
-                this.changeState(
-                    state => {
-                        if (validateGzNumber(state.pageInput.value)) {
-                            if (this.isProperPageRange(state, parseInt(action.payload.value))) {
-                                state.pageInput.isInvalid = false;
-                                state.pageInput.errorDesc = undefined;
-                                state.isBusy = true;
-                                state.page = parseInt(action.payload.value);
-                                this.reloadData();
+                if (validateGzNumber(this.state.pageInput.value)) {
+                    if (this.isProperPageRange(this.state, parseInt(action.payload.value))) {
+                        this.changeState(state => {
+                            state.pageInput.isInvalid = false;
+                            state.pageInput.errorDesc = undefined;
+                            state.isBusy = true;
+                            state.page = parseInt(action.payload.value);
+                        });
+                        this.reloadData();
 
-                            } else {
-                                state.pageInput.isInvalid = true;
-                                state.pageInput.errorDesc = this.layoutModel.translate(
-                                    'global__number_must_be_less_or_eq_than_{val}',
-                                    {val: Math.ceil(state.numLines / state.pageSize)});
-                            }
-
-                        } else {
+                    } else {
+                        this.changeState(state => {
                             state.pageInput.isInvalid = true;
-                            state.pageInput.errorDesc = this.layoutModel.translate('global__invalid_number_format');
-                        }
+                            state.pageInput.errorDesc = this.layoutModel.translate(
+                                'global__number_must_be_less_or_eq_than_{val}',
+                                {val: Math.ceil(state.numLines / state.pageSize)});
+                        });
                     }
-                );
+
+                } else {
+                    this.changeState(state => {
+                        state.pageInput.isInvalid = true;
+                        state.pageInput.errorDesc = this.layoutModel.translate('global__invalid_number_format');
+                    });
+                }
                 if (this.state.pageInput.errorDesc) {
                     this.layoutModel.showMessage('error', this.state.pageInput.errorDesc);
                 }
