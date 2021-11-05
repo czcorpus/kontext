@@ -47,6 +47,9 @@ export const PqueryFormSection = styled.section`
     }
 
     .add {
+
+        margin-top: 1em;
+
         img {
             margin-right: 0.5em;
             width: 1em;
@@ -69,13 +72,19 @@ export const PqueryForm = styled.form`
 
 `;
 
-// ---------------- <QueryRowDiv /> -------------
+// ---------------- <QueryBlock /> -------------
 
-export const QueryRowDiv = styled.div`
+export const QueryBlock = styled.div`
 
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: auto auto 2em;
     align-items: center;
+    row-gap: 0.4em;
+    margin-bottom: 1em;
+
+    .query {
+        grid-column: 1 / 3;
+    }
 
     img.loader {
         width: 1em;
@@ -137,14 +146,31 @@ export const ParameterField = styled.span`
 
 //  --------------- <MinFreqField /> ----------------
 
-export const MinFreqField = styled(ParameterField)`
+export const MinFreqField = styled.span`
+
+    text-align: right;
+
+    label {
+        margin-right: 0.2em;
+    }
 
     input {
         width: 3em;
+        border: 1px solid ${theme.colorInputBorder};
+        border-radius: ${theme.inputBorderRadius};
     }
 
     input.error {
         background-color: ${theme.colorLightPink};
+    }
+
+    input[readonly] {
+        color: ${theme.colorLightText};
+        border-color: ${theme.colorInputBorderDisabled};
+    }
+
+    input[readonly]:focus {
+        outline: 1px solid ${theme.colorInputBorderDisabled};
     }
 `;
 
@@ -176,9 +202,6 @@ export const StylelessFieldset = styled(BorderlessFieldset)`
 // ---------------- <ExpressionRoleFieldset /> -------------
 
 export const ExpressionRoleFieldset = styled(BorderlessFieldset)`
-    display: flex;
-    align-items: center;
-    margin: 0.6em 0 0.4em 0;
 
     input {
         width: 3em;
@@ -220,7 +243,7 @@ export const PQueryToolbar = styled.div`
     display: flex;
     align-items: center;
     padding-left: 0.6em;
-    margin-bottom: 0.4em;
+    margin-bottom: 1.2em;
 `;
 
 // ----------------- <FullQueryProgressSpan /> --------------

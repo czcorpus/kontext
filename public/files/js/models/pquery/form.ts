@@ -536,19 +536,20 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
     }
 
     private mkSubsetStream(
-        state:PqueryFormModelState,
+        subcorp:string|undefined,
+        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
     ):Observable<[ConcQueryResponse, number]> {
 
-        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'subset', state.queries)) {
+        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'subset', partialQueries)) {
             const [subsetSourceId, subsetQuery] = Dict.find(
-                v => v.type === 'partial-query' && v.expressionRole.type === 'subset', state.queries);
+                v => v.type === 'partial-query' && v.expressionRole.type === 'subset', partialQueries);
             return this.layoutModel.ajax$<ConcQueryResponse>(
                 HTTP.Method.POST,
                 this.layoutModel.createActionUrl(
                     'query_submit',
                     {format: 'json'}
                 ),
-                this.createConcSubmitArgs(state, subsetQuery, false),
+                this.createConcSubmitArgs(subcorp, subsetQuery, false),
                 {contentType: 'application/json'}
             ).pipe(
                 tap( _ => {
@@ -559,7 +560,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                 }),
                 concatMap(
                     concSubsetResponse => {
-                        const query = state.queries[subsetSourceId];
+                        const query = partialQueries[subsetSourceId];
                         if (query.type === 'partial-query') {
                             return rxOf(tuple(
                                 concSubsetResponse,
@@ -576,17 +577,21 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         }
     }
 
-    private mkSupersetStream(state:PqueryFormModelState):Observable<[ConcQueryResponse, number]> {
-        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'superset', state.queries)) {
+    private mkSupersetStream(
+        subcorp:string|undefined,
+        partialQueries:{[sourceId:string]:ParadigmaticPartialQuery}
+    ):Observable<[ConcQueryResponse, number]> {
+
+        if (Dict.some(v => v.type === 'partial-query' && v.expressionRole.type === 'superset', partialQueries)) {
             const [sourceId, supersetQuery] = Dict.find(
-                v => v.type === 'partial-query' && v.expressionRole.type === 'superset', state.queries);
+                v => v.type === 'partial-query' && v.expressionRole.type === 'superset', partialQueries);
             return this.layoutModel.ajax$<ConcQueryResponse>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl(
                         'query_submit',
                         {format: 'json'}
                     ),
-                    this.createConcSubmitArgs(state, supersetQuery, false),
+                    this.createConcSubmitArgs(subcorp, supersetQuery, false),
                     {contentType: 'application/json'}
 
             ).pipe(
@@ -618,7 +623,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                         if (error) {
                             throw error;
                         }
-                        const query = state.queries[sourceId];
+                        const query = partialQueries[sourceId];
                         if (query.type === 'partial-query') {
                             return tuple(
                                 resp,
@@ -661,7 +666,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                             'query_submit',
                             {format: 'json'}
                         ),
-                        this.createConcSubmitArgs(state, specQuery, false),
+                        this.createConcSubmitArgs(state.usesubcorp, specQuery, false),
                         {contentType: 'application/json'}
 
                     ).pipe(
@@ -697,8 +702,8 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
                     [] as Array<[string, ConcQueryResponse, Error]>
                 )
             ),
-            this.mkSubsetStream(state),
-            this.mkSupersetStream(state)
+            this.mkSubsetStream(state.usesubcorp, partialQueries),
+            this.mkSupersetStream(state.usesubcorp, partialQueries)
 
         ]).pipe(
             concatMap(
@@ -798,12 +803,12 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         };
     }
 
-    createConcSubmitArgs(state:PqueryFormModelState, query:AdvancedQuery, async:boolean):ConcQueryArgs {
+    createConcSubmitArgs(subcorp:string|undefined, query:AdvancedQuery, async:boolean):ConcQueryArgs {
 
         const currArgs = this.layoutModel.getConcArgs();
         return {
             type: 'concQueryArgs',
-            usesubcorp: state.usesubcorp || null,
+            usesubcorp: subcorp || null,
             viewmode: 'kwic',
             pagesize: currArgs.pagesize,
             attrs: [],
