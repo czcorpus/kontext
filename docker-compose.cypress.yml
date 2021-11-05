@@ -19,7 +19,7 @@ services:
 
   kontext:
     volumes:
-      - ./scripts/install/conf/docker/config.mysql.xml:/opt/kontext/conf/config.xml
+      - ./scripts/install/conf/docker/config.cypress.xml:/opt/kontext/conf/config.xml
     depends_on:
       - mariadb-test
 
