@@ -254,8 +254,8 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                     <S.MinFreqField>
                         {props.expressionRole.type === 'specification' ?
                             <>
-                                <label htmlFor="freq">{he.translate('pquery__min_fq_input')}:</label>
-                                <input id="freq" onChange={handleFreqChange} value={props.minFreq.value}
+                                <label htmlFor={`freq_${props.sourceId}`}>{he.translate('pquery__min_fq_input')}:</label>
+                                <input id={`freq_${props.sourceId}`} onChange={handleFreqChange} value={props.minFreq.value}
                                         className={props.minFreq.isInvalid ? 'error' : null} />
                                 <span>
                                     <layoutViews.InlineHelp noSuperscript={true}
