@@ -40,3 +40,12 @@ Cypress.Commands.add('popUpNotifications', () => {
 Cypress.Commands.add('closeNotifications', () => {
     cy.get('.async-task-list .header button.close-link').click();
 });
+
+Cypress.Commands.add('openLastHistoryItem', () => {
+    cy.hoverNthMenuItem(1);
+    cy.clickMenuItem(1, 4);
+    cy.get('#query-history-mount')
+        .find('.history-entries')
+        .should('not.be.empty', {'timeout':5000})
+        .children().first().click();
+});

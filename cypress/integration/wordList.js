@@ -20,30 +20,42 @@ describe('Word List', () => {
         // test result page
         cy.url().should('include', '/wordlist/result');
         cy.get('#wordlist-result-mount .data tbody tr').should('have.length', 2);
+        cy.get('#wordlist-result-mount .data').contains('containing');
+        cy.get('#wordlist-result-mount .data').contains('training');
 
         // breadcrumb navig. test
         cy.get('.corpus-and-query ul li strong').contains('Word list');
 
-        // ---------------
-        // open last query
-        // ---------------
-
-        cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
-
-        // wait for history response
-        cy.wait(1000)
-
-        // load last query
-        cy.get('#query-history-mount .history-entries > li:nth-child(1) > div:nth-child(2)').click();
-
-        // test page
+        // test last query
+        cy.openLastHistoryItem();
         cy.url().should('include', '/wordlist/form');
-
-        // test form
         cy.get('#wl-attr-selector').should('have.value', 'word');
         cy.get('#wl-pattern-input').should('have.value', '.*ining');
         cy.get('#wl-min-freq-input').should('have.value', '10');
+    });
+
+    it('defines a simple word list query with lemma search attr, submits and reloads query form from history', () => {
+
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 3);
+
+        cy.get('#wl-attr-selector').select('lemma');
+        cy.get('#wl-pattern-input').type('.*ining');
+        cy.get('#wordlist-form-mount .default-button').click();
+
+        // test result page
+        cy.url().should('include', '/wordlist/result');
+        cy.get('#wordlist-result-mount .data tbody tr').should('have.length', 1);
+        cy.get('#wordlist-result-mount .data').contains('training');
+
+        // breadcrumb navig. test
+        cy.get('.corpus-and-query ul li strong').contains('Word list');
+
+        // test last query
+        cy.openLastHistoryItem();
+        cy.url().should('include', '/wordlist/form');
+        cy.get('#wl-attr-selector').should('have.value', 'lemma');
+        cy.get('#wl-pattern-input').should('have.value', '.*ining');
     });
 
     it('defines a simple word list query including non-words, submits and reloads query form from history', () => {
@@ -62,23 +74,9 @@ describe('Word List', () => {
         // breadcrumb navig. test
         cy.get('.corpus-and-query ul li strong').contains('Word list');
 
-        // ---------------
-        // open last query
-        // ---------------
-
-        cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
-
-        // wait for history response
-        cy.wait(1000)
-
-        // load last query
-        cy.get('#query-history-mount .history-entries > li:nth-child(1) > div:nth-child(2)').click();
-
-        // test page
+        // test last query
+        cy.openLastHistoryItem();
         cy.url().should('include', '/wordlist/form');
-
-        // test form
         cy.get('#wl-pattern-input').should('have.value', ',');
         cy.get('#wl-include-non-words-checkbox').should('be.checked');
     });
@@ -102,23 +100,9 @@ describe('Word List', () => {
         dataTable.should('be.visible');
         dataTable.get('tbody tr').should('have.length', 7);
 
-        // ---------------
-        // open last query
-        // ---------------
-
-        cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
-
-        // wait for history response
-        cy.wait(1000)
-
-        // load last query
-        cy.get('#query-history-mount .history-entries > li:nth-child(1) > div:nth-child(2)').click();
-
-        // test page
+        // test last query
+        cy.openLastHistoryItem();
         cy.url().should('include', '/wordlist/form');
-
-        // test form
         cy.get('#wl-attr-selector').should('have.value', 'lemma');
         cy.get('#wl-pattern-input').should('have.value', 'have');
         cy.get('#wlform-output-options button[type="button"]').click();
