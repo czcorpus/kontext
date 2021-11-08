@@ -61,7 +61,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} min={0}
+                        <input id="conc-page-size" type="number" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -92,7 +92,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} min={0}
+                        <input id="conc-kwic-size" type="number" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
