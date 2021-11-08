@@ -46,4 +46,26 @@ describe('Concordance - general view options', () => {
         cy.get('#conc-dashboard-mount table tbody tr').first().find('td.rc').children().should('have.length', 5);
     });
 
+    it('tests line numbers', () => {
+        cy.get('.simple-input').type('and');
+        cy.get('.query .default-button').click();
+
+        cy.hoverNthMenuItem(8);
+        cy.clickMenuItem(8, 3);
+
+        // check default line numbers options
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.line-num').should('contain.text', '');
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(2) td.line-num').should('contain.text', '');
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(3) td.line-num').should('contain.text', '');
+
+        // turn on line numbers
+        cy.get('#view-options-mount .FieldsetConcordance label[for="show-line-numbers-input"]').click();
+        cy.get('#view-options-mount div.buttons button').click();
+
+        // check new line numbers options
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.line-num').should('contain.text', '1');
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(2) td.line-num').should('contain.text', '2');
+        cy.get('#conc-dashboard-mount table tbody tr:nth-child(3) td.line-num').should('contain.text', '3');
+    });
+
 });
