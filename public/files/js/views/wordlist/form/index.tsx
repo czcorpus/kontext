@@ -518,7 +518,7 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         return (
             <span>
-                <a onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a>
+                <a id={`${props.ident}-create`} onClick={handleNewFileClick}>{he.translate('wordlist__create_filter_list')}</a>
                 {'\u00a0/\u00a0'}<input id={props.ident} type="file" onChange={handleInputChange} />
             </span>
         );
@@ -578,12 +578,12 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
 
         return (
             <>
-                <label htmlFor={`filter-file-${props.label}`}>
+                <label htmlFor={`filter-file-${props.target}`}>
                     {props.label}:{'\u00a0'}
                 </label>
                 {props.hasValue ?
                     <ExistingFileOps target={props.target} fileName={props.fileName} /> :
-                    <FilterFileUploadInput ident={`filter-file-${props.label}`} target={props.target} />
+                    <FilterFileUploadInput ident={`filter-file-${props.target}`} target={props.target} />
                 }
             </>
         );
