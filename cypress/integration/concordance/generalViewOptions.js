@@ -18,7 +18,7 @@ describe('Concordance - general view options', () => {
         // set page size to 10
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetConcordance #conc-page-size').clear().type(10);
+        cy.get('#view-options-mount .FieldsetConcordance .tst-conc-page-size').clear().type(10);
         cy.get('#view-options-mount div.buttons button').click();
 
         // check new page size
@@ -36,7 +36,7 @@ describe('Concordance - general view options', () => {
         // set kwic size to 5
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetConcordance #conc-kwic-size').clear().type(5);
+        cy.get('#view-options-mount .FieldsetConcordance .tst-conc-kwic-size').clear().type(5);
         cy.get('#view-options-mount div.buttons button').click();
 
         // check new kwic size
