@@ -57,23 +57,23 @@ module.exports = (env) => merge(common.wpConf(env), {
            poll: true
         },
         */
-        contentBase: path.resolve(__dirname, "../../public/files/dist"),
-        compress: true,
+        allowedHosts: ['localhost', 'kontext6.korpus.test'],
         port: process.env.DEV_SERVER_PORT || 9000,
         host: process.env.DEV_SERVER_HOST || 'localhost',
-        public: 'kontext6.korpus.test',
-        publicPath: common.PUBLIC_PATH + '/files/dist/',
-        inline: false,
-        sockPath: common.PUBLIC_PATH + '/socket',
-        serveIndex: true,
+        static: {
+            directory: path.resolve(__dirname, "../../public/files/dist"),
+            publicPath: (process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH)
+        },
+        client: {
+              webSocketURL: 'ws://localhost:8080/wds-ws',
+        },
         liveReload: false,
-        disableHostCheck: true, // TODO
-        before: function(app) {
+        onAfterSetupMiddleware: function (devServer) {
             // In the devel-server mode, all the css is delivered via Webpack
             // but at the same time our hardcoded <link rel="stylesheet" ... />
             // elements cause browser to load non-available styles.
             // So we always return an empty stuff with proper content type.
-            app.get(common.PUBLIC_PATH + '/files/dist/*.css', function(req, res) {
+            devServer.app.get((process.env.DEV_PUBLIC_PATH === undefined ? common.PUBLIC_PATH : process.env.DEV_PUBLIC_PATH) + '/*.css', function(req, res) {
                 res.set('Content-Type', 'text/css');
                 res.send('');
             });
