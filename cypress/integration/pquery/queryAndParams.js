@@ -64,7 +64,7 @@ describe('Paradigmatic query', () => {
         );
         cy.get('#pquery-form-mount .submit').click();
 
-        cy.url().should('include', '/pquery/result');
+        cy.url({timeout: 8000}).should('include', '/pquery/result');
         cy.get('#pquery-result-mount .data tbody tr').should('have.length', 5);
     });
 

@@ -26,157 +26,163 @@ import { WideCtxArgs } from '../concordance/common';
 
 export class Actions {
 
-    static GeneralInitalDataLoaded: Action<{
-        data: ViewOptsResponse;
+    static GeneralInitalDataLoaded:Action<{
+        data:ViewOptsResponse;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_INITIAL_DATA_LOADED'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_INITIAL_DATA_LOADED'
+    };
 
-    static GeneralSetPageSize: Action<{
-        value: number;
+    static GeneralSetPageSize:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_PAGESIZE'
+    };
 
-    static GeneralSetContextSize: Action<{
-        value: number;
+    static GeneralSetContextSize:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_CONTEXTSIZE'
+    };
 
-    static GeneralSetLineNums: Action<{
-        value: boolean;
+    static GeneralSetLineNums:Action<{
+        value:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_LINE_NUMS'
+    };
 
-    static GeneralSetShuffle: Action<{
-        value: boolean;
+    static GeneralSetShuffle:Action<{
+        value:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_SHUFFLE'
+    };
 
-    static GeneralSetUseRichQueryEditor: Action<{
-        value: boolean;
+    static GeneralSetUseRichQueryEditor:Action<{
+        value:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_USE_RICH_QUERY_EDITOR'
+    };
 
-    static GeneralSetWlPageSize: Action<{
-        value: number;
+    static GeneralSetWlPageSize:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_WLPAGESIZE'
+    };
 
-    static GeneralSetFmaxItems: Action<{
-        value: number;
+    static GeneralSetFmaxItems:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS'
+    };
 
-    static GeneralSetCitemsPerPage: Action<{
-        value: number;
+    static GeneralSetCitemsPerPage:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_CITEMSPERPAGE'
+    };
 
-    static GeneralSetPQueryitemsPerPage: Action<{
-        value: number;
+    static GeneralSetPQueryitemsPerPage:Action<{
+        value:string;
+        debounced?:boolean;
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE'
+    };
 
-    static GeneralSubmit: Action<{
+    static GeneralSubmit:Action<{
     }> = {
-            name: 'GENERAL_VIEW_OPTIONS_SUBMIT'
-        };
+        name: 'GENERAL_VIEW_OPTIONS_SUBMIT'
+    };
 
-    static GeneralSubmitDone: Action<GeneralOptionsShared> = {
+    static GeneralSubmitDone:Action<GeneralOptionsShared> = {
         name: 'GENERAL_VIEW_OPTIONS_SUBMIT_DONE'
     };
 
-    static LoadDataDone: Action<{
-        data: ViewOptions.PageData;
+    static LoadDataDone:Action<{
+        data:ViewOptions.PageData;
     }> = {
-            name: 'VIEW_OPTIONS_LOAD_DATA_DONE'
-        };
+        name: 'VIEW_OPTIONS_LOAD_DATA_DONE'
+    };
 
-    static DataReady: Action<{}> = {
+    static DataReady:Action<{}> = {
         name: 'VIEW_OPTIONS_DATA_READY'
     };
 
-    static UpdateAttrVisibility: Action<{
-        value: ViewOptions.AttrViewMode;
+    static UpdateAttrVisibility:Action<{
+        value:ViewOptions.AttrViewMode;
     }> = {
-            name: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY'
-        };
+        name: 'VIEW_OPTIONS_UPDATE_ATTR_VISIBILITY'
+    };
 
-    static ToggleAttribute: Action<{
-        idx: number;
+    static ToggleAttribute:Action<{
+        idx:number;
     }> = {
-            name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE'
-        };
+        name: 'VIEW_OPTIONS_TOGGLE_ATTRIBUTE'
+    };
 
-    static ToggleAllAttributes: Action<{}> = {
+    static ToggleAllAttributes:Action<{}> = {
         name: 'VIEW_OPTIONS_TOGGLE_ALL_ATTRIBUTES'
     };
 
-    static ToggleStructure: Action<{
+    static ToggleStructure:Action<{
         structIdent: string;
         structAttrIdent: string;
     }> = {
-            name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE'
-        };
+        name: 'VIEW_OPTIONS_TOGGLE_STRUCTURE'
+    };
 
-    static ToggleAllStructures: Action<{}> = {
+    static ToggleAllStructures:Action<{}> = {
         name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURES'
     };
 
-    static ToggleAllStructureAttrs: Action<{
+    static ToggleAllStructureAttrs:Action<{
         structIdent: string;
     }> = {
-            name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS'
-        };
+        name: 'VIEW_OPTIONS_TOGGLE_ALL_STRUCTURE_ATTRS'
+    };
 
-    static ToggleReference: Action<{
+    static ToggleReference:Action<{
         refIdent: string;
         refAttrIdent: string | null;
     }> = {
-            name: 'VIEW_OPTIONS_TOGGLE_REFERENCE'
-        };
+        name: 'VIEW_OPTIONS_TOGGLE_REFERENCE'
+    };
 
-    static ToogleAllReferenceAttrs: Action<{
+    static ToogleAllReferenceAttrs:Action<{
         refIdent: string;
     }> = {
-            name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS'
-        };
+        name: 'VIEW_OPTIONS_TOGGLE_ALL_REF_ATTRS'
+    };
 
-    static ToggleAllReferences: Action<{}> = {
+    static ToggleAllReferences:Action<{}> = {
         name: 'VIEW_OPTIONS_TOGGLE_ALL_REFERENCES'
     };
 
-    static SetBaseViewAttr: Action<{
+    static SetBaseViewAttr:Action<{
         value: string;
     }> = {
-            name: 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR'
-        };
+        name: 'VIEW_OPTIONS_SET_BASE_VIEW_ATTR'
+    };
 
-    static SaveSettings: Action<{}> = {
+    static SaveSettings:Action<{}> = {
         name: 'VIEW_OPTIONS_SAVE_SETTINGS'
     };
 
-    static SaveSettingsDone: Action<{
+    static SaveSettingsDone:Action<{
         baseViewAttr: string;
         widectxGlobals:WideCtxArgs;
         attrVmode: ViewOptions.AttrViewMode;
         qsEnabled: boolean;
     }> = {
-            name: 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
-        };
+        name: 'VIEW_OPTIONS_SAVE_SETTINGS_DONE'
+    };
 
-    static ChangeQuerySuggestionMode: Action<{
+    static ChangeQuerySuggestionMode:Action<{
         value: boolean;
     }> = {
-            name: 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
-        };
+        name: 'VIEW_OPTIONS_CHANGE_QUERY_SUGGESTION_MODE'
+    };
 }

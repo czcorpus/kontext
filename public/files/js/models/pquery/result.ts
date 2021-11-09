@@ -24,6 +24,7 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
+import { Actions as ViewOptionsActions } from '../options/actions';
 import { PqueryResult } from './common';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { FormValue, TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS } from '../../types/kontext';
@@ -175,7 +176,7 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                     {},
                     (action2, syncData) => Actions.isResultApplyQuickFilterArgsReady(action2) ? null : syncData
                 ).subscribe({
-                    next: (action2) => {
+                    next: action2 => {
                         if (Actions.isResultApplyQuickFilterArgsReady(action2)) {
                             const alignIdx = action2.payload.posAlign === AlignTypes.LEFT ? '-1' : '1';
                             const cqlList = pipe(
@@ -195,12 +196,24 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                         }
 
                     },
-                    error: (error) => {
+                    error: error => {
                         console.log(error);
                     }
                 })
             }
         );
+
+        this.addActionHandler(
+            ViewOptionsActions.GeneralSubmitDone,
+            action => {
+                this.changeState(
+                    state => {
+                        state.pageSize = action.payload.pqueryitemsperpage;
+                    }
+                );
+                this.reloadData();
+            }
+        )
     }
 
     private isProperPageRange(state:PqueryResultModelState, v:number):boolean {

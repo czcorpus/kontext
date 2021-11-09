@@ -557,6 +557,7 @@
         "options__cannot_remove_attribute_set_as_main": "Cannot remove attribute currently set as the main one",
         "options__currently_avail_qs_providers": "Services configured for the current corpus",
         "options__currently_avail_qs_none": "none",
+        "options__value_must_be_gt_0": "The value must be a valid number greater than 0 UNTRANSLATED",
         "subc__quick_subcorpus": "Save as subcorpus UNTRANSLATED",
         "subc__quick_subcorpus_form_hd": "Save the current text type selection UNTRANSLATED",
         "subc__quick_subcorpus_create": "Create UNTRANSLATED",

@@ -593,6 +593,7 @@
         "options__cannot_remove_attribute_set_as_main": "Atributa, ki je trenutno nastavljen kot glavni, ni mogoče odstraniti.",
         "options__currently_avail_qs_providers": "Storitve, konfigurirane za trenutni korpus",
         "options__currently_avail_qs_none": "nič",
+        "options__value_must_be_gt_0": "The value must be a valid number greater than 0 UNTRANSLATED",
         "subcform__mode_attr_list": "Seznam atributov",
         "subcform__mode_raw_within": "Prilagodljiv pogoj 'within'",
         "subcform__missing_subcname": "Ime podkorpusa mora biti podano",
