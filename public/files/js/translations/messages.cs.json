@@ -558,6 +558,7 @@
         "options__cannot_remove_attribute_set_as_main": "Ze zobrazení nelze odstranit atribut, který je aktuálně nastaven jako hlavní",
         "options__currently_avail_qs_providers": "Funkce nastavené pro aktuální korpus",
         "options__currently_avail_qs_none": "žádné",
+        "options__value_must_be_gt_0": "Hodnota musí být platné číslo větší než 0",
         "subc__quick_subcorpus": "Uložit jako subkorpus",
         "subc__quick_subcorpus_form_hd": "Uložit aktuální výběr typů textu",
         "subc__quick_subcorpus_create": "Vytvořit",

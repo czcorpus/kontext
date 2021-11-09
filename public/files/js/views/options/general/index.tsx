@@ -41,7 +41,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <TRConcPageSizeInput /> ---------------------
 
     const TRConcPageSizeInput:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -61,7 +61,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input id="conc-page-size" type="number" value={props.value.value} min={0}
+                        <input id="conc-page-size" type="text" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -72,7 +72,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetConcordance /> ---------------------
 
     const TRKwicContextSize:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -92,7 +92,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input id="conc-kwic-size" type="number" value={props.value.value} min={0}
+                        <input id="conc-kwic-size" type="text" value={props.value.value} min={0}
                                 onChange={handleInputChange} style={{width: '2em'}} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -207,8 +207,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetConcordance /> ---------------------
 
     const FieldsetConcordance:React.FC<{
-        pageSize:Kontext.FormValue<number>;
-        newCtxSize:Kontext.FormValue<number>;
+        pageSize:Kontext.FormValue<string>;
+        newCtxSize:Kontext.FormValue<string>;
         lineNumbers:boolean;
         shuffle:boolean;
         useRichQueryEditor:boolean;
@@ -235,7 +235,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <TRWordlistNumPagesInput /> ---------------------
 
     const TRWordlistNumPagesInput:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -255,7 +255,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
                                 style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -266,7 +266,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetWordlist /> ---------------------
 
     const FieldsetWordlist:React.FC<{
-        wlPageSize:Kontext.FormValue<number>;
+        wlPageSize:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
@@ -286,7 +286,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <TRFmaxitemsInput /> ---------------------
 
     const TRFmaxitemsInput:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -306,7 +306,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
                             style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -317,7 +317,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
     const FieldsetFreqDistrib:React.FC<{
-        fmaxItems:Kontext.FormValue<number>;
+        fmaxItems:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
@@ -337,7 +337,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <TRCitemsPerPageInput /> ---------------------
 
     const TRCitemsPerPageInput:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -357,7 +357,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
                                 style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -368,7 +368,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetColl /> ---------------------
 
     const FieldsetColl:React.FC<{
-        citemsPerPage:Kontext.FormValue<number>;
+        citemsPerPage:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (
@@ -388,7 +388,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <TRPQueryitemsPerPageInput /> ---------------------
 
     const TRPQueryitemsPerPageInput:React.FC<{
-        value:Kontext.FormValue<number>;
+        value:Kontext.FormValue<string>;
 
     }> = (props) => {
 
@@ -408,7 +408,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </th>
                 <td>
                     <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
-                        <input type="number" value={props.value.value} onChange={handleInputChange}
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
                                 style={{width: '2em'}} min={0} />
                     </layoutViews.ValidatedItem>
                 </td>
@@ -419,7 +419,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     // ------------- <FieldsetPquery /> ---------------------
 
     const FieldsetPquery:React.FC<{
-        resultsPerPage:Kontext.FormValue<number>;
+        resultsPerPage:Kontext.FormValue<string>;
 
     }> = (props) => {
         return (

@@ -19,7 +19,7 @@
  */
 
 import { tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { Observable, Subject, debounceTime } from 'rxjs';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { HTTP, List } from 'cnc-tskit';
 
@@ -28,6 +28,7 @@ import { PageModel } from '../../app/page';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { ViewOptsResponse } from './common';
+import { validateGzNumber } from '../base';
 
 
 interface GeneralOptionsArgsSubmit {
@@ -45,17 +46,17 @@ interface GeneralOptionsArgsSubmit {
 
 export interface GeneralViewOptionsModelState {
 
-    pageSize:Kontext.FormValue<number>;
+    pageSize:Kontext.FormValue<string>;
 
-    newCtxSize:Kontext.FormValue<number>;
+    newCtxSize:Kontext.FormValue<string>;
 
-    wlpagesize:Kontext.FormValue<number>;
+    wlpagesize:Kontext.FormValue<string>;
 
-    fmaxitems:Kontext.FormValue<number>;
+    fmaxitems:Kontext.FormValue<string>;
 
-    citemsperpage:Kontext.FormValue<number>;
+    citemsperpage:Kontext.FormValue<string>;
 
-    pqueryitemsperpage:Kontext.FormValue<number>;
+    pqueryitemsperpage:Kontext.FormValue<string>;
 
     ctxUnit:string;
 
@@ -73,6 +74,15 @@ export interface GeneralViewOptionsModelState {
 }
 
 
+type DebouncedActions =
+    typeof Actions.GeneralSetPageSize |
+    typeof Actions.GeneralSetContextSize |
+    typeof Actions.GeneralSetWlPageSize |
+    typeof Actions.GeneralSetFmaxItems |
+    typeof Actions.GeneralSetCitemsPerPage |
+    typeof Actions.GeneralSetPQueryitemsPerPage;
+
+
 export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsModelState> {
 
     private static readonly MAX_ITEMS_PER_PAGE = 500;
@@ -83,21 +93,23 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
     private readonly submitResponseHandlers:Array<(store:GeneralViewOptionsModel)=>void>;
 
+    private readonly debouncedAction$:Subject<DebouncedActions>;
+
     constructor(dispatcher:IFullActionControl, layoutModel:PageModel, userIsAnonymous:boolean) {
         super(
             dispatcher,
             {
                 userIsAnonymous,
-                pageSize: Kontext.newFormValue(0, true),
-                newCtxSize: Kontext.newFormValue(0, true),
+                pageSize: Kontext.newFormValue('0', true),
+                newCtxSize: Kontext.newFormValue('0', true),
                 ctxUnit: '',
                 lineNumbers: false,
                 shuffle: false,
                 useRichQueryEditor: false,
-                wlpagesize: Kontext.newFormValue(0, true),
-                fmaxitems: Kontext.newFormValue(0, true),
-                citemsperpage: Kontext.newFormValue(0, true),
-                pqueryitemsperpage: Kontext.newFormValue(0, true),
+                wlpagesize: Kontext.newFormValue('0', true),
+                fmaxitems: Kontext.newFormValue('0', true),
+                citemsperpage: Kontext.newFormValue('0', true),
+                pqueryitemsperpage: Kontext.newFormValue('0', true),
                 isBusy: false,
                 loaded: false,
             }
@@ -105,15 +117,29 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         this.layoutModel = layoutModel;
         this.submitResponseHandlers = [];
 
-        this.addActionHandler<typeof MainMenuActions.ShowGeneralViewOptions>(
-            MainMenuActions.ShowGeneralViewOptions.name,
+        this.debouncedAction$ = new Subject();
+        this.debouncedAction$.pipe(
+            debounceTime(Kontext.TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, debounced: true}
+                });
+            }
+        });
+
+
+        this.addActionHandler(
+            MainMenuActions.ShowGeneralViewOptions,
             (state, action) => {
                 state.isBusy = true;
                 state.loaded = false;
             },
             (state, action, dispatch) => {
-                this.loadData().subscribe(
-                    (data) => {
+                this.loadData().subscribe({
+                    next: data => {
                         dispatch<typeof Actions.GeneralInitalDataLoaded>({
                             name: Actions.GeneralInitalDataLoaded.name,
                             payload: {
@@ -121,102 +147,167 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                             }
                         });
                     },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
-                        dispatch<typeof Actions.GeneralInitalDataLoaded>({
-                            name: Actions.GeneralInitalDataLoaded.name,
-                            error: err
-                        });
+                    error: error => {
+                        this.layoutModel.showMessage('error', error);
+                        dispatch(
+                            Actions.GeneralInitalDataLoaded,
+                            error
+                        );
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralInitalDataLoaded>(
-            Actions.GeneralInitalDataLoaded.name,
+        this.addActionHandler(
+            Actions.GeneralInitalDataLoaded,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
                     state.loaded = true;
-                    state.pageSize = {value: action.payload.data.pagesize, isInvalid: false, isRequired: true};
-                    state.newCtxSize = {value: action.payload.data.newctxsize, isInvalid: false, isRequired: true};
+                    state.pageSize = {
+                        value: action.payload.data.pagesize + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
+                    state.newCtxSize = {
+                        value: action.payload.data.newctxsize + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
                     state.ctxUnit = action.payload.data.ctxunit;
                     state.lineNumbers = action.payload.data.line_numbers;
                     state.shuffle = action.payload.data.shuffle;
-                    state.wlpagesize = {value: action.payload.data.wlpagesize, isInvalid: false, isRequired: true};
-                    state.fmaxitems = {value: action.payload.data.fmaxitems, isInvalid: false, isRequired: true};
-                    state.citemsperpage = {value: action.payload.data.citemsperpage, isInvalid: false, isRequired: true};
-                    state.pqueryitemsperpage = {value: action.payload.data.pqueryitemsperpage, isInvalid: false, isRequired: true};
+                    state.wlpagesize = {
+                        value: action.payload.data.wlpagesize + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
+                    state.fmaxitems = {
+                        value: action.payload.data.fmaxitems + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
+                    state.citemsperpage = {
+                        value: action.payload.data.citemsperpage + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
+                    state.pqueryitemsperpage = {
+                        value: action.payload.data.pqueryitemsperpage + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
                     state.useRichQueryEditor = action.payload.data.rich_query_editor;
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetPageSize>(
-            Actions.GeneralSetPageSize.name,
+        this.addActionHandler(
+            Actions.GeneralSetPageSize,
             (state, action) => {
                 state.pageSize.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.pageSize = this.validateGt1Value(state.pageSize, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action) => {
+                if (action.payload.debounced && state.pageSize.errorDesc) {
+                    this.layoutModel.showMessage('error', state.pageSize.errorDesc);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetContextSize>(
-            Actions.GeneralSetContextSize.name,
+        this.addActionHandler(
+            Actions.GeneralSetContextSize,
             (state, action) => {
                 state.newCtxSize.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.newCtxSize = this.validateGt1Value(state.newCtxSize, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetLineNums>(
-            Actions.GeneralSetLineNums.name,
+        this.addActionHandler(
+            Actions.GeneralSetLineNums,
             (state, action) => {
                 state.lineNumbers = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetShuffle>(
-            Actions.GeneralSetShuffle.name,
+        this.addActionHandler(
+            Actions.GeneralSetShuffle,
             (state, action) => {
                 state.shuffle = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetUseRichQueryEditor>(
-            Actions.GeneralSetUseRichQueryEditor.name,
+        this.addActionHandler(
+            Actions.GeneralSetUseRichQueryEditor,
             (state, action) => {
                 state.useRichQueryEditor = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetWlPageSize>(
-            Actions.GeneralSetWlPageSize.name,
+        this.addActionHandler(
+            Actions.GeneralSetWlPageSize,
             (state, action) => {
                 state.wlpagesize.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.wlpagesize = this.validateGt1Value(state.wlpagesize, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetFmaxItems>(
-            Actions.GeneralSetFmaxItems.name,
+        this.addActionHandler(
+            Actions.GeneralSetFmaxItems,
             (state, action) => {
                 state.fmaxitems.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.fmaxitems = this.validateGt1Value(state.fmaxitems, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetCitemsPerPage>(
-            Actions.GeneralSetCitemsPerPage.name,
+        this.addActionHandler(
+            Actions.GeneralSetCitemsPerPage,
             (state, action) => {
                 state.citemsperpage.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.citemsperpage = this.validateGt1Value(state.citemsperpage, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSetPQueryitemsPerPage>(
-            Actions.GeneralSetPQueryitemsPerPage.name,
+        this.addActionHandler(
+            Actions.GeneralSetPQueryitemsPerPage,
             (state, action) => {
                 state.pqueryitemsperpage.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.pqueryitemsperpage = this.validateGt1Value(state.pqueryitemsperpage, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSubmit>(
-            Actions.GeneralSubmit.name,
+        this.addActionHandler(
+            Actions.GeneralSubmit,
             (state, action) => {
                 state.isBusy = true;
                 this.validateForm(state);
@@ -231,48 +322,65 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                     });
 
                 } else {
-                    this.submit(state).subscribe(
-                        () => {
+                    this.submit(state).subscribe({
+                        next: () => {
                             dispatch<typeof Actions.GeneralSubmitDone>({
                                 name: Actions.GeneralSubmitDone.name,
                                 payload: {
                                     showLineNumbers: state.lineNumbers,
-                                    pageSize: state.pageSize.value,
-                                    newCtxSize: state.newCtxSize.value,
-                                    wlpagesize: state.wlpagesize.value,
-                                    fmaxitems: state.fmaxitems.value,
-                                    citemsperpage: state.citemsperpage.value,
-                                    pqueryitemsperpage: state.pqueryitemsperpage.value
+                                    pageSize: parseInt(state.pageSize.value),
+                                    newCtxSize: parseInt(state.newCtxSize.value),
+                                    wlpagesize: parseInt(state.wlpagesize.value),
+                                    fmaxitems: parseInt(state.fmaxitems.value),
+                                    citemsperpage: parseInt(state.citemsperpage.value),
+                                    pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value)
                                 }
                             });
                             List.forEach(fn => fn(this), this.submitResponseHandlers);
                         },
-                        (err) => {
-                            this.layoutModel.showMessage('error', err);
+                        error: error => {
+                            this.layoutModel.showMessage('error', error);
                             dispatch<typeof Actions.GeneralSubmitDone>({
                                 name: Actions.GeneralSubmitDone.name,
-                                error: err
+                                error
                             });
                         }
-                    );
+                    });
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.GeneralSubmitDone>(
-            Actions.GeneralSubmitDone.name,
+        this.addActionHandler(
+            Actions.GeneralSubmitDone,
             (state, action) => {
                 state.isBusy = false;
             }
         );
     }
 
-    private testMaxPageSize(v:number):boolean {
-        return v <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
+    private validateGt1Value(formItem:Kontext.FormValue<string>, input:string):Kontext.FormValue<string> {
+        if (!validateGzNumber(input) || parseInt(input) < 1) {
+            return {
+                ...formItem,
+                isInvalid: true,
+                errorDesc: this.layoutModel.translate('options__value_must_be_gt_0')
+            };
+
+        } else {
+            return {
+                ...formItem,
+                isInvalid: false,
+                errorDesc: undefined
+            };
+        }
     }
 
-    private testMaxCtxSize(v:number):boolean {
-        return v <= GeneralViewOptionsModel.MAX_CTX_SIZE;
+    private testMaxPageSize(v:string):boolean {
+        return parseInt(v) <= GeneralViewOptionsModel.MAX_ITEMS_PER_PAGE;
+    }
+
+    private testMaxCtxSize(v:string):boolean {
+        return parseInt(v) <= GeneralViewOptionsModel.MAX_CTX_SIZE;
     }
 
     private hasErrorInputs(state:GeneralViewOptionsModelState):boolean {
@@ -325,15 +433,15 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
     private serialize(state:GeneralViewOptionsModelState):GeneralOptionsArgsSubmit {
         return {
-            pagesize: state.pageSize.value,
-            newctxsize: state.newCtxSize.value,
+            pagesize: parseInt(state.pageSize.value),
+            newctxsize: parseInt(state.newCtxSize.value),
             ctxunit: state.ctxUnit,
             line_numbers: state.lineNumbers,
             shuffle: state.shuffle,
-            wlpagesize: state.wlpagesize.value,
-            fmaxitems: state.fmaxitems.value,
-            citemsperpage: state.citemsperpage.value,
-            pqueryitemsperpage: state.pqueryitemsperpage.value,
+            wlpagesize: parseInt(state.wlpagesize.value),
+            fmaxitems: parseInt(state.fmaxitems.value),
+            citemsperpage: parseInt(state.citemsperpage.value),
+            pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
             rich_query_editor: state.useRichQueryEditor
         };
     }
@@ -348,7 +456,9 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
 
         ).pipe(
             tap(d => {
-                this.layoutModel.updateConcArgs({pagesize: state.pageSize.value});
+                this.layoutModel.updateConcArgs({
+                    pagesize: parseInt(state.pageSize.value)
+                });
             })
         );
     }
