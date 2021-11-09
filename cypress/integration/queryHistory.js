@@ -2,7 +2,7 @@
 
 
 describe('Query History', () => {
-
+/*
     before(() => {
         cy.actionLogin();
         
@@ -29,7 +29,7 @@ describe('Query History', () => {
 
         cy.actionLogout();
     });
-
+*/
     beforeEach(() => {
         cy.actionLogin();
         
@@ -38,7 +38,6 @@ describe('Query History', () => {
     });
 
     it('tests supertype filter', () => {
-
         // test any supertype
         let history = cy.get('#query-history-mount .history-entries .supertype');
         history.should('not.be.empty');
@@ -66,6 +65,22 @@ describe('Query History', () => {
         history.should('not.contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
         history.should('contain.text', 'word list');
+    });
+
+    it('tests archive filter', () => {
+        // test any supertype
+        cy.get('#query-history-mount fieldset label').eq(2).click();
+        cy.get('#query-history-mount .history-entries').should('be.empty');
+        cy.get('#query-history-mount fieldset label').eq(2).click();
+
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools input[type="text"]').type('first-archived-item');
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+        
+        cy.get('#query-history-mount fieldset label').eq(2).click();
+        cy.get('#query-history-mount .history-entries').should('not.be.empty');
+        cy.get('#query-history-mount fieldset label').eq(2).click();
     });
 
 });
