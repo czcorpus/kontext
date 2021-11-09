@@ -12,7 +12,7 @@ describe('Paradigmatic query vs. general view options', () => {
         // set page size to 5
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetPquery table input[type="number"]').clear().type(5);
+        cy.get('#view-options-mount .FieldsetPquery table input[type="text"]').clear().type(5);
         cy.get('#view-options-mount div.buttons button').click();
 
 
@@ -31,13 +31,13 @@ describe('Paradigmatic query vs. general view options', () => {
         // set page size to 20
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 3);
-        cy.get('#view-options-mount .FieldsetPquery table input[type="number"]').clear().type(20);
+        cy.get('#view-options-mount .FieldsetPquery table input[type="text"]').clear().type(20);
         cy.get('#view-options-mount div.buttons button').click();
 
         // test result page
         cy.url({timeout: 8000}).should('include', '/pquery/result');
         cy.get('#pquery-result-mount .data tbody tr').should('have.length', 20);
-        cy.get('#pquery-result-mount .controls .num-input').contains('/ 2');
+        cy.get('#pquery-result-mount .controls .num-input').contains('/ 3');
 
     });
 
