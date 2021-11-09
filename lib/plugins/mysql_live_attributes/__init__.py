@@ -123,8 +123,11 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         return StructAttr.get(k) if k is not None else k
 
     @staticmethod
-    def _get_subcorp_attrs(corpus: KCorpus) -> List[StructAttr]:
-        return set(StructAttr.get(x) for x in re.split(r'\s*[,|]\s*', corpus.get_conf('SUBCORPATTRS')))
+    def _get_subcorp_attrs(corpus: KCorpus) -> Set[StructAttr]:
+        sca = corpus.get_conf('SUBCORPATTRS')
+        if sca:
+            return set(StructAttr.get(x) for x in re.split(r'\s*[,|]\s*', sca))
+        return set(StructAttr.get(x) for x in corpus.get_structattrs())
 
     @staticmethod
     def _group_bib_items(data: Dict[str, Set[AttrValue]], bib_label: StructAttr):
