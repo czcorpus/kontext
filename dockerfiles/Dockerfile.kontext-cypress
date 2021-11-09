@@ -1,0 +1,21 @@
+FROM czcorpus/kontext-manatee
+
+SHELL ["/bin/bash", "--login", "-c"]
+RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
+RUN nvm install node
+
+RUN apt-get install -y sox libsox-fmt-mp3
+
+COPY ./requirements.txt ./
+RUN pip3 install -r requirements.txt gunicorn
+RUN mkdir /var/log/gunicorn && mkdir /var/log/gunicorn/kontext && mkdir /var/local/corpora/query_persistence
+
+COPY ./pack*.json ./
+RUN npm install
+
+COPY . .
+ENV KONTEXT_INSTALL_CONF=../scripts/install/conf/docker/config.cypress.xml
+RUN python3 scripts/install/steps.py SetupKontext
+RUN npm start build:production
+
+CMD [ "gunicorn", "-c", "./scripts/install/conf/docker/gunicorn-conf.py", "public.app:application" ]

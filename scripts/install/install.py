@@ -6,6 +6,7 @@ import inspect
 import argparse
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
 MANATEE_VER = '2.167.8'
 
 REQUIREMENTS = [
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
         args.manatee_version, args.patch_path)
-    steps.SetupKontext(KONTEXT_PATH, stdout, stderr).run(args.install_celery)
+    steps.SetupKontext(KONTEXT_PATH, KONTEXT_INSTALL_CONF, stdout, stderr).run(args.install_celery)
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     if args.install_gunicorn:
         steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()

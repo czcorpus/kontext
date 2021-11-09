@@ -255,6 +255,11 @@ class SetupManatee(InstallationStep):
 
 
 class SetupKontext(InstallationStep):
+
+    def __init__(self, kontext_path: str, kontext_conf: str, stdout: str, stderr: str):
+        super().__init__(kontext_path, stdout, stderr)
+        self._kontext_conf = kontext_conf
+
     def is_done(self):
         pass
 
@@ -263,7 +268,7 @@ class SetupKontext(InstallationStep):
 
     def run(self, use_celery, build_production=True):
         print('Installing kontext...')
-        subprocess.check_call(['cp', 'config.default.xml', 'config.xml'],
+        subprocess.check_call(['cp', self._kontext_conf, 'config.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
         subprocess.check_call(['cp', 'corplist.default.xml', 'corplist.xml'],
                               cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
@@ -360,7 +365,7 @@ class SetupDefaultUsers(InstallationStep):
         ''')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser('Run step')
@@ -374,7 +379,8 @@ if __name__ == "__main__":
     init_step_args = (kontext_path, None, None)
 
     if args.step_name == 'SetupKontext':
-        obj = SetupKontext(*init_step_args)
+        obj = SetupKontext(
+            kontext_path, os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml'), None, None)
         obj.run(False, False)
     elif args.step_name == 'SetupDefaultUsers':
         obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))

@@ -145,7 +145,10 @@
             <cookie>kontext_toolbar_lang</cookie>
             <fallback_lang>en-US</fallback_lang>
         </getlang>
-        <live_attributes/>
+        <live_attributes>
+            <module>mysql_live_attributes</module>
+            <js_module>mysqlLiveAttributes</js_module>
+        </live_attributes>
         <menu_items>
             <module>default_menu_items</module>
             <data_path>/opt/kontext/conf/main-menu.sample.json</data_path>
