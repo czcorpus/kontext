@@ -137,29 +137,30 @@ class Querying(Kontext):
         # create and store concordance query key
         if type(result) is dict:
             if action_metadata['mutates_result']:
-                next_query_keys, stored_history = self._store_conc_params()
+                next_query_keys, history_ts = self._store_conc_params()
             else:
                 next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
-                stored_history = False
-            self.on_conc_store(next_query_keys, stored_history, result)
+                history_ts = None
+            self.on_conc_store(next_query_keys, history_ts, result)
             self._update_output_with_conc_params(
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
-    def _store_conc_params(self) -> Tuple[List[str], bool]:
+    def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """
         Stores concordance operation if the query_persistence plugin is installed
         (otherwise nothing is done).
 
         returns:
-        string ID of the stored operation (or the current ID of nothing was stored)
+        a 2-tuple (
+            ID of the stored operation (or the current ID of nothing was stored),
+            UNIX timestamp of stored history item (or None)
         """
         with plugins.runtime.QUERY_PERSISTENCE as cp:
             prev_data = self._prev_q_data if self._prev_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
             ans = [cp.store(self.session_get('user', 'id'),
                             curr_data=curr_data, prev_data=self._prev_q_data)]
-            if use_history:
-                self._save_query_to_history(ans[0], curr_data)
+            history_ts = self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
@@ -170,7 +171,7 @@ class Querying(Kontext):
                             corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
                 ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
-            return ans, use_history
+            return ans, history_ts
 
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()

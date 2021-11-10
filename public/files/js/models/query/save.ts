@@ -21,9 +21,10 @@
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { Actions } from './actions';
 import { HTTP, tuple } from 'cnc-tskit';
+import { SaveItemResponse } from '../searchHistory/common';
 
 
 interface IsArchivedResponse extends Kontext.AjaxResponse {
@@ -236,13 +237,19 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
     }
 
     private submit(state:QuerySaveAsFormModelState):Observable<boolean> {
-        return this.layoutModel.ajax$<any>(
+        return this.layoutModel.ajax$<SaveItemResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('save_query'),
             {
                 query_id: state.queryId,
                 name: state.name
-            }
+            },
+            {contentType: 'application/json'}
+
+        ).pipe(
+            map(
+                resp => resp.saved
+            )
         );
     }
 }

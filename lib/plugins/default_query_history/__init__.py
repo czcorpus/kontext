@@ -87,28 +87,34 @@ class QueryHistory(AbstractQueryHistory):
         arguments:
         see the super class
         """
-        item = dict(created=self._current_timestamp(), query_id=query_id,
-                    name=None, q_supertype=q_supertype)
+        ts = self._current_timestamp()
+        item = dict(created=ts, query_id=query_id, name=None, q_supertype=q_supertype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             self.delete_old_records(user_id)
+        return ts
 
-    def make_persistent(self, user_id, query_id, name):
+    def make_persistent(self, user_id, query_id, created, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
+        last_match_idx = -1
         for i, item in enumerate(data):
-            if item.get('query_id', None) == query_id:
-                item['name'] = name
-                self.db.list_set(k, i, item)
-                self._query_persistence.archive(user_id, query_id)
-                return True
+            if item.get('query_id') == query_id:
+                last_match_idx = i
+                if item.get('created') == created:
+                    break
+        if last_match_idx > -1:
+            data[last_match_idx]['name'] = name
+            self.db.list_set(k, last_match_idx, data[last_match_idx])
+            self._query_persistence.archive(user_id, query_id)
+            return True
         return False
 
-    def make_transient(self, user_id, query_id, name):
+    def make_transient(self, user_id, query_id, created, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         for i, item in enumerate(data):
-            if item.get('query_id', None) == query_id:
+            if item.get('query_id', None) == query_id and item.get('created') == created and item.get('name') == name:
                 item['name'] = None
                 self.db.list_set(k, i, item)
                 return True

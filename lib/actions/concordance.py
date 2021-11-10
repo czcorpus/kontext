@@ -329,9 +329,10 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):
         with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as cp:
-            hsave = qh.make_persistent(self.session_get('user', 'id'), request.form['query_id'],
-                                       request.form['name'])
-            _, data = cp.archive(self.session_get('user', 'id'), request.form['query_id'])
+            hsave = qh.make_persistent(
+                self.session_get('user', 'id'), request.json['query_id'],
+                request.json.get('created'), request.json['name'])
+            _, data = cp.archive(self.session_get('user', 'id'), request.json['query_id'])
             if cp.stored_query_type(data) == 'pquery':
                 for conc_id in data.get('form', {}).get('conc_ids', []):
                     cn, _ = cp.archive(self.session_get('user', 'id'), conc_id)
@@ -343,7 +344,9 @@ class Actions(Querying):
         # this method keeps the conc params as they are because we assume that user just does
         # not want to keep the query in their history
         with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.make_transient(self.session_get('user', 'id'), request.form['query_id'])
+            ans = qh.make_transient(
+                self.session_get('user', 'id'), request.json['query_id'], request.json['created'],
+                request.json['name'])
         return dict(deleted=ans)
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
@@ -351,7 +354,7 @@ class Actions(Querying):
         # remove query from history (respective results are kept)
         with plugins.runtime.QUERY_HISTORY as qh:
             ans = qh.delete(self.session_get('user', 'id'),
-                            request.form['query_id'], int(request.form['created']))
+                            request.json['query_id'], int(request.json['created']))
         return dict(num_deleted=ans)
 
     @exposed()
@@ -665,8 +668,8 @@ class Actions(Querying):
              return_type='json')
     def query_submit(self, request):
 
-        def store_last_op(conc_ids: List[str], stored_history: bool, _):
-            if stored_history:
+        def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+            if history_ts:
                 self._store_last_search('conc', conc_ids[0])
 
         self._clear_prev_conc_params()

@@ -161,7 +161,7 @@ class Kontext(Controller):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str], bool, Any], None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], Optional[int], Any], None] = lambda s, uh, res: None
 
         self._tt_cache = tt_cache
         self._tt = None  # this will be instantiated lazily
@@ -381,11 +381,14 @@ class Kontext(Controller):
         """
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
-    def _save_query_to_history(self, query_id, conc_data):
+    def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                qh.store(user_id=self.session_get('user', 'id'),
-                         query_id=query_id, q_supertype='conc')
+                ts = qh.store(
+                    user_id=self.session_get('user', 'id'),
+                    query_id=query_id, q_supertype='conc')
+                return ts
+        return None
 
     def _clear_prev_conc_params(self):
         self._prev_q_data = None

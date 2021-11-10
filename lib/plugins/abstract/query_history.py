@@ -21,12 +21,13 @@ Query history plug-in works as a backend for the 'recent queries' function.
 """
 
 import abc
+from typing import Optional
 
 
 class AbstractQueryHistory(abc.ABC):
 
     @abc.abstractmethod
-    def store(self, user_id: int, query_id: str, q_supertype: str):
+    def store(self, user_id: int, query_id: str, q_supertype: str) -> int:
         """
         Store data as a new saved query
 
@@ -39,11 +40,11 @@ class AbstractQueryHistory(abc.ABC):
             pquery - paradigmatic query
 
         returns:
-        an ID of the query (either new or existing)
+        creation UNIX timestamp (seconds)
         """
 
     @abc.abstractmethod
-    def make_persistent(self, user_id, query_id, name):
+    def make_persistent(self, user_id: int, query_id: str, created: Optional[int], name: str):
         """
         Finds (if implemented) a specific query history
         record based on its respective concordance record.
@@ -52,11 +53,13 @@ class AbstractQueryHistory(abc.ABC):
         arguments:
         user_id -- a user ID
         query_id -- a query ID (in URLs: q=~[query_id])
+        created -- a UNIX timestamp of the upgraded item; it is possible to pass None in which case
+                   the plug-in takes the most recent matching (by query_id) item
         name -- a name user gave to the query
         """
 
     @abc.abstractmethod
-    def make_transient(self, user_id, query_id, name):
+    def make_transient(self, user_id: int, query_id: str, created: int, name: str):
         """
         Remove name from the history item and let it be
         removed once it gets too old

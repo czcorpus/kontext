@@ -47,7 +47,7 @@ class Wordlist(Kontext):
     def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
         super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
         self._curr_wlform_args: Optional[WordlistFormArgs] = None
-        self.on_conc_store: Callable[[List[str], bool,
+        self.on_conc_store: Callable[[List[str], Optional[int],
                                       Dict[str, Any]], None] = lambda s, uh, res: None
 
     def get_mapping_url_prefix(self):
@@ -70,9 +70,10 @@ class Wordlist(Kontext):
                                     curr_data=dict(form=self._curr_wlform_args.to_qp(),
                                                    corpora=[self._curr_wlform_args.corpname],
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
-                qh.store(user_id=self.session_get('user', 'id'),
-                         query_id=query_id, q_supertype='wlist')
-                self.on_conc_store([query_id], True, result)
+                ts = qh.store(
+                    user_id=self.session_get('user', 'id'),
+                    query_id=query_id, q_supertype='wlist')
+                self.on_conc_store([query_id], ts, result)
 
     def export_form_args(self, result):
         if self._curr_wlform_args:
@@ -122,9 +123,9 @@ class Wordlist(Kontext):
             raise bg_result
         self._curr_wlform_args = form_args
 
-        def on_conc_store(query_ids, stored_history, result):
+        def on_conc_store(query_ids, history_ts, result):
             result['wl_query_id'] = query_ids[0]
-            if stored_history:
+            if history_ts:
                 self._store_last_search('wlist', query_ids[0])
 
         self.on_conc_store = on_conc_store
