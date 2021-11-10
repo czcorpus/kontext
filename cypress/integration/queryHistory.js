@@ -73,14 +73,26 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').should('be.empty');
         cy.get('#query-history-mount fieldset label').eq(2).click();
 
+        // open tools and archive
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools input[type="text"]').type('first-archived-item');
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+
+        cy.wait(1000);
         
+        // check there are archived items
         cy.get('#query-history-mount fieldset label').eq(2).click();
         cy.get('#query-history-mount .history-entries').should('not.be.empty');
         cy.get('#query-history-mount fieldset label').eq(2).click();
+
+        // open tools and dearchive
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
+
+        cy.get('#query-history-mount fieldset label').eq(2).click();
+        cy.get('#query-history-mount .history-entries').should('be.empty');
+
     });
 
 });
