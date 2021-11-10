@@ -3,6 +3,7 @@
 
 describe('Query History', () => {
 
+    // fill in some history items
     before(() => {
         cy.actionLogin();
         
@@ -89,9 +90,28 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').should('not.be.empty');
 
         cy.get('#query-history-mount fieldset label').eq(2).click();
+        cy.wait(1000);
         cy.get('#query-history-mount fieldset label').eq(2).click();
         cy.get('#query-history-mount .history-entries').should('be.empty');
 
+    });
+
+    it('tests remove history item', () => {
+        cy.get('#query-history-mount img.close-icon').click();
+        cy.get('#query-history-mount').should('be.empty');
+
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 1);
+        cy.get('.simple-input').type('general archive item');
+        cy.get('.query .default-button').click();
+
+        cy.hoverNthMenuItem(1);
+        cy.clickMenuItem(1, 4);
+
+        cy.get('#query-history-mount .history-entries').children().first().should('contain', 'general archive item');
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
+        cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(0).click();
+        cy.get('#query-history-mount .history-entries').children().first().should('not.contain', 'general archive item');
     });
 
 });
