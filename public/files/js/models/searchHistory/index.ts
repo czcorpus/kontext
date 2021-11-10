@@ -29,7 +29,7 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
-import { GetHistoryResponse, QueryHistoryItem, SearchHistoryModelState } from './common';
+import { GetHistoryResponse, QueryHistoryItem, SaveItemResponse, SearchHistoryModelState } from './common';
 
 
 
@@ -340,7 +340,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             {
                 query_id: item.query_id,
                 created: item.created
-            }
+            },
+            {contentType: 'application/json'}
 
         ).pipe(
             tap(
@@ -359,13 +360,15 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         return (() => {
             const item = this.state.data[itemIdx];
             if (item.name) {
-                return this.pageModel.ajax$<any>(
+                return this.pageModel.ajax$<SaveItemResponse>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
                     {
                         query_id: item.query_id,
+                        created: item.created,
                         name: item.name
-                    }
+                    },
+                    {contentType: 'application/json'}
 
                 ).pipe(
                     map(resp => tuple(resp, true))
@@ -375,7 +378,12 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 return this.pageModel.ajax$<any>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('unsave_query'),
-                    {query_id: item.query_id}
+                    {
+                        query_id: item.query_id,
+                        created: item.created,
+                        name: item.name
+                    },
+                    {contentType: 'application/json'}
 
                 ).pipe(
                     map(resp => tuple(resp, false))

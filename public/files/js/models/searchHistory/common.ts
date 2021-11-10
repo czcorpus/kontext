@@ -98,6 +98,10 @@ export interface GetHistoryResponse extends Kontext.AjaxResponse {
     to_date:string;
 }
 
+export interface SaveItemResponse extends Kontext.AjaxResponse {
+    saved:boolean;
+}
+
 export interface WidgetProps {
     sourceId:string;
     formType:QueryFormType;

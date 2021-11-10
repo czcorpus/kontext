@@ -115,6 +115,8 @@ class RejsonDb(KeyValueStorage):
         idx -- a zero based index where the set should be performed
         value -- a JSON-serializable value to be inserted
         """
+        # TODO the operation pair should be atomic to avoid possible race conditions
+        self.redis.jsonarrpop(key, Path.rootPath(), idx)
         return self.redis.jsonarrinsert(key, Path.rootPath(), idx, value)
 
     def list_trim(self, key, keep_left, keep_right):

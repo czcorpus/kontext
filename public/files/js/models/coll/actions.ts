@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { AjaxResponse, CollSaveServerArgs, CollServerArgs, HistoryState } from './common';
+import { AjaxResponse, CollServerArgs, HistoryState } from './common';
 import { ConcQuickFilterServerArgs } from '../concordance/common';
 import { DataSaveFormat } from '../../app/navigation/save';
 
