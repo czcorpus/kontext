@@ -119,19 +119,19 @@ export const PoSFilter = styled.div`
 export const SyntaxHighlight = styled.pre`
 
     .sh-regexp {
-        color: #920040;
+        color: ${theme.shRegexp};
     }
 
     .sh-attr {
-        color: ${theme.colorLogoPink};
+        color: ${theme.shAttr};
     }
 
     .sh-keyword {
-        color: #48872b;
+        color: ${theme.shKeyword};
     }
 
     .sh-operator {
-        color: #bd42ee;
+        color: ${theme.shOperator};
     }
 
     .rg-look-operator > span {

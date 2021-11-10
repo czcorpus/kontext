@@ -24,7 +24,7 @@ import { QueryFormType } from '../query/actions';
 import { QueryType } from '../query/query';
 
 
-export interface QueryHistoryItem {
+interface AbstractQueryHistoryItem {
     /**
      * An index in list, always respecting offset (i.e. the
      * server can return values starting from i > 0).
@@ -89,6 +89,25 @@ export interface QueryHistoryItem {
         default_attr:string;
     }>;
 }
+
+export interface ConcQueryHistoryItem extends AbstractQueryHistoryItem {
+    q_supertype:'conc';
+}
+
+export interface WlistQueryHistoryItem extends AbstractQueryHistoryItem {
+    q_supertype:'wlist';
+    pfilter_words:Array<string>;
+    nfilter_words:Array<string>;
+}
+
+export interface PQueryHistoryItem extends AbstractQueryHistoryItem {
+    q_supertype:'pquery';
+}
+
+export type QueryHistoryItem =
+    ConcQueryHistoryItem |
+    WlistQueryHistoryItem |
+    PQueryHistoryItem;
 
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
     data:Array<QueryHistoryItem>;

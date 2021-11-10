@@ -24,12 +24,13 @@ import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
 import { highlightSyntaxStatic } from '../query/cqleditor/parser';
-import { List, HTTP, tuple } from 'cnc-tskit';
+import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
-import { GetHistoryResponse, QueryHistoryItem, SaveItemResponse, SearchHistoryModelState } from './common';
+import { GetHistoryResponse, SaveItemResponse, SearchHistoryModelState,
+    QueryHistoryItem } from './common';
 
 
 
@@ -40,7 +41,7 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he: Kontext.ComponentHelpers, item: QueryHistoryItem) => {
+const attachSh = (he: Kontext.ComponentHelpers, item:QueryHistoryItem) => {
     if (item.query_type !== 'simple') {
         [item.query_sh,] = highlightSyntaxStatic({
             query: item.query,
@@ -311,15 +312,14 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             tap(data => {
                 this.changeState(state => {
                     state.hasMoreItems = data.data.length === state.limit + 1;
-                    state.data = state.hasMoreItems ?
+                    state.data = pipe(
+                        state.hasMoreItems ?
+                            data.data.slice(0, data.data.length - 1) :
+                            data.data,
                         List.map(
-                            attachSh.bind(null, this.pageModel.getComponentHelpers()),
-                            data.data.slice(0, data.data.length - 1)
-                        ) :
-                        List.map(
-                            attachSh.bind(null, this.pageModel.getComponentHelpers()),
-                            data.data
-                        );
+                            item => attachSh(this.pageModel.getComponentHelpers(), item)
+                        )
+                    );
                     state.itemsToolbars = List.repeat(
                         _ => tuple(false, false),
                         state.data.length
