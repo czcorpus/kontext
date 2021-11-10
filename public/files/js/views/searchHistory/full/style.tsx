@@ -178,6 +178,19 @@ export const QueryInfoDiv = styled.div`
             margin: 0.4em 0 0.2em 0;
         }
     }
+
+    dl.pnfilter {
+
+        dt {
+            font-weight: bold;
+        }
+
+        dd {
+            margin-left: 1em;
+            padding: 0.4em 0;
+            color: ${theme.shRegexp};
+        }
+    }
 `;
 
 // -------------- <QueryAndTypeDiv /> ------------------------------

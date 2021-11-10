@@ -27,7 +27,8 @@ import { Actions } from '../../../models/searchHistory/actions';
 import { QueryType } from '../../../models/query/query';
 
 import * as S from './style';
-import { SearchHistoryModelState, QueryHistoryItem } from '../../../models/searchHistory/common';
+import { SearchHistoryModelState, ConcQueryHistoryItem,
+    QueryHistoryItem } from '../../../models/searchHistory/common';
 import { SearchHistoryModel } from '../../../models/searchHistory';
 import gearIcon from '../../../../img/config-icon.svg';
 import gearIconS from '../../../../img/config-icon_s.svg';
@@ -255,7 +256,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         query_sh:string;
         query:string;
         textTypes:Kontext.GeneralProps;
-        aligned:QueryHistoryItem['aligned'];
+        aligned:ConcQueryHistoryItem['aligned'];
 
     }> = (props) => {
 
@@ -283,6 +284,53 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     props.aligned
                 )}
                 <TextTypesInfo textTypes={props.textTypes} />
+            </S.QueryInfoDiv>
+        );
+    }
+
+    // -------------------- <WlistQueryInfo /> ------------------------
+
+    const WlistQueryInfo:React.FC<{
+        itemIdx:number;
+        isEdited:boolean;
+        query_sh:string;
+        query:string;
+        pfilter:Array<string>;
+        nfilter:Array<string>;
+    }> = (props) => {
+
+        const handleAreaClick = () => {
+            dispatcher.dispatch<typeof Actions.HistoryOpenQueryForm>({
+                name: Actions.HistoryOpenQueryForm.name,
+                payload: {
+                    idx: props.itemIdx
+                }
+            });
+        };
+
+        return (
+            <S.QueryInfoDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
+                <S.QueryAndTypeDiv>
+                    {
+                        props.query_sh ?
+                        <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                        <span className="query">{props.query}</span>
+                    }
+                </S.QueryAndTypeDiv>
+                {List.empty(props.pfilter) ?
+                    null :
+                    <dl className="pnfilter">
+                        <dt>{he.translate('query__qfilter_pos')}:</dt>
+                        <dd>{props.pfilter.join(', ')}</dd>
+                    </dl>
+                }
+                {List.empty(props.nfilter) ?
+                    null :
+                    <dl className="pnfilter">
+                        <dt>{he.translate('query__qfilter_neg')}:</dt>
+                        <dd>{props.nfilter.join(', ')}</dd>
+                    </dl>
+                }
             </S.QueryInfoDiv>
         );
     }
@@ -498,43 +546,58 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         nameEditorVisible:boolean;
         data:QueryHistoryItem;
 
-    }> = (props) => {
+    }> = ({toolbarVisible, nameEditorVisible, data}) => {
+
+        const renderQuery = () => {
+            if (data.q_supertype === 'conc' || data.q_supertype === 'pquery') {
+                return <QueryInfo
+                    itemIdx={data.idx}
+                    isEdited={toolbarVisible}
+                    query={data.query}
+                    query_sh={data.query_sh}
+                    query_type={data.query_type}
+                    aligned={data.aligned}
+                    textTypes={data.selected_text_types} />;
+
+            } else {
+                return <WlistQueryInfo
+                            itemIdx={data.idx}
+                            isEdited={toolbarVisible}
+                            query={data.query}
+                            query_sh={data.query_sh}
+                            pfilter={data.pfilter_words}
+                            nfilter={data.nfilter_words} />;
+            }
+        };
 
         return (
             <S.DataRowLi>
                 <div className="heading">
                     <strong>
-                        {props.data.idx + 1}.
+                        {data.idx + 1}.
                     </strong>
                     {'\u00a0'}
                     <h3>
-                        <span className="supertype">{supertypeToHuman(props.data.q_supertype)}</span>,{'\u00a0'}
-                        {props.data.human_corpname}
-                        {props.data.subcorpname ?
+                        <span className="supertype">{supertypeToHuman(data.q_supertype)}</span>,{'\u00a0'}
+                        {data.human_corpname}
+                        {data.subcorpname ?
                             <span className="subcorpname" title={he.translate('global__subcorpus')}>:
-                                    {props.data.subcorpname}</span> :
+                                    {data.subcorpname}</span> :
                             null
                         }
                         {List.map(
                             v => <span key={v.corpname} className="corpname"> || {v.human_corpname}</span>,
-                            props.data.aligned
+                            data.aligned
                         )}
                     </h3>
                     <span className="date">
-                        {he.formatDate(new Date(props.data.created * 1000), 1)}
+                        {he.formatDate(new Date(data.created * 1000), 1)}
                     </span>
                 </div>
-                <QueryInfo
-                        itemIdx={props.data.idx}
-                        isEdited={props.toolbarVisible}
-                        query={props.data.query}
-                        query_sh={props.data.query_sh}
-                        query_type={props.data.query_type}
-                        aligned={props.data.aligned}
-                        textTypes={props.data.selected_text_types} />
-                <DataRowActions toolbarVisible={props.toolbarVisible}
-                        nameEditorVisible={props.nameEditorVisible}
-                        data={props.data} />
+                {renderQuery()}
+                <DataRowActions toolbarVisible={toolbarVisible}
+                        nameEditorVisible={nameEditorVisible}
+                        data={data} />
             </S.DataRowLi>
         );
     };

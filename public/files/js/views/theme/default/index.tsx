@@ -81,6 +81,11 @@ export const colorHeatmap = [
     '#7a0177', '#49006a'
 ];
 
+export const shRegexp = '#920040';
+export const shAttr = colorLogoPink;
+export const shKeyword = '#48872b';
+export const shOperator = '#bd42ee';
+
 // misc.
 
 export const borderRadiusDefault = '5px';

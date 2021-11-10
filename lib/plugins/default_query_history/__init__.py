@@ -262,17 +262,13 @@ class QueryHistory(AbstractQueryHistory):
                     stored = self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
-                    query = [stored.get('form', {}).get('wlpat')]
-                    pfw = stored['form']['pfilter_words']
-                    nfw = stored['form']['nfilter_words']
-                    if len(pfw) > 0:
-                        query.append(f'{{{", ".join(pfw)}}}')
-                    if len(nfw) > 0:
-                        query.append(f'NOT {{{", ".join(nfw)}}}')
-                    tmp = dict(corpname=stored['corpora'][0],
-                               aligned=[],
-                               human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
-                               query=' AND '.join(q for q in query if q.strip() != ''))
+                    tmp = dict(
+                        corpname=stored['corpora'][0],
+                        aligned=[],
+                        human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
+                        query=stored.get('form', {}).get('wlpat'),
+                        pfilter_words=stored['form']['pfilter_words'],
+                        nfilter_words=stored['form']['nfilter_words'])
                     tmp.update(item)
                     tmp.update(stored)
                     full_data.append(tmp)
