@@ -98,7 +98,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         } else {
             return (
                 <span><a className="username" onClick={props.onNameClick}>{props.fullname}</a>{'\u00a0'}
-                <a onClick={props.onLogoutClick}>{he.translate('user__logout_btn')}</a></span>
+                <a className="logout" onClick={props.onLogoutClick}>{he.translate('user__logout_btn')}</a></span>
             );
         }
     };

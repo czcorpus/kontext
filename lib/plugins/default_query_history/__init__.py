@@ -74,10 +74,10 @@ class QueryHistory(AbstractQueryHistory):
         return int(time.time())
 
     def _mk_key(self, user_id):
-        return 'query_history:user:%d' % user_id
+        return f'query_history:user:{user_id}'
 
     def _mk_tmp_key(self, user_id):
-        return 'query_history:user:%d:new' % user_id
+        return f'query_history:user:{user_id}:new'
 
     def store(self, user_id, query_id, q_supertype):
         """

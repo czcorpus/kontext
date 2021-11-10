@@ -15,6 +15,10 @@ Cypress.Commands.add('actionLogin', () => {
     cy.get('.closeable-frame button[type="submit"]').click();
 });
 
+Cypress.Commands.add('actionLogout', () => {
+    cy.get('.user .logout').click();
+});
+
 Cypress.Commands.add('hoverNthMenuItem', (n) => {
 });
 
@@ -46,6 +50,6 @@ Cypress.Commands.add('openLastHistoryItem', () => {
     cy.clickMenuItem(1, 4);
     cy.get('#query-history-mount')
         .find('.history-entries')
-        .should('not.be.empty', {'timeout':5000})
+        .should('not.be.empty', {'timeout': 5000})
         .children().first().click();
 });

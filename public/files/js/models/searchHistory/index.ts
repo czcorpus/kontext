@@ -186,10 +186,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         this.addActionHandler<typeof Actions.HistoryDoNotArchive>(
             Actions.HistoryDoNotArchive.name,
             action => {
-                this.changeState(state => {
-                    state.data[action.payload.itemIdx].name = null;
-                });
-                this.saveItem(action.payload.itemIdx).subscribe(
+                this.saveItem(action.payload.itemIdx, null).subscribe(
                     (msg) => {
                         this.changeState(state => {
                             state.isBusy = false;
@@ -216,7 +213,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
 
                 } else {
                     this.changeState(state => {state.isBusy = true});
-                    this.saveItem(action.payload.itemIdx).subscribe({
+                    this.saveItem(action.payload.itemIdx, item.name).subscribe({
                         next: (msg) => {
                             this.changeState(state => { state.isBusy = false });
                             this.pageModel.showMessage('info', msg);
@@ -356,17 +353,17 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private saveItem(itemIdx:number):Observable<string> {
+    private saveItem(itemIdx:number, saveName:string|null):Observable<string> {
         return (() => {
             const item = this.state.data[itemIdx];
-            if (item.name) {
+            if (saveName) {
                 return this.pageModel.ajax$<SaveItemResponse>(
                     HTTP.Method.POST,
                     this.pageModel.createActionUrl('save_query'),
                     {
                         query_id: item.query_id,
                         created: item.created,
-                        name: item.name
+                        name: saveName
                     },
                     {contentType: 'application/json'}
 
@@ -381,7 +378,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     {
                         query_id: item.query_id,
                         created: item.created,
-                        name: item.name
+                        name: item.name // sending old name for identification
                     },
                     {contentType: 'application/json'}
 
