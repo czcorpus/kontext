@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 
-describe('corpus settings - structure attributes', () => {
+describe('corpus settings - structures', () => {
 
     beforeEach(() => {
         cy.viewport(1600, 1200);
@@ -13,9 +13,11 @@ describe('corpus settings - structure attributes', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
 
+        // test there are no <head> and <p> structures by default
         cy.get('#conc-dashboard-mount table tbody').should('not.contain', '</head>');
         cy.get('#conc-dashboard-mount table tbody').should('not.contain', '</p>');
 
+        // display <head> and <p> structures
         cy.hoverNthMenuItem(8);
         cy.clickMenuItem(8, 2);
         cy.get('#view-options-mount ul.FieldsetsTabs li:nth-child(2) button').click();
@@ -25,6 +27,7 @@ describe('corpus settings - structure attributes', () => {
         // close option save message
         cy.get('.messages-mount .message .button-box .close-icon').click();
 
+        // test there <head> and <p> structures are visible
         cy.get('#conc-dashboard-mount table tbody').should('contain', '</head>');
         cy.get('#conc-dashboard-mount table tbody').should('contain', '</p>');
     });
