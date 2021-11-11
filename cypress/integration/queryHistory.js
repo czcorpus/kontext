@@ -6,20 +6,20 @@ describe('Query History', () => {
     // fill in some history items
     before(() => {
         cy.actionLogin();
-        
+
         // concordance query
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 1);
         cy.get('.simple-input').type('London');
         cy.get('.query .default-button').click().then(() => {
-            
+
             // paradigmatic query
             cy.hoverNthMenuItem(1);
             cy.clickMenuItem(1, 2);
             cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
             cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
             cy.get('#pquery-form-mount .submit').click().then(() => {
-                
+
                 // word list query
                 cy.hoverNthMenuItem(1);
                 cy.clickMenuItem(1, 3);
@@ -33,7 +33,7 @@ describe('Query History', () => {
 
     beforeEach(() => {
         cy.actionLogin();
-        
+
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 4);
     });
@@ -79,7 +79,7 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools input[type="text"]').type('first-archived-item');
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
-        
+
         // check there are archived items
         cy.get('#query-history-mount fieldset label').eq(2).click();
         cy.get('#query-history-mount .history-entries').should('not.be.empty');
@@ -87,11 +87,6 @@ describe('Query History', () => {
         // open tools and dearchive
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
-        cy.get('#query-history-mount .history-entries').should('not.be.empty');
-
-        cy.get('#query-history-mount fieldset label').eq(2).click();
-        cy.wait(1000);
-        cy.get('#query-history-mount fieldset label').eq(2).click();
         cy.get('#query-history-mount .history-entries').should('be.empty');
 
     });
