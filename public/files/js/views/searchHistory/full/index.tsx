@@ -247,46 +247,67 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     };
 
-    // -------------------- <QueryInfo /> ------------------------
+    // ------
 
-    const QueryInfo:React.FC<{
+    const handleAreaClick = (idx:number) => () => {
+        dispatcher.dispatch<typeof Actions.HistoryOpenQueryForm>({
+            name: Actions.HistoryOpenQueryForm.name,
+            payload: {
+                idx
+            }
+        });
+    };
+
+    // -------------------- <ConcQueryInfo /> ------------------------
+
+    const ConcQueryInfo:React.FC<{
         itemIdx:number;
         isEdited:boolean;
-        query_type:QueryType;
         query_sh:string;
         query:string;
         textTypes:Kontext.GeneralProps;
         aligned:ConcQueryHistoryItem['aligned'];
 
-    }> = (props) => {
-
-        const handleAreaClick = () => {
-            dispatcher.dispatch<typeof Actions.HistoryOpenQueryForm>({
-                name: Actions.HistoryOpenQueryForm.name,
-                payload: {
-                    idx: props.itemIdx
+    }> = (props) => (
+        <S.QueryInfoDiv onClick={handleAreaClick(props.itemIdx)} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryAndTypeDiv>
+                {
+                    props.query_sh ?
+                    <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                    <span className="query">{props.query}</span>
                 }
-            });
-        };
+            </S.QueryAndTypeDiv>
+            {List.map(
+                v => <AlignedQueryInfo key={v.corpname}
+                        query={v.query} query_type={v.query_type} />,
+                props.aligned
+            )}
+            <TextTypesInfo textTypes={props.textTypes} />
+            {List.map(
+                v => <span key={v.corpname} className="corpname"> || {v.human_corpname}</span>,
+                props.aligned
+            )}
+        </S.QueryInfoDiv>
+    );
 
-        return (
-            <S.QueryInfoDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
-                <S.QueryAndTypeDiv>
-                    {
-                        props.query_sh ?
-                        <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
-                        <span className="query">{props.query}</span>
-                    }
-                </S.QueryAndTypeDiv>
-                {List.map(
-                    v => <AlignedQueryInfo key={v.corpname}
-                            query={v.query} query_type={v.query_type} />,
-                    props.aligned
-                )}
-                <TextTypesInfo textTypes={props.textTypes} />
-            </S.QueryInfoDiv>
-        );
-    }
+    // -------------------- <PQueryInfo /> ----------------------------
+
+    const PQueryInfo:React.FC<{
+        itemIdx:number;
+        isEdited:boolean;
+        query_sh:string;
+        query:string;
+    }> = (props) => (
+        <S.QueryInfoDiv onClick={handleAreaClick(props.itemIdx)} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryAndTypeDiv>
+                {
+                    props.query_sh ?
+                    <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                    <span className="query">{props.query}</span>
+                }
+            </S.QueryAndTypeDiv>
+        </S.QueryInfoDiv>
+    );
 
     // -------------------- <WlistQueryInfo /> ------------------------
 
@@ -297,43 +318,31 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         query:string;
         pfilter:Array<string>;
         nfilter:Array<string>;
-    }> = (props) => {
-
-        const handleAreaClick = () => {
-            dispatcher.dispatch<typeof Actions.HistoryOpenQueryForm>({
-                name: Actions.HistoryOpenQueryForm.name,
-                payload: {
-                    idx: props.itemIdx
+    }> = (props) => (
+        <S.QueryInfoDiv onClick={handleAreaClick(props.itemIdx)} title={he.translate('qhistory__open_in_form')}>
+            <S.QueryAndTypeDiv>
+                {
+                    props.query_sh ?
+                    <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
+                    <span className="query">{props.query}</span>
                 }
-            });
-        };
-
-        return (
-            <S.QueryInfoDiv onClick={handleAreaClick} title={he.translate('qhistory__open_in_form')}>
-                <S.QueryAndTypeDiv>
-                    {
-                        props.query_sh ?
-                        <QS.SyntaxHighlight className="query" dangerouslySetInnerHTML={{__html: props.query_sh}} /> :
-                        <span className="query">{props.query}</span>
-                    }
-                </S.QueryAndTypeDiv>
-                {List.empty(props.pfilter) ?
-                    null :
-                    <dl className="pnfilter">
-                        <dt>{he.translate('query__qfilter_pos')}:</dt>
-                        <dd>{props.pfilter.join(', ')}</dd>
-                    </dl>
-                }
-                {List.empty(props.nfilter) ?
-                    null :
-                    <dl className="pnfilter">
-                        <dt>{he.translate('query__qfilter_neg')}:</dt>
-                        <dd>{props.nfilter.join(', ')}</dd>
-                    </dl>
-                }
-            </S.QueryInfoDiv>
-        );
-    }
+            </S.QueryAndTypeDiv>
+            {List.empty(props.pfilter) ?
+                null :
+                <dl className="pnfilter">
+                    <dt>{he.translate('query__qfilter_pos')}:</dt>
+                    <dd>{props.pfilter.join(', ')}</dd>
+                </dl>
+            }
+            {List.empty(props.nfilter) ?
+                null :
+                <dl className="pnfilter">
+                    <dt>{he.translate('query__qfilter_neg')}:</dt>
+                    <dd>{props.nfilter.join(', ')}</dd>
+                </dl>
+            }
+        </S.QueryInfoDiv>
+    );
 
     // -------------------- <SavedNameInfo /> ------------------------
 
@@ -549,17 +558,23 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     }> = ({toolbarVisible, nameEditorVisible, data}) => {
 
         const renderQuery = () => {
-            if (data.q_supertype === 'conc' || data.q_supertype === 'pquery') {
-                return <QueryInfo
+            switch (data.q_supertype) {
+            case 'conc':
+                return <ConcQueryInfo
                     itemIdx={data.idx}
                     isEdited={toolbarVisible}
                     query={data.query}
                     query_sh={data.query_sh}
-                    query_type={data.query_type}
                     aligned={data.aligned}
                     textTypes={data.selected_text_types} />;
+            case 'pquery':
+                return <PQueryInfo
+                    itemIdx={data.idx}
+                    isEdited={toolbarVisible}
+                    query={data.query}
+                    query_sh={data.query_sh} />;
 
-            } else {
+            case 'wlist':
                 return <WlistQueryInfo
                             itemIdx={data.idx}
                             isEdited={toolbarVisible}
@@ -585,10 +600,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     {data.subcorpname}</span> :
                             null
                         }
-                        {List.map(
-                            v => <span key={v.corpname} className="corpname"> || {v.human_corpname}</span>,
-                            data.aligned
-                        )}
                     </h3>
                     <span className="date">
                         {he.formatDate(new Date(data.created * 1000), 1)}
