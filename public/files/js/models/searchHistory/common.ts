@@ -32,13 +32,15 @@ interface AbstractQueryHistoryItem {
     idx:number;
 
     /**
-     * If not null then the item is persistent
+     * If not empty then the item is persistent/archived
      */
     name?:string;
 
     corpname:string;
     corpus_id:string;
     human_corpname:string;
+    subcorpname:string;
+
     /**
      * a UNIX timestamp in seconds
      */
@@ -52,7 +54,10 @@ interface AbstractQueryHistoryItem {
     query_type:QueryType;
     q_supertype:Kontext.QuerySupertype;
     query_id:string;
-    subcorpname:string;
+}
+
+export interface ConcQueryHistoryItem extends AbstractQueryHistoryItem {
+    q_supertype:'conc';
     lpos:string;
     qmcase:string;
     pcq_pos_neg:string;
@@ -88,10 +93,6 @@ interface AbstractQueryHistoryItem {
         pcq_pos_neg:string;
         default_attr:string;
     }>;
-}
-
-export interface ConcQueryHistoryItem extends AbstractQueryHistoryItem {
-    q_supertype:'conc';
 }
 
 export interface WlistQueryHistoryItem extends AbstractQueryHistoryItem {
