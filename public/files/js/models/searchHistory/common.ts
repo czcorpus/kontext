@@ -110,6 +110,10 @@ export type QueryHistoryItem =
     WlistQueryHistoryItem |
     PQueryHistoryItem;
 
+export function isConcQueryHistoryItem(item:QueryHistoryItem):item is ConcQueryHistoryItem {
+    return item.q_supertype === 'conc';
+}
+
 export interface GetHistoryResponse extends Kontext.AjaxResponse {
     data:Array<QueryHistoryItem>;
     limit:number;
@@ -130,7 +134,7 @@ export interface WidgetProps {
 
 export interface SearchHistoryModelState {
     corpname:string;
-    data:Array<QueryHistoryItem>;
+    data:Array<ConcQueryHistoryItem>;
     itemsToolbars:Array<[boolean, boolean]>;
     offset:number;
     limit:number;
