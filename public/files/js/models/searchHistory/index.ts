@@ -30,7 +30,7 @@ import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
 import { GetHistoryResponse, SaveItemResponse, SearchHistoryModelState,
-    QueryHistoryItem } from './common';
+    QueryHistoryItem, ConcQueryHistoryItem, isConcQueryHistoryItem } from './common';
 
 
 
@@ -41,7 +41,7 @@ export interface InputBoxHistoryItem {
 }
 
 
-const attachSh = (he: Kontext.ComponentHelpers, item:QueryHistoryItem) => {
+const attachSh = <T extends QueryHistoryItem>(he: Kontext.ComponentHelpers, item:T) => {
     if (item.query_type !== 'simple') {
         [item.query_sh,] = highlightSyntaxStatic({
             query: item.query,
@@ -99,17 +99,6 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.HistorySetQuerySupertype>(
-            Actions.HistorySetQuerySupertype.name,
-            action => {
-                this.changeState(state => {
-                    state.isBusy = true;
-                    state.querySupertype = action.payload.value || undefined;
-                });
-                this.performLoadAction();
-            }
-        );
-
         this.addActionHandler<typeof Actions.HistorySetArchivedOnly>(
             Actions.HistorySetArchivedOnly.name,
             action => {
@@ -139,7 +128,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                     state.isBusy = true
                 });
                 if (this.isToggleWidgetAction(action)) {
-                    this.performLoadAction(true, action.payload.querySupertype);
+                    this.performLoadAction(true);
                 } else {
                     this.performLoadAction();
                 }
@@ -278,8 +267,8 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         );
     }
 
-    private performLoadAction(widgetMode: boolean = false, querySupertype?: Kontext.QuerySupertype): void {
-        this.loadData(widgetMode, querySupertype).subscribe({
+    private performLoadAction(widgetMode: boolean = false): void {
+        this.loadData(widgetMode).subscribe({
             next: () => {
                 this.changeState(state => {
                     state.isBusy = false
@@ -294,7 +283,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
         });
     }
 
-    private loadData(widgetMode:boolean=false, querySupertype?:Kontext.QuerySupertype): Observable<GetHistoryResponse> {
+    private loadData(widgetMode:boolean=false): Observable<GetHistoryResponse> {
         // widget mode loads all history for all corpora
         return this.pageModel.ajax$<GetHistoryResponse>(
             HTTP.Method.GET,
@@ -302,7 +291,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             {
                 offset: this.state.offset,
                 limit: this.state.limit + 1,
-                query_supertype: querySupertype === undefined ? this.state.querySupertype : querySupertype,
+                query_supertype: 'conc',
                 corpname: !widgetMode && this.state.currentCorpusOnly ?
                     this.pageModel.getCorpusIdent().id : undefined,
                 archived_only: !widgetMode && this.state.archivedOnly
@@ -316,6 +305,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         state.hasMoreItems ?
                             data.data.slice(0, data.data.length - 1) :
                             data.data,
+                        List.filter(isConcQueryHistoryItem),
                         List.map(
                             item => attachSh(this.pageModel.getComponentHelpers(), item)
                         )
