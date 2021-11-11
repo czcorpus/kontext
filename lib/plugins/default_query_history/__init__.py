@@ -132,10 +132,9 @@ class QueryHistory(AbstractQueryHistory):
                 deleted += 1
         return deleted
 
-    def _is_paired_with_conc(self, data):
+    def _is_paired_with_conc(self, data) -> bool:
         q_id = data['query_id']
-        edata = self._query_persistence.open(q_id)
-        return edata and 'lastop_form' in edata
+        return self._query_persistence.open(q_id) is not None
 
     def _merge_conc_data(self, data):
         q_id = data['query_id']
