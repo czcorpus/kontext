@@ -8,6 +8,14 @@ describe('Concordance - general view options', () => {
         cy.visit('http://localhost:8080/query?corpname=susanne');
     });
 
+    it('tests displaying and closing general option', () => {
+        cy.hoverNthMenuItem(8);
+        cy.clickMenuItem(8, 3);
+        cy.get('#view-options-mount').should('not.be.empty');
+        cy.get('#view-options-mount img.close-icon').click();
+        cy.get('#view-options-mount').should('be.empty');
+    });
+
     it('tests page size option', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
@@ -74,7 +82,7 @@ describe('Concordance - general view options', () => {
         cy.clickMenuItem(8, 3);
         cy.get('#view-options-mount .FieldsetConcordance label[for="always-shuffle"]').click();
         cy.get('#view-options-mount div.buttons button').click();
-        
+
         // take value of first left kwic
         cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.lc').invoke('text').then(text => {
             // run new query
