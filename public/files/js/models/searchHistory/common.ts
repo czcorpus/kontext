@@ -134,7 +134,7 @@ export interface WidgetProps {
 
 export interface SearchHistoryModelState {
     corpname:string;
-    data:Array<ConcQueryHistoryItem>;
+    data:Array<QueryHistoryItem>;
     itemsToolbars:Array<[boolean, boolean]>;
     offset:number;
     limit:number;

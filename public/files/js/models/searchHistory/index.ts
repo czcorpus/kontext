@@ -109,6 +109,16 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 this.performLoadAction();
             }
         );
+        
+        this.addActionHandler<typeof Actions.HistorySetQuerySupertype>(
+            Actions.HistorySetQuerySupertype.name,
+            action => {
+                this.changeState(state => {
+                    state.querySupertype = action.payload.value;
+                });
+                this.performLoadAction();
+            }
+        );
 
         this.addActionHandler<typeof Actions.HistoryLoadMore>(
             Actions.HistoryLoadMore.name,
@@ -291,7 +301,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
             {
                 offset: this.state.offset,
                 limit: this.state.limit + 1,
-                query_supertype: 'conc',
+                query_supertype: this.state.querySupertype,
                 corpname: !widgetMode && this.state.currentCorpusOnly ?
                     this.pageModel.getCorpusIdent().id : undefined,
                 archived_only: !widgetMode && this.state.archivedOnly
@@ -305,7 +315,6 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                         state.hasMoreItems ?
                             data.data.slice(0, data.data.length - 1) :
                             data.data,
-                        List.filter(isConcQueryHistoryItem),
                         List.map(
                             item => attachSh(this.pageModel.getComponentHelpers(), item)
                         )

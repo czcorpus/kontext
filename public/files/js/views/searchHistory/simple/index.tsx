@@ -29,7 +29,7 @@ import { Actions as QueryActions } from '../../../models/query/actions';
 
 import * as S from './style';
 import { QueryFormType } from '../../../models/query/actions';
-import { SearchHistoryModelState } from '../../../models/searchHistory/common';
+import { isConcQueryHistoryItem, SearchHistoryModelState } from '../../../models/searchHistory/common';
 
 
 export interface QueryHistoryProps {
@@ -63,16 +63,19 @@ export function init(
         }
 
         getFlatData():Array<InputBoxHistoryItem> {
-            return List.flatMap(
-                v => [{query: v.query, query_type: v.query_type, created: v.created}]
+            return pipe(
+                this.props.data,
+                List.flatMap(v => 
+                    [{query: v.query, query_type: v.query_type, created: v.created}]
                     .concat(
+                        isConcQueryHistoryItem(v) ?
                         pipe(
                             v.aligned,
                             List.filter(v2 => !!v2.query),
                             List.map(v2 => ({query: v2.query, query_type: v2.query_type, created: v.created}))
-                        )
-                ),
-                this.props.data
+                        ): []
+                    )
+                )
             );
         }
 
