@@ -2,8 +2,15 @@
 
 
 describe('Initial testing experiments', () => {
-    it('Logs in, creates a concordance and calculates freq. distrib. by lemmas', () => {
+    before(() => {
         cy.actionLogin();
+    });
+
+    after(() => {
+        cy.actionLogout();
+    });
+
+    it('Logs in, creates a concordance and calculates freq. distrib. by lemmas', () => {
         cy.get('.query .options label[for="match-case-switch-susanne"]').click();
         cy.get('.simple-input').type('London');
         cy.get('.query .default-button').click();

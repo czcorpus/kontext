@@ -286,7 +286,6 @@ class QueryHistory(AbstractQueryHistory):
                 tmp['aligned'] = []
                 tmp['name'] = None
                 full_data.append(tmp)
-
         if from_date:
             from_date = [int(d) for d in from_date.split('-')]
             from_date = time.mktime(

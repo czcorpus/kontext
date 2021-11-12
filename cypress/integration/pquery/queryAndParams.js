@@ -7,6 +7,10 @@ describe('Paradigmatic query', () => {
         cy.actionLogin();
     });
 
+    afterEach(() => {
+        cy.actionLogout();
+    });
+
     it('defines a query using separate sub-queries, submits, changes min freq. and re-evaluates', () => {
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 2);

@@ -30,7 +30,7 @@ import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { QueryType } from '../query/query';
 import { PageModel } from '../../app/page';
 import { GetHistoryResponse, SaveItemResponse, SearchHistoryModelState,
-    QueryHistoryItem, ConcQueryHistoryItem, isConcQueryHistoryItem } from './common';
+    QueryHistoryItem, isConcQueryHistoryItem } from './common';
 
 
 

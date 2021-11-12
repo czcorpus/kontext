@@ -7,6 +7,10 @@ describe('Paradigmatic query vs. general view options', () => {
         cy.actionLogin();
     });
 
+    afterEach(() => {
+        cy.actionLogout();
+    });
+
     it('defines a query using separate sub-queries, submits, changes min freq. and re-evaluates', () => {
 
         // set page size to 5

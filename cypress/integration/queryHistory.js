@@ -39,6 +39,10 @@ describe('Query History', () => {
         cy.clickMenuItem(1, 4);
     });
 
+    afterEach(() => {
+        cy.actionLogout();
+    });
+
     it('tests opening and closing history', () => {
         cy.get('#query-history-mount').should('not.be.empty');
         cy.get('#query-history-mount img.close-icon').click();
