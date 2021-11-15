@@ -57,11 +57,18 @@ from texttypes import TextTypeCollector
 from texttypes.cache import TextTypesCache
 from main_menu import MenuGenerator, MainMenu
 from controller.querying import Querying
-import templating
 import mailing
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
+
+
+Q_TYPE_SUPERTYPE_MAP = {
+    'query': 'conc',
+    'filter': 'conc',
+    'word list': 'wlist',
+    'pquery': 'pquery',
+}
 
 
 class Actions(Querying):
@@ -328,14 +335,17 @@ class Actions(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def save_query(self, request):
-        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as cp:
-            hsave = qh.make_persistent(
-                self.session_get('user', 'id'), request.json['query_id'],
-                request.json.get('created'), request.json['name'])
-            _, data = cp.archive(self.session_get('user', 'id'), request.json['query_id'])
-            if cp.stored_query_type(data) == 'pquery':
+        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+            _, data = qp.archive(self.session_get('user', 'id'), request.json['query_id'])
+            query_type = qp.stored_query_type(data)
+            if query_type == 'pquery':
                 for conc_id in data.get('form', {}).get('conc_ids', []):
-                    cn, _ = cp.archive(self.session_get('user', 'id'), conc_id)
+                    cn, _ = qp.archive(self.session_get('user', 'id'), conc_id)
+
+            hsave = qh.make_persistent(
+                self.session_get(
+                    'user', 'id'), request.json['query_id'], Q_TYPE_SUPERTYPE_MAP[query_type],
+                request.json.get('created'), request.json['name'])
         return dict(saved=hsave)
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)

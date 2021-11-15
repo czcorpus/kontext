@@ -44,7 +44,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def make_persistent(self, user_id: int, query_id: str, created: Optional[int], name: str):
+    def make_persistent(self, user_id: int, query_id: str, q_supertype: str, created: Optional[int], name: str):
         """
         Finds (if implemented) a specific query history
         record based on its respective concordance record.
