@@ -39,6 +39,10 @@ describe('Query History', () => {
         cy.clickMenuItem(1, 4);
     });
 
+    afterEach(() => {
+        cy.actionLogout();
+    });
+
     it('tests opening and closing history', () => {
         cy.get('#query-history-mount').should('not.be.empty');
         cy.get('#query-history-mount img.close-icon').click();
@@ -73,6 +77,9 @@ describe('Query History', () => {
         history.should('not.contain.text', 'concordance');
         history.should('not.contain.text', 'paradigmatic query');
         history.should('contain.text', 'word list');
+
+        // need to close history widget, so logout can be clicked
+        cy.get('#query-history-mount img.close-icon').click();
     });
 
     it('tests archive filter', () => {
@@ -96,6 +103,8 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(1).click();
         cy.get('#query-history-mount .history-entries').should('be.empty');
 
+        // need to close history widget, so logout can be clicked
+        cy.get('#query-history-mount img.close-icon').click();
     });
 
     it('tests remove history item', () => {
@@ -115,6 +124,9 @@ describe('Query History', () => {
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(0).click();
         cy.get('#query-history-mount .history-entries').children().first().should('not.contain', 'general archive test query');
+
+        // need to close history widget, so logout can be clicked
+        cy.get('#query-history-mount img.close-icon').click();
     });
 
 });

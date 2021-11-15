@@ -10,6 +10,10 @@ describe('Word List', () => {
         cy.clickMenuItem(1, 3);
     });
 
+    afterEach(() => {
+        cy.actionLogout();
+    });
+
     it('defines a simple word list query, submits and reloads query form from history', () => {
         cy.get('#wl-attr-selector').select('word');
         cy.get('#wl-pattern-input').type('.*ining');
