@@ -94,7 +94,7 @@ class QueryHistory(AbstractQueryHistory):
             self.delete_old_records(user_id)
         return ts
 
-    def make_persistent(self, user_id, query_id, created, name):
+    def make_persistent(self, user_id, query_id, q_supertype, created, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         last_match_idx = -1
@@ -107,8 +107,11 @@ class QueryHistory(AbstractQueryHistory):
             data[last_match_idx]['name'] = name
             self.db.list_set(k, last_match_idx, data[last_match_idx])
             self._query_persistence.archive(user_id, query_id)
-            return True
-        return False
+        else:
+            ts = self._current_timestamp()
+            item = dict(created=ts, query_id=query_id, name=name, q_supertype=q_supertype)
+            self.db.list_append(self._mk_key(user_id), item)
+        return True
 
     def make_transient(self, user_id, query_id, created, name):
         k = self._mk_key(user_id)
