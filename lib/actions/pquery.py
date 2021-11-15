@@ -61,7 +61,7 @@ def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: st
             if data is None:
                 raise UserActionException(
                     'Source concordance query does not exist: {}'.format(conc_id))
-            if qs.stored_query_type(data) != form_type:
+            if qs.stored_form_type(data) != form_type:
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
             if form_type == 'query':
                 args = QueryFormArgs(
