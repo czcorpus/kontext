@@ -18,6 +18,13 @@
 
 """
 Query history plug-in works as a backend for the 'recent queries' function.
+This should not be confused with 'query_persistence'. Query_persistence stores
+each query under a "query ID". The ID depends in general only on
+the query itself (imagine something like 'all query args -> JSON -> sha1').
+It means that two different users may generate the very same query ID
+in case the queries are the same. The query_history takes the ID, adds
+a timestamp and (optionally) a permanent name and stores it for a specific
+user.
 """
 
 import abc
@@ -51,8 +58,8 @@ class AbstractQueryHistory(abc.ABC):
         If not supported then the function
 
         arguments:
-        user_id -- a user ID
-        query_id -- a query ID (in URLs: q=~[query_id])
+        user_id -- a user ID (it is expected to be legit; so please avoid values passed from untrusted sources)
+        query_id -- a query ID
         created -- a UNIX timestamp of the upgraded item; it is possible to pass None in which case
                    the plug-in takes the most recent matching (by query_id) item
         name -- a name user gave to the query
