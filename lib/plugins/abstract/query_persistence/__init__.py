@@ -134,9 +134,9 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @staticmethod
-    def stored_query_type(data: Dict[str, Any]) -> Union[None, str]:
+    def stored_form_type(data: Dict[str, Any]) -> Union[None, str]:
         """
-        Determine a form type of serialized query/filter/pquery/etc. form data
+        Determine a form type of serialized query/filter/pquery/etc. from data
         """
         if data is None:
             return None
@@ -145,6 +145,23 @@ class AbstractQueryPersistence(abc.ABC):
         elif 'lastop_form' in data:
             return data['lastop_form'].get('form_type')
         return None
+
+    @staticmethod
+    def stored_query_supertype(data: Dict[str, Any]) -> str:
+        """
+        Determine a query supertype of serialized conc/wlist/pquery from data
+        """
+        if data.get('form', {}).get('form_type') == 'pquery':
+            return 'pquery'
+        elif 'lastop_form' in data:
+            form_type = data['lastop_form'].get('form_type')
+            if form_type in ('filter', 'sort', 'sample', 'shuffle', 'switchmc', 'lgroup', 'locked', 'subhits', 'firsthits'):
+                return 'conc'
+            elif form_type == 'word list':
+                return 'wlist'
+
+            raise ValueError(f'Cannot determine query supertype from type {form_type}')
+        raise ValueError(f'Cannot determine query supertype from data {data}')
 
     def load_pipeline_ops(
             self, plugin_ctx: PluginCtx, last_id: str,

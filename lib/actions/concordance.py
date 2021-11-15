@@ -63,14 +63,6 @@ from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
 
 
-Q_TYPE_SUPERTYPE_MAP = {
-    'query': 'conc',
-    'filter': 'conc',
-    'word list': 'wlist',
-    'pquery': 'pquery',
-}
-
-
 class Actions(Querying):
     """
     KonText actions are specified here
@@ -337,14 +329,13 @@ class Actions(Querying):
     def save_query(self, request):
         with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
             _, data = qp.archive(self.session_get('user', 'id'), request.json['query_id'])
-            query_type = qp.stored_query_type(data)
-            if query_type == 'pquery':
+            if qp.stored_form_type(data) == 'pquery':
                 for conc_id in data.get('form', {}).get('conc_ids', []):
                     cn, _ = qp.archive(self.session_get('user', 'id'), conc_id)
 
             hsave = qh.make_persistent(
                 self.session_get(
-                    'user', 'id'), request.json['query_id'], Q_TYPE_SUPERTYPE_MAP[query_type],
+                    'user', 'id'), request.json['query_id'], qp.stored_query_supertype(data),
                 request.json.get('created'), request.json['name'])
         return dict(saved=hsave)
 
