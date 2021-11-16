@@ -3,8 +3,8 @@
         "outDir": "./public/files/js/min",
         "sourceMap": true,
         "noImplicitAny": false,
-        "module": "esnext",
-        "target": "esnext",
+        "module": "es2015",
+        "target": "es2015",
         "jsx": "react",
         "moduleResolution": "node"
     },
