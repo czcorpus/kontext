@@ -72,21 +72,25 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
 
         return attr1, attr2
 
-    def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-                        query_type, p_attr, struct, s_attr):
+    def find_suggestion(
+            self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+            query_type, p_attr, struct, s_attr):
         used_corp = self._preset_corp if self._preset_corp is not None else maincorp
         value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
         try:
-            conc = get_conc(used_corp, user_id,
-                            (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',))
+            conc = get_conc(
+                used_corp,
+                user_id,
+                (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',))
             conc.sync()
             mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
             fcrit = multi_level_crit(2, **mlargs)
             data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
             for item in data:
-                attr1, attr2 = self._normalize_multivalues(used_corp, value_norm, *(tuple([w['n'] for w in item['Word']])[:2]))
+                attr1, attr2 = self._normalize_multivalues(
+                    used_corp, value_norm, *(tuple([w['n'] for w in item['Word']])[:2]))
                 rels[attr1].add(attr2)
         except RuntimeError as ex:
             msg = str(ex).lower()
