@@ -17,9 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import os
 import sqlite3
-import logging
 
 # required cache table:
 # CREATE TABLE cache (key text, provider text, data blob, found integer, last_access integer NOT NULL,

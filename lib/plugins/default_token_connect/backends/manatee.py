@@ -18,6 +18,7 @@
 
 from plugins.abstract.token_connect import AbstractBackend
 import conclib
+from plugins.default_token_connect.backends.cache import cached
 
 
 class ManateeWideCtxBackend(AbstractBackend):
@@ -29,6 +30,7 @@ class ManateeWideCtxBackend(AbstractBackend):
         super().__init__(ident)
         self._conf = conf
 
+    @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         """
         display a hit in a wider context
