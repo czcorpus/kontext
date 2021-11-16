@@ -26,8 +26,8 @@ class ManateeWideCtxBackend(AbstractBackend):
     ELEMENT_HIERARCHY = ['document', 'text', 'paragraph',
                          'sentence', 'typeface', 'newLine', 'removeSpace']
 
-    def __init__(self, conf, ident):
-        super().__init__(ident)
+    def __init__(self, conf, ident, db):
+        super().__init__(ident, db)
         self._conf = conf
 
     @cached

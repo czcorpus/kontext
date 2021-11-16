@@ -49,8 +49,8 @@ class TreqBackend(HTTPBackend):
 
     AVAIL_LANG_MAPPINGS = None
 
-    def __init__(self, conf, ident):
-        super(TreqBackend, self).__init__(conf, ident)
+    def __init__(self, conf, ident, db):
+        super(TreqBackend, self).__init__(conf, ident, db)
         self._conf = conf
         self.AVAIL_GROUPS = conf.get('availGroups', {})
         self.AVAIL_LANG_MAPPINGS = conf.get('availTranslations', {})
