@@ -42,8 +42,8 @@ class HTTPBackend(AbstractBackend):
         - num_tokens (mainly for multi-word kwics)
     """
 
-    def __init__(self, conf, ident, db):
-        super(HTTPBackend, self).__init__(ident, db)
+    def __init__(self, conf, ident, db, ttl):
+        super(HTTPBackend, self).__init__(ident, db, ttl)
         self._conf = conf
 
     @staticmethod

@@ -176,7 +176,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return {concordance.Actions: [fetch_token_detail]}
 
 
-def init_provider(conf, ident, db):
+def init_provider(conf, ident, db, ttl):
     """
     Create and return both backend and frontend.
 
@@ -188,13 +188,14 @@ def init_provider(conf, ident, db):
     """
     backend_class = find_implementation(conf['backend'])
     frontend_class = find_implementation(conf['frontend'])
-    return backend_class(conf['conf'], ident, db), frontend_class(conf)
+    return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
 def setup_providers(plg_conf, db):
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    providers = dict((b['ident'], init_provider(b, b['ident'], db)) for b in providers_conf)
+    providers = dict((b['ident'], init_provider(b, b['ident'], db, plg_conf['ttl']))
+                     for b in providers_conf)
     return providers
 
 

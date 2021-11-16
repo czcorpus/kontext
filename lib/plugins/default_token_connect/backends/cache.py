@@ -67,10 +67,10 @@ def cached(fn):
             # if a result is returned by the backend function, encode and zip its data part and store it in
             # the cache along with the "found" parameter
             cache_db.set(key, {'data': res[0], 'found': res[1]})
-            cache_db.set_ttl(key, 3600)  # TODO ttl config
         else:
             res = [cached_data['data'], cached_data['found']]
 
+        cache_db.set_ttl(key, self.cache_ttl)
         return res if res else ('', False)
 
     return wrapper

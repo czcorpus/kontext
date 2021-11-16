@@ -93,8 +93,9 @@ class AbstractBackend(abc.ABC):
     combination.
     """
 
-    def __init__(self, provider_id: str, db: KeyValueStorage):
+    def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
         self._db: KeyValueStorage = db
+        self._ttl: KeyValueStorage = ttl
         self._provider_id: str = provider_id
 
     def get_cache_db(self) -> KeyValueStorage:
@@ -103,6 +104,10 @@ class AbstractBackend(abc.ABC):
     @property
     def provider_id(self) -> str:
         return self._provider_id
+
+    @property
+    def cache_ttl(self) -> str:
+        return self._ttl
 
     @abc.abstractmethod
     def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
