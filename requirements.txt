@@ -16,6 +16,7 @@ PyICU >= 1.5
 babel >= 2.8.0
 mysql-connector-python >= 8.0.25
 dataclasses-json >= 0.5.4
+couchdb >= 1.2
 
 rq-scheduler >= 0.10.0
 rq >= 1.5.1
