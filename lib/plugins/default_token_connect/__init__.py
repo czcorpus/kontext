@@ -41,7 +41,6 @@ from plugins.abstract.token_connect import AbstractTokenConnect, find_implementa
 from actions import concordance
 from controller import exposed
 from corplib.corpus import KCorpus
-from plugins.default_token_connect.cache_man import CacheMan
 from plugins.default_token_connect.frontends import ErrorFrontend
 
 
@@ -124,19 +123,9 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def __init__(self, providers, corparch):
         self._corparch = corparch
         self._providers = providers
-        self._cache_path = None
 
     def map_providers(self, providers):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
-
-    def set_cache_path(self, path):
-        self._cache_path = path
-        for backend, frontend in list(self._providers.values()):
-            backend.set_cache_path(path)
-
-    @property
-    def cache_path(self):
-        return self._cache_path
 
     def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None):
         ans = []
@@ -186,16 +175,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def export_actions(self):
         return {concordance.Actions: [fetch_token_detail]}
 
-    def export_tasks(self):
-        """
-        Export tasks for Celery worker(s)
-        """
-        def clean_cache(cache_size):
-            CacheMan(self.cache_path).connect().clear_extra_rows(cache_size)
-        return clean_cache,
 
-
-def init_provider(conf, ident):
+def init_provider(conf, ident, db, ttl):
     """
     Create and return both backend and frontend.
 
@@ -207,24 +188,19 @@ def init_provider(conf, ident):
     """
     backend_class = find_implementation(conf['backend'])
     frontend_class = find_implementation(conf['frontend'])
-    return backend_class(conf['conf'], ident), frontend_class(conf)
+    return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-def setup_providers(plg_conf):
+def setup_providers(plg_conf, db):
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    cache_path = plg_conf.get('cache_db_path')
-    providers = dict((b['ident'], init_provider(b, b['ident'])) for b in providers_conf)
-    if cache_path:
-        cache_manager = CacheMan(cache_path)
-        cache_manager.test_cache()
-    return providers, cache_path
+    providers = dict((b['ident'], init_provider(b, b['ident'], db, plg_conf['ttl']))
+                     for b in providers_conf)
+    return providers
 
 
-@plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch):
-    providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
+@plugins.inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
+def create_instance(settings, corparch, db):
+    providers = setup_providers(settings.get('plugins', 'token_connect'), db)
     tok_det = DefaultTokenConnect(providers, corparch)
-    if cache_path:
-        tok_det.set_cache_path(cache_path)
     return tok_det

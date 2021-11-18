@@ -18,6 +18,7 @@
 
 from plugins.abstract.token_connect import AbstractBackend
 import conclib
+from plugins.default_token_connect.backends.cache import cached
 
 
 class ManateeWideCtxBackend(AbstractBackend):
@@ -25,10 +26,11 @@ class ManateeWideCtxBackend(AbstractBackend):
     ELEMENT_HIERARCHY = ['document', 'text', 'paragraph',
                          'sentence', 'typeface', 'newLine', 'removeSpace']
 
-    def __init__(self, conf, ident):
-        super().__init__(ident)
+    def __init__(self, conf, ident, db, ttl):
+        super().__init__(ident, db, ttl)
         self._conf = conf
 
+    @cached
     def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         """
         display a hit in a wider context

@@ -11,6 +11,9 @@
             <element name="js_module">
                 <value>defaultTokenConnect</value>
             </element>
+            <element name="ttl">
+                <data type="nonNegativeInteger" />
+            </element>
             <element name="providers_conf">
                 <a:documentation>
                     A path to a JSON file containing different 'providers'. The structure is
@@ -35,16 +38,6 @@
                           }
                         ]
                     ]]>
-                </a:documentation>
-                <text />
-            </element>
-            <element name="cache_db_path">
-                <a:documentation>
-                    A path to a sqlite3 database file storing results of user queries.
-                    This can be important especially in case it is important to behave
-                    nicely towards different 3rd party APIs (e.g. if 20 students click
-                    the same element we want only a single request to be performed and
-                    the rest should run from API).
                 </a:documentation>
                 <text />
             </element>

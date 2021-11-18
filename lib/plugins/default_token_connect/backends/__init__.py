@@ -22,27 +22,9 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import logging
-import sqlite3
 from plugins.default_token_connect.backends.cache import cached
 
 from plugins.abstract.token_connect import AbstractBackend, BackendException
-
-
-class SQLite3Backend(AbstractBackend):
-    def __init__(self, conf, ident):
-        super(SQLite3Backend, self).__init__(ident)
-        self._db = sqlite3.connect(conf['path'])
-        self._query_tpl = conf['query']
-
-    @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang):
-        cur = self._db.cursor()
-        cur.execute(self._query_tpl, (query_args['word'], query_args['lemma']))
-        ans = cur.fetchone()
-        if ans:
-            return ans[0], True
-        else:
-            return '', False
 
 
 class HTTPBackend(AbstractBackend):
@@ -60,8 +42,8 @@ class HTTPBackend(AbstractBackend):
         - num_tokens (mainly for multi-word kwics)
     """
 
-    def __init__(self, conf, ident):
-        super(HTTPBackend, self).__init__(ident)
+    def __init__(self, conf, ident, db, ttl):
+        super(HTTPBackend, self).__init__(ident, db, ttl)
         self._conf = conf
 
     @staticmethod

@@ -46,6 +46,7 @@ add your frontend or backend (depending on what needs to be customized).
 import abc
 from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
 from corplib.corpus import KCorpus
+from plugins.abstract.general_storage import KeyValueStorage
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
@@ -92,24 +93,26 @@ class AbstractBackend(abc.ABC):
     combination.
     """
 
-    def __init__(self, provider_id: str):
-        self._cache_path: Optional[str] = None
+    def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
+        self._db: KeyValueStorage = db
+        self._ttl: KeyValueStorage = ttl
         self._provider_id: str = provider_id
+
+    def get_cache_db(self) -> KeyValueStorage:
+        return self._db
 
     @property
     def provider_id(self) -> str:
         return self._provider_id
 
+    @property
+    def cache_ttl(self) -> str:
+        return self._ttl
+
     @abc.abstractmethod
     def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
               query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
         pass
-
-    def set_cache_path(self, path: str):
-        self._cache_path = path
-
-    def get_cache_path(self) -> Optional[str]:
-        return self._cache_path
 
     def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
         """

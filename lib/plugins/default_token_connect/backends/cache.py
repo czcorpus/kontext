@@ -17,15 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import time
-import zlib
-import logging
-import sqlite3
 from functools import wraps
 from hashlib import md5
 
+from plugins.abstract.general_storage import KeyValueStorage
 
-def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context=None):
+
+def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context=None):
     """
     Returns a hashed cache key based on the passed parameters.
     """
@@ -35,7 +33,14 @@ def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query
             args.append((x, sorted([(x2, y2) for x2, y2 in list(y.items())], key=lambda x: x[0])))
         else:
             args.append((x, y))
-    return md5(f'{provider_id}{corpora}{token_id}{num_tokens}{args}{lang}{context}'.encode('utf-8')).hexdigest()
+    return md5(f'{corpora}{token_id}{num_tokens}{args}{lang}{context}'.encode('utf-8')).hexdigest()
+
+
+def mk_token_connect_cache_key(provider_id, corpora, token_id, num_tokens, query_args, lang, context=None):
+    """
+    Returns a cache key based on the passed parameters.
+    """
+    return f'token_connect_cache:{provider_id}:{mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context)}'
 
 
 def cached(fn):
@@ -49,44 +54,23 @@ def cached(fn):
     @wraps(fn)
     def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context):
         """
-        get full path to the cache_db_file using a method defined in the abstract class that reads the value from
-        kontext's config.xml; if the cache path is not defined, do not use caching:
+        get cache db using a method defined in the abstract class
         """
-        cache_path = self.get_cache_path()
-        if cache_path:
-            key = mk_token_connect_cache_key(
-                self.provider_id, corpora, token_id, num_tokens, query_args, lang, context)
-            with sqlite3.connect(cache_path) as conn:
-                res = conn.execute('PRAGMA journal_mode=WAL').fetchone()
-                imode = res[0] if res else 'undefined'
-                if imode != 'wal':
-                    logging.getLogger(__name__).warning(
-                        'Unable to set WAL mode for SQLite. Actual mode: {0}'.format(imode))
-                curs = conn.cursor()
-                res = curs.execute("SELECT data, found FROM cache WHERE key = ?", (key,)).fetchone()
-                # if no result is found in the cache, call the backend function
-                if res is None:
-                    res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
-                    # if a result is returned by the backend function, encode and zip its data part and store it in
-                    # the cache along with the "found" parameter
-                    if res:
-                        zipped = memoryview(zlib.compress(res[0].encode('utf-8')))
-                        curs.execute(
-                            "INSERT INTO cache (key, provider, data, found, last_access) VALUES (?, ?, ?, ?, ?)",
-                            (key, self.provider_id, zipped, 1 if res[1] else 0, int(round(time.time()))))
-                else:
-                    logging.getLogger(__name__).debug(
-                        'TC/KC cache hit, key prefix: {0} for token_id {1}, num_tokens: {2}, args {3}'.format(
-                            key[:6], token_id, num_tokens, query_args))
-                    # unzip and decode the cached result, convert the "found" parameter value back to boolean
-                    res = [zlib.decompress(res[0]).decode('utf-8'), res[1] == 1]
-                    # update last access
-                    curs.execute("UPDATE cache SET last_access = ? WHERE key = ?",
-                                 (int(round(time.time())), key))
-                curs.close()
-                # commited automatically via context manager
-        else:
+        cache_db: KeyValueStorage = self.get_cache_db()
+        key = mk_token_connect_cache_key(self.provider_id, corpora,
+                                         token_id, num_tokens, query_args, lang, context)
+
+        cached_data = cache_db.get(key)
+        # if no result is found in the cache, call the backend function
+        if cached_data is None:
             res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
+            # if a result is returned by the backend function, encode and zip its data part and store it in
+            # the cache along with the "found" parameter
+            cache_db.set(key, {'data': res[0], 'found': res[1]})
+        else:
+            res = [cached_data['data'], cached_data['found']]
+
+        cache_db.set_ttl(key, self.cache_ttl)
         return res if res else ('', False)
 
     return wrapper
