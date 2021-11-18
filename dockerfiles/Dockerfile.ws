@@ -1,6 +1,6 @@
 FROM czcorpus/kontext-manatee
 
-RUN pip3 install aiohttp
+RUN pip3 install --upgrade pip && pip3 install aiohttp
 
 WORKDIR /opt/kontext
 COPY . .
