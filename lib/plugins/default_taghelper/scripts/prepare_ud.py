@@ -1,12 +1,34 @@
-import sys
+# Copyright (c) 2021 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+import logging
 import pickle
+import argparse
+import sys
+import random
+logger = logging.getLogger('')
 
 
-def parse_word_line(line):
-    ''' parses word line to get POS and features '''
+def parse_word_line(line: str, pos_idx: int, feat_idx: int):
+    """
+    parses word line to get POS and features
+    """
 
-    line_parts = line.split('\t', 5)
-    pos, feature = line_parts[3: 5]
+    line_parts = line.split('\t')
+    pos = line_parts[pos_idx]
+    feature = line_parts[feat_idx]
     data = [
         tuple(k_v.split('='))
         for k_v in feature.split('|')
@@ -16,32 +38,50 @@ def parse_word_line(line):
 
     # check multiple keys of the same kind
     if len([x[0] for x in data]) > len(set(x[0] for x in data)):
-        print('multiple keys in {}'.format(data))
+        logger.warning('multiple keys in {}'.format(data))
 
     # return tuple of tuples (key, value) sorted by key
     return tuple(sorted(data, key=lambda x: x[0]))
 
 
-def load_variations(src_path):
+def load_variations(src_path, pos_idx: int, feat_idx: int):
     # prepare all variations from vertical data
     variations = set()
-    with open(src_path, 'r') as f:
-        for line in f:
+    example_shown = False
+    with open(src_path, 'r') as fr:
+        i = -1
+        for line in fr:
+            i += 1
+            if i % 1000000 == 0:
+                logging.getLogger(__name__).info(f'Processed {i} lines')
             if line.strip().startswith('<'):  # skip lines with xml tags
                 continue
-            variations.add(parse_word_line(line))
+            parsed = parse_word_line(line, pos_idx, feat_idx)
+            if not example_shown:
+                logger.info('Parsed example: {}'.format(parsed))
+                example_shown = True
+            variations.add(parsed)
     return list(variations)
 
 
 if __name__ == '__main__':
-    try:
-        src_path = sys.argv[1] if len(sys.argv) > 1 else 'vertikala_pdt'
-        dest_path = sys.argv[2] if len(sys.argv) > 1 else 'tags_pdt'
-    except KeyError:
-        sys.exit('Missing source or destination file')
+    parser = argparse.ArgumentParser(
+        description='Extract UD key-value properties from a vertical file')
+    parser.add_argument('vertical', metavar='VERTICAL', type=str)
+    parser.add_argument('output', metavar='OUTPUT', type=str)
+    parser.add_argument('-p', '--pos-idx', type=int, default=3,
+                        help='A position of the POS attribute')
+    parser.add_argument('-f', '--feat-idx', type=int, default=4,
+                        help='A position of the FEATURE attribute')
+    args = parser.parse_args()
 
-    print('Loading resource from {}...'.format(src_path))
-    variations = load_variations(src_path)
-    with open(dest_path, 'w') as f:
-        pickle.dump(variations, f, protocol=2)
-    print('...saved to {} ({} items)'.format(dest_path, len(variations)))
+    shandler = logging.StreamHandler(sys.stdout)
+    shandler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s'))
+    logger.addHandler(shandler)
+    logger.setLevel(logging.INFO)
+
+    logger.info('Loading resource from {}...'.format(args.vertical))
+    variations = load_variations(args.vertical, pos_idx=args.pos_idx, feat_idx=args.feat_idx)
+    with open(args.output, 'wb') as fw:
+        pickle.dump(variations, fw, protocol=2)
+    logger.info('...saved to a binary file {} ({} items)'.format(args.output, len(variations)))
