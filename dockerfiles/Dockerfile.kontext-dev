@@ -10,7 +10,7 @@ COPY ./pack*.json ./
 RUN npm install
 
 COPY requirements.txt dev-requirements.txt ./
-RUN pip3 install -r requirements.txt -r dev-requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt -r dev-requirements.txt
 
 COPY ./conf ./conf
 RUN python3 scripts/install/steps.py SetupKontext
