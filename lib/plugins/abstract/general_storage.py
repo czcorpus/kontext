@@ -222,7 +222,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def keys(self, pattern: str = None) -> Iterator[str]:
+    def keys(self, startswith: str = None) -> Iterator[str]:
         """
         Search keys by pattern.
         """
