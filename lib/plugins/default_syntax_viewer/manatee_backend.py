@@ -162,7 +162,10 @@ class TreeConf(object):
         """
         ans = {self.parent_attr}.union(self.node_attrs).union(self.detail_attrs)
         ans = ans - {'word'}
-        return ('word', ) + tuple(ans)   # word attr must be first
+        # now the 'word' attr must be first and the order of items must be stable
+        # so the plug-in can ask for items and pick them up properly from Manatee output
+        # (imagine items like "/word/lemma/parent/afun")
+        return ('word', ) + tuple(sorted(ans))
 
     def __repr__(self):
         return str(self._data)
