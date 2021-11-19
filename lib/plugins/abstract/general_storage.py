@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Union, List, Dict
+from typing import Iterator, Union, List, Dict
 
 Serializable = Union[int, float, str, bool, list, dict, None]
 
@@ -219,6 +219,12 @@ class KeyValueStorage(abc.ABC):
         Make the record persistent again.
 
         key -- data access key
+        """
+
+    @abc.abstractmethod
+    def keys(self, pattern: str = None) -> Iterator[str]:
+        """
+        Search keys by pattern.
         """
 
     def get_instance(self, plugin_id):

@@ -283,6 +283,12 @@ class DefaultDb(KeyValueStorage):
         self.set(key, mapping)
         return True
 
+    def keys(self, pattern):
+        cursor = self._conn().cursor()
+        cursor.execute('SELECT key from data WHERE key LIKE ?', (f'{pattern}%',))
+        for row in cursor:
+            yield row[0]
+
 
 def create_instance(conf):
     """
