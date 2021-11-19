@@ -53,6 +53,8 @@ class QueryHistory(AbstractQueryHistory):
 
     DEFAULT_TTL_DAYS = 10
 
+    TABLE_NAME = 'kontext_query_history'
+
     def __init__(self, conf, db: IntegrationDatabase, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
         """
         arguments:
@@ -77,7 +79,7 @@ class QueryHistory(AbstractQueryHistory):
         corpora = self._query_persistence.open(query_id)['corpora']
         cursor = self._db.cursor()
         cursor.executemany(
-            'INSERT INTO kontext_query_history (corpus_name, query_id, user_id, q_supertype, created, name) VALUES (%s, %s, %s, %s, %s, %s)',
+            f'INSERT IGNORE INTO {self.TABLE_NAME} (corpus_name, query_id, user_id, q_supertype, created, name) VALUES (%s, %s, %s, %s, %s, %s)',
             [(corpus, query_id, user_id, q_supertype, created, name) for corpus in corpora]
         )
         return created.timestamp()
@@ -94,35 +96,29 @@ class QueryHistory(AbstractQueryHistory):
             self.delete_old_records(user_id)
         return created
 
-    def _update_name(self, user_id, query_id, q_supertype, created, name):
+    def _update_name(self, user_id, query_id, created, name, new_name) -> bool:
         cursor = self._db.cursor()
         cursor.execute(
-            'UPDATE TABLE kontext_query_history SET name = %s WHERE user_id = %s AND query_id = %s AND q_supertype = %s AND created = %s',
-            (name, user_id, query_id, q_supertype, created)
+            f'UPDATE {self.TABLE_NAME} SET name = %s WHERE user_id = %s AND query_id = %s AND created = %s AND name = %s',
+            (new_name, user_id, query_id, created, name)
         )
         self._db.commit()
         return cursor.rowcount > 0
 
-    def make_persistent(self, user_id, query_id, q_supertype, created, name):
-        if self._update_name(user_id, query_id, q_supertype, created, name):
+    def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+        if self._update_name(user_id, query_id, datetime.fromtimestamp(created), None, name):
             self._query_persistence.archive(user_id, query_id)
         else:
             self.store(user_id, query_id, q_supertype, name)
         return True
 
-    def make_transient(self, user_id, query_id, created, name):
-        cursor = self._db.cursor()
-        cursor.execute(
-            'UPDATE TABLE kontext_query_history SET name = null WHERE user_id = %s AND query_id = %s AND name = %s AND created = %s',
-            (user_id, query_id, name, datetime.fromtimestamp(created))
-        )
-        self._db.commit()
-        return cursor.rowcount > 0
+    def make_transient(self, user_id, query_id, created, name) -> bool:
+        return self._update_name(user_id, query_id, datetime.fromtimestamp(created), name, None)
 
     def delete(self, user_id, query_id, created):
         cursor = self._db.cursor()
         cursor.execute(
-            'DELETE FROM kontext_query_history WHERE user_id = %s AND query_id = %s AND created = %s',
+            f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
             (user_id, query_id, datetime.fromtimestamp(created))
         )
         self._db.commit()
@@ -202,7 +198,7 @@ class QueryHistory(AbstractQueryHistory):
 
         cursor = self._db.cursor()
         cursor.execute(f'''
-            SELECT DISTINCT query_id, created, name, q_supertype FROM kontext_query_history WHERE
+            SELECT DISTINCT query_id, created, name, q_supertype FROM {self.TABLE_NAME} WHERE
             {' AND '.join(where_sql)}
             ORDER BY created DESC
             {'LIMIT %s' if limit is not None else ''}
@@ -295,7 +291,7 @@ class QueryHistory(AbstractQueryHistory):
         # TODO remove also named but unpaired history entries
         cursor = self._db.cursor()
         cursor.execute(
-            'DELETE FROM kontext_query_history WHERE user_id = %s AND created < %s AND name IS NOT NONE',
+            f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND created < %s AND name IS NOT NULL',
             (user_id, datetime.now() - timedelta(days=self.ttl_days))
         )
         self._db.commit()
