@@ -161,7 +161,10 @@ class TreeConf(object):
         """
         ans = {self.parent_attr}.union(self.node_attrs).union(self.detail_attrs)
         ans = ans - {'word'}
-        return ('word', ) + tuple(ans)   # word attr must be first
+        # now the 'word' attr must be first and the order of items must be stable
+        # so the plug-in can ask for items and pick them up properly from Manatee output
+        # (imagine items like "/word/lemma/parent/afun")
+        return ('word', ) + tuple(sorted(ans))
 
     def __repr__(self):
         return str(self._data)
@@ -390,12 +393,9 @@ class ManateeBackend(SearchBackend):
         conc = manatee.Concordance(corpus, ' '.join(
             '[#%d]' % k for k in range(token_id, token_id + kwic_len)), 1, -1)
         conc.sync()
-        kl = manatee.KWICLines(corpus, conc.RS(True, 0, 1),
-                               '-1:%s' % sentence_struct,
-                               '1:%s' % sentence_struct,
-                               ','.join(tree_attrs),
-                               ','.join(tree_attrs),
-                               '', '')
+        kl = manatee.KWICLines(
+            corpus, conc.RS(True, 0, 1), f'-1:{sentence_struct}', f'1:{sentence_struct}',
+            ','.join(tree_attrs), ','.join(tree_attrs), '', '')
         if kl.nextline():
             left_tk = kl.get_left()
             kwic_tk = kl.get_kwic()
@@ -433,7 +433,6 @@ class ManateeBackend(SearchBackend):
                     ans.append(row)
                 return ans
             return [values]
-
         data = []
         for i in range(0, len(in_data), 4):
             parsed_m = expand_multivals([import_raw_val(x) for x in in_data[i + 2].split('/')])
@@ -573,11 +572,13 @@ class ManateeBackend(SearchBackend):
         tree_id_list = self._conf.get_tree_display_list(corpus_id)
         for tree in tree_id_list:
             conf = tree_configs[tree]
-            raw_data = self._load_raw_sent(corpus=corpus, corpus_id=corpus_id, token_id=token_id, kwic_len=kwic_len,
-                                           tree_attrs=conf.all_attrs)
-            parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                               self._conf.get_empty_value_placeholders(corpus_id),
-                                               multival_separ=None)
+            raw_data = self._load_raw_sent(
+                corpus=corpus, corpus_id=corpus_id, token_id=token_id, kwic_len=kwic_len,
+                tree_attrs=conf.all_attrs)
+            parsed_data = self._parse_raw_sent(
+                raw_data['data'], conf.all_attrs,
+                self._conf.get_empty_value_placeholders(corpus_id),
+                multival_separ=None)
             if conf.root_node:
                 parsed_data = [conf.root_node] + parsed_data
             self._decode_tree_data(parsed_data, conf.parent_attr, conf.attr_refs, conf.parent_type)
