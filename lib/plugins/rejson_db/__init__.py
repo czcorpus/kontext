@@ -276,6 +276,9 @@ class RejsonDb(KeyValueStorage):
         """
         return self.set(key, mapping)
 
+    def keys(self, pattern=None):
+        yield from self.redis.scan_iter(pattern)
+
 
 def create_instance(conf):
     """
