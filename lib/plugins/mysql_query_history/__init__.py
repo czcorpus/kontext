@@ -18,11 +18,9 @@ A plugin providing a history for user's queries for services such as 'query hist
 Required config.xml/plugins entries: please see config.rng
 """
 
-from datetime import datetime
-import time
+from datetime import datetime, timedelta
 import random
 import logging
-from actions import user
 from plugins.abstract.auth import AbstractAuth
 from plugins.abstract.integration_db import IntegrationDatabase
 
@@ -69,23 +67,20 @@ class QueryHistory(AbstractQueryHistory):
             logging.getLogger(__name__).warning(
                 'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
                     self.ttl_days))
-        self.db = db
+        self._db = db
         self._query_persistence = query_persistence
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
-    def _current_timestamp(self):
-        return int(time.time())
-
     def _store(self, user_id, query_id, q_supertype, name):
-        created = self._current_timestamp()
+        created = datetime.now()
         corpora = self._query_persistence.open(query_id)['corpora']
         cursor = self._db.cursor()
         cursor.executemany(
-            'INSERT INTO kontext_query_history (corpus_name, query_id, user_id, q_supertype, name) VALUES (%s, %s, %s, %s, %s, %s)',
+            'INSERT INTO kontext_query_history (corpus_name, query_id, user_id, q_supertype, created, name) VALUES (%s, %s, %s, %s, %s, %s)',
             [(corpus, query_id, user_id, q_supertype, created, name) for corpus in corpora]
         )
-        return created
+        return created.timestamp()
 
     def store(self, user_id, query_id, q_supertype):
         """
@@ -105,7 +100,7 @@ class QueryHistory(AbstractQueryHistory):
             'UPDATE TABLE kontext_query_history SET name = %s WHERE user_id = %s AND query_id = %s AND q_supertype = %s AND created = %s',
             (name, user_id, query_id, q_supertype, created)
         )
-        cursor.commit()
+        self._db.commit()
         return cursor.rowcount > 0
 
     def make_persistent(self, user_id, query_id, q_supertype, created, name):
@@ -119,18 +114,18 @@ class QueryHistory(AbstractQueryHistory):
         cursor = self._db.cursor()
         cursor.execute(
             'UPDATE TABLE kontext_query_history SET name = null WHERE user_id = %s AND query_id = %s AND name = %s AND created = %s',
-            (user_id, query_id, name, created)
+            (user_id, query_id, name, datetime.fromtimestamp(created))
         )
-        cursor.commit()
+        self._db.commit()
         return cursor.rowcount > 0
 
     def delete(self, user_id, query_id, created):
         cursor = self._db.cursor()
         cursor.execute(
             'DELETE FROM kontext_query_history WHERE user_id = %s AND query_id = %s AND created = %s',
-            (user_id, query_id, created)
+            (user_id, query_id, datetime.fromtimestamp(created))
         )
-        cursor.commit()
+        self._db.commit()
         return cursor.rowcount
 
     def _is_paired_with_conc(self, data) -> bool:
@@ -191,8 +186,8 @@ class QueryHistory(AbstractQueryHistory):
 
         where_dict = {
             'user_id = %s': user_id,
-            'created >= %s': time.mktime(datetime(*[int(d) for d in from_date.split('-')], 0, 0, 0).timetuple()) if from_date else None,
-            'created <= %s': time.mktime(datetime(*[int(d) for d in to_date.split('-')], 23, 59, 59).timetuple()) if to_date else None,
+            'created >= %s': from_date if from_date else None,
+            'created <= %s': to_date if to_date else None,
             'q_supertype = %s': q_supertype,
             'corpus_name = %s': corpname,
         }
@@ -205,7 +200,7 @@ class QueryHistory(AbstractQueryHistory):
         if offset:
             values.append(offset)
 
-        cursor = self.db.cursor()
+        cursor = self._db.cursor()
         cursor.execute(f'''
             SELECT DISTINCT query_id, created, name, q_supertype FROM kontext_query_history WHERE
             {' AND '.join(where_sql)}
@@ -287,6 +282,7 @@ class QueryHistory(AbstractQueryHistory):
                 raise ValueError('Unknown query supertype: ', q_supertype)
 
         for i, item in enumerate(full_data):
+            item['created'] = item['created'].timestamp()
             item['idx'] = offset + i
 
         return full_data
@@ -300,9 +296,9 @@ class QueryHistory(AbstractQueryHistory):
         cursor = self._db.cursor()
         cursor.execute(
             'DELETE FROM kontext_query_history WHERE user_id = %s AND created < %s AND name IS NOT NONE',
-            (user_id, int(time.time()) - 86400 * self.ttl_days, )
+            (user_id, datetime.now() - timedelta(days=self.ttl_days))
         )
-        cursor.commit()
+        self._db.commit()
 
     def export(self, plugin_ctx):
         return {'page_num_records': self._page_num_records}
