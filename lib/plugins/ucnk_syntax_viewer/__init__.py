@@ -72,9 +72,11 @@ class UcnkManateeBackend(mbk.ManateeBackend):
         tree_id = self._conf.get_tree_display_list(corpus_id)[0]
         conf = tree_configs[tree_id]
         raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, conf.all_attrs)
-        parsed_data = self._parse_raw_sent(raw_data['data'], conf.all_attrs,
-                                           self._conf.get_empty_value_placeholders(corpus_id),
-                                           multival_separ=self._conf.get_multival_lemmata_separator(corpus_id))
+
+        parsed_data = self._parse_raw_sent(
+            raw_data['data'], conf.all_attrs,
+            self._conf.get_empty_value_placeholders(corpus_id),
+            multival_separ=self._conf.get_multival_lemmata_separator(corpus_id))
         fallback_parse = None
         for i, parsed_item in enumerate(parsed_data):
             if self.is_error_node(parsed_item):
