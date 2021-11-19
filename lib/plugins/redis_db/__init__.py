@@ -253,8 +253,9 @@ class RedisDb(KeyValueStorage):
             new_mapping[name] = json.dumps(mapping[name])
         return self.redis.hmset(key, new_mapping)
 
-    def keys(self, pattern=None):
-        yield from self.redis.scan_iter(pattern)
+    def keys(self, startswith=None):
+        for key in self.redis.scan_iter(f'{startswith}*'):
+            yield key.decode()
 
 
 def create_instance(conf):
