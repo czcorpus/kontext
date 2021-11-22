@@ -223,7 +223,7 @@ class Backend(DatabaseBackend):
             f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
             f'     (SELECT {self._user_table}.{self._group_acc_group_attr} '
             f'          FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
-            ') AS kcu ON c.id = kcu.corpus_id '
+            ') AS kcu ON c.name = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
