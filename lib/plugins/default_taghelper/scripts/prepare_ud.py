@@ -14,10 +14,9 @@
 # GNU General Public License for more details.
 
 import logging
-import pickle
+import json
 import argparse
 import sys
-import random
 logger = logging.getLogger('')
 
 
@@ -27,21 +26,22 @@ def parse_word_line(line: str, pos_idx: int, feat_idx: int):
     """
 
     line_parts = line.split('\t')
-    pos = line_parts[pos_idx]
-    feature = line_parts[feat_idx]
-    data = [
-        tuple(k_v.split('='))
-        for k_v in feature.split('|')
-        if k_v != '_'  # `_` denotes absence according to Universal Dependencies
-    ]
-    data.append(('POS', pos))
+    poses = line_parts[pos_idx].split('|')
+    features = line_parts[feat_idx].split('||')
+    for pos, feature in zip(poses, features):
+        data = [
+            tuple(k_v.split('='))
+            for k_v in feature.split('|')
+            if k_v and k_v != '_'  # `_` denotes absence according to Universal Dependencies
+        ]
+        data.append(('POS', pos))
 
-    # check multiple keys of the same kind
-    if len([x[0] for x in data]) > len(set(x[0] for x in data)):
-        logger.warning('multiple keys in {}'.format(data))
+        # check multiple keys of the same kind
+        if len([x[0] for x in data]) > len(set(x[0] for x in data)):
+            logger.warning('multiple keys in {}'.format(data))
 
-    # return tuple of tuples (key, value) sorted by key
-    return tuple(sorted(data, key=lambda x: x[0]))
+        # return tuple of tuples (key, value) sorted by key
+        yield tuple(sorted(data, key=lambda x: x[0]))
 
 
 def load_variations(src_path, pos_idx: int, feat_idx: int):
@@ -56,11 +56,11 @@ def load_variations(src_path, pos_idx: int, feat_idx: int):
                 logging.getLogger(__name__).info(f'Processed {i} lines')
             if line.strip().startswith('<'):  # skip lines with xml tags
                 continue
-            parsed = parse_word_line(line, pos_idx, feat_idx)
-            if not example_shown:
-                logger.info('Parsed example: {}'.format(parsed))
-                example_shown = True
-            variations.add(parsed)
+            for parsed in parse_word_line(line, pos_idx, feat_idx):
+                if not example_shown:
+                    logger.info('Parsed example: {}'.format(parsed))
+                    example_shown = True
+                variations.add(parsed)
     return list(variations)
 
 
@@ -69,9 +69,9 @@ if __name__ == '__main__':
         description='Extract UD key-value properties from a vertical file')
     parser.add_argument('vertical', metavar='VERTICAL', type=str)
     parser.add_argument('output', metavar='OUTPUT', type=str)
-    parser.add_argument('-p', '--pos-idx', type=int, default=3,
+    parser.add_argument('-p', '--pos-idx', type=int, required=True,
                         help='A position of the POS attribute')
-    parser.add_argument('-f', '--feat-idx', type=int, default=4,
+    parser.add_argument('-f', '--feat-idx', type=int, required=True,
                         help='A position of the FEATURE attribute')
     args = parser.parse_args()
 
@@ -82,6 +82,6 @@ if __name__ == '__main__':
 
     logger.info('Loading resource from {}...'.format(args.vertical))
     variations = load_variations(args.vertical, pos_idx=args.pos_idx, feat_idx=args.feat_idx)
-    with open(args.output, 'wb') as fw:
-        pickle.dump(variations, fw, protocol=2)
-    logger.info('...saved to a binary file {} ({} items)'.format(args.output, len(variations)))
+    with open(args.output, 'w') as fw:
+        json.dump(variations, fw)
+    logger.info('...saved to a json file {} ({} items)'.format(args.output, len(variations)))
