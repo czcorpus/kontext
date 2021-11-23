@@ -14,10 +14,9 @@
 # GNU General Public License for more details.
 
 import logging
-import pickle
+import json
 import argparse
 import sys
-import random
 logger = logging.getLogger('')
 
 
@@ -82,6 +81,6 @@ if __name__ == '__main__':
 
     logger.info('Loading resource from {}...'.format(args.vertical))
     variations = load_variations(args.vertical, pos_idx=args.pos_idx, feat_idx=args.feat_idx)
-    with open(args.output, 'wb') as fw:
-        pickle.dump(variations, fw, protocol=2)
-    logger.info('...saved to a binary file {} ({} items)'.format(args.output, len(variations)))
+    with open(args.output, 'w') as fw:
+        json.dump(variations, fw)
+    logger.info('...saved to a json file {} ({} items)'.format(args.output, len(variations)))
