@@ -119,16 +119,16 @@ def init_provider(conf, ident):
     return backend_class(conf['conf'], ident), frontend_class(conf)
 
 
-def setup_providers(plg_conf):
+def setup_providers(plg_conf, db):
     return dict((prov['ident'], init_provider(prov, prov['ident'])) for prov in plg_conf.get('providers', []))
 
 
-@plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch):
+@plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
+def create_instance(settings, db, corparch):
     """
     arguments:
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    conf = setup_providers(settings.get_plugin_custom_conf(plugins.runtime.QUERY_SUGGEST.name))
+    conf = setup_providers(settings.get_plugin_custom_conf(plugins.runtime.QUERY_SUGGEST.name), db)
     return DefaultQuerySuggest(conf, corparch)

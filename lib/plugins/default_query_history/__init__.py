@@ -91,7 +91,7 @@ class QueryHistory(AbstractQueryHistory):
         item = dict(created=ts, query_id=query_id, name=None, q_supertype=q_supertype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
-            self.delete_old_records(user_id)
+            self._delete_old_records(user_id)
         return ts
 
     def make_persistent(self, user_id, query_id, q_supertype, created, name):
@@ -316,7 +316,7 @@ class QueryHistory(AbstractQueryHistory):
 
         return full_data
 
-    def delete_old_records(self, user_id):
+    def _delete_old_records(self, user_id):
         """
         Deletes records older than ttl_days. Named records are
         kept intact.

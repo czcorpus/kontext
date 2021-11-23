@@ -1,6 +1,7 @@
 # Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,18 +17,26 @@
 A plugin providing a history for user's queries for services such as 'query history'.
 
 Required config.xml/plugins entries: please see config.rng
+
+Also, don't forget to regularly clean-up older records by adding
+something like the following config JSON snippet to your rq-scheduler
+configuration.
+
+{
+"task": "query_history__delete_old_records",
+"schedule": "1 4 * * *",
+"kwargs": {}
+}
 """
 
-from datetime import datetime, timedelta
-import random
+from datetime import datetime
 import logging
 from plugins.abstract.auth import AbstractAuth
 from plugins.abstract.integration_db import IntegrationDatabase
-
+from corplib.abstract import AbstractKCorpus
 from plugins.abstract.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
-from manatee import Corpus
 from corplib.fallback import EmptyCorpus
 from plugins.abstract.query_persistence import AbstractQueryPersistence
 
@@ -38,7 +47,7 @@ class CorpusCache:
         self._cm = corpus_manager
         self._corpora = {}
 
-    def corpus(self, cname: str) -> Corpus:
+    def corpus(self, cname: str) -> AbstractKCorpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
@@ -46,10 +55,7 @@ class CorpusCache:
         return self._corpora[cname]
 
 
-class QueryHistory(AbstractQueryHistory):
-
-    # we define a 10% chance that on write there will be a check for old records
-    PROB_DELETE_OLD_RECORDS = 0.1
+class MySqlQueryHistory(AbstractQueryHistory):
 
     DEFAULT_TTL_DAYS = 10
 
@@ -74,52 +80,44 @@ class QueryHistory(AbstractQueryHistory):
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
-    def _store(self, user_id, query_id, q_supertype, name):
-        created = datetime.now()
+    def store(self, user_id, query_id, q_supertype):
+        created = int(datetime.utcnow().timestamp())
         corpora = self._query_persistence.open(query_id)['corpora']
         cursor = self._db.cursor()
         cursor.executemany(
-            f'INSERT IGNORE INTO {self.TABLE_NAME} (corpus_name, query_id, user_id, q_supertype, created, name) VALUES (%s, %s, %s, %s, %s, %s)',
-            [(corpus, query_id, user_id, q_supertype, created, name) for corpus in corpora]
+            f'INSERT IGNORE INTO {self.TABLE_NAME} '
+            '(corpus_name, query_id, user_id, q_supertype, created) VALUES (%s, %s, %s, %s, %s)',
+            [(corpus, query_id, user_id, q_supertype, created) for corpus in corpora]
         )
-        return created.timestamp()
-
-    def store(self, user_id, query_id, q_supertype):
-        """
-        stores information about a query; from time
-        to time also check remove too old records
-        arguments:
-        see the super class
-        """
-        created = self._store(user_id, query_id, q_supertype, None)
-        if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:  # TODO make rq schduler task
-            self.delete_old_records(user_id)
         return created
 
-    def _update_name(self, user_id, query_id, created, name, new_name) -> bool:
+    def _update_name(self, user_id, query_id, created, new_name) -> bool:
         cursor = self._db.cursor()
         cursor.execute(
-            f'UPDATE {self.TABLE_NAME} SET name = %s WHERE user_id = %s AND query_id = %s AND created = %s AND name = %s',
-            (new_name, user_id, query_id, created, name)
+            f'UPDATE {self.TABLE_NAME} '
+            'SET name = %s '
+            'WHERE user_id = %s AND query_id = %s AND created = %s',
+            (new_name, user_id, query_id, created)
         )
         self._db.commit()
         return cursor.rowcount > 0
 
     def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
-        if self._update_name(user_id, query_id, datetime.fromtimestamp(created), None, name):
+        if self._update_name(user_id, query_id, created, name):
             self._query_persistence.archive(user_id, query_id)
         else:
-            self.store(user_id, query_id, q_supertype, name)
+            c = self.store(user_id, query_id, q_supertype)
+            self._update_name(user_id, query_id, c, name)
         return True
 
     def make_transient(self, user_id, query_id, created, name) -> bool:
-        return self._update_name(user_id, query_id, datetime.fromtimestamp(created), name, None)
+        return self._update_name(user_id, query_id, created, None)
 
     def delete(self, user_id, query_id, created):
         cursor = self._db.cursor()
         cursor.execute(
             f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
-            (user_id, query_id, datetime.fromtimestamp(created))
+            (user_id, query_id, created)
         )
         self._db.commit()
         return cursor.rowcount
@@ -151,16 +149,16 @@ class QueryHistory(AbstractQueryHistory):
                 ans['selected_text_types'] = form_data.get('selected_text_types', {})
                 ans['aligned'] = []
                 for aitem in edata['corpora'][1:]:
-                    ans['aligned'].append(dict(corpname=aitem,
-                                               query=form_data['curr_queries'].get(aitem),
-                                               query_type=form_data['curr_query_types'].get(aitem),
-                                               default_attr=form_data['curr_default_attr_values'].get(
-                                                   aitem),
-                                               lpos=form_data['curr_lpos_values'].get(aitem),
-                                               qmcase=form_data['curr_qmcase_values'].get(aitem),
-                                               pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(
-                                                   aitem),
-                                               include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
+                    ans['aligned'].append(
+                        dict(
+                            corpname=aitem,
+                            query=form_data['curr_queries'].get(aitem),
+                            query_type=form_data['curr_query_types'].get(aitem),
+                            default_attr=form_data['curr_default_attr_values'].get(aitem),
+                            lpos=form_data['curr_lpos_values'].get(aitem),
+                            qmcase=form_data['curr_qmcase_values'].get(aitem),
+                            pcq_pos_neg=form_data['curr_pcq_pos_neg_values'].get(aitem),
+                            include_empty=get_ac_val(form_data, 'curr_include_empty_values', aitem)))
             elif form_data['form_type'] == 'filter':
                 ans.update(form_data)
                 ans['corpname'] = main_corp
@@ -171,8 +169,9 @@ class QueryHistory(AbstractQueryHistory):
         else:
             return None   # persistent result not available
 
-    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
-                         archived_only=False, offset=0, limit=None):
+    def get_user_queries(
+            self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 
@@ -278,26 +277,36 @@ class QueryHistory(AbstractQueryHistory):
                 raise ValueError('Unknown query supertype: ', q_supertype)
 
         for i, item in enumerate(full_data):
-            item['created'] = item['created'].timestamp()
             item['idx'] = offset + i
 
         return full_data
 
-    def delete_old_records(self, user_id):
+    def delete_old_records(self):
         """
         Deletes records older than ttl_days. Named records are
         kept intact.
+        now - created > ttl
+        now - ttl  > created
         """
         # TODO remove also named but unpaired history entries
         cursor = self._db.cursor()
         cursor.execute(
-            f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND created < %s AND name IS NOT NULL',
-            (user_id, datetime.now() - timedelta(days=self.ttl_days))
+            f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
+            (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
         )
         self._db.commit()
 
     def export(self, plugin_ctx):
+        """
+        Export plug-in data to dependent HTML pages
+        """
         return {'page_num_records': self._page_num_records}
+
+    def export_tasks(self):
+        """
+        Export schedulable tasks
+        """
+        return self.delete_old_records,
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
@@ -307,4 +316,4 @@ def create_instance(settings, db, query_persistence, auth):
     settings -- the settings.py module
     db -- a 'db' plugin implementation
     """
-    return QueryHistory(settings, db, query_persistence, auth)
+    return MySqlQueryHistory(settings, db, query_persistence, auth)

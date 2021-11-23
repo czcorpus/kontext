@@ -138,6 +138,11 @@ class RqClient:
                         kwargs=entry['kwargs'] if 'kwargs' in entry else None,
                         use_local_timezone=True,
                     )
+            logging.getLogger(__name__).info(f'Loaded configuration for Rq-scheduler from {self.scheduler_conf_path}')
+        else:
+            logging.getLogger(__name__).warning(
+                'No Rq-scheduler configuration path defined. '
+                'Regular system maintenance will be disabled which may lead to disks becoming full.')
 
     @staticmethod
     def _resolve_limit(softl, hardl):

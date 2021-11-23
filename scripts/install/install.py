@@ -1,4 +1,22 @@
-from typing import List
+# Copyright (c) 2021 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2021 Martin Zimandl <martin.zimandlk@gmail.com>
+# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 
 import os
 import subprocess
@@ -7,6 +25,7 @@ import argparse
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
+SCHEDULER_INSTALL_CONF = os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json')
 MANATEE_VER = '2.167.8'
 
 REQUIREMENTS = [
@@ -82,7 +101,9 @@ if __name__ == "__main__":
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
     steps.SetupManatee(KONTEXT_PATH, stdout, stderr, args.no_cert_check).run(
         args.manatee_version, args.patch_path)
-    steps.SetupKontext(KONTEXT_PATH, KONTEXT_INSTALL_CONF, stdout, stderr).run(args.install_celery)
+    steps.SetupKontext(
+        kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
+        scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run(args.install_celery)
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
     if args.install_gunicorn:
         steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()

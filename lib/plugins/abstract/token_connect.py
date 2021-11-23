@@ -95,7 +95,7 @@ class AbstractBackend(abc.ABC):
 
     def __init__(self, provider_id: str, db: KeyValueStorage, ttl: int):
         self._db: KeyValueStorage = db
-        self._ttl: KeyValueStorage = ttl
+        self._ttl: int = ttl
         self._provider_id: str = provider_id
 
     def get_cache_db(self) -> KeyValueStorage:
@@ -106,7 +106,7 @@ class AbstractBackend(abc.ABC):
         return self._provider_id
 
     @property
-    def cache_ttl(self) -> str:
+    def cache_ttl(self) -> int:
         return self._ttl
 
     @abc.abstractmethod

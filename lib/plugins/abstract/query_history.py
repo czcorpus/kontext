@@ -47,7 +47,7 @@ class AbstractQueryHistory(abc.ABC):
             pquery - paradigmatic query
 
         returns:
-        creation UNIX timestamp (seconds)
+        creation UTC UNIX timestamp (seconds)
         """
 
     @abc.abstractmethod
@@ -105,16 +105,4 @@ class AbstractQueryHistory(abc.ABC):
         archived_only -- if True then only archived items should be displayed
         offset -- where to start the list (starts from zero)
         limit -- how many rows will be selected
-        """
-
-    @abc.abstractmethod
-    def delete_old_records(self, user_id):
-        """
-        Remove old records to keep the query history
-        list of a reasonable size. There are no
-        strict rules on how this should behave - it
-        is up to a concrete plug-in implementation.
-
-        arguments:
-        user_id -- user ID
         """
