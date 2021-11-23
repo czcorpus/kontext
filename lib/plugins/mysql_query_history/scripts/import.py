@@ -46,14 +46,12 @@ class CustomDB:
                 cursor.execute('SELECT key from data WHERE key LIKE ?', (f'{startswith}%',))
             else:
                 cursor.execute('SELECT key from data')
-            for row in cursor:
-                yield row[0]
+            return [row for row in cursor]
         else:
-            for key in getattr(self._db_plugin, '_db').scan_iter(f'{startswith}*'):
-                yield key.decode()
+            return [x for x in getattr(self._db_plugin, 'redis').scan_iter(f'{startswith}*')]
 
     def list_get(self, key, from_idx=0, to_idx=-1):
-        return self._db_plugin(key, from_idx, to_idx)
+        return self._db_plugin.list_get(key, from_idx, to_idx)
 
 
 if __name__ == '__main__':
@@ -75,25 +73,29 @@ if __name__ == '__main__':
                 if 'query_id' in item:
                     query_id = item['query_id']
                     q_supertype = item.get('q_supertype', item.get('qtype', 'conc'))
-                    corpora = qp.open(query_id)['corpora']
-                    created = item['created']
+                    try:
+                        corpora = qp.open(query_id)['corpora']
+                        created = item['created']
 
-                    full_data.extend([
-                        (user_id, query_id, q_supertype, created, item['name'], corpus)
-                        for corpus in corpora
-                    ])
+                        full_data.extend([
+                            (user_id, query_id, q_supertype, created, item['name'], corpus)
+                            for corpus in corpora
+                        ])
+                    except Exception as ex:
+                        print(f'Failed to add query {query_id}: {ex}')
 
                 else:
                     logging.warning('Unsupported history item for user %s: %s', user_id, item)
 
         unique_entries_count = len(set(full_data))
-        print(f'{unique_entries_count} entries will be inserted. {len(full_data) - unique_entries_count} duplicate entries will be ignored.')
+        print(f'{unique_entries_count} entries will be inserted. ')
+        print(f'{len(full_data) - unique_entries_count} duplicate entries will be ignored.')
 
         cursor = integration_db.cursor()
-        cursor.executemany('''
-            INSERT IGNORE INTO kontext_query_history (user_id, query_id, q_supertype, created, name, corpus_name)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', full_data)
+        cursor.executemany(
+            'INSERT IGNORE INTO kontext_query_history (user_id, query_id, q_supertype, created, name, corpus_name)'
+            'VALUES (%s, %s, %s, %s, %s, %s)',
+            full_data)
         integration_db.commit()
 
-        print(f'{cursor.rowcount} entries has been inserted.')
+        print(f'\n{max(cursor.rowcount, 0)} entries has been inserted.')
