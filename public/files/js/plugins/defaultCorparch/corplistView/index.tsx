@@ -64,6 +64,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     const layoutViews = he.getLayoutViews();
 
+    const sizeStringValidator = new RegExp('^$|^[0-9]+[kMGT]?$');
+
     // ---------------------------------------------------------------------
     // -------------------------- dataset components -----------------------
     // ---------------------------------------------------------------------
@@ -420,10 +422,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch<typeof Actions.FilterChanged>({
-                name: Actions.FilterChanged.name,
-                payload: {...props.currFilter, minSize: e.target.value}
-            });
+            if (sizeStringValidator.test(e.target.value)) {
+                dispatcher.dispatch<typeof Actions.FilterChanged>({
+                    name: Actions.FilterChanged.name,
+                    payload: {...props.currFilter, minSize: e.target.value}
+                });
+            }
         };
 
         return <input className="min-max" type="text"
@@ -443,13 +447,12 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     }> = (props) => {
 
         const changeHandler = (e) => {
-            dispatcher.dispatch<typeof Actions.FilterChanged>({
-                name: Actions.FilterChanged.name,
-                payload: {
-                    ...props.currFilter,
-                    maxSize: e.target.value
-                }
-            });
+            if (sizeStringValidator.test(e.target.value)) {
+                dispatcher.dispatch<typeof Actions.FilterChanged>({
+                    name: Actions.FilterChanged.name,
+                    payload: {...props.currFilter, maxSize: e.target.value}
+                });
+            }
         };
 
         return <input className="min-max" type="text"
