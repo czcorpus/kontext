@@ -1,3 +1,23 @@
+# Copyright (c) 2021 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2021 Martin Zimandl <martin.zimandlk@gmail.com>
+# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
 from typing import Tuple, List
 from abc import ABC, abstractmethod
 
@@ -256,9 +276,10 @@ class SetupManatee(InstallationStep):
 
 class SetupKontext(InstallationStep):
 
-    def __init__(self, kontext_path: str, kontext_conf: str, stdout: str, stderr: str):
+    def __init__(self, kontext_path: str, kontext_conf: str, scheduler_conf: str, stdout: str, stderr: str):
         super().__init__(kontext_path, stdout, stderr)
         self._kontext_conf = kontext_conf
+        self._scheduler_conf = scheduler_conf
 
     def is_done(self):
         pass
@@ -282,7 +303,7 @@ class SetupKontext(InstallationStep):
             replace_string_in_file(os.path.join(self.kontext_path, 'conf/config.xml'),
                                    r'<job_scheduler>[\s\S]*<\/job_scheduler>', CELERY_SCHEDULER_CONFIG)
         else:
-            subprocess.check_call(['cp', 'rq-schedule-conf.sample.json', 'rq-schedule-conf.json'],
+            subprocess.check_call(['cp', self._scheduler_conf, 'rq-schedule-conf.json'],
                                   cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
 
         # update config.xml with current install path
@@ -380,7 +401,9 @@ if __name__ == '__main__':
 
     if args.step_name == 'SetupKontext':
         obj = SetupKontext(
-            kontext_path, os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml'), None, None)
+            kontext_path=kontext_path, kontext_conf=os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml'),
+            scheduler_conf=os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json'),
+            stdout=None, stderr=None)
         obj.run(False, False)
     elif args.step_name == 'SetupDefaultUsers':
         obj = SetupDefaultUsers(*init_step_args, args.step_args[0], int(args.step_args[1]))

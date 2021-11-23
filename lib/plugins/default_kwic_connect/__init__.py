@@ -84,19 +84,9 @@ class DefaultKwicConnect(AbstractKwicConnect):
         self._load_chunk_size = load_chunk_size
 
         self._providers = providers
-        self._cache_path = None
 
     def map_providers(self, provider_ids):
         return [self._providers[ident] for ident in provider_ids]
-
-    def set_cache_path(self, path):
-        self._cache_path = path
-        for backend, frontend in self.map_providers(self._providers):
-            backend.set_cache_path(path)
-
-    @property
-    def cache_path(self):
-        return self._cache_path
 
     def is_enabled_for(self, plugin_ctx, corpname):
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
@@ -125,12 +115,11 @@ class DefaultKwicConnect(AbstractKwicConnect):
         return ans
 
 
-@plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch):
-    providers, cache_path = setup_providers(settings.get('plugins', 'kwic_connect'))
+@plugins.inject(plugins.runtime.DB, plugins.runtime.CORPARCH)
+def create_instance(settings, db, corparch):
+    providers = setup_providers(settings.get('plugins', 'kwic_connect'), db)
     plg_conf = settings.get('plugins', 'kwic_connect')
-    kwic_conn = DefaultKwicConnect(providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],
-                                   load_chunk_size=plg_conf['load_chunk_size'])
-    if cache_path:
-        kwic_conn.set_cache_path(cache_path)
+    kwic_conn = DefaultKwicConnect(
+        providers, corparch, max_kwic_words=plg_conf['max_kwic_words'],
+        load_chunk_size=plg_conf['load_chunk_size'])
     return kwic_conn

@@ -283,15 +283,6 @@ class DefaultDb(KeyValueStorage):
         self.set(key, mapping)
         return True
 
-    def keys(self, startswith=None):
-        cursor = self._conn().cursor()
-        if startswith:
-            cursor.execute('SELECT key from data WHERE key LIKE ?', (f'{startswith}%',))
-        else:
-            cursor.execute('SELECT key from data')
-        for row in cursor:
-            yield row[0]
-
 
 def create_instance(conf):
     """

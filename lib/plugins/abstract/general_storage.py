@@ -221,12 +221,6 @@ class KeyValueStorage(abc.ABC):
         key -- data access key
         """
 
-    @abc.abstractmethod
-    def keys(self, startswith: str = None) -> Iterator[str]:
-        """
-        Search keys by pattern.
-        """
-
     def get_instance(self, plugin_id):
         """
         Return the current instance of the plug-in

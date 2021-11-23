@@ -21,19 +21,42 @@ from collections import defaultdict
 import logging
 import sys
 import os
-import datetime
 
 sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.realpath(__file__))))
 
 import settings
 import initializer
 import plugins
+from plugins import sqlite3_db
 
 # imports data from KeyValueStorage query persistence plugin db
 # into mysql integration database query history table
 # all parameters are defined in config.xml
 
-if __name__ == "__main__":
+
+class CustomDB:
+
+    def __init__(self, db_plugin):
+        self._db_plugin = db_plugin
+
+    def keys(self, startswith=None):
+        if isinstance(self._db_plugin, sqlite3_db.DefaultDb):
+            cursor = getattr(self._db_plugin, '_conn')().cursor()
+            if startswith:
+                cursor.execute('SELECT key from data WHERE key LIKE ?', (f'{startswith}%',))
+            else:
+                cursor.execute('SELECT key from data')
+            for row in cursor:
+                yield row[0]
+        else:
+            for key in getattr(self._db_plugin, '_db').scan_iter(f'{startswith}*'):
+                yield key.decode()
+
+    def list_get(self, key, from_idx=0, to_idx=-1):
+        return self._db_plugin(key, from_idx, to_idx)
+
+
+if __name__ == '__main__':
     logging.basicConfig()
     conf_path = os.path.realpath(os.path.join(os.path.dirname(
         __file__), '..', '..', '..', '..', 'conf', 'config.xml'))
@@ -45,14 +68,15 @@ if __name__ == "__main__":
 
     with plugins.runtime.DB as db, plugins.runtime.INTEGRATION_DB as integration_db, plugins.runtime.QUERY_PERSISTENCE as qp:
         full_data = []
-        for query_history_user in db.keys('query_history:user:'):
+        custom_db = CustomDB(db)
+        for query_history_user in custom_db.keys('query_history:user:'):
             user_id = int(query_history_user.split(':')[-1])
-            for item in db.list_get(query_history_user):
+            for item in custom_db.list_get(query_history_user):
                 if 'query_id' in item:
                     query_id = item['query_id']
                     q_supertype = item.get('q_supertype', item.get('qtype', 'conc'))
                     corpora = qp.open(query_id)['corpora']
-                    created = datetime.datetime.fromtimestamp(item['created'])
+                    created = item['created']
 
                     full_data.extend([
                         (user_id, query_id, q_supertype, created, item['name'], corpus)
