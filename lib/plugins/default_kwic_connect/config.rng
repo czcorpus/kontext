@@ -10,6 +10,9 @@
             <element name="js_module">
                 <value>defaultKwicConnect</value>
             </element>
+            <element name="ttl">
+                <data type="nonNegativeInteger" />
+            </element>
             <element name="providers_conf">
                 <a:documentation>
                     A path to a JSON file containing different 'providers'. The structure is
