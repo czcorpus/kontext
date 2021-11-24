@@ -68,7 +68,7 @@ if __name__ == '__main__':
         full_data = []
         custom_db = CustomDB(db)
         for query_history_user in custom_db.keys('query_history:user:'):
-            user_id = int(query_history_user.split(':')[-1])
+            user_id = int(query_history_user.decode().split(':')[-1])
             for item in custom_db.list_get(query_history_user):
                 if 'query_id' in item:
                     query_id = item['query_id']
