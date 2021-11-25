@@ -2,7 +2,7 @@ FROM czcorpus/kontext-manatee
 
 SHELL ["/bin/bash", "--login", "-c"]
 RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.36.0/install.sh | bash
-RUN nvm install node
+RUN nvm install 16
 
 RUN apt-get install -y sox libsox-fmt-mp3
 
