@@ -61,10 +61,12 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_all_corpora(self, user_id: int, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None,
-                         min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
-                         offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Iterable[Dict[str, Any]]:
+    def list_corpora(
+            self, user_id: int, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None,
+            min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
+            offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Iterable[Dict[str, Any]]:
         """
+        List all the active corpora based on provided arguments
         """
         pass
 

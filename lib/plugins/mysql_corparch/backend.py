@@ -33,6 +33,7 @@ class MySQLConfException(Exception):
 
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
+DFLT_CORP_ID_ATTR = 'name'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
 DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
@@ -42,13 +43,18 @@ DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
 
 class Backend(DatabaseBackend):
 
-    def __init__(self, db, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
-                 group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
-                 user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
-                 group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
+    def __init__(
+            self, db, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+            corp_id_attr: str = DFLT_CORP_ID_ATTR,
+            group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+            group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,
+            group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+            user_acc_table: str = DFLT_USER_ACC_TABLE,
+            user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR):
         self._db = db
         self._user_table = user_table
         self._corp_table = corp_table
+        self._corp_id_attr = corp_id_attr
         self._group_acc_table = group_acc_table
         self._user_acc_table = user_acc_table
         self._user_acc_corp_attr = user_acc_corp_attr
@@ -121,8 +127,9 @@ class Backend(DatabaseBackend):
             'GROUP BY c.name ', (corp_id,))
         return cursor.fetchone()
 
-    def load_all_corpora(self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                         offset=0, limit=10000000000, favourites=()) -> Iterable[Dict[str, Any]]:
+    def list_corpora(
+            self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+            offset=0, limit=10000000000, favourites=()) -> Iterable[Dict[str, Any]]:
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
@@ -223,7 +230,7 @@ class Backend(DatabaseBackend):
             f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
             f'     (SELECT {self._user_table}.{self._group_acc_group_attr} '
             f'          FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
-            ') AS kcu ON c.name = kcu.corpus_id '
+            f') AS kcu ON c.{self._corp_id_attr} = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
