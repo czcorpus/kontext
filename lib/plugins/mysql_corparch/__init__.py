@@ -185,9 +185,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                      offset=0, limit=-1, favourites=()):
         user_id = plugin_ctx.user_dict['id']
         ans = OrderedDict()
-        for row in self._backend.load_all_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
-                                                  max_size=max_size, requestable=requestable, offset=offset,
-                                                  limit=limit, favourites=favourites):
+        for row in self._backend.list_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
+                                              max_size=max_size, requestable=requestable, offset=offset,
+                                              limit=limit, favourites=favourites):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_ctx, row)
         return ans
 

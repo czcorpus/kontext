@@ -229,8 +229,8 @@ class CentralAuth(AbstractRemoteAuth):
 def create_instance(conf, sessions, cnc_db):
     logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(
-        cnc_db, user_table='user', corp_table='corpora', group_acc_table='relation',
-        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id', group_acc_corp_attr='corpora',
-        group_acc_group_attr='corplist')
+        cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
+        group_acc_table='relation', group_acc_group_attr='corplist', group_acc_corp_attr='corpora',
+        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id')
     return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
                        toolbar_conf=ToolbarConf(conf))
