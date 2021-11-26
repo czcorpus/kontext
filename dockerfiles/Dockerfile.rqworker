@@ -1,4 +1,4 @@
-FROM czcorpus/kontext-manatee
+FROM czcorpus/kontext-manatee:latest
 
 RUN mkdir /var/log/rq
 WORKDIR /opt/kontext
