@@ -71,22 +71,51 @@ export interface CorplistItem {
     keywords:Array<[string, string]>;
 }
 
-
-export interface Filters {
+export interface ServerFilters {
     maxSize:string;
     minSize:string;
     name:string;
     query?:string;
 }
 
+export interface Filters {
+    maxSize:Kontext.FormValue<string>;
+    minSize:Kontext.FormValue<string>;
+    name:Kontext.FormValue<string>;
+}
+
 export interface CorplistDataResponse extends Kontext.AjaxResponse {
     nextOffset:number;
     current_keywords:Array<string>;
-    filters:Filters;
+    filters:ServerFilters;
     keywords:Array<string>;
     rows:Array<CorplistItem>;
 }
 
+export interface ConfPluginData {
+    corpora_labels:[string, string, string]; // short, long, color
+    favorite:Array<{
+        id:string;
+        size:number;
+        size_info:string;
+        corpora:Array<{name:string; id:string}>;
+        description:string;
+        subcorpus_id:string;
+        subcorpus_orig_id:string;
+    }>;
+    featured:Array<{
+        id:string;
+        name:string;
+        corpus_id:string;
+        description:string;
+        size:number;
+    }>;
+    max_num_hints:number;
+    max_page_size:number;
+    tag_prefix:string;
+}
 
 
-
+export function validateSizeSpec(input:string):boolean {
+    return /^$|^[0-9]+[kMGT]?$/.test(input);
+}

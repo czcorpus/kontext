@@ -34,7 +34,8 @@
     "defaultCorparch__no_keyword": "Reset",
     "defaultCorparch__item_will_be_removed": "Item will be removed from the list in a few moments. Click the star icon to add it back to favourites.",
     "defaultCorparch__err001": "Maximum allowed number ({maxNum}) of favorite corpora exceeded. To add a new item, please remove an existing item first.",
-    "defaultCorparch__favourites_filter_label": "favourites"
+    "defaultCorparch__favourites_filter_label": "favourites",
+    "defaultCorparch__invalid_size_format": "Invalid size format. Use numbers or numbers with k (e.g. 800k = 800,000), M (e.g. 3.5M = 3,500,500), G (e.g. 2G = 2,000,000,000) "
   },
   "cs-CZ": {
     "defaultCorparch__unknown_size": "neznámá velikost",
@@ -71,7 +72,8 @@
     "defaultCorparch__no_keyword": "Zrušit výběr",
     "defaultCorparch__item_will_be_removed": "Položka bude za několik okamžiků odstraněna ze seznamu. Klikněte na ikonku hvězdičky pro její opětovné přidání do oblíbených.",
     "defaultCorparch__err001": "Byl překročen maximální povolený počet oblíbených korpusů ({maxNum}). Pro přidání nové položky je třeba nejdříve smazat některou z existujících.",
-    "defaultCorparch__favourites_filter_label": "oblíbené"
+    "defaultCorparch__favourites_filter_label": "oblíbené",
+    "defaultCorparch__invalid_size_format": "Neznámý formát pro velikost. Použijte buď běžná čísla nebo čísla v kombinaci s příponami k (např. 800k = 800.000), M (např. 3.5M = 3.500.500), G (např. 2G = 2.000.000.000)"
   },
   "szl": {
     "defaultCorparch__unknown_size": "niyznanŏ srogość",
@@ -108,7 +110,8 @@
     "defaultCorparch__no_keyword": "Resetuj",
     "defaultCorparch__item_will_be_removed": "Elymynt bydzie skasowany ze listy za chwilã. Kliknij ikōnã gwiŏzdy, żeby go dodać nazŏd do podryncznych.",
     "defaultCorparch__err001": "Maksymalnŏ wielość ({maxNum}) podryncznych korpusōw bōł przekroczōny. Żeby dodać nowy elymynt, nojprzōd skasuj jakiś inkszy.",
-    "defaultCorparch__favourites_filter_label": "favourites"
+    "defaultCorparch__favourites_filter_label": "favourites",
+    "defaultCorparch__invalid_size_format": "Invalid size format. Use numbers or numbers with k (e.g. 800k = 800,000), M (e.g. 3.5M = 3,500,500), G (e.g. 2G = 2,000,000,000) UNTRANSLATED"
   },
   "sl-SI": {
     "defaultCorparch__unknown_size": "neznana velikost",
@@ -145,6 +148,7 @@
     "defaultCorparch__no_keyword": "Ponastavite",
     "defaultCorparch__item_will_be_removed": "Element bo v nekaj trenutkih odstranjen s seznama. Kliknite na ikono zvezdice, da ga dodate nazaj med priljubljene",
     "defaultCorparch__err001": "Preseženo je največje število ({maxNum}) priljubljenih korpusov. Če želite dodati nov element, prosimo, najprej odstranite že obstoječi element.",
-    "defaultCorparch__favourites_filter_label": "Priljubljeno"
+    "defaultCorparch__favourites_filter_label": "Priljubljeno",
+    "defaultCorparch__invalid_size_format": "Invalid size format. Use numbers or numbers with k (e.g. 800k = 800,000), M (e.g. 3.5M = 3,500,500), G (e.g. 2G = 2,000,000,000) UNTRANSLATED"
   }
 }

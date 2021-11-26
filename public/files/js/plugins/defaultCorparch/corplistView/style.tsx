@@ -77,8 +77,12 @@ export const CorplistTable = styled.div`
 
 export const FilterForm = styled.section`
 
-    .filter input.min-max {
+    input.min-max {
         width: 70pt;
+    }
+
+    input.min-max.invalid {
+        background-color: ${theme.colorErrorInputBg};
     }
 
     fieldset {

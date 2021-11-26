@@ -64,8 +64,6 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
 
     const layoutViews = he.getLayoutViews();
 
-    const sizeStringValidator = new RegExp('^$|^[0-9]+[kMGT]?$');
-
     // ---------------------------------------------------------------------
     // -------------------------- dataset components -----------------------
     // ---------------------------------------------------------------------
@@ -416,23 +414,24 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      * An input to specify minimum corpus size
      */
     const MinSizeInput:React.FC<{
-        value:string;
+        value:Kontext.FormValue<string>;
         currFilter:Filters;
 
-    }> = (props) => {
+    }> = ({value, currFilter}) => {
 
-        const changeHandler = (e) => {
-            if (sizeStringValidator.test(e.target.value)) {
-                dispatcher.dispatch<typeof Actions.FilterChanged>({
-                    name: Actions.FilterChanged.name,
-                    payload: {...props.currFilter, minSize: e.target.value}
-                });
-            }
+        const changeHandler = (e:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch<typeof Actions.FilterChanged>({
+                name: Actions.FilterChanged.name,
+                payload: {
+                    ...currFilter,
+                    minSize: Kontext.newFormValue<string>(e.target.value, false)
+                }
+            });
         };
 
-        return <input className="min-max" type="text"
-                    value={props.value}
-                    onChange={changeHandler} />;
+        return <input className={`min-max${value.isInvalid ? ' invalid' : ''}`} type="text"
+                    value={value.value}
+                    title={value.errorDesc} onChange={changeHandler} />;
     };
 
     // -------------------------------- <MaxSizeInput /> -----------------
@@ -441,60 +440,45 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
      * An input to specify maximum corpus size
      */
     const MaxSizeInput:React.FC<{
-        value:string;
+        value:Kontext.FormValue<string>;
         currFilter:Filters;
 
-    }> = (props) => {
+    }> = ({value, currFilter}) => {
 
-        const changeHandler = (e) => {
-            if (sizeStringValidator.test(e.target.value)) {
-                dispatcher.dispatch<typeof Actions.FilterChanged>({
-                    name: Actions.FilterChanged.name,
-                    payload: {...props.currFilter, maxSize: e.target.value}
-                });
-            }
+        const changeHandler = (e:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.FilterChanged,
+                {
+                    ...currFilter,
+                    maxSize: Kontext.newFormValue<string>(e.target.value, false)
+                }
+            );
         };
 
-        return <input className="min-max" type="text"
-                        value={props.value}
-                        onChange={changeHandler} />;
+        return <input className={`min-max${value.isInvalid ? ' invalid' : ''}`} type="text"
+                    value={value.value}
+                    title={value.errorDesc} onChange={changeHandler} />;
     };
 
     // -------------------------------- <NameSearchInput /> -----------------
 
-    class NameSearchInput extends React.PureComponent<{
-        value:string;
+    const NameSearchInput:React.FC<{
+        value:Kontext.FormValue<string>;
         currFilter:Filters;
+    }> = ({value, currFilter}) => {
 
-    }> {
-
-        private _timer:number;
-
-        constructor(props) {
-            super(props);
-            this._timer = null;
-            this._changeHandler = this._changeHandler.bind(this);
+        const changeHandler = (e:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch(
+                Actions.FilterChanged,
+                {
+                    ...currFilter,
+                    name: Kontext.newFormValue<string>(e.target.value, false)
+                }
+            );
         }
 
-        _changeHandler(e) {
-            if (this._timer) {
-                window.clearTimeout(this._timer);
-            }
-            this._timer = window.setTimeout(((value) => () => {
-                dispatcher.dispatch<typeof Actions.FilterChanged>({
-                    name: Actions.FilterChanged.name,
-                    payload: {
-                        ...this.props.currFilter,
-                        corpusName: value
-                    }
-                });
-                window.clearTimeout(this._timer);
-            })(e.target.value), 300);
-        }
-
-        render() {
-            return <input type="text" defaultValue={this.props.value} onChange={this._changeHandler} />;
-        }
+        return <input type="text" className={value.isInvalid ? ' invalid' : ''}
+                        value={value.value} onChange={changeHandler} />;
     }
 
     // -------------------------------- <FilterInputFieldset /> -----------------
@@ -531,34 +515,27 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
     /**
      * Filter form root component
      */
-    class FilterForm extends React.PureComponent<CorplistTableModelState> {
+    const FilterForm:React.FC<CorplistTableModelState>  = (props) => {
 
-        _renderLoader() {
-            if (this.props.isBusy) {
-                return <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                alt={he.translate('global__loading')} title={he.translate('global__loading')} />;
-
-            } else {
-                return null;
-            }
-        }
-
-        render() {
-            return (
-                <S.FilterForm className="inner">
-                    <div style={{height: '1em'}}>
-                        {this._renderLoader()}
-                    </div>
-                    <KeywordsField
-                        keywords={this.props.keywords}
-                        label={he.translate('defaultCorparch__keywords_field_label')}
-                        favouritesOnly={this.props.favouritesOnly}
-                        anonymousUser={this.props.anonymousUser}/>
-                    <FilterInputFieldset
-                        filters={this.props.filters} />
-                </S.FilterForm>
-            )
-        }
+        return (
+            <S.FilterForm className="inner">
+                <div style={{height: '1em'}}>
+                    {
+                        props.isBusy ?
+                            <img className="ajax-loader" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading')} title={he.translate('global__loading')} /> :
+                            null
+                    }
+                </div>
+                <KeywordsField
+                    keywords={props.keywords}
+                    label={he.translate('defaultCorparch__keywords_field_label')}
+                    favouritesOnly={props.favouritesOnly}
+                    anonymousUser={props.anonymousUser}/>
+                <FilterInputFieldset
+                    filters={props.filters} />
+            </S.FilterForm>
+        )
     }
 
     return {
