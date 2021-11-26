@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable } from 'rxjs';
+import { Observable, Subject, debounceTime } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { StatelessModel, IActionDispatcher } from 'kombo';
+import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { List, HTTP, pipe, tuple, Dict } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
 import { CorpusInfo, CorpusInfoType, CorpusInfoResponse } from '../../models/common/layout';
 import { Actions } from './actions';
-import { CorplistItem, Filters, CorplistDataResponse } from './common';
+import { CorplistItem, Filters, CorplistDataResponse, validateSizeSpec, ConfPluginData } from './common';
 import { IPluginApi } from '../../types/plugins/common';
 
 
@@ -36,6 +36,9 @@ interface SetFavItemResponse extends Kontext.AjaxResponse {
      */
     id:string;
 }
+
+
+type DebouncedActions = typeof Actions.FilterChanged;
 
 
 export interface CorplistServerData {
@@ -76,7 +79,6 @@ export interface CorplistTableModelState {
     keywords:Array<KeywordInfo>;
     detailData:CorpusInfo|null;
     isBusy:boolean;
-    searchedCorpName:string;
     offset:number;
     nextOffset:number;
     limit:number;
@@ -94,12 +96,18 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
 
     protected readonly tagPrefix:string;
 
+    private readonly debouncedAction$:Subject<DebouncedActions>;
+
     constructor(dispatcher:IActionDispatcher, pluginApi:IPluginApi, initialData:CorplistServerData,
             preselectedKeywords:Array<string>) {
         super(
             dispatcher,
             {
-                filters: { maxSize: '', minSize: '', name: '' },
+                filters: {
+                    maxSize: Kontext.newFormValue('', false),
+                    minSize: Kontext.newFormValue('', false),
+                    name: Kontext.newFormValue('', false)
+                },
                 favouritesOnly: false,
                 keywords: List.map(
                     importKeywordInfo(preselectedKeywords),
@@ -108,33 +116,44 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 detailData: null,
                 isBusy: false,
                 offset: 0,
-                // TODO type safety
-                limit: pluginApi.getConf('pluginData')['corparch']['max_page_size'],
-                searchedCorpName: '',
+                limit: pluginApi.getConf<{corparch:ConfPluginData}>('pluginData')['corparch'].max_page_size,
                 nextOffset: initialData.nextOffset,
                 rows: [...initialData.rows],
                 anonymousUser: pluginApi.getConf<boolean>('anonymousUser'),
             }
         );
         this.pluginApi = pluginApi;
-        // TODO type safety
-        this.tagPrefix = this.pluginApi.getConf('pluginData')['corparch']['tag_prefix'];
+        this.tagPrefix = this.pluginApi.getConf<{corparch:ConfPluginData}>('pluginData')['corparch'].tag_prefix;
+        this.debouncedAction$ = new Subject();
+        this.debouncedAction$.pipe(
+            debounceTime(Kontext.TEXT_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
-        this.addActionHandler<typeof Actions.LoadDataDone>(
-            Actions.LoadDataDone.name,
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, debounced: true}
+                });
+            }
+        });
+
+        this.addActionHandler(
+            Actions.LoadDataDone,
             (state, action) => {
                 state.isBusy = false;
+                if (!action.error) {
+                    this.importData(state, action.payload.data);
+                }
+            },
+            (state, action, dispatch) => {
                 if (action.error) {
                     this.pluginApi.showMessage('error', action.error);
-
-                } else {
-                    this.importData(state, action.payload.data);
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.LoadExpansionDataDone>(
-            Actions.LoadExpansionDataDone.name,
+        this.addActionHandler(
+            Actions.LoadExpansionDataDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -148,8 +167,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.KeywordClicked>(
-            Actions.KeywordClicked.name,
+        this.addActionHandler(
+            Actions.KeywordClicked,
             (state, action) => {
                 state.offset = 0;
                 if (!action.payload.attachToCurrent) {
@@ -175,29 +194,12 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadData(this.exportQuery(state), this.exportFilter(state),
-                        state.offset, undefined, state.favouritesOnly).subscribe(
-                    (data) => {
-                        dispatch<typeof Actions.LoadDataDone>({
-                            name: Actions.LoadDataDone.name,
-                            payload: {data}
-                        });
-                    },
-                    (err) => {
-                        dispatch<typeof Actions.LoadDataDone>({
-                            name: Actions.LoadDataDone.name,
-                            error: err
-                        });
-                    }
-                );
+
             }
-        ).sideEffectAlsoOn(
-            Actions.KeywordResetClicked.name,
-            Actions.FilterChanged.name
         );
 
-        this.addActionHandler<typeof Actions.KeywordResetClicked>(
-            Actions.KeywordResetClicked.name,
+        this.addActionHandler(
+            Actions.KeywordResetClicked,
             (state, action) => {
                 state.offset = 0;
                 state.favouritesOnly = false;
@@ -206,11 +208,14 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                     state.keywords
                 );
                 state.isBusy = true;
+            },
+            (state, action, dispatcher) => {
+                this.loadDataAction(state, dispatcher);
             }
         );
 
-        this.addActionHandler<typeof Actions.ExpansionClicked>(
-            Actions.ExpansionClicked.name,
+        this.addActionHandler(
+            Actions.ExpansionClicked,
             (state, action) => {
                 if (action.payload.offset) {
                     state.offset = action.payload.offset;
@@ -236,26 +241,55 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.FilterChanged>(
-            Actions.FilterChanged.name,
+        this.addActionHandler(
+            Actions.FilterChanged,
             (state, action) => {
-                state.offset = 0;
-                if (action.payload.corpusName) {
-                    state.searchedCorpName = action.payload.corpusName;
+                state.filters.maxSize = action.payload.maxSize;
+                state.filters.minSize = action.payload.minSize;
+                state.filters.name = action.payload.name;
+                if (action.payload.debounced) {
+                    state.offset = 0;
+                    if (!validateSizeSpec(state.filters.maxSize.value)) {
+                        state.filters.maxSize = Kontext.updateFormValue(
+                            state.filters.maxSize,
+                            {
+                                isInvalid: true,
+                                errorDesc: this.pluginApi.translate('defaultCorparch__invalid_size_format')
+                            }
+                        );
+                    }
+                    if (!validateSizeSpec(state.filters.minSize.value)) {
+                        state.filters.minSize = Kontext.updateFormValue(
+                            state.filters.minSize,
+                            {
+                                isInvalid: true,
+                                errorDesc: this.pluginApi.translate('defaultCorparch__invalid_size_format')
+                            }
+                        );
+                    }
+                    if (this.allInputsValid(state)) {
+                        state.isBusy = true;
+                    }
+
+                } else {
+                    this.debouncedAction$.next(action);
                 }
-                state.filters = action.payload;
-                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                if (action.payload.debounced && this.allInputsValid(state)) {
+                    this.loadDataAction(state, dispatch);
+                }
             }
         );
 
-        this.addActionHandler<typeof Actions.ListStarClicked>(
-            Actions.ListStarClicked.name,
+        this.addActionHandler(
+            Actions.ListStarClicked,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.changeFavStatus(action.payload.corpusId, action.payload.favId).subscribe(
-                    ([itemId, itemAction]) => {
+                this.changeFavStatus(action.payload.corpusId, action.payload.favId).subscribe({
+                    next: ([itemId, itemAction]) => {
                         if (itemAction === 'add') {
                             this.pluginApi.showMessage('info',
                                 this.pluginApi.translate('defaultCorparch__item_added_to_fav'));
@@ -273,19 +307,19 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                             }
                         });
                     },
-                    (err) => {
-                        this.pluginApi.showMessage('error', err);
+                    error: error => {
+                        this.pluginApi.showMessage('error', error);
                         dispatch<typeof Actions.ListStarClickedDone>({
                             name: Actions.ListStarClickedDone.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.ListStarClickedDone>(
-            Actions.ListStarClickedDone.name,
+        this.addActionHandler(
+            Actions.ListStarClickedDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -315,8 +349,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.CorpusInfoRequired>(
-            Actions.CorpusInfoRequired.name,
+        this.addActionHandler(
+            Actions.CorpusInfoRequired,
             (state, action) => {
                 state.isBusy = true;
                 state.detailData = this.createEmptyDetail(); // to force view to show detail box
@@ -340,8 +374,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.CorpusInfoLoaded>(
-            Actions.CorpusInfoLoaded.name,
+        this.addActionHandler(
+            Actions.CorpusInfoLoaded,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -353,16 +387,43 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             }
         );
 
-        this.addActionHandler<typeof Actions.CorpusInfoClosed>(
-            Actions.CorpusInfoClosed.name,
+        this.addActionHandler(
+            Actions.CorpusInfoClosed,
             (state, action) => {
                 state.detailData = null;
             }
         );
     }
 
-    public exportFilter(state:CorplistTableModelState):Filters {
+    exportFilter(state:CorplistTableModelState):Filters {
         return state.filters;
+    }
+
+    private allInputsValid(state:CorplistTableModelState):boolean {
+        return !state.filters.maxSize.isInvalid && !state.filters.minSize.isInvalid;
+    }
+
+    private loadDataAction(state:CorplistTableModelState, dispatch:SEDispatcher):void {
+        this.loadData(
+            this.exportQuery(state),
+            this.exportFilter(state),
+            state.offset,
+            undefined,
+            state.favouritesOnly
+        ).subscribe({
+            next: data => {
+                dispatch(
+                    Actions.LoadDataDone,
+                    {data}
+                );
+            },
+            error: error => {
+                dispatch(
+                    Actions.LoadDataDone,
+                    error
+                );
+            }
+        });
     }
 
     exportQuery(state:CorplistTableModelState):string {
@@ -371,8 +432,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             List.filter(v => v.selected && v.visible),
             List.map(v => this.tagPrefix + v.ident)
         );
-        if (state.searchedCorpName) {
-            return q.concat(state.searchedCorpName).join(' ');
+        if (state.filters.name.value) {
+            return List.push(state.filters.name.value, q).join(' ');
         }
         return q.join(' ');
     }
@@ -443,7 +504,10 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             limit,
             favOnly,
             requestable: true,
-            ...filters
+            ...pipe(
+                filters,
+                Dict.map(v => v.value),
+            )
         };
         return this.pluginApi.ajax$<CorplistDataResponse>(
             HTTP.Method.GET,
@@ -477,17 +541,17 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
         );
         state.nextOffset = inData.nextOffset;
         state.filters = {
-            maxSize: inData.filters.maxSize || '',
-            minSize: inData.filters.minSize || '',
-            name: inData.filters.name || ''
+            maxSize: Kontext.newFormValue(inData.filters.maxSize || '', false),
+            minSize: Kontext.newFormValue(inData.filters.minSize || '', false),
+            name: Kontext.newFormValue(inData.filters.name || '', false)
         };
     }
 
     private extendData(state:CorplistTableModelState, data:CorplistDataResponse):void {
         state.filters = {
-            maxSize: data.filters.maxSize || '',
-            minSize: data.filters.minSize || '',
-            name: data.filters.name || ''
+            maxSize: Kontext.newFormValue(data.filters.maxSize || '', false),
+            minSize: Kontext.newFormValue(data.filters.minSize || '', false),
+            name: Kontext.newFormValue(data.filters.name || '', false)
         };
         state.nextOffset = data.nextOffset;
         state.rows = state.rows.concat(data.rows);

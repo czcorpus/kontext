@@ -58,7 +58,7 @@ export class Actions {
     };
 
     static FilterChanged:Action<{
-        corpusName?:string;
+        debounced?:boolean;
     } & Filters> = {
         name: 'CORPARCH_FILTER_CHANGED'
     };
