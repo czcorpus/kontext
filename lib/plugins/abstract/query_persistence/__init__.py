@@ -153,12 +153,12 @@ class AbstractQueryPersistence(abc.ABC):
         """
         if data.get('form', {}).get('form_type') == 'pquery':
             return 'pquery'
+        elif data.get('form', {}).get('form_type') == 'wlist':
+            return 'wlist'
         elif 'lastop_form' in data:
             form_type = data['lastop_form'].get('form_type')
             if form_type in ('query', 'filter', 'sort', 'sample', 'shuffle', 'switchmc', 'lgroup', 'locked', 'subhits', 'firsthits'):
                 return 'conc'
-            elif form_type == 'wlist':
-                return 'wlist'
 
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
