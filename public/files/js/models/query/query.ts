@@ -59,6 +59,7 @@ export interface AdvancedQuery {
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string;
+    last_attr:string|Array<string>;
 }
 
 
@@ -107,6 +108,7 @@ export interface SimpleQuery {
     pcq_pos_neg:'pos'|'neg';
     include_empty:boolean;
     default_attr:string|Array<string>;
+    last_attr:string|Array<string>;
     use_regexp:boolean;
 }
 
@@ -183,7 +185,8 @@ export function simpleToAdvancedQuery(q:SimpleQuery, defaultAttr:string):Advance
         queryHtml,
         pcq_pos_neg: q.pcq_pos_neg,
         include_empty: q.include_empty,
-        default_attr: defaultAttr
+        default_attr: defaultAttr,
+        last_attr: q.last_attr
     };
 }
 
@@ -204,6 +207,7 @@ export function advancedToSimpleQuery(q:AdvancedQuery, defaultAttr:string|Array<
         pcq_pos_neg: 'pos',
         include_empty: false,
         default_attr: defaultAttr,
+        last_attr: q.last_attr,
         use_regexp: false
     };
 }

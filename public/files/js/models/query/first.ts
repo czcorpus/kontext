@@ -188,7 +188,8 @@ function importUserQueries(
                         focusedAttr: undefined,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // determineDefaultAttr always returns string for advanced query
+                        default_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr, // determineDefaultAttr always returns string for advanced query
+                        last_attr: Array.isArray(defaultAttr) ? List.head(defaultAttr) : defaultAttr // the same as default_attr here
                     }
                 );
 
@@ -223,7 +224,8 @@ function importUserQueries(
                         use_regexp: data.currUseRegexpValues[corpus] || false,
                         pcq_pos_neg: data.currPcqPosNegValues[corpus] || 'pos',
                         include_empty: data.currIncludeEmptyValues[corpus] || false,
-                        default_attr: defaultAttr
+                        default_attr: defaultAttr,
+                        last_attr: defaultAttr // the same as default_attr here
                     }
                 );
             }
@@ -860,6 +862,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     pcq_pos_neg: 'pos',
                     include_empty: false,
                     default_attr: 'word',
+                    last_attr: undefined,
                     use_regexp: false
                 };
             }
