@@ -5,7 +5,7 @@ describe('Word List', () => {
 
     beforeEach(() => {
         cy.actionLogin();
-        
+
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 3);
     });
