@@ -82,6 +82,7 @@ class WordlistFormPage {
                 wlpat: formData.wlpat,
                 wlsort: formData.wlsort,
                 wlattr: formData.wlattr,
+                wlposattrs: formData.wlposattrs,
                 wltype: formData.wltype
             } : {
                 include_nonwords: 0,
@@ -93,6 +94,7 @@ class WordlistFormPage {
                 wlpat: '',
                 wlsort: 'f',
                 wlattr: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList')[0].n,
+                wlposattrs: [],
                 wltype: 'simple'
             }
     }

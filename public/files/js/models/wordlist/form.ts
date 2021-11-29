@@ -123,6 +123,7 @@ export interface WordlistFormModelArgs {
         wlsort:string;
         wlattr:string;
         wltype:WlTypes;
+        wlposattrs:Array<string>;
     };
 }
 
@@ -160,7 +161,12 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 wlnums: initialArgs.wlnums,
                 wltype: initialArgs.wltype,
                 wlminfreq: {value: initialArgs.wlminfreq.toFixed(), isInvalid: false, isRequired: true},
-                wlposattrs: [{inputId: Ident.puid(), value: ''}],
+                wlposattrs: List.empty(initialArgs.wlposattrs) ?
+                        [{inputId: Ident.puid(), value: ''}] :
+                        List.map(
+                            value => ({inputId: Ident.puid(), value}),
+                            initialArgs.wlposattrs
+                        ),
                 maxNumWlPosattrLevels: 3,
                 pfilterWords: initialArgs.pfilter_words.join('\n'),
                 nfilterWords: initialArgs.nfilter_words.join('\n'),
@@ -183,8 +189,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         );
         this.layoutModel = layoutModel;
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
+        this.addActionHandler(
+            QueryActions.QueryInputSelectSubcorp,
             (state, action) => {
                 if (action.payload.pubName) {
                     state.currentSubcorpus = action.payload.pubName;
@@ -211,8 +217,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistResultReload>(
-            Actions.WordlistResultReload.name,
+        this.addActionHandler(
+            Actions.WordlistResultReload,
             null,
             (state, action, dispatch) => {
                 dispatch<typeof Actions.WordlistFormSubmitReady>({
@@ -228,30 +234,30 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             MainMenuActions.DirectSave.name
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSelectAttr>(
-            Actions.WordlistFormSelectAttr.name,
+        this.addActionHandler(
+            Actions.WordlistFormSelectAttr,
             (state, action) => {
                 state.wlattr = action.payload.value;
                 state.usesStructAttr = action.payload.value.indexOf('.' ) > -1;
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetWlpat>(
-            Actions.WordlistFormSetWlpat.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetWlpat,
             (state, action) => {
                 state.wlpat = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetWlnums>(
-            Actions.WordlistFormSetWlnums.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetWlnums,
             (state, action) => {
                 state.wlnums = action.payload.value as WlnumsTypes; // TODO
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSelectWlposattr>(
-            Actions.WordlistFormSelectWlposattr.name,
+        this.addActionHandler(
+            Actions.WordlistFormSelectWlposattr,
             (state, action) => {
                 const srchIdx = List.findIndex(v => v.inputId === action.payload.ident, state.wlposattrs);
                 if (srchIdx > -1) {
@@ -261,37 +267,37 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetWltype>(
-            Actions.WordlistFormSetWltype.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetWltype,
             (state, action) => {
                 state.wltype = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetWlminfreq>(
-            Actions.WordlistFormSetWlminfreq.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetWlminfreq,
             (state, action) => {
                 state.wlminfreq.value = action.payload.value;
                 this.validateForm(state);
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetIncludeNonwords>(
-            Actions.WordlistFormSetIncludeNonwords.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetIncludeNonwords,
             (state, action) => {
                 state.includeNonwords = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormAddPosattrLevel>(
+        this.addActionHandler(
             Actions.WordlistFormAddPosattrLevel.name,
             (state, action) => {
                 state.wlposattrs.push({inputId: Ident.puid(), value: ''});
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormRemovePosattrLevel>(
-            Actions.WordlistFormRemovePosattrLevel.name,
+        this.addActionHandler(
+            Actions.WordlistFormRemovePosattrLevel,
             (state, action) => {
                 const srchIdx = List.findIndex(v => v.inputId === action.payload.ident, state.wlposattrs);
                 if (srchIdx > -1) {
@@ -300,8 +306,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         )
 
-        this.addActionHandler<typeof Actions.WordlistFormCreatePfilter>(
-            Actions.WordlistFormCreatePfilter.name,
+        this.addActionHandler(
+            Actions.WordlistFormCreatePfilter,
             (state, action) => {
                 state.filterEditorData = {
                     target: 'pfilter',
@@ -311,8 +317,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormCreateNfilter>(
-            Actions.WordlistFormCreateNfilter.name,
+        this.addActionHandler(
+            Actions.WordlistFormCreateNfilter,
             (state, action) => {
                 state.filterEditorData = {
                     target: 'nfilter',
@@ -322,8 +328,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetFilter>(
-            Actions.WordlistFormSetFilter.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetFilter,
             null,
             (state, action, dispatch) => {
                 const file:File = action.payload.value;
@@ -345,8 +351,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSetFilterDone>(
-            Actions.WordlistFormSetFilterDone.name,
+        this.addActionHandler(
+            Actions.WordlistFormSetFilterDone,
             (state, action) => {
                 const props = action.payload.data;
                 if (props.target === 'nfilter') {
@@ -366,8 +372,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormUpdateEditor>(
-            Actions.WordlistFormUpdateEditor.name,
+        this.addActionHandler(
+            Actions.WordlistFormUpdateEditor,
             (state, action) => {
                 if (state.filterEditorData.target !== 'empty') {
                     if (state.filterEditorData.target === 'nfilter') {
@@ -388,8 +394,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormReopenEditor>(
-            Actions.WordlistFormReopenEditor.name,
+        this.addActionHandler(
+            Actions.WordlistFormReopenEditor,
             (state, action) => {
                 if (action.payload.target === 'pfilter') {
                     state.filterEditorData = {
@@ -408,8 +414,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormClearFilterFile>(
-            Actions.WordlistFormClearFilterFile.name,
+        this.addActionHandler(
+            Actions.WordlistFormClearFilterFile,
             (state, action) => {
                 if (window.confirm(this.layoutModel.translate('wordlist__confirm_file_remove'))) {
                     if (action.payload.target === 'pfilter') {
@@ -424,7 +430,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormCloseEditor>(
+        this.addActionHandler(
             Actions.WordlistFormCloseEditor.name,
             (state, action) => {
                 if (state.filterEditorData.target === 'pfilter') {
@@ -440,8 +446,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSubmit>(
-            Actions.WordlistFormSubmit.name,
+        this.addActionHandler(
+            Actions.WordlistFormSubmit,
             (state, action) => {
                 this.validateForm(state);
                 if (state.wlpat === '' && window.confirm(this.layoutModel.translate('wordlist__ask_empty_pattern'))) {
@@ -468,43 +474,43 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof Actions.WordlistFormSubmitCancelled>(
-            Actions.WordlistFormSubmitCancelled.name,
+        this.addActionHandler(
+            Actions.WordlistFormSubmitCancelled,
             (state, action) => {
                 state.isBusy = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleOutputOptions>(
-            Actions.ToggleOutputOptions.name,
+        this.addActionHandler(
+            Actions.ToggleOutputOptions,
             (state, action) => {
                 state.outputOptionsVisible = !state.outputOptionsVisible;
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleFilterOptions>(
-            Actions.ToggleFilterOptions.name,
+        this.addActionHandler(
+            Actions.ToggleFilterOptions,
             (state, action) => {
                 state.filtersVisible = !state.filtersVisible;
             }
         );
 
-        this.addActionHandler<typeof Actions.RegisterPrecalcTasks>(
-            Actions.RegisterPrecalcTasks.name,
+        this.addActionHandler(
+            Actions.RegisterPrecalcTasks,
             (state, action) => {
                 state.precalcTasks = action.payload.tasks;
             }
         );
 
-        this.addActionHandler<typeof Actions.ToggleModalForm>(
-            Actions.ToggleModalForm.name,
+        this.addActionHandler(
+            Actions.ToggleModalForm,
             (state, action) => {
                 state.modalVisible = !state.modalVisible;
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActions.CorpusSwitchModelRestore.name,
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
             (state, action)  => {
                 if (!action.error) {
                     this.deserialize(
@@ -517,8 +523,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
-            GlobalActions.SwitchCorpus.name,
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
             (state, action) => {
                 dispatcher.dispatch<typeof GlobalActions.SwitchCorpusReady>({
                     name: GlobalActions.SwitchCorpusReady.name,
@@ -530,8 +536,8 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
 
-        this.addActionHandler<typeof ATActions.AsyncTasksChecked>(
-            ATActions.AsyncTasksChecked.name,
+        this.addActionHandler(
+            ATActions.AsyncTasksChecked,
             (state, action) => {
                 if (!List.empty(state.precalcTasks)) {
                     const updated:Array<Kontext.AsyncTaskInfo<{}>> = [];
