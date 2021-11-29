@@ -206,7 +206,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
         full_data = []
         corpora = CorpusCache(corpus_manager)
-        for item in cursor:
+        for item in cursor.fetchall():
             q_supertype = item['q_supertype']
             if q_supertype == 'conc':
                 tmp = self._merge_conc_data(item)

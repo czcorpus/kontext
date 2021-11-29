@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 
-import 'cypress-real-events/support';
 
 beforeEach(() => {
     cy.viewport(1600, 1200);
@@ -33,7 +32,6 @@ Cypress.Commands.add('clickMenuItem', (m, n) => {
         win.integrationTesting.showSubmenu(submenus[m-1]);
     });
     cy.get(`#main-menu-mount li:nth-child(${m}) .submenu li:nth-child(${n})`).should('be.visible').click();
-    cy.get(`body`).realHover();
 });
 
 

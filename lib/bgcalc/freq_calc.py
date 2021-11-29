@@ -279,6 +279,8 @@ def calculate_freqs(args: FreqCalsArgs):
 
     if calc_result is None:
         raise CalcBackendError('Failed to get result')
+    elif isinstance(calc_result, Exception):
+        raise calc_result
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
     lastpage = None

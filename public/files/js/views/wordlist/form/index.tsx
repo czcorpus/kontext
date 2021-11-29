@@ -205,24 +205,23 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
         enabled:boolean;
         value:MultiposAttr;
 
-    }> = (props) => {
+    }> = ({attrList, enabled, value}) => {
 
         const handleChange = (evt) => {
             dispatcher.dispatch<typeof Actions.WordlistFormSelectWlposattr>({
                 name: Actions.WordlistFormSelectWlposattr.name,
                 payload: {
-                    ident: props.value.inputId,
+                    ident: value.inputId,
                     value: evt.target.value
                 }
             });
         }
 
         return (
-            <select onChange={handleChange} disabled={!props.enabled}>
-                <option value={props.value.value}>---</option>
+            <select onChange={handleChange} value={value.value} disabled={!enabled}>
                 {List.map(
                     x => <option key={x.n} value={x.n}>{x.label}</option>,
-                    props.attrList
+                    attrList
                 )}
             </select>
         );
