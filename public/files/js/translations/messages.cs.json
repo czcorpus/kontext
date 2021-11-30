@@ -415,6 +415,7 @@
         "query__interpretation_subhead": "Po odeslání bude dotaz interpretován takto",
         "query__interpretation_note": "Pokud jste zamýšleli něco jiného, zkuste změnit výchozí atribut nebo použijte pokročilý dotaz.",
         "query__interpretation_qs_note": "V případě, že vám nevyhovuje upřesnění parametrů některých slov, můžete se vrátit k výchozí interpretaci pomocí tlačítka níže.",
+        "query__set_last_used_attr": "Nastavit poslední použitý atribut",
         "query__help": "Nápověda - dotazovací formulář",
         "pquery__help": "Nápověda - paradigmatický dotaz",
         "qhistory__attached_text_types": "Typy textů",

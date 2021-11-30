@@ -480,6 +480,7 @@
         "query__interpretation_subhead": "Ko potrdite, bo poizvedba interpretirana, kot sledi",
         "query__interpretation_note": "Če ne želite iskati tega, poskusite spremeniti privzeti atribut iskanja ali uporabite napredno poizvedbo.",
         "query__interpretation_qs_note": "Če ne želite uporabiti razširjenih specifikacij ene ali več besed, uporabite spodnji gumb, da se vrnete na privzeto interpretacijo.",
+        "query__set_last_used_attr": "Set last used attribute UNTRANSLATED",
         "query__help": "Pomoč - obrazec za poizvedbo",
         "pquery__help": "Pomoč - paradigmatična poizvedba",
         "qhistory__attached_text_types": "Vrste besedil",

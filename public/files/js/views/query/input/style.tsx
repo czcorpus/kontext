@@ -24,6 +24,7 @@ import * as theme from '../../theme/default';
 import warningIconImg from '../../../../img/warning-icon.svg';
 import tokenHighlightImg from '../../../../img/token_highlight.svg';
 import configIconPink from '../../../../img/config-icon-pink.svg';
+import lastUsedItemImg from '../../../../img/last-used-item.png';
 
 // -------------------- <AdvancedFormFieldsetDesc /> ---------------------------
 
@@ -531,4 +532,22 @@ export const SuggestionsWidget = styled.div`
         justify-content: center;
         padding: 1em;
     }
+`;
+
+export const LastUsedItem = styled.button`
+    &:hover {
+        cursor: ${(props) => props.disabled ? 'default' : 'pointer'};
+    }
+
+    width: 1.7em;
+    height: 1.7em;
+    margin: 0 0.2em;
+    vertical-align: middle;
+
+    border-style: none;
+    background-color: transparent;
+    background-image: ${(props) => props.disabled ? null : `url(${lastUsedItemImg})`};
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
 `;

@@ -740,7 +740,7 @@ export function init({
     // -------------------- <DefaultAttrSelector /> ------------------------
 
     const DefaultAttrSelector:React.FC<{
-        defaultAttr:string;
+        defaultAttr:string|Array<string>;
         forcedAttr:string;
         attrList:Array<Kontext.AttrItem>;
         lastAttr:string|Array<string>;
@@ -834,8 +834,6 @@ export function init({
         lastAttr:string|Array<string>;
 
     }> = (props) => {
-        console.log(props.value, props.lastAttr);
-
 
         const handleSelectChange = (evt) => {
             dispatcher.dispatch<typeof Actions.QueryInputSetDefaultAttr>({
@@ -856,6 +854,7 @@ export function init({
             );
 
         } else {
+            const disableReset = JSON.stringify(props.lastAttr) === JSON.stringify(props.value);
             return (
                 <>
                     <select className="DefaultAttrSelect" value={formEncodeDefaultAttr(props.value)} onChange={handleSelectChange}>
@@ -876,7 +875,11 @@ export function init({
                         }
                     </select>
                     {props.lastAttr ?
-                        <button type="button" disabled={props.lastAttr === props.value} value={formEncodeDefaultAttr(props.lastAttr)} onClick={handleSelectChange}>Reload</button> :
+                        <S.LastUsedItem type="button"
+                            title={disableReset ? null : he.translate('query__set_last_used_attr')}
+                            disabled={disableReset}
+                            value={formEncodeDefaultAttr(props.lastAttr)}
+                            onClick={handleSelectChange} /> :
                         null
                     }
                 </>
@@ -1085,7 +1088,7 @@ export function init({
                                 <DefaultAttrSelector
                                     label={he.translate('query__default_attr')}
                                     sourceId={this.props.sourceId}
-                                    defaultAttr={Array.isArray(query.default_attr) ? undefined : query.default_attr}
+                                    defaultAttr={query.default_attr}
                                     forcedAttr={this.props.forcedAttr}
                                     attrList={this.props.attrList}
                                     lastAttr={query.last_attr}
