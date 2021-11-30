@@ -188,6 +188,7 @@ export function newModelState(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
+                        last_attr: null,
                         expressionRole: {
                             type: 'specification',
                             maxNonMatchingRatio: Kontext.newFormValue('0', true)
@@ -260,6 +261,7 @@ export function splitFullQuery(
                         pcq_pos_neg: 'pos',
                         include_empty: true,
                         default_attr: null,
+                        last_attr: null,
                         expressionRole: {
                             type: item.type,
                             maxNonMatchingRatio: Kontext.newFormValue(item.limit + '', true)
@@ -333,6 +335,7 @@ export function joinPartialQueries(
         pcq_pos_neg: 'pos',
         include_empty: true,
         default_attr: null,
+        last_attr: null,
         type: 'full-query'
     };
 }
@@ -384,6 +387,7 @@ function importQueries(pqueryForm:FreqIntersectionArgs, concQueries:ConcQueries)
                         pcq_pos_neg: 'pos',
                         include_empty: query.include_empty,
                         default_attr: query.default_attr,
+                        last_attr: null,
                         expressionRole: {
                             type: qRole,
                             maxNonMatchingRatio: Kontext.newFormValue('' + maxNonMatchingRatio, true)

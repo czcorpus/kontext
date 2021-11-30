@@ -1020,6 +1020,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             pcq_pos_neg: 'pos',
             include_empty: false,
             default_attr: null,
+            last_attr: null,
             expressionRole: {
                 type: 'specification',
                 maxNonMatchingRatio: Kontext.newFormValue('0', true)

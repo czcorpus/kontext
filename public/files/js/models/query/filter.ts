@@ -176,7 +176,8 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 focusedAttr: undefined,
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
-                                default_attr: src.currDefaultAttrValues[filter]
+                                default_attr: src.currDefaultAttrValues[filter],
+                                last_attr: null
                             }
                         );
 
@@ -199,6 +200,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                                 pcq_pos_neg: 'pos',
                                 include_empty: false,
                                 default_attr: src.currDefaultAttrValues[filter],
+                                last_attr: null,
                                 use_regexp: src.currUseRegexpValues[filter]
                             }
                         )
@@ -228,7 +230,8 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     focusedAttr: undefined,
                     pcq_pos_neg: 'pos',
                     include_empty: false,
-                    default_attr: src.default_attr
+                    default_attr: src.default_attr,
+                    last_attr: null
                 } :
                 {
                     corpname: sourceId,
@@ -245,6 +248,7 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
                     pcq_pos_neg: 'pos',
                     include_empty: false,
                     default_attr: src.default_attr,
+                    last_attr: null,
                     use_regexp: src.use_regexp
                 }
         };
