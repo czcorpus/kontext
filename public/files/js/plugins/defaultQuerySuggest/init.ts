@@ -28,9 +28,11 @@ import { isEmptyResponse, Model } from './model';
 import {
     isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend,
     isPosAttrPairRelClickValue } from './frontends';
-import { AnyProviderInfo } from './providers';
+import { AnyProviderInfo, isEnabledFor } from './providers';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 import { IPluginApi } from '../../types/plugins/common';
+import { QueryFormType } from '../../models/query/actions';
+import { QueryValueSubformat } from '../../types/plugins/querySuggest';
 
 
 /**
@@ -143,6 +145,22 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
     listCurrentProviders():Array<string> {
         return List.map(
             v => v.heading,
+            this.providers
+        );
+    }
+
+    suggestionsAvailableFor(
+        formType:QueryFormType,
+        valueSubformat:QueryValueSubformat,
+        posAttr:string|undefined
+    ):boolean {
+        return List.some(
+            provider => isEnabledFor(
+                provider,
+                formType,
+                valueSubformat,
+                posAttr
+            ),
             this.providers
         );
     }

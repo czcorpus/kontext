@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { QueryFormType } from '../../../models/query/actions';
 import { AnyQuery, QuerySuggestion } from '../../../models/query/query';
 import * as PluginInterfaces from '../../../types/plugins';
 import { IPluginApi } from '../../../types/plugins/common';
+import { QueryValueSubformat } from '../../../types/plugins/querySuggest';
 
 /**
  *
@@ -48,6 +50,10 @@ export class EmptyQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugin 
 
     listCurrentProviders():Array<string> {
         return [];
+    }
+
+    suggestionsAvailableFor(formType:QueryFormType, valueSubformat:QueryValueSubformat, posAttr:string|undefined):boolean {
+        return false;
     }
 
     isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {

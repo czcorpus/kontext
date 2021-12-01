@@ -28,7 +28,7 @@ import { PageModel } from '../../app/page';
 import { QueryContextModel } from './context';
 import { validateNumber, setFormItemInvalid } from '../../models/base';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport, FilterTypes } from './common';
+    FilterServerArgs, determineSupportedWidgets, getTagBuilderSupport, FilterTypes, suggestionsEnabled } from './common';
 import { Actions } from './actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -387,7 +387,18 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     List.map(k => tuple(k, null)),
                     Dict.fromEntries()
                 ),
-                suggestionsEnabled: props.suggestionsEnabled,
+                suggestionsConfigured: props.suggestionsConfigured,
+                suggestionsEnabled: pipe(
+                    queries,
+                    Dict.map(
+                        query => suggestionsEnabled(
+                            qsPlugin,
+                            props.suggestionsConfigured,
+                            Kontext.ConcFormTypes.QUERY,
+                            query
+                        )
+                    )
+                ),
                 suggestionsLoading: pipe(
                     queries,
                     Dict.keys(),

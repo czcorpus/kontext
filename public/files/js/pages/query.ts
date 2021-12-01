@@ -246,7 +246,7 @@ export class QueryPage {
                 useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
                 isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
                 isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
-                suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
+                suggestionsConfigured: this.layoutModel.getConf<boolean>('QSEnabled'),
                 simpleQueryDefaultAttrs: pipe(
                     [...this.layoutModel.getConf<Array<string>>('alignedCorpora')],
                     List.push(this.layoutModel.getCorpusIdent().id),

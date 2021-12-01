@@ -404,7 +404,7 @@ export class ViewPage {
             useRichQueryEditor:this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
-            suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
+            suggestionsConfigured: this.layoutModel.getConf<boolean>('QSEnabled'),
             simpleQueryDefaultAttrs: pipe(
                 this.getActiveCorpora(),
                 List.map(corpus => tuple(
@@ -495,7 +495,7 @@ export class ViewPage {
             useRichQueryEditor: this.layoutModel.getConf<boolean>('UseRichQueryEditor'),
             isAnonymousUser: this.layoutModel.getConf<boolean>('anonymousUser'),
             isLocalUiLang: this.layoutModel.getConf<boolean>('isLocalUiLang'),
-            suggestionsEnabled: this.layoutModel.getConf<boolean>('QSEnabled'),
+            suggestionsConfigured: this.layoutModel.getConf<boolean>('QSEnabled'),
             simpleQueryDefaultAttrs: {
                 '__new__': pipe(
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),

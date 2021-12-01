@@ -31,7 +31,7 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
-    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport } from './common';
+    ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled } from './common';
 import { Actions } from './actions';
 import { Actions as GenOptsActions } from '../options/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
@@ -77,7 +77,7 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     tagsets:{[corpname:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>};
     isAnonymousUser:boolean;
     isLocalUiLang:boolean;
-    suggestionsEnabled:boolean;
+    suggestionsConfigured:boolean;
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
 }
 
@@ -389,7 +389,18 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     List.map(c => tuple(c, null)),
                     Dict.fromEntries()
                 ),
-                suggestionsEnabled: props.suggestionsEnabled,
+                suggestionsConfigured: props.suggestionsConfigured,
+                suggestionsEnabled: pipe(
+                    queries,
+                    Dict.map(
+                        query => suggestionsEnabled(
+                            qsPlugin,
+                            props.suggestionsConfigured,
+                            Kontext.ConcFormTypes.QUERY,
+                            query
+                        )
+                    )
+                ),
                 suggestionsLoading: pipe(
                     props.corpora,
                     List.map(c => tuple(c, {})),

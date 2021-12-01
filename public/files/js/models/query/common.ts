@@ -44,6 +44,7 @@ import { AttrHelper } from './cqleditor/attrs';
 import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions } from '../searchHistory/actions';
 import { SubmitEncodedSimpleTokens } from './formArgs';
+import { QueryValueSubformat } from '../../types/plugins/querySuggest';
 
 /*
 Some important terms to prevent confusion:
@@ -149,7 +150,7 @@ export interface GeneralQueryFormProperties {
     structList:Array<string>;
     wPoSList:Array<{v:string; n:string}>;
     useRichQueryEditor:boolean;
-    suggestionsEnabled:boolean;
+    suggestionsConfigured:boolean;
 }
 
 
@@ -160,6 +161,32 @@ export const appendQuery = (origQuery:string, query:string, prependSpace:boolean
 
 export interface WithinBuilderData extends Kontext.AjaxResponse {
     structattrs:{[attr:string]:Array<string>};
+}
+
+
+export function determineSuggValueType(query:AnyQuery):QueryValueSubformat {
+    if (query.qtype === 'advanced') {
+        return 'advanced';
+
+    } else if (query.use_regexp) {
+        return 'regexp';
+    }
+    return 'simple_ic';
+}
+
+export function suggestionsEnabled(
+    plugin:PluginInterfaces.QuerySuggest.IPlugin,
+    configured:boolean,
+    formType:QueryFormType,
+    query:AnyQuery,
+):boolean {
+    return configured && plugin.suggestionsAvailableFor(
+    formType,
+    determineSuggValueType(query),
+    Array.isArray(query.default_attr) ?
+        undefined :
+        query.default_attr
+    );
 }
 
 
@@ -216,7 +243,17 @@ export interface QueryFormModelState {
 
     suggestionsVisible:{[sourceId:string]:number};
 
-    suggestionsEnabled:boolean;
+    /**
+     * This specifies whether the "suggestions" are enabled by user in respective options
+     */
+    suggestionsConfigured:boolean;
+
+    /**
+     * This specifies whether the suggestions are enabled given the current form state
+     * (e.g. by selected attributes, case sensitivity etc.). Please note that this depends
+     * on suggestionsConfigured - i.e. suggestionsEnabled => suggestionsConfigured
+     */
+    suggestionsEnabled:{[sourceId:string]:boolean};
 
     suggestionsLoading:{[sourceId:string]:{[position:number]:boolean}};
 
@@ -433,6 +470,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     } else {
                         throw new Error(`Invalid default attr value: ${action.payload.value}`);
                     }
+                    this.updateQsEnabled(state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -454,6 +492,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     } else {
                         console.error('Invalid query type');
                     }
+                    this.updateQsEnabled(state, action.payload.sourceId);
                 });
                 this.autoSuggestTrigger.next(tuple(
                     action.payload.sourceId,
@@ -479,6 +518,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             );
                             this.rehighlightSimpleQuery(queryObj);
                         }
+                        this.updateQsEnabled(state, action.payload.sourceId);
                     }
                 });
                 this.autoSuggestTrigger.next(tuple(
@@ -763,8 +803,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             action => {
                 if (!action.error) {
                     this.changeState(state => {
-                        state.suggestionsEnabled = action.payload.qsEnabled;
-                        if (!state.suggestionsEnabled) {
+                        state.suggestionsConfigured = action.payload.qsEnabled;
+                        if (!state.suggestionsConfigured) {
                             state.suggestionsVisible = Dict.map(
                                 v => null,
                                 state.suggestionsVisible
@@ -903,6 +943,16 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     suggRequests
                 );
             }
+        );
+    }
+
+    private updateQsEnabled(state:QueryFormModelState, sourceId:string):void {
+        const query = state.queries[sourceId];
+        state.suggestionsEnabled[sourceId] = suggestionsEnabled(
+            this.qsPlugin,
+            state.suggestionsConfigured,
+            state.formType,
+            query
         );
     }
 
@@ -1222,21 +1272,15 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     }
 
     private determineSuggValueType(sourceId:string):PluginInterfaces.QuerySuggest.QueryValueSubformat {
-        const query = this.state.queries[sourceId];
-        if (query.qtype === 'advanced') {
-            return 'advanced';
-
-        } else if (query.use_regexp) {
-            return 'regexp';
-        }
-        return 'simple_ic';
+        return determineSuggValueType(this.state.queries[sourceId]);
     }
 
     private shouldAskForSuggestion(sourceId:string, srchWord:string):boolean {
         const queryObj = this.state.queries[sourceId];
+        // TODO maybe the 'use_regexp' should be allowed in case plug-in is OK with that
         const queryOptsOk = queryObj.qtype === 'simple' && !queryObj.use_regexp ||
             queryObj.qtype === 'advanced';
-        return this.state.suggestionsEnabled && !!srchWord.trim() && queryOptsOk;
+        return this.state.suggestionsConfigured && !!srchWord.trim() && queryOptsOk;
     }
 
     protected validateQuery(query:string, queryType:QueryType):boolean {

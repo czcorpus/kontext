@@ -469,6 +469,7 @@
         "query__contains_selected_text_types": "Izbrane so nekatere vrste besedil",
         "query__chain_no_op_msg": "V parametrih konkordanc ni sprememb - prikazani so prvotni rezultati",
         "query__suggestions_available": "Predlogi za poizvedbo",
+        "query_suggestions_are_enabled": "Query suggestions are enabled UNTRANSLATED",
         "query__suggestions_for_token_avail": "CTRL+klik, da prilagodite parametre te pojavnice",
         "query__token_is_expanded": "Pojavnica ima spremenjene parametre. Uporabite funkcijo 'Interpretacija poizvedbe', da jih pregledate ali spremenite.",
         "query__reset_token_expansions": "Odstrani dodatne specifikacije poizvedb",

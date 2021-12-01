@@ -404,6 +404,7 @@
         "query__contains_selected_text_types": "Some text types are selected",
         "query__chain_no_op_msg": "No change in the concordance parameters - showing the original result",
         "query__suggestions_available": "Query suggestions",
+        "query_suggestions_are_enabled": "Query suggestions are enabled",
         "query__suggestions_for_token_avail": "Use CTRL + click to customize parameters of this token",
         "query__token_is_expanded": "The token has modified parameters. Use the 'Query interpretation' function to review or modify them.",
         "query__reset_token_expansions": "Remove additional query specification",
