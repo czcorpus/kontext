@@ -65,10 +65,14 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import re
 import json
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+from typing import Union
 
 import plugins
 from plugins.abstract.query_persistence import AbstractQueryPersistence
 from plugins.abstract.query_persistence.common import generate_idempotent_id
+from plugins.abstract.integration_db import IntegrationDatabase
 from plugins import inject
 from controller.errors import ForbiddenException, NotFoundException
 import logging
@@ -105,7 +109,12 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     DEFAULT_ANONYMOUS_USER_TTL_DAYS = 7
 
-    def __init__(self, settings, db, sql_backend, auth):
+    def __init__(
+            self,
+            settings,
+            db,
+            sql_backend: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            auth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
@@ -291,7 +300,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, db, integration_db, auth):
+def create_instance(settings, db: IntegrationDatabase[MySQLConnection, MySQLCursor], integration_db, auth):
     """
     Creates a plugin instance.
     """
@@ -300,7 +309,6 @@ def create_instance(settings, db, integration_db, auth):
         logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         return MySqlQueryPersistence(settings, db, integration_db, auth)
     else:
-        from plugins.common.mysql import MySQLOps, MySQLConf
         logging.getLogger(__name__).info(
             'mysql_query_persistence uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))

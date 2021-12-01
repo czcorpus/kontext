@@ -19,8 +19,12 @@
 """
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
-import json
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple, Union
+from plugins.abstract.integration_db import IntegrationDatabase
+from plugins.common.mysql import MySQLOps
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+
 from plugins.abstract.corparch.corpus import TagsetInfo, PosCategoryItem
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins.abstract.corparch.backend.regkeys import (
@@ -44,7 +48,10 @@ DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
 class Backend(DatabaseBackend):
 
     def __init__(
-            self, db, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+            self,
+            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            user_table: str = DFLT_USER_TABLE,
+            corp_table: str = DFLT_CORP_TABLE,
             corp_id_attr: str = DFLT_CORP_ID_ATTR,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,
             group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,

@@ -28,9 +28,6 @@ class MockUserItems(AbstractUserItems):
         self._added_items = []
         self._deleted_items = []
 
-    def from_dict(self, data):
-        raise NotImplementedError()
-
     def serialize(self, obj):
         raise NotImplementedError()
 

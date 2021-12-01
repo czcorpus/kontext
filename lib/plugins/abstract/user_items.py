@@ -90,16 +90,6 @@ class AbstractUserItems(abc.ABC):
     it.
     """
 
-    def from_dict(self, data):
-        """
-        According to provided data it returns a proper
-        implementation of GeneralItem. OPTIONAL implementation
-
-        arguments:
-        data -- a dict
-        """
-        raise NotImplementedError()
-
     @abc.abstractmethod
     def serialize(self, obj):
         """

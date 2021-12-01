@@ -19,10 +19,11 @@
 import re
 import copy
 from collections import OrderedDict, defaultdict
-import os
 import logging
 from typing import Dict, List, Tuple
 import json
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 
 from controller import exposed
 import actions.user
@@ -30,9 +31,9 @@ import plugins
 from plugins import inject
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusListItem
 from plugins.abstract.corparch.backend import DatabaseBackend
+from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.abstract.corparch.corpus import (
     BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo)
-from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query
 
@@ -354,7 +355,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, integ_db):
+def create_instance(conf, user_items, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')

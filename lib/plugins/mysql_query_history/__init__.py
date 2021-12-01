@@ -31,6 +31,9 @@ configuration.
 
 from datetime import datetime
 import logging
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+
 from plugins.abstract.auth import AbstractAuth
 from plugins.abstract.integration_db import IntegrationDatabase
 from corplib.abstract import AbstractKCorpus
@@ -61,7 +64,12 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
     TABLE_NAME = 'kontext_query_history'
 
-    def __init__(self, conf, db: IntegrationDatabase, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
+    def __init__(
+            self,
+            conf,
+            db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+            query_persistence: AbstractQueryPersistence,
+            auth: AbstractAuth):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
@@ -310,7 +318,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db, query_persistence, auth):
+def create_instance(settings, db: IntegrationDatabase[MySQLConnection, MySQLCursor], query_persistence, auth):
     """
     arguments:
     settings -- the settings.py module

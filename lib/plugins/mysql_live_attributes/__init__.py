@@ -39,6 +39,7 @@ from plugins.abstract.general_storage import KeyValueStorage
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.abstract.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
+from plugins.errors import PluginCompatibilityException
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -393,7 +394,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
 def create_instance(
-        settings, corparch: AbstractCorporaArchive, db: KeyValueStorage,
+        settings,
+        corparch: AbstractCorporaArchive,
+        db: KeyValueStorage,
         integ_db: IntegrationDatabase) -> MysqlLiveAttributes:
     """
     creates an instance of the plugin
@@ -416,4 +419,4 @@ def create_instance(
                 'corpora', 'empty_attr_value_placeholder'),
             max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
     else:
-        logging.getLogger(__name__).error('mysql_live_attributes integration db not provided')
+        raise PluginCompatibilityException('mysql_live_attributes works only with integration_db enabled')

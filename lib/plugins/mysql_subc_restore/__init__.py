@@ -21,11 +21,14 @@ import urllib.parse
 import urllib.error
 import logging
 from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 
 import werkzeug.urls
 import plugins
 from plugins.abstract.corparch import AbstractCorporaArchive
 from plugins.abstract.subc_restore import AbstractSubcRestore, SubcRestoreRow
+from plugins.abstract.integration_db import IntegrationDatabase
+from plugins.errors import PluginCompatibilityException
 from plugins import inject
 
 
@@ -36,7 +39,11 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
     TABLE_NAME = 'kontext_subc_archive'
 
-    def __init__(self, plugin_conf: Dict[str, Any], corparch: AbstractCorporaArchive, db: MySQLConnection):
+    def __init__(
+            self,
+            plugin_conf: Dict[str, Any],
+            corparch: AbstractCorporaArchive,
+            db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
         self._conf = plugin_conf
         self._corparch = corparch
         self._db = db
@@ -172,10 +179,10 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, corparch, integ_db):
+def create_instance(conf, corparch, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
     plugin_conf = conf.get('plugins', 'subc_restore')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_restore uses integration_db[{integ_db.info}]')
         return MySQLSubcRestore(plugin_conf, corparch, integ_db)
     else:
-        logging.getLogger(__name__).error('mysql_subc_restore - integration DB not provided!')
+        raise PluginCompatibilityException('mysql_subc_restore works only with integration_db enabled')
