@@ -35,5 +35,7 @@ def create_instance(conf, auth, integ_db):
             f'syntax_viewer2 uses integration_db[{integ_db.info}]')
         corpora_conf = dsv.load_plugin_conf_from_db(integ_db)
     else:
+        logging.getLogger(__name__).info(
+            f'syntax_viewer2 uses JSON configuration file {plugin_conf["config_path"]}')
         corpora_conf = dsv.load_plugin_conf_from_file(plugin_conf)
     return dsv.SyntaxDataProvider(corpora_conf, ManateeBackend2(corpora_conf), auth)

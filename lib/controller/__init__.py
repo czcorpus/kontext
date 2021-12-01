@@ -63,7 +63,12 @@ import werkzeug.wrappers
 import http.cookies
 
 T = TypeVar('T')
-ResultType = Union[Callable, Dict[str, Any], str, bytes, DataClassJsonMixin]
+ResultType = Union[
+    Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
+    Dict[str, Any],
+    str,
+    bytes,
+    DataClassJsonMixin]
 
 # this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
@@ -817,26 +822,31 @@ class Controller(object):
             return_type: str) -> Union[str, bytes]:
         """
         Renders a response body out of a provided data. The concrete form of data transformation
-        depends mainly on the 'return_type' argument.
-        The data source can be:
-        1) a dictionary
-        2) str or bytes
-        3) a callable object returning either 1) or 2) (this can be used for lazy evaluation)
+        depends on the combination of the 'return_type' argument and a type of the 'result'.
+        Typical combinations are (ret. type, data type):
+        'template' + dict
+        'json' + dict
+        'json' + DataClassJsonMixin
+        'plain' + str
+        A callable 'result' can be used for lazy result evaluation or for JSON encoding with custom encoder
         """
         if callable(result):
             result = result()
         if return_type == 'json':
             try:
-                if isinstance(result, DataClassJsonMixin):
+                if type(result) in (str, bytes):
+                    return result
+                elif isinstance(result, DataClassJsonMixin):
                     return result.to_json()
-                return json.dumps(result)
+                else:
+                    return json.dumps(result)
             except Exception as e:
                 self._status = 500
                 return json.dumps(dict(messages=[('error', str(e))]))
         elif return_type == 'xml':
             from templating import Type2XML
             return Type2XML.to_xml(result)
-        elif return_type == 'plain' and not isinstance(result, dict):
+        elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
             return result
         elif isinstance(result, dict):
             self.add_globals(self._request, result, methodname, action_metadata)

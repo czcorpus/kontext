@@ -27,6 +27,8 @@ from dataclasses import astuple
 import logging
 from typing import Any, Dict, List, Optional, Set, Union
 from corplib.corpus import KCorpus
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 
 import l10n
 from plugins import inject
@@ -37,6 +39,7 @@ from plugins.abstract.general_storage import KeyValueStorage
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.abstract.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
+from plugins.errors import PluginCompatibilityException
 import strings
 from controller import exposed
 from controller.plg import PluginCtx
@@ -77,8 +80,12 @@ def fill_attrs(self, request):
 class MysqlLiveAttributes(CachedLiveAttributes):
 
     def __init__(
-            self, corparch: AbstractCorporaArchive, db: KeyValueStorage, integ_db: IntegrationDatabase,
-            max_attr_list_size, empty_val_placeholder, max_attr_visible_chars):
+            self, corparch: AbstractCorporaArchive,
+            db: KeyValueStorage,
+            integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+            max_attr_list_size,
+            empty_val_placeholder,
+            max_attr_visible_chars):
         super().__init__(db)
         self.corparch = corparch
         self.integ_db = integ_db
@@ -334,23 +341,28 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
     def _find_attrs(self, corpus_id: str, search: StructAttr, values: List[str], fill: List[StructAttr]):
         cursor = self.integ_db.cursor()
-        cursor.execute(
-            f'''
-            SELECT t.id, GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
-            FROM (
-                SELECT DISTINCT value_tuple_id as id
-                FROM corpus_structattr_value AS t_value
-                JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value IN ({', '.join('%s' for _ in values)})
-            ) as t
-            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
-            JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-            WHERE {
-                ' OR '.join('(t_value.structure_name = %s AND t_value.structattr_name = %s)' for _ in fill)
-            }
-            GROUP BY t.id
-            ''',
-            (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
+        if len(values) == 0:
+            cursor.execute('SELECT 1 FROM dual WHERE false')
+        else:
+            cursor.execute(
+                f'''
+                SELECT
+                    t.id,
+                    GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value)
+                        SEPARATOR '\n') as data
+                FROM (
+                    SELECT DISTINCT value_tuple_id as id
+                    FROM corpus_structattr_value AS t_value
+                    JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+                    WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s
+                      AND value IN ({', '.join('%s' * len(values))})
+                ) AS t
+                JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
+                JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
+                WHERE {' OR '.join('(t_value.structure_name = %s AND t_value.structattr_name = %s)' * len(fill))}
+                GROUP BY t.id
+                ''',
+                (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
         return cursor
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
@@ -382,7 +394,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
 def create_instance(
-        settings, corparch: AbstractCorporaArchive, db: KeyValueStorage,
+        settings,
+        corparch: AbstractCorporaArchive,
+        db: KeyValueStorage,
         integ_db: IntegrationDatabase) -> MysqlLiveAttributes:
     """
     creates an instance of the plugin
@@ -405,4 +419,4 @@ def create_instance(
                 'corpora', 'empty_attr_value_placeholder'),
             max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
     else:
-        logging.getLogger(__name__).error('mysql_live_attributes integration db not provided')
+        raise PluginCompatibilityException('mysql_live_attributes works only with integration_db enabled')

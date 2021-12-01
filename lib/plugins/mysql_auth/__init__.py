@@ -29,14 +29,18 @@ import datetime
 import mailing
 import logging
 from collections import defaultdict
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+from typing import Union
+
 from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
 from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
+from plugins.abstract.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
 from translation import ugettext as _
 import plugins
 from plugins import inject
 from plugins.common.mysql import MySQLOps, MySQLConf
-from mysql.connector import MySQLConnection
 
 IMPLICIT_CORPUS = 'susanne'
 
@@ -52,12 +56,22 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     DEFAULT_CONFIRM_TOKEN_TTL = 3600  # 1 hour
 
-    def __init__(self, db: MySQLConnection, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
-                 login_url, logout_url, smtp_server, mail_sender, confirmation_token_ttl, on_register_get_corpora):
+    def __init__(
+            self,
+            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            sessions,
+            anonymous_user_id,
+            case_sensitive_corpora_names: bool,
+            login_url,
+            logout_url,
+            smtp_server,
+            mail_sender,
+            confirmation_token_ttl,
+            on_register_get_corpora):
         """
         """
         super().__init__(anonymous_user_id)
-        self.db: MySQLConnection = db
+        self.db = db
         self.sessions = sessions
         self._login_url = login_url
         self._logout_url = logout_url
@@ -351,7 +365,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, integ_db, sessions):
+def create_instance(conf, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor], sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

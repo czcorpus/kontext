@@ -19,10 +19,14 @@
 """
 A corparch database backend for MySQL/MariaDB.
 
---------
 """
-from mysql.connector import MySQLConnection
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+from typing import Union
+
 from plugins.abstract.user_items import FavoriteItem
+from plugins.abstract.integration_db import IntegrationDatabase
+from plugins.common.mysql import MySQLOps
 
 
 DFLT_USER_TABLE = 'kontext_user'
@@ -36,10 +40,16 @@ DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
 
 class Backend:
 
-    def __init__(self, db: MySQLConnection, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
-                 group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
-                 user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
-                 group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
+    def __init__(
+            self,
+            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            user_table: str = DFLT_USER_TABLE,
+            corp_table: str = DFLT_CORP_TABLE,
+            group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+            user_acc_table: str = DFLT_USER_ACC_TABLE,
+            user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
+            group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+            group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):
         self._db = db
         self._user_table = user_table
         self._corp_table = corp_table
