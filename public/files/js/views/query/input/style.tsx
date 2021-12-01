@@ -335,13 +335,18 @@ export const QueryToolbox = styled.div`
             text-decoration: underline;
         }
 
+        li .with-icon {
+            display: flex;
+            align-items: center;
+
+            img {
+                margin-left: 0.4em;
+            }
+        }
+
         a.highlighted {
             color: ${theme.colorLogoPink};
             font-weight: normal;
-        }
-
-        a.highlighted::after {
-            content: " \u25C0 ";
         }
     }
 `;
@@ -516,6 +521,7 @@ export const SuggestionsWidget = styled.div`
     background-color: #FFFFFF;
     box-shadow: ${theme.portalBoxShadow};
     padding: 0.7em 0.3em;
+    font-size: 1.1em;
 
 
     h2 {
@@ -530,5 +536,14 @@ export const SuggestionsWidget = styled.div`
         align-items: center;
         justify-content: center;
         padding: 1em;
+    }
+
+    a {
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
     }
 `;

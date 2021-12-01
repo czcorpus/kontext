@@ -37,6 +37,7 @@ export interface IPlugin extends BasePlugin, IUnregistrable {
     isEmptyResponse<T>(v:QuerySuggestion<T>):boolean;
     listCurrentProviders():Array<string>;
     applyClickOnItem(query:AnyQuery, tokenIdx:number, providerId:string, value:unknown):void;
+    suggestionsAvailableFor(formType:QueryFormType, valueSubformat:QueryValueSubformat, posAttr:string|undefined):boolean;
 }
 
 export type SuggestionValueType = 'posattr'|'struct'|'structattr'|'unspecified';

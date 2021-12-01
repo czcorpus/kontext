@@ -18,8 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { QueryFormType } from '../../models/query/actions';
 import { QueryType } from '../../models/query/query';
 import * as PluginInterfaces from '../../types/plugins';
+import { QueryValueSubformat } from '../../types/plugins/querySuggest';
 
 interface ProviderInfo<T> {
     ident:string;
@@ -51,5 +53,21 @@ export function supportsRequest(info:AnyProviderInfo, req:PluginInterfaces.Query
         default:
             return false;
     }
+}
 
+export function isEnabledFor(
+        info:AnyProviderInfo,
+        formType:QueryFormType,
+        valueSubformat:QueryValueSubformat,
+        posAttr:string|undefined
+):boolean {
+    switch (info.rendererId) {
+        case 'basic':
+            return true;
+        case 'posAttrPairRel':
+            return (valueSubformat === 'simple' || valueSubformat === 'simple_ic') &&
+                    info.conf.attr1 === posAttr || info.conf.attr2 === posAttr || !posAttr;
+        default:
+            return false;
+    }
 }
