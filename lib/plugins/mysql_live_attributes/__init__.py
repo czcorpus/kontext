@@ -355,11 +355,11 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                     FROM corpus_structattr_value AS t_value
                     JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
                     WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s
-                      AND value IN ({', '.join('%s' * len(values))})
+                      AND value IN ({', '.join(['%s'] * len(values))})
                 ) AS t
                 JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
                 JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-                WHERE {' OR '.join('(t_value.structure_name = %s AND t_value.structattr_name = %s)' * len(fill))}
+                WHERE {' OR '.join(['(t_value.structure_name = %s AND t_value.structattr_name = %s)'] * len(fill))}
                 GROUP BY t.id
                 ''',
                 (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
