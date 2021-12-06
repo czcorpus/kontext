@@ -45,15 +45,8 @@ class KontextConf implements Kontext.IConfHandler {
 
     private readonly conf:Kontext.Conf;
 
-    /**
-     * Functions listening for change in app config (triggered by
-     * setConf()).
-     */
-    confChangeHandlers:{[key:string]:Array<(v:any)=>void>};
-
     constructor(conf:Kontext.Conf) {
         this.conf = conf;
-        this.confChangeHandlers = {};
     }
 
     /**
@@ -84,12 +77,6 @@ class KontextConf implements Kontext.IConfHandler {
      */
     setConf<T>(key:string, value:T):void {
         this.conf[key] = value;
-        if (Dict.hasKey(key, this.confChangeHandlers)) {
-            List.forEach(
-                item => item(value),
-                this.confChangeHandlers[key]
-            );
-        }
     }
 }
 
