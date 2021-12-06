@@ -97,7 +97,7 @@ class TestPlugin(unittest.TestCase):
         self.assertDictEqual(data['corpora'][0], corpus)
         self.assertEqual(data['name'], 'xxx')
         self.assertEqual(data['size'], 100)
-        self.assertEqual(data['size_info'], '0.1k')
+        self.assertEqual(data['size_info'], '100')
         self.assertEqual(data['subcorpus_id'], 'foo')
 
     def test_get_user_items(self):
