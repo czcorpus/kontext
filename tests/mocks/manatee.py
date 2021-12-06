@@ -28,12 +28,26 @@ class Concordance(object):
     pass
 
 
+class CorpusDummy(EmptyCorpus):
+
+    def __init__(self, corpname: str = '', subcname: str = None):
+        super().__init__(corpname=corpname)
+        self._subcname = subcname
+
+    @property
+    def subcname(self):
+        return self._subcname
+
+    @property
+    def size(self):
+        return 3000
+
+    @property
+    def search_size(self):
+        return 4000
+
+
 class CorpusManager(object):
 
     def get_corpus(self, name, corp_variant='', subcname=None):
-        ans = EmptyCorpus()
-        ans.corpname = name
-        ans.subcname = subcname
-        ans.size = 3000
-        ans.search_size = lambda: 4000
-        return ans
+        return CorpusDummy(name, subcname)
