@@ -31,7 +31,7 @@ const $ = require('jquery');
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List, pipe } from 'cnc-tskit';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { IPluginApi } from '../../types/plugins/common';
 require('./style.css'); // webpack
@@ -58,6 +58,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             {
                 isBusy: false,
                 data: null,
+                corpnames: null,
+                selected: null,
                 kwicLength: 0,
                 tokenNumber: -1,
                 targetHTMLElementID: null
@@ -68,7 +70,13 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
             ConcActions.ShowSyntaxView.name,
             action => {
+                const corpnames = List.filter(
+                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
+                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
+                );
                 this.changeState(state => {
+                    state.corpnames = corpnames;
+                    state.selected = corpnames[0];
                     state.tokenNumber = action.payload.tokenNumber;
                     state.kwicLength = action.payload.kwicLength;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
@@ -114,7 +122,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id,
+                corpname: state.selected,
                 kwic_id: state.tokenNumber,
                 kwic_len: state.kwicLength
             }
