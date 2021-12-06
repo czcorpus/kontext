@@ -764,7 +764,8 @@ class Kontext(Controller):
                 if js_file:
                     ans[opt_plugin.name] = js_file
                     if (not (isinstance(opt_plugin.instance, plugins.abstract.CorpusDependentPlugin)) or
-                            opt_plugin.is_enabled_for(self._plugin_ctx, self.args.corpname)):
+                            opt_plugin.is_enabled_for(
+                                self._plugin_ctx, [self.args.corpname] + self.args.align)):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
@@ -1019,7 +1020,8 @@ class Kontext(Controller):
 
     def _get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_ctx, self.args.corpname):
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+                self._plugin_ctx, [self.args.corpname] + self.args.align):
             corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
                 self._plugin_ctx, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr

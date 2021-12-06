@@ -92,8 +92,8 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
-    def is_enabled_for(self, plugin_ctx, corpname):
-        return corpname in self._conf
+    def is_enabled_for(self, plugin_ctx, corpora):
+        return any(corpname in self._conf for corpname in corpora)
 
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}

@@ -44,7 +44,7 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 import abc
-from typing import Dict, Any, List, Tuple, Iterable, Optional, TYPE_CHECKING
+from typing import Dict, Any, List, Tuple, Iterable, TYPE_CHECKING
 from corplib.corpus import KCorpus
 from plugins.abstract.general_storage import KeyValueStorage
 # this is to fix cyclic imports when running the app caused by typing
@@ -134,7 +134,7 @@ class AbstractBackend(abc.ABC):
         return []
 
 
-class AbstractFrontend(object):
+class AbstractFrontend(abc.ABC):
     """
     A general server-side frontend. All the implementations
     should call its 'export_data' method which performs
@@ -201,6 +201,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
     def map_providers(self, provider_ids: List[str]):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def fetch_data(self, provider_ids: List[str], corpus: KCorpus, corpora: List[str], token_id: int,
                    num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
@@ -217,7 +218,7 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         lang -- user interface language (so we know how to localize the returned stuff)
         context -- optional additional context to be applied (e.g. when using as a KWIC detail)
         """
-        raise NotImplementedError()
+        pass
 
     def get_required_structattrs(self) -> List[str]:
         """
@@ -228,5 +229,6 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         """
         return []
 
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpname: str) -> bool:
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        pass

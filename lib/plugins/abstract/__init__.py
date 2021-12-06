@@ -7,7 +7,7 @@ classes to keep the plug-in implementation clear and consistent.
 """
 
 import abc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
@@ -20,11 +20,13 @@ class CorpusDependentPlugin(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpname: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         """
         arguments:
-        corpname -- a name of the corpus
+        corpora -- primary and aligned corpora (if applicable),
+                   the list should not be empty in any case
 
         returns:
-        True if plug-in supports corpus 'corpname' else False
+        True if plug-in supports corpora else False. It is up to a specific
+        plug-in implementation whether it considers all of the passed corpora.
         """

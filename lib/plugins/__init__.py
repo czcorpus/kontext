@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING
+from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING, List
 from types import ModuleType
 from secure_cookie.session import Session
 from .abstract.general_storage import KeyValueStorage
@@ -120,7 +120,7 @@ class _ID(Generic[T]):
         """
         return _plugins.get(self._ident) is not None
 
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpus_id: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         """
         Returns True if the plugin exists and is enabled for a specified
         corpus or it is corpus independent (e.g. db plugin, session,...)
@@ -129,7 +129,7 @@ class _ID(Generic[T]):
             if hasattr(self.instance, 'is_enabled_for'):
                 # ignoring type check here, error: None type has no attribute is_enabled_for
                 # but we check if it exists
-                return self.instance.is_enabled_for(plugin_ctx, corpus_id)  # type: ignore
+                return self.instance.is_enabled_for(plugin_ctx, corpora)  # type: ignore
             else:
                 return True
         else:

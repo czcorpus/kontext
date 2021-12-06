@@ -88,9 +88,9 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def map_providers(self, provider_ids):
         return [self._providers[ident] for ident in provider_ids]
 
-    def is_enabled_for(self, plugin_ctx, corpname):
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
-        tst = [p.enabled_for_corpora([corpname] + plugin_ctx.aligned_corpora)
+    def is_enabled_for(self, plugin_ctx, corpora):
+        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        tst = [p.enabled_for_corpora([corpora[0]] + plugin_ctx.aligned_corpora)
                for p, _ in self.map_providers(corpus_info.kwic_connect.providers)]
         return len(tst) > 0 and True in tst
 

@@ -163,8 +163,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
         word = fetch_posattr(corpus, 'word', token_id, num_tokens)
         return word, ans
 
-    def is_enabled_for(self, plugin_ctx, corpname):
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
+    def is_enabled_for(self, plugin_ctx, corpora):
+        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return len(corpus_info.token_connect.providers) > 0
 
     def export(self, plugin_ctx):

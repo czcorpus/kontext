@@ -114,11 +114,11 @@ class LiveAttributes(CachedLiveAttributes):
                 self.databases[corpname] = None
         return self.databases[corpname]
 
-    def is_enabled_for(self, plugin_ctx, corpname):
+    def is_enabled_for(self, plugin_ctx, corpora):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
-        return self.db(plugin_ctx, corpname) is not None
+        return self.db(plugin_ctx, corpora[0]) is not None
 
     def execute_sql(self, db, sql, args=()):
         cursor = db.cursor()

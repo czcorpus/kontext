@@ -97,12 +97,12 @@ class MysqlLiveAttributes(CachedLiveAttributes):
     def export_actions(self):
         return {concordance.Actions: [filter_attributes, attr_val_autocomplete, fill_attrs]}
 
-    def is_enabled_for(self, plugin_ctx: PluginCtx, corpname: str) -> bool:
+    def is_enabled_for(self, plugin_ctx, corpora) -> bool:
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         # TODO now enabled if database path is defined
-        return bool(self.corparch.get_corpus_info(plugin_ctx, corpname).metadata.database)
+        return bool(self.corparch.get_corpus_info(plugin_ctx, corpora[0]).metadata.database)
 
     def calc_max_attr_val_visible_chars(self, corpus_info: CorpusInfo) -> int:
         if corpus_info.metadata.avg_label_attr_len:

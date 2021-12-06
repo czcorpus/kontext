@@ -288,7 +288,7 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
 
         out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-            self._plugin_ctx, self.args.corpname)
+            self._plugin_ctx, [self.args.corpname] + self.args.align)
         out['running_calc'] = not out['finished']   # TODO running_calc is redundant
         out['chart_export_formats'] = []
         with plugins.runtime.CHART_EXPORT as ce:
@@ -1708,7 +1708,8 @@ class Actions(Querying):
 
     @exposed(return_type='json', http_method='POST')
     def get_adhoc_subcorp_size(self, request):
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(self._plugin_ctx, self.args.corpname):
+        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+                self._plugin_ctx, [self.args.corpname] + self.args.align):
             # a faster solution based on liveattrs
             with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
                 attr_map = TextTypeCollector(self.corp, request.json['text_types']).get_attrmap()
