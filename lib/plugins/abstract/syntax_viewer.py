@@ -24,7 +24,7 @@ class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx, corpname):
+    def is_enabled_for(self, plugin_ctx, corpora):
         pass
 
 

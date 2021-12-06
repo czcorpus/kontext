@@ -112,7 +112,8 @@ class Subcorpus(Querying):
             data = CreateSubcorpusArgs(**request.json)
             corpus_info = self.get_corpus_info(data.corpname)
             if (plugins.runtime.LIVE_ATTRIBUTES.exists
-                    and plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(self._plugin_ctx, data.corpname)
+                    and plugins.runtime.LIVE_ATTRIBUTES.instance.is_enabled_for(
+                        self._plugin_ctx, [data.corpname])  # TODO here we skip aligned corpora which is debatable
                     and len(data.aligned_corpora) > 0):
                 if corpus_info.metadata.label_attr and corpus_info.metadata.id_attr:
                     within_cql = None

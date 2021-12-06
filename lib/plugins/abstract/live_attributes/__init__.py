@@ -58,9 +58,9 @@ class AttrValuesResponse:
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx: PluginCtx, corpname: str) -> bool:
+    def is_enabled_for(self, plugin_ctx: PluginCtx, corpora: List[str]) -> bool:
         """
-        Return True if live attributes are enabled for selected corpus
+        Return True if live attributes are enabled for selected corpora
         else return False
         """
 
