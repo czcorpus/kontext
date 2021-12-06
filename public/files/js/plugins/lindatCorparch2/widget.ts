@@ -541,26 +541,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
-            (state, action) => {
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection(state)
-                );
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
-            (state, action) => {
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection(state)
-                );
-            }
-        );
-
         this.addActionHandler<typeof CommonActions.SwitchCorpus>(
             CommonActions.SwitchCorpus.name,
             null,

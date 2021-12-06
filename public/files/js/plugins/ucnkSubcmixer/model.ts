@@ -69,20 +69,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
-            (state, action) => {
-                // TODO
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
-            (state, action) => {
-                // TODO
-            }
-        );
-
         this.addActionHandler<typeof TTActions.SelectionChanged>(
             TTActions.SelectionChanged.name,
             (state, action) => {

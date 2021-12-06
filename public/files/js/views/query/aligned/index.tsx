@@ -43,6 +43,7 @@ export interface AlignedCorporaProps {
     sectionVisible:boolean;
     primaryCorpus:string; // do not confuse with the maincorp
     alignedCorpora:Array<string>;
+    subcorpus:string|undefined;
     queries:{[key:string]:AnyQuery};
     supportedWidgets:{[key:string]:Array<string>};
     wPoSList:Array<{n:string; v:string}>;
@@ -93,22 +94,13 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
         tagHelperView:PluginInterfaces.TagHelper.View;
         onEnterKey:()=>void;
         onChangePrimaryCorp:(corp:string)=>void;
+        onRemoveCorp:(corpname:string)=>void;
 
     }, {}> {
 
         constructor(props) {
             super(props);
-            this.handleCloseClick = this.handleCloseClick.bind(this);
             this.handleMakeMainClick = this.handleMakeMainClick.bind(this);
-        }
-
-        handleCloseClick() {
-            dispatcher.dispatch<typeof Actions.QueryInputRemoveAlignedCorpus>({
-                name: Actions.QueryInputRemoveAlignedCorpus.name,
-                payload: {
-                    corpname: this.props.corpname
-                }
-            });
         }
 
         handleMakeMainClick() {
@@ -127,7 +119,7 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                     alt={he.translate('query__make_corpus_primary')} />
                             </a>
                             <a className="close-button" title={he.translate('query__remove_corpus')}
-                                    onClick={this.handleCloseClick}>
+                                    onClick={()=>this.props.onRemoveCorp(this.props.corpname)}>
                                 <img src={he.createStaticUrl('img/close-icon.svg')}
                                         alt={he.translate('query__close_icon')} />
                             </a>
@@ -191,10 +183,15 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
     const AlignedCorpora:React.FC<AlignedCorporaProps> = (props) => {
 
         const handleAddAlignedCorpus = (evt) => {
-            dispatcher.dispatch<typeof Actions.QueryInputAddAlignedCorpus>({
-                name: Actions.QueryInputAddAlignedCorpus.name,
+            dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                name: GlobalActions.SwitchCorpus.name,
                 payload: {
-                    corpname: evt.target.value
+                    corpora: pipe(
+                        [props.primaryCorpus],
+                        List.concat(props.alignedCorpora),
+                        List.push(evt.target.value)
+                    ),
+                    subcorpus: props.subcorpus
                 }
             });
         };
@@ -230,6 +227,20 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
             }
         }
 
+        const handleRemoveAlignedCorp = (corp:string) => {
+            dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                name: GlobalActions.SwitchCorpus.name,
+                payload: {
+                    corpora: pipe(
+                        props.alignedCorpora,
+                        List.removeValue(corp),
+                        List.unshift(props.primaryCorpus)
+                    ),
+                    subcorpus: props.subcorpus
+                }
+            });
+        }
+
         return (
             <S.AlignedCorpora className={props.sectionVisible ? '' : ' closed'} role="group" aria-labelledby="parallel-corpora-forms">
                 <SC.ExpandableSectionLabel id="parallel-corpora-forms">
@@ -263,7 +274,8 @@ export function init({dispatcher, he, inputViews}:AlignedModuleArgs):AlignedView
                                 useRichQueryEditor={props.useRichQueryEditor}
                                 tagsets={props.tagsets[item]}
                                 onEnterKey={props.onEnterKey}
-                                onChangePrimaryCorp={handleMainCorpChange} />,
+                                onChangePrimaryCorp={handleMainCorpChange}
+                                onRemoveCorp={handleRemoveAlignedCorp} />,
                             props.alignedCorpora
                         )}
                         {props.alignedCorpora.length < props.availableCorpora.length ?

@@ -462,24 +462,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryInputAddAlignedCorpus>(
-            Actions.QueryInputAddAlignedCorpus.name,
-            action => {
-                this.changeState(state => {
-                    this.addAlignedCorpus(state, action.payload.corpname);
-                });
-            }
-        );
-
-        this.addActionHandler<typeof Actions.QueryInputRemoveAlignedCorpus>(
-            Actions.QueryInputRemoveAlignedCorpus.name,
-            action => {
-                this.changeState(state => {
-                    this.removeAlignedCorpus(state, action.payload.corpname);
-                });
-            }
-        );
-
         this.addActionHandler<typeof Actions.QueryInputSetIncludeEmpty>(
             Actions.QueryInputSetIncludeEmpty.name,
             action => {
@@ -852,42 +834,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
 
     getTagsets(state:FirstQueryFormModelState):{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>} {
         return state.tagsets;
-    }
-
-    private addAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
-        if (!List.some(v => v === corpname, state.corpora) &&
-                List.some(x => x.n === corpname, state.availableAlignedCorpora)) {
-            state.corpora.push(corpname);
-            if (!Dict.hasKey(corpname, state.queries)) {
-                state.queries[corpname] = {
-                    corpname,
-                    qtype: 'simple',
-                    queryParsed: [],
-                    query: '',
-                    queryHtml: '',
-                    rawAnchorIdx: 0,
-                    rawFocusIdx: 0,
-                    qmcase: false,
-                    pcq_pos_neg: 'pos',
-                    include_empty: false,
-                    default_attr: 'word',
-                    use_regexp: false
-                };
-            }
-            state.supportedWidgets = determineSupportedWidgets(
-                state.queries,
-                getTagBuilderSupport(this.getTagsets(state)),
-                state.isAnonymousUser
-            );
-            state.simpleQueryDefaultAttrs[corpname] = state.simpleQueryDefaultAttrs[List.head(state.corpora)];
-
-        } else {
-            throw new Error(`adding unknown corpus ${corpname}`)
-        }
-    }
-
-    private removeAlignedCorpus(state:FirstQueryFormModelState, corpname:string):void {
-        List.removeValue(corpname, state.corpora);
     }
 
     private exportQuery(query:AnyQuery):AnyQuerySubmit {

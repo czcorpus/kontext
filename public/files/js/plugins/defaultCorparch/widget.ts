@@ -207,34 +207,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
         this.onItemClick = onItemClick;
         this.inputThrottleTimer = null;
 
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
-            (state, action) => {
-                state.alignedCorpora.push(action.payload.corpname);
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection(state)
-                );
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
-            (state, action) => {
-                const srch = List.findIndex(
-                    v => v === action.payload.corpname,
-                    state.alignedCorpora
-                );
-                if (srch > -1) {
-                    state.alignedCorpora.splice(srch, 1);
-                    state.currFavitemId = findCurrFavitemId(
-                        state.dataFav,
-                        this.getFullCorpusSelection(state)
-                    );
-                }
-            }
-        )
-
         this.addActionHandler<typeof Actions.WidgetShow>(
             Actions.WidgetShow.name,
             (state, action) => {

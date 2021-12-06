@@ -748,7 +748,7 @@ class Kontext(Controller):
                 break
         result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
 
-    def _setup_optional_plugins_js(self, result):
+    def _export_optional_plugins_conf(self, result):
         """
         Updates result dict with JavaScript module paths required to
         run client-side parts of some optional plugins. Template document.tmpl
@@ -924,7 +924,7 @@ class Kontext(Controller):
         self._apply_theme(result)
 
         # updates result dict with javascript modules paths required by some of the optional plugins
-        self._setup_optional_plugins_js(result)
+        self._export_optional_plugins_conf(result)
 
         avail_languages = settings.get_full('global', 'translations')
         ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'

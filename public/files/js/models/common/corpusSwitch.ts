@@ -107,36 +107,6 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
         this.history = history;
         this.registrations = [];
 
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
-            action => {
-                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
-                List.addUnique(action.payload.corpname, [...currAligned]);
-                this.conf.setConf('alignedCorpora', currAligned);
-
-                this.changeState(state => {
-                    state.prevCorpora.push(action.payload.corpname);
-                });
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
-            action => {
-                const currAligned = this.conf.getConf<Array<string>>('alignedCorpora');
-                const srchIdx = List.findIndex(v => v === action.payload.corpname, currAligned);
-                if (srchIdx > -1) {
-                    this.conf.setConf('alignedCorpora', List.removeAt(srchIdx, currAligned));
-                }
-                this.changeState(state => {
-                    const srchIdx = List.findIndex(v => v === action.payload.corpname, state.prevCorpora);
-                    if (srchIdx > -1) {
-                        List.removeAt(srchIdx, state.prevCorpora);
-                    }
-                });
-            }
-        );
-
         this.addActionHandler<typeof Actions.SwitchCorpus>(
             Actions.SwitchCorpus.name,
             action => {
@@ -188,7 +158,8 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                                     v => !!v,
                                     {
                                         corpname: data.corpusIdent.id,
-                                        usesubcorp: data.corpusIdent.usesubcorp
+                                        usesubcorp: data.corpusIdent.usesubcorp,
+                                        aligned: data.alignedCorpora
                                     }
                                 )
                             );
