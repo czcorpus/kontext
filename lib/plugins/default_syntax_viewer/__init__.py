@@ -54,6 +54,7 @@ from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumCo
 from actions import concordance
 from controller import exposed
 from controller.errors import UserActionException
+from controller.plg import PluginCtx
 from .manatee_backend import ManateeBackend
 from translation import ugettext as _
 
@@ -98,9 +99,12 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
     def export_actions(self):
         return {concordance.Actions: [get_syntax_data]}
 
-    def export(self, plugin_ctx):
-        return dict(detail_attr_orders=self._backend.get_detail_attr_orders(plugin_ctx.current_corpus.corpname,
-                                                                            plugin_ctx.current_corpus))
+    def export(self, plugin_ctx: PluginCtx):
+        return dict(
+            detail_attr_orders=self._backend.get_detail_attr_orders(
+                plugin_ctx.current_corpus.corpname, plugin_ctx.current_corpus),
+            availability=dict(
+                (c, c in self._conf) for c in [plugin_ctx.current_corpus.corpname] + plugin_ctx.aligned_corpora))
 
 
 def load_plugin_conf_from_file(plugin_conf):
