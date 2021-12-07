@@ -238,6 +238,7 @@ export function init({
                             <alignedViews.AlignedCorpora
                                     availableCorpora={this.props.availableAlignedCorpora}
                                     primaryCorpus={primaryCorpname}
+                                    subcorpus={this.props.origSubcorpName}
                                     alignedCorpora={List.tail(this.props.corpora)}
                                     sectionVisible={this.props.alignedCorporaVisible}
                                     supportedWidgets={this.props.supportedWidgets}

@@ -241,6 +241,11 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
 
     subcorpList:Array<Kontext.SubcorpListItem>;
 
+    /**
+     * In case this is current user's own corpus, the name corresponds to
+     * the user-defined name. Otherwise (foreign published subc.) a public
+     * identifier/code is used.
+     */
     origSubcorpName:string;
 
     isForeignSubcorpus:boolean;
