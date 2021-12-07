@@ -159,7 +159,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                                     {
                                         corpname: data.corpusIdent.id,
                                         usesubcorp: data.corpusIdent.usesubcorp,
-                                        aligned: data.alignedCorpora
+                                        align: data.alignedCorpora
                                     }
                                 )
                             );
