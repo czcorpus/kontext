@@ -299,46 +299,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     this.reloadSizes(state, dispatch);
                 }
             },
-        )
-
-        this.addActionHandler(
-            QueryActions.QueryInputAddAlignedCorpus,
-            (state, action) => {
-                this.reset(state);
-                this.updateAlignedItem(
-                    state,
-                    action.payload.corpname,
-                    orig => ({
-                        ...orig,
-                        locked: true,
-                        selected: true
-                    })
-                );
-                state.controlsEnabled = state.controlsEnabled || this.hasSelectedLanguages(state);
-            },
-            (state, action, dispatch) => {
-                this.reloadSizes(state, dispatch);
-            }
-        );
-
-        this.addActionHandler(
-            QueryActions.QueryInputRemoveAlignedCorpus,
-            (state, action) => {
-                this.reset(state);
-                this.updateAlignedItem(
-                    state,
-                    action.payload.corpname,
-                    orig => ({
-                        value: orig.value,
-                        label: orig.label,
-                        locked: false,
-                        selected: false
-                    })
-                );
-            },
-            (state, action, dispatch) => {
-                this.reloadSizes(state, dispatch);
-            }
         );
 
         this.addActionHandler(

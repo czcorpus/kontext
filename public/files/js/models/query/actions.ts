@@ -337,18 +337,6 @@ export class Actions {
         name: 'QUERY_TOGGLE_ALIGNED_CORPORA'
     };
 
-    static QueryInputAddAlignedCorpus: Action<{
-        corpname:string;
-    }> = {
-        name: 'QUERY_INPUT_ADD_ALIGNED_CORPUS'
-    };
-
-    static QueryInputRemoveAlignedCorpus: Action<{
-        corpname:string;
-    }> = {
-        name: 'QUERY_INPUT_REMOVE_ALIGNED_CORPUS'
-    };
-
     static QueryInputSetPCQPosNeg: Action<{
         formType:QueryFormType;
         sourceId:string;

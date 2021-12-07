@@ -1772,7 +1772,7 @@ class Actions(Querying):
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, tmp_out)
         corpus_info = self.get_corpus_info(self.args.corpname)
         plg_status = {}
-        self._setup_optional_plugins_js(plg_status)
+        self._export_optional_plugins_conf(plg_status)
         conc_args = self._get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = []
 

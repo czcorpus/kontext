@@ -98,6 +98,11 @@ export interface TextTypesModelState {
 }
 
 
+interface TextTypesModelStatePreserve {
+    attributes:Array<TextTypes.AnyTTSelection>;
+}
+
+
 
 /**
  * Provides essential general operations on available text types
@@ -559,15 +564,56 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             GlobalActions.SwitchCorpus,
             action => {
-                dispatcher.dispatch(
-                    GlobalActions.SwitchCorpusReady,
-                    {
+                dispatcher.dispatch({
+                    name: GlobalActions.SwitchCorpusReady.name,
+                    payload: {
                         modelId: this.getRegistrationId(),
-                        data: {}
+                        data: this.serialize(
+                            this.state,
+                            action.payload.corpora,
+                            action.payload.newPrimaryCorpus
+                        )
                     }
-                );
+                });
             }
         );
+
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
+            action => {
+                if (!action.error) {
+                    this.changeState(state => {
+                        this.deserialize(
+                            state,
+                            action.payload.data[this.getRegistrationId()] as
+                                TextTypesModelStatePreserve,
+                            action.payload.corpora
+                        );
+                    });
+                }
+            }
+        );
+    }
+
+    private serialize(
+        state:TextTypesModelState,
+        newCorpora:Array<string>,
+        newPrimaryCorpus:string|undefined
+    ):TextTypesModelStatePreserve {
+        return {
+            attributes: state.attributes
+        };
+    }
+
+    private deserialize(
+        state:TextTypesModelState,
+        data:TextTypesModelStatePreserve,
+        corpora:Array<[string, string]>
+    ):void {
+        if (corpora[0][0] === corpora[0][1]) { // main corp. is the same
+            state.attributes = data.attributes;
+            state.hasSelectedItems = this.findHasSelectedItems(state);
+        }
     }
 
     private snapshotState(state:TextTypesModelState):void {

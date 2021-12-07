@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IFullActionControl, StatelessModel } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../types/kontext';
@@ -37,7 +36,6 @@ import { KontextPage } from '../app/main';
 import {
     ConcLinesStorage, StorageUsingState,
     openStorage } from '../models/concordance/selectionStorage';
-import { Actions as QueryActions } from '../models/query/actions';
 import { Actions as GlobalActions } from '../models/common/actions';
 import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
@@ -46,44 +44,6 @@ import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 
-
-/**
- * ConfigWrapper ensures that actions we need to be bound
- * to the global app config trigger proper updates in the config.
- */
-class ConfigWrapper extends StatelessModel<{}> {
-
-    private layoutModel:PageModel;
-
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel) {
-        super(dispatcher, {});
-        this.layoutModel = layoutModel;
-
-        this.addActionHandler<typeof QueryActions.QueryInputAddAlignedCorpus>(
-            QueryActions.QueryInputAddAlignedCorpus.name,
-            null,
-            (state, action, dispatch) => {
-                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                this.layoutModel.setConf<Array<string>>(
-                    'alignedCorpora',
-                    ac.concat([action.payload.corpname])
-                );
-            }
-        );
-
-        this.addActionHandler<typeof QueryActions.QueryInputRemoveAlignedCorpus>(
-            QueryActions.QueryInputRemoveAlignedCorpus.name,
-            null,
-            (state, action, dispatch) => {
-                const ac = this.layoutModel.getConf<Array<string>>('alignedCorpora');
-                this.layoutModel.setConf<Array<string>>(
-                    'alignedCorpora',
-                    ac.filter(v => v !== action.payload.corpname)
-                );
-            }
-        );
-    }
-}
 
 /**
  *
@@ -393,7 +353,6 @@ export class QueryPage {
                 corparchWidget
             );
             this.initCorpnameLink();
-            const cwrap = new ConfigWrapper(this.layoutModel.dispatcher, this.layoutModel);
             // all the models must be unregistered and components must
             // be unmounted to prevent memory leaks and unwanted action handlers
             // from previous instance

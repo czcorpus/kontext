@@ -378,8 +378,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.autoSuggestTrigger = new Subject<[string, number, number]>();
         this.qsSubscription = this.qsPlugin.isActive() ?
                 this.subscribeAutoSuggest(dispatcher) : undefined;
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSetQType>(
-            Actions.QueryInputSetQType.name,
+
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSetQType,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -405,8 +406,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof HistoryActions.ToggleQueryHistoryWidget>(
-            HistoryActions.ToggleQueryHistoryWidget.name,
+        this.addActionSubtypeHandler(
+            HistoryActions.ToggleQueryHistoryWidget,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -418,8 +419,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.ToggleQuerySuggestionWidget>(
-            Actions.ToggleQuerySuggestionWidget.name,
+        this.addActionSubtypeHandler(
+            Actions.ToggleQuerySuggestionWidget,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -443,8 +444,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryOptionsToggleForm>(
-            Actions.QueryOptionsToggleForm.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryOptionsToggleForm,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -454,8 +455,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSetDefaultAttr>(
-            Actions.QueryInputSetDefaultAttr.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSetDefaultAttr,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -480,8 +481,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSetMatchCase>(
-            Actions.QueryInputSetMatchCase.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSetMatchCase,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -502,8 +503,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputToggleAllowRegexp>(
-            Actions.QueryInputToggleAllowRegexp.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputToggleAllowRegexp,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -529,8 +530,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.SetActiveInputWidget>(
-            Actions.SetActiveInputWidget.name,
+        this.addActionSubtypeHandler(
+            Actions.SetActiveInputWidget,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -539,8 +540,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSetQuery>(
-            Actions.QueryInputSetQuery.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSetQuery,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -565,8 +566,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputAppendQuery>(
-            Actions.QueryInputAppendQuery.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputAppendQuery,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -587,8 +588,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputInsertAtCursor>(
-            Actions.QueryInputInsertAtCursor.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputInsertAtCursor,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -612,8 +613,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryInputRemoveLastChar>(
-            Actions.QueryInputRemoveLastChar.name,
+        this.addActionHandler(
+            Actions.QueryInputRemoveLastChar,
             action => {
                 this.changeState(state => {
                     const queryLength = this.getQueryLength(state, action.payload.sourceId);
@@ -637,8 +638,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputMoveCursor>(
-            Actions.QueryInputMoveCursor.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputMoveCursor,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -661,8 +662,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.ItemClicked>(
-            PluginInterfaces.QuerySuggest.Actions.ItemClicked.name,
+        this.addActionSubtypeHandler(
+            PluginInterfaces.QuerySuggest.Actions.ItemClicked,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -700,8 +701,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested>(
-            PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested.name,
+        this.addActionSubtypeHandler(
+            PluginInterfaces.QuerySuggest.Actions.SuggestionsRequested,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -719,8 +720,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>(
-            PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
+        this.addActionSubtypeHandler(
+            PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived,
             action => action.payload.formType === this.formType,
             action => {
                 if (action.error) {
@@ -770,8 +771,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof PluginInterfaces.QuerySuggest.Actions.ClearSuggestions>(
-            PluginInterfaces.QuerySuggest.Actions.ClearSuggestions.name,
+        this.addActionSubtypeHandler(
+            PluginInterfaces.QuerySuggest.Actions.ClearSuggestions,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
@@ -798,8 +799,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionHandler<typeof CorpOptActions.SaveSettingsDone>(
-            CorpOptActions.SaveSettingsDone.name,
+        this.addActionHandler(
+            CorpOptActions.SaveSettingsDone,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -815,8 +816,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.ShowQueryStructureWidget>(
-            Actions.ShowQueryStructureWidget.name,
+        this.addActionSubtypeHandler(
+            Actions.ShowQueryStructureWidget,
             action => action.payload.formType === this.formType,
             (action) => {
                 this.changeState(state => {
@@ -825,8 +826,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.HideQueryStructureWidget>(
-            Actions.HideQueryStructureWidget.name,
+        this.addActionSubtypeHandler(
+            Actions.HideQueryStructureWidget,
             action => action.payload.formType === this.formType,
             (action) => {
                 this.changeState(state => {
@@ -835,8 +836,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputResetQueryExpansion>(
-            Actions.QueryInputResetQueryExpansion.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputResetQueryExpansion,
             action => action.payload.formType === this.formType,
             (action) => {
                 this.changeState(state => {
@@ -859,8 +860,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSelectText>(
-            Actions.QueryInputSelectText.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSelectText,
             action => action.payload.formType === this.formType,
             action => {
                 this.changeState(state => {
