@@ -415,8 +415,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         });
         this.quickSubcorpModel = quickSubcorpModel;
 
-        this.addActionHandler<typeof Actions.QueryInputSelectSubcorp>(
-            Actions.QueryInputSelectSubcorp.name,
+        this.addActionHandler(
+            Actions.QueryInputSelectSubcorp,
             action => {
                 this.changeState(state => {
                     if (action.payload.pubName) {
@@ -443,8 +443,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionSubtypeHandler<typeof Actions.QueryInputSetLpos>(
-            Actions.QueryInputSetLpos.name,
+        this.addActionSubtypeHandler(
+            Actions.QueryInputSetLpos,
             action => action.payload.formType === 'query',
             action => {
                 this.changeState(state => {
@@ -453,8 +453,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryToggleAlignedCorpora>(
-            Actions.QueryToggleAlignedCorpora.name,
+        this.addActionHandler(
+            Actions.QueryToggleAlignedCorpora,
             action => {
                 this.changeState(state => {
                     state.alignedCorporaVisible = !state.alignedCorporaVisible;
@@ -462,8 +462,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryInputSetIncludeEmpty>(
-            Actions.QueryInputSetIncludeEmpty.name,
+        this.addActionHandler(
+            Actions.QueryInputSetIncludeEmpty,
             action => {
                 this.changeState(state => {
                     state.queries[action.payload.corpname].include_empty = action.payload.value;
@@ -471,8 +471,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QuerySubmit>(
-            Actions.QuerySubmit.name,
+        this.addActionHandler(
+            Actions.QuerySubmit,
             action => {
                 this.changeState(state => {
                     state.isBusy = true;
@@ -541,8 +541,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.CorpusSwitchModelRestore>(
-            GlobalActions.CorpusSwitchModelRestore.name,
+        this.addActionHandler(
+            GlobalActions.CorpusSwitchModelRestore,
             action => {
                 if (!action.error) {
                     this.changeState(state => {
@@ -558,8 +558,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
-            GlobalActions.SwitchCorpus.name,
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
             action => {
                 if (this.qsSubscription) {
                     this.qsSubscription.unsubscribe();
@@ -578,8 +578,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryContextToggleForm>(
-            Actions.QueryContextToggleForm.name,
+        this.addActionHandler(
+            Actions.QueryContextToggleForm,
             action => {
                 this.changeState(state => {
                     state.contextFormVisible = !state.contextFormVisible;
@@ -587,8 +587,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryTextTypesToggleForm>(
-            Actions.QueryTextTypesToggleForm.name,
+        this.addActionHandler(
+            Actions.QueryTextTypesToggleForm,
             action => {
                 this.changeState(state => {
                     state.textTypesFormVisible = !state.textTypesFormVisible;
@@ -596,8 +596,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof GenOptsActions.GeneralSetShuffle>(
-            GenOptsActions.GeneralSetShuffle.name,
+        this.addActionHandler(
+            GenOptsActions.GeneralSetShuffle,
             action => {
                 this.changeState(state => {
                     state.shuffleConcByDefault = action.payload.value;
@@ -605,8 +605,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryInputSetPCQPosNeg>(
-            Actions.QueryInputSetPCQPosNeg.name,
+        this.addActionHandler(
+            Actions.QueryInputSetPCQPosNeg,
             action => {
                 this.changeState(state => {
                     const queryObj = state.queries[action.payload.sourceId];
@@ -615,8 +615,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryShowQuickSubcorpWidget>(
-            Actions.QueryShowQuickSubcorpWidget.name,
+        this.addActionHandler(
+            Actions.QueryShowQuickSubcorpWidget,
             action => {
                 this.changeState(state => {
                     state.quickSubcorpVisible = true;
@@ -624,8 +624,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryHideQuickSubcorpWidget>(
-            Actions.QueryHideQuickSubcorpWidget.name,
+        this.addActionHandler(
+            Actions.QueryHideQuickSubcorpWidget,
             action => {
                 this.changeState(state => {
                     state.quickSubcorpVisible = false;
@@ -633,8 +633,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof TTActions.SelectionChanged>(
-            TTActions.SelectionChanged.name,
+        this.addActionHandler(
+            TTActions.SelectionChanged,
             action => {
                 this.changeState(state => {
                     state.quickSubcorpActive = action.payload.hasSelectedItems
@@ -642,8 +642,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             }
         );
 
-        this.addActionHandler<typeof Actions.QueryAddSubcorp>(
-            Actions.QueryAddSubcorp.name,
+        this.addActionHandler(
+            Actions.QueryAddSubcorp,
             action => {
                 this.changeState(state => {
                     state.subcorpList.push(action.payload);
