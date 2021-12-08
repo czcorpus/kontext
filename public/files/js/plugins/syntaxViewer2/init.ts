@@ -96,8 +96,13 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         this.addActionHandler(
             Actions.SwitchCorpus,
             action => {
+                const target = document.getElementById('treex-frame');
+                if (target) {
+                    target.remove();
+                }
                 this.changeState(state => {
                     state.activeCorpus = action.payload.corpusId;
+                    state.isBusy = true;
                 });
                 this.render(this.state);
             }
@@ -128,6 +133,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         target.append(window.document.createElement('hr'));
 
         const treexFrame = window.document.createElement('div');
+        treexFrame.id = 'treex-frame';
         treexFrame.style.width = '90%';
         target.appendChild(treexFrame);
 
