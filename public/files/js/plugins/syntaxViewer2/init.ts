@@ -19,12 +19,13 @@
  */
 
 import { IFullActionControl, StatefulModel, IModel } from 'kombo';
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../../types/plugins';
 import { DetailAttrOrders } from './common';
 import { createGenerator } from './treeView';
 import { Actions as ConcActions } from '../../models/concordance/actions';
+import { Actions } from './actions';
 import * as srcData from './srcdata';
 import { IPluginApi } from '../../types/plugins/common';
 
@@ -54,6 +55,9 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
 
     private errorHandler:(e:Error)=>void;
 
+    private corpusSelectHandler:(e)=>void;
+
+
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(
             dispatcher,
@@ -61,7 +65,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 isBusy: false,
                 data: null,
                 corpnames: null,
-                selected: null,
+                activeCorpus: null,
                 kwicLength: 0,
                 tokenNumber: -1,
                 targetHTMLElementID: null
@@ -69,10 +73,17 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         );
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
-            ConcActions.ShowSyntaxView.name,
+        this.addActionHandler(
+            ConcActions.ShowSyntaxView,
             action => {
+                const corpnames = List.filter(
+                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
+                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
+                );
+
                 this.changeState(state => {
+                    state.corpnames = corpnames;
+                    state.activeCorpus = List.head(corpnames);
                     state.tokenNumber = action.payload.tokenNumber;
                     state.kwicLength = action.payload.kwicLength;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
@@ -81,6 +92,25 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                 this.render(this.state);
             }
         );
+
+        this.addActionHandler(
+            Actions.SwitchCorpus,
+            action => {
+                this.changeState(state => {
+                    state.activeCorpus = action.payload.corpusId;
+                });
+                this.render(this.state);
+            }
+        );
+
+        this.corpusSelectHandler = (e) => {
+            dispatcher.dispatch<typeof Actions.SwitchCorpus>({
+                name: Actions.SwitchCorpus.name,
+                payload: {
+                    corpusId: e.target.value
+                }
+            });
+        };
     }
 
     isActive():boolean {
@@ -88,9 +118,29 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
     }
 
     private renderTree(target:HTMLElement):void {
+        while (target.firstChild) {
+            target.removeChild(target.firstChild);
+        }
+        const corpusSwitch = window.document.createElement('select');
+        corpusSwitch.classList.add('corpus-switch');
+        corpusSwitch.onchange = this.corpusSelectHandler;
+        target.append(corpusSwitch);
+        target.append(window.document.createElement('hr'));
+
         const treexFrame = window.document.createElement('div');
         treexFrame.style.width = '90%';
         target.appendChild(treexFrame);
+
+        List.forEach(
+            corpname => {
+                const option = window.document.createElement('option');
+                option.value = corpname;
+                option.label = corpname;
+                option.selected = corpname === this.state.activeCorpus;
+                corpusSwitch.append(option);
+            },
+            this.state.corpnames
+        );
 
         createGenerator(
             this.pluginApi.getComponentHelpers(),
@@ -139,9 +189,6 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
             window.clearTimeout(this.resizeThrottleTimer);
         }
         this.resizeThrottleTimer = window.setTimeout(() => {
-            while (target.firstChild) {
-                target.removeChild(target.firstChild);
-            }
             this.renderTree(target);
 
         }, 250);
@@ -153,7 +200,7 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id,
+                corpname: state.activeCorpus,
                 kwic_id: state.tokenNumber,
                 kwic_len: state.kwicLength
             }
