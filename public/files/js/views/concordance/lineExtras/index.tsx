@@ -52,6 +52,7 @@ export interface LineExtrasViews {
     }>;
 
     SyntaxTreeButton:React.FC<{
+        corpnames:Array<string>;
         tokenNumber:number;
         kwicLength:number;
     }>;
@@ -221,6 +222,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             dispatcher.dispatch<typeof Actions.ShowSyntaxView>({
                 name: Actions.ShowSyntaxView.name,
                 payload: {
+                    corpnames: props.corpnames,
                     tokenNumber: props.tokenNumber,
                     kwicLength: props.kwicLength,
                     targetHTMLElementID: 'syntax-view-pane'
@@ -253,10 +255,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
 
     return {
-        AudioLink: AudioLink,
-        TdLineSelection: TdLineSelection,
-        SyntaxTreeButton: SyntaxTreeButton,
-        RefInfo: RefInfo
+        AudioLink,
+        TdLineSelection,
+        SyntaxTreeButton,
+        RefInfo
     };
 
  }

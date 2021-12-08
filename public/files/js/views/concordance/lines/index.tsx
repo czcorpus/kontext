@@ -684,7 +684,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         groupTextColor={this.props.groupTextColor} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
-                            <extras.SyntaxTreeButton tokenNumber={primaryLang.tokenNumber}
+                            <extras.SyntaxTreeButton
+                                    corpnames={List.map(v => v.n, this.props.cols)}
+                                    tokenNumber={primaryLang.tokenNumber}
                                     kwicLength={this.props.data.kwicLength} /> :
                             null
                         }

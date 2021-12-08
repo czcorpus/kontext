@@ -56,6 +56,8 @@ const create:PluginInterfaces.SyntaxViewer.Factory = (pluginApi) => {
             isBusy: false,
             tokenNumber: -1,
             kwicLength: 0,
+            corpnames: [],
+            activeCorpus: undefined,
             targetHTMLElementID: ''
         }
     );

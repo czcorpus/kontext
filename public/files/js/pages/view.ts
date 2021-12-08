@@ -1077,6 +1077,8 @@ export class ViewPage {
                         isBusy: false,
                         kwicLength: 0,
                         tokenNumber: -1,
+                        corpnames: [],
+                        activeCorpus: undefined,
                         targetHTMLElementID: null
                     }
                 );
