@@ -60,6 +60,8 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
             {
                 isBusy: false,
                 data: null,
+                corpnames: null,
+                selected: null,
                 kwicLength: 0,
                 tokenNumber: -1,
                 targetHTMLElementID: null
