@@ -255,10 +255,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
 
     return {
-        AudioLink: AudioLink,
-        TdLineSelection: TdLineSelection,
-        SyntaxTreeButton: SyntaxTreeButton,
-        RefInfo: RefInfo
+        AudioLink,
+        TdLineSelection,
+        SyntaxTreeButton,
+        RefInfo
     };
 
  }

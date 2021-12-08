@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List, pipe } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -684,7 +684,9 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         groupTextColor={this.props.groupTextColor} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
-                            <extras.SyntaxTreeButton corpnames={List.map(v => v.n, this.props.cols)} tokenNumber={primaryLang.tokenNumber}
+                            <extras.SyntaxTreeButton
+                                    corpnames={List.map(v => v.n, this.props.cols)}
+                                    tokenNumber={primaryLang.tokenNumber}
                                     kwicLength={this.props.data.kwicLength} /> :
                             null
                         }
@@ -705,25 +707,27 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                             <td title={this._renderTextSimple(primaryLang, 0)}>{'\u2026'}</td>
                     }
                     {alignedCorpora.map((alCorp, i) => {
-                        return <React.Fragment key={`al-${i}`}>
-                            {this.props.cols[i + 1].visible ? [
-                                    <td className="ref">
-                                        <extras.RefInfo corpusId={this.props.cols[i + 1].n}
-                                                tokenNumber={alCorp.tokenNumber}
-                                                lineIdx={this.props.lineIdx}
-                                                data={alCorp.ref}
-                                                emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
-                                                refsDetailClickHandler={this._refsDetailClickHandler} />
-                                    </td>,
-                                    alCorp.tokenNumber > -1 ?
-                                        this._renderText(alCorp, i + 1) :
-                                        <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
-                                ] : [
-                                    <td className="ref" />,
-                                    <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>,
-                                ]
-                            }
-                        </React.Fragment>;
+                        if (this.props.cols[i + 1].visible) {
+                            return <React.Fragment key={`al-${i}`}>
+                                <td className="ref">
+                                <extras.RefInfo corpusId={this.props.cols[i + 1].n}
+                                        tokenNumber={alCorp.tokenNumber}
+                                        lineIdx={this.props.lineIdx}
+                                        data={alCorp.ref}
+                                        emptyRefValPlaceholder={this.props.emptyRefValPlaceholder}
+                                        refsDetailClickHandler={this._refsDetailClickHandler} />
+                                </td>
+                                {alCorp.tokenNumber > -1 ? this._renderText(alCorp, i + 1) :
+                                    <td className="note">{`// ${he.translate('concview__translat_not_avail')} //`}</td>
+                                }
+                            </React.Fragment>;
+
+                        } else {
+                            return <React.Fragment key={`al-${i}`}>
+                                <td className="ref" />
+                                <td key="par" title={this._renderTextSimple(alCorp, i + 1)}>{'\u2026'}</td>
+                            </React.Fragment>;
+                        }
                     })}
                 </tr>
             );

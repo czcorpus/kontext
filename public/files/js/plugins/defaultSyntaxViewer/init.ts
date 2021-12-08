@@ -32,7 +32,7 @@ import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
-import { Actions } from './actions';
+import { Actions } from '../syntaxViewer2/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { IPluginApi } from '../../types/plugins/common';
 require('./style.css'); // webpack
@@ -62,7 +62,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 isBusy: false,
                 data: null,
                 corpnames: null,
-                selected: null,
+                activeCorpus: null,
                 kwicLength: 0,
                 tokenNumber: -1,
                 targetHTMLElementID: null
@@ -79,7 +79,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 );
                 this.changeState(state => {
                     state.corpnames = corpnames;
-                    state.selected = corpnames[0];
+                    state.activeCorpus = corpnames[0];
                     state.tokenNumber = action.payload.tokenNumber;
                     state.kwicLength = action.payload.kwicLength;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
@@ -93,7 +93,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             Actions.SwitchCorpus.name,
             action => {
                 this.changeState(state => {
-                    state.selected = action.payload.corpusId;
+                    state.activeCorpus = action.payload.corpusId;
                 });
                 this.render(this.state);
             }
@@ -144,7 +144,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: state.selected,
+                corpname: state.activeCorpus,
                 kwic_id: state.tokenNumber,
                 kwic_len: state.kwicLength
             }
@@ -190,8 +190,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             const option = window.document.createElement('option');
             option.value = value;
             option.label = value;
-            option.selected = value === this.state.selected;
-            $(corpusSwitch).append(option);                       
+            option.selected = value === this.state.activeCorpus;
+            $(corpusSwitch).append(option);
         }
 
         const treexFrame = window.document.createElement('div');

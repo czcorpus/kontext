@@ -38,7 +38,7 @@ export interface Factory {
 export interface BaseState {
     isBusy:boolean;
     corpnames:Array<string>;
-    selected:string;
+    activeCorpus:string;
     tokenNumber:number;
     kwicLength:number;
     targetHTMLElementID:string;

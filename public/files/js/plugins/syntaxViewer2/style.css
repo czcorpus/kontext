@@ -97,3 +97,8 @@
 .syntax-tree table.node-detail  td a.detail-ref:hover {
     text-decoration: underline;
 }
+
+.syntax-tree .corpus-switch {
+    padding: 0.1em;
+    margin: 0.4em 0 0 0.6em;
+}
