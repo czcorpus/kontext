@@ -8,7 +8,7 @@
                 <value>ucnk_syntax_viewer</value>
             </element>
             <element name="js_module">
-                <value>ucnkSyntaxViewer</value>
+                <value>syntaxViewer2</value>
             </element>
             <optional>
                 <element name="config_path">
