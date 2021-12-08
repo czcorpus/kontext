@@ -31,8 +31,7 @@ const $ = require('jquery');
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
 import { concatMap } from 'rxjs/operators';
-import { HTTP, List, pipe } from 'cnc-tskit';
-import { Actions } from './actions';
+import { HTTP } from 'cnc-tskit';
 import { Actions as ConcActions } from '../../models/concordance/actions';
 import { IPluginApi } from '../../types/plugins/common';
 require('./style.css'); // webpack
@@ -53,16 +52,12 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
     private errorHandler:(e:Error)=>void;
 
-    private corpusSelectHandler:(e)=>void;
-
     constructor(dispatcher:IFullActionControl, pluginApi:IPluginApi) {
         super(
             dispatcher,
             {
                 isBusy: false,
                 data: null,
-                corpnames: null,
-                selected: null,
                 kwicLength: 0,
                 tokenNumber: -1,
                 targetHTMLElementID: null
@@ -73,13 +68,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
             ConcActions.ShowSyntaxView.name,
             action => {
-                const corpnames = List.filter(
-                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
-                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
-                );
                 this.changeState(state => {
-                    state.corpnames = corpnames;
-                    state.selected = corpnames[0];
                     state.tokenNumber = action.payload.tokenNumber;
                     state.kwicLength = action.payload.kwicLength;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
@@ -88,25 +77,6 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 this.render(this.state);
             }
         );
-
-        this.addActionHandler<typeof Actions.SwitchCorpus>(
-            Actions.SwitchCorpus.name,
-            action => {
-                this.changeState(state => {
-                    state.selected = action.payload.corpusId;
-                });
-                this.render(this.state);
-            }
-        );
-
-        this.corpusSelectHandler = (e) => {
-            dispatcher.dispatch<typeof Actions.SwitchCorpus>({
-                name: Actions.SwitchCorpus.name,
-                payload: {
-                    corpusId: e.target.value
-                }
-            });
-        };
     }
 
     isActive():boolean {
@@ -144,7 +114,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: state.selected,
+                corpname: this.pluginApi.getCorpusIdent().id,
                 kwic_id: state.tokenNumber,
                 kwic_len: state.kwicLength
             }
@@ -182,25 +152,11 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         while (target.firstChild) {
             target.removeChild(target.firstChild);
         }
-
-        const corpusSwitch = window.document.createElement('select');
-        corpusSwitch.onchange = this.corpusSelectHandler;
-        for (let index = 0; index < List.size(this.state.corpnames); index++) {
-            const value = this.state.corpnames[index];
-            const option = window.document.createElement('option');
-            option.value = value;
-            option.label = value;
-            option.selected = value === this.state.selected;
-            $(corpusSwitch).append(option);                       
-        }
-
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;
         treexFrame.style['height'] = `${(window.innerHeight - 70).toFixed(0)}px`;
         treexFrame.style['overflow'] = 'auto';
 
-        $(target).append(corpusSwitch);
-        $(target).append(window.document.createElement('hr'));
         $(target).append(treexFrame);
         $(treexFrame).treexView(this.state.data);
     }
