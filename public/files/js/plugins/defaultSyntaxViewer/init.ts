@@ -30,7 +30,6 @@ declare var require:any;
 const $ = require('jquery');
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
-import { concatMap } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
 import { Actions } from '../syntaxViewer2/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
@@ -84,7 +83,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
                     state.isBusy = true;
                 });
-                this.render(this.state);
+                this.render();
             }
         );
 
@@ -97,7 +96,7 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                         state.sentenceTokens
                     );
                 });
-                this.render(this.state);
+                this.render();
             }
         );
 
@@ -137,11 +136,11 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         }, 250);
     }
 
-    render(state:SyntaxTreeViewerState):void {
+    render():void {
         this.changeState(state => {
             state.isBusy = true;
         });
-        const activeToken = state.sentenceTokens[state.activeToken];
+        const activeToken = this.state.sentenceTokens[this.state.activeToken];
         this.pluginApi.ajax$(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
@@ -151,27 +150,27 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
                 kwic_len: activeToken.kwicLength
             }
 
-        ).pipe(
-            concatMap(
-                (data) => {
-                    this.changeState(state => {
-                        state.data = data;
-                    });
-                    return rxEmpty();
-                }
-            )
         ).subscribe({
+            next: data => {
+                this.changeState(state => {
+                state.data = data;
+                });
+                const target = document.getElementById(this.state.targetHTMLElementID);
+                this.renderTree(target);
+                window.addEventListener('resize', this.onPageResize);
+            },
             error: error => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
                 this.close();
+                this.dispatchSideEffect<typeof ConcActions.CloseSyntaxView>({
+                    name: ConcActions.CloseSyntaxView.name
+                });
                 this.pluginApi.showMessage('error', error);
                 if (this.errorHandler) {
                     this.errorHandler(error);
                 }
-            },
-            complete: () => {
-                const target = document.getElementById(state.targetHTMLElementID);
-                this.renderTree(target);
-                window.addEventListener('resize', this.onPageResize);
             }
         });
     }
