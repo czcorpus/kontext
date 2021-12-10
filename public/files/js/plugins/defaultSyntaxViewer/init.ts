@@ -61,10 +61,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             {
                 isBusy: false,
                 data: null,
-                corpnames: null,
-                activeCorpus: null,
-                kwicLength: 0,
-                tokenNumber: -1,
+                sentenceTokens: [],
+                activeToken: -1,
                 targetHTMLElementID: null
             }
         );
@@ -73,15 +71,16 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
             ConcActions.ShowSyntaxView.name,
             action => {
-                const corpnames = List.filter(
-                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
-                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
+                const sentenceTokens = pipe(
+                    action.payload.sentenceTokens,
+                    List.filter(
+                        stoken => !!pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[stoken.corpus]
+                    ),
+                    List.map(item => ({...item}))
                 );
                 this.changeState(state => {
-                    state.corpnames = corpnames;
-                    state.activeCorpus = corpnames[0];
-                    state.tokenNumber = action.payload.tokenNumber;
-                    state.kwicLength = action.payload.kwicLength;
+                    state.sentenceTokens = sentenceTokens;
+                    state.activeToken = 0;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
                     state.isBusy = true;
                 });
@@ -93,7 +92,10 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             Actions.SwitchCorpus.name,
             action => {
                 this.changeState(state => {
-                    state.activeCorpus = action.payload.corpusId;
+                    state.activeToken = List.findIndex(
+                        v => v.corpus === action.payload.corpusId,
+                        state.sentenceTokens
+                    );
                 });
                 this.render(this.state);
             }
@@ -139,14 +141,14 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         this.changeState(state => {
             state.isBusy = true;
         });
-
+        const activeToken = state.sentenceTokens[state.activeToken];
         this.pluginApi.ajax$(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: state.activeCorpus,
-                kwic_id: state.tokenNumber,
-                kwic_len: state.kwicLength
+                corpname: activeToken.corpus,
+                kwic_id: activeToken.tokenId,
+                kwic_len: activeToken.kwicLength
             }
 
         ).pipe(
@@ -185,14 +187,16 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
         const corpusSwitch = window.document.createElement('select');
         corpusSwitch.onchange = this.corpusSelectHandler;
-        for (let index = 0; index < List.size(this.state.corpnames); index++) {
-            const value = this.state.corpnames[index];
-            const option = window.document.createElement('option');
-            option.value = value;
-            option.label = value;
-            option.selected = value === this.state.activeCorpus;
-            $(corpusSwitch).append(option);
-        }
+        List.forEach(
+            (sentenceToken, i) => {
+                const option = window.document.createElement('option');
+                option.value = sentenceToken.corpus;
+                option.label = sentenceToken.corpus;
+                option.selected = i === this.state.activeToken;
+                corpusSwitch.append(option);
+            },
+            this.state.sentenceTokens
+        );
 
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;

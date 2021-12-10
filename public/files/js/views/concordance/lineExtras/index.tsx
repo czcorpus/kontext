@@ -52,9 +52,7 @@ export interface LineExtrasViews {
     }>;
 
     SyntaxTreeButton:React.FC<{
-        corpnames:Array<string>;
-        tokenNumber:number;
-        kwicLength:number;
+        sentenceTokens:Array<{corpus:string; tokenId:number; kwicLength:number}>;
     }>;
 
     RefInfo:React.FC<{
@@ -222,9 +220,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             dispatcher.dispatch<typeof Actions.ShowSyntaxView>({
                 name: Actions.ShowSyntaxView.name,
                 payload: {
-                    corpnames: props.corpnames,
-                    tokenNumber: props.tokenNumber,
-                    kwicLength: props.kwicLength,
+                    sentenceTokens: props.sentenceTokens,
                     targetHTMLElementID: 'syntax-view-pane'
                 }
             });

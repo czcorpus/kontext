@@ -1075,10 +1075,8 @@ export class ViewPage {
                     this.layoutModel.dispatcher,
                     {
                         isBusy: false,
-                        kwicLength: 0,
-                        tokenNumber: -1,
-                        corpnames: [],
-                        activeCorpus: undefined,
+                        sentenceTokens: [],
+                        activeToken: -1,
                         targetHTMLElementID: null
                     }
                 );

@@ -437,9 +437,7 @@ export class Actions {
     };
 
     static ShowSyntaxView:Action<{
-        tokenNumber:number;
-        kwicLength:number;
-        corpnames:Array<string>;
+        sentenceTokens:Array<{corpus:string; tokenId:number; kwicLength:number}>;
         targetHTMLElementID:string;
     }> = {
         name: 'SHOW_SYNTAX_VIEW'

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import * as ViewOptions from '../../../types/viewOptions';
@@ -36,6 +36,7 @@ import {
     Line as ConcLine } from '../../../models/concordance/common';
 import * as S from './style';
 import { PlayerStatus } from '../../../models/concordance/media';
+import { SentenceToken } from '../../../types/plugins/syntaxViewer';
 
 
 export interface LinesModuleArgs {
@@ -670,6 +671,17 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
             if (this.props.data.hasFocus) {
                 htmlClasses.push('active');
             }
+            const sentenceTokens:Array<SentenceToken> = pipe(
+                this.props.data.languages,
+                List.map(
+                    (x, i) => ({
+
+                        corpus: this.props.cols[i].n,
+                        tokenId: x.tokenNumber,
+                        kwicLength: this.props.data.kwicLength // TODO we have no per-corpus info here
+                    })
+                )
+            );
             return (
                 <tr className={htmlClasses.join(' ')}>
                     <td className="line-num">{this.props.showLineNumbers ? this.props.data.lineNumber + 1 : null}</td>
@@ -684,10 +696,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                         groupTextColor={this.props.groupTextColor} />
                     <td className="syntax-tree">
                         {this.props.supportsSyntaxView ?
-                            <extras.SyntaxTreeButton
-                                    corpnames={List.map(v => v.n, this.props.cols)}
-                                    tokenNumber={primaryLang.tokenNumber}
-                                    kwicLength={this.props.data.kwicLength} /> :
+                            <extras.SyntaxTreeButton sentenceTokens={sentenceTokens} /> :
                             null
                         }
                     </td>

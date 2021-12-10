@@ -35,11 +35,15 @@ export interface Factory {
     (pluginApi:IPluginApi):IPlugin;
 }
 
+export interface SentenceToken {
+    corpus:string;
+    tokenId:number;
+    kwicLength:number;
+}
+
 export interface BaseState {
     isBusy:boolean;
-    corpnames:Array<string>;
-    activeCorpus:string;
-    tokenNumber:number;
-    kwicLength:number;
+    sentenceTokens:Array<SentenceToken>;
+    activeToken:number;
     targetHTMLElementID:string;
 }
