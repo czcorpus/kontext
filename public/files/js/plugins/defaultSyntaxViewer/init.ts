@@ -30,7 +30,6 @@ declare var require:any;
 const $ = require('jquery');
 import './js-treex-view';
 import { IFullActionControl } from 'kombo';
-import { concatMap } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';
 import { Actions } from '../syntaxViewer2/actions';
 import { Actions as ConcActions } from '../../models/concordance/actions';
@@ -61,10 +60,8 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             {
                 isBusy: false,
                 data: null,
-                corpnames: null,
-                activeCorpus: null,
-                kwicLength: 0,
-                tokenNumber: -1,
+                sentenceTokens: [],
+                activeToken: -1,
                 targetHTMLElementID: null
             }
         );
@@ -73,19 +70,20 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         this.addActionHandler<typeof ConcActions.ShowSyntaxView>(
             ConcActions.ShowSyntaxView.name,
             action => {
-                const corpnames = List.filter(
-                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
-                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
+                const sentenceTokens = pipe(
+                    action.payload.sentenceTokens,
+                    List.filter(
+                        stoken => !!pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[stoken.corpus]
+                    ),
+                    List.map(item => ({...item}))
                 );
                 this.changeState(state => {
-                    state.corpnames = corpnames;
-                    state.activeCorpus = corpnames[0];
-                    state.tokenNumber = action.payload.tokenNumber;
-                    state.kwicLength = action.payload.kwicLength;
+                    state.sentenceTokens = sentenceTokens;
+                    state.activeToken = 0;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
                     state.isBusy = true;
                 });
-                this.render(this.state);
+                this.render();
             }
         );
 
@@ -93,9 +91,12 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             Actions.SwitchCorpus.name,
             action => {
                 this.changeState(state => {
-                    state.activeCorpus = action.payload.corpusId;
+                    state.activeToken = List.findIndex(
+                        v => v.corpus === action.payload.corpusId,
+                        state.sentenceTokens
+                    );
                 });
-                this.render(this.state);
+                this.render();
             }
         );
 
@@ -135,41 +136,41 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
         }, 250);
     }
 
-    render(state:SyntaxTreeViewerState):void {
+    render():void {
         this.changeState(state => {
             state.isBusy = true;
         });
-
+        const activeToken = this.state.sentenceTokens[this.state.activeToken];
         this.pluginApi.ajax$(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: state.activeCorpus,
-                kwic_id: state.tokenNumber,
-                kwic_len: state.kwicLength
+                corpname: activeToken.corpus,
+                kwic_id: activeToken.tokenId,
+                kwic_len: activeToken.kwicLength
             }
 
-        ).pipe(
-            concatMap(
-                (data) => {
-                    this.changeState(state => {
-                        state.data = data;
-                    });
-                    return rxEmpty();
-                }
-            )
         ).subscribe({
+            next: data => {
+                this.changeState(state => {
+                state.data = data;
+                });
+                const target = document.getElementById(this.state.targetHTMLElementID);
+                this.renderTree(target);
+                window.addEventListener('resize', this.onPageResize);
+            },
             error: error => {
+                this.changeState(state => {
+                    state.isBusy = false;
+                });
                 this.close();
+                this.dispatchSideEffect<typeof ConcActions.CloseSyntaxView>({
+                    name: ConcActions.CloseSyntaxView.name
+                });
                 this.pluginApi.showMessage('error', error);
                 if (this.errorHandler) {
                     this.errorHandler(error);
                 }
-            },
-            complete: () => {
-                const target = document.getElementById(state.targetHTMLElementID);
-                this.renderTree(target);
-                window.addEventListener('resize', this.onPageResize);
             }
         });
     }
@@ -185,14 +186,16 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
 
         const corpusSwitch = window.document.createElement('select');
         corpusSwitch.onchange = this.corpusSelectHandler;
-        for (let index = 0; index < List.size(this.state.corpnames); index++) {
-            const value = this.state.corpnames[index];
-            const option = window.document.createElement('option');
-            option.value = value;
-            option.label = value;
-            option.selected = value === this.state.activeCorpus;
-            $(corpusSwitch).append(option);
-        }
+        List.forEach(
+            (sentenceToken, i) => {
+                const option = window.document.createElement('option');
+                option.value = sentenceToken.corpus;
+                option.label = sentenceToken.corpus;
+                option.selected = i === this.state.activeToken;
+                corpusSwitch.append(option);
+            },
+            this.state.sentenceTokens
+        );
 
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;

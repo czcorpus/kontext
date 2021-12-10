@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, StatefulModel, IModel } from 'kombo';
-import { HTTP, List } from 'cnc-tskit';
+import { HTTP, List, pipe } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../../types/plugins';
 import { DetailAttrOrders } from './common';
@@ -64,10 +64,8 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
             {
                 isBusy: false,
                 data: null,
-                corpnames: null,
-                activeCorpus: null,
-                kwicLength: 0,
-                tokenNumber: -1,
+                sentenceTokens: [],
+                activeToken: -1,
                 targetHTMLElementID: null
             }
         );
@@ -76,16 +74,17 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         this.addActionHandler(
             ConcActions.ShowSyntaxView,
             action => {
-                const corpnames = List.filter(
-                    v => pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[v],
-                    action.payload.corpnames.length ? action.payload.corpnames : [this.pluginApi.getCorpusIdent().id]
+                const sentenceTokens = pipe(
+                    action.payload.sentenceTokens,
+                    List.filter(
+                        stoken => !!pluginApi.getNestedConf<{[key:string]:boolean}>('pluginData', 'syntax_viewer', 'availability')[stoken.corpus]
+                    ),
+                    List.map(item => ({...item}))
                 );
 
                 this.changeState(state => {
-                    state.corpnames = corpnames;
-                    state.activeCorpus = List.head(corpnames);
-                    state.tokenNumber = action.payload.tokenNumber;
-                    state.kwicLength = action.payload.kwicLength;
+                    state.sentenceTokens = sentenceTokens;
+                    state.activeToken = 0;
                     state.targetHTMLElementID = action.payload.targetHTMLElementID;
                     state.isBusy = true;
                 });
@@ -101,7 +100,10 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
                     target.remove();
                 }
                 this.changeState(state => {
-                    state.activeCorpus = action.payload.corpusId;
+                    state.activeToken = List.findIndex(
+                        v => v.corpus === action.payload.corpusId,
+                        state.sentenceTokens
+                    );
                     state.isBusy = true;
                 });
                 this.render(this.state);
@@ -138,14 +140,14 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         target.appendChild(treexFrame);
 
         List.forEach(
-            corpname => {
+            (sentenceToken, i) => {
                 const option = window.document.createElement('option');
-                option.value = corpname;
-                option.label = corpname;
-                option.selected = corpname === this.state.activeCorpus;
+                option.value = sentenceToken.corpus;
+                option.label = sentenceToken.corpus;
+                option.selected = i === this.state.activeToken;
                 corpusSwitch.append(option);
             },
-            this.state.corpnames
+            this.state.sentenceTokens
         );
 
         createGenerator(
@@ -201,14 +203,14 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
     }
 
     render(state:SyntaxTreeViewerState):void {
-
+        const activeToken = state.sentenceTokens[state.activeToken];
         this.pluginApi.ajax$<Array<srcData.Data>>(
             HTTP.Method.GET,
             this.pluginApi.createActionUrl('get_syntax_data'),
             {
-                corpname: state.activeCorpus,
-                kwic_id: state.tokenNumber,
-                kwic_len: state.kwicLength
+                corpname: activeToken.corpus,
+                kwic_id: activeToken.tokenId,
+                kwic_len: activeToken.kwicLength
             }
 
         ).subscribe({
