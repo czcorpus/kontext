@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
 from controller import exposed
 from controller.kontext import Kontext
+from controller.errors import ForbiddenException
 import plugins
 from plugins.abstract.corparch import AbstractSearchableCorporaArchive
 from plugins.abstract.corparch.corpus import CitationInfo
@@ -34,7 +35,7 @@ class KeyWord:
 @dataclass
 class AttrStruct:
     name: str
-    size: str
+    size: int
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -88,39 +89,39 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_get_corp_details(self, request):
-        corp_conf_info = self.get_corpus_info(request.args['corpname'])
-        corpus = self.cm.get_corpus(request.args['corpname'])
-
-        ans = CorpusDetail(
-            corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
-            description=corp_conf_info.description,
-            size=corpus.size,
-            attrlist=[],
-            structlist=[],
-            web_url=corp_conf_info.web if corp_conf_info is not None else '',
-            citation_info=corp_conf_info.citation_info,
-            keywords=[],
-        )
+        corpname = request.args['corpname']
+        with plugins.runtime.AUTH as auth:
+            _, acc, _ = auth.corpus_access(self.session_get('user'), corpname)
+            if not acc:
+                raise ForbiddenException('No access to corpus {0}'.format(corpname))
+            corp_conf_info = self.get_corpus_info(corpname)
+            corpus = self.cm.get_corpus(request.args['corpname'])
+            ans = CorpusDetail(
+                corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
+                description=corp_conf_info.description,
+                size=corpus.size,
+                attrlist=[],
+                structlist=[],
+                web_url=corp_conf_info.web if corp_conf_info is not None else '',
+                citation_info=corp_conf_info.citation_info,
+                keywords=[])
 
         with plugins.runtime.CORPARCH as cp:
             ans.keywords = [
                 KeyWord(name=name, color=cp.get_label_color(ident))
-                for (ident, name) in corp_conf_info.metadata.keywords
-            ]
+                for (ident, name) in corp_conf_info.metadata.keywords]
 
         try:
             ans.attrlist = [
                 AttrStruct(name=item, size=int(corpus.get_attr(item).id_range()))
-                for item in corpus.get_posattrs()
-            ]
+                for item in corpus.get_posattrs()]
         except RuntimeError as e:
-            logging.getLogger(__name__).warning('%s' % e)
+            logging.getLogger(__name__).warning(f'{e}')
             ans.attrlist = ErrorInfo(error=translate('Failed to load'))
 
         ans.structlist = [
             AttrStruct(name=item, size=int(corpus.get_struct(item).size()))
-            for item in corpus.get_structs()
-        ]
+            for item in corpus.get_structs()]
 
         return ans
 
