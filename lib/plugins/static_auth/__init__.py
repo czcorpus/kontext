@@ -28,33 +28,53 @@ required xml conf: please see ./config.rng
 import hashlib
 from plugins.abstract.auth import AbstractRemoteAuth
 import plugins
+from dataclasses import dataclass
+from typing import Dict, Optional
+
+
+@dataclass
+class ApiTokenZone:
+    api_key: str
+    user_id: int
+    user_info: str
+    corpora: Dict[str, str]  # normalized name => full name
 
 
 class StaticAuth(AbstractRemoteAuth):
+
+    _zones: Dict[str, ApiTokenZone]
 
     def __init__(self, anonymous_id, api_key_cookie_name, api_key_http_header, zones):
         super(StaticAuth, self).__init__(anonymous_id)
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
 
-        self._user_corpora = {}
-        self._api_keys = {}
+        self._zones = {}
         for zone in zones:
-            self._api_keys[zone['api_key']] = zone['user_id']
-            list_corpora = {}
-            self._user_corpora[zone['user_id']] = list_corpora
-            for corp in zone['corpora']:
+            norm_corpora = {}
+            for corp in zone.get('corpora', []):
                 tmp = corp.split('/')
                 if len(tmp) == 2:
-                    list_corpora[tmp[1].lower()] = tmp[0]
+                    norm_corpora[tmp[1].lower()] = tmp[0]
                 else:
-                    list_corpora[tmp[0].lower()] = None
+                    norm_corpora[tmp[0].lower()] = None
+            self._zones[zone['api_key']] = ApiTokenZone(
+                user_id=zone['user_id'],
+                user_info=zone.get('user_info', 'User {}'.format(zone['user_id'])),
+                api_key=zone['api_key'],
+                corpora=norm_corpora)
 
     def anonymous_user(self):
         return dict(
             id=self._anonymous_id,
-            user='anonymous',
-            fullname=_('anonymous'))
+            username='unauthorized',
+            fullname='Unauthorized user')
+
+    def _find_user(self, user_id) -> Optional[ApiTokenZone]:
+        for item in self._zones.values():
+            if item.user_id == user_id:
+                return item
+        return None
 
     def is_anonymous(self, user_id):
         return user_id == self._anonymous_id
@@ -63,19 +83,22 @@ class StaticAuth(AbstractRemoteAuth):
         return False
 
     def corpus_access(self, user_dict, corpus_id):
-        corpora = self._user_corpora.get(user_dict['id'], {})
-        if corpus_id not in corpora:
+        zone = self._find_user(user_dict['id'])
+        if zone is None:
+            return False, False, []
+        if corpus_id not in zone.corpora:
             return False, False, ''
-        return False, True, corpora[corpus_id]
+        return False, True, zone.corpora[corpus_id]
 
     def permitted_corpora(self, user_dict):
         if self.is_anonymous(user_dict['id']):
             return []
         else:
-            return list(self._user_corpora[user_dict['id']].keys())
+            zone = self._find_user(user_dict['id'])
+            return list(zone.corpora.keys())
 
     def get_user_info(self, plugin_ctx):
-        return dict(id=plugin_ctx.session['user']['id'], user='apiuser', fullname='API user')
+        return plugin_ctx.session['user']
 
     def _hash_key(self, k):
         return hashlib.sha256(k.encode()).hexdigest()
@@ -92,11 +115,12 @@ class StaticAuth(AbstractRemoteAuth):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_ctx)
         hash_key = self._hash_key(api_key)
-        if api_key and hash_key in self._api_keys:
+        if api_key and hash_key in self._zones:
+            zone = self._zones[hash_key]
             if self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = dict(
-                id=self._api_keys[hash_key], user='api_user', fullname='API user')
+                id=zone.user_id, user='api_user', fullname=zone.user_info)
         else:
             if not self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
@@ -110,7 +134,8 @@ def create_instance(conf):
     """
     plugin_conf = conf.get('plugins', plugins.runtime.AUTH.name)
     custom_conf = conf.get_plugin_custom_conf(plugins.runtime.AUTH.name)
-    return StaticAuth(anonymous_id=int(plugin_conf['anonymous_user_id']),
-                      api_key_cookie_name=custom_conf.get('api_key_cookie_name', None),
-                      api_key_http_header=custom_conf['api_key_http_header'],
-                      zones=custom_conf['zones'])
+    return StaticAuth(
+        anonymous_id=int(plugin_conf['anonymous_user_id']),
+        api_key_cookie_name=custom_conf.get('api_key_cookie_name', None),
+        api_key_http_header=custom_conf['api_key_http_header'],
+        zones=custom_conf['zones'])
