@@ -11,14 +11,13 @@
 # GNU General Public License for more details.
 
 import logging
-from functools import partial
 from collections import defaultdict
 
 from controller import exposed
 from controller.kontext import Kontext
+from controller.errors import ForbiddenException
 import plugins
 from plugins.abstract.corpora import AbstractSearchableCorporaArchive
-import l10n
 from translation import ugettext as translate
 
 
@@ -56,7 +55,12 @@ class Corpora(Kontext):
     def ajax_get_corp_details(self, request):
         """
         """
-        corp_conf_info = self.get_corpus_info(request.args['corpname'])
+        corpname = request.args['corpname']
+        with plugins.runtime.AUTH as auth:
+            _, acc, _ = auth.corpus_access(self.session_get('user'), corpname)
+            if not acc:
+                raise ForbiddenException('No access to corpus {0}'.format(corpname))
+        corp_conf_info = self.get_corpus_info(corpname)
         corpus = self.cm.get_Corpus(request.args['corpname'])
         citation_info = corp_conf_info.get('citation_info', None)
         citation_info = citation_info.to_dict() if citation_info else {}
