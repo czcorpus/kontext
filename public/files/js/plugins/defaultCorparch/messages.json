@@ -142,7 +142,7 @@
     "defaultCorparch__filters": "Filtri",
     "defaultCorparch__corpus_name_input_label": "Ime korpusa",
     "defaultCorparch__please_note_results_cut_{maxNum}{link}": "Prosimo, upoštevajte, da seznam prikazuje zgolj prvih {maxNum} zadetkov. Če svojega korpusa ne najdete, prosimo, zožajte svojo iskalno poizvedbo ali obiščite <a href=\"{link}\">stran s celotnim seznamom</a>.",
-    "defaultCorparch__no_keyword": "Ponastavite",
+    "defaultCorparch__no_keyword": "Ponastavi",
     "defaultCorparch__item_will_be_removed": "Element bo v nekaj trenutkih odstranjen s seznama. Kliknite na ikono zvezdice, da ga dodate nazaj med priljubljene",
     "defaultCorparch__err001": "Preseženo je največje število ({maxNum}) priljubljenih korpusov. Če želite dodati nov element, prosimo, najprej odstranite že obstoječi element.",
     "defaultCorparch__favourites_filter_label": "Priljubljeno"

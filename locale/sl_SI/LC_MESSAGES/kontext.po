@@ -145,7 +145,7 @@ msgstr "ni opisa"
 
 #: lib/conccgi.py:378 cmpltmpl/document.py:535
 msgid "whole corpus"
-msgstr "celotnega korpusa"
+msgstr "celotni korpus"
 
 #: cmpltmpl/subcorp.py:246 cmpltmpl/first_form.py:407
 #: cmpltmpl/first_form.py:553
@@ -644,6 +644,3 @@ msgstr "Vnesite novo poizvedbo"
 
 msgid "Subcorpus \"%s\" not found"
 msgstr "Podkorpus \"%s\" ni bil najden"
-
-msgid "Login"
-msgstr "Prijava"
