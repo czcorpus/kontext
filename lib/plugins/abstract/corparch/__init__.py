@@ -100,6 +100,13 @@ class AbstractCorporaArchive(abc.ABC):
         The method allows the plug-in to customize main menu link from "Corpora -> Available corpora".
         """
 
+    def get_label_color(self, label_id: str) -> str:
+        """
+        For possible label/search-keyword distinction each label can have its
+        own defined color. By default the method returns transparent white.
+        """
+        return 'rgba(0, 0, 0, 0.0)'
+
 
 class SimpleCorporaArchive(AbstractCorporaArchive):
     """
