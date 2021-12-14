@@ -186,15 +186,15 @@ export interface ParsedPQItem {
     private findSubRuleSeqIn(ruleSeq:Array<string>, i1:number, i2:number):Array<CharsRule> {
         const ans:Array<CharsRule> = [];
         let ruleIdx = 0;
+        // searching backwards, get only the last match in `nonTerminals`
         for (let i = this.nonTerminals.length - 1; i >= 0; i -= 1) {
             if ((this.nonTerminals[i].rule === ruleSeq[ruleIdx]) &&
                     this.nonTerminals[i].from >= i1 &&
                     this.nonTerminals[i].to <= i2) {
                 ans.push(this.nonTerminals[i]);
                 ruleIdx += 1;
-                if (ruleSeq.length === ruleIdx) {
-                    break;
-                }
+                if (ruleSeq.length === ruleIdx) break;
+                i = this.nonTerminals.length - 1;
             }
         }
         return ruleIdx === ruleSeq.length ? ans : [];
