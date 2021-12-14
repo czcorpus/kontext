@@ -314,6 +314,7 @@ export interface AjaxConcResponse extends ConcQueryResponse {
     KWICCorps:Array<string>;
     conc_use_safe_font:number; // TODO should be boolean
     conc_persistence_op_id:string;
+    conc_forms_args:{[opId:string]:unknown};
     concsize:number;
     fullsize:number;
     finished:boolean;
