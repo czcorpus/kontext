@@ -30,7 +30,7 @@ from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
 from conclib.errors import ConcCalculationStatusException
-from corplib.corpus import KCorpus
+from corplib.corpus import KCorpus, AbstractKCorpus
 import bgcalc
 import manatee
 
@@ -122,7 +122,7 @@ def _get_sync_conc(worker, corp, q, subchash, samplesize):
         raise status.normalized_error
 
 
-def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> bool:
+def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int) -> bool:
     return (len(query) > 1 and
             asnc == 1 and
             (query[1][0] == 'X' and corp.size > CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD
@@ -130,7 +130,7 @@ def _should_be_bg_query(corp: KCorpus, query: Tuple[str, ...], asnc: int) -> boo
 
 
 def get_conc(
-        corp: KCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
+        corp: AbstractKCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
         samplesize=0) -> Union[manatee.Concordance, InitialConc]:
     """
     Get/calculate a concordance. The function always tries to fetch as complete

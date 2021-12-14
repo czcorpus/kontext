@@ -194,7 +194,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         return (
             <S.ExecutionOptionsFieldset>
                 <legend>
-                    {he.translate('query__execution_opts_fieldset')}
+                    {he.translate('query__execution_opts_fieldset')}:
                 </legend>
                 <ul>
                     <li>

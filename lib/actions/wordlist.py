@@ -55,11 +55,11 @@ class Wordlist(Kontext):
 
     def pre_dispatch(self, action_name, action_metadata=None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         ans = super().pre_dispatch(action_name, action_metadata)
-        if self._prev_q_data is not None:
-            if self._prev_q_data.get('form', {}).get('form_type') != 'wlist':
+        if self._active_q_data is not None:
+            if self._active_q_data.get('form', {}).get('form_type') != 'wlist':
                 raise UserActionException('Invalid search session for a word-list')
             self._curr_wlform_args = WordlistFormArgs.from_dict(
-                self._prev_q_data['form'], id=self._prev_q_data['id'])
+                self._active_q_data['form'], id=self._active_q_data['id'])
         return ans
 
     def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):

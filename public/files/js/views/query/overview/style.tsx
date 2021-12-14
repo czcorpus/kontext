@@ -39,12 +39,14 @@ export const ExecutionOptionsFieldset = styled.div`
     legend {
         margin-left: 0.7em;
         margin-right: 0.7em;
+        margin-bottom: 0.4em;
     }
 
     ul {
         list-style-type: none;
-        margin: 0;
-        }
+        margin: 0 0 0 1.7em;
+        padding-left: 0;
+    }
 
     ul li {
         margin: 0;

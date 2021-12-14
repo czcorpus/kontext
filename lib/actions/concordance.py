@@ -201,12 +201,14 @@ class Actions(Querying):
         out = self._create_empty_conc_result_dict()
         out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
         out['items_per_page'] = self.args.pagesize
+
         conc = InitialConc(self.corp, None)
         asnc = bool(int(request.args['asnc'])) if 'asnc' in request.args else False
         try:
-            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=asnc,
-                            samplesize=corpus_info.sample_size)
+            conc = get_conc(
+                corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
+                fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=asnc,
+                samplesize=corpus_info.sample_size)
             if conc:
                 self._apply_linegroups(conc)
                 conc.switch_aligned(os.path.basename(self.args.corpname))
@@ -281,7 +283,10 @@ class Actions(Querying):
 
         # query form data
         out['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
-        self._attach_query_params(out)
+        qf_args = self._fetch_prev_query('conc:filter')
+        if qf_args and qf_args.data.maincorp != self.args.corpname:
+            qf_args = None
+        self._attach_query_params(out, filter=qf_args)
         out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
@@ -363,39 +368,46 @@ class Actions(Querying):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
 
-    def _fetch_prev_query(self) -> Optional[QueryFormArgs]:
-        if self._prev_q_data is None:
-            last_op = self._load_last_search('conc')
-            if last_op:
-                with plugins.runtime.QUERY_PERSISTENCE as qp:
-                    last_op_form = qp.open(last_op)
-                    if last_op_form is None:  # probably a lost/deleted concordance record
-                        return None
-                    prev_corpora = last_op_form.get('corpora', [])
-                    prev_subcorp = last_op_form.get('usesubcorp', None)
-                    curr_corpora = [self.args.corpname] + self.args.align
-                    curr_subcorp = self.args.usesubcorp
+    def _fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
+        curr = self._session.get('last_search', {})
+        last_op = curr.get(query_type, None)
+        if last_op:
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                last_op_form = qp.open(last_op)
+                if last_op_form is None:  # probably a lost/deleted concordance record
+                    return None
+                prev_corpora = last_op_form.get('corpora', [])
+                prev_subcorp = last_op_form.get('usesubcorp', None)
+                curr_corpora = [self.args.corpname] + self.args.align
+                curr_subcorp = self.args.usesubcorp
 
-                    if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                        args = [('corpname', prev_corpora[0])] + [('align', a)
-                                                                  for a in prev_corpora[1:]]
-                        if prev_subcorp and not curr_subcorp and any(subc['n'] == prev_subcorp for subc in self.cm.subcorp_names(prev_corpora[0])):
-                            args += [('usesubcorp', prev_subcorp)]
+                if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                    args = [('corpname', prev_corpora[0])] + [('align', a)
+                                                              for a in prev_corpora[1:]]
+                    if prev_subcorp and not curr_subcorp and any(subc['n'] == prev_subcorp for subc in self.cm.subcorp_names(prev_corpora[0])):
+                        args += [('usesubcorp', prev_subcorp)]
 
-                        if len(args) > 1:
-                            raise ImmediateRedirectException(self.create_url('query', args))
+                    if len(args) > 1:
+                        raise ImmediateRedirectException(self.create_url('query', args))
 
-                    if last_op_form:
-                        qf_args = QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                                corpora=self._select_current_aligned_corpora(
-                                                    active_only=False),
-                                                persist=False)
+                if last_op_form:
+                    if query_type == 'conc:filter':
+                        qf_args = FilterFormArgs(
+                            plugin_ctx=self._plugin_ctx,
+                            maincorp=self.args.corpname,
+                            persist=False)
+                        qf_args.apply_last_used_opts(last_op_form.get('lastop_form', {}))
+                    else:
+                        qf_args = QueryFormArgs(
+                            plugin_ctx=self._plugin_ctx,
+                            corpora=self._select_current_aligned_corpora(active_only=False),
+                            persist=False)
                         qf_args.apply_last_used_opts(
                             data=last_op_form.get('lastop_form', {}),
                             prev_corpora=prev_corpora,
                             curr_corpora=[self.args.corpname] + self.args.align,
                             curr_posattrs=self.corp.get_posattrs())
-                        return qf_args
+                    return qf_args
         return None
 
     @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
@@ -412,7 +424,7 @@ class Actions(Querying):
         out['text_types_notes'] = corp_info.metadata.desc
         out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-        qf_args = self._fetch_prev_query()
+        qf_args = self._fetch_prev_query('conc') if self._active_q_data is None else None
         if qf_args is None:
             qf_args = QueryFormArgs(
                 plugin_ctx=self._plugin_ctx,
@@ -744,6 +756,10 @@ class Actions(Querying):
         """
         Positive/Negative filter
         """
+        def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+            if history_ts:
+                self._store_last_search('conc:filter', conc_ids[0])
+
         if len(self._lines_groups) > 0:
             raise UserActionException('Cannot apply a filter once a group of lines has been saved')
 
@@ -779,6 +795,8 @@ class Actions(Querying):
             wquery = ''
             self.args.q.append(
                 f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
+
+        self.on_conc_store = store_last_op
         self._status = 201
         try:
             return self.view(request)

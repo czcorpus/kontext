@@ -116,15 +116,15 @@ class ParadigmaticQuery(Kontext):
 
     def pre_dispatch(self, action_name, action_metadata=None):
         ans = super().pre_dispatch(action_name, action_metadata)
-        if self._prev_q_data is not None:
-            if self._prev_q_data.get('form', {}).get('form_type') != 'pquery':
+        if self._active_q_data is not None:
+            if self._active_q_data.get('form', {}).get('form_type') != 'pquery':
                 raise UserActionException('Invalid search session for a paradimatic query')
             self._curr_pquery_args = PqueryFormArgs(
                 corpname=self.corp.corpname,
                 attr=self._get_default_attr(),
                 position='0<0~0>0'
             )
-            self._curr_pquery_args.from_dict(self._prev_q_data['form'])
+            self._curr_pquery_args.from_dict(self._active_q_data['form'])
 
         return ans
 
