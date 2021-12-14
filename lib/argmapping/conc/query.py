@@ -82,8 +82,8 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
         for corp in corpora:
             self._add_corpus_metadata(corp)
 
-    def apply_last_used_opts(self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str],
-                             curr_posattrs: List[str]):
+    def apply_last_used_opts(
+            self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str], curr_posattrs: List[str]):
         self._test_data_type(data, 'form_type', 'query')
         prev_maincorp = prev_corpora[0]
         curr_maincorp = curr_corpora[0]

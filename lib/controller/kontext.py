@@ -156,8 +156,8 @@ class Kontext(Controller):
         # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
 
-        # data of the previous operation are stored here
-        self._prev_q_data: Optional[Dict[str, Any]] = None
+        # data of the currently active operation are stored here
+        self._active_q_data: Optional[Dict[str, Any]] = None
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
@@ -300,12 +300,12 @@ class Kontext(Controller):
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
-                self._prev_q_data = query_persistence.open(self._q_code)
+                self._active_q_data = query_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
-                if self._prev_q_data is not None:
-                    form.add_forced_arg('q', *(self._prev_q_data.get('q', [])[:] + url_q[1:]))
-                    corpora = self._prev_q_data.get('corpora', [])
+                if self._active_q_data is not None:
+                    form.add_forced_arg('q', *(self._active_q_data.get('q', [])[:] + url_q[1:]))
+                    corpora = self._active_q_data.get('corpora', [])
                     if len(corpora) > 0:
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
                         if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
@@ -315,10 +315,10 @@ class Kontext(Controller):
                     if len(corpora) > 1:
                         form.add_forced_arg('align', *corpora[1:])
                         form.add_forced_arg('viewmode', 'align')
-                    if self._prev_q_data.get('usesubcorp', None):
-                        form.add_forced_arg('usesubcorp', self._prev_q_data['usesubcorp'])
+                    if self._active_q_data.get('usesubcorp', None):
+                        form.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     self._lines_groups = LinesGroups.deserialize(
-                        self._prev_q_data.get('lines_groups', []))
+                        self._active_q_data.get('lines_groups', []))
                 else:
                     raise UserActionException(translate('Invalid or expired query'))
 
@@ -391,7 +391,7 @@ class Kontext(Controller):
         return None
 
     def _clear_prev_conc_params(self):
-        self._prev_q_data = None
+        self._active_q_data = None
 
     def _get_curr_conc_args(self):
         args = self._get_mapped_attrs(ConcArgsMapping)
@@ -1108,15 +1108,6 @@ class Kontext(Controller):
         curr = self._session.get('last_search', {})
         curr[op_type] = conc_id
         self._session['last_search'] = curr
-
-    def _load_last_search(self, op_type: str):
-        """
-        See _store_last_search for more info.
-
-        possible op. types: pquery, conc, wlist
-        """
-        curr = self._session.get('last_search', {})
-        return curr.get(op_type, None)
 
     @exposed(return_type='json')
     def concdesc_json(self, _: Optional[Request] = None) -> Dict[str, List[Dict[str, Any]]]:

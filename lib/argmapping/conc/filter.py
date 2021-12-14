@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 import re
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -76,6 +76,15 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
         self.data.default_attr = data['default_attr']
         self.data.use_regexp = data.get('use_regexp', False)
         self.data.no_query_history = data.get('no_query_history', False)
+
+    def apply_last_used_opts(self, data: Dict[str, Any]):
+        self.data.filfpos = data['filfpos']
+        self.data.filtpos = data['filtpos']
+        self.data.filfl = data['filfl']
+        self.data.inclkwic = data['inclkwic']
+        self.data.qmcase = data['qmcase']
+        self.data.default_attr = data['default_attr']
+        self.data.use_regexp = data['use_regexp']
 
     def _add_corpus_metadata(self):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:

@@ -27,7 +27,7 @@ import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, ConcCacheStatus
 from corplib import CorpusManager
 from conclib.empty import InitialConc
-from corplib.corpus import KCorpus
+from corplib.corpus import KCorpus, AbstractKCorpus
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
@@ -163,8 +163,9 @@ def require_existing_conc(corp: KCorpus, q: Tuple[str, ...]) -> manatee.Concorda
         'Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
-def find_cached_conc_base(corp: KCorpus, subchash: Optional[str], q: Tuple[str, ...],
-                          minsize: int) -> Tuple[Optional[int], manatee.Concordance]:
+def find_cached_conc_base(
+        corp: AbstractKCorpus, subchash: Optional[str], q: Tuple[str, ...],
+        minsize: int) -> Tuple[Optional[int], manatee.Concordance]:
     """
     Load a concordance from cache starting from a complete operation q[:],
     then trying q[:-1], q[:-2], q:[:-i] etc. A possible found concordance can be

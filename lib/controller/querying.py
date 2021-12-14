@@ -108,12 +108,12 @@ class Querying(Kontext):
             if op_id:
                 tpl_data['Q'] = [f'~{op_id}']
                 tpl_data['conc_persistence_op_id'] = op_id
-                if self._prev_q_data:  # => main query already entered; user is doing something else
+                if self._active_q_data:  # => main query already entered; user is doing something else
                     # => additional operation => ownership is clear
-                    if self._prev_q_data.get('id', None) != op_id:
+                    if self._active_q_data.get('id', None) != op_id:
                         tpl_data['user_owns_conc'] = True
                     else:  # some other action => we have to check if user is the author
-                        tpl_data['user_owns_conc'] = self._prev_q_data.get(
+                        tpl_data['user_owns_conc'] = self._active_q_data.get(
                             'user_id', None) == self.session_get('user', 'id')
                 else:  # initial query => ownership is clear
                     tpl_data['user_owns_conc'] = True
@@ -139,7 +139,7 @@ class Querying(Kontext):
             if action_metadata['mutates_result']:
                 next_query_keys, history_ts = self._store_conc_params()
             else:
-                next_query_keys = [self._prev_q_data.get('id', None)] if self._prev_q_data else []
+                next_query_keys = [self._active_q_data.get('id', None)] if self._active_q_data else []
                 history_ts = None
             self.on_conc_store(next_query_keys, history_ts, result)
             self._update_output_with_conc_params(
@@ -156,10 +156,10 @@ class Querying(Kontext):
             UNIX timestamp of stored history item (or None)
         """
         with plugins.runtime.QUERY_PERSISTENCE as cp:
-            prev_data = self._prev_q_data if self._prev_q_data is not None else {}
+            prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
             ans = [cp.store(self.session_get('user', 'id'),
-                            curr_data=curr_data, prev_data=self._prev_q_data)]
+                            curr_data=curr_data, prev_data=self._active_q_data)]
             history_ts = self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
@@ -176,22 +176,27 @@ class Querying(Kontext):
     def _select_current_aligned_corpora(self, active_only: bool):
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
-    def _attach_query_params(self, tpl_out: Dict[str, Any]):
+    def _attach_query_params(
+            self, tpl_out: Dict[str, Any], query: Optional[QueryFormArgs] = None,
+            filter: Optional[FilterFormArgs] = None, sort: Optional[SortFormArgs] = None,
+            sample: Optional[SampleFormArgs] = None, shuffle: Optional[ShuffleFormArgs] = None,
+            firsthits: Optional[FirstHitsFilterFormArgs] = None):
         """
         Attach data required by client-side forms which are
         part of the current query pipeline (i.e. initial query, filters,
-        sorting, samples,...)
+        sorting, samples,...). If any of query, filter,..., firsthits is provided than
+        it is used instead of the default variant of the form.
         """
         corpus_info = self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
-        if self._prev_q_data is not None and 'lastop_form' in self._prev_q_data:
-            op_key = self._prev_q_data['id']
+        if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
+            op_key = self._active_q_data['id']
             conc_forms_args = {
                 op_key: build_conc_form_args(
-                    self._plugin_ctx, self._prev_q_data.get('corpora', []),
-                    self._prev_q_data['lastop_form'], op_key).to_dict()
+                    self._plugin_ctx, self._active_q_data.get('corpora', []),
+                    self._active_q_data['lastop_form'], op_key).to_dict()
             }
         else:
             conc_forms_args = {}
@@ -205,20 +210,16 @@ class Querying(Kontext):
 
         corpora = self._select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                corpora=corpora, persist=False).to_dict(),
-            filter=FilterFormArgs(
-                plugin_ctx=self._plugin_ctx,
-                maincorp=getattr(self.args, 'maincorp') if getattr(
-                    self.args, 'maincorp') else getattr(self.args, 'corpname'),
-                persist=False
-            ).to_dict(),
-            sort=SortFormArgs(persist=False).to_dict(),
-            sample=SampleFormArgs(persist=False).to_dict(),
-            shuffle=ShuffleFormArgs(persist=False).to_dict(),
-            firsthits=FirstHitsFilterFormArgs(
-                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict()
-        )
+            query=query.to_dict() if query is not None else QueryFormArgs(
+                plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False).to_dict(),
+            filter=filter.to_dict() if filter is not None else FilterFormArgs(
+                plugin_ctx=self._plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
+                    self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False).to_dict(),
+            sort=sort.to_dict() if sort is not None else SortFormArgs(persist=False).to_dict(),
+            sample=sample.to_dict() if sample is not None else SampleFormArgs(persist=False).to_dict(),
+            shuffle=shuffle.to_dict() if shuffle is not None else ShuffleFormArgs(persist=False).to_dict(),
+            firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
+                persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
     def _attach_aligned_query_params(self, tpl_out: Dict[str, Any]):
         """

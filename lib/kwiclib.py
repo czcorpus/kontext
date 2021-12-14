@@ -27,7 +27,7 @@ import manatee
 from structures import FixedDict
 from conclib.empty import InitialConc
 from kwiclib_common import tokens2strclass
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -222,12 +222,12 @@ class Kwic:
     KWIC related data preparation utilities
 
     arguments:
-    corpus -- 
+    corpus --
     corpus_fullname -- full (internal) name of the corpus (e.g. with path prefix if used)
     conc -- a manatee.Concordance instance
     """
 
-    def __init__(self, corpus: KCorpus, corpus_fullname, conc):
+    def __init__(self, corpus: AbstractKCorpus, corpus_fullname, conc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
         self.conc = conc
