@@ -142,6 +142,8 @@ export interface FilterFormModelState extends QueryFormModelState {
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>;
 
     changeMaincorp:string;
+
+    syncInitialArgs:formArgs.FilterFormArgs;
 }
 
 /**
@@ -297,8 +299,6 @@ function pnfilterInclKwicConv(v:FilterTypes, inclKwic:boolean):FilterTypes {
  */
 export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
-    private readonly syncInitialArgs:formArgs.FilterFormArgs;
-
     constructor(
             dispatcher:IFullActionControl,
             pageModel:PageModel,
@@ -408,9 +408,10 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 isBusy: false,
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
-                changeMaincorp: undefined
+                changeMaincorp: undefined,
+                syncInitialArgs
         });
-        this.syncInitialArgs = syncInitialArgs;
+
         this.addActionHandler<typeof MainMenuActions.ShowFilter>(
             MainMenuActions.ShowFilter.name,
             action => {
@@ -418,7 +419,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                     state.changeMaincorp = action.payload.maincorp
                 });
 
-                this.syncFrom(rxOf({...this.syncInitialArgs, ...action.payload})).subscribe({
+                this.syncFrom(rxOf({...this.state.syncInitialArgs, ...action.payload})).subscribe({
                     error: (err) => {
                         this.pageModel.showMessage('error',
                                 `Failed to synchronize filter model: ${err}`);
@@ -499,8 +500,22 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                         tap(
                             (data) => {
                                 this.pageModel.updateConcPersistenceId(data.conc_persistence_op_id);
+                                const filterData = data.conc_forms_args[data.conc_persistence_op_id] as formArgs.FilterFormArgs;
+                                if (filterData.form_type !== 'filter') {
+                                    throw new Error(`Not a filter form: ${data.conc_persistence_op_id}`);
+                                }
                                 this.changeState(state => {
                                     state.isBusy = false;
+                                    state.syncInitialArgs = {
+                                        ...state.syncInitialArgs,
+                                        filfl: filterData.filfl,
+                                        filfpos: filterData.filfpos,
+                                        filtpos: filterData.filtpos,
+                                        use_regexp: filterData.use_regexp,
+                                        inclkwic: filterData.inclkwic,
+                                        qmcase: filterData.qmcase,
+                                        query_type: filterData.query_type
+                                    }
                                 });
                             }
                         )
