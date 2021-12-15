@@ -628,6 +628,7 @@ export function init({
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     corpname: this.props.corpname,
+                    currQuery: this.props.queries[this.props.sourceId].query,
                     value: name,
                     appliedQueryRange: tuple(
                         this.props.queries[this.props.sourceId].rawFocusIdx,
@@ -651,6 +652,7 @@ export function init({
                     formType: this.props.formType,
                     sourceId: this.props.sourceId,
                     corpname: this.props.corpname,
+                    currQuery: this.props.queries[this.props.sourceId].query,
                     value: null,
                     appliedQueryRange: tuple(
                         this.props.queries[this.props.sourceId].rawFocusIdx,

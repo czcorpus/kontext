@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher } from 'kombo';
 import { List } from 'cnc-tskit';
 
-import {PositionValue, PositionOptions, PosTagModelState} from './models';
+import {PositionValue, PositionOptions, PosTagModelState} from './common';
 import * as Kontext from '../../../types/kontext';
 import { Actions } from '../actions';
 

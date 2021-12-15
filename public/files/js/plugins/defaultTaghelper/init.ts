@@ -22,7 +22,8 @@ import { BoundWithProps } from 'kombo';
 import { List, tuple, pipe } from 'cnc-tskit';
 
 import * as PluginInterfaces from '../../types/plugins';
-import { PosTagModel, PosTagModelState, createEmptyPosTagsetStatus } from './positional/models';
+import { DataInitSyncModel, PosTagModel } from './positional/models';
+import { PosTagModelState, createEmptyPosTagsetStatus } from './positional/common';
 import { createEmptyUDTagsetStatus, UDTagBuilderModel, UDTagBuilderModelState } from './keyval/models';
 import { init as viewInit} from './views';
 import { init as ppTagsetViewInit} from './positional/views';
@@ -40,7 +41,7 @@ type AnyModel = PosTagModel|UDTagBuilderModel;
 
 
 
-function isPresent(list:Array<[string, AnyComponent, AnyModel]>, ident:string):boolean {
+function isPresent(list:Array<[string, AnyComponent, AnyModel, unknown]>, ident:string):boolean {
     return List.some(([d,,]) => d === ident, list);
 }
 
@@ -56,7 +57,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     private pluginApi:IPluginApi;
 
-    private deps:Array<[string, AnyComponent, AnyModel]>;
+    private deps:Array<[string, AnyComponent, AnyModel, unknown]>;
 
     constructor(pluginApi:IPluginApi) {
         this.pluginApi = pluginApi;
@@ -68,7 +69,7 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
     }
 
     private addPosTagsetBuilder(
-            deps:Array<[string, AnyComponent, AnyModel]>,
+            deps:Array<[string, AnyComponent, AnyModel, unknown]>,
             tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
             corpname:string,
             sourceId:string
@@ -93,15 +94,18 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
             tagsetInfo.ident
         );
 
-        deps.push(tuple<string, AnyComponent, AnyModel>(
+        const syncModel = new DataInitSyncModel(this.pluginApi.dispatcher());
+
+        deps.push(tuple<string, AnyComponent, AnyModel, unknown>(
             tagsetInfo.ident,
             BoundWithProps<{sourceId:string}, PosTagModelState>(view, model),
-            model
+            model,
+            syncModel
         ));
     }
 
     private addKeyvalTagsetBuilder(
-        deps:Array<[string, AnyComponent, AnyModel]>,
+        deps:Array<[string, AnyComponent, AnyModel, unknown]>,
         tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo,
         corpname:string,
         sourceId:string
@@ -129,7 +133,8 @@ export class TagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
         deps.push(tuple(
             tagsetInfo.ident,
             BoundWithProps<{sourceId:string}, UDTagBuilderModelState>(view, model),
-            model
+            model,
+            undefined
         ));
     }
 

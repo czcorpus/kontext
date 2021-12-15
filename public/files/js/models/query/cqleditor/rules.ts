@@ -184,20 +184,12 @@ export interface ParsedPQItem {
     }
 
     private findSubRuleSeqIn(ruleSeq:Array<string>, i1:number, i2:number):Array<CharsRule> {
-        const ans:Array<CharsRule> = [];
-        let ruleIdx = 0;
-        for (let i = this.nonTerminals.length - 1; i >= 0; i -= 1) {
-            if ((this.nonTerminals[i].rule === ruleSeq[ruleIdx]) &&
-                    this.nonTerminals[i].from >= i1 &&
-                    this.nonTerminals[i].to <= i2) {
-                ans.push(this.nonTerminals[i]);
-                ruleIdx += 1;
-                if (ruleSeq.length === ruleIdx) {
-                    break;
-                }
-            }
-        }
-        return ruleIdx === ruleSeq.length ? ans : [];
+        return List.foldl(
+            (acc, nt) => nt.rule === ruleSeq[List.size(acc)] && nt.from >= i1 && nt.to <= i2 ?
+                    List.push(nt, acc) : acc,
+            [] as Array<CharsRule>,
+            this.nonTerminals
+        );
     }
 
     private createClickableTag(type:string, args:Kontext.GeneralProps, title:string=null):string {

@@ -20,128 +20,52 @@
 
 import { Observable, of as rxOf } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
-import { StatefulModel, IFullActionControl } from 'kombo';
+import { StatefulModel, IFullActionControl, StatelessModel, IActionDispatcher } from 'kombo';
 
-import * as PluginInterfaces from '../../../types/plugins';
-import { TagBuilderBaseState } from '../common';
 import { Actions } from '../actions';
 import { Actions as QueryActions } from '../../../models/query/actions';
 import { IPluginApi } from '../../../types/plugins/common';
+import { createEmptyPosTagsetStatus, PositionValue, PositionOptions, PosTagModelState,
+    RawTagValues, TagDataResponse, PosTagStatus, cloneSelection } from './common';
 
 
-type RawTagValues = Array<Array<[string, string]>>;
+export class DataInitSyncModel extends StatelessModel<{}> {
 
+    constructor(dispatcher:IActionDispatcher) {
+        super(dispatcher, {});
 
-/**
- * Defines a JSON format used by server
- */
-export interface TagDataResponse {
-    containsErrors:boolean;
-    messages:Array<string>;
-    labels:Array<string>;
-    tags:RawTagValues;
-}
+        this.addActionSubtypeHandler(
+            QueryActions.SetActiveInputWidget,
+            action => action.payload.value === 'tag',
+            null,
+            (state, action, dispatch) => {
+                this.suspendWithTimeout(
+                    5000,
+                    {},
+                    (wAction, syncData) => {
 
-/**
- * Defines a single value available in a specific position
- * (e.g. 2nd position, 1st item = 'masculine inanimate')
- */
-export interface PositionValue {
-    id:string;
-    title:string;
-    selected:boolean;
-    available:boolean;
-}
-
-/**
- * Defines options for a single PoS tag position (e.g.: 2nd position = Gender)
- */
-export interface PositionOptions {
-    label:string;
-    values:Array<PositionValue>;
-    isLocked:boolean;
-    isActive:boolean;
-}
-
-
-export interface PosTagStatus {
-
-    corpname:string;
-
-    canUndo:boolean;
-
-    /**
-     * An encoded representation of a tag selection. From CQL
-     * point of view, this is just a string. Typically,
-     * this can be used directly as a part of 'generatedQuery'.
-     *
-     * The value is used when user directly modifies an
-     * existing tag within a CQL query. In such case, we
-     * inject just the raw value.
-     */
-    rawPattern:string;
-
-    /**
-     * A valid CQL fragment directly applicable
-     * within square brackets
-     * "[EXPR_1 ... EXPR_K-1 RAW_PATTERN EXPR_K+1 ... EXPR_N]"
-     *
-     * This value is used when user inserts whole new tag expression.
-     */
-    generatedQuery:string;
-
-    /**
-     * Contains all the values (inner lists) along with selection
-     * status through whole user interaction (outer list).
-     */
-    selHistory:Array<Array<PositionOptions>>;
-
-    positions:Array<PositionOptions>;
-
-    presetPattern:string;
-
-    srchPattern:string;
-
-    tagAttr:string;
-
-    queryRange:[number, number];
-}
-
-
-export function createEmptyPosTagsetStatus(tagsetInfo:PluginInterfaces.TagHelper.TagsetInfo, corpname:string):PosTagStatus {
-    return {
-        corpname: corpname,
-        selHistory: [[]],
-        positions: [],
-        tagAttr: tagsetInfo.featAttr,
-        presetPattern: '',
-        srchPattern: '.*',
-        rawPattern: '.*',
-        generatedQuery: `${tagsetInfo.featAttr}=".*"`,
-        canUndo: false,
-        queryRange: [0, 0]
+                        if (Actions.isGetInitialDataDone(wAction)) {
+                            dispatch({
+                                name: QueryActions.QueryTaghelperPresetPattern.name,
+                                payload: {
+                                    formType: action.payload.formType,
+                                    sourceId: action.payload.sourceId,
+                                    tagsetId: wAction.payload.tagsetId,
+                                    pattern: action.payload.currQuery.substring(
+                                        action.payload.appliedQueryRange[0] + 1,
+                                        action.payload.appliedQueryRange[1] - 1) // +/-1 = get rid of quotes: ;
+                                }
+                            });
+                            return null;
+                        }
+                        return syncData;
+                    }
+                )
+            }
+        );
     }
 }
 
-
-export interface PosTagModelState extends TagBuilderBaseState {
-
-    data:{[sourceId:string]:PosTagStatus};
-}
-
-
-function cloneSelection(data:Array<PositionOptions>):Array<PositionOptions> {
-    return List.map(
-        item => ({
-            ...item,
-            values: List.map(
-                value => ({...value}),
-                item.values
-            )
-        }),
-        data
-    );
-}
 
 /**
  * This model handles a single tag-builder instance.
@@ -521,7 +445,12 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
     /**
      * Performs an initial import (i.e. any previous data is lost)
      */
-    private importData(state:PosTagModelState, labels:Array<string>, rawData:RawTagValues, sourceId:string):void {
+    private importData(
+        state:PosTagModelState,
+        labels:Array<string>,
+        rawData:RawTagValues,
+        sourceId:string
+    ):void {
         const data = state.data[sourceId];
         data.selHistory.push(List.map(
             (position:Array<Array<string>>, i:number) => ({
@@ -545,7 +474,7 @@ export class PosTagModel extends StatefulModel<PosTagModelState> {
     }
 
     private hasSelectedItemsAt(opt:PositionOptions):boolean {
-        return opt.values.some((item:PositionValue) => item.selected === true);
+        return List.some(item => item.selected === true, opt.values);
     }
 
     private hasSelectedItems(data:PosTagStatus):boolean {

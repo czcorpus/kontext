@@ -226,6 +226,7 @@ export class Actions {
         sourceId:string;
         corpname:string;
         value:string;
+        currQuery:string;
         appliedQueryRange:[number, number];
     }> = {
         name: 'QUERY_INPUT_SET_ACTIVE_WIDGET'
