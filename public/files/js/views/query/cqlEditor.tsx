@@ -189,28 +189,18 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case 'tag':
                         const leftIdx = parseInt(a.getAttribute('data-leftIdx'));
                         const rightIdx = parseInt(a.getAttribute('data-rightIdx'));
-                        const tagsetId = a.getAttribute('data-tagsetId');
-
+                        const queryObj = this.props.queries[this.props.sourceId];
                         dispatcher.dispatch<typeof Actions.SetActiveInputWidget>({
                             name: Actions.SetActiveInputWidget.name,
                             payload: {
                                 formType: this.props.formType,
                                 sourceId: this.props.sourceId,
                                 corpname: this.props.corpname,
+                                currQuery: queryObj.query,
                                 value: 'tag',
                                 appliedQueryRange: tuple(
                                     leftIdx, rightIdx
                                 )
-                            }
-                        });
-                        dispatcher.dispatch<typeof Actions.QueryTaghelperPresetPattern>({
-                            name: Actions.QueryTaghelperPresetPattern.name,
-                            payload: {
-                                formType: this.props.formType,
-                                sourceId: this.props.sourceId,
-                                tagsetId: tagsetId,
-                                pattern: this.props.queries[this.props.sourceId].query.substring(
-                                    leftIdx + 1, rightIdx - 1) // +/-1 = get rid of quotes
                             }
                         });
                     break;

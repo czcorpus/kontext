@@ -39,6 +39,10 @@ export class Actions {
         name: 'TAGHELPER_GET_INITIAL_DATA_DONE'
     };
 
+    static isGetInitialDataDone(action:Action):action is typeof Actions.GetInitialDataDone {
+        return action.name === Actions.GetInitialDataDone.name;
+    }
+
     static CheckboxChanged:Action<{
         tagsetId:string;
         sourceId:string;

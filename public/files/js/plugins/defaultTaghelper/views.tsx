@@ -26,17 +26,18 @@ import * as PluginInterfaces from '../../types/plugins';
 import { Actions as QueryActions, QueryFormType } from '../../models/query/actions';
 import { Actions } from './actions';
 import { TabFrameModel, TabFrameModelState } from './models';
-import { PosTagModelState, PosTagModel } from './positional/models';
+import { PosTagModel } from './positional/models';
 import { UDTagBuilderModelState, UDTagBuilderModel } from './keyval/models';
 
 import * as S from './style';
+import { PosTagModelState } from './positional/common';
 
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     frameModel:TabFrameModel,
-    deps:Array<[string, React.FC<{}>|React.ComponentClass<{}>, UDTagBuilderModel|PosTagModel]>
+    deps:Array<[string, React.FC<{}>|React.ComponentClass<{}>, UDTagBuilderModel|PosTagModel, unknown]>
 ):PluginInterfaces.TagHelper.View {
 
     const layoutViews = he.getLayoutViews();
