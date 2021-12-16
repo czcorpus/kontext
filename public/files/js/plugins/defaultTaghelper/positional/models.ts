@@ -29,6 +29,11 @@ import { createEmptyPosTagsetStatus, PositionValue, PositionOptions, PosTagModel
     RawTagValues, TagDataResponse, PosTagStatus, cloneSelection } from './common';
 
 
+/**
+ * DataInitSyncModel is a bit "dummy" model as currently we are unable to
+ * synchronize 1) widget activation 2) widget initial data loading (async) and
+ * 3) QueryTaghelperPresetPattern (which relies on both 1) and 2) )
+ */
 export class DataInitSyncModel extends StatelessModel<{}> {
 
     constructor(dispatcher:IActionDispatcher) {
