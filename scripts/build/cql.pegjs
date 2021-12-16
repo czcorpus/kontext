@@ -85,7 +85,8 @@ AttValAnd =
     AttVal (_ BINAND _ AttVal)*
 
 AttVal =
-    AttName (_ NOT)? _ (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
+    AttName _ (NOT)? EEQ _ RawString
+    / AttName (_ NOT)? _ (EQ / LEQ / GEQ / TEQ NUMBER?) _ RegExp
     / POSNUM NUMBER DASH NUMBER
     / POSNUM NUMBER
     / NOT AttVal
@@ -107,6 +108,20 @@ AttName =
 
 PhraseQuery =
     RegExpRaw (_ RegExpRaw)*
+
+// ---------------- Not a Regular expression string (for strict equal expressions) ---
+
+RawString =
+    QUOT SimpleString QUOT / QUOT QUOT
+
+SimpleString =
+    (AnyLetter / NO_RG_ESCAPED / NO_RG_SPEC)+
+
+NO_RG_SPEC =
+    '\{' / '\}' / '\(' / '\)' / '\[' / '\]' / '\?' / '\!' / '\.' / '\*' / '\+' / '\^' / '\$' / '\|'
+
+NO_RG_ESCAPED =
+    '\\"' / '\\\\'
 
 // ---------------- Regular expression with balanced parentheses --------
 
@@ -209,8 +224,8 @@ DOT = '.'
 COMMA = ','
 SEMI = ';'
 COLON =  ':'
-EQ = '='
 EEQ = '=='
+EQ = '='
 TEQ = '~'
 NOT = '!'
 LEQ = '<='

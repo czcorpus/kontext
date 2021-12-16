@@ -183,13 +183,26 @@ export interface ParsedPQItem {
         return ans;
     }
 
+    private findAnyRuleInRange(rules:Array<string>, i1:number, i2:number):Array<CharsRule> {
+        const ans:Array<CharsRule> = [];
+        for (let i = 0; i < this.nonTerminals.length; i += 1) {
+            if (List.find(r => r === this.nonTerminals[i].rule, rules) &&
+                    this.nonTerminals[i].from >= i1 &&
+                    this.nonTerminals[i].to <= i2) {
+                ans.push(this.nonTerminals[i]);
+            }
+        }
+        return ans;
+    }
+
     private findSubRuleSeqIn(ruleSeq:Array<string>, i1:number, i2:number):Array<CharsRule> {
-        return List.foldl(
+        const tmp = List.foldl(
             (acc, nt) => nt.rule === ruleSeq[List.size(acc)] && nt.from >= i1 && nt.to <= i2 ?
                     List.push(nt, acc) : acc,
             [] as Array<CharsRule>,
             this.nonTerminals
         );
+        return List.size(tmp) === List.size(ruleSeq) ? tmp : [];
     }
 
     private createClickableTag(type:string, args:Kontext.GeneralProps, title:string=null):string {
@@ -226,7 +239,7 @@ export interface ParsedPQItem {
                                     this.findRuleInRange('AttVal', curr.from, curr.to),
                                     List.map(paRule => {
                                         const nameSrch = this.findRuleInRange('AttName', paRule.from, paRule.to);
-                                        const valSrch = this.findRuleInRange('RegExpRaw', paRule.from, paRule.to);
+                                        const valSrch = this.findAnyRuleInRange(['RegExpRaw', 'SimpleString'], paRule.from, paRule.to);
                                         if (List.size(nameSrch) === 1 && List.size(valSrch) === 1) {
                                             return tuple(List.head(nameSrch), List.head(valSrch));
                                         }
@@ -351,6 +364,14 @@ export interface ParsedPQItem {
             Dict.values(),
             List.filter(v => v.to <= this.query.length),
             List.sortedBy(v => v.from),
+            // we must get rid of incorrectly detected "nested" terminals (this applies for incomplete expressions)
+            List.foldl<CharsRule, [number, Array<CharsRule>]>(
+                ([maxPos, acc], curr) => curr.to < maxPos ?
+                        tuple(maxPos, acc) :
+                        tuple(curr.to, List.push(curr, acc)),
+                tuple(0, [])
+            ),
+            ([, acc]) => acc,
             List.map(v => ({
                 value: this.ruleToSubstring(v),
                 htmlValue: this.emitTerminal(v.rule, v.from, v.to),
@@ -358,6 +379,9 @@ export interface ParsedPQItem {
                 to: v.to
             }))
         );
+        if (List.size(chunks) > 1 && List.last(chunks).to < List.last(List.init(chunks)).to) {
+
+        }
         // 'inserts' contains values (= HTML tags) inserted
         // before matching 'result' items. I.e. 0th item
         // from 'inserts' is inserted before 0th item from 'result'
@@ -526,6 +550,8 @@ export interface ParsedPQItem {
             case 'DASH':
             case 'RG_OP':
             case 'RG_ESCAPED':
+            case 'NO_RG_SPEC':
+            case 'NO_RG_ESCAPED':
                 return `<span class="${CLASS_OPERATOR}">${this.query.substring(startIdx, endIdx)}</span>`;
             case 'SEMI':
             break;
