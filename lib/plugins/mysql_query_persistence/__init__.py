@@ -188,23 +188,27 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        data = self.db.get(mk_key(data_id))
-        if data is None:
-            cursor = self._archive.cursor()
-            cursor.execute(
-                'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
-            tmp = cursor.fetchone()
-            if tmp:
-                data = json.loads(tmp['data'])
-                if save_access:
-                    cursor.execute(
-                        'UPDATE kontext_conc_persistence '
-                        'SET last_access = %s, num_access = num_access + 1 '
-                        'WHERE id = %s AND created = %s',
-                        (get_iso_datetime(), data_id, tmp['created'].isoformat())
-                    )
-                    self._archive.commit()
-        return data
+        try:
+            data = self.db.get(mk_key(data_id))
+            if data is None:
+                cursor = self._archive.cursor()
+                cursor.execute(
+                    'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
+                tmp = cursor.fetchone()
+                if tmp:
+                    data = json.loads(tmp['data'])
+                    if save_access:
+                        cursor.execute(
+                            'UPDATE kontext_conc_persistence '
+                            'SET last_access = %s, num_access = num_access + 1 '
+                            'WHERE id = %s AND created = %s',
+                            (get_iso_datetime(), data_id, tmp['created'].isoformat())
+                        )
+                        self._archive.commit()
+            return data
+        except Exception as ex:
+            logging.getLogger(__name__).error(f'Failed to restore archived concordance {data_id}: {ex}')
+            raise ex
 
     def store(self, user_id, curr_data, prev_data=None):
         """
