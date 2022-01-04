@@ -25,6 +25,7 @@ import { HTTP, Dict, List, pipe } from 'cnc-tskit';
 import { PageModel, DownloadType } from '../app/page';
 import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
+import { init as initViews } from './lineSelectionView'
 
 export interface LineGroupChartItem {
     groupId:number;
@@ -63,7 +64,8 @@ export class LineSelGroupsRatiosChart {
     }
 
     // TODO rewrite for Recharts
-    private renderChart(rootElm:d3.Selection<any, any, any, any>, data:LineGroupChartData):Array<string> {
+    private renderChart(rootElm:HTMLElement, data:LineGroupChartData) {
+        const lineSelectionViews = initViews(this.layoutModel.getComponentHelpers());
         const coloredData = attachColorsToIds(
             data,
             item => item.groupId,
@@ -73,123 +75,20 @@ export class LineSelGroupsRatiosChart {
                 bgColor
             })
         );
-        const radius = Math.min(this.currWidth, this.currHeight) / 2;
-        const arc = d3.arc()
-            .outerRadius(radius - 10)
-            .innerRadius(0);
-        const labelArc = d3.arc()
-            .outerRadius(radius - 40)
-            .innerRadius(radius - 40);
-        const pie = d3.pie<any, {count:number}>()
-            .value((d) => d.count)
-            .sort(null);
-
-        const pieData = pie(coloredData);
-        const wrapper = rootElm.append('svg')
-            .attr('width', this.currWidth)
-            .attr('height', this.currHeight)
-            .attr('class', 'chart')
-            .append('g')
-                .attr('transform', 'translate(' + this.currWidth / 2 + ',' + this.currHeight / 2 + ')')
-                .attr('class', 'chart-wrapper');
-
-        const g = wrapper.selectAll('.arc')
-            .data(pieData).enter()
-                .append('g')
-                .attr('class', 'arc');
-
-        /*
-        g.append('path')
-            .attr('d', arc)
-            .style('fill', (d:any) => d.data['bgColor']);
-        */
-
-        if (pieData.length <= 5) { // direct labels only for small num of portions
-            g.append('text')
-                .attr('transform', (d:any) => ('translate(' + labelArc.centroid(d) + ')'))
-                .text((d:any) => d.data['group']);
-        }
-        const ans = List.repeat(() => '#000000', List.maxItem(v => v.groupId, coloredData).groupId);
-        List.forEach(
-            v => {
-                ans[v.groupId] = v.bgColor;
-            },
-            coloredData
-        );
-        return ans;
+        const title = document.createElement('legend');
+        title.append();
+        this.layoutModel.renderReactComponent(
+            lineSelectionViews.LineGroupChart,
+            rootElm,
+            {data: coloredData, width: this.currWidth, height: this.currHeight}
+        )
     }
 
-    private renderLabels(
+    private renderExportLinks(
         data:LineGroupChartData,
-        colors:Array<string>,
-        rootElm:d3.Selection<any, any, any, any>
-    ):void {
-        const labelWrapper:HTMLElement = window.document.createElement('table');
-        const tbody:HTMLElement = window.document.createElement('tbody');
-        const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
-
-        const percentage = (item) => {
-            return (item / total * 100).toFixed(1) + '%';
-        };
-
-        const sortedData = List.sorted(
-            (x1, x2) => x1.groupId > x2.groupId ? 1 : -1,
-            data
-        );
-
-        const dataPairs = pipe(
-            sortedData,
-            List.filter((_, i) => i < List.size(sortedData) / 2),
-            List.zipAll(List.filter((_, i) => i >= List.size(sortedData) / 2, sortedData)),
-        );
-
-        const trSel = d3.select(labelWrapper)
-            .attr('class', 'chart-label')
-            .append(() => tbody)
-            .selectAll('tr')
-            .data(dataPairs)
-            .enter()
-            .append('tr');
-
-        const addRowData = (colNum:number, dataSel:(d:any, key:string)=>any) => {
-            trSel
-                .append('td')
-                    .attr('class', 'label-text color-code')
-                    .style('padding-left', colNum === 1 ? '1em' : '0')
-                    .append('svg')
-                    .attr('width', '1.5em')
-                    .attr('height', '1.5em')
-                    .append('rect')
-                    .attr('width', '100%')
-                    .attr('height', '100%')
-                    .style('fill', d => colors[dataSel(d, 'groupId')])
-                    .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
-            trSel.append('th')
-                .attr('class', 'num')
-                .text(d => dataSel(d, 'group'))
-                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
-            trSel.append('td')
-                .attr('class', 'num')
-                .text(d => percentage(dataSel(d, 'count')))
-                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
-            trSel.append('td')
-                .attr('class', 'num')
-                .text(d => '(' + dataSel(d, 'count') + 'x)')
-                .style('display', d => dataSel(d, 'groupId') ? undefined : 'none');
-        };
-
-        addRowData(0, (item, key) => {
-            const tmp = item[0];
-            return tmp ? tmp[key] : undefined;
-        });
-        addRowData(1, (item, key) => {
-            const tmp = item[1];
-            return tmp ? tmp[key] : undefined;
-        });
-        rootElm.append(() => labelWrapper);
-    }
-
-    private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any, any, any, any>, corpusId:string) {
+        rootElm:d3.Selection<any, any, any, any>,
+        corpusId:string
+    ) {
         if (this.exportFormats.length > 0) {
             const fieldset = rootElm.append('fieldset');
             fieldset.attr('class', 'footer');
@@ -249,11 +148,10 @@ export class LineSelGroupsRatiosChart {
                 );
                 const d3Root = d3.select(rootElm);
                 d3Root.selectAll('*').remove(); // remove loader
-                d3Root
-                    .append('legend')
+                d3Root.append('legend')
                     .text(this.layoutModel.translate('linesel__groups_stats_heading'));
-                const colors = this.renderChart(d3Root, chartData);
-                this.renderLabels(chartData, colors, d3Root);
+                d3Root.append('div').attr('class', 'chart')
+                this.renderChart(rootElm.querySelector('.chart'), chartData);
                 this.renderExportLinks(chartData, d3Root, corpusId);
             },
             (err) => {
