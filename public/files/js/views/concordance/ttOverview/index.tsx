@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../../vendor.d.ts/d3-color.d.ts" />
-
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
 import { TextTypesDistModel, TextTypesDistModelState } from '../../../models/concordance/ttdist/model';
@@ -167,6 +165,6 @@ export function init(
     }
 
     return {
-        TextTypesDist: BoundWithProps(TextTypesDist, ttDistModel)
+        TextTypesDist: Bound(TextTypesDist, ttDistModel)
     };
 }
