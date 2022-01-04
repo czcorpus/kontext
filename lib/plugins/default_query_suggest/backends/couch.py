@@ -43,13 +43,19 @@ class CouchDBBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-        self._client = couchdb.Server(self._conf['server'])
-        self._db = self._client[self._conf['database']]
+        self._db = None
+
+    @property
+    def db(self):
+        if self._db is None:
+            client = couchdb.Server(self._conf['server'])
+            self._db = client[self._conf['database']]
+        return self._db
 
     def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
-        ans = self._db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
+        ans = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
         merged = {}
         for item in ans:
             merged[item['doc']['_id']] = item['doc']
