@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/d3.d.ts" />
-/// <reference path="../vendor.d.ts/d3-color.d.ts" />
 
-import * as d3 from 'vendor/d3';
-import { HTTP, Dict, List, pipe, tuple } from 'cnc-tskit';
+import * as d3 from 'd3';
+import { HTTP, Dict, List, pipe } from 'cnc-tskit';
 
 import { PageModel, DownloadType } from '../app/page';
 import * as Kontext from '../types/kontext';
@@ -64,7 +62,8 @@ export class LineSelGroupsRatiosChart {
         this.currHeight = 200;
     }
 
-    private renderChart(rootElm:d3.Selection<any>, data:LineGroupChartData):Array<string> {
+    // TODO rewrite for Recharts
+    private renderChart(rootElm:d3.Selection<any, any, any, any>, data:LineGroupChartData):Array<string> {
         const coloredData = attachColorsToIds(
             data,
             item => item.groupId,
@@ -81,8 +80,8 @@ export class LineSelGroupsRatiosChart {
         const labelArc = d3.arc()
             .outerRadius(radius - 40)
             .innerRadius(radius - 40);
-        const pie = d3.pie()
-            .value((d) => d['count'])
+        const pie = d3.pie<any, {count:number}>()
+            .value((d) => d.count)
             .sort(null);
 
         const pieData = pie(coloredData);
@@ -99,9 +98,11 @@ export class LineSelGroupsRatiosChart {
                 .append('g')
                 .attr('class', 'arc');
 
+        /*
         g.append('path')
             .attr('d', arc)
             .style('fill', (d:any) => d.data['bgColor']);
+        */
 
         if (pieData.length <= 5) { // direct labels only for small num of portions
             g.append('text')
@@ -118,7 +119,11 @@ export class LineSelGroupsRatiosChart {
         return ans;
     }
 
-    private renderLabels(data:LineGroupChartData, colors:Array<string>, rootElm:d3.Selection<any>):void {
+    private renderLabels(
+        data:LineGroupChartData,
+        colors:Array<string>,
+        rootElm:d3.Selection<any, any, any, any>
+    ):void {
         const labelWrapper:HTMLElement = window.document.createElement('table');
         const tbody:HTMLElement = window.document.createElement('tbody');
         const total = data.reduce((prev, curr)=>(prev + curr['count']), 0);
@@ -184,7 +189,7 @@ export class LineSelGroupsRatiosChart {
         rootElm.append(() => labelWrapper);
     }
 
-    private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any>, corpusId:string) {
+    private renderExportLinks(data:LineGroupChartData, rootElm:d3.Selection<any, any, any, any>, corpusId:string) {
         if (this.exportFormats.length > 0) {
             const fieldset = rootElm.append('fieldset');
             fieldset.attr('class', 'footer');

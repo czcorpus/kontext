@@ -18,10 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../vendor.d.ts/d3.d.ts" />
-/// <reference path="../vendor.d.ts/d3-color.d.ts" />
-
-import * as d3 from 'vendor/d3';
+import * as d3 from 'd3';
 import {PageModel} from '../app/page';
 
 
@@ -47,7 +44,7 @@ export class ConfIntervals {
 
     private paddingBottom:number;
 
-    private tooltipElm:d3.Selection<any>;
+    private tooltipElm:d3.Selection<any, any, any, any>;
 
     private tooltipOpacity:number;
 
@@ -68,7 +65,7 @@ export class ConfIntervals {
         this.dataPointTextSize = 11;
     }
 
-    private renderLines(root:d3.Selection<any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
+    private renderLines(root:d3.Selection<any, any, any, any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
 
 
     }
@@ -77,7 +74,7 @@ export class ConfIntervals {
         return this.height - this.paddingBottom - this.paddingTop;
     }
 
-    private createTooltip(d:DataPoint, i:number, parent:d3.Selection<any>, xScale:any, yScale:any):void {
+    private createTooltip(d:DataPoint, i:number, parent:d3.Selection<any, any, any, any>, xScale:any, yScale:any):void {
         const p = this.tooltipElm.append('p');
         this.tooltipElm.style('top', `${yScale(i)}px`);
         this.tooltipElm.style('left', `${xScale(d.data[1]) - 20}px`);
@@ -89,7 +86,8 @@ export class ConfIntervals {
         }
     }
 
-    private renderCircles(root:d3.Selection<any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
+    private renderCircles(root:d3.Selection<any, any, any, any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
+        const self = this;
         const dataPoints = root
             .selectAll('.data-point')
             .data(data)
@@ -141,21 +139,26 @@ export class ConfIntervals {
             .attr('font-size', this.dataPointTextSize)
             .text(d => d.label);
 
+        const circleIdxs:d3.Local<number> = d3.local();
+
         dataPoints
-            .on('mouseover', (d, i, nodes) => {
-                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 7);
-                this.createTooltip(d, i, d3.select(nodes[i]), xScale, yScale);
-                this.tooltipElm
+            .each(function(d, i) {
+                circleIdxs.set(this, i);
+            })
+            .on('mouseover', function (event, d) {
+                d3.select(this).select('circle').transition().duration(100).attr('r', 7);
+                self.createTooltip(d, circleIdxs.get(this), d3.select(this), xScale, yScale);
+                self.tooltipElm
                     .style('display', 'block')
                     .style('opacity', 0)
                     .transition()
                     .duration(200)
-                    .style('opacity', this.tooltipOpacity);
+                    .style('opacity', self.tooltipOpacity);
             })
-            .on('mouseout', (d, i, nodes) => {
-                d3.select(nodes[i]).select('circle').transition().duration(100).attr('r', 5);
-                this.tooltipElm.select('p').remove();
-                this.tooltipElm.style('display', 'none');
+            .on('mouseout', function () {
+                d3.select(this).select('circle').transition().duration(100).attr('r', 5);
+                self.tooltipElm.select('p').remove();
+                self.tooltipElm.style('display', 'none');
             });
     }
 
@@ -174,25 +177,25 @@ export class ConfIntervals {
         return [min - padding, max + padding];
     }
 
-    private makeAxes(root:d3.Selection<any>, xScale:any):void {
+    private makeAxes(root:d3.Selection<any, any, any, any>, xScale:any):void {
         const xAxis = d3.axisBottom(xScale);
         const formatNumber = d3.format('.1f');
         root.append('g')
             .attr('transform', `translate(0, ${this.getRealHeight()})`)
-            .call(xAxis.tickFormat(d => d >= 0 ? formatNumber(d) : '-'));
+            .call(xAxis.tickFormat(d => d >= 0 ? formatNumber(parseFloat(d.toString())) : '-'));
 
         root.append('g')
-            .call(xAxis.tickFormat(''));
+            .call(xAxis.tickFormat(null));
 
 
-        const makeXGridlines = () => d3.axisBottom(xScale).tickFormat(d3.format('d'));
+        const makeXGridlines = () => d3.axisBottom(xScale).tickFormat(x => typeof x === 'number' ? d3.format('d')(x) : `${x}`);
 
         root.append('g')
             .attr('class', 'grid')
             .attr('transform', `translate(0, ${this.getRealHeight()})`)
             .call(makeXGridlines()
                     .tickSize(-this.getRealHeight())
-                    .tickFormat(''));
+                    .tickFormat(null));
 
         root
             .append('text')

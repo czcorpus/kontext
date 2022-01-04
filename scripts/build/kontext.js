@@ -146,8 +146,6 @@
         const moduleMap = {
             'translations': translatPath,
             'views': path.resolve(jsPath, 'views'),
-            'vendor/d3': path.resolve(jsPath, 'vendor/d3.min'),
-            'vendor/d3-color': path.resolve(jsPath, 'vendor/d3-color.min'),
             'vendor/intl-messageformat': path.resolve(jsPath, 'vendor/intl-messageformat'),
             'vendor/SoundManager' : path.resolve(jsPath, 'vendor/soundmanager2.min'),
             'cqlParser/parser': cqlParserPath,

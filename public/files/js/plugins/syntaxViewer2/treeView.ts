@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/// <reference path="../../vendor.d.ts/d3.d.ts" />
-
 import * as Kontext from '../../types/kontext';
-import * as d3 from 'vendor/d3';
+import * as d3 from 'd3';
 import { List } from 'cnc-tskit';
 import * as srcData from './srcdata';
 import {
@@ -302,8 +300,9 @@ class TreeGenerator {
         return `<span class="label" ${inlineCss}>${label.value}</span>`;
     }
 
-    private renderLinearSentence(tokens:Sentence, target:d3.Selection<srcData.Token>):void {
-       target
+    private renderLinearSentence(tokens:Sentence, target:d3.Selection<HTMLDivElement, srcData.Token, any, any>):void {
+        const self = this;
+        target
             .selectAll('span')
             .data(tokens)
             .enter()
@@ -313,25 +312,27 @@ class TreeGenerator {
             .classed('multival-start', d => d.multivalFlag === 'start')
             .classed('multival-end', d => d.multivalFlag === 'end')
             .text(d => d.value)
-            .on('mouseover', (datum, i, values) => {
-                d3.select(values[i])
+            .on('mouseover', function (datum) {
+                d3.select(this)
                     .classed('focused', true);
-                d3.select(this.sent2NodeActionMap[datum.id]).classed('focused', true);
+                d3.select(self.sent2NodeActionMap[datum.id]).classed('focused', true);
             })
-            .on('mouseout', (datum, i, values) => {
-                d3.select(values[i])
+            .on('mouseout', function (datum) {
+                d3.select(this)
                     .classed('focused', false);
-                d3.select(this.sent2NodeActionMap[datum.id]).classed('focused', false);
+                d3.select(self.sent2NodeActionMap[datum.id]).classed('focused', false);
             });
 
         target
             .selectAll('span.token')
-            .each((d, i, nodes) => {
-                this.node2SentActionMap[d.id] = nodes[i];
+            .each(function () {
+                const d = d3.select<HTMLElement, srcData.Node>((this as HTMLElement).parentNode as HTMLElement).datum();
+                self.node2SentActionMap[d.id] = this as HTMLElement;
             });
     }
 
-    private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any>, group:d3.Selection<Token>) {
+    private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any, any, any, any>, group:d3.Selection<any, Token, any, any>) {
+        const self = this;
         const foreignObj = group.append('foreignObject');
         foreignObj
             .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
@@ -358,21 +359,21 @@ class TreeGenerator {
             .html(d => generateNodeHtml(d, nodeMap[d.id].labels));
 
         div.each((d, i, items) => {
-            this.sent2NodeActionMap[d.id] = items[i];
+            this.sent2NodeActionMap[d.id] = items[i] as HTMLElement;
         });
 
         div
-            .on('mouseover', (datum, i, elements) => {
-                d3.select(elements[i]).classed('focused', true);
-                d3.select(this.node2SentActionMap[datum.id]).classed('focused', true);
+            .on('mouseover', function (datum) {
+                d3.select(this).classed('focused', true);
+                d3.select(self.node2SentActionMap[datum.id]).classed('focused', true);
             })
-            .on('mouseout', (datum, i, elements) => {
-                d3.select(elements[i]).classed('focused', false);
-                d3.select(this.node2SentActionMap[datum.id]).classed('focused', false);
+            .on('mouseout', function (datum) {
+                d3.select(this).classed('focused', false);
+                d3.select(self.node2SentActionMap[datum.id]).classed('focused', false);
             })
-            .on('click', (datum, i, elements) => {
+            .on('click', function (datum) {
                 target.selectAll('table').remove();
-                if (!this.detailedId || this.detailedId !== datum.id) {
+                if (!self.detailedId || self.detailedId !== datum.id) {
                     const table = target
                         .append('xhtml:table')
                         .classed('node-detail', true)
@@ -389,15 +390,15 @@ class TreeGenerator {
                         .append('a')
                         .on('click', (datum) => {
                             target.selectAll('table').remove();
-                            this.detailedId = null;
+                            self.detailedId = null;
                         });
 
                     link
                         .append('img')
                         .classed('close-button', true)
-                        .attr('src', this.componentHelpers.createStaticUrl('img/close-icon.svg'))
-                        .attr('alt', this.componentHelpers.translate('global__close'))
-                        .attr('title', this.componentHelpers.translate('global__close'));
+                        .attr('src', self.componentHelpers.createStaticUrl('img/close-icon.svg'))
+                        .attr('alt', self.componentHelpers.translate('global__close'))
+                        .attr('title', self.componentHelpers.translate('global__close'));
 
                     const data = nodeMap[datum.id].data;
                     data.filter(k => k[0] !== 'id').forEach(item => {
@@ -419,12 +420,12 @@ class TreeGenerator {
                                         .classed('detail-ref', true)
                                         .text(item[1])
                                         .on('mouseover', () => {
-                                            d3.select(this.node2SentActionMap[refData.id]).classed('focused', true);
-                                            d3.select(this.sent2NodeActionMap[refData.id]).classed('focused', true);
+                                            d3.select(self.node2SentActionMap[refData.id]).classed('focused', true);
+                                            d3.select(self.sent2NodeActionMap[refData.id]).classed('focused', true);
                                         })
                                         .on('mouseout', () => {
-                                            d3.select(this.node2SentActionMap[refData.id]).classed('focused', false);
-                                            d3.select(this.sent2NodeActionMap[refData.id]).classed('focused', false);
+                                            d3.select(self.node2SentActionMap[refData.id]).classed('focused', false);
+                                            d3.select(self.sent2NodeActionMap[refData.id]).classed('focused', false);
                                         });
                                 }
                             });
@@ -433,16 +434,16 @@ class TreeGenerator {
                             td.text(value);
                         }
                     });
-                    this.detailedId = datum.id;
+                    self.detailedId = datum.id;
 
                 } else {
-                    this.detailedId = null;
+                    self.detailedId = null;
                 }
             });
     }
 
     private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement):void {
-        const wrapper = d3.select(target);
+        const wrapper = d3.select<HTMLElement, srcData.Token>(target);
 
         const sentDiv = wrapper
             .append('div')
