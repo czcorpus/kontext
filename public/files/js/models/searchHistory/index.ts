@@ -23,7 +23,7 @@ import { forkJoin, Observable, of as rxOf } from 'rxjs';
 import { Action, IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
-import { highlightSyntaxStatic } from '../query/cqleditor/parser';
+import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { List, HTTP, tuple, pipe } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -109,7 +109,7 @@ export class SearchHistoryModel extends StatefulModel<SearchHistoryModelState> {
                 this.performLoadAction();
             }
         );
-        
+
         this.addActionHandler<typeof Actions.HistorySetQuerySupertype>(
             Actions.HistorySetQuerySupertype.name,
             action => {

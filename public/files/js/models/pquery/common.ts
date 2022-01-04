@@ -21,7 +21,7 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import * as Kontext from '../../types/kontext';
-import { highlightSyntaxStatic, ParsedPQItem } from '../query/cqleditor/parser';
+import { highlightSyntaxStatic, ParsedPQItem } from '../cqleditor/parser';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AdvancedQuery, AdvancedQuerySubmit } from '../query/query';
 import { FilterFormArgs, isQueryFormArgs, QueryFormArgs } from '../query/formArgs';

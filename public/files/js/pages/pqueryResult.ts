@@ -30,7 +30,7 @@ import { init as resultViewInit } from '../views/pquery/result';
 import { init as queryOverviewInit } from '../views/pquery/overview';
 import { PqueryResult, FreqIntersectionArgs, importConcQueries, InvolvedConcFormArgs,
     storedQueryToModel } from '../models/pquery/common';
-import { AttrHelper } from '../models/query/cqleditor/attrs';
+import { AttrHelper } from '../models/cqleditor/attrs';
 import { PqueryResultsSaveModel } from '../models/pquery/save';
 import { HtmlHelpModel } from '../models/help/help';
 

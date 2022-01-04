@@ -24,7 +24,7 @@ import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Dict, Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
 import { init as keyboardInit } from '../virtualKeyboard';
-import { init as cqlEditoInit } from '../cqlEditor';
+import { init as cqlEditoInit } from '../../cqlEditor';
 import { init as richInputInit } from '../richInput';
 import { WithinBuilderModel, WithinBuilderModelState } from '../../../models/query/withinBuilder';
 import * as PluginInterfaces from '../../../types/plugins';

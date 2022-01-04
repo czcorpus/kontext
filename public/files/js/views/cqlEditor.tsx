@@ -19,17 +19,17 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import * as S from './style';
+import * as Kontext from '../types/kontext';
+import * as S from './query/style';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Keyboard, List, pipe, tuple } from 'cnc-tskit';
 
-import { QueryFormModelState } from '../../models/query/common';
-import { QueryFormModel } from '../../models/query/common';
-import { Actions, QueryFormType } from '../../models/query/actions';
-import { ContentEditable } from './contentEditable';
-import { AdvancedQuery, findTokenIdxByFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../../models/query/query';
-import { PqueryFormModel } from '../../models/pquery/form';
+import { QueryFormModelState } from '../models/query/common';
+import { QueryFormModel } from '../models/query/common';
+import { Actions, QueryFormType } from '../models/query/actions';
+import { ContentEditable } from './query/contentEditable';
+import { AdvancedQuery, findTokenIdxByFocusIdx, SimpleQuery, strictEqualParsedQueries } from '../models/query/query';
+import { PqueryFormModel } from '../models/pquery/form';
 
 
 export interface CQLEditorProps {

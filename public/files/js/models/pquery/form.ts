@@ -39,8 +39,8 @@ import {
     PqueryFormModelState, PqueryAlignTypes, ParadigmaticQuery, SubsetComplementsAndRatio,
     SupersetAndRatio, ParadigmaticPartialQuery, splitFullQuery, joinPartialQueries, ConcStatus
 } from './common';
-import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../query/cqleditor/parser';
-import { AttrHelper } from '../query/cqleditor/attrs';
+import { highlightSyntax, ParsedAttr, ParsedPQItem } from '../cqleditor/parser';
+import { AttrHelper } from '../cqleditor/attrs';
 import { AlignTypes } from '../freqs/twoDimension/common';
 import { AjaxError } from 'rxjs/ajax';
 

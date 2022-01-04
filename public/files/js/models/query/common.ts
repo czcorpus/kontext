@@ -39,8 +39,8 @@ import {
     AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, findTokenIdxByFocusIdx,
     parseSimpleQuery, QueryType, runSimpleQueryParser, SimpleQuery, simpleToAdvancedQuery,
     TokenSuggestions } from './query';
-import { getApplyRules, highlightSyntax, ParsedAttr } from './cqleditor/parser';
-import { AttrHelper } from './cqleditor/attrs';
+import { getApplyRules, highlightSyntax, ParsedAttr } from '../cqleditor/parser';
+import { AttrHelper } from '../cqleditor/attrs';
 import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions } from '../searchHistory/actions';
 import { SubmitEncodedSimpleTokens } from './formArgs';
