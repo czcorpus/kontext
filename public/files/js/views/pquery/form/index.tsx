@@ -31,7 +31,7 @@ import * as SC from '../../query/style';
 import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { ConcStatus, ExpressionRoleType, PqueryAlignTypes,
     PqueryFormModelState } from '../../../models/pquery/common';
-import { init as cqlEditoInit } from '../../query/cqlEditor';
+import { init as cqlEditoInit } from '../../cqlEditor';
 import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 import { HtmlHelpModel, HtmlHelpModelState } from '../../../models/help/help';
 import { Actions as HelpActions } from '../../../models/help/actions';

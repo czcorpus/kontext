@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../types/kontext';
 import { IAttrHelper } from './attrs';
 import { List, tuple, pipe, Dict } from 'cnc-tskit';
-import { TokenSuggestions } from '../query';
+import { TokenSuggestions } from '../query/query';
 
 
 /**

@@ -42,8 +42,8 @@ import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
 import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
-import { AttrHelper } from './cqleditor/attrs';
-import { highlightSyntaxStatic } from './cqleditor/parser';
+import { AttrHelper } from '../cqleditor/attrs';
+import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
 import { QuickSubcorpModel } from '../subcorp/quickSubcorp';
 

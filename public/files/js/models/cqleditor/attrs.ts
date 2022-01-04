@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../../types/kontext';
+import * as Kontext from '../../types/kontext';
 import { List, pipe } from 'cnc-tskit';
-import * as PluginInterfaces from '../../../types/plugins';
+import * as PluginInterfaces from '../../types/plugins';
 
 /**
  * IAttrHelper defines a general object able to

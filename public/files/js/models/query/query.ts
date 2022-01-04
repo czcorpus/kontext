@@ -19,7 +19,7 @@
  */
 
 import { id, List, tuple } from 'cnc-tskit';
-import { highlightSyntaxStatic, ParsedAttr } from './cqleditor/parser';
+import { highlightSyntaxStatic, ParsedAttr } from '../cqleditor/parser';
 import { SubmitEncodedSimpleTokens } from './formArgs';
 
 

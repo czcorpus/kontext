@@ -36,8 +36,8 @@ import * as PluginInterfaces from '../../types/plugins';
 import { TextTypesModel } from '../textTypes/main';
 import { AjaxConcResponse } from '../concordance/common';
 import { QueryType, AnyQuery, AdvancedQuery, SimpleQuery, parseSimpleQuery } from './query';
-import { highlightSyntaxStatic } from './cqleditor/parser';
-import { AttrHelper } from './cqleditor/attrs';
+import { highlightSyntaxStatic } from '../cqleditor/parser';
+import { AttrHelper } from '../cqleditor/attrs';
 import * as formArgs from './formArgs';
 
 

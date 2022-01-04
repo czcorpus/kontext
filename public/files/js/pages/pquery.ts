@@ -31,7 +31,7 @@ import { tuple } from 'cnc-tskit';
 import { init as queryOverviewInit } from '../views/pquery/overview';
 import { FreqIntersectionArgs, importConcQueries, newModelState, InvolvedConcFormArgs,
     storedQueryToModel } from '../models/pquery/common';
-import { AttrHelper } from '../models/query/cqleditor/attrs';
+import { AttrHelper } from '../models/cqleditor/attrs';
 import { HtmlHelpModel } from '../models/help/help';
 
 
