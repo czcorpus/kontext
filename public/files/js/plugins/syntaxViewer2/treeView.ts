@@ -312,33 +312,36 @@ class TreeGenerator {
             .classed('multival-start', d => d.multivalFlag === 'start')
             .classed('multival-end', d => d.multivalFlag === 'end')
             .text(d => d.value)
-            .on('mouseover', function (datum) {
+            .on('mouseover', function (_, datum) {
                 d3.select(this)
                     .classed('focused', true);
                 d3.select(self.sent2NodeActionMap[datum.id]).classed('focused', true);
             })
-            .on('mouseout', function (datum) {
+            .on('mouseout', function (_, datum) {
                 d3.select(this)
                     .classed('focused', false);
                 d3.select(self.sent2NodeActionMap[datum.id]).classed('focused', false);
             });
 
         target
-            .selectAll('span.token')
-            .each(function () {
-                const d = d3.select<HTMLElement, srcData.Node>((this as HTMLElement).parentNode as HTMLElement).datum();
-                self.node2SentActionMap[d.id] = this as HTMLElement;
+            .selectAll<HTMLElement, srcData.Node>('span.token')
+            .each(function (datum) {
+                self.node2SentActionMap[datum.id] = this as HTMLElement;
             });
     }
 
-    private renderNodeDiv(nodeMap:TreeNodeMap, target:d3.Selection<any, any, any, any>, group:d3.Selection<any, Token, any, any>) {
+    private renderNodeDiv(
+        nodeMap:TreeNodeMap,
+        target:d3.Selection<any, srcData.Token, any, any>,
+        group:d3.Selection<any, Token, any, any>
+    ) {
         const self = this;
         const foreignObj = group.append('foreignObject');
         foreignObj
-            .attr('x', (d, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
+            .attr('x', (_, i) => this.params.paddingLeft + this.params.cmlWordSteps[i])
             .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
-            .attr('transform', (d, i) => `translate(-10, 0)`)
-            .attr('width', (d, i) => TreeGenerator.NODE_DIV_WIDTH + (1.1 * d['value'].length ))
+            .attr('transform', () => `translate(-10, 0)`)
+            .attr('width', (d) => TreeGenerator.NODE_DIV_WIDTH + (1.1 * d.value.length ))
             .attr('height', TreeGenerator.NODE_DIV_HEIGHT + 5);
 
         const body = foreignObj
@@ -363,15 +366,15 @@ class TreeGenerator {
         });
 
         div
-            .on('mouseover', function (datum) {
+            .on('mouseover', function (_, datum) {
                 d3.select(this).classed('focused', true);
                 d3.select(self.node2SentActionMap[datum.id]).classed('focused', true);
             })
-            .on('mouseout', function (datum) {
+            .on('mouseout', function (_, datum) {
                 d3.select(this).classed('focused', false);
                 d3.select(self.node2SentActionMap[datum.id]).classed('focused', false);
             })
-            .on('click', function (datum) {
+            .on('click', function (_, datum) {
                 target.selectAll('table').remove();
                 if (!self.detailedId || self.detailedId !== datum.id) {
                     const table = target
@@ -388,7 +391,7 @@ class TreeGenerator {
                         .classed('controls', true)
                         .attr('colspan', 2)
                         .append('a')
-                        .on('click', (datum) => {
+                        .on('click', function () {
                             target.selectAll('table').remove();
                             self.detailedId = null;
                         });
