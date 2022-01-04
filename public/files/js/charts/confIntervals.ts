@@ -86,14 +86,20 @@ export class ConfIntervals {
         }
     }
 
-    private renderCircles(root:d3.Selection<any, any, any, any>, data:Array<DataPoint>, xScale:any, yScale:any):void {
+    private renderCircles(
+        root:d3.Selection<any, any, any, any>,
+        data:Array<DataPoint>,
+        xScale:(x:number)=>number,
+        yScale:(x:number)=>number
+    ):void {
         const self = this;
         const dataPoints = root
             .selectAll('.data-point')
             .data(data)
             .enter()
             .append('g')
-            .attr('class', 'data-point');
+            .attr('class', 'data-point')
+            .attr('transform', `translate(0, 20)`);
 
         dataPoints
             .append('line')
@@ -179,11 +185,6 @@ export class ConfIntervals {
 
     private makeAxes(root:d3.Selection<any, any, any, any>, xScale:any):void {
         const xAxis = d3.axisBottom(xScale);
-        const formatNumber = d3.format('.1f');
-        root.append('g')
-            .attr('transform', `translate(0, ${this.getRealHeight()})`)
-            .call(xAxis.tickFormat(d => d >= 0 ? formatNumber(parseFloat(d.toString())) : '-'));
-
         root.append('g')
             .call(xAxis.tickFormat(null));
 
@@ -202,7 +203,7 @@ export class ConfIntervals {
             .text(this.pageModel.translate('freq__ct_ipm_x_axis_label'))
             .attr('x', 0)
             .attr('y', this.getRealHeight() + 40)
-            .attr("text-anchor", "middle")
+            .attr('text-anchor', 'middle')
             .attr('transform', `translate(${this.width / 2}, 0)`);
     }
 
