@@ -21,25 +21,30 @@
 import * as React from 'react';
 import * as Kontext from '../types/kontext';
 import { Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
-import { LineGroupChartItem } from './lineSelection';
+import { LineGroupChartData } from './lineSelection';
+import { List } from 'cnc-tskit';
+import { DownloadType } from '../app/page';
 
-
-export interface Views {
-    LineGroupChart:React.FC<LineGroupChart>;
-}
 
 interface LineGroupChart {
     width: number;
     height: number;
-    data: Array<LineGroupChartItem>;
+    data: LineGroupChartData;
 }
 
-export function init(he:Kontext.ComponentHelpers):Views {
+export function init(he:Kontext.ComponentHelpers):React.FC<{
+    chartWidth: number;
+    chartHeight: number;
+    data: LineGroupChartData;
+    exportFormats:Array<string>;
+    corpusId: string;
+    bgDownload:({})=>void;
+}> {
 
     const LineGroupChart:React.FC<LineGroupChart> = (props) => {
 
         const legendFormatter = (value, entry) => {
-            return <span style={{color: '#000'}}><b>{value}</b> {(100*entry.payload.percent).toFixed(1)}% ({entry.payload.count}x)</span>;
+            return <span style={{color: '#000'}}><b>{value}</b> {he.formatNumber(100*entry.payload.percent, 1)}% ({entry.payload.count}x)</span>;
         };
 
         return (
@@ -59,8 +64,52 @@ export function init(he:Kontext.ComponentHelpers):Views {
         );
     };
 
-    return {
-        LineGroupChart: LineGroupChart
-    };
+    const ExportLinks:React.FC<{
+        data: LineGroupChartData;
+        exportFormats:Array<string>;
+        corpusId: string;
+        bgDownload:({})=>void;
+    }> = (props) => {
+        return props.exportFormats.length > 0 ?
+            <fieldset className="footer">
+                <legend>{he.translate('linesel__export_btn')}</legend>
+                <ul className="export">{
+                    List.map(v =>
+                        <li key={v}>
+                            <a onClick={e => props.bgDownload({
+                                filename: 'line-selection-overview.xlsx',
+                                type: DownloadType.LINE_SELECTION,
+                                url: he.createActionLink('export_line_groups_chart'),
+                                contentType: 'application/json',
+                                args: {
+                                    data: props.data,
+                                    corpname: props.corpusId,
+                                    cformat: v,
+                                    title: he.translate('linesel__saved_line_groups_heading')
+                                }
+                            })}>{v}</a>
+                        </li>
+                    , props.exportFormats)
+                }</ul>
+            </fieldset>:
+            null
+    }
+
+    const GroupsStats:React.FC<{
+        chartWidth: number;
+        chartHeight: number;
+        data: LineGroupChartData;
+        exportFormats:Array<string>;
+        corpusId: string;
+        bgDownload:({})=>void;
+    }> = (props) => {
+        return <div>
+            <legend>{he.translate('linesel__groups_stats_heading')}</legend>
+            <LineGroupChart width={props.chartWidth} height={props.chartHeight} data={props.data}/>
+            <ExportLinks data={props.data} exportFormats={props.exportFormats} corpusId={props.corpusId} bgDownload={props.bgDownload} />
+        </div>
+    }
+
+    return GroupsStats;
 
 }

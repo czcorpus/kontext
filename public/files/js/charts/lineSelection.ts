@@ -19,13 +19,13 @@
  */
 
 
-import * as d3 from 'd3';
 import { HTTP, Dict, List, pipe } from 'cnc-tskit';
 
-import { PageModel, DownloadType } from '../app/page';
+import { PageModel } from '../app/page';
 import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
-import { init as initViews } from './lineSelectionView'
+import { init as initView } from './lineSelectionView'
+import { IFullActionControl, StatelessModel } from 'kombo';
 
 export interface LineGroupChartItem {
     groupId:number;
@@ -45,7 +45,7 @@ export interface LineGroupStats extends Kontext.AjaxResponse {
 /**
  *
  */
-export class LineSelGroupsRatiosChart {
+export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
 
     private readonly layoutModel:PageModel;
 
@@ -56,70 +56,16 @@ export class LineSelGroupsRatiosChart {
     private currHeight:number;
 
 
-    constructor(layoutModel:PageModel, exportFormats:Array<string>) {
-        this.layoutModel = layoutModel;
+    constructor(dispatcher:IFullActionControl, pageModel:PageModel, exportFormats:Array<string>) {
+        super(
+            dispatcher,
+            {}
+        );
+    
+        this.layoutModel = pageModel;
         this.exportFormats = exportFormats;
         this.currWidth = 200;
         this.currHeight = 200;
-    }
-
-    // TODO rewrite for Recharts
-    private renderChart(rootElm:HTMLElement, data:LineGroupChartData) {
-        const lineSelectionViews = initViews(this.layoutModel.getComponentHelpers());
-        const coloredData = attachColorsToIds(
-            data,
-            item => item.groupId,
-            (item, fgColor, bgColor) => ({
-                ...item,
-                fgColor,
-                bgColor
-            })
-        );
-        const title = document.createElement('legend');
-        title.append();
-        this.layoutModel.renderReactComponent(
-            lineSelectionViews.LineGroupChart,
-            rootElm,
-            {data: coloredData, width: this.currWidth, height: this.currHeight}
-        )
-    }
-
-    private renderExportLinks(
-        data:LineGroupChartData,
-        rootElm:d3.Selection<any, any, any, any>,
-        corpusId:string
-    ) {
-        if (this.exportFormats.length > 0) {
-            const fieldset = rootElm.append('fieldset');
-            fieldset.attr('class', 'footer');
-            const sElm = fieldset.append('legend');
-            sElm.text(this.layoutModel.translate('linesel__export_btn'));
-            const ul = fieldset.append('ul');
-            ul.attr('class', 'export');
-
-            List.forEach(
-                ef => {
-                    const li = ul.append('li');
-                    const aElm = li.append('a');
-                    aElm.text(ef);
-                    aElm.on('click', () => {
-                        this.layoutModel.bgDownload({
-                            filename: 'line-selection-overview.xlsx',
-                            type: DownloadType.LINE_SELECTION,
-                            url: this.layoutModel.createActionUrl('export_line_groups_chart'),
-                            contentType: 'application/json',
-                            args: {
-                                data,
-                                corpname: corpusId,
-                                cformat: ef,
-                                title: this.layoutModel.translate('linesel__saved_line_groups_heading')
-                            }
-                        });
-                    });
-                },
-                this.exportFormats
-            );
-        }
     }
 
     showGroupsStats(rootElm:HTMLElement, corpusId:string, size:[number, number]):void {
@@ -134,25 +80,39 @@ export class LineSelGroupsRatiosChart {
 
         ).subscribe(
             (resp) => {
-                const chartData:LineGroupChartData = pipe(
-                    resp.groups,
-                    Dict.toEntries(),
-                    List.map(([ident, num]) => ({
-                        groupId: parseInt(ident, 10),
-                        group: `#${ident}`,
-                        count: num,
-                        fgColor: '#abcdef',
-                        bgColor: '#111111'
-                    })),
-                    List.sortBy(v => v.groupId)
+                const chartData:LineGroupChartData = attachColorsToIds(
+                    pipe(
+                        resp.groups,
+                        Dict.toEntries(),
+                        List.map(([ident, num]) => ({
+                            groupId: parseInt(ident, 10),
+                            group: `#${ident}`,
+                            count: num,
+                            fgColor: '#abcdef',
+                            bgColor: '#111111'
+                        })),
+                        List.sortBy(v => v.groupId)
+                    ),
+                    item => item.groupId,
+                    (item, fgColor, bgColor) => ({
+                        ...item,
+                        fgColor,
+                        bgColor
+                    })
                 );
-                const d3Root = d3.select(rootElm);
-                d3Root.selectAll('*').remove(); // remove loader
-                d3Root.append('legend')
-                    .text(this.layoutModel.translate('linesel__groups_stats_heading'));
-                d3Root.append('div').attr('class', 'chart')
-                this.renderChart(rootElm.querySelector('.chart'), chartData);
-                this.renderExportLinks(chartData, d3Root, corpusId);
+                const GroupsStatsView = initView(this.layoutModel.getComponentHelpers());
+                this.layoutModel.renderReactComponent(
+                    GroupsStatsView,
+                    rootElm,
+                    {
+                        data: chartData,
+                        chartWidth: this.currWidth,
+                        chartHeight: this.currHeight,
+                        corpusId: corpusId,
+                        exportFormats: this.exportFormats,
+                        bgDownload: this.layoutModel.bgDownload
+                    }
+                );
             },
             (err) => {
                 this.layoutModel.showMessage('error', err);

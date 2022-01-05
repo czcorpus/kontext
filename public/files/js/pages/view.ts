@@ -67,7 +67,7 @@ import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActi
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
-import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
+import { LineSelGroupsRatiosChartModel } from '../charts/lineSelection';
 import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
@@ -142,7 +142,7 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lineGroupsChart:LineSelGroupsRatiosChart; // TODO
+    private lineGroupsChartModel:LineSelGroupsRatiosChartModel;
 
     private queryFormViews:QueryMainViews;
 
@@ -180,7 +180,8 @@ export class ViewPage {
         this.queryModels = new QueryModels();
         this.concFormsInitialArgs = this.layoutModel.getConf<formArgs.ConcFormsInitialArgs>(
             'ConcFormsInitialArgs');
-        this.lineGroupsChart = new LineSelGroupsRatiosChart(
+        this.lineGroupsChartModel = new LineSelGroupsRatiosChartModel(
+            this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
         );
@@ -936,7 +937,7 @@ export class ViewPage {
             ),
             onLineSelChartFrameReady:(
                     rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
-                this.lineGroupsChart.showGroupsStats(rootElm, corpusId, size);
+                this.lineGroupsChartModel.showGroupsStats(rootElm, corpusId, size);
             }
         };
 
