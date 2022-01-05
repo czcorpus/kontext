@@ -39,7 +39,7 @@ export function init(he:Kontext.ComponentHelpers):Views {
     const LineGroupChart:React.FC<LineGroupChart> = (props) => {
 
         const legendFormatter = (value, entry) => {
-            return <span style={{color: '#000'}}><b>{value}</b> {100*entry.payload.percent}% ({entry.payload.count}x)</span>;
+            return <span style={{color: '#000'}}><b>{value}</b> {(100*entry.payload.percent).toFixed(1)}% ({entry.payload.count}x)</span>;
         };
 
         return (
