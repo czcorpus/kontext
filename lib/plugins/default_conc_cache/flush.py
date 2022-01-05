@@ -34,7 +34,7 @@ if __name__ == '__main__':
     import argparse
 
     def mk_key(corpus_id):
-        return DefaultCacheMapping.KEY_TEMPLATE % corpus_id
+        return DefaultCacheMapping.KEY_TEMPLATE.format(corpus_id)
 
     parser = argparse.ArgumentParser(description='A script to control UCNK concordance cache')
     parser.add_argument('--dry-run', '-d', action='store_true',
