@@ -11,7 +11,7 @@
         "task": "conc_cache__conc_cache_cleanup",
         "schedule": "10 */12 * * *",
         "kwargs": {
-            "ttl": 120,
+            "ttl_hours": 2,
             "subdir": "student",
             "dry_run": false
         }

@@ -26,6 +26,7 @@ import time
 import collections
 import json
 import logging
+from typing import Dict, Tuple
 
 
 DEFAULT_TTL = 60  # in minutes
@@ -39,7 +40,7 @@ class CacheFiles(object):
         self._corpus = corpus
         self._curr_time = time.time()
 
-    def list_dir(self):
+    def list_dir(self) -> Dict[str, Tuple[str, float, int]]:
         """
         Searches for cache files in a directory specified by the 'path'
         argument. The method expects a specific fixed directory structure:
@@ -59,8 +60,7 @@ class CacheFiles(object):
         where 3-tuple is
         (cache_file_abs_path, age_of_file_in_sec, size_of_file_in_Bytes)
         """
-        path = self._root_path if not self._subdir else os.path.normpath('%s/%s' % (self._root_path,
-                                                                                    self._subdir))
+        path = self._root_path if not self._subdir else os.path.normpath(os.path.join(self._root_path, self._subdir))
         if self._corpus:
             corpora_dirs = [self._corpus]
         elif os.path.isdir(path):
@@ -70,27 +70,25 @@ class CacheFiles(object):
 
         ans = collections.defaultdict(list)
         for corpus_dir in corpora_dirs:
-            corp_full_path = '%s/%s' % (path, corpus_dir)
+            corp_full_path = os.path.join(path, corpus_dir)
             if not os.path.isdir(corp_full_path):
                 continue
             for cache_file in os.listdir(corp_full_path):
-                cache_full_path = '%s/%s' % (corp_full_path, cache_file)
-                corpus_key = corpus_dir if not self._subdir else '%s/%s' % (
-                    self._subdir, corpus_dir)
+                cache_full_path = os.path.join(corp_full_path, cache_file)
+                corpus_key = corpus_dir if not self._subdir else os.path.join(self._subdir, corpus_dir)
                 ans[corpus_key].append(
                     (cache_full_path,
                      self._curr_time - os.path.getmtime(cache_full_path),
-                     os.path.getsize(cache_full_path))
-                )
-        return ans
+                     os.path.getsize(cache_full_path)))
+        return dict(ans)
 
 
 class CacheCleanup(CacheFiles):
 
-    def __init__(self, db, root_path, corpus, ttl, subdir, entry_key_gen):
+    def __init__(self, db, root_path, corpus, ttl_hours, subdir, entry_key_gen):
         super(CacheCleanup, self).__init__(root_path, subdir, corpus)
         self._db = db
-        self._ttl = ttl
+        self._ttl_hours = ttl_hours
         self._entry_key_gen = entry_key_gen
         self._num_processed = 0
         self._num_removed = 0
@@ -134,17 +132,18 @@ class CacheCleanup(CacheFiles):
 
         cache_files = self.list_dir()
         self._log_stats(cache_files)
-
         to_del = {}
         # processing corpus by corpus
-        for corpus_id, corpus_cache_files in list(cache_files.items()):
+        for corpus_id, corpus_cache_files in cache_files.items():
             real_file_hashes = set()  # to be able to compare cache map with actual files
-            for cache_entry in corpus_cache_files:
+            for item_path, item_age, item_size in corpus_cache_files:
                 num_processed += 1
-                item_key = os.path.basename(cache_entry[0]).rsplit('.conc')[0]
+                item_key = os.path.basename(item_path).rsplit('.conc')[0]
                 real_file_hashes.add(item_key)
-                if self._ttl < cache_entry[1] / 60.:
-                    to_del[item_key] = cache_entry[0]
+                logging.getLogger(__name__).warning('cache entry: {}'.format(item_path))
+                logging.getLogger(__name__).warning(f'TTL {self._ttl_hours} vs. {item_age}')
+                if self._ttl_hours * 3600 < item_age:
+                    to_del[item_key] = item_path
 
             cache_key = self._entry_key_gen(corpus_id)
             cache_map = self._db.hash_get_all(cache_key)
@@ -161,10 +160,10 @@ class CacheCleanup(CacheFiles):
                         elif item_hash not in real_file_hashes:
                             if not dry_run:
                                 self._db.hash_del(cache_key, item_hash)
-                            logging.getLogger().warn(
+                            logging.getLogger().warning(
                                 'deleted stale cache map entry [%s][%s]' % (cache_key, item_hash))
                 except Exception as ex:
-                    logging.getLogger().warn('Failed to process cache map file (will be deleted): %s' % (ex,))
+                    logging.getLogger().warning('Failed to process cache map file (will be deleted): %s' % (ex,))
                     self._db.remove(cache_key)
             else:
                 logging.getLogger().error('Cache map [%s] not found' % cache_key)
@@ -174,14 +173,15 @@ class CacheCleanup(CacheFiles):
                             os.unlink(unbound_file)
                         except OSError as ex:
                             logging.getLogger().warning('Failed to remove file %s: %s' % (unbound_file, ex))
-                    logging.getLogger().warn('deleted unbound cache file: %s' % unbound_file)
+                    logging.getLogger().warning('deleted unbound cache file: %s' % unbound_file)
 
         ans = {'type': 'summary', 'processed': num_processed, 'deleted': num_deleted}
         logging.getLogger(__name__).info(json.dumps(ans))
         return ans
 
 
-def run(root_dir, corpus_id, ttl, subdir, dry_run, db_plugin, entry_key_gen):
-    proc = CacheCleanup(db=db_plugin, root_path=root_dir, corpus=corpus_id, ttl=ttl, subdir=subdir,
-                        entry_key_gen=entry_key_gen)
+def run(root_dir, corpus_id, ttl_hours, subdir, dry_run, db_plugin, entry_key_gen):
+    proc = CacheCleanup(
+        db=db_plugin, root_path=root_dir, corpus=corpus_id, ttl_hours=ttl_hours, subdir=subdir,
+        entry_key_gen=entry_key_gen)
     return proc.run(dry_run=dry_run)

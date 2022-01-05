@@ -67,7 +67,7 @@ class DefaultCacheMapping(AbstractConcCache):
     md5(subchash, q) => [stored_conc_size, calc_status, hash_of(subchash, q[0])]
     """
 
-    KEY_TEMPLATE = 'conc_cache:%s'
+    KEY_TEMPLATE = 'conc_cache:{}'
 
     def __init__(self, cache_dir: str, corpus: KCorpus, db: KeyValueStorage):
         self._cache_root_dir = cache_dir
@@ -84,7 +84,7 @@ class DefaultCacheMapping(AbstractConcCache):
         self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
 
     def _mk_key(self) -> str:
-        return DefaultCacheMapping.KEY_TEMPLATE % self._corpus.corpname
+        return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname)
 
     def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return self._get_entry(subchash, q)
@@ -174,10 +174,11 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         from .cleanup import run as run_cleanup
         from .monitor import run as run_monitor
 
-        def conc_cache_cleanup(ttl, subdir, dry_run, corpus_id=None):
-            return run_cleanup(root_dir=self._cache_dir,
-                               corpus_id=corpus_id, ttl=ttl, subdir=subdir, dry_run=dry_run,
-                               db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE % c)
+        def conc_cache_cleanup(ttl_hours, subdir, dry_run, corpus_id=None):
+            return run_cleanup(
+                root_dir=self._cache_dir,
+                corpus_id=corpus_id, ttl_hours=ttl_hours, subdir=subdir, dry_run=dry_run,
+                db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c))
 
         def conc_cache_monitor(min_file_age, free_capacity_goal, free_capacity_trigger, elastic_conf):
             """
@@ -193,7 +194,7 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
                             configuration for storing monitoring info; if None then the function is disabled
             """
             return run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
-                               entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE % c,
+                               entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c),
                                min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
                                free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
 
