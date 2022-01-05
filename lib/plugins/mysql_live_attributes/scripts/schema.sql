@@ -14,6 +14,8 @@ CREATE TABLE corpus_structattr_value_tuple (
   CONSTRAINT corpus_structatrr_value_tuple_item_id_fk FOREIGN KEY (item_id) REFERENCES corpus_parallel_item(id)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+CREATE INDEX corpus_structattr_value_tuple_corpus_name_idx ON corpus_structattr_value_tuple(corpus_name);
+
 CREATE TABLE corpus_structattr_value (
   id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   corpus_name varchar(63) NOT NULL,
@@ -23,6 +25,8 @@ CREATE TABLE corpus_structattr_value (
   CONSTRAINT unique_value UNIQUE (corpus_name, structure_name, structattr_name, value),
   CONSTRAINT corpus_structatrr_value_structattr_fk FOREIGN KEY (corpus_name, structure_name, structattr_name) REFERENCES corpus_structattr(corpus_name, structure_name, name)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE INDEX corpus_structattr_value_corpus_name_idx ON corpus_structattr_value(corpus_name);
 
 CREATE TABLE corpus_structattr_value_mapping (
   value_tuple_id int NOT NULL,
