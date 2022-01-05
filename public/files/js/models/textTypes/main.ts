@@ -554,7 +554,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             action => {
                 this.changeState(
                     state => {
-                        this.updateInitialSizes(state, action.payload.sizes);
+                        if (action.error) {
+                            this.pluginApi.showMessage('error', action.error);
+
+                        } else {
+                            this.updateInitialSizes(state, action.payload.sizes);
+                        }
                         this.setAllAttributesBusy(state, false);
                     }
                 );

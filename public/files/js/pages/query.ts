@@ -43,6 +43,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
+import { TTInitialData } from '../models/textTypes/common';
 
 
 /**
@@ -105,7 +106,7 @@ export class QueryPage {
     }
 
     createTTViews(queryFormArgs:QueryFormArgs):QueryFormProps {
-        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
+        const textTypesData = this.layoutModel.getConf<TTInitialData>('textTypesData');
         this.textTypesModel = new TextTypesModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel.pluginApi(),
@@ -122,7 +123,7 @@ export class QueryPage {
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             false,
             {
-                bibAttr: textTypesData['bib_attr'],
+                bibAttr: textTypesData.bib_attr,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),
