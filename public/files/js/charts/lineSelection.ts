@@ -21,11 +21,11 @@
 
 import { HTTP, Dict, List, pipe } from 'cnc-tskit';
 
-import { PageModel } from '../app/page';
+import { DownloadType, PageModel } from '../app/page';
 import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
 import { init as initView } from './lineSelectionView'
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { Action, IFullActionControl, StatelessModel } from 'kombo';
 
 export interface LineGroupChartItem {
     groupId:number;
@@ -36,6 +36,17 @@ export interface LineGroupChartItem {
 }
 
 export type LineGroupChartData = Array<LineGroupChartItem>;
+
+export class Actions {
+
+    static DownloadSelectionOverview:Action<{
+        data:LineGroupChartData;
+        corpname:string;
+        cformat:string;
+    }> = {
+        name: 'LINE_SELECTION_MENU_DOWNLOAD_SELECTION_OVERVIEW'
+    };
+}
 
 
 export interface LineGroupStats extends Kontext.AjaxResponse {
@@ -66,6 +77,22 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
         this.exportFormats = exportFormats;
         this.currWidth = 200;
         this.currHeight = 200;
+
+        this.addActionHandler<typeof Actions.DownloadSelectionOverview>(
+            Actions.DownloadSelectionOverview.name,
+            (state, action) => {
+                this.layoutModel.bgDownload({
+                    filename: 'line-selection-overview.xlsx',
+                    type: DownloadType.LINE_SELECTION,
+                    url: this.layoutModel.createActionUrl('export_line_groups_chart'),
+                    contentType: 'application/json',
+                    args: {
+                        title: this.layoutModel.translate('linesel__saved_line_groups_heading'),
+                        ...action.payload
+                    }
+                })
+            }
+        );
     }
 
     showGroupsStats(rootElm:HTMLElement, corpusId:string, size:[number, number]):void {
@@ -100,7 +127,7 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
                         bgColor
                     })
                 );
-                const GroupsStatsView = initView(this.layoutModel.getComponentHelpers());
+                const GroupsStatsView = initView(this.layoutModel.getComponentHelpers(), this.layoutModel.dispatcher);
                 this.layoutModel.renderReactComponent(
                     GroupsStatsView,
                     rootElm,
@@ -110,7 +137,6 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
                         chartHeight: this.currHeight,
                         corpusId: corpusId,
                         exportFormats: this.exportFormats,
-                        bgDownload: this.layoutModel.bgDownload
                     }
                 );
             },

@@ -23,7 +23,8 @@ import * as Kontext from '../types/kontext';
 import { Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { LineGroupChartData } from './lineSelection';
 import { List } from 'cnc-tskit';
-import { DownloadType } from '../app/page';
+import { IFullActionControl } from 'kombo';
+import { Actions } from './lineSelection';
 
 
 interface LineGroupChart {
@@ -32,13 +33,12 @@ interface LineGroupChart {
     data: LineGroupChartData;
 }
 
-export function init(he:Kontext.ComponentHelpers):React.FC<{
+export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl):React.FC<{
     chartWidth: number;
     chartHeight: number;
     data: LineGroupChartData;
     exportFormats:Array<string>;
     corpusId: string;
-    bgDownload:({})=>void;
 }> {
 
     const LineGroupChart:React.FC<LineGroupChart> = (props) => {
@@ -68,7 +68,6 @@ export function init(he:Kontext.ComponentHelpers):React.FC<{
         data: LineGroupChartData;
         exportFormats:Array<string>;
         corpusId: string;
-        bgDownload:({})=>void;
     }> = (props) => {
         return props.exportFormats.length > 0 ?
             <fieldset className="footer">
@@ -76,18 +75,16 @@ export function init(he:Kontext.ComponentHelpers):React.FC<{
                 <ul className="export">{
                     List.map(v =>
                         <li key={v}>
-                            <a onClick={e => props.bgDownload({
-                                filename: 'line-selection-overview.xlsx',
-                                type: DownloadType.LINE_SELECTION,
-                                url: he.createActionLink('export_line_groups_chart'),
-                                contentType: 'application/json',
-                                args: {
-                                    data: props.data,
-                                    corpname: props.corpusId,
-                                    cformat: v,
-                                    title: he.translate('linesel__saved_line_groups_heading')
-                                }
-                            })}>{v}</a>
+                            <a onClick={e => {
+                                dispatcher.dispatch<typeof Actions.DownloadSelectionOverview>({
+                                    name: Actions.DownloadSelectionOverview.name,
+                                    payload: {
+                                        cformat: v,
+                                        corpname: props.corpusId,
+                                        data: props.data,
+                                    }
+                                })
+                            }}>{v}</a>
                         </li>
                     , props.exportFormats)
                 }</ul>
@@ -101,12 +98,11 @@ export function init(he:Kontext.ComponentHelpers):React.FC<{
         data: LineGroupChartData;
         exportFormats:Array<string>;
         corpusId: string;
-        bgDownload:({})=>void;
     }> = (props) => {
         return <div>
             <legend>{he.translate('linesel__groups_stats_heading')}</legend>
             <LineGroupChart width={props.chartWidth} height={props.chartHeight} data={props.data}/>
-            <ExportLinks data={props.data} exportFormats={props.exportFormats} corpusId={props.corpusId} bgDownload={props.bgDownload} />
+            <ExportLinks data={props.data} exportFormats={props.exportFormats} corpusId={props.corpusId} />
         </div>
     }
 
