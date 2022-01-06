@@ -20,7 +20,6 @@
 
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
-import { Action } from 'kombo';
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
@@ -67,7 +66,7 @@ import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActi
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
-import { LineSelGroupsRatiosChart } from '../charts/lineSelection';
+import { LineSelGroupsRatiosChartModel } from '../charts/lineSelection';
 import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
@@ -75,6 +74,7 @@ import { openStorage, ConcLinesStorage } from '../models/concordance/selectionSt
 import { Actions } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
+import { Actions as LinSelOverviewActions } from '../charts/lineSelection';
 import { ConcSortModel } from '../models/query/sort/single';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
@@ -142,7 +142,7 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lineGroupsChart:LineSelGroupsRatiosChart; // TODO
+    private lineGroupsChartModel:LineSelGroupsRatiosChartModel;
 
     private queryFormViews:QueryMainViews;
 
@@ -180,7 +180,8 @@ export class ViewPage {
         this.queryModels = new QueryModels();
         this.concFormsInitialArgs = this.layoutModel.getConf<formArgs.ConcFormsInitialArgs>(
             'ConcFormsInitialArgs');
-        this.lineGroupsChart = new LineSelGroupsRatiosChart(
+        this.lineGroupsChartModel = new LineSelGroupsRatiosChartModel(
+            this.layoutModel.dispatcher,
             this.layoutModel,
             this.layoutModel.getConf<Array<string>>('ChartExportFormats')
         );
@@ -934,9 +935,15 @@ export class ViewPage {
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             ),
-            onLineSelChartFrameReady:(
-                    rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
-                this.lineGroupsChart.showGroupsStats(rootElm, corpusId, size);
+            onLineSelChartFrameReady:(rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
+                this.layoutModel.dispatcher.dispatch<typeof LinSelOverviewActions.RenderLineSelectionOverview>({
+                    name: LinSelOverviewActions.RenderLineSelectionOverview.name,
+                    payload: {
+                        rootElm,
+                        size,
+                        corpname: corpusId,
+                    }
+                });
             }
         };
 
