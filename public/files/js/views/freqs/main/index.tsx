@@ -27,6 +27,7 @@ import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/actions';
 import * as S from './style';
+import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 
 // --------------------------- exported types --------------------------------------
 
@@ -36,8 +37,10 @@ import * as S from './style';
 export function init(
         dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
-        freqDataRowsModel:FreqDataRowsModel) {
-
+        freqChartsModel:FreqChartsModel,
+        freqDataRowsModel:FreqDataRowsModel
+) {
+    const globalComponents = he.getLayoutViews();
     const drViews = dataRowsInit(dispatcher, he);
     const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
 
@@ -199,54 +202,66 @@ export function init(
 
     // ----------------------- <FreqResultView /> -------------------------
 
-    class FreqResultView extends React.Component<FreqDataRowsModelState> {
+    const FreqResultView:React.FC<FreqDataRowsModelState> = (props) => {
 
-        _handleSaveFormClose() {
+        const handleSaveFormClose = () => {
             dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
                 name: Actions.ResultCloseSaveForm.name,
                 payload: {}
             });
         }
 
-        hasNextPage(state:FreqDataRowsModelState):boolean {
+        const hasNextPage = (state:FreqDataRowsModelState):boolean => {
             return parseInt(state.currentPage) < state.data[0].TotalPages;
         }
 
-        hasPrevPage(state:FreqDataRowsModelState):boolean {
+        const hasPrevPage = (state:FreqDataRowsModelState):boolean => {
             return parseInt(state.currentPage) > 1 && state.data[0].TotalPages > 1;
         }
 
-        render() {
-            return (
+        const handleTabSelection = (id:string) => {
+
+        }
+
+        return (
+            <globalComponents.TabView
+                    className="TagsetFormSelector"
+                    callback={handleTabSelection}
+                    items={[{id: 'tables', label: 'Tables'}, {id: 'charts', label: 'Charts'}]}
+                    defaultId="tables"
+                    noButtonSeparator={true} >
                 <div className="FreqResultView">
-                    {this.props.currentPage !== null ?
-                        <Paginator currentPage={this.props.currentPage}
-                            hasNextPage={this.hasNextPage(this.props)}
-                            hasPrevPage={this.hasPrevPage(this.props)}
-                            totalPages={this.props.data[0].TotalPages}
-                            isLoading={this.props.isBusy} /> : null}
+                    {props.currentPage !== null ?
+                        <Paginator currentPage={props.currentPage}
+                            hasNextPage={hasNextPage(props)}
+                            hasPrevPage={hasPrevPage(props)}
+                            totalPages={props.data[0].TotalPages}
+                            isLoading={props.isBusy} /> : null}
                     <div className="freq-blocks">
-                        <FilterForm minFreqVal={this.props.flimit} />
+                        <FilterForm minFreqVal={props.flimit} />
                         {List.map((block, i) => {
                             return (
                                 <div key={`block-${i}`}>
                                     <hr />
                                     <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
                                     <drViews.DataTable head={block.Head}
-                                            sortColumn={this.props.sortColumn}
+                                            sortColumn={props.sortColumn}
                                             rows={block.Items}
                                             hasSkippedEmpty={block.SkippedEmpty} />
                                 </div>
                             );
-                        }, this.props.data)}
+                        }, props.data)}
                     </div>
-                    {this.props.saveFormActive ?
-                        <saveViews.SaveFreqForm onClose={this._handleSaveFormClose} /> :
+                    {props.saveFormActive ?
+                        <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
                         null
                     }
                 </div>
-            );
-        }
+                <div>
+                    Chart view
+                </div>
+            </globalComponents.TabView>
+        );
     }
 
 
