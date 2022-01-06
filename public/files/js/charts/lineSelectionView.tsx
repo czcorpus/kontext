@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../types/kontext';
-import { Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { Cell, LabelList, Legend, Pie, PieChart } from 'recharts';
 import { LineGroupChartData } from './lineSelection';
 import { List } from 'cnc-tskit';
 import { IFullActionControl } from 'kombo';
@@ -48,19 +48,17 @@ export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl)
         };
 
         return (
-            <ResponsiveContainer width={props.width} height={props.height}>
-                <PieChart>
-                    <Pie
-                            data={props.data}
-                            isAnimationActive={false}
-                            dataKey="count"
-                            nameKey="group" >
-                        {props.data.map(entry => <Cell key={`cell-${entry.groupId}`} fill={entry.bgColor}/>)}
-                        <LabelList dataKey="group" position="inside" stroke="#000000" fill="#000000" />
-                    </Pie>
-                    <Legend verticalAlign="middle" align="right" layout="vertical" formatter={legendFormatter} />
-                </PieChart>
-            </ResponsiveContainer>
+            <PieChart width={props.width} height={props.height}>
+                <Pie
+                        data={props.data}
+                        isAnimationActive={false}
+                        dataKey="count"
+                        nameKey="group" >
+                    {props.data.map(entry => <Cell key={`cell-${entry.groupId}`} fill={entry.bgColor}/>)}
+                    <LabelList dataKey="group" position="inside" fill="#000000" strokeWidth={0} />
+                </Pie>
+                <Legend verticalAlign="middle" align="right" layout="vertical" formatter={legendFormatter} />
+            </PieChart>
         );
     };
 
