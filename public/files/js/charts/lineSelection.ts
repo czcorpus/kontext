@@ -83,27 +83,21 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
 
     private readonly exportFormats:Array<string>;
 
-    private currWidth:number;
-
-    private currHeight:number;
-
-
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, exportFormats:Array<string>) {
         super(
             dispatcher,
             {
                 rootElm: null,
-                size: null,
+                size: [200, 200],
                 corpname: null,
                 data: null,
                 isBusy: false,
             }
         );
-    
+
         this.layoutModel = pageModel;
+        
         this.exportFormats = exportFormats;
-        this.currWidth = 200;
-        this.currHeight = 200;
 
         const lineSelectionOverviewView = initView(this.layoutModel.getComponentHelpers(), dispatcher);
 
@@ -134,7 +128,7 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.getGroupsStats(dispatch, state.size)
+                this.getGroupsStats(dispatch);
             }
         );
 
@@ -152,8 +146,8 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
                         state.rootElm,
                         {
                             data: state.data,
-                            chartWidth: this.currWidth,
-                            chartHeight: this.currHeight,
+                            chartWidth: state.size[0],
+                            chartHeight: state.size[1],
                             corpusId: state.corpname,
                             exportFormats: this.exportFormats,
                         }
@@ -163,8 +157,7 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
         );
     }
 
-    private getGroupsStats(dispatch: SEDispatcher, size:[number, number]):void {
-        [this.currWidth, this.currHeight] = size;
+    private getGroupsStats(dispatch: SEDispatcher):void {
         this.layoutModel.ajax$<LineGroupStats>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl(
