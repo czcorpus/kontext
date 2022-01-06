@@ -25,7 +25,7 @@ import { DownloadType, PageModel } from '../app/page';
 import * as Kontext from '../types/kontext';
 import { attachColorsToIds } from '../models/concordance/common';
 import { init as initView } from './lineSelectionView'
-import { Action, IFullActionControl, StatelessModel } from 'kombo';
+import { Action, IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 
 export interface LineGroupChartItem {
     groupId:number;
@@ -40,12 +40,25 @@ export type LineGroupChartData = Array<LineGroupChartItem>;
 export class Actions {
 
     static DownloadSelectionOverview:Action<{
-        data:LineGroupChartData;
-        corpname:string;
-        cformat:string;
+        format:string;
     }> = {
-        name: 'LINE_SELECTION_MENU_DOWNLOAD_SELECTION_OVERVIEW'
+        name: 'LINE_SELECTION_OVERVIEW_DOWNLOAD'
     };
+
+    static RenderLineSelectionOverview:Action<{
+        rootElm:HTMLElement;
+        corpname:string;
+        size:[number, number];
+    }> = {
+        name: 'LINE_SELECTION_OVERVIEW_RENDER'
+    };
+
+    static RenderLineSelectionOverviewDone:Action<{
+        data:LineGroupChartData;
+    }> = {
+        name: 'LINE_SELECTION_OVERVIEW_RENDER_DONE'
+    };
+
 }
 
 
@@ -53,10 +66,18 @@ export interface LineGroupStats extends Kontext.AjaxResponse {
     groups:{[groupId:string]:number};
 }
 
+interface LineSelGroupsRatiosChartModelState {
+    rootElm:HTMLElement;
+    size:[number, number];
+    corpname:string;
+    data:LineGroupChartData;
+    isBusy:boolean;
+}
+
 /**
  *
  */
-export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
+export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsRatiosChartModelState> {
 
     private readonly layoutModel:PageModel;
 
@@ -70,13 +91,21 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
     constructor(dispatcher:IFullActionControl, pageModel:PageModel, exportFormats:Array<string>) {
         super(
             dispatcher,
-            {}
+            {
+                rootElm: null,
+                size: null,
+                corpname: null,
+                data: null,
+                isBusy: false,
+            }
         );
     
         this.layoutModel = pageModel;
         this.exportFormats = exportFormats;
         this.currWidth = 200;
         this.currHeight = 200;
+
+        const lineSelectionOverviewView = initView(this.layoutModel.getComponentHelpers(), dispatcher);
 
         this.addActionHandler<typeof Actions.DownloadSelectionOverview>(
             Actions.DownloadSelectionOverview.name,
@@ -88,14 +117,53 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
                     contentType: 'application/json',
                     args: {
                         title: this.layoutModel.translate('linesel__saved_line_groups_heading'),
-                        ...action.payload
+                        data: state.data,
+                        corpname: state.corpname,
+                        cformat: action.payload.format,
                     }
                 })
             }
         );
+
+        this.addActionHandler<typeof Actions.RenderLineSelectionOverview>(
+            Actions.RenderLineSelectionOverview.name,
+            (state, action) => {
+                state.rootElm = action.payload.rootElm;
+                state.size = action.payload.size;
+                state.corpname = action.payload.corpname;
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.getGroupsStats(dispatch, state.size)
+            }
+        );
+
+        this.addActionHandler<typeof Actions.RenderLineSelectionOverviewDone>(
+            Actions.RenderLineSelectionOverviewDone.name,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
+
+                } else {
+                    state.data = action.payload.data;
+                    this.layoutModel.renderReactComponent(
+                        lineSelectionOverviewView,
+                        state.rootElm,
+                        {
+                            data: state.data,
+                            chartWidth: this.currWidth,
+                            chartHeight: this.currHeight,
+                            corpusId: state.corpname,
+                            exportFormats: this.exportFormats,
+                        }
+                    );
+                }
+            }
+        );
     }
 
-    showGroupsStats(rootElm:HTMLElement, corpusId:string, size:[number, number]):void {
+    private getGroupsStats(dispatch: SEDispatcher, size:[number, number]):void {
         [this.currWidth, this.currHeight] = size;
         this.layoutModel.ajax$<LineGroupStats>(
             HTTP.Method.GET,
@@ -127,21 +195,16 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<{}> {
                         bgColor
                     })
                 );
-                const GroupsStatsView = initView(this.layoutModel.getComponentHelpers(), this.layoutModel.dispatcher);
-                this.layoutModel.renderReactComponent(
-                    GroupsStatsView,
-                    rootElm,
-                    {
-                        data: chartData,
-                        chartWidth: this.currWidth,
-                        chartHeight: this.currHeight,
-                        corpusId: corpusId,
-                        exportFormats: this.exportFormats,
-                    }
-                );
+                dispatch<typeof Actions.RenderLineSelectionOverviewDone>({
+                    name: Actions.RenderLineSelectionOverviewDone.name,
+                    payload: {data: chartData}
+                });
             },
             (err) => {
-                this.layoutModel.showMessage('error', err);
+                dispatch<typeof Actions.RenderLineSelectionOverviewDone>({
+                    name: Actions.RenderLineSelectionOverviewDone.name,
+                    error: err
+                });
             }
         );
     }

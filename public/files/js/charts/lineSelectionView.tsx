@@ -73,18 +73,14 @@ export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl)
             <fieldset className="footer">
                 <legend>{he.translate('linesel__export_btn')}</legend>
                 <ul className="export">{
-                    List.map(v =>
-                        <li key={v}>
+                    List.map(format =>
+                        <li key={format}>
                             <a onClick={e => {
                                 dispatcher.dispatch<typeof Actions.DownloadSelectionOverview>({
                                     name: Actions.DownloadSelectionOverview.name,
-                                    payload: {
-                                        cformat: v,
-                                        corpname: props.corpusId,
-                                        data: props.data,
-                                    }
+                                    payload: {format}
                                 })
-                            }}>{v}</a>
+                            }}>{format}</a>
                         </li>
                     , props.exportFormats)
                 }</ul>

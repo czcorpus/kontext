@@ -20,7 +20,6 @@
 
 /// <reference path="../vendor.d.ts/soundmanager.d.ts" />
 
-import { Action } from 'kombo';
 import { List, tuple, Dict, pipe } from 'cnc-tskit';
 
 import { KontextPage } from '../app/main';
@@ -75,6 +74,7 @@ import { openStorage, ConcLinesStorage } from '../models/concordance/selectionSt
 import { Actions } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
+import { Actions as LinSelOverviewActions } from '../charts/lineSelection';
 import { ConcSortModel } from '../models/query/sort/single';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
@@ -935,9 +935,15 @@ export class ViewPage {
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
             ),
-            onLineSelChartFrameReady:(
-                    rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
-                this.lineGroupsChartModel.showGroupsStats(rootElm, corpusId, size);
+            onLineSelChartFrameReady:(rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
+                this.layoutModel.dispatcher.dispatch<typeof LinSelOverviewActions.RenderLineSelectionOverview>({
+                    name: LinSelOverviewActions.RenderLineSelectionOverview.name,
+                    payload: {
+                        rootElm,
+                        size,
+                        corpname: corpusId,
+                    }
+                });
             }
         };
 
