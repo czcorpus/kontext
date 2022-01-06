@@ -49,6 +49,7 @@ import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/freqs/actions';
 import { Block } from '../models/freqs/response';
 import { ConcFormArgs } from '../models/query/formArgs';
+import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 
 
 /**
@@ -63,6 +64,8 @@ class FreqPage {
     private ttFreqModel:TTFreqFormModel;
 
     private freqResultModel:FreqDataRowsModel;
+
+    private freqChartsModel:FreqChartsModel;
 
     private ctFreqModel:Freq2DTableModel;
 
@@ -102,6 +105,8 @@ class FreqPage {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
+
+        this.freqChartsModel = new FreqChartsModel(this.layoutModel.dispatcher);
 
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
@@ -298,6 +303,7 @@ class FreqPage {
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
+                    this.freqChartsModel,
                     this.freqResultModel
                 );
                 this.layoutModel.renderReactComponent(
