@@ -23,7 +23,7 @@ import { ResultBlock } from './dataRows';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
-import { FreqChartsAvailableUnits } from './freqCharts';
+import { FreqChartsAvailableTypes, FreqChartsAvailableUnits } from './freqCharts';
 
 
 export class Actions {
@@ -201,5 +201,11 @@ export class Actions {
         value:FreqChartsAvailableUnits;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_UNITS'
+        };
+
+    static FreqChartsChangeType: Action<{
+        value:FreqChartsAvailableTypes;
+    }> = {
+            name: 'FREQ_CHARTS_CHANGE_TYPE'
         };
 }

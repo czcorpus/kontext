@@ -22,8 +22,10 @@ import { IActionDispatcher, StatelessModel } from 'kombo';
 import { Actions } from './actions';
 
 export type FreqChartsAvailableUnits = 'ipm'|'abs';
+export type FreqChartsAvailableTypes = 'bar'|'line';
 
 export interface FreqChartsModelState {
+    type:FreqChartsAvailableTypes;
     units:FreqChartsAvailableUnits;
 }
 
@@ -33,6 +35,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         super(
             dispatcher,
             {
+                type: 'bar',
                 units: 'abs',
             }
         );
@@ -41,6 +44,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeUnits.name,
             (state, action) => {
                 state.units = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<typeof Actions.FreqChartsChangeType>(
+            Actions.FreqChartsChangeType.name,
+            (state, action) => {
+                state.type = action.payload.value;
             }
         );
     }
