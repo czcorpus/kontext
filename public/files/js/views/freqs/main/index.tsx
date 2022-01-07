@@ -22,10 +22,10 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Keyboard, List } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
-import { init as initSaveViews } from '../save';
-import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/dataRows';
+import { init as initSaveViews } from '../regular/save';
+import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/regular/dataRows';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 

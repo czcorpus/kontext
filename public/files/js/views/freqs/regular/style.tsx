@@ -19,7 +19,7 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../theme/default';
+import * as theme from '../../theme/default';
 
 // ---------------- <FrequencyForm /> --------------------------------------
 

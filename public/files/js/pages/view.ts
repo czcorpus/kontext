@@ -49,7 +49,7 @@ import { VirtualKeyboardModel } from '../models/query/virtualKeyboard';
 import { QueryContextModel } from '../models/query/context';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
-    from '../models/freqs/freqForms';
+    from '../models/freqs/regular/freqForms';
 import { FirstHitsModel } from '../models/query/firstHits';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';

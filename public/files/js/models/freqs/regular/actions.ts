@@ -20,11 +20,9 @@
 
 import { Action } from 'kombo';
 import { ResultBlock } from './dataRows';
-import { Dimensions, FreqFilterQuantities, AlignTypes, FreqQuantities } from './twoDimension/common';
-import { Maths } from 'cnc-tskit';
-import { ColorMappings } from './twoDimension/table2d';
-import { HistoryState } from './common';
-import { DataSaveFormat } from '../../app/navigation/save';
+import { AlignTypes } from '../twoDimension/common';
+import { HistoryState } from '../common';
+import { DataSaveFormat } from '../../../app/navigation/save';
 
 
 export class Actions {
@@ -120,12 +118,6 @@ export class Actions {
             name: 'FREQ_SAVE_FORM_SUBMIT'
         };
 
-    static SetCtSaveMode: Action<{
-        value:string;
-    }> = {
-            name: 'FREQ_CT_SET_SAVE_MODE'
-        };
-
     static MLSetFLimit: Action<{
         value:string;
     }> = {
@@ -203,115 +195,4 @@ export class Actions {
     }> = {
             name: 'FREQ_TT_SUBMIT'
         };
-
-    static FreqctFormSetDimensionAttr: Action<{
-        dimension:Dimensions;
-        value:string;
-    }> = {
-            name: 'FREQ_CT_FORM_SET_DIMENSION_ATTR'
-        };
-
-    static FreqctFormSetMinFreqType: Action<{
-        value: FreqFilterQuantities;
-    }> = {
-            name: 'FREQ_CT_FORM_SET_MIN_FREQ_TYPE'
-        };
-
-    static FreqctFormSetMinFreq: Action<{
-        value:string;
-    }> = {
-            name: 'FREQ_CT_FORM_SET_MIN_FREQ'
-        };
-
-    static FreqctFormSetCtx: Action<{
-        dim:Dimensions;
-        value:number;
-    }> = {
-            name: 'FREQ_CT_FORM_SET_CTX'
-        };
-
-    static FreqctFormSetAlignType: Action<{
-        dim:Dimensions;
-        value:AlignTypes;
-    }> = {
-            name: 'FREQ_CT_FORM_SET_ALIGN_TYPE'
-        };
-
-    static FreqctFormSubmit: Action<{
-    }> = {
-            name: 'FREQ_CT_SUBMIT'
-        };
-
-    static FreqctSetAlphaLevel: Action<{
-        value:Maths.AlphaLevel;
-    }> = {
-            name: 'FREQ_CT_SET_ALPHA_LEVEL'
-        };
-
-    static FreqctSetMinFreq: Action<{
-        value:string;
-    }> = {
-            name: 'FREQ_CT_SET_MIN_FREQ'
-        };
-
-    static FreqctSetEmptyVecVisibility: Action<{
-        value:boolean;
-    }> = {
-            name: 'FREQ_CT_SET_EMPTY_VEC_VISIBILITY'
-        };
-
-    static FreqctTransposeTable: Action<{
-    }> = {
-            name: 'FREQ_CT_TRANSPOSE_TABLE'
-        };
-
-    static FreqctSortByDimension: Action<{
-        dim:Dimensions;
-        attr:string;
-    }> = {
-            name: 'FREQ_CT_SORT_BY_DIMENSION'
-        };
-
-    static FreqctSetDisplayQuantity: Action<{
-        value:FreqQuantities;
-    }> = {
-            name: 'FREQ_CT_SET_DISPLAY_QUANTITY'
-        };
-
-    static FreqctSetColorMapping: Action<{
-        value:ColorMappings;
-    }> = {
-            name: 'FREQ_CT_SET_COLOR_MAPPING'
-        };
-
-    static FreqctSetHighlightedGroup: Action<{
-        value:[number, number];
-    }> = {
-            name: 'FREQ_CT_SET_HIGHLIGHTED_GROUP'
-        };
-
-    static FreqctSortFlatList: Action<{
-        value:string;
-        reversed:boolean;
-    }> = {
-            name: 'FREQ_CT_SORT_FLAT_LIST'
-        };
-
-    static FreqctHighlight2DCoord: Action<{
-        coord:[number, number];
-    }> = {
-            name: 'FREQ_CT_HIGHLIGHT_2D_COORD'
-        };
-
-    static FreqctReset2DCoordHighlight: Action<{
-    }> = {
-            name: 'FREQ_CT_RESET_2D_COORD_HIGHLIGHT'
-        };
-
-    static FreqctApplyQuickFilter: Action<{
-        url:string;
-    }> = {
-            name: 'FREQ_CT_APPLY_QUICK_FILTER'
-        };
-
 }

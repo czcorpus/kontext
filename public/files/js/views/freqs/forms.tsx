@@ -22,13 +22,16 @@ import * as React from 'react';
 import { IActionDispatcher} from 'kombo';
 
 import * as Kontext from '../../types/kontext';
-import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/freqForms';
-import { init as freqFormsFactory } from './freqForms';
-import { Actions } from '../../models/freqs/actions';
+import { init as freqFormsFactory } from './regular/freqForms';
+import { Actions as ActionsRF } from '../../models/freqs/regular/actions';
+import { Actions as Actions2DF } from '../../models/freqs/twoDimension/actions';
 import { init as ctFreqFormFactory } from './twoDimension/form';
 import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
+import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/regular/freqForms';
 
-import * as S from './style';
+
+import * as S from './regular/style';
+
 
 // -------------------------- exported component ----------
 
@@ -76,18 +79,18 @@ export function init(
         _handleSubmitClick() {
             switch (this.state.formType) {
                 case 'ml':
-                    dispatcher.dispatch<typeof Actions.MLSubmit>({
-                        name: Actions.MLSubmit.name
+                    dispatcher.dispatch<typeof ActionsRF.MLSubmit>({
+                        name: ActionsRF.MLSubmit.name
                     });
                 break;
                 case 'tt':
-                    dispatcher.dispatch<typeof Actions.TTSubmit>({
-                        name: Actions.TTSubmit.name
+                    dispatcher.dispatch<typeof ActionsRF.TTSubmit>({
+                        name: ActionsRF.TTSubmit.name
                     });
                 break;
                 case 'ct':
-                    dispatcher.dispatch<typeof Actions.FreqctFormSubmit>({
-                        name: Actions.FreqctFormSubmit.name
+                    dispatcher.dispatch<typeof Actions2DF.FreqctFormSubmit>({
+                        name: Actions2DF.FreqctFormSubmit.name
                     });
             }
         }
