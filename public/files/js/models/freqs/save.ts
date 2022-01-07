@@ -24,7 +24,8 @@ import { Freq2DTableModel } from './twoDimension/table2d';
 import { Freq2DFlatViewModel } from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './actions';
+import { Actions } from './regular/actions';
+import { Actions as Actions2df } from './twoDimension/actions';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 
@@ -218,8 +219,8 @@ export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModel
         this.ctTableModel = ctTableModel;
         this.ctFlatModel = ctFlatModel;
 
-        this.addActionHandler<typeof Actions.SetCtSaveMode>(
-            Actions.SetCtSaveMode.name,
+        this.addActionHandler<typeof Actions2df.SetCtSaveMode>(
+            Actions2df.SetCtSaveMode.name,
             action => this.changeState(state => {state.saveMode = action.payload.value})
         );
 

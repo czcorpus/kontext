@@ -35,7 +35,7 @@ import {
     FreqQuantities } from '../../../../models/freqs/twoDimension/common';
 import { CTFreqCell } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { DataPoint } from '../../../../charts/confIntervals';
-import { Actions } from '../../../../models/freqs/actions';
+import { Actions } from '../../../../models/freqs/twoDimension/actions';
 import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions';
 import * as S from './style';
 

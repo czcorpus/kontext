@@ -24,7 +24,7 @@ import { IActionDispatcher, Bound } from 'kombo';
 import * as Kontext from '../../../types/kontext';
 import { FreqFilterQuantities, Dimensions, isStructAttr } from '../../../models/freqs/twoDimension/common';
 import { Freq2DFormModel, Freq2DFormModelState } from '../../../models/freqs/twoDimension/form';
-import { Actions } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/twoDimension/actions';
 
 import * as S from './style';
 

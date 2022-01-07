@@ -21,7 +21,9 @@ import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { KontextPage } from '../app/main';
 import { CollFormModel, CollFormInputs, CollFormProps } from '../models/coll/collForm';
-import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps } from '../models/freqs/freqForms';
+import {
+    MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps
+} from '../models/freqs/regular/freqForms';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { QuerySaveAsFormModel } from '../models/query/save';
 import { CollResultModel } from '../models/coll/result';
@@ -33,7 +35,7 @@ import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, Dict, pipe, URL } from 'cnc-tskit';
+import { List, pipe, URL } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';

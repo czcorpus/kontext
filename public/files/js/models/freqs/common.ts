@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2017 Charles University, Faculty of Arts,
+ * Copyright (c) 2022 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,27 +18,51 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { ConcServerArgs } from '../concordance/common';
+import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
 
-export interface FreqServerArgs extends ConcServerArgs {
-    flimit:number;
-    freqlevel:number;
-    freq_sort:string;
-    ftt_include_empty:boolean;
-    [other:string]:any;
-}
-
-export interface CTFreqServerArgs extends ConcServerArgs {
-    ctfcrit1:string;
-    ctfcrit2:string;
-    ctattr1:string;
-    ctattr2:string;
-    ctminfreq:string;
-    ctminfreq_type:string;
-}
 
 export interface HistoryState {
     currentPage:string;
     flimit:string;
     sortColumn:string;
+}
+
+export interface Item {
+    Word:Array<{n:string}>;
+    pfilter:ConcQuickFilterServerArgs;
+    nfilter:ConcQuickFilterServerArgs;
+    fbar:number;
+    freqbar:number;
+    rel:number;
+    relbar:number;
+    freq:number;
+    nbar:number;
+    norm:number;
+    norel:0|1; // (TODO bool?)
+}
+
+export interface Header {
+    s:string;
+    n:string;
+}
+
+export interface Block {
+    TotalPages:number;
+    Items:Array<Item>;
+    Head:Array<Header>;
+    Total:number;
+    SkippedEmpty:boolean;
+}
+
+export interface FreqResultResponse extends AjaxConcResponse {
+    Blocks:Array<Block>;
+    lastpage:number; // 0|1 TODO type
+    paging:number;
+    quick_to_line:number; // TODO type?
+    quick_from_line:number;
+    freq_ipm_warn_enabled:boolean;
+    FCrit:Array<{fcrit:string}>;
+    fcrit:Array<{fcrit:string}>;
+    fmaxitems:number;
+    concsize:number;
 }

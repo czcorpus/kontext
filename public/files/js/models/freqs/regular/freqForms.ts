@@ -21,10 +21,10 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import * as Kontext from '../../../types/kontext';
+import { PageModel } from '../../../app/page';
 import { FreqServerArgs } from './common';
-import { AlignTypes } from './twoDimension/common';
+import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
 
 

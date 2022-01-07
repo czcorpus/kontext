@@ -18,3 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { ConcServerArgs } from '../../concordance/common';
+
+
+export interface FreqServerArgs extends ConcServerArgs {
+    flimit:number;
+    freqlevel:number;
+    freq_sort:string;
+    ftt_include_empty:boolean;
+    [other:string]:any;
+}

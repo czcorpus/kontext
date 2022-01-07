@@ -23,7 +23,7 @@ import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
-    from '../models/freqs/freqForms';
+    from '../models/freqs/regular/freqForms';
 import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
 import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
@@ -36,7 +36,7 @@ import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/main';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData,
-    FreqDataRowsModelState } from '../models/freqs/dataRows';
+    FreqDataRowsModelState } from '../models/freqs/regular/dataRows';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
@@ -46,8 +46,8 @@ import { List, pipe, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { Actions } from '../models/freqs/actions';
-import { Block } from '../models/freqs/response';
+import { Actions } from '../models/freqs/regular/actions';
+import { Block } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 

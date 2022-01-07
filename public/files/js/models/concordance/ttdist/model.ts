@@ -27,7 +27,7 @@ import { PageModel } from '../../../app/page';
 import { ConcordanceModel } from '../main';
 import { Actions as ConcActions } from '../actions';
 import { SampleServerArgs } from '../../query/common';
-import { FreqServerArgs } from '../../freqs/common';
+import { FreqServerArgs } from '../../freqs/regular/common';
 import { FreqBlock, TextTypesDistModelProps, TTCrit } from './common';
 import { FreqData, Reduce } from './response';
 

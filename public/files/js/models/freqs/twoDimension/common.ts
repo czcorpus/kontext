@@ -20,7 +20,7 @@
 
 import * as Kontext from '../../../types/kontext';
 import * as TextTypes from '../../../types/textTypes';
-import { AjaxConcResponse } from '../../concordance/common';
+import { AjaxConcResponse, ConcServerArgs } from '../../concordance/common';
 
 export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
     if (x1.label < x2.label) {
@@ -31,6 +31,16 @@ export const sortAttrVals = (x1:Kontext.AttrItem, x2:Kontext.AttrItem) => {
     }
     return 0;
 };
+
+
+export interface CTFreqServerArgs extends ConcServerArgs {
+    ctfcrit1:string;
+    ctfcrit2:string;
+    ctattr1:string;
+    ctattr2:string;
+    ctminfreq:string;
+    ctminfreq_type:string;
+}
 
 
 /**

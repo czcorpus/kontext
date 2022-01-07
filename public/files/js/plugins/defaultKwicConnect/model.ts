@@ -25,7 +25,7 @@ import { Actions as ConcActions } from '../../models/concordance/actions';
 import { StatefulModel, IFullActionControl } from 'kombo';
 import { Observable, of as rxOf, concat } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
-import { FreqServerArgs } from '../../models/freqs/common';
+import { FreqServerArgs } from '../../models/freqs/regular/common';
 import { HTTP, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
