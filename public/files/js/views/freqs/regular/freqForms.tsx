@@ -20,14 +20,14 @@
 
 import * as React from 'react';
 import { List } from 'cnc-tskit';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 
-import * as Kontext from '../../types/kontext';
+import * as Kontext from '../../../types/kontext';
 import {
     TTFreqFormModel, TTFreqFormModelState, MLFreqFormModel,
-    MLFreqFormModelState } from '../../models/freqs/freqForms';
-import { Actions } from '../../models/freqs/actions';
-import { AlignTypes } from '../../models/freqs/twoDimension/common';
+    MLFreqFormModelState } from '../../../models/freqs/regular/freqForms';
+import { Actions } from '../../../models/freqs/regular/actions';
+import { AlignTypes } from '../../../models/freqs/twoDimension/common';
 
 import * as S from './style';
 
@@ -530,7 +530,7 @@ export function init(
     }
 
     return {
-        TTFreqForm: BoundWithProps(TTFreqForm, ttFreqFormModel),
-        MLFreqForm: BoundWithProps(MLFreqForm, mlFreqFormModel)
+        TTFreqForm: BoundWithProps<TTFreqFormProps, TTFreqFormModelState>(TTFreqForm, ttFreqFormModel),
+        MLFreqForm: Bound(MLFreqForm, mlFreqFormModel)
     };
 }

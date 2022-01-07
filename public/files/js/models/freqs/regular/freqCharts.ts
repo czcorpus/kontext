@@ -19,7 +19,7 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Actions } from '../actions';
+import { Actions } from './actions';
 
 
 export interface FreqChartsModelState {

@@ -18,20 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../../app/page';
+import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
-import { FreqResultsSaveModel } from './save';
+import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { FreqServerArgs } from './common';
 import { HTTP, List } from 'cnc-tskit';
-import { ConcQuickFilterServerArgs } from '../concordance/common';
+import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { ajaxErrorMapped } from '../../app/navigation';
-import * as response from './response';
-import { ConcFormArgs, isFilterFormArgs, isQueryFormArgs } from '../query/formArgs';
-import { TagsetInfo } from '../../types/plugins/tagHelper';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
+import { ajaxErrorMapped } from '../../../app/navigation';
+import { TagsetInfo } from '../../../types/plugins/tagHelper';
+import { Block, FreqResultResponse } from '../common';
 
 
 export interface ResultItem {
@@ -100,7 +99,7 @@ function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
 
 export function importData(
     pageModel:PageModel,
-    data:Array<response.Block>,
+    data:Array<Block>,
     pageSize:number,
     currentPage:number
 ): Array<ResultBlock> {
@@ -311,7 +310,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     private dispatchLoad(
-        load:Observable<response.FreqResultResponse>,
+        load:Observable<FreqResultResponse>,
         state:FreqDataRowsModelState,
         dispatch:SEDispatcher,
         pushHistory:boolean
@@ -392,8 +391,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         };
     }
 
-    loadPage(state:FreqDataRowsModelState):Observable<response.FreqResultResponse> {
-        return this.pageModel.ajax$<response.FreqResultResponse>(
+    loadPage(state:FreqDataRowsModelState):Observable<FreqResultResponse> {
+        return this.pageModel.ajax$<FreqResultResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('freqs'),
             this.getSubmitArgs(state)

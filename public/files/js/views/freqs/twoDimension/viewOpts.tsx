@@ -24,7 +24,7 @@ import { Maths } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
-import { Actions } from '../../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/twoDimension/actions';
 
 
 interface AlphaLevelSelectProps {
