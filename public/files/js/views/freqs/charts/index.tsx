@@ -58,11 +58,13 @@ export function init(
 
         return <div>
             <fieldset>
-                <select value={props.units} onChange={handleUnitsChange}>
+                <label htmlFor='sel-units'>units:</label>
+                <select id='sel-units' value={props.units} onChange={handleUnitsChange}>
                     <option value='abs'>abs</option>
                     <option value='ipm'>ipm</option>
                 </select>
-                <select value={props.type} onChange={handleTypeChange}>
+                <label htmlFor='sel-type'>type:</label>
+                <select id='sel-type' value={props.type} onChange={handleTypeChange}>
                     <option value='bar'>bar</option>
                     <option value='line'>line</option>
                 </select>
