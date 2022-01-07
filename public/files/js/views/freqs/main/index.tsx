@@ -23,6 +23,7 @@ import * as Kontext from '../../../types/kontext';
 import { Keyboard, List } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from '../regular/save';
+import { init as initChartViews } from '../charts';
 import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/regular/dataRows';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -42,6 +43,7 @@ export function init(
 ) {
     const globalComponents = he.getLayoutViews();
     const drViews = dataRowsInit(dispatcher, he);
+    const chartViews = initChartViews(dispatcher, he, freqChartsModel);
     const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
 
     // ----------------------- <ResultSizeInfo /> -------------------------
@@ -225,7 +227,7 @@ export function init(
 
         return (
             <globalComponents.TabView
-                    className="TagsetFormSelector"
+                    className="FreqViewSelector"
                     callback={handleTabSelection}
                     items={[{id: 'tables', label: 'Tables'}, {id: 'charts', label: 'Charts'}]}
                     defaultId="tables"
@@ -258,7 +260,7 @@ export function init(
                     }
                 </div>
                 <div>
-                    Chart view
+                    <chartViews.FreqChartsView data={props.data} />
                 </div>
             </globalComponents.TabView>
         );
