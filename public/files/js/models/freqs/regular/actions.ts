@@ -23,6 +23,7 @@ import { ResultBlock } from './dataRows';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
+import { FreqChartsAvailableUnits } from './freqCharts';
 
 
 export class Actions {
@@ -194,5 +195,11 @@ export class Actions {
     static TTSubmit: Action<{
     }> = {
             name: 'FREQ_TT_SUBMIT'
+        };
+
+    static FreqChartsChangeUnits: Action<{
+        value:FreqChartsAvailableUnits;
+    }> = {
+            name: 'FREQ_CHARTS_CHANGE_UNITS'
         };
 }
