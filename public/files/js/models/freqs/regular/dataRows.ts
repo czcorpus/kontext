@@ -23,12 +23,11 @@ import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { FreqServerArgs } from './common';
-import { HTTP, List } from 'cnc-tskit';
+import { FreqDataLoader, FreqServerArgs } from './common';
+import { List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { ajaxErrorMapped } from '../../../app/navigation';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 
@@ -71,6 +70,7 @@ export interface FreqDataRowsModelArgs {
     saveLinkFn:(file:string, url:string)=>void;
     initialData:Array<ResultBlock>;
     currentPage:number;
+    freqLoader:FreqDataLoader;
 }
 
 export interface FreqDataRowsModelState {
@@ -152,8 +152,10 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     private saveModel:FreqResultsSaveModel;
 
+    private freqLoader:FreqDataLoader;
+
     constructor({dispatcher, pageModel, freqCrit, formProps, saveLinkFn,
-                quickSaveRowLimit, initialData, currentPage}:FreqDataRowsModelArgs) {
+                quickSaveRowLimit, initialData, currentPage, freqLoader}:FreqDataRowsModelArgs) {
         super(
             dispatcher,
             {
@@ -169,11 +171,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
         this.pageModel = pageModel;
 
+        this.freqLoader = freqLoader;
+
         this.saveModel = new FreqResultsSaveModel({
-            dispatcher: dispatcher,
+            dispatcher,
             layoutModel: pageModel,
-            saveLinkFn: saveLinkFn,
-            quickSaveRowLimit: quickSaveRowLimit
+            saveLinkFn,
+            quickSaveRowLimit
         });
 
         this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
@@ -206,7 +210,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
-                    this.loadPage(state),
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
                     state,
                     dispatch,
                     true
@@ -243,7 +247,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
-                    this.loadPage(state),
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
                     state,
                     dispatch,
                     false
@@ -259,7 +263,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
-                    this.loadPage(state),
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
                     state,
                     dispatch,
                     true
@@ -280,7 +284,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             (state, action, dispatch) => {
                 if (this.validateNumber(action.payload.value, 1)) {
                     this.dispatchLoad(
-                        this.loadPage(state),
+                        this.freqLoader.loadPage(this.getSubmitArgs(state)),
                         state,
                         dispatch,
                         true
@@ -389,19 +393,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freqlevel: 1,
             format: 'json'
         };
-    }
-
-    loadPage(state:FreqDataRowsModelState):Observable<FreqResultResponse> {
-        return this.pageModel.ajax$<FreqResultResponse>(
-            HTTP.Method.GET,
-            this.pageModel.createActionUrl('freqs'),
-            this.getSubmitArgs(state)
-
-        ).pipe(
-            ajaxErrorMapped({
-                502: this.pageModel.translate('global__human_readable_502')
-            }),
-        )
     }
 
     getSaveModel():FreqResultsSaveModel {

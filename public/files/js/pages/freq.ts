@@ -50,6 +50,7 @@ import { Actions } from '../models/freqs/regular/actions';
 import { Block } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
+import { FreqDataLoader } from '../models/freqs/regular/common';
 
 
 /**
@@ -62,6 +63,8 @@ class FreqPage {
     private mlFreqModel:MLFreqFormModel;
 
     private ttFreqModel:TTFreqFormModel;
+
+    private freqLoader:FreqDataLoader;
 
     private freqResultModel:FreqDataRowsModel;
 
@@ -105,8 +108,6 @@ class FreqPage {
             attrList: attrs,
             structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
         };
-
-        this.freqChartsModel = new FreqChartsModel(this.layoutModel.dispatcher);
 
         this.mlFreqModel = new MLFreqFormModel(
             this.layoutModel.dispatcher,
@@ -285,6 +286,9 @@ class FreqPage {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
             case 'tt':
+                this.freqLoader = new FreqDataLoader({
+                    pageModel: this.layoutModel
+                });
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
@@ -298,7 +302,13 @@ class FreqPage {
                         this.layoutModel.getConf<number>('FreqItemsPerPage'),
                         1
                     ),
-                    currentPage: this.layoutModel.getConf<number>('CurrentPage')
+                    currentPage: this.layoutModel.getConf<number>('CurrentPage'),
+                    freqLoader: this.freqLoader
+                });
+                this.freqChartsModel = new FreqChartsModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    pageModel: this.layoutModel,
+                    freqLoader: this.freqLoader,
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
