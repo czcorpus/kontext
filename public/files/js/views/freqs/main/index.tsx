@@ -226,43 +226,46 @@ export function init(
         }
 
         return (
-            <globalComponents.TabView
-                    className="FreqViewSelector"
-                    callback={handleTabSelection}
-                    items={[{id: 'tables', label: 'Tables'}, {id: 'charts', label: 'Charts'}]}
-                    defaultId="tables"
-                    noButtonSeparator={true} >
-                <div className="FreqResultView">
-                    {props.currentPage !== null ?
-                        <Paginator currentPage={props.currentPage}
-                            hasNextPage={hasNextPage(props)}
-                            hasPrevPage={hasPrevPage(props)}
-                            totalPages={props.data[0].TotalPages}
-                            isLoading={props.isBusy} /> : null}
-                    <div className="freq-blocks">
-                        <FilterForm minFreqVal={props.flimit} />
-                        {List.map((block, i) => {
-                            return (
-                                <div key={`block-${i}`}>
-                                    <hr />
-                                    <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
-                                    <drViews.DataTable head={block.Head}
-                                            sortColumn={props.sortColumn}
-                                            rows={block.Items}
-                                            hasSkippedEmpty={block.SkippedEmpty} />
-                                </div>
-                            );
-                        }, props.data)}
+            <div>
+                <FilterForm minFreqVal={props.flimit} />
+                <hr />
+                <globalComponents.TabView
+                        className="FreqViewSelector"
+                        callback={handleTabSelection}
+                        items={[{id: 'tables', label: 'Tables'}, {id: 'charts', label: 'Charts'}]}
+                        defaultId="tables"
+                        noButtonSeparator={true} >
+                    <div className="FreqResultView">
+                        {props.currentPage !== null ?
+                            <Paginator currentPage={props.currentPage}
+                                hasNextPage={hasNextPage(props)}
+                                hasPrevPage={hasPrevPage(props)}
+                                totalPages={props.data[0].TotalPages}
+                                isLoading={props.isBusy} /> : null}
+                        <div className="freq-blocks">
+                            {List.map((block, i) => {
+                                return (
+                                    <div key={`block-${i}`}>
+                                        {i > 0 ? <hr /> : null}
+                                        <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
+                                        <drViews.DataTable head={block.Head}
+                                                sortColumn={props.sortColumn}
+                                                rows={block.Items}
+                                                hasSkippedEmpty={block.SkippedEmpty} />
+                                    </div>
+                                );
+                            }, props.data)}
+                        </div>
+                        {props.saveFormActive ?
+                            <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
+                            null
+                        }
                     </div>
-                    {props.saveFormActive ?
-                        <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
-                        null
-                    }
-                </div>
-                <div>
-                    <chartViews.FreqChartsView data={props.data} />
-                </div>
-            </globalComponents.TabView>
+                    <div>
+                        <chartViews.FreqChartsView data={props.data} />
+                    </div>
+                </globalComponents.TabView>
+            </div>
         );
     }
 
