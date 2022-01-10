@@ -18,7 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { HTTP } from 'cnc-tskit';
+import { ajaxErrorMapped } from '../../../app/navigation';
+import { PageModel } from '../../../app/page';
+import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
+import { FreqResultResponse } from '../common';
 
 
 export interface FreqServerArgs extends ConcServerArgs {
@@ -27,4 +32,26 @@ export interface FreqServerArgs extends ConcServerArgs {
     freq_sort:string;
     ftt_include_empty:boolean;
     [other:string]:any;
+}
+
+export class FreqDataLoader {
+
+    private pageModel:PageModel;
+
+    constructor({pageModel}) {
+        this.pageModel = pageModel;
+    }
+
+    loadPage(args:FreqServerArgs):Observable<FreqResultResponse> {
+        return this.pageModel.ajax$<FreqResultResponse>(
+            HTTP.Method.GET,
+            this.pageModel.createActionUrl('freqs'),
+            args
+
+        ).pipe(
+            ajaxErrorMapped({
+                502: this.pageModel.translate('global__human_readable_502')
+            }),
+        )
+    }
 }

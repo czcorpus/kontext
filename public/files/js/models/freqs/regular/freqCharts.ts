@@ -18,11 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { IActionDispatcher, StatelessModel } from 'kombo';
+import { IFullActionControl, StatelessModel } from 'kombo';
+import { PageModel } from '../../../app/page';
 import { Actions } from './actions';
+import { FreqDataLoader } from './common';
 
 export type FreqChartsAvailableUnits = 'ipm'|'abs';
 export type FreqChartsAvailableTypes = 'bar'|'line';
+
+export interface FreqChartsModelArgs {
+    dispatcher:IFullActionControl;
+    pageModel:PageModel;
+    freqLoader:FreqDataLoader;
+}
 
 export interface FreqChartsModelState {
     type:FreqChartsAvailableTypes;
@@ -31,7 +39,12 @@ export interface FreqChartsModelState {
 
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
-    constructor(dispatcher:IActionDispatcher) {
+    private pageModel:PageModel;
+
+    private freqLoader:FreqDataLoader;
+
+    constructor({dispatcher, pageModel, freqLoader}:FreqChartsModelArgs) {
+
         super(
             dispatcher,
             {
@@ -39,6 +52,10 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 units: 'abs',
             }
         );
+
+        this.pageModel = pageModel;
+
+        this.freqLoader = freqLoader;
 
         this.addActionHandler<typeof Actions.FreqChartsChangeUnits>(
             Actions.FreqChartsChangeUnits.name,
