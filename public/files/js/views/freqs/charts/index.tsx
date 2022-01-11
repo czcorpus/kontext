@@ -75,6 +75,9 @@ export function init(
                 </select>
                 <label htmlFor='input-max'>display max:</label>
                 <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
+                {props.isBusy ?
+                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}alt={he.translate('global__loading')} /> :
+                    null}
             </fieldset>
             {props.type === 'bar' ?
                 List.map((d, i) =>
