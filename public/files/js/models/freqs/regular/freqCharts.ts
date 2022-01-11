@@ -119,21 +119,26 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
+        this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
+            Actions.ResultApplyMinFreq.name,
+            (state, action) => {
+                state.isBusy = true,
+                state.currentPage = '1';
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                    state,
+                    dispatch,
+                );
+            }
+        );
+
         this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
             Actions.ResultSetMinFreqVal.name,
             (state, action) => {
                 if (validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
-                    state.isBusy = true;
-                }
-            },
-            (state, action, dispatch) => {
-                if (validateNumber(action.payload.value, 0)) {
-                    this.dispatchLoad(
-                        this.freqLoader.loadPage(this.getSubmitArgs(state)),
-                        state,
-                        dispatch,
-                    );
                 }
             }
         );
