@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { BoundWithProps, IActionDispatcher } from "kombo";
 import { FreqChartsModel, FreqChartsModelState } from "../../../models/freqs/regular/freqCharts";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line, ResponsiveContainer } from 'recharts';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 
@@ -81,13 +81,15 @@ export function init(
             </fieldset>
             {props.type === 'bar' ?
                 List.map((d, i) =>
-                    <BarChart key={i} data={d.Items} width={500} height={300} layout='vertical' barCategoryGap={1} >
-                        <CartesianGrid strokeDasharray='3 3'/>
-                        <XAxis type='number' height={50} label={props.units} />
-                        <YAxis type='category' widths={150} dataKey={v => v.Word[0]} />
-                        <Tooltip />
-                        <Bar dataKey={props.units === 'abs' ? 'freq' : 'rel'} />
-                    </BarChart>
+                    <ResponsiveContainer width="95%" height={300}>
+                        <BarChart key={i} data={d.Items} layout='vertical' barCategoryGap={1} >
+                            <CartesianGrid strokeDasharray='3 3'/>
+                            <XAxis type='number' height={50} label={props.units} />
+                            <YAxis type='category' widths={150} dataKey={v => v.Word[0]} />
+                            <Tooltip />
+                            <Bar dataKey={props.units === 'abs' ? 'freq' : 'rel'} barSize={50} />
+                        </BarChart>
+                    </ResponsiveContainer>
                 , props.data) :
                 List.map((d, i) =>
                     <LineChart key={i} data={d.Items} width={500} height={300} >
