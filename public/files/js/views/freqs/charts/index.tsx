@@ -21,9 +21,9 @@
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { BoundWithProps, IActionDispatcher } from "kombo";
-import { FreqChartsModel, FreqChartsModelState } from "public/files/js/models/freqs/regular/freqCharts";
+import { FreqChartsModel, FreqChartsModelState } from "../../../models/freqs/regular/freqCharts";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line } from 'recharts';
-import { ResultBlock } from 'public/files/js/models/freqs/regular/dataRows';
+import { ResultBlock } from '../../../models/freqs/regular/common';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 
@@ -37,7 +37,6 @@ export function init(
     // ----------------------- <FreqCharts /> -------------------------
 
     interface FreqChartsProps {
-        data:Array<ResultBlock>;
     }
 
     const FreqCharts:React.FC<FreqChartsProps & FreqChartsModelState> = (props) => {
@@ -56,6 +55,13 @@ export function init(
             });
         }
 
+        const handlePageSizeChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsChangePageSize>({
+                name: Actions.FreqChartsChangePageSize.name,
+                payload: {value: e.target.value}
+            });
+        }
+
         return <div>
             <fieldset>
                 <label htmlFor='sel-units'>units:</label>
@@ -68,6 +74,8 @@ export function init(
                     <option value='bar'>bar</option>
                     <option value='line'>line</option>
                 </select>
+                <label htmlFor='input-max'>display max:</label>
+                <input type='number' min={1} id='input-max' value={props.pageSize} onChange={handlePageSizeChange} />
             </fieldset>
             {props.type === 'bar' ?
                 List.map((d, i) =>

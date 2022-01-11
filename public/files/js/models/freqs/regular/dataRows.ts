@@ -23,7 +23,7 @@ import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
-import { FreqDataLoader, FreqServerArgs } from './common';
+import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, validateNumber } from './common';
 import { List } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
@@ -31,35 +31,6 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 
-
-export interface ResultItem {
-    idx:number;
-    Word:Array<string>;
-    pfilter:string;
-    nfilter:string;
-    fbar:number;
-    freqbar:number;
-    rel:number;
-    relbar:number;
-    freq:number;
-    nbar:number;
-    norm:number;
-    norel:number; // 0|1 (TODO bool?)
-}
-
-export interface ResultHeader {
-    s:string;
-    n:string;
-    isPosTag:boolean;
-}
-
-export interface ResultBlock {
-    TotalPages:number;
-    Total:number;
-    Items:Array<ResultItem>;
-    Head:Array<ResultHeader>;
-    SkippedEmpty:boolean;
-}
 
 export interface FreqDataRowsModelArgs {
     dispatcher:IFullActionControl;
@@ -73,13 +44,7 @@ export interface FreqDataRowsModelArgs {
     freqLoader:FreqDataLoader;
 }
 
-export interface FreqDataRowsModelState {
-    data:Array<ResultBlock>;
-    currentPage:string|null; // null means multi-block output which cannot be paginated
-    sortColumn:string
-    freqCrit:Array<string>;
-    ftt_include_empty:boolean;
-    flimit:string;
+export interface FreqDataRowsModelState extends BaseFreqModelState {
     isBusy:boolean;
     saveFormActive:boolean;
 }
@@ -193,7 +158,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
             Actions.ResultSetMinFreqVal.name,
             (state, action) => {
-                if (this.validateNumber(action.payload.value, 0)) {
+                if (validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
 
                 } else {
@@ -274,7 +239,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler<typeof Actions.ResultSetCurrentPage>(
             Actions.ResultSetCurrentPage.name,
             (state, action) => {
-                if (this.validateNumber(action.payload.value, 1)) {
+                if (validateNumber(action.payload.value, 1)) {
                     state.isBusy = true;
                     state.currentPage = action.payload.value;
                 } else {
@@ -282,7 +247,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 }
             },
             (state, action, dispatch) => {
-                if (this.validateNumber(action.payload.value, 1)) {
+                if (validateNumber(action.payload.value, 1)) {
                     this.dispatchLoad(
                         this.freqLoader.loadPage(this.getSubmitArgs(state)),
                         state,
@@ -369,16 +334,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             window.document.title
         );
-    }
-
-    validateNumber(v:string, minNum:number):boolean {
-        if (v === '') {
-            return true;
-
-        } else if (/^(0|[1-9][0-9]*)$/.exec(v) !== null) {
-            return parseInt(v) >= minNum;
-        }
-        return false;
     }
 
     getSubmitArgs(state:FreqDataRowsModelState):FreqServerArgs {

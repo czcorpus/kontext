@@ -308,6 +308,16 @@ class FreqPage {
                 this.freqChartsModel = new FreqChartsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
+                    freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                    formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
+                    initialData: importFreqData(
+                        this.layoutModel,
+                        this.layoutModel.getConf<Array<Block>>('FreqResultData'),
+                        this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                        1
+                    ),
+                    currentPage: this.layoutModel.getConf<number>('CurrentPage'),
+                    pageSize: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
                 });
                 const freqResultView = resultViewFactory(
