@@ -19,7 +19,7 @@
  */
 
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
+import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
@@ -48,11 +48,18 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     isBusy:boolean;
 }
 
+type DebouncedActions =
+    typeof Actions.FreqChartsChangePageSize;
+
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
+
+    PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
 
     private pageModel:PageModel;
 
     private freqLoader:FreqDataLoader;
+
+    private readonly debouncedAction$:Subject<DebouncedActions>;
 
     constructor({dispatcher, pageModel, freqCrit, formProps, initialData,
         currentPage, fmaxitems, freqLoader}:FreqChartsModelArgs) {
@@ -74,8 +81,20 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         );
 
         this.pageModel = pageModel;
-
         this.freqLoader = freqLoader;
+
+        this.debouncedAction$ = new Subject();
+        this.debouncedAction$.pipe(
+            debounceTime(this.PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, debounced: true}
+                });
+            }
+        });
 
         this.addActionHandler<typeof Actions.FreqChartsDataLoaded>(
             Actions.FreqChartsDataLoaded.name,
@@ -107,15 +126,23 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler<typeof Actions.FreqChartsChangePageSize>(
             Actions.FreqChartsChangePageSize.name,
             (state, action) => {
-                state.fmaxitems = action.payload.value;
-                state.isBusy = true;
+                if (action.payload.debounced) {
+                    state.isBusy = true;
+
+                } else {
+                    state.fmaxitems = action.payload.value;
+                    this.debouncedAction$.next(action);
+                }
+
             },
             (state, action, dispatch) => {
-                this.dispatchLoad(
-                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
-                    state,
-                    dispatch,
-                );
+                if (action.payload.debounced) {
+                    this.dispatchLoad(
+                        this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                        state,
+                        dispatch,
+                    );
+                }
             }
         );
 
