@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { List } from 'cnc-tskit';
-import { IFullActionControl, StatelessModel } from 'kombo';
+import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
+import { Observable } from 'rxjs';
 import { PageModel } from '../../../app/page';
+import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
-import { BaseFreqModelState, FreqDataLoader, ResultBlock, validateNumber } from './common';
+import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, validateNumber } from './common';
+import { importData } from './dataRows';
 import { FreqFormInputs } from './freqForms';
 
 export type FreqChartsAvailableUnits = 'ipm'|'abs';
@@ -35,14 +37,15 @@ export interface FreqChartsModelArgs {
     formProps:FreqFormInputs;
     initialData:Array<ResultBlock>;
     currentPage:number;
-    pageSize:number;
+    fmaxitems:number;
     freqLoader:FreqDataLoader;
 }
 
 export interface FreqChartsModelState extends BaseFreqModelState {
     type:FreqChartsAvailableTypes;
     units:FreqChartsAvailableUnits;
-    pageSize:number;
+    fmaxitems:number;
+    isBusy:boolean;
 }
 
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
@@ -52,7 +55,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
     private freqLoader:FreqDataLoader;
 
     constructor({dispatcher, pageModel, freqCrit, formProps, initialData,
-        currentPage, pageSize, freqLoader}:FreqChartsModelArgs) {
+        currentPage, fmaxitems, freqLoader}:FreqChartsModelArgs) {
 
         super(
             dispatcher,
@@ -65,13 +68,27 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 flimit: formProps.flimit || '0',
                 type: 'bar',
                 units: 'abs',
-                pageSize,
+                fmaxitems,
+                isBusy: false,
             }
         );
 
         this.pageModel = pageModel;
 
         this.freqLoader = freqLoader;
+
+        this.addActionHandler<typeof Actions.FreqChartsDataLoaded>(
+            Actions.FreqChartsDataLoaded.name,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
+
+                } else {
+                    state.data = action.payload.data;
+                }
+            }
+        );
 
         this.addActionHandler<typeof Actions.FreqChartsChangeUnits>(
             Actions.FreqChartsChangeUnits.name,
@@ -90,7 +107,15 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler<typeof Actions.FreqChartsChangePageSize>(
             Actions.FreqChartsChangePageSize.name,
             (state, action) => {
-                state.pageSize = action.payload.value;
+                state.fmaxitems = action.payload.value;
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                    state,
+                    dispatch,
+                );
             }
         );
 
@@ -99,8 +124,63 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 if (validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
+                    state.isBusy = true;
+                }
+            },
+            (state, action, dispatch) => {
+                if (validateNumber(action.payload.value, 0)) {
+                    this.dispatchLoad(
+                        this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                        state,
+                        dispatch,
+                    );
                 }
             }
         );
+    }
+
+    private dispatchLoad(
+        load:Observable<FreqResultResponse>,
+        state:FreqChartsModelState,
+        dispatch:SEDispatcher
+    ):void {
+
+        load.subscribe(
+            (data) => {
+                dispatch<typeof Actions.FreqChartsDataLoaded>({
+                    name: Actions.FreqChartsDataLoaded.name,
+                    payload: {
+                        data: importData(
+                            this.pageModel,
+                            data.Blocks,
+                            data.fmaxitems,
+                            parseInt(state.currentPage)
+                        )
+                    },
+                });
+            },
+            (err) => {
+                dispatch<typeof Actions.FreqChartsDataLoaded>({
+                    name: Actions.FreqChartsDataLoaded.name,
+                    payload: {data: null},
+                    error: err
+                });
+            }
+        );
+    }
+
+    getSubmitArgs(state:FreqChartsModelState):FreqServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            fcrit: state.freqCrit,
+            flimit: parseInt(state.flimit),
+            freq_sort: state.sortColumn,
+            // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
+            fpage: state.currentPage !== null ? state.currentPage : '1',
+            ftt_include_empty: state.ftt_include_empty,
+            freqlevel: 1,
+            fmaxitems: state.fmaxitems,
+            format: 'json'
+        };
     }
 }

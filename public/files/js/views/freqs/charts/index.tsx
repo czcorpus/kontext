@@ -22,8 +22,7 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { BoundWithProps, IActionDispatcher } from "kombo";
 import { FreqChartsModel, FreqChartsModelState } from "../../../models/freqs/regular/freqCharts";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line } from 'recharts';
-import { ResultBlock } from '../../../models/freqs/regular/common';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 
@@ -75,7 +74,7 @@ export function init(
                     <option value='line'>line</option>
                 </select>
                 <label htmlFor='input-max'>display max:</label>
-                <input type='number' min={1} id='input-max' value={props.pageSize} onChange={handlePageSizeChange} />
+                <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
             </fieldset>
             {props.type === 'bar' ?
                 List.map((d, i) =>

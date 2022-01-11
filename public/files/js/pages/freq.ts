@@ -317,7 +317,7 @@ class FreqPage {
                         1
                     ),
                     currentPage: this.layoutModel.getConf<number>('CurrentPage'),
-                    pageSize: this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                    fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
                 });
                 const freqResultView = resultViewFactory(
