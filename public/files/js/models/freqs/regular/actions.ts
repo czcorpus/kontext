@@ -214,4 +214,10 @@ export class Actions {
     }> = {
             name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
         };
+
+    static FreqChartsDataLoaded: Action<{
+        data:Array<ResultBlock>;
+    }> = {
+            name: 'FREQ_CHARTS_DATA_LOADED'
+        };
 }

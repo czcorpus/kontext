@@ -20,7 +20,7 @@
 
 import * as Kontext from '../../../types/kontext';
 import * as React from 'react';
-import { ResultHeader, ResultItem } from '../../../models/freqs/regular/dataRows';
+import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common';
 import { IActionDispatcher } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import { List } from 'cnc-tskit';
