@@ -262,7 +262,7 @@ export function init(
                         }
                     </div>
                     <div>
-                        <chartViews.FreqChartsView data={props.data} />
+                        <chartViews.FreqChartsView />
                     </div>
                 </globalComponents.TabView>
             </div>

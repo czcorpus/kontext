@@ -18,10 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { List } from 'cnc-tskit';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { PageModel } from '../../../app/page';
 import { Actions } from './actions';
-import { FreqDataLoader } from './common';
+import { BaseFreqModelState, FreqDataLoader, ResultBlock, validateNumber } from './common';
+import { FreqFormInputs } from './freqForms';
 
 export type FreqChartsAvailableUnits = 'ipm'|'abs';
 export type FreqChartsAvailableTypes = 'bar'|'line';
@@ -29,12 +31,18 @@ export type FreqChartsAvailableTypes = 'bar'|'line';
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
+    freqCrit:Array<string>;
+    formProps:FreqFormInputs;
+    initialData:Array<ResultBlock>;
+    currentPage:number;
+    pageSize:number;
     freqLoader:FreqDataLoader;
 }
 
-export interface FreqChartsModelState {
+export interface FreqChartsModelState extends BaseFreqModelState {
     type:FreqChartsAvailableTypes;
     units:FreqChartsAvailableUnits;
+    pageSize:number;
 }
 
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
@@ -43,13 +51,21 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private freqLoader:FreqDataLoader;
 
-    constructor({dispatcher, pageModel, freqLoader}:FreqChartsModelArgs) {
+    constructor({dispatcher, pageModel, freqCrit, formProps, initialData,
+        currentPage, pageSize, freqLoader}:FreqChartsModelArgs) {
 
         super(
             dispatcher,
             {
+                data: initialData,
+                freqCrit,
+                currentPage: initialData.length > 1 ? null : `${currentPage}`,
+                sortColumn: formProps.freq_sort,
+                ftt_include_empty: formProps.ftt_include_empty,
+                flimit: formProps.flimit || '0',
                 type: 'bar',
                 units: 'abs',
+                pageSize,
             }
         );
 
@@ -68,6 +84,22 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeType.name,
             (state, action) => {
                 state.type = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<typeof Actions.FreqChartsChangePageSize>(
+            Actions.FreqChartsChangePageSize.name,
+            (state, action) => {
+                state.pageSize = action.payload.value;
+            }
+        );
+
+        this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
+            Actions.ResultSetMinFreqVal.name,
+            (state, action) => {
+                if (validateNumber(action.payload.value, 0)) {
+                    state.flimit = action.payload.value;
+                }
             }
         );
     }

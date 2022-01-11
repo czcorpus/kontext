@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { ResultBlock } from './dataRows';
+import { ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
@@ -207,5 +207,11 @@ export class Actions {
         value:FreqChartsAvailableTypes;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_TYPE'
+        };
+
+    static FreqChartsChangePageSize: Action<{
+        value:number;
+    }> = {
+            name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
         };
 }

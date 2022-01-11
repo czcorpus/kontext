@@ -26,12 +26,60 @@ import { ConcServerArgs } from '../../concordance/common';
 import { FreqResultResponse } from '../common';
 
 
+export interface ResultItem {
+    idx:number;
+    Word:Array<string>;
+    pfilter:string;
+    nfilter:string;
+    fbar:number;
+    freqbar:number;
+    rel:number;
+    relbar:number;
+    freq:number;
+    nbar:number;
+    norm:number;
+    norel:number; // 0|1 (TODO bool?)
+}
+
+export interface ResultHeader {
+    s:string;
+    n:string;
+    isPosTag:boolean;
+}
+
+export interface ResultBlock {
+    TotalPages:number;
+    Total:number;
+    Items:Array<ResultItem>;
+    Head:Array<ResultHeader>;
+    SkippedEmpty:boolean;
+}
+
+export interface BaseFreqModelState {
+    data:Array<ResultBlock>;
+    currentPage:string|null; // null means multi-block output which cannot be paginated
+    sortColumn:string
+    freqCrit:Array<string>;
+    ftt_include_empty:boolean;
+    flimit:string;
+}
+
 export interface FreqServerArgs extends ConcServerArgs {
     flimit:number;
     freqlevel:number;
     freq_sort:string;
     ftt_include_empty:boolean;
     [other:string]:any;
+}
+
+export function validateNumber(v:string, minNum:number):boolean {
+    if (v === '') {
+        return true;
+
+    } else if (/^(0|[1-9][0-9]*)$/.exec(v) !== null) {
+        return parseInt(v) >= minNum;
+    }
+    return false;
 }
 
 export class FreqDataLoader {
