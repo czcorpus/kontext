@@ -211,6 +211,7 @@ export class Actions {
 
     static FreqChartsChangePageSize: Action<{
         value:number;
+        debounced?:boolean;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
         };
