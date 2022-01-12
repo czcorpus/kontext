@@ -52,6 +52,15 @@ class PosAttrPairRelFrontend(AbstractFrontend):
         self.on_item_click = conf.get('onItemClick', None)
         self.is_active = True
 
+    @property
+    def custom_conf(self):
+        conf_out = dict(self._conf)
+        for k in list(conf_out.keys()):
+            # prevent showing sensitive information (passwords in URL etc.)
+            if 'server' in k:
+                del conf_out[k]
+        return conf_out
+
     def export_data(self, data: Dict[str, Any], value, ui_lang):
         data_norm = data['data']
         value_indirect = bool(self._conf.get('attr3'))
