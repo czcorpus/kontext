@@ -54,11 +54,18 @@ class PosAttrPairRelFrontend(AbstractFrontend):
 
     def export_data(self, data: Dict[str, Any], value, ui_lang):
         data_norm = data['data']
-        for k, v in data['data'].items():
-            data_norm[k] = v[:self.MAX_ATTR2_VARIANTS]
-            if len(v) > self.MAX_ATTR2_VARIANTS:
+        value_indirect = bool(self._conf.get('attr3'))
+        for k, att2_variants in data['data'].items():
+            data_norm[k] = att2_variants[:self.MAX_ATTR2_VARIANTS]
+            if len(att2_variants) > self.MAX_ATTR2_VARIANTS:
                 data_norm[k].append(None)
+            if value_indirect and self._conf.get('attr3'):
+                for v in data_norm[k]:
+                    if v == value:
+                        value_indirect = False
+                        break
         data['data'] = data_norm
+        data['value_indirect'] = value_indirect  # value has been found via attribute(s) != attr1, attr2
         response = super().export_data(data_norm, value, ui_lang)
         response.contents = data
         return response

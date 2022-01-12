@@ -43,8 +43,10 @@ export function isBasicFrontend(
 
 export interface PosAttrPairRelFrontend extends
         QuerySuggestion<{
-            attrs:[string, string];
+            attrs:[string, string, string];
             data:{[attr1:string]:Array<string>};
+            value:string;
+            value_indirect:boolean;
         }> {
     isActive:true;
 }
@@ -56,10 +58,22 @@ export function isPosAttrPairRelFrontend(
     return isDataAndRenderer(v) && v['rendererId'] === 'posAttrPairRel';
 }
 
-export function isPosAttrPairRelClickValue(v:any):v is [string, string, string, string] {
-    return Array.isArray(v) && typeof v[0] === 'string' && typeof v[1] === 'string' &&
-            (typeof v[2] === 'string') &&
-            (typeof v[3] === 'string' || v[3] === undefined) && v.length === 4;
+export function isPosAttrPairRelClickPayload(v:any):v is PosAttrPairRelFrontendClickPayload {
+    return  typeof v['attr1'] === 'string' && typeof v['attr1Val'] === 'string' &&
+                typeof v['attr2'] === 'string';
+}
+
+export interface PosAttrPairRelFrontendClickPayload {
+    attr1:string;
+    attr1Val:string;
+    attr2:string;
+    attr2Val:string;
+    attr3:string;
+    attr3Val: string;
+}
+
+export interface PosAttrPairRelFrontendClickHanlder {
+    (value:PosAttrPairRelFrontendClickPayload):void;
 }
 
 // -----------------------
@@ -101,13 +115,13 @@ export function filterOutTrivialSuggestions<T>(data:QuerySuggestion<T>):QuerySug
         return {
             ...data,
             contents: {
-                attrs: data.contents.attrs,
+                ...data.contents,
                 data: Dict.size(data.contents.data) > 1 ?
                     data.contents.data :
                     Dict.filter(
                         (v, k) => List.size(v) > 1 || (List.size(v) === 1 && v[0] !== k),
                         data.contents.data
-                    )
+                    ),
             }
         };
 
@@ -148,7 +162,7 @@ export function cutLongResult<T>(
             providerId: data.providerId,
             heading: data.heading,
             contents: {
-                attrs: data.contents.attrs,
+                ...data.contents,
                 data: newData
             },
             isShortened: hasLongAttrList || hasLongLemmaList,
@@ -173,7 +187,7 @@ export function mergeResults<T>(
             providerId: data1.providerId,
             heading: data1.heading,
             contents: {
-                attrs: data1.contents.attrs,
+                ...data1.contents,
                 data: pipe(
                     data1.contents.data,
                     Dict.map(

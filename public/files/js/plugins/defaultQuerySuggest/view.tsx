@@ -26,6 +26,7 @@ import { List, pipe, Dict, tuple } from 'cnc-tskit';
 import { Model } from './model';
 
 import * as S from './style';
+import { PosAttrPairRelFrontendClickHanlder } from './frontends';
 
 
 
@@ -51,10 +52,12 @@ export interface UnsupportedRendererProps {
 }
 
 export interface PosAttrPairRelRendererProps {
-    attrs:[string, string];
+    attrs:[string, string, string];
     data:{[attr1:string]:Array<string>};
+    value_indirect:boolean;
+    value:string;
     isShortened:boolean;
-    itemClickHandler:(value:[string, string, string, string])=>void;
+    itemClickHandler:PosAttrPairRelFrontendClickHanlder;
 }
 
 
@@ -66,7 +69,11 @@ export interface SuggestionsViews {
 }
 
 
-export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.ComponentHelpers):SuggestionsViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    model:Model,
+    he:Kontext.ComponentHelpers
+):SuggestionsViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -116,13 +123,13 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
     // ------------- <PosAttrPairRelRenderer /> ----------------------
 
     const PosAttrPairRelRenderer:React.FC<PosAttrPairRelRendererProps> = (props) => {
-
         return <S.PosAttrPairRelRenderer>
             <table>
                 <thead>
                     <tr>
                         <th>{props.attrs[0]}</th>
                         <th>{props.attrs[1]}</th>
+                        {props.value_indirect ? <th>{props.attrs[2] ? props.attrs[2] : '??'}</th> : null}
                     </tr>
                 </thead>
                 <tbody>
@@ -138,14 +145,32 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                     <tr className={index > 0 ? 'separ' : null}>
                                         <th className="attr1" rowSpan={List.size(attrs2)}>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], undefined))}>{attr1}</a> :
+                                            <a onClick={e => props.itemClickHandler({
+                                                attr1: props.attrs[0], attr1Val: attr1,
+                                                attr2: props.attrs[1], attr2Val: undefined,
+                                                attr3: undefined, attr3Val: undefined})}>{attr1}</a> :
                                             attr1
                                         }</th>
                                         <td>{
                                             props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], List.head(attrs2)))}>{List.head(attrs2)}</a> :
-                                            List.head(attrs2)
+                                            <a onClick={e => props.itemClickHandler({
+                                                attr1: props.attrs[0], attr1Val: attr1,
+                                                attr2: props.attrs[1], attr2Val: List.head(attrs2),
+                                                attr3: undefined, attr3Val: undefined})}>{List.head(attrs2)}</a> :
+                                            <span>{List.head(attrs2)}</span>
                                         }</td>
+                                        {props.value_indirect ?
+                                            <td className="attr3" rowSpan={List.size(attrs2)}>
+                                                {props.itemClickHandler ?
+                                                    <a onClick={e => props.itemClickHandler({
+                                                        attr1: props.attrs[0], attr1Val: attr1,
+                                                        attr2: props.attrs[1], attr2Val: List.head(attrs2),
+                                                        attr3: props.attrs[2], attr3Val: props.value})}>{props.value}</a> :
+                                                    <span>{props.value}</span>
+                                                }
+                                            </td>
+                                            : null
+                                        }
                                     </tr>
                                     {pipe(
                                         attrs2,
@@ -157,7 +182,10 @@ export function init(dispatcher:IActionDispatcher, model:Model, he:Kontext.Compo
                                                     {attr2 === null && i === List.size(attrs2) - 2 ?
                                                     <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
                                                     (props.itemClickHandler ?
-                                                        <a onClick={e => props.itemClickHandler(tuple(props.attrs[0], attr1, props.attrs[1], attr2))}>{attr2}</a> :
+                                                        <a onClick={e => props.itemClickHandler({
+                                                            attr1: props.attrs[0], attr1Val: attr1,
+                                                            attr2: props.attrs[1], attr2Val: attr2,
+                                                            attr3: undefined, attr3Val: undefined})}>{attr2}</a> :
                                                         attr2
                                                     )
                                                     }

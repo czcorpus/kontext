@@ -37,7 +37,8 @@ export interface BasicProviderInfo extends ProviderInfo<{}> {
 export interface PosAttrPairRelProviderInfo extends ProviderInfo<{
     attr1:string;
     attr2:string;
-    corpus?:string
+    attr3?:string;
+    corpus?:string;
 }> {
     rendererId:'posAttrPairRel';
 }
