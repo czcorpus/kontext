@@ -25,6 +25,7 @@ import { FreqChartsModel, FreqChartsModelState } from "../../../models/freqs/reg
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line, ResponsiveContainer } from 'recharts';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
+import * as theme from '../../theme/default';
 
 
 export function init(
@@ -39,6 +40,13 @@ export function init(
     }
 
     const FreqCharts:React.FC<FreqChartsProps & FreqChartsModelState> = (props) => {
+
+        const handleOrderChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsChangeOrder>({
+                name: Actions.FreqChartsChangeOrder.name,
+                payload: {value: e.target.value}
+            });
+        }
 
         const handleUnitsChange = (e) => {
             dispatcher.dispatch<typeof Actions.FreqChartsChangeUnits>({
@@ -63,10 +71,20 @@ export function init(
 
         return <div>
             <fieldset>
+                <label htmlFor='sel-order'>order:</label>
+                <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
+                    <option value='0'>name</option>
+                    <option value='freq'>freq</option>
+                    {List.some(d => List.some(v => !!v.rel, d.Items), props.data) ?
+                        <option value='rel'>rel</option> :
+                        null}
+                </select>
                 <label htmlFor='sel-units'>units:</label>
-                <select id='sel-units' value={props.units} onChange={handleUnitsChange}>
-                    <option value='abs'>abs</option>
-                    <option value='ipm'>ipm</option>
+                <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
+                    <option value='freq'>abs</option>
+                    {List.some(d => List.some(v => !!v.rel, d.Items), props.data) ?
+                        <option value='rel'>ipm</option> :
+                        null}
                 </select>
                 <label htmlFor='sel-type'>type:</label>
                 <select id='sel-type' value={props.type} onChange={handleTypeChange}>
@@ -80,25 +98,31 @@ export function init(
                     null}
             </fieldset>
             {props.type === 'bar' ?
-                List.map((d, i) =>
-                    <ResponsiveContainer width="95%" height={300}>
-                        <BarChart key={i} data={d.Items} layout='vertical' barCategoryGap={1} >
+                List.map((d, i) => {
+                    const maxLabelLength = (List.maxItem(
+                        v => v.length,
+                        d.Items.map(v => v.Word[0])
+                    ) as string).length;
+                    return <ResponsiveContainer key={i} width="95%" height={List.size(d.Items)*17+60}>
+                        <BarChart key={i} data={d.Items} layout='vertical'>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} label={props.units} />
-                            <YAxis type='category' widths={150} dataKey={v => v.Word[0]} />
+                            <XAxis type='number' height={50} label={props.dataKey} />
+                            <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, maxLabelLength * 7)}/>
                             <Tooltip />
-                            <Bar dataKey={props.units === 'abs' ? 'freq' : 'rel'} barSize={50} />
+                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
                         </BarChart>
                     </ResponsiveContainer>
-                , props.data) :
+                }, props.data) :
                 List.map((d, i) =>
-                    <LineChart key={i} data={d.Items} width={500} height={300} >
-                        <CartesianGrid strokeDasharray='3 3'/>
-                        <XAxis type='category' height={50} dataKey={v => v.Word[0]} />
-                        <YAxis type='number' widths={150} />
-                        <Tooltip />
-                        <Line dataKey={props.units === 'abs' ? 'freq' : 'rel'} />
-                    </LineChart>
+                    <ResponsiveContainer key={i} width="95%" height={300}>
+                        <LineChart key={i} data={d.Items}>
+                            <CartesianGrid strokeDasharray='3 3'/>
+                            <XAxis type='category' height={50} dataKey={v => v.Word[0]} />
+                            <YAxis type='number' />
+                            <Tooltip />
+                            <Line dataKey={props.dataKey} />
+                        </LineChart>
+                    </ResponsiveContainer>
                 , props.data)
             }
         </div>;
