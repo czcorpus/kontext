@@ -23,7 +23,7 @@ import { ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
-import { FreqChartsAvailableTypes, FreqChartsAvailableUnits } from './freqCharts';
+import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from './freqCharts';
 
 
 export class Actions {
@@ -198,7 +198,7 @@ export class Actions {
         };
 
     static FreqChartsChangeUnits: Action<{
-        value:FreqChartsAvailableUnits;
+        value:FreqChartsAvailableData;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_UNITS'
         };
@@ -220,5 +220,11 @@ export class Actions {
         data:Array<ResultBlock>;
     }> = {
             name: 'FREQ_CHARTS_DATA_LOADED'
+        };
+
+    static FreqChartsChangeOrder: Action<{
+        value:FreqChartsAvailableOrder;
+    }> = {
+            name: 'FREQ_CHARTS_CHANGE_ORDER'
         };
 }

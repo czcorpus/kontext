@@ -27,7 +27,8 @@ import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, valida
 import { importData } from './dataRows';
 import { FreqFormInputs } from './freqForms';
 
-export type FreqChartsAvailableUnits = 'ipm'|'abs';
+export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+export type FreqChartsAvailableData = 'freq'|'rel';
 export type FreqChartsAvailableTypes = 'bar'|'line';
 
 export interface FreqChartsModelArgs {
@@ -43,7 +44,7 @@ export interface FreqChartsModelArgs {
 
 export interface FreqChartsModelState extends BaseFreqModelState {
     type:FreqChartsAvailableTypes;
-    units:FreqChartsAvailableUnits;
+    dataKey:FreqChartsAvailableData;
     fmaxitems:number;
     isBusy:boolean;
 }
@@ -74,7 +75,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 ftt_include_empty: formProps.ftt_include_empty,
                 flimit: formProps.flimit || '0',
                 type: 'bar',
-                units: 'abs',
+                dataKey: 'freq',
                 fmaxitems,
                 isBusy: false,
             }
@@ -109,10 +110,25 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
+        this.addActionHandler<typeof Actions.FreqChartsChangeOrder>(
+            Actions.FreqChartsChangeOrder.name,
+            (state, action) => {
+                state.sortColumn = action.payload.value;
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                    state,
+                    dispatch,
+                );
+            }
+        );
+
         this.addActionHandler<typeof Actions.FreqChartsChangeUnits>(
             Actions.FreqChartsChangeUnits.name,
             (state, action) => {
-                state.units = action.payload.value;
+                state.dataKey = action.payload.value;
             }
         );
 
