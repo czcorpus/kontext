@@ -26,8 +26,8 @@ import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, KnownRenderers, SuggestionsViews } from './view';
 import { isEmptyResponse, Model } from './model';
 import {
-    isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend,
-    isPosAttrPairRelClickValue } from './frontends';
+    isBasicFrontend, isPosAttrPairRelFrontend, isErrorFrontend, isPosAttrPairRelClickPayload,
+     } from './frontends';
 import { AnyProviderInfo, isEnabledFor } from './providers';
 import { AnyQuery, QuerySuggestion } from '../../models/query/query';
 import { IPluginApi } from '../../types/plugins/common';
@@ -72,17 +72,21 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
         if (provInfo.rendererId === KnownRenderers.BASIC && typeof value === 'string') {
 
         } else if (provInfo.rendererId === KnownRenderers.POS_ATTR_PAIR_REL &&
-                isPosAttrPairRelClickValue(value)) {
+                isPosAttrPairRelClickPayload(value)) {
             if (query.qtype === 'simple') {
                 query.queryParsed[tokenIdx].isExtended = true;
                 query.queryParsed[tokenIdx].args.splice(0);
-                query.queryParsed[tokenIdx].args.push(tuple(value[0], value[1]));
-                if (value[2] && value[3]) {
-                    query.queryParsed[tokenIdx].args.push(tuple(value[2], value[3]));
-                    query.queryParsed[tokenIdx].value = value[3];
+                query.queryParsed[tokenIdx].args.push(tuple(value.attr1, value.attr1Val));
+                if (value.attr3 && value.attr3Val) {
+                    query.queryParsed[tokenIdx].args.push(tuple(value.attr3, value.attr3Val));
+                    query.queryParsed[tokenIdx].value = value.attr3Val;
+
+                } else if (value.attr2 && value.attr2Val) {
+                    query.queryParsed[tokenIdx].args.push(tuple(value.attr2, value.attr2Val));
+                    query.queryParsed[tokenIdx].value = value.attr2Val;
 
                 } else {
-                    query.queryParsed[tokenIdx].value = value[1];
+                    query.queryParsed[tokenIdx].value = value.attr1Val;
                 }
                 query.query = List.map(v => v.value, query.queryParsed).join(' ');
                 query.rawFocusIdx = pipe(
@@ -102,9 +106,9 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             } else {
                 const attr = query.parsedAttrs[tokenIdx];
                 const prefix = query.query.substring(0, attr.rangeAttr[0]);
-                const newChunk = value[2] && value[3] ?
-                    `${value[2]}="${value[3]}"` :
-                    `${value[0]}="${value[1]}"`;
+                const newChunk = value.attr2 && value.attr2Val ?
+                    `${value.attr2}="${value.attr2Val}"` :
+                    `${value.attr1}="${value.attr1Val}"`;
                 const postfix = query.query.substring(attr.rangeVal[1] + 1);
                 query.rawFocusIdx = (prefix + newChunk).length;
                 query.rawAnchorIdx = query.rawFocusIdx;
@@ -112,7 +116,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             }
 
         } else {
-            throw new Error(`Failed to apply click operation with renderer ${provInfo.rendererId} and data ${value}`);
+            throw new Error(`Failed to apply click operation with renderer ${provInfo.rendererId} and data ${JSON.stringify(value)}`);
         }
     }
 
@@ -131,7 +135,7 @@ export class DefaultQuerySuggest implements PluginInterfaces.QuerySuggest.IPlugi
             return createElement(this.views.posAttrPairRel, {
                 ...dr.contents,
                 isShortened: dr.isShortened,
-                itemClickHandler: (value:[string, string, string, string]) => itemClickHandler(dr.providerId, value)
+                itemClickHandler: value => itemClickHandler(dr.providerId, value)
             });
 
         } else if (isErrorFrontend(dr)) {

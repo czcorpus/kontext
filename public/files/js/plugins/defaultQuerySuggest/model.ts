@@ -316,8 +316,8 @@ export class Model extends StatelessModel<ModelState> {
                         )
                     )
                 )
-            ).subscribe(
-                data => {
+            ).subscribe({
+                next: data => {
                     dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                         payload: {
@@ -328,7 +328,7 @@ export class Model extends StatelessModel<ModelState> {
                         }
                     });
                 },
-                error => {
+                error: error => {
                     dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({
                         name: PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived.name,
                         payload: {
@@ -340,7 +340,7 @@ export class Model extends StatelessModel<ModelState> {
                         error
                     });
                 }
-            );
+            });
 
         } else {
             dispatch<typeof PluginInterfaces.QuerySuggest.Actions.SuggestionsReceived>({

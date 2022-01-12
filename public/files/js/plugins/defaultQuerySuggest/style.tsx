@@ -74,6 +74,12 @@ export const PosAttrPairRelRenderer = styled.div`
             border-width: 0 1px 0 0;
         }
 
+        td.attr3 {
+            border-width: 0 0 0 1px;
+            border-color: ${theme.colorLightGrey};
+            border-style: solid;
+        }
+
         tr.separ {
             td, th {
                 border-top-width: 1px;

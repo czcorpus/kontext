@@ -63,5 +63,6 @@ class CouchDBBackend(AbstractBackend):
         for k, v in merged.items():
             data[v['lemma']] = [s['value'] for s in v['sublemmas']]
         return dict(
-            attrs=(self._conf['attr1'], self._conf['attr2']),
-            data=data)
+            attrs=(self._conf['attr1'], self._conf['attr2'], self._conf.get('attr3')),
+            data=data,
+            value=value)
