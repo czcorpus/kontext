@@ -16,8 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugins.abstract.query_suggest import AbstractFrontend, Response
-from typing import Any, Dict
+from plugins.abstract.query_suggest import AbstractFrontend
+from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion
+from typing import Dict, Any
 
 
 class ErrorFrontend(AbstractFrontend):
@@ -63,18 +64,42 @@ class PosAttrPairRelFrontend(AbstractFrontend):
 
     def export_data(self, data: Dict[str, Any], value, ui_lang):
         data_norm = data['data']
-        value_indirect = bool(self._conf.get('attr3'))
         for k, att2_variants in data['data'].items():
             data_norm[k] = att2_variants[:self.MAX_ATTR2_VARIANTS]
             if len(att2_variants) > self.MAX_ATTR2_VARIANTS:
                 data_norm[k].append(None)
-            if value_indirect and self._conf.get('attr3'):
-                for v in data_norm[k]:
-                    if v == value:
-                        value_indirect = False
-                        break
         data['data'] = data_norm
-        data['value_indirect'] = value_indirect  # value has been found via attribute(s) != attr1, attr2
+        response = super().export_data(data_norm, value, ui_lang)
+        response.contents = data
+        return response
+
+
+class CncExtendedSublemmaFrontend(AbstractFrontend[CncSublemmaSuggestion, CncSublemmaSuggestion]):
+
+    MAX_ATTR2_VARIANTS = 30
+
+    def __init__(self, conf):
+        super().__init__(conf, 'cncExtendedSublemma')
+        self.on_item_click = conf.get('onItemClick', None)
+        self.is_active = True
+
+    @property
+    def custom_conf(self):
+        conf_out = dict(self._conf)
+        for k in list(conf_out.keys()):
+            # prevent showing sensitive information (passwords in URL etc.)
+            if 'server' in k:
+                del conf_out[k]
+        return conf_out
+
+    def export_data(self, data: CncSublemmaSuggestion, value, ui_lang):
+        data_norm = dict(data.data)
+        for k, attr1_data in data.data.items():
+            norm_variants = data_norm[k].sublemmas[:self.MAX_ATTR2_VARIANTS]
+            if len(data_norm[k].sublemmas) > self.MAX_ATTR2_VARIANTS:
+                norm_variants.append(None)
+            data_norm[k].sublemmas = norm_variants
+        data.data = data_norm
         response = super().export_data(data_norm, value, ui_lang)
         response.contents = data
         return response

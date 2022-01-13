@@ -29,15 +29,16 @@ def fetch_query_suggestions(self: Kontext, request):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(plugin_ctx=self._plugin_ctx,
-                                   corpora=request.args.getlist('corpora'),
-                                   subcorpus=request.args.get('subcorpus'),
-                                   value=request.args.get('value'),
-                                   value_type=request.args.get('value_type'),
-                                   value_subformat=request.args.get('value_subformat'),
-                                   query_type=request.args.get('query_type'),
-                                   p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
-                                   s_attr=request.args.get('s_attr'))
+        ans = plg.find_suggestions(
+            plugin_ctx=self._plugin_ctx,
+            corpora=request.args.getlist('corpora'),
+            subcorpus=request.args.get('subcorpus'),
+            value=request.args.get('value'),
+            value_type=request.args.get('value_type'),
+            value_subformat=request.args.get('value_subformat'),
+            query_type=request.args.get('query_type'),
+            p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
+            s_attr=request.args.get('s_attr'))
     return dict(items=ans)
 
 
@@ -47,8 +48,9 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
         self._providers = providers
         self._corparch = corparch
 
-    def find_suggestions(self, plugin_ctx: PluginCtx, corpora: List[str], subcorpus: str, value: str, value_type: str,
-                         value_subformat: str, query_type: str, p_attr: str, struct: str, s_attr: str):
+    def find_suggestions(
+            self, plugin_ctx: PluginCtx, corpora: List[str], subcorpus: str, value: str, value_type: str,
+            value_subformat: str, query_type: str, p_attr: str, struct: str, s_attr: str):
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, plugin_ctx.current_corpus.corpname)
         ans = []
         for ident, provider in self._providers.items():

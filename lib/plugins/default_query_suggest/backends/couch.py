@@ -32,13 +32,15 @@ function (doc) {
 
 from plugins.abstract.query_suggest import AbstractBackend
 import couchdb
+from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion, SuggestionLemmaData
+from typing import Dict
 
 
 def norm_str(s):
     return f'"{s.lower()}"'
 
 
-class CouchDBBackend(AbstractBackend):
+class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
 
     def __init__(self, conf, ident):
         super().__init__(ident)
@@ -54,15 +56,19 @@ class CouchDBBackend(AbstractBackend):
 
     def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-            query_type, p_attr, struct, s_attr):
-        ans = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
-        merged = {}
-        for item in ans:
-            merged[item['doc']['_id']] = item['doc']
-        data = {}
+            query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
+        tmp = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
+        merged = dict((item['doc']['_id'], item['doc']) for item in tmp)
+        ans = CncSublemmaSuggestion(
+            attrs=(self._conf['lemma'], self._conf['sublemma'], self._conf.get('word')),
+            value=value,
+            data={})
         for k, v in merged.items():
-            data[v['lemma']] = [s['value'] for s in v['sublemmas']]
-        return dict(
-            attrs=(self._conf['attr1'], self._conf['attr2'], self._conf.get('attr3')),
-            data=data,
-            value=value)
+            match_indirect = v['lemma'].lower() != value.lower()
+            sublemmas = [s['value'] for s in v['sublemmas']]
+            for subl in sublemmas:
+                if value.lower() == subl.lower():
+                    match_indirect = False
+                    break
+            ans.data[v['lemma']] = SuggestionLemmaData(match_indirect=match_indirect, sublemmas=sublemmas)
+        return ans
