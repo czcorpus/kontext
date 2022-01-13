@@ -87,7 +87,10 @@ export interface PosAttrPairRelFrontendClickHanlder {
 export interface CncExtendedSublemmaFrontend extends
         QuerySuggestion<{
             attrs:[string, string, string];
-            data:{[attr1:string]:{match_indirect:boolean; sublemmas:Array<string>}};
+            data:{[attr1:string]:{
+                found_in:Array<'lemma'|'sublemma'|'word'>;
+                sublemmas:Array<string>;
+            }};
             value:string;
             value_indirect:boolean;
         }> {

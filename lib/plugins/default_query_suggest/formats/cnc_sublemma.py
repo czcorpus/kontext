@@ -20,7 +20,7 @@ from dataclasses_json import dataclass_json
 @dataclass_json
 @dataclass
 class SuggestionLemmaData:
-    match_indirect: bool
+    found_in: List[str]
     sublemmas: List[str]
 
 

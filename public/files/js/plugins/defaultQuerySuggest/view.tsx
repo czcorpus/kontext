@@ -53,7 +53,10 @@ export interface PosAttrPairRelRendererProps {
 
 export interface CncExtendedSublemmaRendererProps {
     attrs:[string, string, string];
-    data:{[attr1:string]:{match_indirect:boolean; sublemmas:Array<string>}};
+    data:{[attr1:string]:{
+        found_in:Array<'lemma'|'sublemma'|'word'>;
+        sublemmas:Array<string>;
+    }};
     value:string;
     isShortened:boolean;
     itemClickHandler:CncExtendedSublemmaFrontendClickHandler;
@@ -201,13 +204,22 @@ export function init(
 // ------------- <CncExtendedSublemmaRenderer /> ----------------------
 
 const CncExtendedSublemmaRenderer:React.FC<CncExtendedSublemmaRendererProps> = (props) => {
+    const hasSomeWordMatch = pipe(
+        props.data,
+        Dict.values(),
+        List.flatMap(v => v.found_in),
+        List.filter(v => v === 'word'),
+        List.size()
+    ) > 0;
     return <S.PosAttrPairRelRenderer>
         <table>
             <thead>
                 <tr>
                     <th>{props.attrs[0]}</th>
                     <th>{props.attrs[1]}</th>
-                    <th>{props.attrs[2] ? props.attrs[2] : '??'}</th>
+                    {hasSomeWordMatch ?
+                        <th>{props.attrs[2] ? props.attrs[2] : '??'}</th> :
+                        null}
                 </tr>
             </thead>
             <tbody>
@@ -239,16 +251,19 @@ const CncExtendedSublemmaRenderer:React.FC<CncExtendedSublemmaRendererProps> = (
                                             renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{List.head(data.sublemmas)}</a> :
                                         <span>{List.head(data.sublemmas)}</span>
                                     }</td>
-                                    <td className="attr3" rowSpan={List.size(data.sublemmas)}>
-                                        {props.itemClickHandler ?
-                                            <a onClick={e => props.itemClickHandler({
-                                                attr1: props.attrs[0], attr1Val: attr1,
-                                                attr2: props.attrs[1], attr2Val: List.head(data.sublemmas),
-                                                attr3: props.attrs[2], attr3Val: props.value,
-                                                renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{props.value}</a> :
-                                            <span>{props.value}</span>
-                                        }
-                                    </td>
+                                    {List.find(v => v === 'word', data.found_in) ?
+                                        <td className="attr3" rowSpan={List.size(data.sublemmas)}>
+                                            {props.itemClickHandler ?
+                                                <a onClick={e => props.itemClickHandler({
+                                                    attr1: props.attrs[0], attr1Val: attr1,
+                                                    attr2: props.attrs[1], attr2Val: List.head(data.sublemmas),
+                                                    attr3: props.attrs[2], attr3Val: props.value,
+                                                    renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{props.value}</a> :
+                                                <span>{props.value}</span>
+                                            }
+                                        </td> :
+                                        null
+                                    }
                                 </tr>
                                 {pipe(
                                     data.sublemmas,
