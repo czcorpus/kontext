@@ -71,13 +71,10 @@ export function init(
 
         return <div>
             <fieldset>
-                <label htmlFor='sel-order'>order:</label>
-                <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
-                    <option value='0'>name</option>
-                    <option value='freq'>freq</option>
-                    {List.some(d => List.some(v => !!v.rel, d.Items), props.data) ?
-                        <option value='rel'>rel</option> :
-                        null}
+                <label htmlFor='sel-type'>type:</label>
+                <select id='sel-type' value={props.type} onChange={handleTypeChange}>
+                    <option value='bar'>bar</option>
+                    <option value='timeline'>timeline</option>
                 </select>
                 <label htmlFor='sel-units'>units:</label>
                 <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
@@ -86,13 +83,20 @@ export function init(
                         <option value='rel'>ipm</option> :
                         null}
                 </select>
-                <label htmlFor='sel-type'>type:</label>
-                <select id='sel-type' value={props.type} onChange={handleTypeChange}>
-                    <option value='bar'>bar</option>
-                    <option value='line'>line</option>
-                </select>
                 <label htmlFor='input-max'>display max:</label>
                 <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
+                {props.type !== 'timeline' ?
+                    <>
+                        <label htmlFor='sel-order'>order:</label>
+                        <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
+                            <option value='0'>name</option>
+                            <option value='freq'>freq</option>
+                            {List.some(d => List.some(v => !!v.rel, d.Items), props.data) ?
+                                <option value='rel'>rel</option> :
+                                null}
+                        </select>
+                    </> :
+                    null}
                 {props.isBusy ?
                     <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}alt={he.translate('global__loading')} /> :
                     null}
