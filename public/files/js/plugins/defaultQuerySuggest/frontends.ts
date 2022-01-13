@@ -23,6 +23,15 @@ import { Dict, List, pipe } from 'cnc-tskit';
 import { QuerySuggestion } from '../../models/query/query';
 
 
+export enum KnownRenderers {
+    BASIC = 'basic',
+    ERROR = 'error',
+    POS_ATTR_PAIR_REL = 'posAttrPairRel',
+    CNC_EXTENDED_SUBLEMMA = 'cncExtendedSublemma',
+    UNSUPPORTED = 'unsupported'
+}
+
+
 export interface BasicFrontend extends QuerySuggestion<Array<string>> {
     isActive:false;
 }
@@ -36,7 +45,7 @@ export function isBasicFrontend(
     v:QuerySuggestion<unknown>
 
 ):v is BasicFrontend {
-    return isDataAndRenderer(v) && v['rendererId'] === 'basic';
+    return isDataAndRenderer(v) && v['rendererId'] === KnownRenderers.BASIC;
 }
 
 // -----------------------
@@ -46,7 +55,6 @@ export interface PosAttrPairRelFrontend extends
             attrs:[string, string, string];
             data:{[attr1:string]:Array<string>};
             value:string;
-            value_indirect:boolean;
         }> {
     isActive:true;
 }
@@ -55,12 +63,11 @@ export function isPosAttrPairRelFrontend(
     v:QuerySuggestion<unknown>
 
 ):v is PosAttrPairRelFrontend {
-    return isDataAndRenderer(v) && v['rendererId'] === 'posAttrPairRel';
+    return isDataAndRenderer(v) && v['rendererId'] === KnownRenderers.POS_ATTR_PAIR_REL;
 }
 
 export function isPosAttrPairRelClickPayload(v:any):v is PosAttrPairRelFrontendClickPayload {
-    return  typeof v['attr1'] === 'string' && typeof v['attr1Val'] === 'string' &&
-                typeof v['attr2'] === 'string';
+    return v['renderer'] === KnownRenderers.POS_ATTR_PAIR_REL;
 }
 
 export interface PosAttrPairRelFrontendClickPayload {
@@ -68,12 +75,48 @@ export interface PosAttrPairRelFrontendClickPayload {
     attr1Val:string;
     attr2:string;
     attr2Val:string;
-    attr3:string;
-    attr3Val: string;
+    renderer:KnownRenderers.POS_ATTR_PAIR_REL;
 }
 
 export interface PosAttrPairRelFrontendClickHanlder {
     (value:PosAttrPairRelFrontendClickPayload):void;
+}
+
+// -----------------------
+
+export interface CncExtendedSublemmaFrontend extends
+        QuerySuggestion<{
+            attrs:[string, string, string];
+            data:{[attr1:string]:{match_indirect:boolean; sublemmas:Array<string>}};
+            value:string;
+            value_indirect:boolean;
+        }> {
+    isActive:true;
+}
+
+export function isCncExtendedSublemmaFrontend(
+    v:QuerySuggestion<unknown>
+
+):v is CncExtendedSublemmaFrontend {
+    return isDataAndRenderer(v) && v['rendererId'] === KnownRenderers.CNC_EXTENDED_SUBLEMMA;
+}
+
+export function isCncExtendedSublemmaFrontendClickPayload(v:any):v is CncExtendedSublemmaFrontendClickPayload {
+    return v['renderer'] === KnownRenderers.CNC_EXTENDED_SUBLEMMA;
+}
+
+export interface CncExtendedSublemmaFrontendClickPayload {
+    attr1:string;
+    attr1Val:string;
+    attr2:string;
+    attr2Val:string;
+    attr3:string;
+    attr3Val: string;
+    renderer:KnownRenderers.CNC_EXTENDED_SUBLEMMA;
+}
+
+export interface CncExtendedSublemmaFrontendClickHandler {
+    (value:CncExtendedSublemmaFrontendClickPayload):void;
 }
 
 // -----------------------
@@ -86,7 +129,7 @@ export function isErrorFrontend(
     v:QuerySuggestion<unknown>
 
 ):v is ErrorFrontend {
-    return isDataAndRenderer(v) && v['rendererId'] === 'error';
+    return isDataAndRenderer(v) && v['rendererId'] === KnownRenderers.ERROR;
 }
 
 // -----------------------
@@ -102,6 +145,18 @@ export function listAttrs1ToExtend<T>(data:QuerySuggestion<T>):Array<string> {
             ),
             List.map(
                 ([attr1,]) => attr1
+            )
+        );
+
+    } else if (isCncExtendedSublemmaFrontend(data)) {
+        return pipe(
+            data.contents.data,
+            Dict.toEntries(),
+            List.filter(
+                ([lemma, sublemma]) => sublemma.sublemmas.length === 1 && sublemma.sublemmas[0] !== lemma
+            ),
+            List.map(
+                ([lemma,]) => lemma
             )
         );
     }
@@ -178,10 +233,10 @@ export function mergeResults<T>(
     data2:QuerySuggestion<T>
 
 ):QuerySuggestion<unknown> {
-    if (isPosAttrPairRelFrontend(data1) && isPosAttrPairRelFrontend(data2)) {
-        if (data1.providerId !== data2.providerId) {
-            throw new Error('cannot merge different provider data');
-        }
+    if (data1.providerId !== data2.providerId) {
+        throw new Error('cannot merge different provider data');
+
+    } else if (isPosAttrPairRelFrontend(data1) && isPosAttrPairRelFrontend(data2)) {
         return {
             rendererId: data1.rendererId,
             providerId: data1.providerId,
@@ -193,6 +248,27 @@ export function mergeResults<T>(
                     Dict.map(
                         (curr, attr1) => data2.contents.data[attr1] &&
                                 data2.contents.data[attr1].length > List.size(curr) ?
+                            data2.contents.data[attr1] :
+                            data1.contents.data[attr1]
+                    )
+                )
+            },
+            isShortened: data1.isShortened || data2.isShortened,
+            isActive: true
+        }
+
+    } else if (isCncExtendedSublemmaFrontend(data1) && isCncExtendedSublemmaFrontend(data2)) {
+        return {
+            rendererId: data1.rendererId,
+            providerId: data1.providerId,
+            heading: data1.heading,
+            contents: {
+                ...data1.contents,
+                data: pipe(
+                    data1.contents.data,
+                    Dict.map(
+                        (curr, attr1) => data2.contents.data[attr1] &&
+                                data2.contents.data[attr1].sublemmas.length > List.size(curr.sublemmas) ?
                             data2.contents.data[attr1] :
                             data1.contents.data[attr1]
                     )

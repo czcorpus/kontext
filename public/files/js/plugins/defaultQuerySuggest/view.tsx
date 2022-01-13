@@ -22,20 +22,11 @@
 import * as React from 'react';
 import * as Kontext from '../../types/kontext';
 import { IActionDispatcher } from 'kombo';
-import { List, pipe, Dict, tuple } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 import { Model } from './model';
 
 import * as S from './style';
-import { PosAttrPairRelFrontendClickHanlder } from './frontends';
-
-
-
-export enum KnownRenderers {
-    BASIC = 'basic',
-    ERROR = 'error',
-    POS_ATTR_PAIR_REL = 'posAttrPairRel',
-    UNSUPPORTED = 'unsupported'
-}
+import { PosAttrPairRelFrontendClickHanlder, KnownRenderers, CncExtendedSublemmaFrontendClickHandler } from './frontends';
 
 
 export interface BasicRendererProps {
@@ -54,10 +45,18 @@ export interface UnsupportedRendererProps {
 export interface PosAttrPairRelRendererProps {
     attrs:[string, string, string];
     data:{[attr1:string]:Array<string>};
-    value_indirect:boolean;
     value:string;
     isShortened:boolean;
     itemClickHandler:PosAttrPairRelFrontendClickHanlder;
+}
+
+
+export interface CncExtendedSublemmaRendererProps {
+    attrs:[string, string, string];
+    data:{[attr1:string]:{match_indirect:boolean; sublemmas:Array<string>}};
+    value:string;
+    isShortened:boolean;
+    itemClickHandler:CncExtendedSublemmaFrontendClickHandler;
 }
 
 
@@ -66,6 +65,7 @@ export interface SuggestionsViews {
     [KnownRenderers.ERROR]:React.FC<ErrorRendererProps>;
     [KnownRenderers.UNSUPPORTED]:React.FC<UnsupportedRendererProps>;
     [KnownRenderers.POS_ATTR_PAIR_REL]:React.FC<PosAttrPairRelRendererProps>;
+    [KnownRenderers.CNC_EXTENDED_SUBLEMMA]:React.FC<CncExtendedSublemmaRendererProps>;
 }
 
 
@@ -129,7 +129,6 @@ export function init(
                     <tr>
                         <th>{props.attrs[0]}</th>
                         <th>{props.attrs[1]}</th>
-                        {props.value_indirect ? <th>{props.attrs[2] ? props.attrs[2] : '??'}</th> : null}
                     </tr>
                 </thead>
                 <tbody>
@@ -148,7 +147,7 @@ export function init(
                                             <a onClick={e => props.itemClickHandler({
                                                 attr1: props.attrs[0], attr1Val: attr1,
                                                 attr2: props.attrs[1], attr2Val: undefined,
-                                                attr3: undefined, attr3Val: undefined})}>{attr1}</a> :
+                                                renderer: KnownRenderers.POS_ATTR_PAIR_REL})}>{attr1}</a> :
                                             attr1
                                         }</th>
                                         <td>{
@@ -156,21 +155,9 @@ export function init(
                                             <a onClick={e => props.itemClickHandler({
                                                 attr1: props.attrs[0], attr1Val: attr1,
                                                 attr2: props.attrs[1], attr2Val: List.head(attrs2),
-                                                attr3: undefined, attr3Val: undefined})}>{List.head(attrs2)}</a> :
+                                                renderer: KnownRenderers.POS_ATTR_PAIR_REL})}>{List.head(attrs2)}</a> :
                                             <span>{List.head(attrs2)}</span>
                                         }</td>
-                                        {props.value_indirect ?
-                                            <td className="attr3" rowSpan={List.size(attrs2)}>
-                                                {props.itemClickHandler ?
-                                                    <a onClick={e => props.itemClickHandler({
-                                                        attr1: props.attrs[0], attr1Val: attr1,
-                                                        attr2: props.attrs[1], attr2Val: List.head(attrs2),
-                                                        attr3: props.attrs[2], attr3Val: props.value})}>{props.value}</a> :
-                                                    <span>{props.value}</span>
-                                                }
-                                            </td>
-                                            : null
-                                        }
                                     </tr>
                                     {pipe(
                                         attrs2,
@@ -185,7 +172,7 @@ export function init(
                                                         <a onClick={e => props.itemClickHandler({
                                                             attr1: props.attrs[0], attr1Val: attr1,
                                                             attr2: props.attrs[1], attr2Val: attr2,
-                                                            attr3: undefined, attr3Val: undefined})}>{attr2}</a> :
+                                                            renderer: KnownRenderers.POS_ATTR_PAIR_REL})}>{attr2}</a> :
                                                         attr2
                                                     )
                                                     }
@@ -210,9 +197,102 @@ export function init(
         </S.PosAttrPairRelRenderer>
     };
 
+
+// ------------- <CncExtendedSublemmaRenderer /> ----------------------
+
+const CncExtendedSublemmaRenderer:React.FC<CncExtendedSublemmaRendererProps> = (props) => {
+    return <S.PosAttrPairRelRenderer>
+        <table>
+            <thead>
+                <tr>
+                    <th>{props.attrs[0]}</th>
+                    <th>{props.attrs[1]}</th>
+                    <th>{props.attrs[2] ? props.attrs[2] : '??'}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {pipe(
+                props.data,
+                Dict.toEntries(),
+                List.sortedAlphaBy(([k,]) => k),
+                List.map(
+                    ([attr1, data], index) => (
+                        List.empty(data.sublemmas) ?
+                            null :
+                            <React.Fragment key={`${attr1}`}>
+                                <tr className={index > 0 ? 'separ' : null}>
+                                    <th className="attr1" rowSpan={List.size(data.sublemmas)}>{
+                                        props.itemClickHandler ?
+                                        <a onClick={e => props.itemClickHandler({
+                                            attr1: props.attrs[0], attr1Val: attr1,
+                                            attr2: props.attrs[1], attr2Val: undefined,
+                                            attr3: undefined, attr3Val: undefined,
+                                            renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{attr1}</a> :
+                                        attr1
+                                    }</th>
+                                    <td>{
+                                        props.itemClickHandler ?
+                                        <a onClick={e => props.itemClickHandler({
+                                            attr1: props.attrs[0], attr1Val: attr1,
+                                            attr2: props.attrs[1], attr2Val: List.head(data.sublemmas),
+                                            attr3: undefined, attr3Val: undefined,
+                                            renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{List.head(data.sublemmas)}</a> :
+                                        <span>{List.head(data.sublemmas)}</span>
+                                    }</td>
+                                    <td className="attr3" rowSpan={List.size(data.sublemmas)}>
+                                        {props.itemClickHandler ?
+                                            <a onClick={e => props.itemClickHandler({
+                                                attr1: props.attrs[0], attr1Val: attr1,
+                                                attr2: props.attrs[1], attr2Val: List.head(data.sublemmas),
+                                                attr3: props.attrs[2], attr3Val: props.value,
+                                                renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{props.value}</a> :
+                                            <span>{props.value}</span>
+                                        }
+                                    </td>
+                                </tr>
+                                {pipe(
+                                    data.sublemmas,
+                                    List.tail(),
+                                    List.map(
+                                        (attr2, i) => (
+                                            <tr key={`${attr1}:${attr2}`}>
+                                            <td>
+                                                {attr2 === null && i === List.size(data.sublemmas) - 2 ?
+                                                <span title={he.translate('global__shortened')}>{'\u2026'}</span> :
+                                                (props.itemClickHandler ?
+                                                    <a onClick={e => props.itemClickHandler({
+                                                        attr1: props.attrs[0], attr1Val: attr1,
+                                                        attr2: props.attrs[1], attr2Val: attr2,
+                                                        attr3: undefined, attr3Val: undefined,
+                                                        renderer: KnownRenderers.CNC_EXTENDED_SUBLEMMA})}>{attr2}</a> :
+                                                    attr2
+                                                )
+                                                }
+                                                </td>
+                                            </tr>
+                                        )
+                                    )
+                                )}
+                            </React.Fragment>
+                    )
+                )
+            )}
+            </tbody>
+        </table>
+        {props.isShortened ?
+            <div className="note">
+                <layoutViews.StatusIcon status="warning" />
+                {he.translate('defaultTD__shortened_notice')}
+            </div> :
+            null
+        }
+    </S.PosAttrPairRelRenderer>
+};
+
     return {
         [KnownRenderers.BASIC]: BasicRenderer,
         [KnownRenderers.POS_ATTR_PAIR_REL]:PosAttrPairRelRenderer,
+        [KnownRenderers.CNC_EXTENDED_SUBLEMMA]:CncExtendedSublemmaRenderer,
         [KnownRenderers.ERROR]: ErrorRenderer,
         [KnownRenderers.UNSUPPORTED]: UnsupportedRenderer
     }
