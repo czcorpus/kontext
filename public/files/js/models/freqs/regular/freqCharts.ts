@@ -29,7 +29,7 @@ import { FreqFormInputs } from './freqForms';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
 export type FreqChartsAvailableData = 'freq'|'rel';
-export type FreqChartsAvailableTypes = 'bar'|'line';
+export type FreqChartsAvailableTypes = 'bar'|'timeline';
 
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
@@ -136,6 +136,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeType.name,
             (state, action) => {
                 state.type = action.payload.value;
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state)),
+                    state,
+                    dispatch,
+                );
             }
         );
 
@@ -222,7 +230,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ...this.pageModel.getConcArgs(),
             fcrit: state.freqCrit,
             flimit: parseInt(state.flimit),
-            freq_sort: state.sortColumn,
+            freq_sort: state.type === 'timeline' ? '0' : state.sortColumn,
             // fpage: for client, null means 'multi-block' output, for server '1' must be filled in
             fpage: state.currentPage !== null ? state.currentPage : '1',
             ftt_include_empty: state.ftt_include_empty,
