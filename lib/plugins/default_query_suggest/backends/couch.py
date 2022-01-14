@@ -60,16 +60,20 @@ class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
         tmp = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
         merged = {}
         for item in tmp:
-            item_id = item['doc']['_id']
-            if item_id not in merged:
-                merged[item_id] = (item['doc'], {item['value']})
-            else:
-                merged[item_id][1].add(item['value'])
+            lemma = item['doc']['lemma']
+            if lemma not in merged:
+                merged[lemma] = ({}, set())
+            for subl in item['doc']['sublemmas']:
+                if subl['value'] not in merged[lemma][0]:
+                    merged[lemma][0][subl['value']] = 0
+                merged[lemma][0][subl['value']] += int(subl.get('count', 0))
+            merged[lemma][1].add(item['value'])
         ans = CncSublemmaSuggestion(
             attrs=(self._conf['lemma'], self._conf['sublemma'], self._conf.get('word')),
-            value=value,
+            value=value.lower() if value else None,
             data={})
-        for k, (doc, value) in merged.items():
-            ans.data[doc['lemma']] = SuggestionLemmaData(
-                found_in=list(value), sublemmas=[s['value'] for s in doc['sublemmas']])
+        for lemma, (sublemmas, found_in) in merged.items():
+            ans.data[lemma] = SuggestionLemmaData(
+                found_in=list(found_in),
+                sublemmas=[s for s, _ in sorted(sublemmas.items(), key=lambda x: x[1], reverse=True)])
         return ans
