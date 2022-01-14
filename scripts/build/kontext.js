@@ -30,7 +30,7 @@
     const merge = require('merge');
     const path = require('path');
     const peg = require('pegjs');
-    const DOMParser = require('xmldom').DOMParser;
+    const DOMParser = require('@xmldom/xmldom').DOMParser;
 
     function camelizeName(s) {
         return s.split('_')
