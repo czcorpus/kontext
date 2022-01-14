@@ -219,7 +219,7 @@ const CncExtendedSublemmaRenderer:React.FC<CncExtendedSublemmaRendererProps> = (
                     <th>{props.attrs[1]}</th>
                     {hasSomeWordMatch ?
                         <th>{props.attrs[2] ? props.attrs[2] : '??'}</th> :
-                        null}
+                        <th />}
                 </tr>
             </thead>
             <tbody>
@@ -262,7 +262,7 @@ const CncExtendedSublemmaRenderer:React.FC<CncExtendedSublemmaRendererProps> = (
                                                 <span>{props.value}</span>
                                             }
                                         </td> :
-                                        null
+                                        hasSomeWordMatch ? <td className="attr3" /> : null
                                     }
                                 </tr>
                                 {pipe(
