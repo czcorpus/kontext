@@ -18,8 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { QueryFormType } from '../../models/query/actions';
 import { QueryType } from '../../models/query/query';
 import { PluginInterfaces } from '../../types/plugins';
+import { KnownRenderers } from './frontends';
 
 interface ProviderInfo<T> {
     ident:string;
@@ -28,28 +30,63 @@ interface ProviderInfo<T> {
     conf:T;
 }
 
+
 export interface BasicProviderInfo extends ProviderInfo<{}> {
-    rendererId:'basic';
+    rendererId:KnownRenderers.BASIC;
 }
+
 
 export interface PosAttrPairRelProviderInfo extends ProviderInfo<{
     attr1:string;
     attr2:string;
-    corpus?:string
+    corpus?:string;
 }> {
-    rendererId:'posAttrPairRel';
+    rendererId:KnownRenderers.POS_ATTR_PAIR_REL
 }
 
-export type AnyProviderInfo = BasicProviderInfo | PosAttrPairRelProviderInfo;
+
+export interface CncExtendedSublemmaProviderInfo extends ProviderInfo<{
+    lemma:string;
+    sublemma:string;
+    word:string;
+    corpus?:string;
+}> {
+    rendererId:KnownRenderers.CNC_EXTENDED_SUBLEMMA;
+}
+
+
+export type AnyProviderInfo = BasicProviderInfo | PosAttrPairRelProviderInfo | CncExtendedSublemmaProviderInfo;
+
 
 export function supportsRequest(info:AnyProviderInfo, req:PluginInterfaces.QuerySuggest.SuggestionArgs):boolean {
     switch (info.rendererId) {
-        case 'basic':
+        case KnownRenderers.BASIC:
             return true;
-        case 'posAttrPairRel':
+        case KnownRenderers.POS_ATTR_PAIR_REL:
             return info.conf.attr1 === req.posAttr || info.conf.attr2 === req.posAttr || !req.posAttr;
+        case KnownRenderers.CNC_EXTENDED_SUBLEMMA:
+            return info.conf.lemma === req.posAttr || info.conf.sublemma === req.posAttr || !req.posAttr;
         default:
             return false;
     }
+}
 
+export function isEnabledFor(
+        info:AnyProviderInfo,
+        formType:QueryFormType,
+        valueSubformat:PluginInterfaces.QuerySuggest.QueryValueSubformat,
+        posAttr:string|undefined
+):boolean {
+    switch (info.rendererId) {
+        case KnownRenderers.BASIC:
+            return true;
+        case KnownRenderers.POS_ATTR_PAIR_REL:
+            return (valueSubformat === 'simple' || valueSubformat === 'simple_ic') &&
+                info.conf.attr1 === posAttr || info.conf.attr2 === posAttr || !posAttr;
+        case KnownRenderers.CNC_EXTENDED_SUBLEMMA:
+            return (valueSubformat === 'simple' || valueSubformat === 'simple_ic') &&
+                info.conf.lemma === posAttr || info.conf.sublemma === posAttr || !posAttr;
+        default:
+            return false;
+    }
 }

@@ -742,10 +742,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             );
 
             this.userInfoModel = new UserInfo(this.dispatcher, this);
-
             this.qsuggPlugin = querySuggestPlugin(
                 this.pluginApi()
             );
+
             this.corpViewOptionsModel = new CorpusViewOptionsModel(
                 this.dispatcher,
                 this,

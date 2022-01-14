@@ -19,12 +19,12 @@ it needs also "sublemmas" attached).
 A respective CouchDB database must define the following view:
 
 function (doc) {
-  emit(doc.lemma, 1);
+  emit(doc.lemma, 'lemma');
   for (var i = 0; i < doc.forms.length; i++) {
-    emit(doc.forms[i].word.toLowerCase(), 1);
+    emit(doc.forms[i].word.toLowerCase(), 'word');
   };
   for (var i = 0; i < doc.sublemmas.length; i++) {
-    emit(doc.sublemmas[i].value.toLowerCase(), 1);
+    emit(doc.sublemmas[i].value.toLowerCase(), 'sublemma');
   };
 }
 """
@@ -32,13 +32,15 @@ function (doc) {
 
 from plugins.abstract.query_suggest import AbstractBackend
 import couchdb
+from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion, SuggestionLemmaData
+from typing import Dict
 
 
 def norm_str(s):
     return f'"{s.lower()}"'
 
 
-class CouchDBBackend(AbstractBackend):
+class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
 
     def __init__(self, conf, ident):
         super().__init__(ident)
@@ -54,14 +56,20 @@ class CouchDBBackend(AbstractBackend):
 
     def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-            query_type, p_attr, struct, s_attr):
-        ans = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
+            query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
+        tmp = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
         merged = {}
-        for item in ans:
-            merged[item['doc']['_id']] = item['doc']
-        data = {}
-        for k, v in merged.items():
-            data[v['lemma']] = [s['value'] for s in v['sublemmas']]
-        return dict(
-            attrs=(self._conf['attr1'], self._conf['attr2']),
-            data=data)
+        for item in tmp:
+            item_id = item['doc']['_id']
+            if item_id not in merged:
+                merged[item_id] = (item['doc'], {item['value']})
+            else:
+                merged[item_id][1].add(item['value'])
+        ans = CncSublemmaSuggestion(
+            attrs=(self._conf['lemma'], self._conf['sublemma'], self._conf.get('word')),
+            value=value,
+            data={})
+        for k, (doc, value) in merged.items():
+            ans.data[doc['lemma']] = SuggestionLemmaData(
+                found_in=list(value), sublemmas=[s['value'] for s in doc['sublemmas']])
+        return ans

@@ -25,10 +25,10 @@ import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
 import { Observable, of as rxOf } from 'rxjs';
 import { MultiDict } from '../../multidict';
 import { List, HTTP, Ident, Dict, pipe, id, tuple } from 'cnc-tskit';
-import { map, tap, concatMap, mergeMap, scan, catchError } from 'rxjs/operators';
+import { map, tap, concatMap, mergeMap, scan } from 'rxjs/operators';
 import { Actions as QueryActions, ActionName as QueryActionName } from '../../models/query/actions';
 import { cutLongResult, isBasicFrontend, isPosAttrPairRelFrontend, listAttrs1ToExtend, mergeResults,
-    isErrorFrontend, filterOutTrivialSuggestions} from './frontends';
+    isErrorFrontend, filterOutTrivialSuggestions, isCncExtendedSublemmaFrontend} from './frontends';
 import { AnyProviderInfo, supportsRequest } from './providers';
 import { Actions, ActionName } from './actions';
 import { QuerySuggestion, QueryType } from '../../models/query/query';
@@ -93,10 +93,13 @@ export function isEmptyResponse<T>(v:QuerySuggestion<T>):boolean {
     } else if (isPosAttrPairRelFrontend(v)) {
         return Dict.empty(v.contents.data);
 
+    } else if (isCncExtendedSublemmaFrontend(v)) {
+        return Dict.empty(v.contents.data);
+
     } else if (isErrorFrontend(v)) {
         return false;
     }
-    return !!data;
+    return !data;
 }
 
 /**
