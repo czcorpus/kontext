@@ -633,18 +633,13 @@ class Kontext(Controller):
                 redirect = True
         return cn, redirect
 
-    @property
-    def corp_encoding(self) -> str:
-        enc = self.corp.get_conf('ENCODING')
-        return enc if enc else 'iso-8859-1'
-
     def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, ErrorCorpus):
-            self._status = 404
+            self._response.set_http_status(404)
             self.add_system_message('error', 'Failed to open corpus {0}'.format(
                 getattr(self.args, 'corpname')))
         else:
-            self._status = 500
+            self._response.set_http_status(500)
 
     @property
     def corp(self) -> AbstractKCorpus:

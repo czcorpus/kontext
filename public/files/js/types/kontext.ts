@@ -41,7 +41,14 @@ export type ListOfPairs = Array<[string, string]>;
 
 export type SubcorpListItem = {v:string; n:string; pub:string, foreign?:boolean};
 
-export type StructsAndAttrs = {[struct:string]:Array<string>};
+export interface StructuralAttribute {
+    name:string;
+    structureName:string;
+    label:string;
+    dtFormat?:string;
+}
+
+export type StructsAndAttrs = {[struct:string]:Array<StructuralAttribute>};
 
 export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 

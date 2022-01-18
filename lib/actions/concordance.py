@@ -438,7 +438,7 @@ class Actions(Querying):
 
     @exposed(return_type='json')
     def get_conc_cache_status(self, _):
-        self._headers['Content-Type'] = 'text/plain'
+        self._response.set_header('Content-Type', 'text/plain')
         cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(self.corp)
         q = tuple(self.args.q)
         subchash = getattr(self.corp, 'subchash', None)
@@ -710,7 +710,7 @@ class Actions(Querying):
             ans['size'] = conc.size()
             ans['finished'] = conc.finished()
             self.on_conc_store = store_last_op
-            self._status = 201
+            self._response.set_http_status(201)
         except (ConcordanceException, ConcCacheStatusException) as ex:
             ans['size'] = 0
             ans['finished'] = True
@@ -797,7 +797,7 @@ class Actions(Querying):
                 f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
 
         self.on_conc_store = store_last_op
-        self._status = 201
+        self._response.set_http_status(201)
         try:
             return self.view(request)
         except Exception as ex:
@@ -1130,9 +1130,10 @@ class Actions(Querying):
         saved_filename = self.args.corpname
         output = None
         if saveformat == 'text':
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="%s-frequencies.txt"' % \
-                                                   saved_filename
+            self._response.set_header('Content-Type', 'application/text')
+            self._response.set_header(
+                'Content-Disposition',
+                f'attachment; filename="{saved_filename}-frequencies.txt"')
             output = result
             output['Desc'] = self.concdesc_json()['Desc']
             output['fcrit'] = fcrit
@@ -1154,9 +1155,8 @@ class Actions(Querying):
             num_word_cols = len(result['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
             writer.set_col_types(*([int] + num_word_cols * [str] + [float, float]))
 
-            self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
-                mkfilename(saveformat),)
+            self._response.set_header('Content-Type', writer.content_type())
+            self._response.set_header('Content-Disposition', f'attachment; filename="{mkfilename(saveformat)}"')
 
             for block in result['Blocks']:
                 col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
@@ -1268,9 +1268,10 @@ class Actions(Querying):
                 exporter.set_content_flat(headings=data.get('headings', []), alpha_level=data['alphaLevel'],
                                           min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
                                           data=data['data'])
-            self._headers['Content-Type'] = exporter.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="{0}-2dfreq-distrib.xlsx"'.format(
-                self.args.corpname)
+            self._response.set_header('Content-Type', exporter.content_type())
+            self._response.set_header(
+                'Content-Disposition',
+                f'attachment; filename="{self.args.corpname}-2dfreq-distrib.xlsx"')
         return exporter.raw_content()
 
     @exposed(access_level=1, page_model='coll')
@@ -1349,9 +1350,10 @@ class Actions(Querying):
             result.Items = result.Items[from_line - 1:]
             saved_filename = self.args.corpname
             if saveformat == 'text':
-                self._headers['Content-Type'] = 'application/text'
-                self._headers['Content-Disposition'] = 'attachment; filename="%s-collocations.txt"' % (
-                    saved_filename,)
+                self._response.set_header('Content-Type', 'application/text')
+                self._response.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{saved_filename}-collocations.txt"')
                 out_data = asdict(result)
                 out_data['Desc'] = self.concdesc_json()['Desc']
                 out_data['saveformat'] = saveformat
@@ -1366,8 +1368,10 @@ class Actions(Querying):
                 writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
                 writer.set_col_types(int, str, *(8 * (float,)))
 
-                self._headers['Content-Type'] = writer.content_type()
-                self._headers['Content-Disposition'] = f'attachment; filename="{mk_filename(saveformat)}"'
+                self._response.set_header('Content-Type', writer.content_type())
+                self._response.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{mk_filename(saveformat)}"')
                 if colheaders or heading:
                     writer.writeheading([''] + [item['n'] for item in result.Head])
                 i = 1
@@ -1496,9 +1500,10 @@ class Actions(Querying):
 
             def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
             if saveformat == 'text':
-                self._headers['Content-Type'] = 'text/plain'
-                self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(
-                    mkfilename('txt'))
+                self._response.set_header('Content-Type', 'text/plain')
+                self._response.set_header(
+                    'Content-Disposition',
+                    f"attachment; filename=\"{mkfilename('txt')}\"")
                 output.update(data)
                 for item in data['Lines']:
                     item['ref'] = ', '.join(item['ref'])
@@ -1511,9 +1516,10 @@ class Actions(Querying):
                 writer = plugins.runtime.EXPORT.instance.load_plugin(
                     saveformat, subtype='concordance')
 
-                self._headers['Content-Type'] = writer.content_type()
-                self._headers['Content-Disposition'] = 'attachment; filename="%s"' % (
-                    mkfilename(saveformat),)
+                self._response.set_header('Content-Type', writer.content_type())
+                self._response.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{mkfilename(saveformat)}"')
 
                 if len(data['Lines']) > 0:
                     aligned_corpora = [self.corp] + \
@@ -1567,9 +1573,9 @@ class Actions(Querying):
                 raise UserActionException(translate('Unknown export data type'))
             return output
         except Exception as e:
-            self._headers['Content-Type'] = 'text/html'
-            if 'Content-Disposition' in self._headers:
-                del (self._headers['Content-Disposition'])
+            self._response.set_header('Content-Type', 'text/html')
+            if self._response.contains_header('Content-Disposition'):
+                self._response.remove_header('Content-Disposition')
             raise e
 
     @exposed(access_level=0, return_type='plain')
@@ -1581,7 +1587,8 @@ class Actions(Querying):
         """
         with plugins.runtime.AUDIO_PROVIDER as audiop:
             headers, ans = audiop.get_audio(self._plugin_ctx, request)
-            self._headers.update(headers)
+            for h, v in headers:
+                self._response.set_header(h, v)
             return ans
 
     @exposed(return_type='json', access_level=0)
@@ -1716,8 +1723,8 @@ class Actions(Querying):
         with plugins.runtime.CHART_EXPORT as ce:
             format = request.json.get('cformat')
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
-            self._headers['Content-Type'] = ce.get_content_type(format)
-            self._headers['Content-Disposition'] = 'attachment; filename="{0}"'.format(filename)
+            self._response.set_header('Content-Type', ce.get_content_type(format))
+            self._response.set_header('Content-Disposition',  f'attachment; filename="{format(filename)}"')
             data = sorted(request.json.get('data', {}), key=lambda x: int(x['groupId']))
             total = sum(x['count'] for x in data)
             data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
@@ -1871,5 +1878,5 @@ class Actions(Querying):
                 'attr'), request.args.get('attr_val'),
             request.args.get('search_attr'))
         if len(ans) == 0:
-            self._status = 404
+            self._response.set_http_status(404)
         return dict(result=ans, conc_size=found, lines_used=used)

@@ -280,8 +280,8 @@ class ParadigmaticQuery(Kontext):
         writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='pquery')
         writer.set_col_types(int, str, float)
 
-        self._headers['Content-Type'] = writer.content_type()
-        self._headers['Content-Disposition'] = f'attachment; filename="{mkfilename(saveformat)}"'
+        self._response.set_header('Content-Type', writer.content_type())
+        self._response.set_header('Content-Disposition', f'attachment; filename="{mkfilename(saveformat)}"')
 
         if colheaders or heading:
             writer.writeheading(['', 'value', 'freq'])

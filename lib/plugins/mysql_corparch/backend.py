@@ -19,7 +19,7 @@
 """
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 from mysql.connector.connection import MySQLConnection
@@ -310,11 +310,18 @@ class Backend(DatabaseBackend):
         cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
 
-    def load_corpus_structattrs(self, corpus_id: str, structure_id: str) -> Iterable[Dict[str, Any]]:
+    def load_corpus_structattrs(self, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
         cursor = self._db.cursor()
-        sql = 'SELECT {0} FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s'.format(
-            ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
-        cursor.execute(sql, (corpus_id, structure_id))
+        if structure_id:
+            sql = (
+                'SELECT {0}, dt_format, structure_name, name '
+                'FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s').format(
+                    ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+            cursor.execute(sql, (corpus_id, structure_id))
+        else:
+            sql = 'SELECT {0}, dt_format, structure_name, name FROM corpus_structattr WHERE corpus_name = %s'.format(
+                ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+            cursor.execute(sql, (corpus_id,))
         return cursor.fetchall()
 
     def load_subcorpattrs(self, corpus_id: str) -> List[str]:

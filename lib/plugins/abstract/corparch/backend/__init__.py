@@ -95,7 +95,11 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_corpus_structattrs(self, corpus_id: str, structure_id: str) -> Iterable[Dict[str, Any]]:
+    def load_corpus_structattrs(self, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
+        """
+        Load rows matching provided corpus and (if provided) structure_id. The order of items can be
+        arbitrary so there is no guarantee that items are grouped or ordered in any way.
+        """
         pass
 
     @abc.abstractmethod

@@ -238,9 +238,8 @@ class Wordlist(Kontext):
             wlsort='', collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
         saved_filename = form_args.corpname
         if form_args.saveformat == 'text':
-            self._headers['Content-Type'] = 'application/text'
-            self._headers['Content-Disposition'] = 'attachment; filename="{}-word-list.txt"'.format(
-                saved_filename)
+            self._response.set_header('Content-Type', 'application/text')
+            self._response.set_header('Content-Disposition', f'attachment; filename="{saved_filename}-word-list.txt"')
             return dict(Items=data,
                         pattern=self._curr_wlform_args.wlpat,
                         from_line=form_args.from_line,
@@ -255,9 +254,9 @@ class Wordlist(Kontext):
                 form_args.saveformat, subtype='wordlist')
             writer.set_col_types(int, str, float)
 
-            self._headers['Content-Type'] = writer.content_type()
-            self._headers['Content-Disposition'] = 'attachment; filename="{}"'.format(
-                mkfilename(form_args.saveformat))
+            self._response.set_header('Content-Type', writer.content_type())
+            self._response.set_header(
+                'Content-Disposition', f'attachment; filename="{mkfilename(form_args.saveformat)}"')
             # write the header first, if required
             if form_args.colheaders:
                 writer.writeheading(('', self._curr_wlform_args.wlattr, 'freq'))

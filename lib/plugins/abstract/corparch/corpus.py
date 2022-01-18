@@ -126,6 +126,15 @@ class QuerySuggest:
     providers: List[Any] = field(default_factory=list)
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class StructAttrInfo:
+    structure_name: str
+    name: str
+    label: Optional[str] = None
+    dt_format: Optional[str] = None
+
+
 @dataclass_json
 @dataclass
 class CorpusInfo:

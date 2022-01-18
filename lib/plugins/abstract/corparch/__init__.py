@@ -38,14 +38,15 @@ files.
 """
 
 import abc
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Iterable, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from controller.plg import PluginCtx
 import l10n
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
-from .corpus import CorpusInfo
+from .corpus import CorpusInfo, StructAttrInfo
+from .error import CorparchError
 
 
 @dataclass_json
@@ -94,6 +95,24 @@ class AbstractCorporaArchive(abc.ABC):
         {id, path, web, sentence_struct, tagset, speech_segment, bib_struct, citation_info,
         metadata} where metadata is a dict with keys {database, label_attr, id_attr, desc, keywords}.
         """
+
+    def get_structattrs_info(
+            self, plugin_ctx: 'PluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
+        """
+        Return information for one or more structural attributes. Please note that it should always return
+        at least 'name' and 'structure_name'. In case no 'label' is available, None should be used
+        in a respective item.
+
+        arguments:
+        full_name -- a fully qualified name (e.g. 'doc.author', 'sp.id')
+        """
+        ans = []
+        for full_name in full_names:
+            tmp = full_name.split('.')
+            if len(tmp) != 2:
+                raise CorparchError(f'invalid structattr full_name: {full_name}')
+            ans.append(StructAttrInfo(structure_name=tmp[0], name=tmp[1]))
+        return ans
 
     def mod_corplist_menu(self, plugin_ctx: 'PluginCtx', menu_item):
         """

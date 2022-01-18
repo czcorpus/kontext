@@ -18,35 +18,41 @@
 # 02110-1301, USA.
 
 from collections import defaultdict
+from typing import Dict, Union, Any, List, Iterable, Optional
 
 
-class MultiDict(object):
+class MultiDict:
     """
     A key->[list of values] dictionary for simple values
     (ints, strings, bools).
     """
 
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Union[Any, List[Any]]]):
         """
-
         arguments:
             data -- a dictionary where value can be a list of values
                     or a single value (in such case, it is converted to
                     a single value list).
         """
         self._data = defaultdict(lambda: [])
-        for k, v in list(data.items()):
+        for k, v in data.items():
             if type(v) is list:
                 self._data[k] = v
+            elif isinstance(v, Iterable):
+                self._data[v] = list(v)
             else:
                 self._data[k].append(v)
 
-    def __getitem__(self, item):
-        if len(self._data[item]) > 0:
-            return self._data[item][0]
+    def __getitem__(self, key: str) -> Optional[Any]:
+        """
+        Return first item with the specified key.
+        If no such item is available, None is returned.
+        """
+        if len(self._data[key]) > 0:
+            return self._data[key][0]
 
     def __repr__(self):
         return dict(self._data).__repr__()
 
-    def getlist(self, item):
+    def getlist(self, item) -> List[Any]:
         return self._data[item]
