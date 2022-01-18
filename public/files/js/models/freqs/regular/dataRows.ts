@@ -149,18 +149,20 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             quickSaveRowLimit
         });
 
-        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
-            MainMenuActions.ShowSaveForm.name,
+        this.addActionHandler>(
+            MainMenuActions.ShowSaveForm,
             (state, action) => {state.saveFormActive = true}
         );
 
-        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
-            Actions.ResultCloseSaveForm.name,
-            (state, action) => {state.saveFormActive = false}
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
+            (state, action) => {
+                state.saveFormActive = false;
+            }
         );
 
-        this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
-            Actions.ResultSetMinFreqVal.name,
+        this.addActionHandler(
+            Actions.ResultSetMinFreqVal,
             (state, action) => {
                 if (validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
@@ -171,8 +173,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
-            Actions.ResultApplyMinFreq.name,
+        this.addActionHandler(
+            Actions.ResultApplyMinFreq,
             (state, action) => {
                 state.isBusy = true,
                 state.currentPage = '1';
@@ -187,8 +189,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultDataLoaded>(
-            Actions.ResultDataLoaded.name,
+        this.addActionHandler(
+            Actions.ResultDataLoaded,
             (state, action) => {
                 state.isBusy = false;
                 if (action.error) {
@@ -200,15 +202,15 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.StatePushToHistory>(
-            Actions.StatePushToHistory.name,
+        this.addActionHandler(
+            Actions.StatePushToHistory,
             (state, action) => {
                 this.pushStateToHistory(state);
             }
         );
 
-        this.addActionHandler<typeof Actions.PopHistory>(
-            Actions.PopHistory.name,
+        this.addActionHandler(
+            Actions.PopHistory,
             (state, action) => {
                 state.currentPage = action.payload.currentPage;
                 state.flimit = action.payload.flimit;
@@ -224,8 +226,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultSortByColumn>(
-            Actions.ResultSortByColumn.name,
+        this.addActionHandler(
+            Actions.ResultSortByColumn,
             (state, action) => {
                 state.isBusy = true;
                 state.sortColumn = action.payload.value;
@@ -240,8 +242,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultSetCurrentPage>(
-            Actions.ResultSetCurrentPage.name,
+        this.addActionHandler(
+            Actions.ResultSetCurrentPage,
             (state, action) => {
                 if (validateNumber(action.payload.value, 1)) {
                     state.isBusy = true;
@@ -262,8 +264,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSubmit>(
-            Actions.SaveFormSubmit.name,
+        this.addActionHandler(
+            Actions.SaveFormSubmit,
             null,
             (state, action, dispatch) => {
                 dispatch<typeof Actions.ResultPrepareSubmitArgsDone>({
@@ -273,8 +275,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         ).sideEffectAlsoOn(MainMenuActions.DirectSave.name);
 
-        this.addActionHandler<typeof Actions.ResultApplyQuickFilter>(
-            Actions.ResultApplyQuickFilter.name,
+        this.addActionHandler(
+            Actions.ResultApplyQuickFilter,
             null,
             (state, action, dispatch) => {
                 this.pageModel.setLocationPost(action.payload.url, {}, action.payload.blankWindow);
