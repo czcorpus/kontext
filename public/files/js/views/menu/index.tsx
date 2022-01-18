@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import { Dict, List } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 import { IActionDispatcher, IModel, Bound } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
