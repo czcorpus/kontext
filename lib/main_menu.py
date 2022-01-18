@@ -146,8 +146,14 @@ class AbstractMenuItem:
         """
         By a single argument here we understand a 2-tuple (name, value)
         """
-        for arg in args:
-            self._args[arg[0]] = arg[1]
+        for k, v in args:
+            if k in self._args:
+                if type(self._args[k]) is list:
+                    self._args[k].append(v)
+                else:
+                    self._args[k] = [self._args[k], v]
+            else:
+                self._args[k] = v
         return self
 
     def filter_empty_args(self):
@@ -482,7 +488,7 @@ class MenuGenerator(object):
 
         self.freq_text_types = (
             ConcMenuItem(MainMenu.FREQUENCY('text-types'), te('Text Types'), 'freqs')
-            .add_args(*self._args.get('ttcrit', []))
+            .add_args(*[('fcrit', v) for v in self._args.get('ttcrit', [])])
             .add_args(('ml', 0))
             .enable_if(lambda d: bool(d['ttcrit']))
         )

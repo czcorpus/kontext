@@ -164,7 +164,7 @@ export class AppNavigation implements Kontext.IURLHandler, Kontext.IAjaxHandler 
             ).join('&');
         }
         return this.conf.getConf('rootPath') +
-                (path.indexOf('/') === 0 ? path.substr(1) : path) +
+                (path.indexOf('/') === 0 ? path.substring(1) : path) +
                 (urlArgs ? '?' + urlArgs : '');
     }
 
