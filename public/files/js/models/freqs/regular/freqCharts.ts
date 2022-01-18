@@ -262,8 +262,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                 data: importData(
                                     this.pageModel,
                                     block,
-                                    data.fmaxitems,
-                                    parseInt(state.currentPage[data.fcrit[idx].fcrit])
+                                    parseInt(state.currentPage[block.fcrit]),
+                                    data.fmaxitems
                                 )
                             },
                         });

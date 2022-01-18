@@ -249,9 +249,9 @@ export function init(
                                 props.data,
                                 Dict.toEntries(),
                                 List.map(([sourceId, block], i) => (
-                                    <div>
+                                    <div key={`block:${sourceId}`}>
                                         {block ?
-                                          <div key={`block:${sourceId}`}>
+                                          <div>
                                                 <Paginator currentPage={props.currentPage[sourceId]}
                                                         sourceId={sourceId}
                                                         hasNextPage={hasNextPage(props, sourceId)}

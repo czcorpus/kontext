@@ -301,8 +301,8 @@ class FreqPage {
                         block =>importFreqData(
                             this.layoutModel,
                             block,
-                            this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                            1
+                            this.layoutModel.getConf<number>('CurrentPage'),
+                            this.layoutModel.getConf<number>('FreqItemsPerPage')
                         ),
                         this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                     ),
@@ -319,8 +319,8 @@ class FreqPage {
                         block =>importFreqData(
                             this.layoutModel,
                             block,
-                            this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                            1
+                            1, // TODO this is debatable even for a chart output
+                            this.layoutModel.getConf<number>('FreqItemsPerPage')
                         ),
                         this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                     ),
@@ -404,13 +404,9 @@ class FreqPage {
             case 'tt':
             case 'ml': {
                 const state = this.freqResultModel.getState(); // no antipattern here
+                const firstCrit = List.head(state.freqCrit);
                 const args = {
-                    submitArgs: pipe(
-                        state.data,
-                        Dict.map(
-                            (v, fcrit) => this.freqResultModel.getSubmitArgs(state, fcrit)
-                        )
-                    ),
+                    ...this.freqResultModel.getSubmitArgs(state, firstCrit),
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(

@@ -69,23 +69,25 @@ export function importData(
     currentPage:number,
     pageSize:number,
 ):ResultBlock {
-
     const posTagAttrs = getPositionalTagAttrs(pageModel);
     return {
-        Items: List.map((item, i) => ({
-            idx: i + (currentPage - 1) * pageSize,
-            Word: List.map(x => x.n, item.Word),
-            pfilter: createQuickFilterUrl(pageModel, item.pfilter),
-            nfilter: createQuickFilterUrl(pageModel, item.nfilter),
-            fbar: item.fbar,
-            freqbar: item.freqbar,
-            rel: item.rel,
-            relbar: item.relbar,
-            freq: item.freq,
-            nbar: item.nbar,
-            norm: item.norm,
-            norel: item.norel
-        }), data.Items),
+        Items: List.map(
+            (item, i) => ({
+                idx: i + (currentPage - 1) * pageSize,
+                Word: List.map(x => x.n, item.Word),
+                pfilter: createQuickFilterUrl(pageModel, item.pfilter),
+                nfilter: createQuickFilterUrl(pageModel, item.nfilter),
+                fbar: item.fbar,
+                freqbar: item.freqbar,
+                rel: item.rel,
+                relbar: item.relbar,
+                freq: item.freq,
+                nbar: item.nbar,
+                norm: item.norm,
+                norel: item.norel
+            }),
+            data.Items
+        ),
         Head: List.map(
             item => ({
                 ...item,
@@ -140,7 +142,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     freqCrit,
                     List.concat(freqCritAsync),
                     List.map(
-                        k => tuple(k, initialData.length > 1 ? null : `${currentPage}`)
+                        (k, i) => tuple(k, i === 0 ? `${currentPage}` : `1`)
                     ),
                     Dict.fromEntries()
                 ),
@@ -159,7 +161,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
         this.pageModel = pageModel;
-
         this.freqLoader = freqLoader;
 
         this.saveModel = new FreqResultsSaveModel({
@@ -326,7 +327,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         dispatch:SEDispatcher,
         pushHistory:boolean
     ):void {
-
         load.subscribe({
             next: data => {
                 List.forEach(
@@ -337,8 +337,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                 block: importData(
                                     this.pageModel,
                                     block,
+                                    parseInt(state.currentPage[block.fcrit]),
                                     data.fmaxitems,
-                                    parseInt(state.currentPage[data.fcrit[idx].fcrit])
                                 )
                             },
                         });
@@ -361,13 +361,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     }
 
     private pushStateToHistory(state:FreqDataRowsModelState):void {
+        const firstCrit = List.head(state.freqCrit);
         const args = {
-            submitArgs: pipe(
-                state.data,
-                Dict.map(
-                    (v, fcrit) => this.getSubmitArgs(state, fcrit)
-                )
-            ),
+            ...this.getSubmitArgs(state, firstCrit),
             format: undefined
         };
         this.pageModel.getHistory().pushState(
@@ -377,9 +373,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 onPopStateAction: {
                     name: Actions.PopHistory.name,
                     payload: {
-                        currentPage: state.currentPage,
+                        currentPage: {...state.currentPage},
                         flimit: state.flimit,
-                        sortColumn: state.sortColumn
+                        sortColumn: {...state.sortColumn}
                     }
                 }
             },
