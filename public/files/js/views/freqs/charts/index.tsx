@@ -143,7 +143,7 @@ export function init(
                     <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}alt={he.translate('global__loading')} /> :
                     null}
             </fieldset>
-            {props.type[props.sourceId] === 'bar' ?
+            {props.type === 'bar' ?
                 <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
                     <BarChart data={props.data.Items} layout='vertical'>
                         <CartesianGrid strokeDasharray='3 3'/>
@@ -154,20 +154,20 @@ export function init(
                     </BarChart>
                 </ResponsiveContainer> :
 
-            props.type[props.sourceId] === 'cloud' ?
+            props.type === 'cloud' ?
                 <ResponsiveContainer width={300} height={300}>
                     <WordCloud width={300} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
                 </ResponsiveContainer> :
 
-            <ResponsiveContainer width="95%" height={300}>
-                <LineChart data={props.data.Items}>
-                    <CartesianGrid strokeDasharray='3 3'/>
-                    <XAxis type='category' height={50} dataKey={v => v.Word[0]} />
-                    <YAxis type='number' />
-                    <Tooltip />
-                    <Line dataKey={props.dataKey} />
-                </LineChart>
-            </ResponsiveContainer>
+                <ResponsiveContainer width="95%" height={300}>
+                    <LineChart data={props.data.Items}>
+                        <CartesianGrid strokeDasharray='3 3'/>
+                        <XAxis type='category' height={50} dataKey={v => v.Word[0]} />
+                        <YAxis type='number' />
+                        <Tooltip />
+                        <Line dataKey={props.dataKey} />
+                    </LineChart>
+                </ResponsiveContainer>
             }
         </div>;
     };
