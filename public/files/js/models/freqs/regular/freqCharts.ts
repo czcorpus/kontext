@@ -35,6 +35,7 @@ export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
     freqCrit:Array<string>;
+    freqCritAsync:Array<string>;
     formProps:FreqFormInputs;
     initialData:Array<ResultBlock>;
     currentPage:number;
@@ -62,14 +63,17 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
 
-    constructor({dispatcher, pageModel, freqCrit, formProps, initialData,
-        currentPage, fmaxitems, freqLoader}:FreqChartsModelArgs) {
+    constructor({
+        dispatcher, pageModel, freqCrit, freqCritAsync, formProps,
+        initialData, currentPage, fmaxitems, freqLoader
+    }:FreqChartsModelArgs) {
 
         super(
             dispatcher,
             {
                 data: initialData,
                 freqCrit,
+                freqCritAsync,
                 currentPage: initialData.length > 1 ? null : `${currentPage}`,
                 sortColumn: formProps.freq_sort,
                 ftt_include_empty: formProps.ftt_include_empty,

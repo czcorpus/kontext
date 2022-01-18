@@ -60,6 +60,7 @@ export interface BaseFreqModelState {
     currentPage:string|null; // null means multi-block output which cannot be paginated
     sortColumn:string
     freqCrit:Array<string>;
+    freqCritAsync:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
 }
@@ -69,6 +70,8 @@ export interface FreqServerArgs extends ConcServerArgs {
     freqlevel:number;
     freq_sort:string;
     ftt_include_empty:boolean;
+    fttattr?:string|Array<string>;
+    fttattr_async?:string|Array<string>;
     [other:string]:any;
 }
 

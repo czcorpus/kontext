@@ -21,7 +21,7 @@ import re
 import json
 from collections import defaultdict
 import time
-from typing import Dict, Any, List, Union, Optional
+from typing import Dict, Any, List, Union, Optional, Tuple
 from dataclasses import asdict
 
 from controller.kontext import LinesGroups, Kontext
@@ -929,18 +929,20 @@ class Actions(Querying):
         return out
 
     @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
-    def freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, force_cache=0):
+    def freqs(self, fcrit=(), fcrit_async=(), flimit=0, freq_sort='', ml=0, force_cache=0):
         """
         display a frequency list
         """
         try:
             require_existing_conc(self.corp, self.args.q)
-            return self._freqs(fcrit, flimit, freq_sort, ml, force_cache)
+            return self._freqs(fcrit, fcrit_async, flimit, freq_sort, ml, force_cache)
         except ConcNotFoundException:
             args = list(self._request.args.items()) + [('next', 'freqs')]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-    def _freqs(self, fcrit=(), flimit=0, freq_sort='', ml=0, force_cache=0):
+    def _freqs(
+            self, fcrit: Tuple[str, ...], fcrit_async: Tuple[str, ...], flimit: int, freq_sort: str,
+            ml: int, force_cache: int):
 
         self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
                                     MainMenu.CONCORDANCE('query-overview'))
@@ -993,6 +995,7 @@ class Actions(Querying):
         calc_result = freq_calc.calculate_freqs(args)
         result.update(
             fcrit=fcrit,
+            fcrit_async=fcrit_async,
             Blocks=calc_result['data'],
             paging=0,
             concsize=calc_result['conc_size'],
@@ -1126,7 +1129,7 @@ class Actions(Querying):
         self.args.fmaxitems = to_line - from_line + 1
 
         # following piece of sh.t has hidden parameter dependencies
-        result = self.freqs(fcrit, flimit, freq_sort, ml)
+        result = self.freqs(fcrit, flimit, (), freq_sort, ml)
         saved_filename = self.args.corpname
         output = None
         if saveformat == 'text':
@@ -1190,7 +1193,7 @@ class Actions(Querying):
         multilevel frequency list
         """
         fcrit = multi_level_crit(freqlevel, **kwargs)
-        result = self.freqs([fcrit], flimit, '', 1)
+        result = self.freqs([fcrit], (), flimit, '', 1)
         result['ml'] = 1
         self._session['last_freq_level'] = freqlevel
         tmp = defaultdict(lambda: [])
@@ -1205,10 +1208,10 @@ class Actions(Querying):
         return result
 
     @exposed(access_level=1, template='freqs.html', page_model='freq', func_arg_mapped=True)
-    def freqtt(self, flimit=0, fttattr=()):
+    def freqtt(self, flimit=0, fttattr=(), fttattr_async=()):
         if not fttattr:
             raise ConcordanceQueryParamsError(translate('No text type selected'))
-        return self.freqs(['%s 0' % a for a in fttattr], flimit)
+        return self.freqs(['%s 0' % a for a in fttattr], ['%s 0' % a for a in fttattr_async], flimit)
 
     @exposed(access_level=1, page_model='freq', template='freqs.html')
     def freqct(self, request):
