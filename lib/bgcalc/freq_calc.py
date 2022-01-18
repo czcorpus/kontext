@@ -263,17 +263,19 @@ def calculate_freqs(args: FreqCalsArgs):
     The class is able to cache the data in a background process/task. This prevents KonText to calculate
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
-    cache = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-                          q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
-    calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
-                                        ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
-                                        collator_locale=args.collator_locale)
+    cache = FreqCalcCache(
+        corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
+        q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
+    calc_result, cache_path = cache.get(
+        fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
+        ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
+        collator_locale=args.collator_locale)
 
     if calc_result is None:
         args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task('calculate_freqs', args=(args.to_dict(),),
-                               time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task(
+            'calculate_freqs', args=(args.to_dict(),), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
 
@@ -294,11 +296,13 @@ def calculate_freqs(args: FreqCalsArgs):
             lastpage = 1
         else:
             lastpage = 0
-        ans = [dict(Total=total_length,
-                    TotalPages=int(math.ceil(total_length / float(items_per_page))),
-                    Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
-                    Head=data[0].get('Head', []),
-                    SkippedEmpty=data[0].get('SkippedEmpty', False))]
+        ans = [dict(
+            Total=total_length,
+            TotalPages=int(math.ceil(total_length / float(items_per_page))),
+            Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
+            Head=data[0].get('Head', []),
+            SkippedEmpty=data[0].get('SkippedEmpty', False),
+            fcrit=args.fcrit)]
     else:
         for item in data:
             if 'Items' not in item:

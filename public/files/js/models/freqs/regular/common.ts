@@ -53,12 +53,13 @@ export interface ResultBlock {
     Items:Array<ResultItem>;
     Head:Array<ResultHeader>;
     SkippedEmpty:boolean;
+    fcrit:string; // original encoded freq. criterium (serves as an identifier of the result)
 }
 
 export interface BaseFreqModelState {
-    data:Array<ResultBlock>;
-    currentPage:string|null; // null means multi-block output which cannot be paginated
-    sortColumn:string
+    data:{[sourceId:string]:ResultBlock};
+    currentPage:{[sourceId:string]:string};
+    sortColumn:{[sourceId:string]:string};
     freqCrit:Array<string>;
     freqCritAsync:Array<string>;
     ftt_include_empty:boolean;

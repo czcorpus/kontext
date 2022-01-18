@@ -40,7 +40,7 @@ export class Actions {
         };
 
     static ResultDataLoaded: Action<{
-        data:Array<ResultBlock>;
+        block:ResultBlock;
     }> = {
             name: 'FREQ_RESULT_DATA_LOADED'
         };
@@ -56,12 +56,14 @@ export class Actions {
 
     static ResultSortByColumn: Action<{
         value:string;
+        sourceId:string;
     }> = {
             name: 'FREQ_RESULT_SORT_BY_COLUMN'
         };
 
     static ResultSetCurrentPage: Action<{
         value:string;
+        sourceId:string;
     }> = {
             name: 'FREQ_RESULT_SET_CURRENT_PAGE'
         };
@@ -115,6 +117,7 @@ export class Actions {
         };
 
     static SaveFormSubmit: Action<{
+        sourceId:string;
     }> = {
             name: 'FREQ_SAVE_FORM_SUBMIT'
         };
@@ -199,31 +202,35 @@ export class Actions {
 
     static FreqChartsChangeUnits: Action<{
         value:FreqChartsAvailableData;
+        sourceId:string;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_UNITS'
         };
 
     static FreqChartsChangeType: Action<{
         value:FreqChartsAvailableTypes;
+        sourceId:string;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_TYPE'
         };
 
     static FreqChartsChangePageSize: Action<{
         value:number;
+        sourceId:string;
         debounced?:boolean;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
         };
 
     static FreqChartsDataLoaded: Action<{
-        data:Array<ResultBlock>;
+        data:ResultBlock;
     }> = {
             name: 'FREQ_CHARTS_DATA_LOADED'
         };
 
     static FreqChartsChangeOrder: Action<{
         value:FreqChartsAvailableOrder;
+        sourceId:string;
     }> = {
             name: 'FREQ_CHARTS_CHANGE_ORDER'
         };

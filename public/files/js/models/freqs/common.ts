@@ -22,9 +22,9 @@ import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/comm
 
 
 export interface HistoryState {
-    currentPage:string;
+    currentPage:{[sourceId:string]:string};
     flimit:string;
-    sortColumn:string;
+    sortColumn:{[sourceId:string]:string};
 }
 
 export interface Item {
@@ -52,6 +52,7 @@ export interface Block {
     Head:Array<Header>;
     Total:number;
     SkippedEmpty:boolean;
+    fcrit:string; // original encoded freq. criterium (serves as an identifier of the result)
 }
 
 export interface FreqResultResponse extends AjaxConcResponse {
