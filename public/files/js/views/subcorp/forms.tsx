@@ -24,7 +24,7 @@ import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/fo
 import { SubcorpWithinFormModel, SubcorpWithinFormModelState, WithinLine } from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
 import { Actions } from '../../models/subcorp/actions';
-import { List } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 import * as S from './style';
 
@@ -44,8 +44,8 @@ export interface SubcorpFormProps {
 
 export interface FormViews {
     SubcorpForm:React.ComponentClass<SubcorpFormProps>;
-    SubcNamePublicCheckbox:React.SFC<{value:boolean}>;
-    SubcDescription:React.SFC<{value:Kontext.FormValue<string>}>;
+    SubcNamePublicCheckbox:React.FC<{value:boolean}>;
+    SubcDescription:React.FC<{value:Kontext.FormValue<string>}>;
 }
 
 export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
@@ -155,8 +155,12 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
             });
         };
 
-        const getStructHint = (structName) => {
-            return (props.structsAndAttrs[structName] || []).join(', ');
+        const getStructHint = (structName:string):string => {
+            return pipe(
+                props.structsAndAttrs[structName] || [],
+                List.map(v => v.name),
+                v => v.join(', ')
+            );
         };
 
         const handleStructChange = (evt) => {
@@ -186,10 +190,16 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                     {'\u00a0'}
                     <select value={props.lineData.structureName} onChange={handleStructChange}>
                     {
-                        Object.keys(props.structsAndAttrs).map(
-                            (item) => <option key={item}
-                                                value={item}
-                                                title={getStructHint(item)}>{item}</option>
+                        pipe(
+                            props.structsAndAttrs,
+                            Dict.keys(),
+                            List.map(
+                                item => (
+                                    <option key={item}
+                                        value={item}
+                                        title={getStructHint(item)}>{item}</option>
+                                )
+                            )
                         )
                     }
                     </select>
@@ -222,7 +232,12 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                 name: Actions.FormWithinLineAdded.name,
                 payload: {
                     negated: false,
-                    structureName: Object.keys(props.structsAndAttrs).sort()[0],
+                    structureName: pipe(
+                        props.structsAndAttrs,
+                        Dict.keys(),
+                        List.sortAlphaBy(v => v),
+                        List.head()
+                    ),
                     attributeCql: ''
                 }
             });
@@ -374,14 +389,6 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
 
     }> = (props) => {
 
-        const renderAttrs = () => {
-            const ans = [];
-            for (let p in props.structsAndAttrs) {
-                ans.push(<li key={p}><strong>{p}</strong>:{'\u00a0'}{props.structsAndAttrs[p].join(', ')}</li>);
-            }
-            return ans;
-        };
-
         const css:React.CSSProperties = {
             position: 'absolute',
             maxWidth: '20em',
@@ -396,7 +403,13 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                     {he.translate('global__within_hint_text')}
                 </div>
                 <ul>
-                    {renderAttrs()}
+                    {pipe(
+                        props.structsAndAttrs,
+                        Dict.toEntries(),
+                        List.map(([struct, items]) => (
+                            <li key={struct}><strong>{struct}</strong>:{'\u00a0'}{List.map(v => v.name, items).join(', ')}</li>
+                        ))
+                    )}
                 </ul>
             </layoutViews.PopupBox>
         );
@@ -509,8 +522,8 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     }
 
     return {
-        SubcorpForm: BoundWithProps(SubcorpForm, subcorpFormModel),
-        SubcNamePublicCheckbox: SubcNamePublicCheckbox,
-        SubcDescription: SubcDescription
+        SubcorpForm: BoundWithProps<SubcorpFormProps, SubcorpFormModelState>(SubcorpForm, subcorpFormModel),
+        SubcNamePublicCheckbox,
+        SubcDescription
     };
 }

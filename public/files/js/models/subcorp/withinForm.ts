@@ -24,7 +24,7 @@ import { CreateSubcorpusWithinArgs, InputMode } from './common';
 import { SubcorpFormModel } from './form';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { throwError } from 'rxjs';
-import { List, pipe, HTTP, tuple } from 'cnc-tskit';
+import { List, pipe, HTTP, tuple, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -73,15 +73,25 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     private subcFormModel:SubcorpFormModel;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, inputMode:InputMode,
-            structsAndAttrs:Kontext.StructsAndAttrs, subcFormModel:SubcorpFormModel) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pageModel:PageModel,
+        inputMode:InputMode,
+        structsAndAttrs:Kontext.StructsAndAttrs,
+        subcFormModel:SubcorpFormModel
+    ) {
         super(
             dispatcher,
             {
                 lines: [new WithinLine(
                     0,
                     false,
-                    Object.keys(structsAndAttrs).sort()[0],
+                    pipe(
+                        structsAndAttrs,
+                        Dict.keys(),
+                        List.sortedAlphaBy(v => v),
+                        List.head()
+                    ),
                     {value: '', isRequired: true, isInvalid: false}
                 )],
                 lineIdGen: 0,

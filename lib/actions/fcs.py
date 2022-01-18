@@ -155,7 +155,7 @@ class Actions(Kontext):
 
     @exposed(return_type='template', template='fcs/v1_complete.html', skip_corpus_init=True, http_method=('GET', 'HEAD'))
     def v1(self, req):
-        self._headers['Content-Type'] = 'application/xml'
+        self._response.set_header('Content-Type', 'application/xml')
         current_version = 1.2
 
         default_corp_list = settings.get('corpora', 'default_corpora', [])
@@ -239,7 +239,7 @@ class Actions(Kontext):
                 pass
             elif recordPacking == 'string':
                 # TODO(jm)!!!
-                self._headers['Content-Type'] = 'text/plain; charset=utf-8'
+                self._response.set_header('Content-Type', 'text/plain; charset=utf-8')
             else:
                 raise Exception(71, 'recordPacking', 'Unsupported record packing')
 
@@ -324,7 +324,7 @@ class Actions(Kontext):
         """
             Returns XSL template for rendering FCS XML.
         """
-        self._headers['Content-Type'] = 'text/xsl; charset=utf-8'
+        self._response.set_header('Content-Type', 'text/xsl; charset=utf-8')
         custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
         if custom_hd_inject_path:
             with open(custom_hd_inject_path) as fr:

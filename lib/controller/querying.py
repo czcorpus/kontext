@@ -31,6 +31,7 @@ from main_menu import MainMenu
 from texttypes import TextTypesCache
 import plugins
 from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
+from plugins.abstract.corparch.corpus import StructAttrInfo
 from argmapping.conc.query import QueryFormArgs
 from argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
 from argmapping.conc.sort import SortFormArgs
@@ -261,11 +262,12 @@ class Querying(Kontext):
         except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
             raise NotFoundException(translate('Query information not stored: {}').format(ex))
 
-    def _get_structs_and_attrs(self) -> Dict[str, List[str]]:
-        structs_and_attrs: Dict[str, List[str]] = defaultdict(list)
+    def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
+        structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = (t for t in self.corp.get_structattrs() if t != '')
-        for s, a in [t.split('.') for t in attrs]:
-            structs_and_attrs[s].append(a)
+        with plugins.runtime.CORPARCH as ca:
+            for attr in ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
+                structs_and_attrs[attr.structure_name].append(attr)
         return dict(structs_and_attrs)
 
     def add_globals(self, request, result, methodname, action_metadata):

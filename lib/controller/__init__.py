@@ -23,33 +23,24 @@ KonText controller and related auxiliary objects
 
 from typing import Dict, List, Tuple, Callable, Any, Union, Optional, TYPE_CHECKING, TypeVar
 
-from dataclasses_json.api import DataClassJsonMixin
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .plg import PluginCtx
 
 import os
-from xml.sax.saxutils import escape
-from urllib.parse import unquote, quote, urlparse
-import json
 import logging
 import time
-import re
 from functools import partial
 import types
 import hashlib
 import uuid
-import jinja2
 from dataclasses import fields, asdict
+from abc import abstractmethod, ABC
 
 import werkzeug.urls
-import werkzeug.http
 import werkzeug.exceptions
 from werkzeug import Request
 
-from translation import ugettext
-import l10n
-import strings
 import plugins
 import settings
 from translation import ugettext as translate
@@ -58,17 +49,14 @@ from argmapping import Persistence, Args
 from argmapping.func import convert_func_mapping_types
 from .errors import (ForbiddenException, UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
-
+from .response import KResponse, ResultType
+from .routing import Routing
+from .cookie import KonTextCookie
 import werkzeug.wrappers
 import http.cookies
 
 T = TypeVar('T')
-ResultType = Union[
-    Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
-    Dict[str, Any],
-    str,
-    bytes,
-    DataClassJsonMixin]
+
 
 # this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
@@ -115,31 +103,6 @@ def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple =
     return wrapper
 
 
-def val_to_js(obj):
-    s = obj.to_json() if callable(getattr(obj, 'to_json', None)) else json.dumps(obj)
-    return re.sub(
-        r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', s, flags=re.IGNORECASE)
-
-
-class KonTextCookie(http.cookies.BaseCookie):
-    """
-    Cookie handler which encodes and decodes strings
-    as URI components.
-    """
-
-    def value_decode(self, val):
-        return unquote(val), val
-
-    def value_encode(self, val):
-        strval = str(val)
-        return strval, quote(strval)
-
-
-@jinja2.pass_context
-def translat_filter(_, s):
-    return ugettext(s)
-
-
 def get_protocol(environ):
     if 'HTTP_X_FORWARDED_PROTO' in environ:
         return environ['HTTP_X_FORWARDED_PROTO']
@@ -149,7 +112,7 @@ def get_protocol(environ):
         return environ['wsgi.url_scheme']
 
 
-class Controller(object):
+class Controller(ABC):
     """
     This object serves as a controller of the application. It handles action->method mapping,
     target method processing, result rendering, generates required http headers etc.
@@ -170,46 +133,21 @@ class Controller(object):
         ui_lang -- language used by user
         """
         self._request: werkzeug.wrappers.Request = request
-        self.environ: Dict[str, str] = self._request.environ  # for backward compatibility
+        self.environ: Dict[str, str] = request.environ  # for backward compatibility
+        self._routing: Routing = Routing(self.environ, self.get_mapping_url_prefix(), get_protocol(self.environ))
+        self._response: KResponse = KResponse(self._routing)
         self.ui_lang: str = ui_lang
         self._cookies: KonTextCookie = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))
-        self._new_cookies: KonTextCookie = KonTextCookie()
-        self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
-        self._status: int = 200
         self._system_messages: List[Tuple[str, str]] = []
         self._proc_time: Optional[float] = None
         # a list of functions which must pass (= return None) before any action is performed
         self._validators: List[Callable[[], Exception]] = []
-        # templating engine
-        self._template_dir: str = os.path.realpath(os.path.join(
-            os.path.dirname(__file__), '..', '..', 'templates'))
-        tpl_cache_path = settings.get('global', 'template_engine_cache_path', None)
-        cache = jinja2.FileSystemBytecodeCache(tpl_cache_path) if tpl_cache_path else None
-        self._template_env: jinja2.Environment = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(searchpath=self._template_dir),
-            bytecode_cache=cache,
-            trim_blocks=True,
-            lstrip_blocks=True)
-        self._template_env.filters.update(
-            to_json=val_to_js,
-            shorten=strings.shorten,
-            camelize=l10n.camelize,
-            _=translat_filter,
-            xmle=escape,
-            create_action=lambda a, p=None: self.create_url(a, p if p is not None else {})
-        )
-        ##
         self.args: Args = Args()
         self._uses_valid_sid: bool = True
         self._plugin_ctx: Optional[PluginCtx] = None  # must be implemented in a descendant
 
-        self._redirect_safe_domains: Tuple[str] = (
-            urlparse(self.get_root_url()).netloc,
-            *settings.get('global', 'redirect_safe_domains', ())
-        )
-
     def set_respose_status(self, status: int):
-        self._status = status
+        self._response.set_http_status(status)
 
     def init_session(self) -> None:
         """
@@ -231,8 +169,11 @@ class Controller(object):
                 except Exception as ex:
                     self._session['user'] = auth.anonymous_user()
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                    self.add_system_message('error', translate('User authentication error. Please try to reload the page or '
-                                                               'contact system administrator.'))
+                    self.add_system_message(
+                        'error',
+                        translate(
+                            'User authentication error. Please try to reload the page or '
+                            'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self) -> Dict[str, Any]:
@@ -287,20 +228,6 @@ class Controller(object):
         """
         self._system_messages.append((msg_type, text))
 
-    def _export_status(self) -> str:
-        """
-        Exports numerical HTTP status into a HTTP header format
-        (e.g. 200 -> '200 OK'
-
-        TODO: values not found in the STATUS_MAP should be treated in a better way
-        """
-        s = werkzeug.http.HTTP_STATUS_CODES.get(self._status, '')
-        return '%s  %s' % (self._status, s)
-
-    @property
-    def corp_encoding(self) -> str:
-        return 'iso-8859-1'
-
     def add_globals(self, request: werkzeug.Request, result: Dict[str, Any], methodname: str,
                     action_metadata: Dict[str, Any]) -> None:
         """
@@ -316,103 +243,20 @@ class Controller(object):
         result['user_id'] = self.session_get('user', 'id')
 
     def get_current_url(self) -> str:
-        """
-        Returns an URL representing current application state
-        """
-        action_str = '/'.join([x for x in self.get_current_action() if x])
-        query = '?' + self.environ.get('QUERY_STRING', '')
-        return self.get_root_url() + action_str + query
+        return self._routing.get_current_url()
 
     def updated_current_url(self, params: Dict[str, Any]) -> str:
-        """
-        Modifies current URL using passed parameters.
-
-        Devel. note: the method must preserve existing non-unique 'keys'
-        (because of current app's architecture derived from Bonito2).
-        This means parameter list [(k1, v1), (k2, v2),...] cannot be
-        converted into a dictionary and then worked on because some
-        data would be lost in such case.
-
-        arguments:
-        params -- a dictionary containing parameter names and values
-
-        returns:
-        updated URL
-        """
-        import urllib.parse
-        import urllib.error
-
-        parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
-        old_params = dict(urllib.parse.parse_qsl(parsed_url[4]))
-        new_params = []
-        for k, v in old_params.items():
-            if k in params:
-                new_params.append((k, params[k]))
-            else:
-                new_params.append((k, v))
-
-        for k, v in list(params.items()):
-            if k not in old_params:
-                new_params.append((k, v))
-
-        parsed_url[4] = urllib.parse.urlencode(new_params)
-        return urllib.parse.urlunparse(parsed_url)
+        return self._routing.updated_current_url(params)
 
     def get_current_action(self) -> Tuple[str, str]:
-        """
-        Returns a 2-tuple where:
-        1st item = module name (or an empty string if an implicit one is in use)
-        2nd item = action method name
-        """
-        prefix, action = self.environ.get('PATH_INFO', '').rsplit('/', 1)
-        return prefix.rsplit('/', 1)[-1], action
+        return self._routing.get_current_action()
 
     def get_root_url(self) -> str:
-        """
-        Returns the root URL of the application (based on environmental variables). All the action module
-        path elements and action names are removed. E.g.:
-            The app is installed in http://127.0.0.1/app/ and it is currently processing
-            http://127.0.0.1/app/user/login then root URL is still http://127.0.0.1/app/
+        return self._routing.get_root_url()
 
-        Please note that KonText always normalizes PATH_INFO environment
-        variable to '/' (see public/app.py).
-        """
-        module, _ = self.environ.get('PATH_INFO', '').rsplit('/', 1)
-        module = '%s/' % module
-        if module.endswith(self.get_mapping_url_prefix()):
-            action_module_path = module[:-len(self.get_mapping_url_prefix())]
-        else:
-            action_module_path = ''
-        if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
-            action_module_path = action_module_path[1:]
-        protocol = get_protocol(self.environ)
-        url_items = ('%s://%s' % (protocol, settings.get_str('global', 'http_host',
-                                                             self.environ.get('HTTP_HOST'))),
-                     settings.get_str('global', 'action_path_prefix', ''),
-                     action_module_path)
-        return '/'.join([x for x in [x.strip('/') for x in url_items] if bool(x)]) + '/'
-
-    def create_url(self, action: str, params: Union[Dict[str, Union[str, int, float, bool]], List[Tuple[str, Any]]]) -> str:
-        """
-        Generates URL from provided action identifier and parameters.
-        Please note that utf-8 compatible keys and values are expected here
-        (i.e. you can pass either pure ASCII values or UTF-8 ones).
-
-        arguments:
-        action -- action identification (e.g. 'first_form', 'admin/users')
-        params -- a dict-like object containing parameter names and values
-        """
-        root = self.get_root_url()
-
-        def convert_val(x):
-            return x.encode('utf-8') if isinstance(x, str) else str(x)
-
-        fparams = params.items() if isinstance(params, dict) else params
-        params_str = '&'.join(f'{k}={quote(convert_val(v))}' for k, v in fparams if v is not None)
-        if len(params_str) > 0:
-            return f'{root}{action}?{params_str}'
-        else:
-            return f'{root}{action}'
+    def create_url(
+            self, action: str, params: Union[Dict[str, Union[str, int, float, bool]], List[Tuple[str, Any]]]) -> str:
+        return self._routing.create_url(action, params)
 
     def _validate_http_method(self, action_metadata: Dict[str, Any]) -> None:
         hm = action_metadata.get('http_method', 'GET')
@@ -477,6 +321,7 @@ class Controller(object):
                 ans.update(method_obj.__dict__)
         return ans
 
+    @abstractmethod
     def get_mapping_url_prefix(self) -> str:
         """
         Each action controller must specify a path prefix of PATH_INFO env. variable
@@ -487,8 +332,7 @@ class Controller(object):
         /stats/
         /tools/admin/
         """
-        raise NotImplementedError(
-            'Each action controller must implement method get_mapping_url_prefix()')
+        pass
 
     def _import_req_path(self) -> List[str]:
         """
@@ -512,37 +356,16 @@ class Controller(object):
         return path_split
 
     def redirect(self, url: str, code: int = 303) -> None:
-        """
-        Sets Controller to output HTTP redirection headers.
-        Please note that the method does not interrupt request
-        processing, i.e. the redirect is not immediate. In case
-        immediate redirect is needed raise ImmediateRedirectException.
-
-        arguments:
-        url -- a target URL
-        code -- an optional integer HTTP response code (default is 303)
-        """
-        self._status = code
-        if not url.startswith('http://') and not url.startswith('https://') and not url.startswith('/'):
-            url = self.get_root_url() + url
-
-        if any(urlparse(url).netloc.endswith(domain) for domain in self._redirect_safe_domains):
-            self._headers['Location'] = url
-        else:
-            raise ForbiddenException('Not allowed redirection domain')
+        return self._response.redirect(url, code)
 
     def set_not_found(self) -> None:
         """
         Sets Controller to output HTTP 404 Not Found response
         """
-        if 'Location' in self._headers:
-            del self._headers['Location']
-        self._status = 404
+        self._response.set_not_found()
 
     def set_forbidden(self):
-        if 'Location' in self._headers:
-            del self._headers['Location']
-        self._status = 403
+        self._response.set_forbidden()
 
     def get_http_method(self) -> str:
         return self.environ.get('REQUEST_METHOD', '')
@@ -591,8 +414,10 @@ class Controller(object):
                                 'Plugins cannot overwrite existing action methods (%s.%s)' % (
                                     self.__class__.__name__, action.__name__))
 
-    def pre_dispatch(self, action_name: str, action_metadata: Optional[Dict[str, Any]] = None
-                     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+    def pre_dispatch(
+            self,
+            action_name: str,
+            action_metadata: Optional[Dict[str, Any]] = None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         """
         Allows specific operations to be performed before the action itself is processed.
         """
@@ -609,8 +434,9 @@ class Controller(object):
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 
-    def post_dispatch(self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str],
-                      result: Optional[Dict[str, Any]], err_desc: Optional[Tuple[Exception, Optional[str]]]) -> None:
+    def post_dispatch(
+            self, methodname: str, action_metadata: Dict[str, Any], tmpl: Optional[str],
+            result: Optional[Dict[str, Any]], err_desc: Optional[Tuple[Exception, Optional[str]]]) -> None:
         """
         Allows specific operations to be done after the action itself has been
         processed but before any output or HTTP headers.
@@ -680,7 +506,6 @@ class Controller(object):
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
         methodname = path[0]
-        headers: List[Tuple[str, str]] = []
         err: Optional[Tuple[Exception, Optional[str]]] = None
         action_metadata: Dict[str, Any] = self._get_method_metadata(methodname)
 
@@ -702,7 +527,7 @@ class Controller(object):
                 raise NotFoundException(translate('Unknown action [%s]') % orig_method)
         except CorpusForbiddenException as ex:
             err = (ex, None)
-            self._status = ex.code
+            self._response.set_http_status(ex.code)
             msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
@@ -712,13 +537,13 @@ class Controller(object):
             self.redirect(ex.url, ex.code)
         except UserActionException as ex:
             err = (ex, None)
-            self._status = ex.code
+            self._response.set_http_status(ex.code)
             msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(
                 msg_args, action_metadata, 'error', repr(ex) if settings.is_debug_mode() else str(ex))
         except werkzeug.exceptions.BadRequest as ex:
             err = (ex, None)
-            self._status = ex.code
+            self._response.set_http_status(ex.code)
             msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
             tmpl, result = self._run_message_action(msg_args, action_metadata,
                                                     'error', '{0}: {1}'.format(ex.name, ex.description))
@@ -729,7 +554,7 @@ class Controller(object):
             err = (ex, err_id)
             logging.getLogger(__name__).error(
                 '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
-            self._status = 500
+            self._response.set_http_status(500)
             if settings.is_debug_mode():
                 message = fetch_exception_msg(ex)
             else:
@@ -741,15 +566,15 @@ class Controller(object):
         self._proc_time = round(time.time() - self._proc_time, 4)
         self.post_dispatch(methodname, action_metadata, tmpl, result, err)
         # response rendering
-        headers += self.output_headers(action_metadata['return_type'])
-
-        if (self._status < 300 or self._status >= 400) and (tmpl is not None and result is not None):
-            ans_body = self.output_result(
-                methodname, tmpl, result, action_metadata,
-                return_type=action_metadata['return_type'])
-        else:
-            ans_body = ''
-        return self._export_status(), headers, self._uses_valid_sid, ans_body
+        headers = self._response.output_headers(action_metadata['return_type'])
+        ans_body = self._response.output_result(
+            method_name=methodname,
+            template=tmpl,
+            result=result,
+            inject_page_globals=self.inject_globals,
+            action_metadata=action_metadata,
+            return_type=action_metadata['return_type'])
+        return self._response.http_status, headers, self._uses_valid_sid, ans_body
 
     def process_action(self, methodname: str, req_args: RequestArgsProxy) -> Tuple[str, Dict[str, Any]]:
         """
@@ -787,75 +612,11 @@ class Controller(object):
         """
         return werkzeug.urls.url_encode(key_val_pairs)
 
-    def output_headers(self, return_type: str = 'template') -> List[Tuple[str, str]]:
-        """
-        Generates proper content-type signature and
-        creates a cookie to store user's settings
-
-        arguments:
-        return_type -- action return type (json, html, xml,...)
-
-        returns:
-        bool -- True if content should follow else False
-        """
-        if return_type == 'json':
-            self._headers['Content-Type'] = 'application/json'
-        elif return_type == 'xml':
-            self._headers['Content-Type'] = 'application/xml'
-        elif return_type == 'plain':
-            self._headers['Content-Type'] = 'text/plain'
-        # Note: 'template' return type should never overwrite content type here as it is action-dependent
-        ans = []
-        for k, v in sorted([x for x in list(self._headers.items()) if bool(x[1])], key=lambda item: item[0]):
-            ans.append((k, v))
-        # Cookies
-        cookies_same_site = settings.get('global', 'cookies_same_site', None)
-        for cookie in self._new_cookies.values():
-            if cookies_same_site is not None:
-                cookie['Secure'] = True
-                cookie['SameSite'] = cookies_same_site
-            ans.append(('Set-Cookie', cookie.OutputString()))
-        return ans
-
-    def output_result(
-            self, methodname: str, template: str, result: ResultType, action_metadata: Dict[str, Any],
-            return_type: str) -> Union[str, bytes]:
-        """
-        Renders a response body out of a provided data. The concrete form of data transformation
-        depends on the combination of the 'return_type' argument and a type of the 'result'.
-        Typical combinations are (ret. type, data type):
-        'template' + dict
-        'json' + dict
-        'json' + DataClassJsonMixin
-        'plain' + str
-        A callable 'result' can be used for lazy result evaluation or for JSON encoding with custom encoder
-        """
-        if callable(result):
-            result = result()
-        if return_type == 'json':
-            try:
-                if type(result) in (str, bytes):
-                    return result
-                elif isinstance(result, DataClassJsonMixin):
-                    return result.to_json()
-                else:
-                    return json.dumps(result)
-            except Exception as e:
-                self._status = 500
-                return json.dumps(dict(messages=[('error', str(e))]))
-        elif return_type == 'xml':
-            from templating import Type2XML
-            return Type2XML.to_xml(result)
-        elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
-            return result
-        elif isinstance(result, dict):
-            self.add_globals(self._request, result, methodname, action_metadata)
-            template_object = self._template_env.get_template(template)
-            for k in asdict(self.args):
-                if k not in result:
-                    result[k] = getattr(self.args, k)
-            return template_object.render(result)
-        raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
+    def inject_globals(self, methodname: str, action_metadata: Dict[str, Any], result: ResultType):
+        self.add_globals(self._request, result, methodname, action_metadata)
+        for k in asdict(self.args):
+            if k not in result:
+                result[k] = getattr(self.args, k)
 
     # mypy error: missing return statement
     def user_is_anonymous(self) -> bool:  # type: ignore

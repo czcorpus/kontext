@@ -199,6 +199,7 @@ CREATE TABLE corpus_structattr (
   rnumeric enum('yes','no','y','n'),
   subcorpattrs_idx int(11) DEFAULT '-1',
   freqttattrs_idx int(11) DEFAULT '-1',
+  dt_format VARCHAR(40), -- if not NULL then we assume the structural attribute encodes a date-time information
   PRIMARY KEY (corpus_name,structure_name,name),
   CONSTRAINT corpus_structattr_corpus_name_fkey FOREIGN KEY (corpus_name) references kontext_corpus(name),
   CONSTRAINT corpus_structattr_structure_name_fkey FOREIGN KEY (corpus_name, structure_name) REFERENCES corpus_structure (corpus_name, name)

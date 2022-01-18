@@ -20,7 +20,7 @@ import re
 import copy
 from collections import OrderedDict, defaultdict
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 import json
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
@@ -33,7 +33,7 @@ from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusLi
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.abstract.corparch.corpus import (
-    BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo)
+    BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo, StructAttrInfo)
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query
 
@@ -301,6 +301,20 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                 return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
+
+    def get_structattrs_info(
+            self, plugin_ctx: 'PluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
+        items = super().get_structattrs_info(plugin_ctx, corp_name, full_names)
+        items_index = dict((f'{x.structure_name}{x.name}', x) for x in items)
+        data = self.backend.load_corpus_structattrs(corp_name)
+        for row in data:
+            item = items_index.get(f'{row["structure_name"]}{row["name"]}')
+            if item is None:
+                logging.getLogger(__name__).warning(
+                    f'get_structattrs_info: structure {row["structure_name"]} appears to be superfluous')
+                continue
+            item.dt_format = row['dt_format']
+        return items
 
     def mod_corplist_menu(self, plugin_ctx, menu_item):
         if not plugin_ctx.user_is_anonymous:
