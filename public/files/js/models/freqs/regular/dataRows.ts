@@ -36,6 +36,7 @@ export interface FreqDataRowsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
     freqCrit:Array<string>;
+    freqCritAsync:Array<string>;
     formProps:FreqFormInputs;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
@@ -119,13 +120,16 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     private freqLoader:FreqDataLoader;
 
-    constructor({dispatcher, pageModel, freqCrit, formProps, saveLinkFn,
-                quickSaveRowLimit, initialData, currentPage, freqLoader}:FreqDataRowsModelArgs) {
+    constructor({
+        dispatcher, pageModel, freqCrit, freqCritAsync, formProps, saveLinkFn,
+        quickSaveRowLimit, initialData, currentPage, freqLoader
+    }:FreqDataRowsModelArgs) {
         super(
             dispatcher,
             {
                 data: initialData,
                 freqCrit,
+                freqCritAsync,
                 currentPage: initialData.length > 1 ? null : `${currentPage}`,
                 sortColumn: formProps.freq_sort,
                 ftt_include_empty: formProps.ftt_include_empty,
@@ -340,6 +344,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit: state.freqCrit,
+            fcrit_async: state.freqCritAsync,
             flimit: parseInt(state.flimit),
             freq_sort: state.sortColumn,
             // fpage: for client, null means 'multi-block' output, for server '1' must be filled in

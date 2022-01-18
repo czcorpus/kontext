@@ -293,6 +293,7 @@ class FreqPage {
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
                     freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
@@ -309,6 +310,7 @@ class FreqPage {
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
                     freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     initialData: importFreqData(
                         this.layoutModel,

@@ -317,7 +317,8 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     private submit(state:TTFreqFormModelState):void {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
-            fttattr: state.fttattr,
+            fttattr: List.head(state.fttattr),
+            fttattr_async: List.tail(state.fttattr),
             ftt_include_empty: state.fttIncludeEmpty,
             flimit: parseInt(state.flimit.value),
             freq_sort: state.freqSort,

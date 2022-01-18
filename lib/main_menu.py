@@ -486,9 +486,17 @@ class MenuGenerator(object):
                        '.' in self._args['fcrit_shortref'].split('/')[0])
         )
 
+        fcrit_tmp = self._args.get('ttcrit', [])
+        if len(fcrit_tmp) > 0:
+            fcrit_args = [('fcrit', fcrit_tmp[0])]
+            fcrit_async_args = [('fcrit_async', f) for f in fcrit_tmp[1:]]
+        else:
+            fcrit_args = []
+            fcrit_async_args = []
         self.freq_text_types = (
             ConcMenuItem(MainMenu.FREQUENCY('text-types'), te('Text Types'), 'freqs')
-            .add_args(*[('fcrit', v) for v in self._args.get('ttcrit', [])])
+            .add_args(*fcrit_args)
+            .add_args(*fcrit_async_args)
             .add_args(('ml', 0))
             .enable_if(lambda d: bool(d['ttcrit']))
         )
