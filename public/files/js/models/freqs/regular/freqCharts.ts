@@ -30,7 +30,7 @@ import { FreqFormInputs } from './freqForms';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
 export type FreqChartsAvailableData = 'freq'|'rel';
-export type FreqChartsAvailableTypes = 'bar'|'timeline';
+export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline';
 
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
