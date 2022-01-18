@@ -113,17 +113,20 @@ export function init(
                     <option value='cloud'>cloud</option>
                     <option value='timeline'>timeline</option>
                 </select>
-                <label htmlFor='sel-units'>units:</label>
-                <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
-                    <option value='freq'>abs</option>
-                    {List.some(v => !!v.rel, props.data.Items) ?
-                        <option value='rel'>ipm</option> :
-                        null
-                    }
-                </select>
+                {props.type !== 'cloud' ?
+                    <>
+                        <label htmlFor='sel-units'>units:</label>
+                        <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
+                            <option value='freq'>abs</option>
+                            {List.some(v => !!v.rel, props.data.Items) ?
+                                <option value='rel'>ipm</option> :
+                                null}
+                        </select>
+                    </> :
+                    null}
                 <label htmlFor='input-max'>display max:</label>
                 <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
-                {props.type !== 'timeline' ?
+                {props.type === 'bar' ?
                     <>
                         <label htmlFor='sel-order'>order:</label>
                         <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
