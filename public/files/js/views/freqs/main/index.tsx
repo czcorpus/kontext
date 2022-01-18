@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Keyboard, List } from 'cnc-tskit';
+import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from '../regular/save';
 import { init as initChartViews } from '../charts';
@@ -76,6 +76,7 @@ export function init(
         hasNextPage:boolean;
         hasPrevPage:boolean;
         totalPages:number;
+        sourceId:string;
     }
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
@@ -83,14 +84,20 @@ export function init(
         const handlePageChangeByClick = (curr, step) => {
             dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
                 name: Actions.ResultSetCurrentPage.name,
-                payload: {value: String(Number(curr) + step)}
+                payload: {
+                    value: String(Number(curr) + step),
+                    sourceId: props.sourceId
+                }
             });
         };
 
         const handlePageChange = (evt) => {
             dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
                 name: Actions.ResultSetCurrentPage.name,
-                payload: {value: evt.target.value}
+                payload: {
+                    value: evt.target.value,
+                    sourceId: props.sourceId
+                }
             });
         };
 
@@ -213,12 +220,12 @@ export function init(
             });
         }
 
-        const hasNextPage = (state:FreqDataRowsModelState):boolean => {
-            return parseInt(state.currentPage) < state.data[0].TotalPages;
+        const hasNextPage = (state:FreqDataRowsModelState, sourceId:string):boolean => {
+            return parseInt(state.currentPage[sourceId]) < state.data[sourceId].TotalPages;
         }
 
-        const hasPrevPage = (state:FreqDataRowsModelState):boolean => {
-            return parseInt(state.currentPage) > 1 && state.data[0].TotalPages > 1;
+        const hasPrevPage = (state:FreqDataRowsModelState, sourceId:string):boolean => {
+            return parseInt(state.currentPage[sourceId]) > 1 && state.data[sourceId].TotalPages > 1;
         }
 
         const handleTabSelection = (id:string) => {
@@ -236,30 +243,42 @@ export function init(
                         defaultId="tables"
                         noButtonSeparator={true} >
                     <div className="FreqResultView">
-                        {props.currentPage !== null ?
-                            <Paginator currentPage={props.currentPage}
-                                hasNextPage={hasNextPage(props)}
-                                hasPrevPage={hasPrevPage(props)}
-                                totalPages={props.data[0].TotalPages}
-                                isLoading={props.isBusy} /> : null}
+
                         <div className="freq-blocks">
-                            {List.map((block, i) => {
-                                return (
-                                    <div key={`block-${i}`}>
-                                        {i > 0 ? <hr /> : null}
-                                        <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
-                                        <drViews.DataTable head={block.Head}
-                                                sortColumn={props.sortColumn}
-                                                rows={block.Items}
-                                                hasSkippedEmpty={block.SkippedEmpty} />
+                            {pipe(
+                                props.data,
+                                Dict.toEntries(),
+                                List.map(([sourceId, block], i) => (
+                                    <div>
+                                        {block ?
+                                          <div key={`block:${sourceId}`}>
+                                                <Paginator currentPage={props.currentPage[sourceId]}
+                                                        sourceId={sourceId}
+                                                        hasNextPage={hasNextPage(props, sourceId)}
+                                                        hasPrevPage={hasPrevPage(props, sourceId)}
+                                                        totalPages={props.data[sourceId].TotalPages}
+                                                        isLoading={props.isBusy} />
+                                                <div>
+                                                    {i > 0 ? <hr /> : null}
+                                                    <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
+                                                    <drViews.DataTable head={block.Head}
+                                                            sortColumn={props.sortColumn[sourceId]}
+                                                            rows={block.Items}
+                                                            hasSkippedEmpty={block.SkippedEmpty}
+                                                            sourceId={sourceId} />
+                                                </div>
+                                                {props.saveFormActive ?
+                                                    <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :
+                                                    null
+                                                }
+                                            </div> :
+                                            <div>TODO loading...</div>
+                                        }
                                     </div>
-                                );
-                            }, props.data)}
+                                    )
+                                )
+                            )}
                         </div>
-                        {props.saveFormActive ?
-                            <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
-                            null
-                        }
                     </div>
                     <div>
                         <chartViews.FreqChartsView />

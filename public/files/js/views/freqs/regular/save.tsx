@@ -26,6 +26,7 @@ import { Actions } from '../../../models/freqs/regular/actions';
 
 
 interface SaveFreqFormProps {
+    sourceId:string;
     onClose:()=>void;
 }
 
@@ -217,7 +218,7 @@ export function init(
         _handleSubmitClick() {
             dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
                 name: Actions.SaveFormSubmit.name,
-                payload: {}
+                payload: {sourceId: this.props.sourceId}
             });
         }
 

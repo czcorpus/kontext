@@ -32,6 +32,7 @@ interface DataTableProps {
     rows:Array<ResultItem>;
     sortColumn:string;
     hasSkippedEmpty:boolean;
+    sourceId:string;
 }
 
 
@@ -145,6 +146,7 @@ export function init(
     interface TableColHeadProps {
         data:ResultHeader;
         sortColumn:string;
+        sourceId:string;
     }
 
     const TableColHead:React.FC<TableColHeadProps> = (props) => {
@@ -153,7 +155,8 @@ export function init(
             dispatcher.dispatch<typeof Actions.ResultSortByColumn>({
                 name: Actions.ResultSortByColumn.name,
                 payload: {
-                    value: props.data.s
+                    value: props.data.s,
+                    sourceId: props.sourceId
                 }
             });
         };
@@ -221,7 +224,7 @@ export function init(
                             <th />
                             <th>{he.translate('freq__ct_filter_th')}</th>
                             {List.map(
-                                (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} />,
+                                (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} sourceId={props.sourceId} />,
                                 props.head
                             )}
                             <th title={getBarChartTitle()} />
