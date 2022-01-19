@@ -683,7 +683,7 @@
         "freq__ml_th_node_start_at": "(Node) start at",
         "freq__avail_pages_{num_pages}": "{num_pages, plural, one{# page} other {# pages}}",
         "freq__avail_items_{num_items}": "{num_items, plural, one{# item} other {# items}}",
-        "freq__avail_label": "Total",
+        "freq__avail_label": "total",
         "freq__limit_input_label": "Minimum frequency",
         "freq__limit_invalid_val": "Invalid value (use 0, 1, 2,...)",
         "freq__page_invalid_val": "Invalid value (use 1, 2, 3,...)",

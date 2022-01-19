@@ -46,27 +46,6 @@ export function init(
     const chartViews = initChartViews(dispatcher, he, freqChartsModel);
     const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
 
-    // ----------------------- <ResultSizeInfo /> -------------------------
-
-    interface ResultSizeInfoProps {
-        totalPages:number;
-        totalItems:number;
-    }
-
-    const ResultSizeInfo:React.FC<ResultSizeInfoProps> = (props) => {
-
-        return (
-            <p>
-                <strong>{he.translate('freq__avail_label')}:</strong>
-                {'\u00a0'}
-                {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})}
-                {'\u00a0'}
-                {props.totalPages ?
-                    <span>({he.translate('freq__avail_pages_{num_pages}', {num_pages: props.totalPages})})</span>
-                    : null}
-            </p>
-        );
-    };
 
     // ----------------------- <Paginator /> -------------------------
 
@@ -76,6 +55,7 @@ export function init(
         hasNextPage:boolean;
         hasPrevPage:boolean;
         totalPages:number;
+        totalItems:number;
         sourceId:string;
     }
 
@@ -103,25 +83,27 @@ export function init(
 
         const renderPageNum = () => {
             if (props.isLoading) {
-                return <>
+                return <div>
                         <span className="overlay">
                             <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
                                 alt={he.translate('global__loading')} />
                         </span>
                         <input type="text" />
-                </>;
+                </div>;
 
             } else {
-                return <input type="text" value={props.currentPage}
-                                    title={he.translate('global__curr_page_num')}
-                                    onChange={handlePageChange}
-                                    disabled={!props.hasPrevPage && !props.hasNextPage}
-                                    style={{width: '3em'}} />;
+                return (
+                    <input type="text" value={props.currentPage}
+                        title={he.translate('global__curr_page_num')}
+                        onChange={handlePageChange}
+                        disabled={!props.hasPrevPage && !props.hasNextPage}
+                        style={{width: '3em'}} />
+                );
             }
         };
 
         return (
-            <div className="ktx-pagination">
+            <S.Paginator className="ktx-pagination">
                 <form>
                     <div className="ktx-pagination-core">
                         <div className="ktx-pagination-left">
@@ -142,7 +124,11 @@ export function init(
                         </div>
                     </div>
                 </form>
-            </div>
+                <div className="desc">
+                    ({he.translate('freq__avail_label')}:{'\u00a0'}
+                    {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
+                </div>
+            </S.Paginator>
         );
     };
 
@@ -266,42 +252,40 @@ export function init(
                         defaultId="tables"
                         noButtonSeparator={true} >
                     <div className="FreqResultView">
-
-                        <div className="freq-blocks">
-                            {pipe(
-                                props.data,
-                                Dict.toEntries(),
-                                List.map(([sourceId, block], i) => (
-                                    <div key={`block:${sourceId}`}>
-                                        {block ?
-                                          <div>
-                                                <Paginator currentPage={props.currentPage[sourceId]}
-                                                        sourceId={sourceId}
-                                                        hasNextPage={hasNextPage(props, sourceId)}
-                                                        hasPrevPage={hasPrevPage(props, sourceId)}
-                                                        totalPages={props.data[sourceId].TotalPages}
-                                                        isLoading={props.isBusy} />
-                                                <div>
-                                                    {i > 0 ? <hr /> : null}
-                                                    <ResultSizeInfo totalPages={block.TotalPages} totalItems={block.Total} />
-                                                    <drViews.DataTable head={block.Head}
-                                                            sortColumn={props.sortColumn[sourceId]}
-                                                            rows={block.Items}
-                                                            hasSkippedEmpty={block.SkippedEmpty}
-                                                            sourceId={sourceId} />
-                                                </div>
-                                                {props.saveFormActive ?
-                                                    <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :
-                                                    null
-                                                }
-                                            </div> :
-                                            <FreqResultLoaderView sourceId={sourceId} />
-                                        }
+                        {pipe(
+                            props.data,
+                            Dict.toEntries(),
+                            List.map(([sourceId, block], i) => (
+                                <S.FreqBlock key={`block:${sourceId}`}>
+                                    <div>
+                                    {block ?
+                                        <>
+                                            <Paginator currentPage={props.currentPage[sourceId]}
+                                                    sourceId={sourceId}
+                                                    hasNextPage={hasNextPage(props, sourceId)}
+                                                    hasPrevPage={hasPrevPage(props, sourceId)}
+                                                    totalPages={block.TotalPages}
+                                                    isLoading={props.isBusy}
+                                                    totalItems={block.Total} />
+                                            <div>
+                                                <drViews.DataTable head={block.Head}
+                                                        sortColumn={props.sortColumn[sourceId]}
+                                                        rows={block.Items}
+                                                        hasSkippedEmpty={block.SkippedEmpty}
+                                                        sourceId={sourceId} />
+                                            </div>
+                                            {props.saveFormActive ?
+                                                <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :
+                                                null
+                                            }
+                                        </>
+                                        : <FreqResultLoaderView sourceId={sourceId} />
+                                    }
                                     </div>
-                                    )
+                                </S.FreqBlock>
                                 )
-                            )}
-                        </div>
+                            )
+                        )}
                     </div>
                     <div>
                         <chartViews.FreqChartsView />

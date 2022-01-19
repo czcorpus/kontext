@@ -688,7 +688,7 @@
         "freq__ml_th_node_start_at": "(Zadetek) začni od",
         "freq__avail_pages_{num_pages}": "{num_pages, plural, one{# stran} few{# strani} other {# strani}}",
         "freq__avail_items_{num_items}": "{num_items, plural, one{# element} few{# elementi} other {# elementov}}",
-        "freq__avail_label": "Skupaj",
+        "freq__avail_label": "skupaj",
         "freq__limit_input_label": "Minimalna frekvenca",
         "freq__limit_invalid_val": "Neveljavna vrednost (uporabite 0, 1, 2 ...)",
         "freq__page_invalid_val": "Neveljavna vrednost (uporabite 1, 2, 3 ...)",
