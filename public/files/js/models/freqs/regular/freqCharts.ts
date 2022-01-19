@@ -25,7 +25,7 @@ import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
 import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, validateNumber } from './common';
-import { importData } from './dataRows';
+import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';

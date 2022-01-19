@@ -22,9 +22,9 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
-import { init as initSaveViews } from '../regular/save';
+import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
-import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/regular/dataRows';
+import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/regular/table';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
@@ -209,6 +209,29 @@ export function init(
         );
     };
 
+    // ----------------------- <FreqResultLoaderView /> --------------------
+
+    const FreqResultLoaderView:React.FC<{sourceId:string}> = ({sourceId}) => {
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch<typeof Actions.ReloadData>({
+                    name: Actions.ReloadData.name,
+                    payload: {
+                        sourceId
+                    }
+                })
+            },
+            []
+        );
+
+        return (
+            <S.FreqResultLoaderView>
+                <globalComponents.AjaxLoaderImage />
+            </S.FreqResultLoaderView>
+        );
+    }
+
     // ----------------------- <FreqResultView /> -------------------------
 
     const FreqResultView:React.FC<FreqDataRowsModelState> = (props) => {
@@ -272,7 +295,7 @@ export function init(
                                                     null
                                                 }
                                             </div> :
-                                            <div>TODO loading...</div>
+                                            <FreqResultLoaderView sourceId={sourceId} />
                                         }
                                     </div>
                                     )
