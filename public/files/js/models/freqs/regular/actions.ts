@@ -28,210 +28,216 @@ import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableO
 
 export class Actions {
 
-    static ResultSetMinFreqVal: Action<{
+    static ResultSetMinFreqVal:Action<{
         value:string;
     }> = {
-            name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
-        };
+        name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
+    };
 
-    static ResultApplyMinFreq: Action<{
+    static ResultApplyMinFreq:Action<{
     }> = {
-            name: 'FREQ_RESULT_APPLY_MIN_FREQ'
-        };
+        name: 'FREQ_RESULT_APPLY_MIN_FREQ'
+    };
 
-    static ResultDataLoaded: Action<{
+    static ReloadData:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_RESULT_DATA_RELOAD'
+    };
+
+    static ResultDataLoaded:Action<{
         block:ResultBlock;
     }> = {
-            name: 'FREQ_RESULT_DATA_LOADED'
-        };
+        name: 'FREQ_RESULT_DATA_LOADED'
+    };
 
-    static StatePushToHistory: Action<{
+    static StatePushToHistory:Action<{
     }> = {
-            name: 'FREQ_STATE_PUSH_TO_HISTORY'
-        };
+        name: 'FREQ_STATE_PUSH_TO_HISTORY'
+    };
 
-    static PopHistory: Action<HistoryState> = {
+    static PopHistory:Action<HistoryState> = {
         name: 'FREQ_POP_HISTORY'
     };
 
-    static ResultSortByColumn: Action<{
+    static ResultSortByColumn:Action<{
         value:string;
         sourceId:string;
     }> = {
-            name: 'FREQ_RESULT_SORT_BY_COLUMN'
-        };
+        name: 'FREQ_RESULT_SORT_BY_COLUMN'
+    };
 
-    static ResultSetCurrentPage: Action<{
+    static ResultSetCurrentPage:Action<{
         value:string;
         sourceId:string;
     }> = {
-            name: 'FREQ_RESULT_SET_CURRENT_PAGE'
-        };
+        name: 'FREQ_RESULT_SET_CURRENT_PAGE'
+    };
 
-    static ResultCloseSaveForm: Action<{
+    static ResultCloseSaveForm:Action<{
     }> = {
-            name: 'FREQ_RESULT_CLOSE_SAVE_FORM'
-        };
+        name: 'FREQ_RESULT_CLOSE_SAVE_FORM'
+    };
 
-    static ResultPrepareSubmitArgsDone: Action<{
+    static ResultPrepareSubmitArgsDone:Action<{
         data:{};
     }> = {
-            name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
-        };
+        name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
+    };
 
-    static ResultApplyQuickFilter: Action<{
+    static ResultApplyQuickFilter:Action<{
         url:string;
         blankWindow:boolean;
     }> = {
-            name: 'FREQ_RESULT_APPLY_QUICK_FILTER'
-        };
+        name: 'FREQ_RESULT_APPLY_QUICK_FILTER'
+    };
 
-    static SaveFormSetFormat: Action<{
+    static SaveFormSetFormat:Action<{
         value:DataSaveFormat;
     }> = {
-            name: 'FREQ_SAVE_FORM_SET_FORMAT'
-        };
+        name: 'FREQ_SAVE_FORM_SET_FORMAT'
+    };
 
-    static SaveFormSetFromLine: Action<{
+    static SaveFormSetFromLine:Action<{
         value:string;
     }> = {
-            name: 'FREQ_SAVE_FORM_SET_FROM_LINE'
-        };
+        name: 'FREQ_SAVE_FORM_SET_FROM_LINE'
+    };
 
-    static SaveFormSetToLine: Action<{
+    static SaveFormSetToLine:Action<{
         value:string;
     }> = {
-            name: 'FREQ_SAVE_FORM_SET_TO_LINE'
-        };
+        name: 'FREQ_SAVE_FORM_SET_TO_LINE'
+    };
 
-    static SaveFormSetIncludeHeading: Action<{
+    static SaveFormSetIncludeHeading:Action<{
         value:boolean;
     }> = {
-            name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING'
-        };
+        name: 'FREQ_SAVE_FORM_SET_INCLUDE_HEADING'
+    };
 
-    static SaveFormSetIncludeColHeading: Action<{
+    static SaveFormSetIncludeColHeading:Action<{
         value:boolean;
     }> = {
-            name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
-        };
+        name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
+    };
 
-    static SaveFormSubmit: Action<{
+    static SaveFormSubmit:Action<{
         sourceId:string;
     }> = {
-            name: 'FREQ_SAVE_FORM_SUBMIT'
-        };
+        name: 'FREQ_SAVE_FORM_SUBMIT'
+    };
 
-    static MLSetFLimit: Action<{
+    static MLSetFLimit:Action<{
         value:string;
     }> = {
-            name: 'FREQ_ML_SET_FLIMIT'
-        };
+        name: 'FREQ_ML_SET_FLIMIT'
+    };
 
-    static MLAddLevel: Action<{
+    static MLAddLevel:Action<{
     }> = {
-            name: 'FREQ_ML_ADD_LEVEL'
-        };
+        name: 'FREQ_ML_ADD_LEVEL'
+    };
 
-    static MLRemoveLevel: Action<{
+    static MLRemoveLevel:Action<{
         levelIdx:number;
     }> = {
-            name: 'FREQ_ML_REMOVE_LEVEL'
-        };
+        name: 'FREQ_ML_REMOVE_LEVEL'
+    };
 
-    static MLChangeLevel: Action<{
+    static MLChangeLevel:Action<{
         levelIdx:number;
         direction:string;
     }> = {
-            name: 'FREQ_ML_CHANGE_LEVEL'
-        };
+        name: 'FREQ_ML_CHANGE_LEVEL'
+    };
 
-    static MLSetMlxAttr: Action<{
+    static MLSetMlxAttr:Action<{
         levelIdx:number;
         value:string;
     }> = {
-            name: 'FREQ_ML_SET_MLXATTR'
-        };
+        name: 'FREQ_ML_SET_MLXATTR'
+    };
 
-    static MLSetMlxiCase: Action<{
+    static MLSetMlxiCase:Action<{
         levelIdx:number;
     }> = {
-            name: 'FREQ_ML_SET_MLXICASE'
-        };
+        name: 'FREQ_ML_SET_MLXICASE'
+    };
 
-    static MLSetMlxctxIndex: Action<{
+    static MLSetMlxctxIndex:Action<{
         levelIdx:number;
         value:string;
     }> = {
-            name: 'FREQ_ML_SET_MLXCTX_INDEX'
-        };
+        name: 'FREQ_ML_SET_MLXCTX_INDEX'
+    };
 
-    static MLSetAlignType: Action<{
+    static MLSetAlignType:Action<{
         levelIdx:number;
         value:AlignTypes;
     }> = {
-            name: 'FREQ_ML_SET_ALIGN_TYPE'
-        };
+        name: 'FREQ_ML_SET_ALIGN_TYPE'
+    };
 
-    static MLSubmit: Action<{
+    static MLSubmit:Action<{
     }> = {
-            name: 'FREQ_ML_SUBMIT'
-        };
+        name: 'FREQ_ML_SUBMIT'
+    };
 
-    static TTSetFttAttr: Action<{
+    static TTSetFttAttr:Action<{
         value:string;
     }> = {
-            name: 'FREQ_TT_SET_FTTATTR'
-        };
+        name: 'FREQ_TT_SET_FTTATTR'
+    };
 
-    static TTSetIncludeEmpty: Action<{
+    static TTSetIncludeEmpty:Action<{
     }> = {
-            name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY'
-        };
+        name: 'FREQ_TT_SET_FTT_INCLUDE_EMPTY'
+    };
 
-    static TTSetFLimit: Action<{
+    static TTSetFLimit:Action<{
         value:string;
     }> = {
-            name: 'FREQ_TT_SET_FLIMIT'
-        };
+        name: 'FREQ_TT_SET_FLIMIT'
+    };
 
-    static TTSubmit: Action<{
+    static TTSubmit:Action<{
     }> = {
-            name: 'FREQ_TT_SUBMIT'
-        };
+        name: 'FREQ_TT_SUBMIT'
+    };
 
-    static FreqChartsChangeUnits: Action<{
+    static FreqChartsChangeUnits:Action<{
         value:FreqChartsAvailableData;
         sourceId:string;
     }> = {
-            name: 'FREQ_CHARTS_CHANGE_UNITS'
-        };
+        name: 'FREQ_CHARTS_CHANGE_UNITS'
+    };
 
-    static FreqChartsChangeType: Action<{
+    static FreqChartsChangeType:Action<{
         value:FreqChartsAvailableTypes;
         sourceId:string;
     }> = {
-            name: 'FREQ_CHARTS_CHANGE_TYPE'
-        };
+        name: 'FREQ_CHARTS_CHANGE_TYPE'
+    };
 
-    static FreqChartsChangePageSize: Action<{
+    static FreqChartsChangePageSize:Action<{
         value:number;
         sourceId:string;
         debounced?:boolean;
     }> = {
-            name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
-        };
+        name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
+    };
 
-    static FreqChartsDataLoaded: Action<{
+    static FreqChartsDataLoaded:Action<{
         data:ResultBlock;
     }> = {
-            name: 'FREQ_CHARTS_DATA_LOADED'
-        };
+        name: 'FREQ_CHARTS_DATA_LOADED'
+    };
 
-    static FreqChartsChangeOrder: Action<{
+    static FreqChartsChangeOrder:Action<{
         value:FreqChartsAvailableOrder;
         sourceId:string;
     }> = {
-            name: 'FREQ_CHARTS_CHANGE_ORDER'
-        };
+        name: 'FREQ_CHARTS_CHANGE_ORDER'
+    };
 }

@@ -216,6 +216,21 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
 
         this.addActionHandler(
+            Actions.ReloadData,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                    state,
+                    dispatch,
+                    false
+                );
+            }
+        );
+
+        this.addActionHandler(
             Actions.ResultDataLoaded,
             (state, action) => {
                 state.isBusy = false;
@@ -386,8 +401,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     getSubmitArgs(state:FreqDataRowsModelState, fcrit:string):FreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
-            fcrit: state.freqCrit,
-            fcrit_async: state.freqCritAsync,
+            fcrit,
             flimit: parseInt(state.flimit),
             freq_sort: state.sortColumn[fcrit],
             fpage: state.currentPage[fcrit],

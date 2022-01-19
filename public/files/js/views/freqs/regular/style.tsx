@@ -21,6 +21,23 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+// -------------- <FilterForm /> --------------
+
+export const FilterForm = styled.form`
+
+    button {
+        margin-left: 0.7em;
+    }
+`;
+
+// ---------------- <FreqResultLoaderView /> ----------------------
+
+export const FreqResultLoaderView = styled.div`
+    padding: 1em 2em;
+    border: 1px solid ${theme.colorLightFrame};
+    border-radius: ${theme.borderRadiusDefault};
+`;
+
 // ---------------- <FrequencyForm /> --------------------------------------
 
 export const FrequencyForm = styled.div`

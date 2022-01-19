@@ -33,16 +33,16 @@ import { init as freqFormFactory } from '../views/freqs/forms';
 import { init as collFormFactory } from '../views/coll/forms';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
-import { init as resultViewFactory } from '../views/freqs/main';
+import { init as resultViewFactory } from '../views/freqs/regular';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData,
-    FreqDataRowsModelState } from '../models/freqs/regular/dataRows';
+    FreqDataRowsModelState } from '../models/freqs/regular/table';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { Dict, List, pipe, tuple, URL as CURL } from 'cnc-tskit';
+import { List, pipe, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
@@ -407,6 +407,7 @@ class FreqPage {
                 const firstCrit = List.head(state.freqCrit);
                 const args = {
                     ...this.freqResultModel.getSubmitArgs(state, firstCrit),
+                    fcrit_async: state.freqCritAsync,
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(
