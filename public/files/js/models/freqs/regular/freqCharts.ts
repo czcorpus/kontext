@@ -280,16 +280,16 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         });
     }
 
-    getSubmitArgs(state:FreqChartsModelState, sourceId:string):FreqServerArgs {
+    getSubmitArgs(state:FreqChartsModelState, fcrit:string):FreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
-            fcrit: state.freqCrit,
+            fcrit,
             flimit: parseInt(state.flimit),
-            freq_sort: state.sortColumn[sourceId],
-            fpage: state.currentPage[sourceId],
+            freq_sort: state.sortColumn[fcrit],
+            fpage: state.currentPage[fcrit],
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
-            fmaxitems: state.fmaxitems,
+            fmaxitems: state.fmaxitems[fcrit],
             format: 'json'
         };
     }
