@@ -117,7 +117,7 @@ function createQuickFilterUrl(pageModel:PageModel, args:ConcQuickFilterServerArg
 }
 
 type DebouncedActions =
-    typeof Actions.ResultSetCurrentPage;
+    typeof Actions.ResultSetCurrentPage | typeof Actions.ResultSetMinFreqVal;
 
 
 export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
@@ -211,36 +211,38 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (validateNumber(action.payload.value, 0)) {
-                    state.flimit = action.payload.value;
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.currentPage = Dict.map(_ => '1', state.currentPage);
+                    }
 
                 } else {
-                    this.pageModel.showMessage('error', this.pageModel.translate('freq__limit_invalid_val'));
+                    state.flimit = action.payload.value;
+                    this.debouncedAction$.next(action);
                 }
-            }
-        );
 
-        this.addActionHandler(
-            Actions.ResultApplyMinFreq,
-            (state, action) => {
-                state.isBusy = Dict.map(
-                    v => true,
-                    state.isBusy
-                );
-                state.currentPage = Dict.map(_ => '1', state.currentPage);
             },
             (state, action, dispatch) => {
-                Dict.forEach(
-                    (block, fcrit) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
-                            state,
-                            dispatch,
-                            true
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        Dict.forEach(
+                            (block, fcrit) => {
+                                this.dispatchLoad(
+                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                    state,
+                                    dispatch,
+                                    true
+                                );
+                            },
+                            state.data
                         );
-                    },
-                    state.data
-                )
+
+                    } else {
+                        this.pageModel.showMessage(
+                            'error', this.pageModel.translate('freq__limit_invalid_val'));
+                    }
+                }
             }
         );
 

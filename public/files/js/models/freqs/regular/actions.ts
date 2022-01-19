@@ -30,13 +30,9 @@ export class Actions {
 
     static ResultSetMinFreqVal:Action<{
         value:string;
+        debounced?:boolean;
     }> = {
         name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
-    };
-
-    static ResultApplyMinFreq:Action<{
-    }> = {
-        name: 'FREQ_RESULT_APPLY_MIN_FREQ'
     };
 
     static ReloadData:Action<{

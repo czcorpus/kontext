@@ -58,7 +58,7 @@ export interface FreqChartsModelState extends BaseFreqModelState {
 }
 
 type DebouncedActions =
-    typeof Actions.FreqChartsChangePageSize;
+    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal;
 
 
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
@@ -243,26 +243,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
-            Actions.ResultApplyMinFreq.name,
-            (state, action) => {
-                state.isBusy = Dict.map(_ => true, state.isBusy);
-                state.currentPage = Dict.map(_ => '1', state.currentPage);
-            },
-            (state, action, dispatch) => {
-                Dict.forEach(
-                    (_, sourceId) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, sourceId)),
-                            state,
-                            dispatch,
-                        );
-                    },
-                    state.data
-                );
-            }
-        );
-
         this.addActionHandler<typeof Actions.FreqChartsReloadData>(
             Actions.FreqChartsReloadData.name,
             (state, action) => {
@@ -277,11 +257,39 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
-            Actions.ResultSetMinFreqVal.name,
+        this.addActionHandler(
+            Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (validateNumber(action.payload.value, 0)) {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.currentPage = Dict.map(_ => '1', state.currentPage);
+                    }
+
+                } else {
                     state.flimit = action.payload.value;
+                    this.debouncedAction$.next(action);
+                }
+
+            },
+            (state, action, dispatch) => {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        Dict.forEach(
+                            (block, fcrit) => {
+                                this.dispatchLoad(
+                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                    state,
+                                    dispatch
+                                );
+                            },
+                            state.data
+                        );
+
+                    } else {
+                        this.pageModel.showMessage(
+                            'error', this.pageModel.translate('freq__limit_invalid_val'));
+                    }
                 }
             }
         );
