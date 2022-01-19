@@ -29,11 +29,14 @@ import {
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute } from 'public/files/js/types/kontext';
+import { StructuralAttribute } from '../../../types/kontext';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+
 export type FreqChartsAvailableData = 'freq'|'rel';
+
 export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline';
+
 
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
@@ -51,21 +54,21 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     type:{[sourceId:string]:FreqChartsAvailableTypes};
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:number};
-    isBusy:{[sourceId:string]:boolean};
     dtFormat:{[sourceId:string]:string};
 }
 
 type DebouncedActions =
     typeof Actions.FreqChartsChangePageSize;
 
-export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
+export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private pageModel:PageModel;
 
     private freqLoader:FreqDataLoader;
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
+
 
     constructor({
         dispatcher, pageModel, freqCrit, freqCritAsync, formProps,

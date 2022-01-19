@@ -67,6 +67,7 @@ export interface BaseFreqModelState {
     freqCritAsync:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
+    isBusy:{[sourceId:string]:boolean};
 }
 
 export interface FreqServerArgs extends ConcServerArgs {
