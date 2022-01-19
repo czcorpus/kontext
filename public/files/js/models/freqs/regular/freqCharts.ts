@@ -29,6 +29,7 @@ import {
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
+import { StructuralAttribute } from 'public/files/js/types/kontext';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
 export type FreqChartsAvailableData = 'freq'|'rel';
@@ -50,7 +51,8 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     type:{[sourceId:string]:FreqChartsAvailableTypes};
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:number};
-    isBusy:boolean;
+    isBusy:{[sourceId:string]:boolean};
+    dtFormat:{[sourceId:string]:string};
 }
 
 type DebouncedActions =
@@ -118,13 +120,32 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 fmaxitems: pipe(
                     freqCrit,
                     List.concat(freqCritAsync),
-                    List.concat(freqCritAsync),
                     List.map(
                         k => tuple(k, fmaxitems)
                     ),
                     Dict.fromEntries()
                 ),
-                isBusy: false,
+                isBusy: pipe(
+                    freqCrit,
+                    List.concat(freqCritAsync),
+                    List.map(
+                        k => tuple(k, false)
+                    ),
+                    Dict.fromEntries()
+                ),
+                dtFormat: pipe(
+                    freqCrit,
+                    List.concat(freqCritAsync),
+                    List.map(
+                        k => {
+                            return tuple(k, List.find(
+                                v => v.name === k.split('.')[1].split(' ')[0],
+                                pageModel.getNestedConf<Array<StructuralAttribute>>('structsAndAttrs', k.split('.')[0])
+                            ).dtFormat)
+                        }
+                    ),
+                    Dict.fromEntries()
+                )
             }
         );
 
@@ -147,7 +168,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler<typeof Actions.FreqChartsDataLoaded>(
             Actions.FreqChartsDataLoaded.name,
             (state, action) => {
-                state.isBusy = false;
+                state.isBusy[action.payload.data.fcrit] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
 
@@ -161,7 +182,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeOrder.name,
             (state, action) => {
                 state.sortColumn[action.payload.sourceId] = action.payload.value;
-                state.isBusy = true;
+                state.isBusy[action.payload.sourceId] = true;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
@@ -183,7 +204,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeType.name,
             (state, action) => {
                 state.type[action.payload.sourceId] = action.payload.value;
-                state.isBusy = true;
+                state.isBusy[action.payload.sourceId] = true;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
@@ -198,7 +219,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangePageSize.name,
             (state, action) => {
                 if (action.payload.debounced) {
-                    state.isBusy = true;
+                    state.isBusy[action.payload.sourceId] = true;
 
                 } else {
                     state.fmaxitems[action.payload.sourceId] = action.payload.value;
@@ -209,7 +230,9 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action, dispatch) => {
                 if (action.payload.debounced) {
                     this.dispatchLoad(
-                        this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                        this.freqLoader.loadPage(
+                            this.getSubmitArgs(state, action.payload.sourceId)
+                        ),
                         state,
                         dispatch,
                     );
@@ -220,7 +243,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
             Actions.ResultApplyMinFreq.name,
             (state, action) => {
-                state.isBusy = true,
+                state.isBusy = Dict.map(_ => true, state.isBusy);
                 state.currentPage = Dict.map(_ => '1', state.currentPage);
             },
             (state, action, dispatch) => {
@@ -233,6 +256,20 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                         );
                     },
                     state.data
+                );
+            }
+        );
+
+        this.addActionHandler<typeof Actions.FreqChartsReloadData>(
+            Actions.FreqChartsReloadData.name,
+            (state, action) => {
+                state.isBusy[action.payload.sourceId] = true
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                    state,
+                    dispatch,
                 );
             }
         );
@@ -286,7 +323,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ...this.pageModel.getConcArgs(),
             fcrit,
             flimit: parseInt(state.flimit),
-            freq_sort: state.sortColumn[fcrit],
+            freq_sort: state.type[fcrit] === 'timeline' ? '0' : state.sortColumn[fcrit],
             fpage: state.currentPage[fcrit],
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,

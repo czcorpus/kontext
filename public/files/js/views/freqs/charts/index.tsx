@@ -28,6 +28,7 @@ import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import { ResultItem, ResultBlock } from 'public/files/js/models/freqs/regular/common';
+import * as S from './style';
 
 
 export function init(
@@ -35,6 +36,8 @@ export function init(
     he:Kontext.ComponentHelpers,
     freqChartsModel:FreqChartsModel,
 ) {
+
+    const globalComponents = he.getLayoutViews();
 
     const WordCloud = initWordCloud<ResultItem>(he);
     const dataTransform = (item:ResultItem) => ({
@@ -56,6 +59,7 @@ export function init(
         fmaxitems:number;
         sortColumn:string;
         isBusy:boolean;
+        dtFormat:string;
     }
 
     const FreqChart:React.FC<FreqChartsProps> = (props) => {
@@ -106,12 +110,13 @@ export function init(
         ) as string).length
 
         return <div>
+            <label>{props.data.Head[0].n}</label>
             <fieldset>
                 <label htmlFor='sel-type'>type:</label>
                 <select id='sel-type' value={props.type} onChange={handleTypeChange}>
                     <option value='bar'>bar</option>
                     <option value='cloud'>cloud</option>
-                    <option value='timeline'>timeline</option>
+                    {props.dtFormat ? <option value='timeline'>timeline</option> : null}
                 </select>
                 {props.type !== 'cloud' ?
                     <>
@@ -155,22 +160,46 @@ export function init(
                 </ResponsiveContainer> :
 
             props.type === 'cloud' ?
-                <ResponsiveContainer width={300} height={300}>
-                    <WordCloud width={300} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
+                <ResponsiveContainer width={500} height={300}>
+                    <WordCloud width={500} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
                 </ResponsiveContainer> :
 
+            props.type === 'timeline' ?
                 <ResponsiveContainer width="95%" height={300}>
-                    <LineChart data={props.data.Items}>
+                    <LineChart data={props.data.Items} >
                         <CartesianGrid strokeDasharray='3 3'/>
-                        <XAxis type='category' height={50} dataKey={v => v.Word[0]} />
+                        <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                         <YAxis type='number' />
                         <Tooltip />
                         <Line dataKey={props.dataKey} />
                     </LineChart>
-                </ResponsiveContainer>
+                </ResponsiveContainer> : null
             }
         </div>;
     };
+
+    // ----------------------- <FreqChartsLoaderView /> --------------------
+
+    const FreqChartsLoaderView:React.FC<{sourceId:string}> = ({sourceId}) => {
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch<typeof Actions.FreqChartsReloadData>({
+                    name: Actions.FreqChartsReloadData.name,
+                    payload: {
+                        sourceId
+                    }
+                })
+            },
+            []
+        );
+
+        return (
+            <S.FreqResultLoaderView>
+                <globalComponents.AjaxLoaderImage />
+            </S.FreqResultLoaderView>
+        );
+    }
 
 
     const FreqChartsView:React.FC<FreqChartsModelState> = (props) => (
@@ -181,13 +210,14 @@ export function init(
                 List.map(
                     ([sourceId, block]) => (
                         block ?
-                            <FreqChart sourceId={sourceId} data={block}
+                            <FreqChart key={sourceId} sourceId={sourceId} data={block}
                                     dataKey={props.dataKey[sourceId]}
                                     fmaxitems={props.fmaxitems[sourceId]}
                                     sortColumn={props.sortColumn[sourceId]}
                                     type={props.type[sourceId]}
-                                    isBusy={props.isBusy} /> :
-                            <div>TODO loading...</div>
+                                    isBusy={props.isBusy[sourceId]}
+                                    dtFormat={props.dtFormat[sourceId]} /> :
+                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} />
                     )
                 )
             )}
