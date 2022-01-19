@@ -180,16 +180,28 @@ export function init(
 
     // ----------------------- <FreqChartsLoaderView /> --------------------
 
-    const FreqChartsLoaderView:React.FC<{sourceId:string}> = ({sourceId}) => {
+    const FreqChartsLoaderView:React.FC<{sourceId:string, dtFormat:string}> = ({sourceId, dtFormat}) => {
 
         React.useEffect(
             () => {
-                dispatcher.dispatch<typeof Actions.FreqChartsReloadData>({
-                    name: Actions.FreqChartsReloadData.name,
-                    payload: {
-                        sourceId
-                    }
-                })
+                if (dtFormat) { // if timedata => switch to timeline chart automatically
+                    dispatcher.dispatch<typeof Actions.FreqChartsSetParameters>({
+                        name: Actions.FreqChartsSetParameters.name,
+                        payload: {
+                            sourceId,
+                            type: 'timeline',
+                            dataKey: 'rel',
+                            sortColumn: '0'
+                        }
+                    })
+                } else {
+                    dispatcher.dispatch<typeof Actions.FreqChartsReloadData>({
+                        name: Actions.FreqChartsReloadData.name,
+                        payload: {
+                            sourceId
+                        }
+                    })
+                }
             },
             []
         );
@@ -217,7 +229,7 @@ export function init(
                                     type={props.type[sourceId]}
                                     isBusy={props.isBusy[sourceId]}
                                     dtFormat={props.dtFormat[sourceId]} /> :
-                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} />
+                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]} />
                     )
                 )
             )}

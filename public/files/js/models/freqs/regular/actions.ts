@@ -247,4 +247,13 @@ export class Actions {
     }> = {
         name: 'FREQ_CHARTS_DATA_RELOAD'
     };
+
+    static FreqChartsSetParameters:Action<{
+        sourceId:string;
+        type:FreqChartsAvailableTypes;
+        sortColumn:FreqChartsAvailableOrder;
+        dataKey:FreqChartsAvailableData;
+    }> = {
+        name: 'FREQ_CHARTS_SET_PARAMETERS'
+    };
 }
