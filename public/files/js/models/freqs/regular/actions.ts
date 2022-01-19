@@ -240,4 +240,10 @@ export class Actions {
     }> = {
         name: 'FREQ_CHARTS_CHANGE_ORDER'
     };
+
+    static FreqChartsReloadData:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_CHARTS_DATA_RELOAD'
+    };
 }
