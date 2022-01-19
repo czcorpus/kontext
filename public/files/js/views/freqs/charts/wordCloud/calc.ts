@@ -36,7 +36,7 @@ export interface Rect {
 
 export const MAX_WC_FONT_SIZE = 78;
 
-const MIN_WC_FONT_SIZE = 13;
+const MIN_WC_FONT_SIZE = 26;
 
 const PLACE_NUM_SPIRAL_ITER = 8000;
 

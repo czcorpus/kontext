@@ -155,8 +155,8 @@ export function init(
                 </ResponsiveContainer> :
 
             props.type === 'cloud' ?
-                <ResponsiveContainer width={300} height={300}>
-                    <WordCloud width={300} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
+                <ResponsiveContainer width={500} height={300}>
+                    <WordCloud width={500} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
                 </ResponsiveContainer> :
 
                 <ResponsiveContainer width="95%" height={300}>
