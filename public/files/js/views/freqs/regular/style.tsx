@@ -38,6 +38,41 @@ export const FreqResultLoaderView = styled.div`
     border-radius: ${theme.borderRadiusDefault};
 `;
 
+// ----------------- <Paginator /> -------------------------------------
+
+export const Paginator = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 0.4em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+
+    form {
+        margin: 0;
+    }
+
+    .desc {
+        margin-left: 1em;
+    }
+`;
+
+// ---------------- <FreqBlockTable /> -------------------------------------
+
+export const FreqBlock = styled.div`
+
+    > div {
+        display: inline-flex;
+        flex-direction: column;
+    }
+
+    &:nth-child(n+2) {
+        margin-top: 2.5em;
+    }
+
+`;
+
 // ---------------- <FrequencyForm /> --------------------------------------
 
 export const FrequencyForm = styled.div`

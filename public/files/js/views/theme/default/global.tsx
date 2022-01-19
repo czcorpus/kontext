@@ -345,16 +345,14 @@ export const GlobalStyle = createGlobalStyle`
         border-radius: ${theme.inputBorderRadius};
     }
 
-    section > .ktx-pagination,
-    section #result-mount .ktx-pagination {
+    section > .ktx-pagination {
         margin: 0;
     }
 
-    section > .ktx-pagination form,
-    section #result-mount .ktx-pagination form {
-        margin: 0 20px;
-        padding-bottom: 5px;
-        padding-top: 5px;
+    section > .ktx-pagination form {
+        margin: 0 1.5em;
+        padding-bottom: 0.4em;
+        padding-top: 0.4em;
     }
 
     .ktx-pagination-core,

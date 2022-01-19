@@ -47,6 +47,7 @@ export const DataTable = styled.div`
         display: flex;
         align-items: center;
         margin-top: 1em;
+        width: 90%;
 
         img {
             width: 1.4em;
@@ -54,6 +55,7 @@ export const DataTable = styled.div`
 
         p {
             margin-left: 0.7em;
+            display: inline;
         }
     }
 `;

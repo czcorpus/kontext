@@ -682,7 +682,7 @@
         "freq__ml_th_node_start_at": "(Node) zacznij ôd",
         "freq__avail_pages_{num_pages}": "{num_pages, plural, one{# strōna} few{# strōny} other{# strōn}}",
         "freq__avail_items_{num_items}": "{num_pages, plural, one{# elymynt} few{# elymynta} other{# elymyntōw}}",
-        "freq__avail_label": "Społym",
+        "freq__avail_label": "społym",
         "freq__limit_input_label": "Minimalnŏ frekwyncyjŏ",
         "freq__limit_invalid_val": "Niynŏleżnŏ werta (użyj 0, 1, 2,...)",
         "freq__page_invalid_val": "Niynŏleżnŏ werta (użyj 1, 2, 3,...)",

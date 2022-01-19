@@ -359,7 +359,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                         });
                     },
                     data.Blocks
-                )
+                );
                 if (pushHistory) {
                     dispatch<typeof Actions.StatePushToHistory>({
                         name: Actions.StatePushToHistory.name
@@ -379,6 +379,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         const firstCrit = List.head(state.freqCrit);
         const args = {
             ...this.getSubmitArgs(state, firstCrit),
+            fcrit_async: state.freqCritAsync,
             format: undefined
         };
         this.pageModel.getHistory().pushState(

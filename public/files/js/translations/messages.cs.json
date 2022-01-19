@@ -681,7 +681,7 @@
         "freq__ml_th_icase": "Nerozlišovat velikost",
         "freq__ml_th_position": "Pozice",
         "freq__ml_th_node_start_at": "(Node) začít od",
-        "freq__avail_label": "Celkem",
+        "freq__avail_label": "celkem",
         "freq__avail_pages_{num_pages}": "{num_pages, plural, one{# stránka} few{# stránky} other{# stránek}}",
         "freq__avail_items_{num_items}": "{num_items, plural, one{# položka} few{# položky} other{# položek}}",
         "freq__limit_input_label": "Minimální frekvence",
