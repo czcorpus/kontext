@@ -26,7 +26,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line, R
 import { Dict, List, pipe } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
-import { ResultBlock } from '../../../models/freqs/regular/common';
+import { init as initWordCloud } from './wordCloud/index';
+import { ResultItem, ResultBlock } from 'public/files/js/models/freqs/regular/common';
 
 
 export function init(
@@ -34,6 +35,16 @@ export function init(
     he:Kontext.ComponentHelpers,
     freqChartsModel:FreqChartsModel,
 ) {
+
+    const WordCloud = initWordCloud<ResultItem>(he);
+    const dataTransform = (item:ResultItem) => ({
+        text: item.Word[0],
+        value: item.freq,
+        tooltip: [
+            {label: 'abs', value: item.freq},
+            {label: 'rel', value: item.rel, round: 1},
+        ],
+    });
 
     // ----------------------- <FreqCharts /> -------------------------
 
@@ -99,19 +110,23 @@ export function init(
                 <label htmlFor='sel-type'>type:</label>
                 <select id='sel-type' value={props.type} onChange={handleTypeChange}>
                     <option value='bar'>bar</option>
+                    <option value='cloud'>cloud</option>
                     <option value='timeline'>timeline</option>
                 </select>
-                <label htmlFor='sel-units'>units:</label>
-                <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
-                    <option value='freq'>abs</option>
-                    {List.some(v => !!v.rel, props.data.Items) ?
-                        <option value='rel'>ipm</option> :
-                        null
-                    }
-                </select>
+                {props.type !== 'cloud' ?
+                    <>
+                        <label htmlFor='sel-units'>units:</label>
+                        <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
+                            <option value='freq'>abs</option>
+                            {List.some(v => !!v.rel, props.data.Items) ?
+                                <option value='rel'>ipm</option> :
+                                null}
+                        </select>
+                    </> :
+                    null}
                 <label htmlFor='input-max'>display max:</label>
                 <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
-                {props.type !== 'timeline' ?
+                {props.type === 'bar' ?
                     <>
                         <label htmlFor='sel-order'>order:</label>
                         <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
@@ -128,16 +143,22 @@ export function init(
                     <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}alt={he.translate('global__loading')} /> :
                     null}
             </fieldset>
-            {props.type[props.sourceId] === 'bar' ?
-                <ResponsiveContainer width="95%" height={List.size(props.data.Items) * 17 + 60}>
+            {props.type === 'bar' ?
+                <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
                     <BarChart data={props.data.Items} layout='vertical'>
                         <CartesianGrid strokeDasharray='3 3'/>
                         <XAxis type='number' height={50} label={props.dataKey} />
                         <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, maxLabelLength * 7)}/>
                         <Tooltip />
-                        <Bar dataKey={props.dataKey[props.sourceId]} barSize={15} fill={theme.colorLogoBlue} />
+                        <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
                     </BarChart>
                 </ResponsiveContainer> :
+
+            props.type === 'cloud' ?
+                <ResponsiveContainer width={300} height={300}>
+                    <WordCloud width={300} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
+                </ResponsiveContainer> :
+
                 <ResponsiveContainer width="95%" height={300}>
                     <LineChart data={props.data.Items}>
                         <CartesianGrid strokeDasharray='3 3'/>
