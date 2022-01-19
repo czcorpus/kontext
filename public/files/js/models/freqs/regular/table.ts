@@ -22,8 +22,10 @@ import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { Observable } from 'rxjs';
-import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, validateNumber } from './common';
+import { debounceTime, Observable, Subject } from 'rxjs';
+import {
+    BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    ResultBlock, validateNumber } from './common';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
@@ -115,6 +117,10 @@ function createQuickFilterUrl(pageModel:PageModel, args:ConcQuickFilterServerArg
     }
 }
 
+type DebouncedActions =
+    typeof Actions.ResultSetCurrentPage;
+
+
 export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     private pageModel:PageModel;
@@ -122,6 +128,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private saveModel:FreqResultsSaveModel;
 
     private freqLoader:FreqDataLoader;
+
+    private readonly debouncedAction$:Subject<DebouncedActions>;
 
     constructor({
         dispatcher, pageModel, freqCrit, freqCritAsync, formProps, saveLinkFn,
@@ -162,6 +170,18 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
         this.pageModel = pageModel;
         this.freqLoader = freqLoader;
+        this.debouncedAction$ = new Subject();
+        this.debouncedAction$.pipe(
+            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+
+        ).subscribe({
+            next: value => {
+                dispatcher.dispatch({
+                    ...value,
+                    payload: {...value.payload, debounced: true}
+                });
+            }
+        });
 
         this.saveModel = new FreqResultsSaveModel({
             dispatcher,
@@ -294,22 +314,30 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultSetCurrentPage,
             (state, action) => {
-                if (validateNumber(action.payload.value, 1)) {
-                    state.isBusy = true;
-                    state.currentPage[action.payload.sourceId] = action.payload.value;
+                state.currentPage[action.payload.sourceId] = action.payload.value;
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 1)) {
+                        state.isBusy = true;
+                    }
 
                 } else {
-                    this.pageModel.showMessage('error', this.pageModel.translate('freq__page_invalid_val'));
+                    this.debouncedAction$.next(action);
                 }
             },
             (state, action, dispatch) => {
-                if (validateNumber(action.payload.value, 1)) {
-                    this.dispatchLoad(
-                        this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
-                        state,
-                        dispatch,
-                        true
-                    );
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 1)) {
+                        this.dispatchLoad(
+                            this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                            state,
+                            dispatch,
+                            true
+                        );
+
+                    } else {
+                        this.pageModel.showMessage(
+                            'error', this.pageModel.translate('freq__page_invalid_val'));
+                    }
                 }
             }
         );

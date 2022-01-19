@@ -96,7 +96,7 @@ export function init(
                     <input type="text" value={props.currentPage}
                         title={he.translate('global__curr_page_num')}
                         onChange={handlePageChange}
-                        disabled={!props.hasPrevPage && !props.hasNextPage}
+                        disabled={props.totalPages === 1}
                         style={{width: '3em'}} />
                 );
             }

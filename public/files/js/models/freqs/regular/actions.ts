@@ -70,6 +70,7 @@ export class Actions {
     static ResultSetCurrentPage:Action<{
         value:string;
         sourceId:string;
+        debounced?:boolean;
     }> = {
         name: 'FREQ_RESULT_SET_CURRENT_PAGE'
     };

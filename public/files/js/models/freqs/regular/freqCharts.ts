@@ -24,7 +24,9 @@ import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
-import { BaseFreqModelState, FreqDataLoader, FreqServerArgs, ResultBlock, validateNumber } from './common';
+import {
+    BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
 
@@ -56,7 +58,6 @@ type DebouncedActions =
 
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
-    PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
 
     private pageModel:PageModel;
 
@@ -132,7 +133,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
         this.debouncedAction$ = new Subject();
         this.debouncedAction$.pipe(
-            debounceTime(this.PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
         ).subscribe({
             next: value => {
