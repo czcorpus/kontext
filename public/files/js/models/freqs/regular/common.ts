@@ -26,6 +26,9 @@ import { ConcServerArgs } from '../../concordance/common';
 import { FreqResultResponse } from '../common';
 
 
+export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
+
+
 export interface ResultItem {
     idx:number;
     Word:Array<string>;
