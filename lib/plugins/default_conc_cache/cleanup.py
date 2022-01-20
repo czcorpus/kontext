@@ -140,8 +140,6 @@ class CacheCleanup(CacheFiles):
                 num_processed += 1
                 item_key = os.path.basename(item_path).rsplit('.conc')[0]
                 real_file_hashes.add(item_key)
-                logging.getLogger(__name__).warning('cache entry: {}'.format(item_path))
-                logging.getLogger(__name__).warning(f'TTL {self._ttl_hours} vs. {item_age}')
                 if self._ttl_hours * 3600 < item_age:
                     to_del[item_key] = item_path
 
