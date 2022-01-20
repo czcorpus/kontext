@@ -32,8 +32,11 @@ import { FreqFormInputs } from './freqForms';
 import { StructuralAttribute } from '../../../types/kontext';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+
 export type FreqChartsAvailableData = 'freq'|'rel';
+
 export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline';
+
 
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
@@ -55,7 +58,7 @@ export interface FreqChartsModelState extends BaseFreqModelState {
 }
 
 type DebouncedActions =
-    typeof Actions.FreqChartsChangePageSize;
+    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal;
 
 function getDtFormat(pageModel:PageModel, fcrit:string):string {
     return List.find(
@@ -66,14 +69,15 @@ function getDtFormat(pageModel:PageModel, fcrit:string):string {
     ).dtFormat;
 }
 
-export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
+export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private pageModel:PageModel;
 
     private freqLoader:FreqDataLoader;
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
+
 
     constructor({
         dispatcher, pageModel, freqCrit, freqCritAsync, formProps,
@@ -245,26 +249,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         );
 
         this.addActionHandler(
-            Actions.ResultApplyMinFreq,
-            (state, action) => {
-                state.isBusy = Dict.map(_ => true, state.isBusy);
-                state.currentPage = Dict.map(_ => '1', state.currentPage);
-            },
-            (state, action, dispatch) => {
-                Dict.forEach(
-                    (_, sourceId) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, sourceId)),
-                            state,
-                            dispatch,
-                        );
-                    },
-                    state.data
-                );
-            }
-        );
-
-        this.addActionHandler(
             Actions.FreqChartsReloadData,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true
@@ -281,8 +265,36 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler(
             Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (validateNumber(action.payload.value, 0)) {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.currentPage = Dict.map(_ => '1', state.currentPage);
+                    }
+
+                } else {
                     state.flimit = action.payload.value;
+                    this.debouncedAction$.next(action);
+                }
+
+            },
+            (state, action, dispatch) => {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        Dict.forEach(
+                            (block, fcrit) => {
+                                this.dispatchLoad(
+                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                    state,
+                                    dispatch
+                                );
+                            },
+                            state.data
+                        );
+
+                    } else {
+                        this.pageModel.showMessage(
+                            'error', this.pageModel.translate('freq__limit_invalid_val'));
+                    }
                 }
             }
         );

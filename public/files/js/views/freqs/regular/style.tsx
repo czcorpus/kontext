@@ -25,8 +25,16 @@ import * as theme from '../../theme/default';
 
 export const FilterForm = styled.form`
 
+    display: flex;
+    justify-content: flex-end;
+
     button {
         margin-left: 0.7em;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
     }
 `;
 
