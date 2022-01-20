@@ -58,6 +58,13 @@ export interface FreqChartsModelState extends BaseFreqModelState {
 type DebouncedActions =
     typeof Actions.FreqChartsChangePageSize;
 
+function getDtFormat(pageModel:PageModel, fcrit:string):string {    
+    return List.find(
+        v => v.name === fcrit.split('.')[1].split(' ')[0],
+        pageModel.getNestedConf<Array<StructuralAttribute>>('structsAndAttrs', fcrit.split('.')[0])
+    ).dtFormat;
+}
+
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
 
@@ -77,7 +84,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             {
                 data: pipe(
                     initialData,
-                    List.map(v => tuple(v.fcrit, v)),
+                    // if initial data are time data we'll change chart parameters and reload on view init
+                    List.map(v => tuple(v.fcrit, getDtFormat(pageModel, v.fcrit[0]) ? undefined : v)), // TODO v.fcrit is typed as string, but is list
                     List.concat(List.map(v => tuple(v, undefined), freqCritAsync)),
                     Dict.fromEntries()
                 ),
@@ -137,12 +145,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     freqCrit,
                     List.concat(freqCritAsync),
                     List.map(
-                        k => {
-                            return tuple(k, List.find(
-                                v => v.name === k.split('.')[1].split(' ')[0],
-                                pageModel.getNestedConf<Array<StructuralAttribute>>('structsAndAttrs', k.split('.')[0])
-                            ).dtFormat)
-                        }
+                        k => tuple(k, getDtFormat(pageModel, k))
                     ),
                     Dict.fromEntries()
                 )
@@ -280,6 +283,23 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 if (validateNumber(action.payload.value, 0)) {
                     state.flimit = action.payload.value;
                 }
+            }
+        );
+
+        this.addActionHandler<typeof Actions.FreqChartsSetParameters>(
+            Actions.FreqChartsSetParameters.name,
+            (state, action) => {
+                state.sortColumn[action.payload.sourceId] = action.payload.sortColumn;
+                state.type[action.payload.sourceId] = action.payload.type;
+                state.dataKey[action.payload.sourceId] = action.payload.dataKey;
+                state.isBusy[action.payload.sourceId] = true;
+            },
+            (state, action, dispatch) => {
+                this.dispatchLoad(
+                    this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                    state,
+                    dispatch,
+                );
             }
         );
     }
