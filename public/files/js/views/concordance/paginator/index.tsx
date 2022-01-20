@@ -259,15 +259,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
         }
 
         _navigActionHandler() {
-            const newState = he.cloneState(this.state);
-            newState.loader = true;
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                loader: true
+            });
         }
 
         _pageInputHandler(event) {
-            const newState = he.cloneState(this.state);
-            newState.currentPageInput = event.currentTarget.value
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                currentPageInput: event.currentTarget.value
+            });
         }
 
         _inputKeyDownHandler(evt:React.KeyboardEvent<{}>) {

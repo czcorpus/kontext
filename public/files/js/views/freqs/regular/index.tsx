@@ -146,25 +146,13 @@ export function init(
             });
         };
 
-        const inputKeyDownHandler = (evt:React.KeyboardEvent<{}>) => {
-            if (evt.key === Keyboard.Value.ENTER) {
-                dispatcher.dispatch<typeof Actions.ResultApplyMinFreq>({
-                    name: Actions.ResultApplyMinFreq.name,
-                    payload: {}
-                });
-                evt.preventDefault();
-                evt.stopPropagation();
-            }
-        };
-
         return (
             <label>
                 {he.translate('freq__limit_input_label')}:
                 {'\u00a0'}
                 <input type="text" name="flimit" value={props.minFreqVal}
                         style={{width: '3em'}}
-                        onChange={handleInputChange}
-                        onKeyDown={inputKeyDownHandler} />
+                        onChange={handleInputChange} />
             </label>
         );
     };
@@ -177,20 +165,9 @@ export function init(
 
     const FilterForm:React.FC<FilterFormProps> = (props) => {
 
-        const handleApplyClick = (evt) => {
-            dispatcher.dispatch<typeof Actions.ResultApplyMinFreq>({
-                name: Actions.ResultApplyMinFreq.name,
-                payload: {}
-            });
-        };
-
         return (
-            <S.FilterForm action="freqs">
+            <S.FilterForm>
                 <MinFreqInput minFreqVal={props.minFreqVal} />
-                {'\u00a0'}
-                <button type="button" className="util-button" onClick={handleApplyClick}>
-                    {he.translate('global__apply_btn')}
-                </button>
             </S.FilterForm>
         );
     };
@@ -265,7 +242,7 @@ export function init(
                                                     hasNextPage={hasNextPage(props, sourceId)}
                                                     hasPrevPage={hasPrevPage(props, sourceId)}
                                                     totalPages={block.TotalPages}
-                                                    isLoading={props.isBusy}
+                                                    isLoading={props.isBusy[sourceId]}
                                                     totalItems={block.Total} />
                                             <div>
                                                 <drViews.DataTable head={block.Head}

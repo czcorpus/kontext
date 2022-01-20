@@ -200,15 +200,17 @@ export function init(
         }
 
         _handleSrcInputChange(evt) {
-            const newState = he.cloneState(this.state);
-            newState.srcGroupNum = evt.target.value ? evt.target.value : null;
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                srcGroupNum: evt.target.value ? evt.target.value : null,
+            });
         }
 
         _handleDstInputChange(evt) {
-            const newState = he.cloneState(this.state);
-            newState.dstGroupNum = evt.target.value ? evt.target.value : null;
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                dstGroupNum: evt.target.value ? evt.target.value : null
+            });
         }
 
         render() {

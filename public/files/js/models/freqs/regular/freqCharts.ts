@@ -29,11 +29,14 @@ import {
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute } from 'public/files/js/types/kontext';
+import { StructuralAttribute } from '../../../types/kontext';
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+
 export type FreqChartsAvailableData = 'freq'|'rel';
+
 export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline';
+
 
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
@@ -51,28 +54,30 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     type:{[sourceId:string]:FreqChartsAvailableTypes};
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:number};
-    isBusy:{[sourceId:string]:boolean};
     dtFormat:{[sourceId:string]:string};
 }
 
 type DebouncedActions =
-    typeof Actions.FreqChartsChangePageSize;
+    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal;
 
-function getDtFormat(pageModel:PageModel, fcrit:string):string {    
+function getDtFormat(pageModel:PageModel, fcrit:string):string {
     return List.find(
+        // TODO maybe this fcrit parsing is too low-level (but the server must
+        // reflect the issue too as there is no alternative value for this at the moment)
         v => v.name === fcrit.split('.')[1].split(' ')[0],
         pageModel.getNestedConf<Array<StructuralAttribute>>('structsAndAttrs', fcrit.split('.')[0])
     ).dtFormat;
 }
 
-export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
+export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private pageModel:PageModel;
 
     private freqLoader:FreqDataLoader;
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
+
 
     constructor({
         dispatcher, pageModel, freqCrit, freqCritAsync, formProps,
@@ -85,7 +90,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 data: pipe(
                     initialData,
                     // if initial data are time data we'll change chart parameters and reload on view init
-                    List.map(v => tuple(v.fcrit, getDtFormat(pageModel, v.fcrit[0]) ? undefined : v)), // TODO v.fcrit is typed as string, but is list
+                    List.map(v => tuple(v.fcrit, getDtFormat(pageModel, v.fcrit) ? undefined : v)),
                     List.concat(List.map(v => tuple(v, undefined), freqCritAsync)),
                     Dict.fromEntries()
                 ),
@@ -168,8 +173,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         });
 
-        this.addActionHandler<typeof Actions.FreqChartsDataLoaded>(
-            Actions.FreqChartsDataLoaded.name,
+        this.addActionHandler(
+            Actions.FreqChartsDataLoaded,
             (state, action) => {
                 state.isBusy[action.payload.data.fcrit] = false;
                 if (action.error) {
@@ -181,8 +186,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqChartsChangeOrder>(
-            Actions.FreqChartsChangeOrder.name,
+        this.addActionHandler(
+            Actions.FreqChartsChangeOrder,
             (state, action) => {
                 state.sortColumn[action.payload.sourceId] = action.payload.value;
                 state.isBusy[action.payload.sourceId] = true;
@@ -196,15 +201,15 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqChartsChangeUnits>(
-            Actions.FreqChartsChangeUnits.name,
+        this.addActionHandler(
+            Actions.FreqChartsChangeUnits,
             (state, action) => {
                 state.dataKey[action.payload.sourceId] = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqChartsChangeType>(
-            Actions.FreqChartsChangeType.name,
+        this.addActionHandler(
+            Actions.FreqChartsChangeType,
             (state, action) => {
                 state.type[action.payload.sourceId] = action.payload.value;
                 state.isBusy[action.payload.sourceId] = true;
@@ -218,8 +223,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqChartsChangePageSize>(
-            Actions.FreqChartsChangePageSize.name,
+        this.addActionHandler(
+            Actions.FreqChartsChangePageSize,
             (state, action) => {
                 if (action.payload.debounced) {
                     state.isBusy[action.payload.sourceId] = true;
@@ -243,28 +248,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultApplyMinFreq>(
-            Actions.ResultApplyMinFreq.name,
-            (state, action) => {
-                state.isBusy = Dict.map(_ => true, state.isBusy);
-                state.currentPage = Dict.map(_ => '1', state.currentPage);
-            },
-            (state, action, dispatch) => {
-                Dict.forEach(
-                    (_, sourceId) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, sourceId)),
-                            state,
-                            dispatch,
-                        );
-                    },
-                    state.data
-                );
-            }
-        );
-
-        this.addActionHandler<typeof Actions.FreqChartsReloadData>(
-            Actions.FreqChartsReloadData.name,
+        this.addActionHandler(
+            Actions.FreqChartsReloadData,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true
             },
@@ -277,17 +262,45 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultSetMinFreqVal>(
-            Actions.ResultSetMinFreqVal.name,
+        this.addActionHandler(
+            Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (validateNumber(action.payload.value, 0)) {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.currentPage = Dict.map(_ => '1', state.currentPage);
+                    }
+
+                } else {
                     state.flimit = action.payload.value;
+                    this.debouncedAction$.next(action);
+                }
+
+            },
+            (state, action, dispatch) => {
+                if (action.payload.debounced) {
+                    if (validateNumber(action.payload.value, 0)) {
+                        Dict.forEach(
+                            (block, fcrit) => {
+                                this.dispatchLoad(
+                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                    state,
+                                    dispatch
+                                );
+                            },
+                            state.data
+                        );
+
+                    } else {
+                        this.pageModel.showMessage(
+                            'error', this.pageModel.translate('freq__limit_invalid_val'));
+                    }
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.FreqChartsSetParameters>(
-            Actions.FreqChartsSetParameters.name,
+        this.addActionHandler(
+            Actions.FreqChartsSetParameters,
             (state, action) => {
                 state.sortColumn[action.payload.sourceId] = action.payload.sortColumn;
                 state.type[action.payload.sourceId] = action.payload.type;

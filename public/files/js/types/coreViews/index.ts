@@ -45,6 +45,7 @@ import * as TabView from './tabView';
 import * as ToggleSwitch from './toggleSwitch';
 import * as UnsupportedRenderer from './unsupportedRenderer';
 import * as ValidatedItem from './validateItem';
+import * as ResponsiveWrapper from './responsiveWrapper';
 
 // -------------------------------
 
@@ -76,6 +77,7 @@ export interface Runtime {
     ToggleSwitch:ToggleSwitch.Component;
     UnsupportedRenderer:UnsupportedRenderer.Component;
     ValidatedItem:ValidatedItem.Component;
+    ResponsiveWrapper:ResponsiveWrapper.Component;
 }
 
 export { AutoWidth } from './common';
@@ -108,3 +110,4 @@ export * as TabView from './tabView';
 export * as ToggleSwitch from './toggleSwitch';
 export * as UnsupportedRenderer from './unsupportedRenderer';
 export * as ValidatedItem from './validateItem';
+export * as ResponsiveWrapper from './responsiveWrapper';

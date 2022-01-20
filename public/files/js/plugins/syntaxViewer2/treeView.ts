@@ -25,6 +25,8 @@ import * as srcData from './srcdata';
 import {
     DetailAttrOrders, OverflowHandler, Options, Sentence, TreeNodeMap, DetailValue,
     Edge, Label, Token, ReferencedValues } from './common';
+import { ScreenProps } from '../../views/document/responsiveWrapper';
+import { debounceTime, fromEvent, map, Observable } from 'rxjs';
 
 
 /**
@@ -538,12 +540,22 @@ export function generate(
         getLayoutViews: () => null,
         addGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
         removeGlobalKeyEventHandler:(fn:(evt:Event)=>void):void => {},
-        cloneState:<T extends {[key:string]:any}>(obj:T):T => obj,
         getHelpLink:(ident:string) => '',
         browserInfo: {
             isFirefox: () => false
         },
-        getElmPosition:(elm:HTMLElement):[number, number] => [0, 0]
+        getElmPosition:(elm:HTMLElement):[number, number] => [0, 0],
+        getWindowResizeStream: () => (
+            fromEvent(window, 'resize')
+            .pipe(
+                debounceTime(500),
+                map(v => ({
+                    isMobile: false, // TODO
+                    innerWidth: window.innerWidth,
+                    innerHeight: window.innerHeight
+                }))
+            )
+        )
     };
     const gen = new TreeGenerator(options, helpers, {});
     gen.generate(data, zone, tree, target);
