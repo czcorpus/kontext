@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { List } from 'cnc-tskit';
 import * as React from 'react';
 import * as Kontext from '../../../../types/kontext';
 import { Rect, WordCloudItemCalc, TooltipData, createWordCloud, MAX_WC_FONT_SIZE } from './calc';
@@ -42,7 +43,7 @@ interface WordCloudState<T> {
 }
 
 
-export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCloudProps<T>, {}> {
+export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCloudProps<T>> {
 
     // -------------------------- <Word /> -----------------------------------------
 
@@ -79,7 +80,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
                 onMouseMove={handleMouseMove}
                 onMouseOut={handleMouseOut}
                 onMouseOver={handleMouseOver}>
-                
+
                 <rect x={props.rect.x} y={props.rect.y}
                         width={props.rect.w} height={props.rect.h}
                         opacity={0} />
@@ -170,6 +171,10 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
             "#FFC584",
             "#FFC584",
             "#FFC584",
+            "#e7c6a0",
+            "#d4bda1",
+            "#cfbda8",
+            "#cec1b3",
         ]
 
         private readonly chartContainer:React.RefObject<HTMLDivElement>;
@@ -235,6 +240,10 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
             return null;
         }
 
+        private getColor(idx:number):string {
+            return this.COLORS[idx] ? this.COLORS[idx] : List.last(this.COLORS);
+        }
+
         render() {
             const boxWidth = 200;
             const vboxAspectRatio = this.props.width / this.props.height;
@@ -256,7 +265,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
                         <g transform={wcloud.transform}>
                             {wcloud.rectangles.map((r, i) =>
                                 <Word key={`${r.x}:${r.y}:${r.w}:${r.h}`}
-                                        color={r.data && r.data.color ? r.data.color : this.COLORS[i]} rect={r}
+                                        color={r.data && r.data.color ? r.data.color : this.getColor(i)} rect={r}
                                     onMouseMove={this.handleMouseMove}
                                     onMouseOut={this.handleMouseOut}
                                     onMouseOver={this.handleMouseOver}

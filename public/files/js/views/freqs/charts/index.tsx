@@ -27,8 +27,8 @@ import { Dict, List, pipe } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
-import { ResultItem, ResultBlock } from 'public/files/js/models/freqs/regular/common';
 import * as S from './style';
+import { ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
 
 
 export function init(
@@ -160,9 +160,9 @@ export function init(
                 </ResponsiveContainer> :
 
             props.type === 'cloud' ?
-                <ResponsiveContainer width={500} height={300}>
-                    <WordCloud width={500} height={300} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
-                </ResponsiveContainer> :
+                <globalComponents.ResponsiveWrapper render={(width, height) =>
+                        <WordCloud width={width} height={height} data={props.data.Items} dataTransform={dataTransform} font={theme.monospaceFontFamily} />
+                } /> :
 
             props.type === 'timeline' ?
                 <ResponsiveContainer width="95%" height={300}>

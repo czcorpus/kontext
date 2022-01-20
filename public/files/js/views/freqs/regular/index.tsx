@@ -265,7 +265,7 @@ export function init(
                                                     hasNextPage={hasNextPage(props, sourceId)}
                                                     hasPrevPage={hasPrevPage(props, sourceId)}
                                                     totalPages={block.TotalPages}
-                                                    isLoading={props.isBusy}
+                                                    isLoading={props.isBusy[sourceId]}
                                                     totalItems={block.Total} />
                                             <div>
                                                 <drViews.DataTable head={block.Head}

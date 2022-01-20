@@ -89,7 +89,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
 
         _mkInputChangeHandler(name) {
             return (evt) => {
-                const newState = he.cloneState(this.state);
+                const newState = {...this.state};
                 if (name !== 'keepCurrent') {
                     newState[name] = evt.target.value;
 
@@ -108,13 +108,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         }
 
         _helpClickHandler() {
-            const newState = he.cloneState(this.state);
+            const newState = {...this.state};
             newState.showHelp = true;
             this.setState(newState);
         }
 
         _helpCloseHandler() {
-            const newState = he.cloneState(this.state);
+            const newState = {...this.state};
             newState.showHelp = false;
             this.setState(newState);
         }

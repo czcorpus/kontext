@@ -164,9 +164,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:ViewModuleArgs):
         }
 
         _closeDialog() {
-            const newState = he.cloneState(this.state);
-            newState.hasDialog = false;
-            this.setState(newState);
+            this.setState({...this.state, hasDialog: false});
         }
 
         _renderDialog() {
