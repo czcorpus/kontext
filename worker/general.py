@@ -232,7 +232,7 @@ def clean_colls_cache():
 
 
 def calculate_freqs(args):
-    args = freq_calc.FreqCalsArgs(**args)
+    args = freq_calc.FreqCalcArgs(**args)
     calculate_freqs.cache_path = args.cache_path
     ans = freq_calc.calculate_freqs_bg(args)
     trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
