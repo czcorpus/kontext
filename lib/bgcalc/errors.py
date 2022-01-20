@@ -33,3 +33,11 @@ class UnfinishedConcordanceError(CalcBackendError):
     in case asnc=1).
     """
     pass
+
+
+class CalcArgsAssertionError(CalcBackendError):
+    """
+    CalcArgsAssertionError represents a semantically
+    incorrect combination of function arguments for
+    a background calculation.
+    """

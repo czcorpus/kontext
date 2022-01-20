@@ -973,24 +973,24 @@ class Actions(Querying):
             rel_mode = 0
         corp_info = self.get_corpus_info(self.args.corpname)
 
-        args = freq_calc.FreqCalsArgs()
-        args.corpname = self.corp.corpname
-        args.subcname = getattr(self.corp, 'subcname', None)
-        args.subcpath = self.subcpath
-        args.user_id = self.session_get('user', 'id')
-        args.q = self.args.q
-        args.pagesize = self.args.pagesize
-        args.samplesize = 0
-        args.flimit = flimit
-        args.fcrit = fcrit
-        args.freq_sort = freq_sort
-        args.ml = ml
-        args.ftt_include_empty = self.args.ftt_include_empty
-        args.rel_mode = rel_mode
-        args.collator_locale = corp_info.collator_locale
-        args.fmaxitems = self.args.fmaxitems
-        args.fpage = self.args.fpage
-        args.force_cache = True if force_cache else False
+        args = freq_calc.FreqCalcArgs(
+            corpname=self.corp.corpname,
+            subcname=self.corp.subcname,
+            subcpath=self.subcpath,
+            user_id=self.session_get('user', 'id'),
+            q=self.args.q,
+            pagesize=self.args.pagesize,
+            samplesize=0,
+            flimit=flimit,
+            fcrit=fcrit,
+            freq_sort=freq_sort,
+            ml=ml,
+            ftt_include_empty=self.args.ftt_include_empty,
+            rel_mode=rel_mode,
+            collator_locale=corp_info.collator_locale,
+            fmaxitems=self.args.fmaxitems,
+            fpage=self.args.fpage,
+            force_cache=True if force_cache else False)
 
         calc_result = freq_calc.calculate_freqs(args)
         result.update(

@@ -36,26 +36,26 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         self._preset_corp = CorpusManager().get_corpus(fixed_corp) if fixed_corp else None
 
     def _freq_dist(self, corp: KCorpus, conc: manatee.Concordance, fcrit: str, user_id: int):
-        args = freq_calc.FreqCalsArgs()
-        args.corpname = corp.corpname
-        args.subcname = getattr(corp, 'subcname', None)
-        args.subcpath = ''  # TODO xx
-        args.user_id = user_id
-        args.pagesize = 100
-        args.samplesize = 0
-        args.flimit = 1
-        args.fcrit = [fcrit]
-        args.ml = 2
-        args.ftt_include_empty = 0
-        args.rel_mode = 1
-        args.collator_locale = 'en_US'  # TODO xx
-        args.fmaxitems = 1
-        args.fpage = 1
-        args.force_cache = False
-
-        freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
-                                 args.collator_locale)
-                 for cr in args.fcrit]
+        args = freq_calc.FreqCalcArgs(
+            corpname=corp.corpname,
+            subcname=corp.subcname,
+            subcpath=[],
+            user_id=user_id,
+            pagesize=100,
+            samplesize=0,
+            flimit=1,
+            fcrit=[fcrit],
+            ml=2,
+            ftt_include_empty=0,
+            rel_mode=1,
+            freq_sort='freq',
+            collator_locale='en_US',  # TODO use data provided by corparch plg
+            fmaxitems=1,
+            fpage=1,
+            force_cache=False)
+        freqs = [conc.xfreq_dist(
+            cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+            for cr in args.fcrit]
         return freqs[0].get('Items', [])
 
     def _normalize_multivalues(self, corp: KCorpus, srch_val: str, attr1: str, attr2: str) -> Tuple[str, str]:
