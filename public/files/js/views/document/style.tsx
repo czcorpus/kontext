@@ -797,3 +797,11 @@ export const MessagesDiv = styled.div`
         height: ${theme.closeButtonSize};
     }
 `;
+
+// ------------------ <ResponsiveWrapper /> -----------------------------
+
+export const ResponsiveWrapper = styled.div<{minWidth:number}>`
+    width: 100%;
+    height: 100%;
+    min-width: ${props => props.minWidth ? props.minWidth : 'auto'};
+`;
