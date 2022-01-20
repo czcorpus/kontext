@@ -28,3 +28,35 @@ export const FreqResultLoaderView = styled.div`
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
 `;
+
+// ---------------- <FreqChartsParamsFieldset /> -----------------------
+
+export const FreqChartsParamsFieldset = styled.fieldset`
+
+    display: flex;
+    align-items: center;
+
+    label {
+        margin-right: 0.5em;
+    }
+
+    label:not(:first-of-type) {
+        margin-left: 1.2em;
+    }
+
+`;
+
+// --------------- <FreqChartSection /> ------------------------------------
+
+export const FreqChartSection = styled.section`
+
+    h3 {
+        text-align: center;
+        padding: 0.7em auto;
+    }
+
+    .chart-wrapper {
+        padding: 1em 0.7em;
+    }
+
+`;
