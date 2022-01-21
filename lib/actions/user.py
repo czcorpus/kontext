@@ -16,7 +16,7 @@ import logging
 from controller import exposed
 from controller.errors import UserActionException, ImmediateRedirectException
 from controller.kontext import Kontext
-from main_menu import MainMenu
+from main_menu.model import MainMenu
 from translation import ugettext as _
 import plugins
 from plugins.abstract.auth import SignUpNeedsUpdateException

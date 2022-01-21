@@ -35,7 +35,7 @@ from bgcalc.pquery.errors import PqueryResultNotFound
 from bgcalc import AsyncTaskStatus
 from controller.plg import PluginCtx
 from translation import ugettext as translate
-from main_menu import MainMenu, EventTriggeringItem
+from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
 import settings
 
 
@@ -184,8 +184,15 @@ class ParadigmaticQuery(Kontext):
         self.export_form_args(ans)
         self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, ans)
         self._add_save_menu()
-        self.disabled_menu_items = (MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS,
-                                    MainMenu.VIEW('kwic-sent-switch'))
+        self.disabled_menu_items = (
+            MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS,
+            MainMenu.VIEW('kwic-sent-switch'))
+        for i, conc_id in enumerate(self._curr_pquery_args.conc_ids):
+            self._dynamic_menu_items.append(
+                MenuItemInternal(
+                    MainMenu.CONCORDANCE, translate('Go to the constituent concordance #{}').format(i+1), 'view'
+                ).add_args(('q', f'~{conc_id}'))
+            )
         return ans
 
     @exposed(http_method='POST', mutates_result=True, return_type='json')
@@ -295,14 +302,15 @@ class ParadigmaticQuery(Kontext):
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
-            self._save_menu.append(
+            self._dynamic_menu_items.append(
                 EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
                                     hint=hint).mark_indirect())  # key = 's'
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
-            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
-                                                       ).add_args(('saveformat', save_format)))
+            self._dynamic_menu_items.append(
+                EventTriggeringItem(
+                    MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
 
     def _add_save_menu(self):
         self._add_save_menu_item('CSV', save_format='csv',
