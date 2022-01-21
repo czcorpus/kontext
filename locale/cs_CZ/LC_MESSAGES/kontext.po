@@ -545,3 +545,6 @@ msgstr "Paradigmatický dotaz"
 
 msgid "Paradigmatic query calculation"
 msgstr "Výpočet paradigmatického dotazu"
+
+msgid "Go to the constituent concordance #{}"
+msgstr "Přejít na dílčí konkordanci #{}"

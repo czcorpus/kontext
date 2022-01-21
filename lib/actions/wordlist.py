@@ -18,7 +18,7 @@ from typing import Optional, Callable, List, Dict, Any, Union
 from corplib.errors import MissingSubCorpFreqFile
 from controller import exposed
 from controller.kontext import Kontext
-from main_menu import MainMenu
+from main_menu.model import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
 from bgcalc import freq_calc, calc_backend_client

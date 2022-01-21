@@ -27,7 +27,7 @@ from werkzeug import Request
 from collections import defaultdict
 
 from controller.kontext import Kontext
-from main_menu import MainMenu
+from main_menu.model import MainMenu
 from texttypes import TextTypesCache
 import plugins
 from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound

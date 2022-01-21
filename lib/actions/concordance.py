@@ -55,7 +55,8 @@ from translation import ugettext as translate
 from argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector
 from texttypes.cache import TextTypesCache
-from main_menu import MenuGenerator, MainMenu
+from main_menu.model import MainMenu
+from main_menu import generate_main_menu
 from controller.querying import Querying
 import mailing
 from conclib.freq import one_level_crit, multi_level_crit
@@ -1851,11 +1852,13 @@ class Actions(Querying):
         self._configure_auth_urls(ans)
 
         def rtrn():
-            ans['menuData'] = MenuGenerator(tmp_out, self.args, self._plugin_ctx).generate(
+            ans['menuData'] = generate_main_menu(
+                tpl_data=tmp_out,
+                args=self.args,
                 disabled_items=self.disabled_menu_items,
-                save_items=self._save_menu,
+                dynamic_items=self._dynamic_menu_items,
                 corpus_dependent=tmp_out['uses_corp_instance'],
-                ui_lang=self.ui_lang)
+                plugin_ctx=self._plugin_ctx)
             return ans
         return rtrn
 
