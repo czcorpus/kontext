@@ -28,12 +28,22 @@ import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableO
 
 export class Actions {
 
+    static ResultSetActiveTab:Action<{
+        value: 'tables'|'charts';
+    }> = {
+        name: 'FREQ_RESULT_SET_ACTIVE_TAB'
+    };
+
     static ResultSetMinFreqVal:Action<{
         value:string;
         debounced?:boolean;
     }> = {
         name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
     };
+
+    static isResultSetMinFreqVal(a:Action):a is typeof Actions.ResultSetMinFreqVal {
+        return a.name === Actions.ResultSetMinFreqVal.name;
+    }
 
     static ReloadData:Action<{
         sourceId:string;
@@ -70,6 +80,10 @@ export class Actions {
     }> = {
         name: 'FREQ_RESULT_SET_CURRENT_PAGE'
     };
+
+    static isResultSetCurrentPage(a:Action):a is typeof Actions.ResultSetCurrentPage {
+        return a.name === Actions.ResultSetCurrentPage.name;
+    }
 
     static ResultCloseSaveForm:Action<{
     }> = {
@@ -218,7 +232,7 @@ export class Actions {
     };
 
     static FreqChartsChangePageSize:Action<{
-        value:number;
+        value:string;
         sourceId:string;
         debounced?:boolean;
     }> = {

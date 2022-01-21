@@ -67,6 +67,7 @@ export interface BaseFreqModelState {
     freqCritAsync:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
+    isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
 }
 

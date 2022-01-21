@@ -22,7 +22,7 @@ import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { debounceTime, Observable, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
 import {
     BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     ResultBlock, validateNumber } from './common';
@@ -169,14 +169,28 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isActive: true,
                 saveFormActive: false
             }
         );
         this.pageModel = pageModel;
         this.freqLoader = freqLoader;
-        this.debouncedAction$ = new Subject();
+        this.debouncedAction$ = new Subject<DebouncedActions>();
         this.debouncedAction$.pipe(
-            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS),
+            distinctUntilChanged(
+                (prev, curr) => {
+                    if (Actions.isResultSetCurrentPage(prev) && Actions.isResultSetCurrentPage(curr)) {
+                        return prev.payload.sourceId === curr.payload.sourceId && prev.payload.value === curr.payload.value;
+
+                    } else if (Actions.isResultSetMinFreqVal(prev) && Actions.isResultSetMinFreqVal(curr)) {
+                        return prev.payload.value === curr.payload.value;
+
+                    } else {
+                        return prev === curr;
+                    }
+                }
+            )
 
         ).subscribe({
             next: value => {
@@ -193,6 +207,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             saveLinkFn,
             quickSaveRowLimit
         });
+
+        this.addActionHandler(
+            Actions.ResultSetActiveTab,
+            (state, action) => {
+                state.isActive = action.payload.value === 'tables';
+            }
+        );
 
         this.addActionHandler>(
             MainMenuActions.ShowSaveForm,
@@ -213,6 +234,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
+                        if (!state.isActive) {
+                            state.data = Dict.map(_ => undefined, state.data);
+                        }
                     }
 
                 } else {
@@ -224,17 +248,19 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             (state, action, dispatch) => {
                 if (action.payload.debounced) {
                     if (validateNumber(action.payload.value, 0)) {
-                        Dict.forEach(
-                            (block, fcrit) => {
-                                this.dispatchLoad(
-                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
-                                    state,
-                                    dispatch,
-                                    true
-                                );
-                            },
-                            state.data
-                        );
+                        if (state.isActive) {
+                            Dict.forEach(
+                                (block, fcrit) => {
+                                    this.dispatchLoad(
+                                        this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                        state,
+                                        dispatch,
+                                        true
+                                    );
+                                },
+                                state.data
+                            );
+                        }
 
                     } else {
                         this.pageModel.showMessage(

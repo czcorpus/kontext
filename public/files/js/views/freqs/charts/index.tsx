@@ -56,7 +56,7 @@ export function init(
         type:FreqChartsAvailableTypes;
         dataKey:FreqChartsAvailableData;
         data:ResultBlock;
-        fmaxitems:number;
+        fmaxitems:Kontext.FormValue<string>;
         sortColumn:string;
         isBusy:boolean;
         dtFormat:string;
@@ -105,33 +105,36 @@ export function init(
 
         return (
             <S.FreqChartsParamsFieldset>
-                <label htmlFor="sel-type">type:</label>
+                <label htmlFor="sel-type">{he.translate('freq__visualisation_type')}:</label>
                 <select id="sel-type" value={props.type} onChange={handleTypeChange}>
-                    <option value='bar'>bar</option>
-                    <option value='cloud'>cloud</option>
-                    {props.dtFormat ? <option value='timeline'>timeline</option> : null}
+                    <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
+                    <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
+                    {props.dtFormat ? <option value="timeline">{he.translate('freq__visualisation_type_line')}</option> : null}
                 </select>
                 {props.type !== 'cloud' ?
                     <>
-                        <label htmlFor='sel-units'>units:</label>
-                        <select id='sel-units' value={props.dataKey} onChange={handleUnitsChange}>
-                            <option value='freq'>abs</option>
+                        <label htmlFor="sel-units">{he.translate('freq__visualization_units')}:</label>
+                        <select id="sel-units" value={props.dataKey} onChange={handleUnitsChange}>
+                            <option value="freq">{he.translate('freq__unit_abs')}</option>
                             {List.some(v => !!v.rel, props.data.Items) ?
-                                <option value='rel'>ipm</option> :
+                                <option value="rel">{he.translate('freq__unit_rel')}</option> :
                                 null}
                         </select>
                     </> :
                     null}
-                <label htmlFor='input-max'>display max:</label>
-                <input type='number' min={1} id='input-max' value={props.fmaxitems} onChange={handlePageSizeChange} />
+                <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
+                <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
+                    <input type="text" id="input-max" style={{width: '2em'}} value={props.fmaxitems.value} onChange={handlePageSizeChange} />
+                </globalComponents.ValidatedItem>
+                {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
                 {props.type === 'bar' ?
                     <>
-                        <label htmlFor='sel-order'>order:</label>
-                        <select id='sel-order' value={props.sortColumn} onChange={handleOrderChange}>
-                            <option value='0'>name</option>
-                            <option value='freq'>freq</option>
+                        <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
+                        <select id="sel-order" value={props.sortColumn} onChange={handleOrderChange}>
+                            <option value="0">{he.translate('freq__unit_value')}</option>
+                            <option value="freq">{he.translate('freq__unit_abs')}</option>
                             {List.some(v => !!v.rel, props.data.Items) ?
-                                <option value='rel'>rel</option> :
+                                <option value="rel">{he.translate('freq__unit_rel')}</option> :
                                 null
                             }
                         </select>
@@ -153,7 +156,7 @@ export function init(
         dataKey:FreqChartsAvailableData;
         isBusy:boolean;
         dtFormat:string;
-        fmaxitems:number;
+        fmaxitems:Kontext.FormValue<string>;
         sortColumn:string;
     }> = (props) => {
 
@@ -181,16 +184,16 @@ export function init(
                                 />;
                 case 'timeline':
                     return <ResponsiveContainer width="95%" height={300}>
-                        <LineChart data={props.data.Items} >
+                        <LineChart data={props.data.Items}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
                             <Tooltip />
-                            <Line dataKey={props.dataKey} />
+                            <Line dataKey={props.dataKey} strokeWidth={3} />
                         </LineChart>
                     </ResponsiveContainer>;
                 default:
-                        <div>unknown chart</div>;
+                    return <div>unknown chart</div>;
             }
         }
 
