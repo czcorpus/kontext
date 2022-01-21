@@ -20,7 +20,7 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { debounceTime, Observable, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Observable, Subject, tap } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
@@ -29,7 +29,9 @@ import {
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute } from '../../../types/kontext';
+import { StructuralAttribute, FormValue, newFormValue } from '../../../types/kontext';
+import { validateGzNumber } from '../../base';
+
 
 export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
 
@@ -53,7 +55,7 @@ export interface FreqChartsModelArgs {
 export interface FreqChartsModelState extends BaseFreqModelState {
     type:{[sourceId:string]:FreqChartsAvailableTypes};
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
-    fmaxitems:{[sourceId:string]:number};
+    fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
 }
 
@@ -134,7 +136,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     freqCrit,
                     List.concat(freqCritAsync),
                     List.map(
-                        k => tuple(k, fmaxitems)
+                        k => tuple(k, newFormValue(fmaxitems + '', true))
                     ),
                     Dict.fromEntries()
                 ),
@@ -146,6 +148,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isActive: false,
                 dtFormat: pipe(
                     freqCrit,
                     List.concat(freqCritAsync),
@@ -162,7 +165,20 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
         this.debouncedAction$ = new Subject();
         this.debouncedAction$.pipe(
-            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
+            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS),
+            distinctUntilChanged(
+                (prev, curr) => {
+                    if (Actions.isResultSetCurrentPage(prev) && Actions.isResultSetCurrentPage(curr)) {
+                        return prev.payload.sourceId === curr.payload.sourceId && prev.payload.value === curr.payload.value;
+
+                    } else if (Actions.isResultSetMinFreqVal(prev) && Actions.isResultSetMinFreqVal(curr)) {
+                        return prev.payload.value === curr.payload.value;
+
+                    } else {
+                        return prev === curr;
+                    }
+                }
+            )
 
         ).subscribe({
             next: value => {
@@ -172,6 +188,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 });
             }
         });
+
+        this.addActionHandler(
+            Actions.ResultSetActiveTab,
+            (state, action) => {
+                state.isActive = action.payload.value === 'charts';
+            }
+        );
 
         this.addActionHandler(
             Actions.FreqChartsDataLoaded,
@@ -230,20 +253,33 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state.isBusy[action.payload.sourceId] = true;
 
                 } else {
-                    state.fmaxitems[action.payload.sourceId] = action.payload.value;
+                    state.fmaxitems[action.payload.sourceId].value = action.payload.value;
+                    if (!validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
+                        state.fmaxitems[action.payload.sourceId].isInvalid = true;
+                        state.fmaxitems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
+
+                    } else {
+                        state.fmaxitems[action.payload.sourceId].isInvalid = false;
+                        state.fmaxitems[action.payload.sourceId].errorDesc = undefined;
+                    }
                     this.debouncedAction$.next(action);
                 }
 
             },
             (state, action, dispatch) => {
                 if (action.payload.debounced) {
-                    this.dispatchLoad(
-                        this.freqLoader.loadPage(
-                            this.getSubmitArgs(state, action.payload.sourceId)
-                        ),
-                        state,
-                        dispatch,
-                    );
+                    if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
+                        this.dispatchLoad(
+                            this.freqLoader.loadPage(
+                                this.getSubmitArgs(state, action.payload.sourceId)
+                            ),
+                            state,
+                            dispatch,
+                        );
+
+                    } else {
+                        this.pageModel.showMessage('error', this.pageModel.translate('options__value_must_be_gt_0'));
+                    }
                 }
             }
         );
@@ -269,6 +305,9 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
+                        if (!state.isActive) {
+                            state.data = Dict.map(_ => undefined, state.data);
+                        }
                     }
 
                 } else {
@@ -280,16 +319,18 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action, dispatch) => {
                 if (action.payload.debounced) {
                     if (validateNumber(action.payload.value, 0)) {
-                        Dict.forEach(
-                            (block, fcrit) => {
-                                this.dispatchLoad(
-                                    this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
-                                    state,
-                                    dispatch
-                                );
-                            },
-                            state.data
-                        );
+                        if (state.isActive) {
+                            Dict.forEach(
+                                (block, fcrit) => {
+                                    this.dispatchLoad(
+                                        this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                        state,
+                                        dispatch
+                                    );
+                                },
+                                state.data
+                            );
+                        }
 
                     } else {
                         this.pageModel.showMessage(
@@ -322,7 +363,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         state:FreqChartsModelState,
         dispatch:SEDispatcher
     ):void {
-
         load.subscribe({
             next: data => {
                 List.forEach(
@@ -360,7 +400,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             fpage: state.currentPage[fcrit],
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
-            fmaxitems: state.fmaxitems[fcrit],
+            fmaxitems: state.fmaxitems[fcrit].value,
             format: 'json'
         };
     }

@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Dict, Keyboard, List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
@@ -190,6 +190,7 @@ export function init(
 
         return (
             <S.FreqResultLoaderView>
+                <h3>{sourceId}</h3>
                 <globalComponents.AjaxLoaderImage />
             </S.FreqResultLoaderView>
         );
@@ -214,8 +215,13 @@ export function init(
             return parseInt(state.currentPage[sourceId]) > 1 && state.data[sourceId].TotalPages > 1;
         }
 
-        const handleTabSelection = (id:string) => {
-
+        const handleTabSelection = (value:string) => {
+            dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
+                name: Actions.ResultSetActiveTab.name,
+                payload: {
+                    value: value as 'tables'|'charts'
+                }
+            });
         }
 
         return (
