@@ -22,7 +22,7 @@ import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
+import { debounceTime, Observable, Subject } from 'rxjs';
 import {
     BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     ResultBlock, validateNumber } from './common';
@@ -121,6 +121,9 @@ type DebouncedActions =
     typeof Actions.ResultSetCurrentPage | typeof Actions.ResultSetMinFreqVal;
 
 
+/**
+ * FreqDataRowsModel handles traditional 'table' representation of frequencies
+ */
 export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     private pageModel:PageModel;
@@ -178,20 +181,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.freqLoader = freqLoader;
         this.debouncedAction$ = new Subject<DebouncedActions>();
         this.debouncedAction$.pipe(
-            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS),
-            distinctUntilChanged(
-                (prev, curr) => {
-                    if (Actions.isResultSetCurrentPage(prev) && Actions.isResultSetCurrentPage(curr)) {
-                        return prev.payload.sourceId === curr.payload.sourceId && prev.payload.value === curr.payload.value;
-
-                    } else if (Actions.isResultSetMinFreqVal(prev) && Actions.isResultSetMinFreqVal(curr)) {
-                        return prev.payload.value === curr.payload.value;
-
-                    } else {
-                        return prev === curr;
-                    }
-                }
-            )
+            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
 
         ).subscribe({
             next: value => {
@@ -371,17 +361,18 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSetCurrentPage,
             (state, action) => {
                 state.currentPage[action.payload.sourceId] = action.payload.value;
-                if (action.payload.debounced) {
-                    if (validateNumber(action.payload.value, 1)) {
-                        state.isBusy[action.payload.sourceId] = true;
-                    }
+                if (validateNumber(action.payload.value, 1)) {
+                    state.isBusy[action.payload.sourceId] = true;
 
                 } else {
+                    state.isBusy[action.payload.sourceId] = false;
+                }
+                if (!action.payload.debouncedFor) {
                     this.debouncedAction$.next(action);
                 }
             },
             (state, action, dispatch) => {
-                if (action.payload.debounced) {
+                if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 1)) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
