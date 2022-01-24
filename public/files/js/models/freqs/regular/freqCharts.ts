@@ -20,7 +20,7 @@
 
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { debounceTime, distinctUntilChanged, Observable, Subject, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
@@ -184,7 +184,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             next: value => {
                 dispatcher.dispatch({
                     ...value,
-                    payload: {...value.payload, debounced: true}
+                    payload: {...value.payload, debouncedFor: 'charts'}
                 });
             }
         });
@@ -301,7 +301,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler(
             Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (action.payload.debounced) {
+                if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
@@ -317,7 +317,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
             },
             (state, action, dispatch) => {
-                if (action.payload.debounced) {
+                if (action.payload.debouncedFor === 'charts') {
                     if (validateNumber(action.payload.value, 0)) {
                         if (state.isActive) {
                             Dict.forEach(

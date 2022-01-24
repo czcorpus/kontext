@@ -196,7 +196,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             next: value => {
                 dispatcher.dispatch({
                     ...value,
-                    payload: {...value.payload, debounced: true}
+                    payload: {...value.payload, debouncedFor: 'tables'}
                 });
             }
         });
@@ -230,7 +230,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultSetMinFreqVal,
             (state, action) => {
-                if (action.payload.debounced) {
+                if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
@@ -246,7 +246,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
             },
             (state, action, dispatch) => {
-                if (action.payload.debounced) {
+                if (action.payload.debouncedFor === 'tables') {
                     if (validateNumber(action.payload.value, 0)) {
                         if (state.isActive) {
                             Dict.forEach(
