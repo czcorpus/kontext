@@ -761,6 +761,8 @@
         "freq__unit_rel": "relative frequency (ipm)",
         "freq__unit_time": "date/time",
         "freq__unit_value": "text value",
+        "freq__tab_tables_button": "Table view",
+        "freq__tab_charts_button": "Chart view",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",
