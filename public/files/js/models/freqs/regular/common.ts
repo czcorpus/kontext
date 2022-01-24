@@ -112,3 +112,6 @@ export class FreqDataLoader {
         )
     }
 }
+
+
+export type FreqDisplayMode = 'tables'|'charts';

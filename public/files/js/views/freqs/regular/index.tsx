@@ -137,12 +137,14 @@ export function init(
     const MinFreqInput:React.FC<{
         minFreqVal:string;
 
-    }> = (props) => {
+    }> = ({minFreqVal}) => {
 
         const handleInputChange = (evt:React.ChangeEvent<HTMLInputElement>) => {
             dispatcher.dispatch<typeof Actions.ResultSetMinFreqVal>({
                 name: Actions.ResultSetMinFreqVal.name,
-                payload: {value: evt.target.value}
+                payload: {
+                    value: evt.target.value
+                }
             });
         };
 
@@ -150,7 +152,7 @@ export function init(
             <label>
                 {he.translate('freq__limit_input_label')}:
                 {'\u00a0'}
-                <input type="text" name="flimit" value={props.minFreqVal}
+                <input type="text" name="flimit" value={minFreqVal}
                         style={{width: '3em'}}
                         onChange={handleInputChange} />
             </label>

@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { ResultBlock } from './common';
+import { FreqDisplayMode, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
@@ -29,14 +29,14 @@ import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableO
 export class Actions {
 
     static ResultSetActiveTab:Action<{
-        value: 'tables'|'charts';
+        value: FreqDisplayMode;
     }> = {
         name: 'FREQ_RESULT_SET_ACTIVE_TAB'
     };
 
     static ResultSetMinFreqVal:Action<{
         value:string;
-        debounced?:boolean;
+        debouncedFor?:FreqDisplayMode;
     }> = {
         name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
     };
