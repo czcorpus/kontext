@@ -32,6 +32,7 @@ import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
+import { Actions as GeneralOptsActions } from '../../options/actions';
 
 
 export interface FreqDataRowsModelArgs {
@@ -281,6 +282,26 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     state,
                     dispatch,
                     false
+                );
+            }
+        );
+
+        this.addActionHandler(
+            GeneralOptsActions.GeneralSubmitDone,
+            (state, action) => {
+                state.isBusy = Dict.map(v => true, state.isBusy);
+            },
+            (state, action, dispatch) => {
+                Dict.forEach(
+                    (block, fcrit) => {
+                        this.dispatchLoad(
+                            this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                            state,
+                            dispatch,
+                            true
+                        );
+                    },
+                    state.data
                 );
             }
         );
