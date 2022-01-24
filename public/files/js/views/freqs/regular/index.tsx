@@ -227,13 +227,16 @@ export function init(
         }
 
         return (
-            <div>
+            <S.FreqResultView>
                 <FilterForm minFreqVal={props.flimit} />
                 <hr />
                 <globalComponents.TabView
                         className="FreqViewSelector"
                         callback={handleTabSelection}
-                        items={[{id: 'tables', label: 'Tables'}, {id: 'charts', label: 'Charts'}]}
+                        items={[
+                            {id: 'tables', label: he.translate('freq__tab_tables_button')},
+                            {id: 'charts', label: he.translate('freq__tab_charts_button')}
+                        ]}
                         defaultId="tables"
                         noButtonSeparator={true} >
                     <div className="FreqResultView">
@@ -276,7 +279,7 @@ export function init(
                         <chartViews.FreqChartsView />
                     </div>
                 </globalComponents.TabView>
-            </div>
+            </S.FreqResultView>
         );
     }
 

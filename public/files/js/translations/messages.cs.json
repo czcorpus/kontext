@@ -761,6 +761,8 @@
         "freq__unit_rel": "relativní frekvence (ipm)",
         "freq__unit_time": "datum/čas",
         "freq__unit_value": "textová hodnota",
+        "freq__tab_tables_button": "Tabulkové zobrazení",
+        "freq__tab_charts_button": "Zobrazení v grafech",
         "user__password_change": "Změna hesla",
         "user__new_password": "Nové heslo",
         "user__new_password_again": "Nové heslo (znovu)",

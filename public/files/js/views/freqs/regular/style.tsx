@@ -21,6 +21,17 @@
 import styled from 'styled-components';
 import * as theme from '../../theme/default';
 
+// -------------- <FreqResultView /> ------------
+
+export const FreqResultView = styled.div`
+
+    .FreqViewSelector {
+        margin-top: 1.4em;
+        margin-bottom: 1.7em;
+    }
+
+`;
+
 // -------------- <FilterForm /> --------------
 
 export const FilterForm = styled.form`
