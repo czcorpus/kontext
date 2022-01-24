@@ -42,7 +42,7 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, pipe, URL as CURL } from 'cnc-tskit';
+import { Dict, List, pipe, tuple, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
@@ -289,6 +289,17 @@ class FreqPage {
                 this.freqLoader = new FreqDataLoader({
                     pageModel: this.layoutModel
                 });
+                const initialData = List.map(
+                    block =>importFreqData(
+                        this.layoutModel,
+                        block,
+                        this.layoutModel.getConf<number>('CurrentPage'),
+                        this.layoutModel.getConf<number>('FreqItemsPerPage')
+                    ),
+                    this.layoutModel.getConf<Array<Block>>('FreqResultData'),
+                );
+                const currentPage = this.layoutModel.getConf<number>('CurrentPage');
+
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
@@ -297,16 +308,8 @@ class FreqPage {
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-                    initialData: List.map(
-                        block =>importFreqData(
-                            this.layoutModel,
-                            block,
-                            this.layoutModel.getConf<number>('CurrentPage'),
-                            this.layoutModel.getConf<number>('FreqItemsPerPage')
-                        ),
-                        this.layoutModel.getConf<Array<Block>>('FreqResultData'),
-                    ),
-                    currentPage: this.layoutModel.getConf<number>('CurrentPage'),
+                    initialData,
+                    currentPage,
                     freqLoader: this.freqLoader
                 });
                 this.freqChartsModel = new FreqChartsModel({
@@ -315,16 +318,13 @@ class FreqPage {
                     freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
-                    initialData: List.map(
-                        block =>importFreqData(
-                            this.layoutModel,
-                            block,
-                            1, // TODO this is debatable even for a chart output
-                            this.layoutModel.getConf<number>('FreqItemsPerPage')
+                    initialData: currentPage === 1 ?
+                        initialData :
+                        pipe(
+                            this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                            List.concat(this.layoutModel.getConf<Array<string>>('FreqCritAsync')),
+                            List.map(v => ({fcrit: v, isInvalid: true}))
                         ),
-                        this.layoutModel.getConf<Array<Block>>('FreqResultData'),
-                    ),
-                    currentPage: this.layoutModel.getConf<number>('CurrentPage'),
                     fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
                 });

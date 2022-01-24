@@ -76,7 +76,7 @@ export class Actions {
     static ResultSetCurrentPage:Action<{
         value:string;
         sourceId:string;
-        debounced?:boolean;
+        debouncedFor?:FreqDisplayMode;
     }> = {
         name: 'FREQ_RESULT_SET_CURRENT_PAGE'
     };
@@ -234,7 +234,7 @@ export class Actions {
     static FreqChartsChangePageSize:Action<{
         value:string;
         sourceId:string;
-        debounced?:boolean;
+        debouncedFor?:FreqDisplayMode;
     }> = {
         name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
     };
