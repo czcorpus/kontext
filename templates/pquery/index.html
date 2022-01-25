@@ -29,6 +29,7 @@ KonText - {{ "Paradigmatic query"|_}}
 {% block bodyonload %}
 __conf.SubcorpList = {{SubcorpList|to_json}};
 __conf.AttrList = {{ AttrList|default([], true)|to_json }};
+__conf.AlignAttrList = {{ AlignAttrList|to_json }};
 __conf.StructAttrList = {{ StructAttrList|to_json }};
 __conf.StructList = {{ StructList|to_json }};
 __conf.FormData = {{ pquery_form|to_json }};

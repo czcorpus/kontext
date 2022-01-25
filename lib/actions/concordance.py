@@ -1758,16 +1758,15 @@ class Actions(Querying):
             MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
             MainMenu.VIEW('kwic-sent-switch'))
 
-        align_attrlist = None
+        attrlist = self.corp.get_posattrs()
+        align_attrlist = set(attrlist)
+
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
             alcorp = self.cm.get_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
             if al in self.args.align:
-                if align_attrlist is None:
-                    align_attrlist = set(alcorp.get_posattrs())
-                else:
-                    align_attrlist.intersection_update(alcorp.get_posattrs())
+                align_attrlist.intersection_update(alcorp.get_posattrs())
 
         tmp_out = dict(
             uses_corp_instance=True,
@@ -1775,12 +1774,6 @@ class Actions(Querying):
             usesubcorp=self.args.usesubcorp,
             undo_q=[]
         )
-
-        attrlist = self.corp.get_posattrs()
-        if align_attrlist is None:
-            align_attrlist = set(attrlist)
-        else:
-            align_attrlist.intersection_update(attrlist)
 
         tmp_out['AttrList'] = [{
             'label': self.corp.get_conf(f'{n}.LABEL') or n,

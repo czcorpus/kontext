@@ -157,6 +157,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
     const AttributesCheckboxes:React.FC<{
         attrList:Array<ViewOptions.AttrDesc>;
+        alignAttrList:Array<string>;
         basePosAttr:string;
         baseViewAttr:string;
         hasSelectAll:boolean;
@@ -193,8 +194,8 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                         </tr>
                     </thead>
                     <tbody>
-                        {props.attrList.map((item, i) => (
-                            <tr key={`${i}:${item.n}`}>
+                        {List.map((item, i) => (
+                            <tr key={`${i}:${item.n}`} style={{backgroundColor: List.find(v => v === item.n, props.alignAttrList) ? null : 'red'}}>
                                 <th className="row-hd attr">
                                     {item.label}
                                 </th>
@@ -204,7 +205,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                                     <input type="radio" name="mainViewAttr" checked={item.n === props.baseViewAttr} onChange={()=>undefined} />
                                 </td>
                             </tr>
-                        ))}
+                        ), props.attrList)}
                         <tr className="func">
                             <td />
                             <td className="select-whole-col">
@@ -503,6 +504,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Array<ViewOptions.AttrDesc>;
+        alignAttrList:Array<string>;
         baseViewAttr:string;
         basePosAttr:string;
         availStructs:Array<ViewOptions.StructDesc>;
@@ -552,6 +554,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
                             <AttributesCheckboxes
                                 attrList={props.attrList}
+                                alignAttrList={props.alignAttrList}
                                 basePosAttr={props.basePosAttr}
                                 baseViewAttr={props.baseViewAttr}
                                 hasSelectAll={props.hasSelectAllAttrs}
@@ -603,6 +606,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
             <StructsAndAttrsForm
                     fixedAttr={props.fixedAttr}
                     attrList={props.attrList}
+                    alignAttrList={props.alignAttrList}
                     basePosAttr={props.basePosAttr}
                     baseViewAttr={props.baseViewAttr}
                     hasSelectAllAttrs={props.selectAllAttrs}

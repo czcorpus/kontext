@@ -178,7 +178,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<any>('menuData', data.menuData); // TODO type
                             this.conf.setConf<Array<any>>('Wposlist', data.Wposlist); // TODO type
                             this.conf.setConf<Array<any>>('AttrList', data.AttrList); // TODO type
-                            this.conf.setConf<Array<any>>('AlignAttrList', data.AlignAttrList); // TODO type
+                            this.conf.setConf<Array<string>>('AlignAttrList', data.AlignAttrList);
                             this.conf.setConf<Array<Kontext.AttrItem>>('StructAttrList', data.StructAttrList);
                             this.conf.setConf<Array<string>>('StructList', data.StructList);
                             this.conf.setConf<{[corpname:string]:string}>('InputLanguages', data.InputLanguages);
