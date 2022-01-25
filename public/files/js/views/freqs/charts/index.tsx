@@ -21,14 +21,21 @@
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
-import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqChartsModel, FreqChartsModelState } from "../../../models/freqs/regular/freqCharts";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line, ResponsiveContainer } from 'recharts';
+import {
+    FreqChartsAvailableData, FreqChartsAvailableTypes, FreqChartsModel,
+    FreqChartsModelState
+} from '../../../models/freqs/regular/freqCharts';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line,
+    ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
+    Legend
+} from 'recharts';
 import { Dict, List, pipe } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
-import { ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
+import { reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
 
 
 export function init(
@@ -109,7 +116,14 @@ export function init(
                 <select id="sel-type" value={props.type} onChange={handleTypeChange}>
                     <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
                     <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
-                    {props.dtFormat ? <option value="timeline">{he.translate('freq__visualisation_type_line')}</option> : null}
+                    <option value="pie">pie</option>
+                    {props.dtFormat ?
+                        <>
+                            <option value="timeline">{he.translate('freq__visualisation_type_line')}</option>
+                            <option value="timescatter">{he.translate('freq__visualisation_type_scatter')}</option>
+                        </> :
+                        null
+                    }
                 </select>
                 {props.type !== 'cloud' ?
                     <>
@@ -147,6 +161,36 @@ export function init(
         );
     }
 
+    // ---------------------- <PieChartCustomizer /> ---------------
+
+    const PieChartCustomizer:React.FC<{
+        sourceId:string;
+        value:Kontext.FormValue<string>;
+
+    }> = ({sourceId, value}) => {
+
+        const handleInput = (evt:React.ChangeEvent<HTMLInputElement>) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsPieSetMaxIndividualItems>({
+                name: Actions.FreqChartsPieSetMaxIndividualItems.name,
+                payload: {
+                    sourceId,
+                    value: evt.target.value
+                }
+            });
+        }
+
+        return (
+            <div>
+                <label>
+                    {he.translate('freq__pie_chart_max_items_input_label')}:{'\u00a0'}
+                    <globalComponents.ValidatedItem invalid={value.isInvalid}>
+                        <input type="text" style={{width: '2em'}} onChange={handleInput} value={value.value} />
+                    </globalComponents.ValidatedItem>
+                </label>
+            </div>
+        );
+    }
+
     // ----------------------- <FreqChart /> -------------------------
 
     const FreqChart:React.FC<{
@@ -158,6 +202,7 @@ export function init(
         dtFormat:string;
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:string;
+        pieChartMaxIndividualItems:Kontext.FormValue<string>;
     }> = (props) => {
 
         const maxLabelLength = (List.maxItem(
@@ -182,6 +227,56 @@ export function init(
                                 <WordCloud width={width} height={height} data={props.data.Items}
                                         dataTransform={dataTransform} font={theme.monospaceFontFamily} />}
                                 />;
+                case 'pie':
+                    const modList = reduceNumResultItems(
+                        props.data.Items,
+                        parseInt(props.pieChartMaxIndividualItems.value),
+                        he.translate('freq__pie_other_group_label')
+                    );
+                    const legendFormatter = (value, entry) => {
+                        return (
+                            <span style={{color: '#000'}}>
+                                <strong>{entry.payload.Word.join(' ')}</strong>:{'\u00a0'}
+                                {entry.payload[props.dataKey]}{'\u00a0'}
+                                ({he.formatNumber(100*entry.payload.percent, 1)}%)
+                            </span>
+                        );
+                    };
+                    const RADIAN = Math.PI / 180;
+                    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                        const radius = innerRadius + (outerRadius - innerRadius) * 1.25;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                        return (
+                          <text x={x} y={y} fill="#111111" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+                            {modList[index].Word.join(' ')}
+                          </text>
+                        );
+                      };
+                    return (
+                        <>
+                            <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} />
+                            <ResponsiveContainer width="95%" height={300}>
+                                <PieChart>
+                                    <Pie
+                                        isAnimationActive={false}
+                                        data={modList}
+                                        dataKey={props.dataKey}
+                                        label={renderCustomizedLabel}
+                                        cx="40%"
+                                        cy="50%"
+                                        labelLine={true} >
+                                            {List.map(
+                                                (entry, i) => <Cell key={`cell-${entry.Word.join(':')}`} fill={theme.colorCategoricalData[i]} />,
+                                                modList
+                                            )}
+                                    </Pie>
+                                    <Legend verticalAlign="middle" align="right" layout="vertical" formatter={legendFormatter} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </>
+                    );
                 case 'timeline':
                     return <ResponsiveContainer width="95%" height={300}>
                         <LineChart data={props.data.Items}>
@@ -189,11 +284,21 @@ export function init(
                             <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
                             <Tooltip />
-                            <Line dataKey={props.dataKey} strokeWidth={3} />
+                            <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
                         </LineChart>
                     </ResponsiveContainer>;
+                case 'timescatter':
+                        return <ResponsiveContainer width="95%" height={300}>
+                            <ScatterChart>
+                                <CartesianGrid strokeDasharray='3 3'/>
+                                <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
+                                <YAxis type='number' />
+                                <Tooltip />
+                                <Scatter data={props.data.Items} dataKey={props.dataKey} fill={theme.colorLogoBlue} />
+                            </ScatterChart>
+                        </ResponsiveContainer>;
                 default:
-                    return <div>unknown chart</div>;
+                    return <div>ERROR: unknown chart type <strong>{props.type}</strong></div>;
             }
         }
 
@@ -260,7 +365,8 @@ export function init(
                                     type={props.type[sourceId]}
                                     isBusy={props.isBusy[sourceId]}
                                     dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
-                                    sortColumn={props.sortColumn[sourceId]} /> :
+                                    sortColumn={props.sortColumn[sourceId]}
+                                    pieChartMaxIndividualItems={props.pieChartMaxIndividualItems[sourceId]} /> :
                             <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]} />
                     )
                 )

@@ -19,7 +19,7 @@ import { List } from 'cnc-tskit';
 import * as React from 'react';
 import * as Kontext from '../../../../types/kontext';
 import { Rect, WordCloudItemCalc, TooltipData, createWordCloud, MAX_WC_FONT_SIZE } from './calc';
-
+import * as theme from '../../../../views/theme/default';
 import * as S from './style';
 
 
@@ -159,24 +159,6 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
 
     class WordCloud<T> extends React.Component<WordCloudProps<T>, WordCloudState<T>> {
 
-        COLORS = [
-            "#60CFFF",
-            "#8ADCFF",
-            "#94A3FF",
-            "#C1C9FF",
-            "#FFDC84",
-            "#FFEBB8",
-            "#FFB058",
-            "#FFC584",
-            "#FFC584",
-            "#FFC584",
-            "#FFC584",
-            "#e7c6a0",
-            "#d4bda1",
-            "#cfbda8",
-            "#cec1b3",
-        ]
-
         private readonly chartContainer:React.RefObject<HTMLDivElement>;
 
         constructor(props) {
@@ -241,7 +223,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
         }
 
         private getColor(idx:number):string {
-            return this.COLORS[idx] ? this.COLORS[idx] : List.last(this.COLORS);
+            return theme.colorCategoricalData[idx] ? theme.colorCategoricalData[idx] : List.last(theme.colorCategoricalData);
         }
 
         render() {

@@ -37,7 +37,7 @@ export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
 
 export type FreqChartsAvailableData = 'freq'|'rel';
 
-export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline';
+export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'pie';
 
 
 export interface FreqChartsModelArgs {
@@ -56,10 +56,14 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
+    pieChartMaxIndividualItems:{[sourceId:string]:FormValue<string>};
 }
 
+
 type DebouncedActions =
-    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal;
+    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal |
+        typeof Actions.FreqChartsPieSetMaxIndividualItems;
+
 
 function getDtFormat(pageModel:PageModel, fcrit:string):string {
     return List.find(
@@ -74,7 +78,10 @@ function importInitialValue(v:ResultBlock|{fcrit:string; isInvalid:boolean}):Res
     return 'isInvalid' in v ? undefined : v;
 }
 
-
+/**
+ * FreqChartsModel handles data operations and events for frequency distribution
+ * in form of charts.
+ */
 export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     private pageModel:PageModel;
@@ -150,6 +157,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     allCrits,
                     List.map(
                         k => tuple(k, getDtFormat(pageModel, k))
+                    ),
+                    Dict.fromEntries()
+                ),
+                pieChartMaxIndividualItems: pipe(
+                    allCrits,
+                    List.map(
+                        k => tuple(k, newFormValue('5', true))
                     ),
                     Dict.fromEntries()
                 )
@@ -336,6 +350,40 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     state,
                     dispatch,
                 );
+            }
+        );
+
+        this.addActionHandler(
+            Actions.FreqChartsPieSetMaxIndividualItems,
+            (state, action) => {
+                if (action.payload.debouncedFor) {
+                    state.isBusy[action.payload.sourceId] = true;
+
+                } else {
+                    state.pieChartMaxIndividualItems[action.payload.sourceId].value = action.payload.value;
+                    if (!validateGzNumber(state.pieChartMaxIndividualItems[action.payload.sourceId].value)) {
+                        state.pieChartMaxIndividualItems[action.payload.sourceId].isInvalid = true;
+                        state.pieChartMaxIndividualItems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
+
+                    } else {
+                        state.pieChartMaxIndividualItems[action.payload.sourceId].isInvalid = false;
+                        state.pieChartMaxIndividualItems[action.payload.sourceId].errorDesc = undefined;
+                    }
+                    this.debouncedAction$.next(action);
+                }
+            },
+            (state, action, dispatch) => {
+                dispatch<typeof Actions.FreqChartsPieSetMaxIndividualItemsDone>({
+                    name: Actions.FreqChartsPieSetMaxIndividualItemsDone.name,
+                    payload: {sourceId: action.payload.sourceId}
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.FreqChartsPieSetMaxIndividualItemsDone,
+            (state, action) => {
+                state.isBusy[action.payload.sourceId] = false;
             }
         );
     }

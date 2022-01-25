@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List, pipe } from 'cnc-tskit';
 import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
@@ -89,6 +89,48 @@ export function validateNumber(v:string, minNum:number):boolean {
         return parseInt(v) >= minNum;
     }
     return false;
+}
+
+/**
+ * reduceNumResultItems produces an array of items with max size maxItems by taking
+ * first maxItems-1 items and adding a new items with values summed (representing "other").
+ */
+export function reduceNumResultItems(data:Array<ResultItem>, maxItems:number, restLabel:string):Array<ResultItem> {
+    if (maxItems < 1) {
+        throw new Error('reduceNumResultItems requires maxItems > 0');
+    }
+    if (List.size(data) <= maxItems) {
+        return data;
+    }
+    const subList = List.slice(0, maxItems, data);
+    const other = pipe(
+        data,
+        List.slice(maxItems, List.size(data)),
+        List.foldl<ResultItem, ResultItem>(
+            (acc, curr) => {
+                return {
+                    ...acc,
+                    rel: acc.rel + curr.rel,
+                    freq: acc.freq + curr.freq
+                };
+            },
+            {
+                idx: maxItems,
+                Word: [restLabel],
+                pfilter: '',
+                nfilter: '',
+                fbar: 0,
+                freqbar: 0,
+                rel: 0,
+                relbar: 0,
+                freq: 0,
+                nbar: 0,
+                norm: 0,
+                norel: 0
+            }
+        )
+    );
+    return List.push(other, subList);
 }
 
 export class FreqDataLoader {
