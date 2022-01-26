@@ -67,7 +67,7 @@ import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
 import { LineSelGroupsRatiosChartModel } from '../charts/lineSelection';
-import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs }
+import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
 import { openStorage, ConcLinesStorage } from '../models/concordance/selectionStorage';
@@ -419,7 +419,9 @@ export class ViewPage {
                     )
                 )),
                 Dict.fromEntries()
-            )
+            ),
+            concViewPosAttrs: this.layoutModel.getConf<ConcServerArgs>('currentArgs').attrs,
+            alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs')
         };
 
         this.queryModels.queryModel = new FirstQueryFormModel(

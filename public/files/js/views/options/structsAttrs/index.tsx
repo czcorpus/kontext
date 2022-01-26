@@ -27,7 +27,7 @@ import {
     CorpusViewOptionsModel,
     CorpusViewOptionsModelState } from '../../../models/options/structsAttrs';
 import { Actions } from '../../../models/options/actions';
-import { List } from 'cnc-tskit';
+import { List, pipe } from 'cnc-tskit';
 
 import * as S from './style';
 
@@ -157,6 +157,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
     const AttributesCheckboxes:React.FC<{
         attrList:Array<ViewOptions.AttrDesc>;
+        alignCommonPosAttrs:Array<string>;
         basePosAttr:string;
         baseViewAttr:string;
         hasSelectAll:boolean;
@@ -181,6 +182,11 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
             });
         };
 
+        const hasCommonPosAttrsIssues = List.some(
+            attr => !List.find(v => v === attr.n, props.alignCommonPosAttrs),
+            props.attrList
+        );
+
         return (
             <S.AttributesCheckboxes>
                 <h2 className="label">{helpers.translate('options__which_attrs_show_hd')}</h2>
@@ -190,10 +196,11 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                             <th />
                             <th>{helpers.translate('options__display_attributes')}</th>
                             <th>{helpers.translate('options__display_use_for_text')}</th>
+                            {hasCommonPosAttrsIssues ? <th>{helpers.translate('global__note_heading')}</th> : null}
                         </tr>
                     </thead>
                     <tbody>
-                        {props.attrList.map((item, i) => (
+                        {List.map((item, i) => (
                             <tr key={`${i}:${item.n}`}>
                                 <th className="row-hd attr">
                                     {item.label}
@@ -203,8 +210,16 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
                                 <td className="unique-sel" onClick={handlePrimaryAttrSel(item.n)}>
                                     <input type="radio" name="mainViewAttr" checked={item.n === props.baseViewAttr} onChange={()=>undefined} />
                                 </td>
+                                {hasCommonPosAttrsIssues ?
+                                    <td className="warning">
+                                        {!List.find(v => v === item.n, props.alignCommonPosAttrs) ?
+                                            helpers.translate('options__posattr_not_in_all_aligned_corpora') :
+                                            null
+                                        }
+                                    </td> :
+                                    null}
                             </tr>
-                        ))}
+                        ), props.attrList)}
                         <tr className="func">
                             <td />
                             <td className="select-whole-col">
@@ -503,6 +518,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
         hasLoadedData:boolean;
         fixedAttr:string;
         attrList:Array<ViewOptions.AttrDesc>;
+        alignCommonPosAttrs:Array<string>;
         baseViewAttr:string;
         basePosAttr:string;
         availStructs:Array<ViewOptions.StructDesc>;
@@ -552,6 +568,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
 
                             <AttributesCheckboxes
                                 attrList={props.attrList}
+                                alignCommonPosAttrs={props.alignCommonPosAttrs}
                                 basePosAttr={props.basePosAttr}
                                 baseViewAttr={props.baseViewAttr}
                                 hasSelectAll={props.hasSelectAllAttrs}
@@ -603,6 +620,7 @@ export function init({dispatcher, helpers, viewOptionsModel}:StructsAttrsModuleA
             <StructsAndAttrsForm
                     fixedAttr={props.fixedAttr}
                     attrList={props.attrList}
+                    alignCommonPosAttrs={props.alignCommonPosAttrs}
                     basePosAttr={props.basePosAttr}
                     baseViewAttr={props.baseViewAttr}
                     hasSelectAllAttrs={props.selectAllAttrs}

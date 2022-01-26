@@ -1156,7 +1156,8 @@ class Actions(Querying):
             writer.set_col_types(*([int] + num_word_cols * [str] + [float, float]))
 
             self._response.set_header('Content-Type', writer.content_type())
-            self._response.set_header('Content-Disposition', f'attachment; filename="{mkfilename(saveformat)}"')
+            self._response.set_header('Content-Disposition',
+                                      f'attachment; filename="{mkfilename(saveformat)}"')
 
             for block in result['Blocks']:
                 col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
@@ -1724,7 +1725,8 @@ class Actions(Querying):
             format = request.json.get('cformat')
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._response.set_header('Content-Type', ce.get_content_type(format))
-            self._response.set_header('Content-Disposition',  f'attachment; filename="{format(filename)}"')
+            self._response.set_header('Content-Disposition',
+                                      f'attachment; filename="{format(filename)}"')
             data = sorted(request.json.get('data', {}), key=lambda x: int(x['groupId']))
             total = sum(x['count'] for x in data)
             data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
@@ -1756,10 +1758,15 @@ class Actions(Querying):
             MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
             MainMenu.VIEW('kwic-sent-switch'))
 
+        attrlist = self.corp.get_posattrs()
+        align_common_posattrs = set(attrlist)
+
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
             alcorp = self.cm.get_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+            if al in self.args.align:
+                align_common_posattrs.intersection_update(alcorp.get_posattrs())
 
         tmp_out = dict(
             uses_corp_instance=True,
@@ -1768,7 +1775,6 @@ class Actions(Querying):
             undo_q=[]
         )
 
-        attrlist = self.corp.get_posattrs()
         tmp_out['AttrList'] = [{
             'label': self.corp.get_conf(f'{n}.LABEL') or n,
             'n': n,
@@ -1831,6 +1837,7 @@ class Actions(Querying):
             textTypesData=self.tt.export_with_norms(ret_nums=True),
             Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
             AttrList=tmp_out['AttrList'],
+            AlignCommonPosAttrs=list(align_common_posattrs),
             StructAttrList=tmp_out['StructAttrList'],
             StructList=tmp_out['StructList'],
             InputLanguages=tmp_out['input_languages'],

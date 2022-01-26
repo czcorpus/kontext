@@ -79,6 +79,8 @@ export interface QueryFormProperties extends GeneralQueryFormProperties, QueryFo
     isLocalUiLang:boolean;
     suggestionsConfigured:boolean;
     simpleQueryDefaultAttrs:{[corpname:string]:Array<string|Array<string>>};
+    concViewPosAttrs:Array<string>;
+    alignCommonPosAttrs:Array<string>;
 }
 
 export interface QueryInputSetQueryProps {
@@ -285,6 +287,13 @@ export interface FirstQueryFormModelState extends QueryFormModelState {
     quickSubcorpVisible:boolean;
 
     quickSubcorpActive:boolean;
+
+    /**
+     * Attributes user wants to display
+     */
+     concViewPosAttrs:Array<string>;
+
+     alignCommonPosAttrs:Array<string>;
 }
 
 
@@ -417,6 +426,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
                 quickSubcorpActive: Dict.size(textTypesModel.UNSAFE_exportSelections(false)) > 0,
+                concViewPosAttrs: props.concViewPosAttrs,
+                alignCommonPosAttrs: props.alignCommonPosAttrs
         });
         this.quickSubcorpModel = quickSubcorpModel;
 
@@ -607,6 +618,17 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     state.shuffleConcByDefault = action.payload.value;
                 });
+            }
+        );
+
+        this.extendActionHandler(
+            GenOptsActions.SaveSettingsDone,
+            action => {
+                if (!action.error) {
+                    this.changeState(state => {
+                        state.concViewPosAttrs = [...action.payload.posAttrs];
+                    });
+                }
             }
         );
 

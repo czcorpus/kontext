@@ -190,6 +190,10 @@ export const AttrSelection = styled(CollMetricsSelection)`
     th.attr {
         color: ${theme.colorLogoPink};
     }
+
+    td.warning {
+        color: ${theme.colorLogoPink};
+    }
 `;
 
 

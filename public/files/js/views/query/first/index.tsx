@@ -43,7 +43,7 @@ import { Actions as HelpActions } from '../../../models/help/actions';
 import * as S from './style';
 import { QueryHelpModel, QueryHelpModelState } from '../../../models/help/queryHelp';
 import { SearchHistoryModel } from '../../../models/searchHistory';
-import { QuickSubcorpModel } from 'public/files/js/models/subcorp/quickSubcorp';
+import { QuickSubcorpModel } from '../../../models/subcorp/quickSubcorp';
 
 
 export interface MainModuleArgs {
@@ -89,6 +89,17 @@ export interface MainViews {
     QueryForm:React.ComponentClass<QueryFormProps>;
     QueryFormLite:React.ComponentClass<QueryFormLiteProps>;
     QueryHelp:React.ComponentClass<QueryHelpProps>;
+}
+
+
+function posAttrsCompatibleWithAllAlignedCorpora(attrs:Array<string>, sharedAttrs:Array<string>):boolean {
+    return pipe(
+        attrs,
+        List.map(
+            attr => !!List.find(v => v === attr, sharedAttrs)
+        ),
+        List.every(v => v)
+    )
 }
 
 
@@ -285,12 +296,21 @@ export function init({
                                             ]}
                                         />
                         </inputViews.AdvancedFormFieldset>
-                        <div className="buttons">
-                            {this.props.isBusy ?
-                                <layoutViews.AjaxLoaderBarImage /> :
-                                <button type="button" className="default-button" onClick={this._handleSubmit}>
-                                    {he.translate('query__search_btn')}
-                                </button>
+                        <div className="submit-block">
+                            <div className="buttons">
+                                {this.props.isBusy ?
+                                    <layoutViews.AjaxLoaderBarImage /> :
+                                    <button type="button" className="default-button" onClick={this._handleSubmit}>
+                                        {he.translate('query__search_btn')}
+                                    </button>
+                                }
+                            </div>
+                            {posAttrsCompatibleWithAllAlignedCorpora(this.props.concViewPosAttrs, this.props.alignCommonPosAttrs) ?
+                                null :
+                                <div className="warning note">
+                                    <layoutViews.StatusIcon status="warning" inline={true} />
+                                    {he.translate('query__current_posattrs_not_covered_by_all_aligned_corpora')}
+                                </div>
                             }
                         </div>
                     </div>

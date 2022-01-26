@@ -161,7 +161,8 @@ class Kontext(Controller):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str], Optional[int], Any], None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], Optional[int], Any],
+                                     None] = lambda s, uh, res: None
 
         self._tt_cache = tt_cache
         self._tt = None  # this will be instantiated lazily
@@ -719,6 +720,13 @@ class Kontext(Controller):
                 'n': n,
                 **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
             } for n in maincorp.get_conf(listname.upper()).split(',') if n]
+
+        align_common_posattrs = set(self.corp.get_posattrs())
+        for a in self.args.align:
+            align_corp = self.cm.get_corpus(a)
+            align_common_posattrs.intersection_update(align_corp.get_posattrs())
+        result['AlignCommonPosAttrs'] = list(align_common_posattrs)
+
         result['StructList'] = self.corp.get_structs()
 
         if maincorp.get_conf('FREQTTATTRS'):
@@ -973,7 +981,8 @@ class Kontext(Controller):
         # asynchronous tasks
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
         result['help_links'] = settings.get_help_links(self.ui_lang)
-        result['integration_testing_env'] = settings.get_bool('global', 'integration_testing_env', '0')
+        result['integration_testing_env'] = settings.get_bool(
+            'global', 'integration_testing_env', '0')
         result['use_phantom_polyfills'] = 'phantomjs' in self._request.environ.get(
             'HTTP_USER_AGENT', '').lower()
         if 'popup_server_messages' not in result:
