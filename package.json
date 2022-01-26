@@ -42,10 +42,12 @@
     "d3": "^7.3.0",
     "d3-color": "^3.0.1",
     "diff": "^5.0.0",
+    "file-saver": "^2.0.5",
     "kombo": "^0.92.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "recharts": "^2.1.8",
+    "recharts-to-png": "^2.0.0",
     "rxjs": "^7.5.2",
     "styled-components": "^5.3.3"
   },

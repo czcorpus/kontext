@@ -36,6 +36,8 @@ import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
 import { reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
+import { useCurrentPng } from 'recharts-to-png';
+import * as FileSaver from 'file-saver';
 
 
 export function init(
@@ -67,6 +69,7 @@ export function init(
         sortColumn:string;
         isBusy:boolean;
         dtFormat:string;
+        handleDownload:()=>void;
 
     }> = (props) => {
 
@@ -154,8 +157,9 @@ export function init(
                         </select>
                     </> :
                     null}
+                <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('global__save')} onClick={props.handleDownload} />
                 {props.isBusy ?
-                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}alt={he.translate('global__loading')} /> :
+                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
                     null}
             </S.FreqChartsParamsFieldset>
         );
@@ -210,11 +214,19 @@ export function init(
             props.data.Items.map(v => v.Word[0])
         ) as string).length;
 
+        const [getPng, {ref, isLoading}] = useCurrentPng();
+        const handleDownload = React.useCallback(async () => {
+            const png = await getPng();
+            if (png) {
+                FileSaver.saveAs(png, 'freq-chart.png')
+            }
+        }, [getPng])
+
         const renderChart = () => {
             switch (props.type)  {
                 case 'bar':
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
-                        <BarChart data={props.data.Items} layout='vertical'>
+                        <BarChart data={props.data.Items} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} label={props.dataKey} />
                             <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, maxLabelLength * 7)}/>
@@ -225,7 +237,7 @@ export function init(
                 case 'cloud':
                     return <globalComponents.ResponsiveWrapper render={(width, height) =>
                                 <WordCloud width={width} height={height} data={props.data.Items}
-                                        dataTransform={dataTransform} font={theme.monospaceFontFamily} />}
+                                        dataTransform={dataTransform} font={theme.monospaceFontFamily} ref={ref} />}
                                 />;
                 case 'pie':
                     const modList = reduceNumResultItems(
@@ -258,7 +270,7 @@ export function init(
                         <>
                             <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} />
                             <ResponsiveContainer width="95%" height={300}>
-                                <PieChart>
+                                <PieChart ref={ref}>
                                     <Pie
                                         isAnimationActive={false}
                                         data={modList}
@@ -279,7 +291,7 @@ export function init(
                     );
                 case 'timeline':
                     return <ResponsiveContainer width="95%" height={300}>
-                        <LineChart data={props.data.Items}>
+                        <LineChart data={props.data.Items} ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
@@ -289,7 +301,7 @@ export function init(
                     </ResponsiveContainer>;
                 case 'timescatter':
                         return <ResponsiveContainer width="95%" height={300}>
-                            <ScatterChart>
+                            <ScatterChart ref={ref}>
                                 <CartesianGrid strokeDasharray='3 3'/>
                                 <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                                 <YAxis type='number' />
@@ -302,12 +314,13 @@ export function init(
             }
         }
 
+        const saveRef = React.createRef();
         return (
             <S.FreqChartSection>
                 <h3>{props.data.Head[0].n}</h3>
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
-                        fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} />
+                        fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload} />
                 <div className="chart-wrapper">
                     {renderChart()}
                 </div>

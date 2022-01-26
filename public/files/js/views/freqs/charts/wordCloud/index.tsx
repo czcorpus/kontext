@@ -161,6 +161,8 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
 
         private readonly chartContainer:React.RefObject<HTMLDivElement>;
 
+        private container:HTMLDivElement;
+
         constructor(props) {
             super(props);
             this.chartContainer = React.createRef();
@@ -242,19 +244,21 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
                 <div ref={this.chartContainer} style={style}>
                     <Tooltip x={this.state.tooltipPos[0]} y={this.state.tooltipPos[1]}
                             data={this.state.activeItem ? this.state.activeItem.tooltip : []} />
-                    <svg width="100%" height="100%" preserveAspectRatio="xMinYMid meet"
-                            viewBox={`0 0 ${boxWidth} ${(boxWidth / vboxAspectRatio).toFixed()}`}>
-                        <g transform={wcloud.transform}>
-                            {wcloud.rectangles.map((r, i) =>
-                                <Word key={`${r.x}:${r.y}:${r.w}:${r.h}`}
-                                        color={r.data && r.data.color ? r.data.color : this.getColor(i)} rect={r}
-                                    onMouseMove={this.handleMouseMove}
-                                    onMouseOut={this.handleMouseOut}
-                                    onMouseOver={this.handleMouseOver}
-                                    font={this.props.font} />
-                            )}
-                        </g>
-                    </svg>
+                    <div ref={node => {this.container = node}}>
+                        <svg width="100%" height="100%" preserveAspectRatio="xMinYMid meet"
+                                viewBox={`0 0 ${boxWidth} ${(boxWidth / vboxAspectRatio).toFixed()}`}>
+                            <g transform={wcloud.transform}>
+                                {wcloud.rectangles.map((r, i) =>
+                                    <Word key={`${r.x}:${r.y}:${r.w}:${r.h}`}
+                                            color={r.data && r.data.color ? r.data.color : this.getColor(i)} rect={r}
+                                        onMouseMove={this.handleMouseMove}
+                                        onMouseOut={this.handleMouseOut}
+                                        onMouseOver={this.handleMouseOver}
+                                        font={this.props.font} />
+                                )}
+                            </g>
+                        </svg>
+                    </div>
                 </div>
             );
         }
