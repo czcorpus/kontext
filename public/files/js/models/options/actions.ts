@@ -172,7 +172,8 @@ export class Actions {
     };
 
     static SaveSettingsDone:Action<{
-        baseViewAttr: string;
+        baseViewAttr:string;
+        posAttrs:Array<string>;
         widectxGlobals:WideCtxArgs;
         attrVmode: ViewOptions.AttrViewMode;
         qsEnabled: boolean;

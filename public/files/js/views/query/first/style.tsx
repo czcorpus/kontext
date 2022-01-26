@@ -75,6 +75,27 @@ export const QueryForm = styled.form`
             max-width: auto;
         }
     }
+
+    .submit-block {
+        display: flex;
+        align-items: center;
+        margin-top: 1.5em;
+
+        button {
+            margin-right: 1em;
+        }
+
+        .warning {
+            display: flex;
+            align-items: center;
+
+            img {
+                display: block;
+                width: 1.1em;
+                margin-right: 0.4em;
+            }
+        }
+    }
 `;
 
 // ---------------- <QueryHelp /> --------------------------------------

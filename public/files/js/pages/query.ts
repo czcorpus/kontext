@@ -44,6 +44,7 @@ import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 import { TTInitialData } from '../models/textTypes/common';
+import { ConcServerArgs } from '../models/concordance/common';
 
 
 /**
@@ -222,7 +223,9 @@ export class QueryPage {
                         )
                     )),
                     Dict.fromEntries()
-                )
+                ),
+                concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
+                alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs')
             }
         );
     }

@@ -457,15 +457,6 @@ export const GlobalStyle = createGlobalStyle`
         text-decoration: underline;
     }
 
-    div.buttons {
-        padding-top: 1.2em;
-    }
-
-    div.buttons button:not(:last-child),
-    div.buttons span.util-button:not(:last-child) {
-        margin-right: 0.7em;
-    }
-
     form .select-all {
         display: inline-block;
         padding-top: 10px;

@@ -1759,14 +1759,14 @@ class Actions(Querying):
             MainMenu.VIEW('kwic-sent-switch'))
 
         attrlist = self.corp.get_posattrs()
-        align_attrlist = set(attrlist)
+        align_common_posattrs = set(attrlist)
 
         avail_al_corp = []
         for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
             alcorp = self.cm.get_corpus(al)
             avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
             if al in self.args.align:
-                align_attrlist.intersection_update(alcorp.get_posattrs())
+                align_common_posattrs.intersection_update(alcorp.get_posattrs())
 
         tmp_out = dict(
             uses_corp_instance=True,
@@ -1837,7 +1837,7 @@ class Actions(Querying):
             textTypesData=self.tt.export_with_norms(ret_nums=True),
             Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
             AttrList=tmp_out['AttrList'],
-            AlignAttrList=list(align_attrlist),
+            AlignCommonPosAttrs=list(align_common_posattrs),
             StructAttrList=tmp_out['StructAttrList'],
             StructList=tmp_out['StructList'],
             InputLanguages=tmp_out['input_languages'],

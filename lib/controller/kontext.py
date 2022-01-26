@@ -721,11 +721,11 @@ class Kontext(Controller):
                 **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
             } for n in maincorp.get_conf(listname.upper()).split(',') if n]
 
-        align_attr_list = set(self.corp.get_posattrs())
+        align_common_posattrs = set(self.corp.get_posattrs())
         for a in self.args.align:
             align_corp = self.cm.get_corpus(a)
-            align_attr_list.intersection_update(align_corp.get_posattrs())
-        result['AlignAttrList'] = list(align_attr_list)
+            align_common_posattrs.intersection_update(align_corp.get_posattrs())
+        result['AlignCommonPosAttrs'] = list(align_common_posattrs)
 
         result['StructList'] = self.corp.get_structs()
 
