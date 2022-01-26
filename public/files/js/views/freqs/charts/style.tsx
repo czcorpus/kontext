@@ -60,3 +60,14 @@ export const FreqChartSection = styled.section`
     }
 
 `;
+
+// --------------- <DownloadButton /> ------------------------------------
+
+export const DownloadButton = styled.img`
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: 'middle';
+    margin: 0 1em;
+    cursor: pointer;
+
+`;
