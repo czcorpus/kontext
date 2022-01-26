@@ -21,10 +21,10 @@
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import * as Kontext from '../../../types/kontext';
+import { PageModel } from '../../../app/page';
 import { FreqServerArgs } from './common';
-import { AlignTypes } from './twoDimension/common';
+import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
 
 
@@ -317,7 +317,8 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     private submit(state:TTFreqFormModelState):void {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
-            fttattr: state.fttattr,
+            fttattr: List.head(state.fttattr),
+            fttattr_async: List.tail(state.fttattr),
             ftt_include_empty: state.fttIncludeEmpty,
             flimit: parseInt(state.flimit.value),
             freq_sort: state.freqSort,

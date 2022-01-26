@@ -24,7 +24,7 @@ import { Maths, List, pipe, tuple, Dict } from 'cnc-tskit';
 import { PageModel, DownloadType } from '../../../app/page';
 import { GeneralFreq2DModel, CTFreqCell, GeneralFreq2DModelState, importAvailAlphaLevels } from './generalDisplay';
 import { CTFormProperties, roundFloat, FreqFilterQuantities, FreqQuantities, CTFreqResultData } from './common';
-import { Actions } from '../actions';
+import { Actions } from './actions';
 
 /**
  * En extended 2d freq. data item containing

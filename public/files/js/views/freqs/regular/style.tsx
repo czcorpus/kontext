@@ -19,7 +19,78 @@
  */
 
 import styled from 'styled-components';
-import * as theme from '../theme/default';
+import * as theme from '../../theme/default';
+
+// -------------- <FreqResultView /> ------------
+
+export const FreqResultView = styled.div`
+
+    .FreqViewSelector {
+        margin-top: 1.4em;
+        margin-bottom: 1.7em;
+    }
+
+`;
+
+// -------------- <FilterForm /> --------------
+
+export const FilterForm = styled.form`
+
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        margin-left: 0.7em;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
+    }
+`;
+
+// ---------------- <FreqResultLoaderView /> ----------------------
+
+export const FreqResultLoaderView = styled.div`
+    padding: 1em 2em;
+    border: 1px solid ${theme.colorLightFrame};
+    border-radius: ${theme.borderRadiusDefault};
+`;
+
+// ----------------- <Paginator /> -------------------------------------
+
+export const Paginator = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 0.4em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+
+    form {
+        margin: 0;
+    }
+
+    .desc {
+        margin-left: 1em;
+    }
+`;
+
+// ---------------- <FreqBlockTable /> -------------------------------------
+
+export const FreqBlock = styled.div`
+
+    > div {
+        display: inline-flex;
+        flex-direction: column;
+    }
+
+    &:nth-child(n+2) {
+        margin-top: 2.5em;
+    }
+
+`;
 
 // ---------------- <FrequencyForm /> --------------------------------------
 

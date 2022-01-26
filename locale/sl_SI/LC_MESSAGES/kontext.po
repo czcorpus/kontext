@@ -652,3 +652,6 @@ msgstr "Prijava"
 
 msgid "Paradigmatic query calculation"
 msgstr "Paradigmatic query calculation UNTRANSLATED"
+
+msgid "Go to the constituent concordance #{}"
+msgstr "Go to the constituent concordance #{} UNTRANSLATED"

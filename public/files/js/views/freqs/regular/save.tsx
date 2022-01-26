@@ -19,13 +19,14 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../../types/kontext';
-import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../models/freqs/save';
+import * as Kontext from '../../../types/kontext';
+import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../../models/freqs/save';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
-import { Actions } from '../../models/freqs/actions';
+import { Actions } from '../../../models/freqs/regular/actions';
 
 
 interface SaveFreqFormProps {
+    sourceId:string;
     onClose:()=>void;
 }
 
@@ -217,7 +218,7 @@ export function init(
         _handleSubmitClick() {
             dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
                 name: Actions.SaveFormSubmit.name,
-                payload: {}
+                payload: {sourceId: this.props.sourceId}
             });
         }
 

@@ -81,6 +81,17 @@ export const colorHeatmap = [
     '#7a0177', '#49006a'
 ];
 
+export const colorCategoricalData = [
+    "#60CFFF", "#8ADCFF",
+    "#94A3FF", "#C1C9FF",
+    "#FFDC84", "#FFEBB8",
+    "#FFB058", "#FFC584",
+    "#FFC584", "#FFC584",
+    "#FFC584", "#e7c6a0",
+    "#d4bda1", "#cfbda8",
+    "#cec1b3"
+]
+
 export const shRegexp = '#920040';
 export const shAttr = colorLogoPink;
 export const shKeyword = '#48872b';

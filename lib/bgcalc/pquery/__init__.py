@@ -15,7 +15,7 @@
 import hashlib
 import os.path
 from collections import defaultdict
-from bgcalc.freq_calc import FreqCalsArgs, calculate_freqs_bg
+from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
 import l10n
 from multiprocessing import Pool
 from functools import wraps
@@ -112,30 +112,30 @@ def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
 
 
 def create_freq_calc_args(
-        pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, str], subcpath: str,
-        user_id: int, collator_locale: str, flimit_override: Optional[int] = None) -> FreqCalsArgs:
-    args = FreqCalsArgs()
+        pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, List[str]], subcpath: List[str],
+        user_id: int, collator_locale: str, flimit_override: Optional[int] = None) -> FreqCalcArgs:
     attr = pquery.attr
-    args.fcrit = [f'{attr} {pquery.position}']
-    args.corpname = pquery.corpname
-    args.subcname = pquery.usesubcorp
-    args.subcpath = subcpath
-    args.user_id = user_id
-    args.freq_sort = 'freq'
-    args.pagesize = 10000  # TODO
-    args.fmaxitems = 10000
-    args.samplesize = 0
-    args.flimit = flimit_override if flimit_override is not None else pquery.min_freq
-    args.q = raw_queries[conc_id]
-    args.collator_locale = collator_locale
-    args.rel_mode = 0 if '.' in attr else 1
-    args.ftt_include_empty = False
-    return args
+    return FreqCalcArgs(
+        fcrit=[f'{attr} {pquery.position}'],
+        corpname=pquery.corpname,
+        subcname=pquery.usesubcorp,
+        subcpath=subcpath,
+        user_id=user_id,
+        freq_sort='freq',
+        pagesize=10000,  # TODO
+        fmaxitems=10000,
+        samplesize=0,
+        flimit=flimit_override if flimit_override is not None else pquery.min_freq,
+        q=raw_queries[conc_id],
+        collator_locale=collator_locale,
+        rel_mode=0 if '.' in attr else 1,
+        ftt_include_empty=False)
 
 
 @cached
-def calc_merged_freqs(pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: str, user_id: int,
-                      collator_locale: str):
+def calc_merged_freqs(
+        pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: List[str], user_id: int,
+        collator_locale: str):
     """
     Calculate paradigmatic query providing existing concordances.
 

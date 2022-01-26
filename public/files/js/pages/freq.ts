@@ -23,7 +23,7 @@ import * as TextTypes from '../types/textTypes';
 import { PageModel, DownloadType } from '../app/page';
 import { CollFormModel, CollFormInputs } from '../models/coll/collForm';
 import { MLFreqFormModel, TTFreqFormModel, FreqFormInputs, FreqFormProps }
-    from '../models/freqs/freqForms';
+    from '../models/freqs/regular/freqForms';
 import { Freq2DTableModel } from '../models/freqs/twoDimension/table2d';
 import { Freq2DFlatViewModel } from '../models/freqs/twoDimension/flatTable';
 import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
@@ -33,22 +33,24 @@ import { init as freqFormFactory } from '../views/freqs/forms';
 import { init as collFormFactory } from '../views/coll/forms';
 import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
-import { init as resultViewFactory } from '../views/freqs/main';
+import { init as resultViewFactory } from '../views/freqs/regular';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData,
-    FreqDataRowsModelState } from '../models/freqs/dataRows';
+    FreqDataRowsModelState } from '../models/freqs/regular/table';
 import { FreqCTResultsSaveModel } from '../models/freqs/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, pipe, URL as CURL } from 'cnc-tskit';
+import { Dict, List, pipe, tuple, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { Actions } from '../models/freqs/actions';
-import { Block } from '../models/freqs/response';
+import { Actions } from '../models/freqs/regular/actions';
+import { Block } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
+import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
+import { FreqDataLoader } from '../models/freqs/regular/common';
 
 
 /**
@@ -62,7 +64,11 @@ class FreqPage {
 
     private ttFreqModel:TTFreqFormModel;
 
+    private freqLoader:FreqDataLoader;
+
     private freqResultModel:FreqDataRowsModel;
+
+    private freqChartsModel:FreqChartsModel;
 
     private ctFreqModel:Freq2DTableModel;
 
@@ -280,24 +286,52 @@ class FreqPage {
         switch (this.layoutModel.getConf<string>('FreqType')) {
             case 'ml':
             case 'tt':
+                this.freqLoader = new FreqDataLoader({
+                    pageModel: this.layoutModel
+                });
+                const initialData = List.map(
+                    block =>importFreqData(
+                        this.layoutModel,
+                        block,
+                        this.layoutModel.getConf<number>('CurrentPage'),
+                        this.layoutModel.getConf<number>('FreqItemsPerPage')
+                    ),
+                    this.layoutModel.getConf<Array<Block>>('FreqResultData'),
+                );
+                const currentPage = this.layoutModel.getConf<number>('CurrentPage');
+
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
                     freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
-                    initialData: importFreqData(
-                        this.layoutModel,
-                        this.layoutModel.getConf<Array<Block>>('FreqResultData'),
-                        this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                        1
-                    ),
-                    currentPage: this.layoutModel.getConf<number>('CurrentPage')
+                    initialData,
+                    currentPage,
+                    freqLoader: this.freqLoader
+                });
+                this.freqChartsModel = new FreqChartsModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    pageModel: this.layoutModel,
+                    freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
+                    formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
+                    initialData: currentPage === 1 ?
+                        initialData :
+                        pipe(
+                            this.layoutModel.getConf<Array<string>>('FreqCrit'),
+                            List.concat(this.layoutModel.getConf<Array<string>>('FreqCritAsync')),
+                            List.map(v => ({fcrit: v, isInvalid: true}))
+                        ),
+                    fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                    freqLoader: this.freqLoader,
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
+                    this.freqChartsModel,
                     this.freqResultModel
                 );
                 this.layoutModel.renderReactComponent(
@@ -370,8 +404,10 @@ class FreqPage {
             case 'tt':
             case 'ml': {
                 const state = this.freqResultModel.getState(); // no antipattern here
+                const firstCrit = List.head(state.freqCrit);
                 const args = {
-                    ...this.freqResultModel.getSubmitArgs(state),
+                    ...this.freqResultModel.getSubmitArgs(state, firstCrit),
+                    fcrit_async: state.freqCritAsync,
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(

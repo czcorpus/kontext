@@ -22,7 +22,7 @@ from controller.errors import FunctionNotSupported, UserActionException
 from bgcalc import AsyncTaskStatus
 from controller.querying import Querying
 from corplib.corpus import list_public_subcorpora
-from main_menu import MainMenu
+from main_menu.model import MainMenu
 from translation import ugettext as translate
 import plugins
 import l10n

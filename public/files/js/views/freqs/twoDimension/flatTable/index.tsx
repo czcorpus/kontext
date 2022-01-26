@@ -25,7 +25,7 @@ import * as Kontext from '../../../../types/kontext';
 import { Freq2DFlatViewModel, Freq2DFlatViewModelState } from '../../../../models/freqs/twoDimension/flatTable';
 import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/generalDisplay';
 import { init as ctViewOptsFactory } from '../viewOpts';
-import { Actions } from '../../../../models/freqs/actions';
+import { Actions } from '../../../../models/freqs/twoDimension/actions';
 import * as S from './style';
 
 

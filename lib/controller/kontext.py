@@ -15,14 +15,13 @@
 
 from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
 from corplib.abstract import AbstractKCorpus
-from main_menu import AbstractMenuItem
+from main_menu.model import AbstractMenuItem
 from argmapping.conc.query import ConcFormArgs
 from werkzeug import Request
 import werkzeug.urls
 from werkzeug.datastructures import MultiDict
 from functools import partial
 from dataclasses import fields
-from collections import defaultdict
 
 import logging
 import inspect
@@ -47,7 +46,8 @@ import scheduled
 from corplib.fallback import ErrorCorpus, EmptyCorpus
 from corplib.corpus import KCorpus
 from argmapping import ConcArgsMapping, Args
-from main_menu import MainMenu, MenuGenerator, EventTriggeringItem
+from main_menu.model import MainMenu, EventTriggeringItem
+from main_menu import generate_main_menu
 from .plg import PluginCtx
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
@@ -140,7 +140,7 @@ class Kontext(Controller):
         self.disabled_menu_items: Tuple[str, ...] = ()
 
         # menu items - they should not be handled directly
-        self._save_menu: List[AbstractMenuItem] = []
+        self._dynamic_menu_items: List[AbstractMenuItem] = []
 
         self.subcpath: List[str] = []
 
@@ -587,14 +587,14 @@ class Kontext(Controller):
     def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
-            self._save_menu.append(
+            self._dynamic_menu_items.append(
                 EventTriggeringItem(MainMenu.SAVE, label, event_name, key_code=83, key_mod='shift',
                                     hint=hint).mark_indirect())  # key = 's'
 
         else:
             event_name = 'MAIN_MENU_DIRECT_SAVE'
-            self._save_menu.append(EventTriggeringItem(MainMenu.SAVE, label, event_name, hint=hint
-                                                       ).add_args(('saveformat', save_format)))
+            self._dynamic_menu_items.append(EventTriggeringItem(
+                MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
 
     def _determine_curr_corpus(self, form: RequestArgsProxy, is_api: bool):
         """
@@ -966,11 +966,13 @@ class Kontext(Controller):
             'global', 'explicit_conc_persistence_ui', False)
 
         # main menu
-        menu_items = MenuGenerator(result, self.args, self._plugin_ctx).generate(
+        menu_items = generate_main_menu(
+            tpl_data=result,
+            args=self.args,
             disabled_items=self.disabled_menu_items,
-            save_items=self._save_menu,
+            dynamic_items=self._dynamic_menu_items,
             corpus_dependent=result['uses_corp_instance'],
-            ui_lang=self.ui_lang)
+            plugin_ctx=self._plugin_ctx)
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.

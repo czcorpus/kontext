@@ -378,15 +378,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
 
         _handleNameChange(evt) {
-            const newState = he.cloneState(this.state);
-            newState.newName = evt.target.value;
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                newName: evt.target.value
+            });
         }
 
         _handleCqlChange(evt) {
-            const newState = he.cloneState(this.state);
-            newState.newCql = evt.target.value;
-            this.setState(newState);
+            this.setState({
+                ...this.state,
+                newCql: evt.target.value
+            });
         }
 
         render() {

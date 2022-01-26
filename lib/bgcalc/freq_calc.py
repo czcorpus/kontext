@@ -21,7 +21,8 @@ import hashlib
 import logging
 import pickle
 from structures import FixedDict
-from typing import Optional, Union, List
+from typing import Optional, List, Union, Tuple
+from dataclasses import dataclass, field, asdict
 
 import manatee
 import corplib
@@ -33,36 +34,37 @@ from bgcalc.errors import UnfinishedConcordanceError, CalcBackendError
 from bgcalc import AsyncTaskStatus
 from translation import ugettext as _
 from controller.errors import UserActionException
+from .errors import CalcArgsAssertionError
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-class FreqCalsArgs(FixedDict):
+@dataclass
+class FreqCalcArgs:
     """
     Collects all the required arguments passed around when
     calculating frequency distribution
     """
-    q = None
-    user_id = None
-    corpname = None
-    # --- corp encoding ??
-    collator_locale = None
-    subcname = None
-    subcpath = None
-    pagesize = None  # ??
-    fpage = 1  # ??
-    samplesize = 0
-    flimit = None  # default ??
-    fcrit = None
-    freq_sort = None
-    ml = 0  # default ??
-    ftt_include_empty = None  # default ??
-    rel_mode = None
-    fmaxitems = None  # default ??
-    cache_path = None
-    force_cache = False
+    user_id: int
+    corpname: str
+    collator_locale: str
+    pagesize: int
+    flimit: int
+    fcrit: Union[List[str], Tuple[str,...]]
+    freq_sort: str
+    ftt_include_empty: int  # 0, 1
+    rel_mode: int  # 0, 1
+    fmaxitems: int
+    cache_path: Optional[str] = None
+    force_cache: Optional[bool] = False
+    ml: Optional[int] = 0  # default ??
+    subcname: Optional[str] = None
+    subcpath: Optional[List[str]] = field(default_factory=list)
+    fpage: Optional[int] = 1  # ??
+    samplesize: Optional[int] = 0
+    q: Optional[List[str]] = field(default_factory=list)
 
 
 def corp_freqs_cache_path(corp: KCorpus, attrname):
@@ -231,12 +233,12 @@ class FreqCalcCache(object):
         return data, cache_path
 
 
-def calculate_freqs_bg(args: FreqCalsArgs):
+def calculate_freqs_bg(args: FreqCalcArgs):
     """
     Calculate actual frequency data.
 
     arguments:
-    args -- a FreqCalsArgs instance
+    args -- a FreqCalcArgs instance
 
     returns:
     a dict(freqs=..., conc_size=...)
@@ -257,23 +259,26 @@ def calculate_freqs_bg(args: FreqCalsArgs):
     return dict(freqs=freqs, conc_size=conc.size())
 
 
-def calculate_freqs(args: FreqCalsArgs):
+def calculate_freqs(args: FreqCalcArgs):
     """
     Calculates a frequency distribution based on a defined concordance and frequency-related arguments.
     The class is able to cache the data in a background process/task. This prevents KonText to calculate
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
-    cache = FreqCalcCache(corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-                          q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
-    calc_result, cache_path = cache.get(fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
-                                        ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
-                                        collator_locale=args.collator_locale)
+    if args.fcrit and len(args.fcrit) > 1 and args.fpage > 1:
+        raise CalcArgsAssertionError('multi-block frequency calculation does not support pagination')
+    cache = FreqCalcCache(
+        corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
+        q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
+    calc_result, cache_path = cache.get(
+        fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
+        ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
+        collator_locale=args.collator_locale)
 
     if calc_result is None:
         args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task('calculate_freqs', args=(args.to_dict(),),
-                               time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task('calculate_freqs', args=(asdict(args),), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
 
@@ -284,29 +289,23 @@ def calculate_freqs(args: FreqCalsArgs):
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
     lastpage = None
+    fstart = (args.fpage - 1) * args.fmaxitems
+    ans = []
 
-    if len(data) == 1:  # a single block => pagination
-        total_length = len(data[0]['Items']) if 'Items' in data[0] else 0
+    for i, freq_block in enumerate(data):
+        if 'Items' not in freq_block:
+            freq_block['Items'] = []
+        total_length = len(freq_block['Items'])
         items_per_page = args.fmaxitems
-        fstart = (args.fpage - 1) * args.fmaxitems
         fmaxitems = args.fmaxitems * args.fpage + 1
-        if total_length < fmaxitems:
-            lastpage = 1
-        else:
-            lastpage = 0
-        ans = [dict(Total=total_length,
-                    TotalPages=int(math.ceil(total_length / float(items_per_page))),
-                    Items=data[0]['Items'][fstart:fmaxitems - 1] if 'Items' in data[0] else [],
-                    Head=data[0].get('Head', []),
-                    SkippedEmpty=data[0].get('SkippedEmpty', False))]
-    else:
-        for item in data:
-            if 'Items' not in item:
-                item['Items'] = []
-            item['Total'] = len(item['Items'])
-            item['TotalPages'] = None
-        ans = data
-        fstart = None
+        lastpage = 1 if total_length < fmaxitems else 0
+        ans.append(dict(
+            Total=total_length,
+            TotalPages=int(math.ceil(total_length / float(items_per_page))),
+            Items=freq_block['Items'][fstart:fmaxitems - 1],
+            Head=freq_block.get('Head', []),
+            SkippedEmpty=freq_block.get('SkippedEmpty', False),
+            fcrit=args.fcrit[i]))
     return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=conc_size)
 
 

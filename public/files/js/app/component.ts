@@ -22,6 +22,8 @@
 import * as Kontext from '../types/kontext';
 import * as CoreViews from '../types/coreViews';
 import { PageModel } from './page';
+import { debounceTime, fromEvent, map, Observable } from 'rxjs';
+import { ScreenProps } from '../views/document/responsiveWrapper';
 
 /**
  * ComponentTools provide a set of runtime functions
@@ -34,6 +36,8 @@ export class ComponentTools {
 
     public browserInfo:Kontext.IBrowserInfo;
 
+    private readonly windowResize$:Observable<ScreenProps>;
+
     constructor(pageModel:PageModel) {
         this.pageModel = pageModel;
         this.browserInfo = {
@@ -42,6 +46,15 @@ export class ComponentTools {
                         && window.navigator.userAgent.indexOf('Seamonkey') === -1;
             }
         }
+        this.windowResize$ = fromEvent(window, 'resize')
+            .pipe(
+                debounceTime(500),
+                map(v => ({
+                    isMobile: false, // TODO
+                    innerWidth: window.innerWidth,
+                    innerHeight: window.innerHeight
+                }))
+            );
     }
 
     translate(s:string, values?:any):string {
@@ -76,21 +89,6 @@ export class ComponentTools {
         this.pageModel.removeGlobalKeyEventHandler(fn);
     }
 
-    cloneState<T extends {[key:string]:any}>(obj:T):T {
-        if (Object.assign) {
-            return Object.assign({}, obj) as T;
-
-        } else {
-            const ans:{[key:string]:any} = {};
-            for (let p in obj) {
-                if (obj.hasOwnProperty(p)) {
-                    ans[p] = obj[p];
-                }
-            }
-            return ans as T;
-        }
-    }
-
     getHelpLink(ident:string) {
         return this.pageModel.getHelpLink(ident);
     }
@@ -113,5 +111,9 @@ export class ComponentTools {
             srchElm = srchElm.offsetParent as HTMLElement;
         }
         return [x, y];
+    }
+
+    getWindowResizeStream():Observable<ScreenProps> {
+        return this.windowResize$;
     }
 }

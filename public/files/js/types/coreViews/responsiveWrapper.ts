@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2021 Charles University, Faculty of Arts,
+ * Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
- * Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+ * Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,14 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
+import * as React from 'react';
 
 
-// -------------- <FilterForm /> --------------
+export interface Props {
 
-export const FilterForm = styled.form`
+    render:(width:number, height:number)=>React.ReactElement<{width:number, height:number} & {}>;
+    minWidth?:number;
 
-    button {
-        margin-left: 0.7em;
-    }
-`;
+    /**
+     * Providing cell width fraction (1, 2, 3) may help
+     * the wrapper to reduce size in case the box gets
+     * potentially too big.
+     */
+    widthFract?:number;
+}
+
+export type Component = React.ComponentClass<Props>;

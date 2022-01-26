@@ -28,6 +28,7 @@ import { AsyncTaskChecker } from '../models/asyncTask';
 import { GeneralViewOptionsModelState } from '../models/options/general';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { SearchHistoryModel } from '../models/searchHistory';
+import { ScreenProps } from '../views/document/responsiveWrapper';
 
 
 /**
@@ -303,14 +304,11 @@ export interface ComponentHelpers extends Translator {
 
     removeGlobalKeyEventHandler(fn:(evt:Event)=>void):void;
 
-    /**
-     * @deprecated
-     */
-    cloneState<T>(obj:Readonly<T>|T):Mutable<T>;
-
     getHelpLink(ident:string):string;
 
     getElmPosition(elm:HTMLElement):[number, number];
+
+    getWindowResizeStream():Observable<ScreenProps>;
 
     browserInfo:IBrowserInfo;
 }

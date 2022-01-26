@@ -30,6 +30,7 @@ import { Actions } from '../../models/common/actions';
 import { init as calendarInit } from './calendar';
 import { init as kwicRangeInit } from './kwicRange';
 import { init as toggleSwitchInit } from './toggle';
+import { init as responsiveInit } from './responsiveWrapper';
 import { ImgWithMouseover } from './general';
 import * as S from './style';
 
@@ -60,6 +61,7 @@ export function init(
     const Calendar = calendarInit(he);
     const KwicRangeSelector = kwicRangeInit(he);
     const ToggleSwitch = toggleSwitchInit(he);
+    const ResponsiveWrapper = responsiveInit(he);
 
     // ------------------------------ <ErrorBoundary /> -----------------------------
 
@@ -800,6 +802,7 @@ export function init(
         FadeInFrame,
         KwicRangeSelector,
         ToggleSwitch,
-        UnsupportedRenderer
+        UnsupportedRenderer,
+        ResponsiveWrapper
     };
 }
