@@ -157,9 +157,7 @@ export function init(
                         </select>
                     </> :
                     null}
-                {props.type !== 'cloud' ?
-                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('global__save')} onClick={props.handleDownload} /> :
-                    null}
+                <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('global__save')} onClick={props.handleDownload} />
                 {props.isBusy ?
                     <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
                     null}
@@ -220,7 +218,7 @@ export function init(
         const handleDownload = React.useCallback(async () => {
             const png = await getPng();
             if (png) {
-                FileSaver.saveAs(png, `${props.data.Head[0].n}-${props.type}-chart.png`)
+                FileSaver.saveAs(png, 'freq-chart.png')
             }
         }, [getPng])
 
@@ -239,7 +237,7 @@ export function init(
                 case 'cloud':
                     return <globalComponents.ResponsiveWrapper render={(width, height) =>
                                 <WordCloud width={width} height={height} data={props.data.Items}
-                                        dataTransform={dataTransform} font={theme.monospaceFontFamily} />}
+                                        dataTransform={dataTransform} font={theme.monospaceFontFamily} ref={ref} />}
                                 />;
                 case 'pie':
                     const modList = reduceNumResultItems(
