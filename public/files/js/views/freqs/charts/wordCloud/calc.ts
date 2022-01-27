@@ -18,6 +18,7 @@
 
 export interface WordCloudItemCalc {
     text:string;
+    fulltext:string;
     value:number;
     tooltip:TooltipData;
     size?:number;
