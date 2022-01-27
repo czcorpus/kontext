@@ -248,7 +248,7 @@ export function init(
                     const legendFormatter = (value, entry) => {
                         return (
                             <span style={{color: '#000'}}>
-                                <strong>{entry.payload.Word.join(' ')}</strong>:{'\u00a0'}
+                                <strong>{Strings.shortenText(entry.payload.Word.join(' '), 100)}</strong>:{'\u00a0'}
                                 {entry.payload[props.dataKey]}{'\u00a0'}
                                 ({he.formatNumber(100*entry.payload.percent, 1)}%)
                             </span>
@@ -262,7 +262,7 @@ export function init(
 
                         return (
                           <text x={x} y={y} fill="#111111" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                            {modList[index].Word.join(' ')}
+                            {Strings.shortenText(modList[index].Word.join(' '), 40)}
                           </text>
                         );
                       };
