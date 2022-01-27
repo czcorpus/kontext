@@ -111,7 +111,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 sortColumn: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, formProps.freq_sort)
+                        k => tuple(k, formProps.freq_sort || 'freq')
                     ),
                     Dict.fromEntries()
                 ),
