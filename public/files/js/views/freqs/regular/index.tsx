@@ -29,6 +29,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
+import { isEmptyResultBlock } from '../../../models/freqs/regular/common';
 
 // --------------------------- exported types --------------------------------------
 
@@ -176,7 +177,7 @@ export function init(
 
     // ----------------------- <FreqResultLoaderView /> --------------------
 
-    const FreqResultLoaderView:React.FC<{sourceId:string}> = ({sourceId}) => {
+    const FreqResultLoaderView:React.FC<{sourceId:string; label:string}> = ({sourceId, label}) => {
 
         React.useEffect(
             () => {
@@ -192,7 +193,7 @@ export function init(
 
         return (
             <S.FreqResultLoaderView>
-                <h3>{sourceId}</h3>
+                <h3>{label}</h3>
                 <globalComponents.AjaxLoaderImage />
             </S.FreqResultLoaderView>
         );
@@ -246,7 +247,8 @@ export function init(
                             List.map(([sourceId, block], i) => (
                                 <S.FreqBlock key={`block:${sourceId}`}>
                                     <div>
-                                    {block ?
+                                    {isEmptyResultBlock(block) ?
+                                        <FreqResultLoaderView sourceId={sourceId} label={block.heading} /> :
                                         <>
                                             <Paginator currentPage={props.currentPage[sourceId]}
                                                     sourceId={sourceId}
@@ -267,7 +269,6 @@ export function init(
                                                 null
                                             }
                                         </>
-                                        : <FreqResultLoaderView sourceId={sourceId} />
                                     }
                                     </div>
                                 </S.FreqBlock>

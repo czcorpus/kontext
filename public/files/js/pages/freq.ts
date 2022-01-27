@@ -303,8 +303,8 @@ class FreqPage {
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
-                    freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
-                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
+                    freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     saveLinkFn: this.setDownloadLink.bind(this),
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
@@ -315,15 +315,20 @@ class FreqPage {
                 this.freqChartsModel = new FreqChartsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
-                    freqCrit: this.layoutModel.getConf<Array<string>>('FreqCrit'),
-                    freqCritAsync: this.layoutModel.getConf<Array<string>>('FreqCritAsync'),
+                    freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
+                    freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     initialData: currentPage === 1 ?
                         initialData :
                         pipe(
-                            this.layoutModel.getConf<Array<string>>('FreqCrit'),
-                            List.concat(this.layoutModel.getConf<Array<string>>('FreqCritAsync')),
-                            List.map(v => ({fcrit: v, isInvalid: true}))
+                            this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
+                            List.concat(this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync')),
+                            List.map(v => ({
+                                fcrit: v.n,
+                                heading: v.label,
+                                TotalPages: 0,
+                                isEmpty: true
+                            }))
                         ),
                     fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
@@ -406,8 +411,8 @@ class FreqPage {
                 const state = this.freqResultModel.getState(); // no antipattern here
                 const firstCrit = List.head(state.freqCrit);
                 const args = {
-                    ...this.freqResultModel.getSubmitArgs(state, firstCrit),
-                    fcrit_async: state.freqCritAsync,
+                    ...this.freqResultModel.getSubmitArgs(state, firstCrit.n),
+                    fcrit_async: List.map(v => v.n, state.freqCritAsync),
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(

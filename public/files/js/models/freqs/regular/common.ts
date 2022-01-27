@@ -24,6 +24,7 @@ import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
 import { FreqResultResponse } from '../common';
+import { AttrItem } from '../../../types/kontext';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
@@ -59,12 +60,34 @@ export interface ResultBlock {
     fcrit:string; // original encoded freq. criterium (serves as an identifier of the result)
 }
 
+export interface EmptyResultBlock {
+    TotalPages:0;
+    fcrit:string;
+    heading:string;
+    isEmpty:true;
+}
+
+export function isEmptyResultBlock(v:ResultBlock|EmptyResultBlock):v is EmptyResultBlock {
+    return v['isEmpty'] === true;
+}
+
+export function clearResultBlock(res:ResultBlock|EmptyResultBlock):EmptyResultBlock {
+    return isEmptyResultBlock(res) ?
+        res :
+        {
+            TotalPages: 0,
+            fcrit: res.fcrit,
+            heading: res.Head[0].n,
+            isEmpty: true
+        };
+}
+
 export interface BaseFreqModelState {
-    data:{[sourceId:string]:ResultBlock};
+    data:{[sourceId:string]:ResultBlock|EmptyResultBlock};
     currentPage:{[sourceId:string]:string};
     sortColumn:{[sourceId:string]:string};
-    freqCrit:Array<string>;
-    freqCritAsync:Array<string>;
+    freqCrit:Array<AttrItem>;
+    freqCritAsync:Array<AttrItem>;
     ftt_include_empty:boolean;
     flimit:string;
     isActive:boolean;

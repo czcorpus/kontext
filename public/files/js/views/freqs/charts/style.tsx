@@ -24,24 +24,39 @@ import * as theme from '../../theme/default';
 // ---------------- <FreqResultLoaderView /> ----------------------
 
 export const FreqResultLoaderView = styled.div`
+
     padding: 1em 2em;
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
+
+    &:not(:first-child) {
+        margin-top: 1.5em;
+    }
 `;
 
 // ---------------- <FreqChartsParamsFieldset /> -----------------------
 
 export const FreqChartsParamsFieldset = styled.fieldset`
 
-    display: flex;
-    align-items: center;
-
-    label {
-        margin-right: 0.5em;
+    > div:not(:first-child) {
+        margin-top: 1.5em;
     }
 
-    label:not(:first-of-type) {
-        margin-left: 1.2em;
+    > div {
+        display: flex;
+        align-items: center;
+
+        label {
+            margin-right: 0.5em;
+        }
+
+        label:first-letter {
+            text-transform: capitalize;
+        }
+
+        label:not(:first-of-type) {
+            margin-left: 1.2em;
+        }
     }
 
 `;
@@ -49,6 +64,10 @@ export const FreqChartsParamsFieldset = styled.fieldset`
 // --------------- <FreqChartSection /> ------------------------------------
 
 export const FreqChartSection = styled.section`
+
+    &:not(:first-child) {
+        margin-top: 1.5em;
+    }
 
     h3 {
         text-align: center;
@@ -67,7 +86,7 @@ export const DownloadButton = styled.img`
     width: 1.2em;
     height: 1.2em;
     vertical-align: 'middle';
-    margin: 0 1em;
+    margin: 0;
     cursor: pointer;
 
 `;
