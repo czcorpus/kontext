@@ -151,19 +151,23 @@ class Args(object):
     subcpath: List[str] = field(default_factory=list, metadata=mk_metdata())
     save: int = field(default=1, metadata=mk_metdata())
     rlines: str = field(default='250', metadata=mk_metdata())
-    attrs: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT, comma_separated_to_js))
+    attrs: str = field(default='word', metadata=mk_metdata(
+        Persistence.PERSISTENT, comma_separated_to_js))
     base_viewattr: str = field(default='word', metadata=mk_metdata(Persistence.PERSISTENT))
     attr_vmode: str = field(default='visible-kwic', metadata=mk_metdata(Persistence.PERSISTENT))
-    structs: str = field(default='', metadata=mk_metdata(Persistence.PERSISTENT, comma_separated_to_js))
+    structs: str = field(default='', metadata=mk_metdata(
+        Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
     pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
     wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
     citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
     pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
-    multiple_copy: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))  # TODO do we need this?
+    multiple_copy: int = field(default=0, metadata=mk_metdata(
+        Persistence.PERSISTENT))  # TODO do we need this?
     wlsendmail: str = field(default='', metadata=mk_metdata())
     cup_hl: str = field(default='q', metadata=mk_metdata(Persistence.PERSISTENT))
-    structattrs: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.PERSISTENT))
+    structattrs: List[str] = field(
+        default_factory=list, metadata=mk_metdata(Persistence.PERSISTENT))
 
     rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
     qs_enabled: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
@@ -172,6 +176,7 @@ class Args(object):
     freqlevel: int = field(default=1, metadata=mk_metdata())
     hidenone: int = field(default=1, metadata=mk_metdata())
     fttattr: List[str] = field(default_factory=list, metadata=mk_metdata())
+    fttattr_async: List[str] = field(default_factory=list, metadata=mk_metdata())
 
     kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
     kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
@@ -203,8 +208,10 @@ class Args(object):
 
     # 2-dimensional frequency
 
-    ctminfreq: int = field(default=80, metadata=mk_metdata())   # 80th percentile (see ctminfreq_type)
-    ctminfreq_type: str = field(default='pabs', metadata=mk_metdata())  # percentile as a default filter mode
+    # 80th percentile (see ctminfreq_type)
+    ctminfreq: int = field(default=80, metadata=mk_metdata())
+    ctminfreq_type: str = field(default='pabs', metadata=mk_metdata()
+                                )  # percentile as a default filter mode
     ctattr1: str = field(default='word', metadata=mk_metdata())
     ctattr2: str = field(default='word', metadata=mk_metdata())
     ctfcrit1: str = field(default='0<0', metadata=mk_metdata())
@@ -212,6 +219,7 @@ class Args(object):
 
     maxsavelines: int = field(default=1000, metadata=mk_metdata())
     fcrit: List[str] = field(default_factory=list, metadata=mk_metdata())
+    fcrit_async: List[str] = field(default_factory=list, metadata=mk_metdata())
 
     sort_linegroups: int = field(default=0, metadata=mk_metdata())
 
@@ -267,7 +275,8 @@ class Args(object):
                             # value item but in such case, the length of values should
                             # be always 1
                             else:
-                                setattr(self, key, self._upgrade_legacy_value(key, values[-1], in_args))
+                                setattr(self, key, self._upgrade_legacy_value(
+                                    key, values[-1], in_args))
                     except ValueError as ex:
                         raise ValueError('Request attribute \'{}\': {}'.format(key, ex))
         if len(in_args.corpora) > 0:
