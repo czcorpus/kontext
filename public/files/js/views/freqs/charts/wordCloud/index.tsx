@@ -98,6 +98,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
     // -------------------------- <Tooltip /> -----------------------------------------
 
     class Tooltip extends React.PureComponent<{
+        fulltext:string;
         data:TooltipData;
         x:number;
         y:number;
@@ -131,6 +132,9 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
             return (
                 <S.WdgTooltip ref={this.elmRef} style={style}>
                     <table>
+                        <thead>
+                            <tr><th colSpan={4}>{this.props.fulltext}</th></tr>
+                        </thead>
                         <tbody>
                             {(this.props.data || []).map((v, i) => {
                                 if (typeof v.value === 'string') {
@@ -243,7 +247,8 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
             return (
                 <div ref={this.chartContainer} style={style}>
                     <Tooltip x={this.state.tooltipPos[0]} y={this.state.tooltipPos[1]}
-                            data={this.state.activeItem ? this.state.activeItem.tooltip : []} />
+                            data={this.state.activeItem ? this.state.activeItem.tooltip : []}
+                            fulltext={this.state.activeItem ? this.state.activeItem.fulltext : null} />
                     <div ref={node => {this.container = node}}>
                         <svg width="100%" height="100%" preserveAspectRatio="xMinYMid meet"
                                 viewBox={`0 0 ${boxWidth} ${(boxWidth / vboxAspectRatio).toFixed()}`}>

@@ -38,6 +38,7 @@ import * as S from './style';
 import { reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
 import { useCurrentPng } from 'recharts-to-png';
 import * as FileSaver from 'file-saver';
+import { WordCloudItemCalc } from './wordCloud/calc';
 
 export function init(
     dispatcher:IActionDispatcher,
@@ -46,22 +47,26 @@ export function init(
 ) {
 
     // max chart label lengths
-    const BAR_CHART_MAX_LENGTH = 50;
-    const WORD_CLOUD_MAX_LENGTH = 30;
-    const PIE_CHART_MAX_LENGTH = 30;
-    const PIE_CHART_LEGEND_MAX_LENGTH = 60;
+    const BAR_CHART_MAX_LABEL_LENGTH = 50;
+    const WORD_CLOUD_MAX_LABEL_LENGTH = 30;
+    const PIE_CHART_MAX_LABEL_LENGTH = 30;
+    const PIE_CHART_LEGEND_MAX_LABEL_LENGTH = 60;
 
     const globalComponents = he.getLayoutViews();
 
     const WordCloud = initWordCloud<ResultItem>(he);
-    const dataTransform = (item:ResultItem) => ({
-        text: Strings.shortenText(item.Word[0], WORD_CLOUD_MAX_LENGTH),
-        value: item.freq,
-        tooltip: [
-            {label: 'abs', value: item.freq},
-            {label: 'rel', value: item.rel, round: 1},
-        ],
-    });
+    const dataTransform = (item:ResultItem):WordCloudItemCalc => {
+        const data:WordCloudItemCalc = {
+            fulltext: item.Word.join(' '),
+            text: Strings.shortenText(item.Word.join(' '), WORD_CLOUD_MAX_LABEL_LENGTH),
+            value: item.freq,
+            tooltip: [{label: 'abs', value: item.freq}]
+        }
+        if (item.rel) {
+            data.tooltip.push({label: 'rel', value: item.rel, round: 1})
+        }
+        return data;
+    };
 
     // ----------------------- <FreqChartsParams /> -------------------
 
@@ -235,8 +240,8 @@ export function init(
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} label={props.dataKey} />
                             <YAxis type="category" interval={0} dataKey={v => v.Word[0]}
-                                width={Math.max(60, Math.min(BAR_CHART_MAX_LENGTH, maxLabelLength) * 7)}
-                                tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LENGTH)} />
+                                width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
+                                tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
                             <Tooltip />
                             <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
                         </BarChart>
@@ -255,7 +260,7 @@ export function init(
                     const legendFormatter = (value, entry) => {
                         return (
                             <span style={{color: '#000'}}>
-                                <strong>{Strings.shortenText(entry.payload.Word.join(' '), PIE_CHART_LEGEND_MAX_LENGTH)}</strong>:{'\u00a0'}
+                                <strong>{Strings.shortenText(entry.payload.Word.join(' '), PIE_CHART_LEGEND_MAX_LABEL_LENGTH)}</strong>:{'\u00a0'}
                                 {entry.payload[props.dataKey]}{'\u00a0'}
                                 ({he.formatNumber(100*entry.payload.percent, 1)}%)
                             </span>
@@ -269,7 +274,7 @@ export function init(
 
                         return (
                           <text x={x} y={y} fill="#111111" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                            {Strings.shortenText(modList[index].Word.join(' '), PIE_CHART_MAX_LENGTH)}
+                            {Strings.shortenText(modList[index].Word.join(' '), PIE_CHART_MAX_LABEL_LENGTH)}
                           </text>
                         );
                       };
