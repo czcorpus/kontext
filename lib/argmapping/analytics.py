@@ -49,7 +49,7 @@ class FreqFormArgs(object):
         self.ftt_include_empty: bool = False
 
     def update(self, args: 'FreqFormArgs') -> 'FreqFormArgs':
-        self.fttattr = args.fttattr
+        self.fttattr = args.fttattr + getattr(args, 'fttattr_async', [])
         self.flimit = args.flimit
         self.freq_sort = args.freq_sort
         self.ftt_include_empty = args.ftt_include_empty
