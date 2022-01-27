@@ -25,11 +25,11 @@ import { PageModel } from '../../../app/page';
 import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
 import {
-    BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute, FormValue, newFormValue } from '../../../types/kontext';
+import { StructuralAttribute, FormValue, newFormValue, AttrItem } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
 
 
@@ -43,10 +43,10 @@ export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'p
 export interface FreqChartsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
-    freqCrit:Array<string>;
-    freqCritAsync:Array<string>;
+    freqCrit:Array<AttrItem>;
+    freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
-    initialData:Array<ResultBlock|{fcrit:string; isInvalid:boolean}>|undefined;
+    initialData:Array<ResultBlock|EmptyResultBlock>|undefined;
     fmaxitems:number;
     freqLoader:FreqDataLoader;
 }
@@ -74,10 +74,6 @@ function getDtFormat(pageModel:PageModel, fcrit:string):string {
     ).dtFormat;
 }
 
-function importInitialValue(v:ResultBlock|{fcrit:string; isInvalid:boolean}):ResultBlock|undefined {
-    return 'isInvalid' in v ? undefined : v;
-}
-
 /**
  * FreqChartsModel handles data operations and events for frequency distribution
  * in form of charts.
@@ -102,8 +98,33 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 data: pipe(
                     initialData,
                     // if initial data are time data we'll change chart parameters and reload on view init
-                    List.map(v => tuple(v.fcrit, getDtFormat(pageModel, v.fcrit) ? undefined : importInitialValue(v))),
-                    List.concat(List.map(v => tuple(v, undefined), freqCritAsync)),
+                    List.map(
+                        v => tuple(
+                            v.fcrit,
+                            getDtFormat(pageModel, v.fcrit) && !isEmptyResultBlock(v) ?
+                                {
+                                    fcrit: v.fcrit,
+                                    heading: v.Head[0].n,
+                                    TotalPages: 0,
+                                    isEmpty: true
+                                } as EmptyResultBlock :
+                                v
+                        )
+                    ),
+                    List.concat<[string, EmptyResultBlock|ResultBlock]>(
+                        List.map(
+                            v => tuple(
+                                v.n,
+                                {
+                                    fcrit: v.n,
+                                    heading: v.label,
+                                    TotalPages: 0,
+                                    isEmpty: true
+                                }
+                            ),
+                            freqCritAsync
+                        )
+                    ),
                     Dict.fromEntries()
                 ),
                 freqCrit,
@@ -111,7 +132,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 sortColumn: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, formProps.freq_sort || 'freq')
+                        k => tuple(k.n, formProps.freq_sort || 'freq')
                     ),
                     Dict.fromEntries()
                 ),
@@ -120,35 +141,35 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 type: pipe(
                     allCrits,
                     List.map(
-                        k => tuple<string, FreqChartsAvailableTypes>(k, 'bar')
+                        k => tuple<string, FreqChartsAvailableTypes>(k.n, 'bar')
                     ),
                     Dict.fromEntries()
                 ),
                 currentPage: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, '1')
+                        k => tuple(k.n, '1')
                     ),
                     Dict.fromEntries()
                 ),
                 dataKey: pipe(
                     allCrits,
                     List.map(
-                        k => tuple<string, FreqChartsAvailableData>(k, 'freq')
+                        k => tuple<string, FreqChartsAvailableData>(k.n, 'freq')
                     ),
                     Dict.fromEntries()
                 ),
                 fmaxitems: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, newFormValue(fmaxitems + '', true))
+                        k => tuple(k.n, newFormValue(fmaxitems + '', true))
                     ),
                     Dict.fromEntries()
                 ),
                 isBusy: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, false)
+                        k => tuple(k.n, false)
                     ),
                     Dict.fromEntries()
                 ),
@@ -156,14 +177,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 dtFormat: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, getDtFormat(pageModel, k))
+                        k => tuple(k.n, getDtFormat(pageModel, k.n))
                     ),
                     Dict.fromEntries()
                 ),
                 pieChartMaxIndividualItems: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k, newFormValue('5', true))
+                        k => tuple(k.n, newFormValue('5', true))
                     ),
                     Dict.fromEntries()
                 )
@@ -302,7 +323,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         if (!state.isActive) {
-                            state.data = Dict.map(_ => undefined, state.data);
+                            state.data = Dict.map(v => clearResultBlock(v), state.data);
                         }
                     }
 

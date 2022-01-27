@@ -995,8 +995,8 @@ class Actions(Querying):
 
         calc_result = freq_calc.calculate_freqs(args)
         result.update(
-            fcrit=fcrit,
-            fcrit_async=fcrit_async,
+            fcrit=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit],
+            fcrit_async=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit_async],
             Blocks=calc_result['data'],
             paging=0,
             concsize=calc_result['conc_size'],
@@ -1013,7 +1013,8 @@ class Actions(Querying):
                 quick_from_line=None,
                 quick_to_line=None,
                 FCrit=[],
-                fcrit=[]
+                fcrit=[],
+                fcrit_async=[]
             )
         else:
             if len(result['Blocks']) == 1:  # paging
@@ -1592,7 +1593,7 @@ class Actions(Querying):
         """
         with plugins.runtime.AUDIO_PROVIDER as audiop:
             headers, ans = audiop.get_audio(self._plugin_ctx, request)
-            for h, v in headers:
+            for h, v in headers.items():
                 self._response.set_header(h, v)
             return ans
 

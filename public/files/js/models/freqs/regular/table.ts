@@ -24,7 +24,7 @@ import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import {
-    BaseFreqModelState, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     ResultBlock, validateNumber } from './common';
 import { Dict, List, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
@@ -33,17 +33,18 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
+import { AttrItem } from '../../../types/kontext';
 
 
 export interface FreqDataRowsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
-    freqCrit:Array<string>;
-    freqCritAsync:Array<string>;
+    freqCrit:Array<AttrItem>;
+    freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
     quickSaveRowLimit:number;
     saveLinkFn:(file:string, url:string)=>void;
-    initialData:Array<ResultBlock>;
+    initialData:Array<ResultBlock|EmptyResultBlock>;
     currentPage:number;
     freqLoader:FreqDataLoader;
 }
@@ -145,7 +146,20 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 data: pipe(
                     initialData,
                     List.map(v => tuple(v.fcrit, v)),
-                    List.concat(List.map(v => tuple(v, undefined), freqCritAsync)),
+                    List.concat<[string, EmptyResultBlock|ResultBlock]>(
+                        List.map(
+                            v => tuple(
+                                v.n,
+                                {
+                                    fcrit: v.n,
+                                    heading: v.label,
+                                    TotalPages: 0,
+                                    isEmpty: true
+                                }
+                            ),
+                            freqCritAsync
+                        )
+                    ),
                     Dict.fromEntries()
                 ),
                 freqCrit,
@@ -153,14 +167,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 currentPage: pipe(
                     allCrit,
                     List.map(
-                        (k, i) => tuple(k, i === 0 ? `${currentPage}` : `1`)
+                        (k, i) => tuple(k.n, i === 0 ? `${currentPage}` : `1`)
                     ),
                     Dict.fromEntries()
                 ),
                 sortColumn: pipe(
                     allCrit,
                     List.map(
-                        k => tuple(k, formProps.freq_sort)
+                        k => tuple(k.n, formProps.freq_sort)
                     ),
                     Dict.fromEntries()
                 ),
@@ -169,7 +183,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 isBusy: pipe(
                     allCrit,
                     List.map(
-                        k => tuple(k, false)
+                        k => tuple(k.n, false)
                     ),
                     Dict.fromEntries()
                 ),
@@ -226,7 +240,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                         state.isBusy = Dict.map(v => true, state.isBusy);
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
                         if (!state.isActive) {
-                            state.data = Dict.map(_ => undefined, state.data);
+                            state.data = Dict.map(block => clearResultBlock(block), state.data);
                         }
                     }
 
@@ -453,7 +467,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private pushStateToHistory(state:FreqDataRowsModelState):void {
         const firstCrit = List.head(state.freqCrit);
         const args = {
-            ...this.getSubmitArgs(state, firstCrit),
+            ...this.getSubmitArgs(state, firstCrit.n),
             fcrit_async: state.freqCritAsync,
             format: undefined
         };

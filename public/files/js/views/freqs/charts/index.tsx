@@ -35,7 +35,7 @@ import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
-import { reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
+import { isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
 import { useCurrentPng } from 'recharts-to-png';
 import * as FileSaver from 'file-saver';
 
@@ -50,7 +50,7 @@ export function init(
 
     const WordCloud = initWordCloud<ResultItem>(he);
     const dataTransform = (item:ResultItem) => ({
-        text: item.Word[0],
+        text: item.Word.join(' | '),
         value: item.freq,
         tooltip: [
             {label: 'abs', value: item.freq},
@@ -69,6 +69,7 @@ export function init(
         sortColumn:string;
         isBusy:boolean;
         dtFormat:string;
+        pieChartMaxIndividualItems:Kontext.FormValue<string>;
         handleDownload:()=>void;
 
     }> = (props) => {
@@ -115,52 +116,59 @@ export function init(
 
         return (
             <S.FreqChartsParamsFieldset>
-                <label htmlFor="sel-type">{he.translate('freq__visualisation_type')}:</label>
-                <select id="sel-type" value={props.type} onChange={handleTypeChange}>
-                    <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
-                    <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
-                    <option value="pie">pie</option>
-                    {props.dtFormat ?
+                <div>
+                    <label htmlFor="sel-type">{he.translate('freq__visualisation_type')}:</label>
+                    <select id="sel-type" value={props.type} onChange={handleTypeChange}>
+                        <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
+                        <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
+                        <option value="pie">{he.translate('freq__visualisation_type_pie')}</option>
+                        {props.dtFormat ?
+                            <>
+                                <option value="timeline">{he.translate('freq__visualisation_type_line')}</option>
+                                <option value="timescatter">{he.translate('freq__visualisation_type_scatter')}</option>
+                            </> :
+                            null
+                        }
+                    </select>
+                    {props.type !== 'cloud' ?
                         <>
-                            <option value="timeline">{he.translate('freq__visualisation_type_line')}</option>
-                            <option value="timescatter">{he.translate('freq__visualisation_type_scatter')}</option>
+                            <label htmlFor="sel-units">{he.translate('freq__visualization_units')}:</label>
+                            <select id="sel-units" value={props.dataKey} onChange={handleUnitsChange}>
+                                <option value="freq">{he.translate('freq__unit_abs')}</option>
+                                {List.some(v => !!v.rel, props.data.Items) ?
+                                    <option value="rel">{he.translate('freq__unit_rel')}</option> :
+                                    null}
+                            </select>
                         </> :
-                        null
-                    }
-                </select>
-                {props.type !== 'cloud' ?
-                    <>
-                        <label htmlFor="sel-units">{he.translate('freq__visualization_units')}:</label>
-                        <select id="sel-units" value={props.dataKey} onChange={handleUnitsChange}>
-                            <option value="freq">{he.translate('freq__unit_abs')}</option>
-                            {List.some(v => !!v.rel, props.data.Items) ?
-                                <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                                null}
-                        </select>
-                    </> :
-                    null}
-                <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
-                <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
-                    <input type="text" id="input-max" style={{width: '2em'}} value={props.fmaxitems.value} onChange={handlePageSizeChange} />
-                </globalComponents.ValidatedItem>
-                {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
-                {props.type === 'bar' ?
-                    <>
-                        <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
-                        <select id="sel-order" value={props.sortColumn} onChange={handleOrderChange}>
-                            <option value="0">{he.translate('freq__unit_value')}</option>
-                            <option value="freq">{he.translate('freq__unit_abs')}</option>
-                            {List.some(v => !!v.rel, props.data.Items) ?
-                                <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                                null
-                            }
-                        </select>
-                    </> :
-                    null}
-                <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('global__save')} onClick={props.handleDownload} />
-                {props.isBusy ?
-                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
-                    null}
+                        null}
+                    <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
+                    <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
+                        <input type="text" id="input-max" style={{width: '2em'}} value={props.fmaxitems.value} onChange={handlePageSizeChange} />
+                    </globalComponents.ValidatedItem>
+                    {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
+                    {props.type === 'bar' ?
+                        <>
+                            <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
+                            <select id="sel-order" value={props.sortColumn} onChange={handleOrderChange}>
+                                <option value="0">{he.translate('freq__unit_value')}</option>
+                                <option value="freq">{he.translate('freq__unit_abs')}</option>
+                                {List.some(v => !!v.rel, props.data.Items) ?
+                                    <option value="rel">{he.translate('freq__unit_rel')}</option> :
+                                    null
+                                }
+                            </select>
+                        </> :
+                        null}
+                    <label>{he.translate('freq__download_chart')}:</label>
+                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                    {props.isBusy ?
+                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
+                        null}
+                </div>
+                {props.type === 'pie' ?
+                    <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} /> :
+                    null
+                }
             </S.FreqChartsParamsFieldset>
         );
     }
@@ -211,7 +219,7 @@ export function init(
 
         const maxLabelLength = (List.maxItem(
             v => v.length,
-            props.data.Items.map(v => v.Word[0])
+            List.map(v => v.Word.join(' | '), props.data.Items)
         ) as string).length;
 
         const [getPng, {ref, isLoading}] = useCurrentPng();
@@ -229,7 +237,7 @@ export function init(
                         <BarChart data={props.data.Items} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} label={props.dataKey} />
-                            <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, maxLabelLength * 7)}/>
+                            <YAxis type="category" interval={0} dataKey={v => v.Word.join(' | ')} width={Math.max(60, maxLabelLength * 7)}/>
                             <Tooltip />
                             <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
                         </BarChart>
@@ -248,7 +256,7 @@ export function init(
                     const legendFormatter = (value, entry) => {
                         return (
                             <span style={{color: '#000'}}>
-                                <strong>{entry.payload.Word.join(' ')}</strong>:{'\u00a0'}
+                                <strong>{entry.payload.Word.join(' | ')}</strong>:{'\u00a0'}
                                 {entry.payload[props.dataKey]}{'\u00a0'}
                                 ({he.formatNumber(100*entry.payload.percent, 1)}%)
                             </span>
@@ -262,38 +270,35 @@ export function init(
 
                         return (
                           <text x={x} y={y} fill="#111111" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                            {modList[index].Word.join(' ')}
+                            {modList[index].Word.join(' | ')}
                           </text>
                         );
                       };
                     return (
-                        <>
-                            <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} />
-                            <ResponsiveContainer width="95%" height={300}>
-                                <PieChart ref={ref}>
-                                    <Pie
-                                        isAnimationActive={false}
-                                        data={modList}
-                                        dataKey={props.dataKey}
-                                        label={renderCustomizedLabel}
-                                        cx="40%"
-                                        cy="50%"
-                                        labelLine={true} >
-                                            {List.map(
-                                                (entry, i) => <Cell key={`cell-${entry.Word.join(':')}`} fill={theme.colorCategoricalData[i]} />,
-                                                modList
-                                            )}
-                                    </Pie>
-                                    <Legend verticalAlign="middle" align="right" layout="vertical" formatter={legendFormatter} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </>
+                        <ResponsiveContainer width="95%" height={300}>
+                            <PieChart ref={ref}>
+                                <Pie
+                                    isAnimationActive={false}
+                                    data={modList}
+                                    dataKey={props.dataKey}
+                                    label={renderCustomizedLabel}
+                                    cx="40%"
+                                    cy="50%"
+                                    labelLine={true} >
+                                        {List.map(
+                                            (entry, i) => <Cell key={`cell-${entry.Word.join(':')}`} fill={theme.colorCategoricalData[i]} />,
+                                            modList
+                                        )}
+                                </Pie>
+                                <Legend verticalAlign="middle" align="right" layout="vertical" formatter={legendFormatter} />
+                            </PieChart>
+                        </ResponsiveContainer>
                     );
                 case 'timeline':
                     return <ResponsiveContainer width="95%" height={300}>
                         <LineChart data={props.data.Items} ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
+                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
                             <Tooltip />
                             <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
@@ -303,7 +308,7 @@ export function init(
                         return <ResponsiveContainer width="95%" height={300}>
                             <ScatterChart ref={ref}>
                                 <CartesianGrid strokeDasharray='3 3'/>
-                                <XAxis type='number' height={50} dataKey={v => v.Word[0]} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
+                                <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                                 <YAxis type='number' />
                                 <Tooltip />
                                 <Scatter data={props.data.Items} dataKey={props.dataKey} fill={theme.colorLogoBlue} />
@@ -314,13 +319,13 @@ export function init(
             }
         }
 
-        const saveRef = React.createRef();
         return (
             <S.FreqChartSection>
-                <h3>{props.data.Head[0].n}</h3>
+                <h3>{pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}</h3>
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
-                        fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload} />
+                        fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
+                        pieChartMaxIndividualItems={props.pieChartMaxIndividualItems} />
                 <div className="chart-wrapper">
                     {renderChart()}
                 </div>
@@ -330,7 +335,11 @@ export function init(
 
     // ----------------------- <FreqChartsLoaderView /> --------------------
 
-    const FreqChartsLoaderView:React.FC<{sourceId:string, dtFormat:string}> = ({sourceId, dtFormat}) => {
+    const FreqChartsLoaderView:React.FC<{
+        sourceId:string;
+        dtFormat:string;
+        heading:string;
+    }> = ({sourceId, dtFormat, heading}) => {
 
         React.useEffect(
             () => {
@@ -358,6 +367,7 @@ export function init(
 
         return (
             <S.FreqResultLoaderView>
+                <h3>{heading}</h3>
                 <globalComponents.AjaxLoaderImage />
             </S.FreqResultLoaderView>
         );
@@ -372,15 +382,16 @@ export function init(
                 Dict.toEntries(),
                 List.map(
                     ([sourceId, block]) => (
-                        block ?
+                        isEmptyResultBlock(block) ?
+                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]}
+                                    heading={block.heading} /> :
                             <FreqChart key={sourceId} sourceId={sourceId} data={block}
                                     dataKey={props.dataKey[sourceId]}
                                     type={props.type[sourceId]}
                                     isBusy={props.isBusy[sourceId]}
                                     dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                     sortColumn={props.sortColumn[sourceId]}
-                                    pieChartMaxIndividualItems={props.pieChartMaxIndividualItems[sourceId]} /> :
-                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]} />
+                                    pieChartMaxIndividualItems={props.pieChartMaxIndividualItems[sourceId]} />
                     )
                 )
             )}

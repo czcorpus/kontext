@@ -314,6 +314,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                 if (action.error) {
                     this.changeState(state => {
                         state.unfinishedCalculation = false;
+                        state.playerAttachedChunk = null;
                     });
 
                 } else {
@@ -324,6 +325,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
                             state.maincorp = action.payload.changeMaincorp;
                         }
                         state.unfinishedCalculation = false;
+                        state.playerAttachedChunk = null;
                     });
                     this.pushHistoryState({
                         name: Actions.ReloadConc.name,
@@ -1078,17 +1080,16 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
     }
 
     private setStopStatus():void {
+        this.audioPlayer.stop();
         if (this.state.playerAttachedChunk) {
-            this.audioPlayer.stop();
             this.changeState(
                 state => {
                     const playingLineIdx = this.findActiveLineIdx(state);
-            const modLine = this.state.lines[playingLineIdx]; // TODO clone?
+                    const modLine = this.state.lines[playingLineIdx]; // TODO clone?
                     state.lines[playingLineIdx] = modLine;
                     const playingChunk = this.findChunks(state, this.state.playerAttachedChunk)[0];
                     if (playingChunk) {
                         playingChunk.showAudioPlayer = false;
-                        this.changeState(state => {state.playerAttachedChunk = null});
 
                     } else {
                         throw new Error(`Failed to find playing chunk "${this.state.playerAttachedChunk}"`);
