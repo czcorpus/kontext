@@ -30,7 +30,7 @@ import {
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
     Legend
 } from 'recharts';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
@@ -229,7 +229,7 @@ export function init(
                         <BarChart data={props.data.Items} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} label={props.dataKey} />
-                            <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, maxLabelLength * 7)}/>
+                            <YAxis type="category" interval={0} dataKey={v => v.Word[0]} width={Math.max(60, Math.min(50, maxLabelLength) * 7)} tickFormatter={value => Strings.shortenText(value, 50)} />
                             <Tooltip />
                             <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
                         </BarChart>
