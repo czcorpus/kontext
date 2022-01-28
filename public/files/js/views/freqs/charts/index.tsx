@@ -178,66 +178,44 @@ export function init(
         )
     }
 
+    // ---------------------- <PageSizeInput /> ----------------------
 
-    // ----------------------- <FreqChartsParams /> -------------------
-
-    const FreqChartsParams:React.FC<{
+    const PageSizeInput:React.FC<{
         sourceId:string;
-        type:FreqChartsAvailableTypes;
-        dataKey:FreqChartsAvailableData;
-        data:ResultBlock;
         fmaxitems:Kontext.FormValue<string>;
-        sortColumn:string;
-        isBusy:boolean;
-        dtFormat:string;
-        pieChartMaxIndividualItems:Kontext.FormValue<string>;
-        handleDownload:()=>void;
+        type:FreqChartsAvailableTypes;
+        data:ResultBlock;
 
-    }> = (props) => {
+    }> = ({sourceId, fmaxitems, type, data}) => {
 
         const handlePageSizeChange = (e) => {
             dispatcher.dispatch<typeof Actions.FreqChartsChangePageSize>({
                 name: Actions.FreqChartsChangePageSize.name,
                 payload: {
                     value: e.target.value,
-                    sourceId: props.sourceId
+                    sourceId
                 }
             });
         }
 
         return (
-            <S.FreqChartsParamsFieldset>
-                <div>
-                    <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
-                    <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
-                    <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
-                    <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
-                        <input type="text" id="input-max" style={{width: '2em'}} value={props.type === 'pie' ? props.data.Total : props.fmaxitems.value} onChange={handlePageSizeChange} disabled={props.type === 'pie'}/>
-                    </globalComponents.ValidatedItem>
-                    {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}
-                    {
-                        props.type === 'pie' ?
-                        <globalComponents.InlineHelp noSuperscript={true}>
-                            {he.translate('freq__pie_chart_need_all_items_help')}
-                        </globalComponents.InlineHelp> :
-                        null
-                    }
-                    </span>
-                    {props.type === 'bar' || props.type === 'cloud' || props.type === 'pie' ?
-                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} disabled={props.type === 'pie'} /> :
-                        null
-                    }
-                    <label>{he.translate('freq__download_chart')}:</label>
-                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
-                    {props.isBusy ?
-                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
-                        null}
-                </div>
-                {props.type === 'pie' ?
-                    <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} /> :
+            <>
+                <label htmlFor="input-max">
+                    {he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(fmaxitems.value) || 100})}
+                </label>
+                <globalComponents.ValidatedItem invalid={fmaxitems.isInvalid}>
+                    <input type="text" id="input-max" style={{width: '2em'}} value={type === 'pie' ? data.Total : fmaxitems.value} onChange={handlePageSizeChange} disabled={type === 'pie'}/>
+                </globalComponents.ValidatedItem>
+                {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(fmaxitems.value) || 100})}
+                {
+                    type === 'pie' ?
+                    <globalComponents.InlineHelp noSuperscript={true} customStyle={{maxWidth: '25em'}}>
+                        {he.translate('freq__pie_chart_need_all_items_help')}
+                    </globalComponents.InlineHelp> :
                     null
                 }
-            </S.FreqChartsParamsFieldset>
+                </span>
+            </>
         );
     }
 
@@ -270,6 +248,45 @@ export function init(
             </div>
         );
     }
+
+
+    // ----------------------- <FreqChartsParams /> -------------------
+
+    const FreqChartsParams:React.FC<{
+        sourceId:string;
+        type:FreqChartsAvailableTypes;
+        dataKey:FreqChartsAvailableData;
+        data:ResultBlock;
+        fmaxitems:Kontext.FormValue<string>;
+        sortColumn:string;
+        isBusy:boolean;
+        dtFormat:string;
+        pieChartMaxIndividualItems:Kontext.FormValue<string>;
+        handleDownload:()=>void;
+
+    }> = (props) => (
+        <S.FreqChartsParamsFieldset>
+            <div>
+                <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
+                <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
+                <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
+                {props.type === 'bar' || props.type === 'cloud' || props.type === 'pie' ?
+                    <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} disabled={props.type === 'pie'} /> :
+                    null
+                }
+                <label>{he.translate('freq__download_chart')}:</label>
+                <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                {props.isBusy ?
+                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
+                    null}
+            </div>
+            {props.type === 'pie' ?
+                <PieChartCustomizer sourceId={props.sourceId} value={props.pieChartMaxIndividualItems} /> :
+                null
+            }
+        </S.FreqChartsParamsFieldset>
+    );
+
 
     // ----------------------- <FreqChart /> -------------------------
 

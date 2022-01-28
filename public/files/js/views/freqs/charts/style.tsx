@@ -25,9 +25,9 @@ import * as theme from '../../theme/default';
 
 export const FreqResultLoaderView = styled.div`
 
-    padding: 1em 2em;
-    border: 1px solid ${theme.colorLightFrame};
+    box-shadow: ${theme.portalBoxShadow};
     border-radius: ${theme.borderRadiusDefault};
+    padding: 1em 2em;
 
     &:not(:first-child) {
         margin-top: 1.5em;
@@ -65,13 +65,22 @@ export const FreqChartsParamsFieldset = styled.fieldset`
 
 export const FreqChartSection = styled.section`
 
+    padding: 1em;
+    box-shadow: ${theme.portalBoxShadow};
+    border-radius: ${theme.borderRadiusDefault};
+
     &:not(:first-child) {
         margin-top: 1.5em;
     }
 
     h3 {
+        margin: 0;
+        padding-top: 0;
+        padding-bottom: 1.2em;
         text-align: center;
-        padding: 0.7em auto;
+        font-size: 1.6em;
+        color: ${theme.colorLightText};
+        letter-spacing: 0.1em;
     }
 
     .chart-wrapper {

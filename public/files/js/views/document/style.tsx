@@ -330,6 +330,8 @@ export const InlineHelp = styled.span`
     ${TooltipBox} {
         font-weight: normal;
         padding-bottom: 0.7em;
+        padding-top: 1.9em;
+        text-align: justify;
 
         div.link {
             margin: 0;
