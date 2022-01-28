@@ -28,7 +28,7 @@ import {
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line,
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
-    Legend
+    Legend, Label
 } from 'recharts';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -238,7 +238,10 @@ export function init(
             if (png) {
                 FileSaver.saveAs(png, 'freq-chart.png')
             }
-        }, [getPng])
+        }, [getPng]);
+
+        const xUnits = props.dataKey === 'freq' ?
+            he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
 
         const renderChart = () => {
             switch (props.type)  {
@@ -246,7 +249,9 @@ export function init(
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
                         <BarChart data={props.data.Items} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} label={props.dataKey} />
+                            <XAxis type='number' height={50}>
+                                <Label value={xUnits} position="insideBottom" />
+                            </XAxis>
                             <YAxis type="category" interval={0} dataKey={v => v.Word[0]}
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
