@@ -56,7 +56,7 @@ export function init(
     const WordCloud = initWordCloud<ResultItem>(he);
 
     const dataTransform = (unit:FreqChartsAvailableData) => (item:ResultItem):WordCloudItemCalc => {
-        const data:WordCloudItemCalc = {
+        return {
             fulltext: item.Word.join(' '),
             text: Strings.shortenText(item.Word.join(' '), WORD_CLOUD_MAX_LABEL_LENGTH),
             value: unit === 'freq' ? item.freq : item.rel,
@@ -67,10 +67,6 @@ export function init(
                 }
             ]
         }
-        if (item.rel) {
-            data.tooltip.push({label: 'rel', value: item.rel, round: 1})
-        }
-        return data;
     };
 
     // ----------------------- <ChartTypeSelector /> ----------------------
