@@ -154,14 +154,16 @@ export function init(
                     <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
                         <input type="text" id="input-max" style={{width: '2em'}} value={props.type === 'pie' ? props.data.Total : props.fmaxitems.value} onChange={handlePageSizeChange} disabled={props.type === 'pie'}/>
                     </globalComponents.ValidatedItem>
-                    {props.type === 'pie' ?
-                        <globalComponents.InlineHelp noSuperscript={true}>TODO: In order for pie to represent 100% all items needs to be shown</globalComponents.InlineHelp> :
-                        null}
-                    {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
-                    {props.type === 'bar' ?
+                    {'\u00a0'}
+                    <span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}
+                        {props.type === 'pie' ?
+                            <globalComponents.InlineHelp noSuperscript={true}>TODO: In order for pie to represent 100% all items needs to be shown</globalComponents.InlineHelp> :
+                            null}
+                    </span>
+                    {props.type === 'bar' || props.type === 'pie' ?
                         <>
                             <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
-                            <select id="sel-order" value={props.sortColumn} onChange={handleOrderChange}>
+                            <select id="sel-order" value={props.type === 'pie' ? props.dataKey : props.sortColumn} onChange={handleOrderChange} disabled={props.type === 'pie'} >
                                 <option value="0">{he.translate('freq__unit_value')}</option>
                                 <option value="freq">{he.translate('freq__unit_abs')}</option>
                                 {List.some(v => !!v.rel, props.data.Items) ?
