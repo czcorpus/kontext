@@ -246,6 +246,19 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeUnits,
             (state, action) => {
                 state.dataKey[action.payload.sourceId] = action.payload.value;
+                if (state.type[action.payload.sourceId] === 'pie') {
+                    state.isBusy[action.payload.sourceId] = true;
+                }
+            },
+            (state, action, dispatch) => {
+                // pie chart sorts by selected units automatically
+                if (state.type[action.payload.sourceId] === 'pie') {
+                    this.dispatchLoad(
+                        this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                        state,
+                        dispatch,
+                    );
+                }
             }
         );
 
@@ -443,16 +456,27 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
     }
 
     getSubmitArgs(state:FreqChartsModelState, fcrit:string):FreqServerArgs {
-        return {
+        const args = {
             ...this.pageModel.getConcArgs(),
             fcrit,
             flimit: parseInt(state.flimit),
-            freq_sort: state.type[fcrit] === 'timeline' ? '0' : state.sortColumn[fcrit],
+            freq_sort: state.type[fcrit] === 'timeline' ?
+                '0' :
+                state.type[fcrit] === 'pie' ?
+                    state.dataKey[fcrit] :
+                    state.sortColumn[fcrit],
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: state.fmaxitems[fcrit].value,
             format: 'json'
-        };
+        } as FreqServerArgs;
+        if (state.type[fcrit] === 'bar') {
+            const data = state.data[fcrit];
+            if (!isEmptyResultBlock(data)) {
+                args['fpagesize'] = data.Total
+            }
+        }
+        return args;
     }
 }
