@@ -226,13 +226,14 @@ class User(Kontext):
             else:
                 return dict(credentials_form=dict(username=user_info['username']), user_registered=False)
 
-    @exposed(skip_corpus_init=True, http_method='POST', access_level=0)
+    @exposed(skip_corpus_init=True, http_method='POST', access_level=0, return_type='plain')
     def switch_language(self, request):
         path_prefix = settings.get_str('global', 'action_path_prefix')
-        self._new_cookies['kontext_ui_lang'] = request.form.get('language')
-        self._new_cookies['kontext_ui_lang']['path'] = path_prefix if path_prefix else '/'
-        self._new_cookies['kontext_ui_lang']['expires'] = time.strftime('%a, %d %b %Y %T GMT',
-                                                                        time.gmtime(time.time() + 180 * 24 * 3600))
+        self._response.set_cookie(
+            'kontext_ui_lang',
+            request.form.get('language'),
+            path=path_prefix if path_prefix else '/',
+            expires=time.strftime('%a, %d %b %Y %T GMT', time.gmtime(time.time() + 180 * 24 * 3600)))
         self.redirect(
             request.environ.get('HTTP_REFERER', self.create_url('query', dict(corpname=self.args.corpname))))
-        return {}
+        return None

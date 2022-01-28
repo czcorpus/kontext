@@ -107,6 +107,11 @@ class KResponse:
     def contains_header(self, name: str) -> bool:
         return name in self._headers
 
+    def set_cookie(self, name, value, path, expires):
+        self._new_cookies[name] = value
+        self._new_cookies[name]['path'] = path
+        self._new_cookies[name]['expires'] = expires
+
     def set_not_found(self) -> None:
         """
         Sets Controller to output HTTP 404 Not Found response
