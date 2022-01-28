@@ -35,7 +35,7 @@ export const condensedFontFamily = '"Roboto Condensed", "Segoe UI", sans-serif';
 export const colorDefaultText = '#010101';
 export const colorLightText = '#8d8c8c';
 export const colorSuperlightText = '#B0B0B0';
-export const colorWhiteText = '#ffffff';
+export const colorWhiteText = '#f0bebe';
 export const colorDarkGreenText = '#4c5854';
 export const textShadow = '0 0 2px #A0A0A0';
 
