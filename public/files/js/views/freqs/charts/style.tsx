@@ -78,6 +78,10 @@ export const FreqChartSection = styled.section`
         padding: 1em 0.7em;
     }
 
+    .cloud-wrapper {
+        padding-top: 1em;
+    }
+
 `;
 
 // --------------- <DownloadButton /> ------------------------------------
