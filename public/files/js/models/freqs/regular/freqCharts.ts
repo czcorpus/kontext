@@ -462,6 +462,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             flimit: parseInt(state.flimit),
             freq_sort: state.type[fcrit] === 'timeline' ?
                 '0' :
+                // pie chart always sorts by selected units
                 state.type[fcrit] === 'pie' ?
                     state.dataKey[fcrit] :
                     state.sortColumn[fcrit],
@@ -471,10 +472,11 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             fmaxitems: state.fmaxitems[fcrit].value,
             format: 'json'
         } as FreqServerArgs;
-        if (state.type[fcrit] === 'bar') {
+        // pie chart always needs to have all items
+        if (state.type[fcrit] === 'pie') {
             const data = state.data[fcrit];
             if (!isEmptyResultBlock(data)) {
-                args['fpagesize'] = data.Total
+                args.fmaxitems = data.Total;
             }
         }
         return args;

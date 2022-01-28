@@ -101,7 +101,6 @@ export interface FreqServerArgs extends ConcServerArgs {
     ftt_include_empty:boolean;
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
-    fpagesize?:number;
     [other:string]:any;
 }
 
