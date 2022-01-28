@@ -214,7 +214,6 @@ export function init(
                     <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
                         <input type="text" id="input-max" style={{width: '2em'}} value={props.type === 'pie' ? props.data.Total : props.fmaxitems.value} onChange={handlePageSizeChange} disabled={props.type === 'pie'}/>
                     </globalComponents.ValidatedItem>
-
                     {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}
                     {
                         props.type === 'pie' ?
