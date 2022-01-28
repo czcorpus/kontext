@@ -244,6 +244,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
 
             const style = {...this.props.style, width: '100%', height: '100%'};
             style['minHeight'] = `${2 * MAX_WC_FONT_SIZE}px`;
+
             return (
                 <div ref={this.chartContainer} style={style}>
                     <Tooltip x={this.state.tooltipPos[0]} y={this.state.tooltipPos[1]}
@@ -254,8 +255,10 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
                                 viewBox={`0 0 ${boxWidth} ${(boxWidth / vboxAspectRatio).toFixed()}`}>
                             <g transform={wcloud.transform}>
                                 {wcloud.rectangles.map((r, i) =>
-                                    <Word key={`${r.x}:${r.y}:${r.w}:${r.h}`}
-                                            color={r.data && r.data.color ? r.data.color : this.getColor(i)} rect={r}
+                                    <Word
+                                        key={`${r.x}:${r.y}:${r.w}:${r.h}`}
+                                        color={r.data && r.data.color ? r.data.color : this.getColor(i)}
+                                        rect={r}
                                         onMouseMove={this.handleMouseMove}
                                         onMouseOut={this.handleMouseOut}
                                         onMouseOver={this.handleMouseOver}

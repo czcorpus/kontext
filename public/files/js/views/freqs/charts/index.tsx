@@ -28,7 +28,7 @@ import {
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line,
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
-    Legend
+    Legend, Label
 } from 'recharts';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -55,18 +55,129 @@ export function init(
     const globalComponents = he.getLayoutViews();
 
     const WordCloud = initWordCloud<ResultItem>(he);
-    const dataTransform = (item:ResultItem):WordCloudItemCalc => {
+
+    const dataTransform = (unit:FreqChartsAvailableData) => (item:ResultItem):WordCloudItemCalc => {
         const data:WordCloudItemCalc = {
             fulltext: item.Word.join(' '),
             text: Strings.shortenText(item.Word.join(' '), WORD_CLOUD_MAX_LABEL_LENGTH),
-            value: item.freq,
-            tooltip: [{label: 'abs', value: item.freq}]
+            value: unit === 'freq' ? item.freq : item.rel,
+            tooltip: [
+                {
+                    label: unit === 'freq' ? he.translate('freq__unit_abs') : he.translate('freq__unit_rel'),
+                    value: unit === 'freq' ? item.freq : item.rel
+                }
+            ]
         }
         if (item.rel) {
             data.tooltip.push({label: 'rel', value: item.rel, round: 1})
         }
         return data;
     };
+
+    // ----------------------- <ChartTypeSelector /> ----------------------
+
+    const ChartTypeSelector:React.FC<{
+        dtFormat:string;
+        sourceId:string;
+        type:FreqChartsAvailableTypes;
+
+    }> = ({dtFormat, sourceId, type}) => {
+
+        const handleTypeChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsChangeType>({
+                name: Actions.FreqChartsChangeType.name,
+                payload: {
+                    value: e.target.value,
+                    sourceId
+                }
+            });
+        }
+
+        return (
+            <>
+                <label htmlFor="sel-type">{he.translate('freq__visualisation_type')}:</label>
+                <select id="sel-type" value={type} onChange={handleTypeChange}>
+                    <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
+                    <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
+                    <option value="pie">{he.translate('freq__visualisation_type_pie')}</option>
+                    {dtFormat ?
+                        <>
+                            <option value="timeline">{he.translate('freq__visualisation_type_line')}</option>
+                            <option value="timescatter">{he.translate('freq__visualisation_type_scatter')}</option>
+                        </> :
+                        null
+                    }
+                </select>
+            </>
+        )
+    };
+
+    // ----------------------- <FreqUnitsSelector /> ---------------------------
+
+    const FreqUnitsSelector:React.FC<{
+        sourceId:string;
+        dataKey:FreqChartsAvailableData;
+        data:ResultBlock;
+
+    }> = ({sourceId, data, dataKey}) => {
+
+        const handleUnitsChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsChangeUnits>({
+                name: Actions.FreqChartsChangeUnits.name,
+                payload: {
+                    value: e.target.value,
+                    sourceId
+                }
+            });
+        }
+
+        return (
+            <>
+                <label htmlFor="sel-units">{he.translate('freq__visualization_units')}:</label>
+                <select id="sel-units" value={dataKey} onChange={handleUnitsChange}>
+                    <option value="freq">{he.translate('freq__unit_abs')}</option>
+                    {List.some(v => !!v.rel, data.Items) ?
+                        <option value="rel">{he.translate('freq__unit_rel')}</option> :
+                        null}
+                </select>
+            </>
+        );
+    }
+
+    // ----------------------- <FreqSortBySelector /> ----------------------------
+
+    const FreqSortBySelector:React.FC<{
+        sourceId:string;
+        sortColumn:string;
+        data:ResultBlock;
+
+    }> = ({sourceId, sortColumn, data}) => {
+
+        const handleOrderChange = (e) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsChangeOrder>({
+                name: Actions.FreqChartsChangeOrder.name,
+                payload: {
+                    value: e.target.value,
+                    sourceId
+                }
+            });
+        }
+
+        return (
+            <>
+                <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
+                <select id="sel-order" value={sortColumn} onChange={handleOrderChange}>
+                    <option value="0">{he.translate('freq__unit_value')}</option>
+                    <option value="freq">{he.translate('freq__unit_abs')}</option>
+                    {List.some(v => !!v.rel, data.Items) ?
+                        <option value="rel">{he.translate('freq__unit_rel')}</option> :
+                        null
+                    }
+                </select>
+            </>
+        )
+    }
+
 
     // ----------------------- <FreqChartsParams /> -------------------
 
@@ -84,36 +195,6 @@ export function init(
 
     }> = (props) => {
 
-        const handleOrderChange = (e) => {
-            dispatcher.dispatch<typeof Actions.FreqChartsChangeOrder>({
-                name: Actions.FreqChartsChangeOrder.name,
-                payload: {
-                    value: e.target.value,
-                    sourceId: props.sourceId
-                }
-            });
-        }
-
-        const handleUnitsChange = (e) => {
-            dispatcher.dispatch<typeof Actions.FreqChartsChangeUnits>({
-                name: Actions.FreqChartsChangeUnits.name,
-                payload: {
-                    value: e.target.value,
-                    sourceId: props.sourceId
-                }
-            });
-        }
-
-        const handleTypeChange = (e) => {
-            dispatcher.dispatch<typeof Actions.FreqChartsChangeType>({
-                name: Actions.FreqChartsChangeType.name,
-                payload: {
-                    value: e.target.value,
-                    sourceId: props.sourceId
-                }
-            });
-        }
-
         const handlePageSizeChange = (e) => {
             dispatcher.dispatch<typeof Actions.FreqChartsChangePageSize>({
                 name: Actions.FreqChartsChangePageSize.name,
@@ -127,48 +208,17 @@ export function init(
         return (
             <S.FreqChartsParamsFieldset>
                 <div>
-                    <label htmlFor="sel-type">{he.translate('freq__visualisation_type')}:</label>
-                    <select id="sel-type" value={props.type} onChange={handleTypeChange}>
-                        <option value="bar">{he.translate('freq__visualisation_type_bar')}</option>
-                        <option value="cloud">{he.translate('freq__visualisation_type_cloud')}</option>
-                        <option value="pie">{he.translate('freq__visualisation_type_pie')}</option>
-                        {props.dtFormat ?
-                            <>
-                                <option value="timeline">{he.translate('freq__visualisation_type_line')}</option>
-                                <option value="timescatter">{he.translate('freq__visualisation_type_scatter')}</option>
-                            </> :
-                            null
-                        }
-                    </select>
-                    {props.type !== 'cloud' ?
-                        <>
-                            <label htmlFor="sel-units">{he.translate('freq__visualization_units')}:</label>
-                            <select id="sel-units" value={props.dataKey} onChange={handleUnitsChange}>
-                                <option value="freq">{he.translate('freq__unit_abs')}</option>
-                                {List.some(v => !!v.rel, props.data.Items) ?
-                                    <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                                    null}
-                            </select>
-                        </> :
-                        null}
+                    <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
+                    <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
                     <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
                     <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
                         <input type="text" id="input-max" style={{width: '2em'}} value={props.fmaxitems.value} onChange={handlePageSizeChange} />
                     </globalComponents.ValidatedItem>
                     {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
-                    {props.type === 'bar' ?
-                        <>
-                            <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
-                            <select id="sel-order" value={props.sortColumn} onChange={handleOrderChange}>
-                                <option value="0">{he.translate('freq__unit_value')}</option>
-                                <option value="freq">{he.translate('freq__unit_abs')}</option>
-                                {List.some(v => !!v.rel, props.data.Items) ?
-                                    <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                                    null
-                                }
-                            </select>
-                        </> :
-                        null}
+                    {props.type === 'bar' || props.type === 'cloud' ?
+                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
+                        null
+                    }
                     <label>{he.translate('freq__download_chart')}:</label>
                     <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
                     {props.isBusy ?
@@ -238,7 +288,10 @@ export function init(
             if (png) {
                 FileSaver.saveAs(png, 'freq-chart.png')
             }
-        }, [getPng])
+        }, [getPng]);
+
+        const xUnits = props.dataKey === 'freq' ?
+            he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
 
         const renderChart = () => {
             switch (props.type)  {
@@ -246,7 +299,9 @@ export function init(
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
                         <BarChart data={props.data.Items} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} label={props.dataKey} />
+                            <XAxis type='number' height={50}>
+                                <Label value={xUnits} position="insideBottom" />
+                            </XAxis>
                             <YAxis type="category" interval={0} dataKey={v => v.Word[0]}
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
@@ -255,10 +310,14 @@ export function init(
                         </BarChart>
                     </ResponsiveContainer>
                 case 'cloud':
-                    return <globalComponents.ResponsiveWrapper render={(width, height) =>
+                    return (
+                        <div className="cloud-wrapper">
+                            <globalComponents.ResponsiveWrapper render={(width, height) =>
                                 <WordCloud width={width} height={height} data={props.data.Items}
-                                        dataTransform={dataTransform} font={theme.monospaceFontFamily} ref={ref} />}
-                                />;
+                                        dataTransform={dataTransform(props.dataKey)} font={theme.monospaceFontFamily} ref={ref} />}
+                                />
+                        </div>
+                    );
                 case 'pie':
                     const modList = reduceNumResultItems(
                         props.data.Items,
