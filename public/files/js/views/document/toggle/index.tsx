@@ -23,6 +23,7 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import * as CoreViews from '../../../types/coreViews';
 import * as S from './style';
+import { Keyboard } from 'cnc-tskit';
 
 
 
@@ -37,6 +38,7 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
                 imgClass: this.props.checked === undefined ? 'off' : this.props.checked ? 'on' : 'off'
             }
             this.clickHandler = this.clickHandler.bind(this);
+            this.keyHandler = this.keyHandler.bind(this);
         }
 
         componentDidUpdate(prevProps) {
@@ -62,9 +64,21 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
             );
         }
 
+        keyHandler(evt) {
+            if (
+                (evt.key === Keyboard.Value.ENTER) ||
+                (!this.state.checked && evt.key === Keyboard.Value.RIGHT_ARROW) ||
+                (this.state.checked && evt.key === Keyboard.Value.LEFT_ARROW)
+            ) {
+                this.clickHandler();
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+        }
+
         render() {
             return (
-                <S.ToggleSwitch className={this.props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
+                <S.ToggleSwitch onKeyDown={this.keyHandler} tabIndex={this.props.disabled ? -1 : 0} className={this.props.disabled ? "ToggleSwitch disabled" : "ToggleSwitch"}>
                     <input id={this.props.id} type="checkbox" checked={this.state.checked}
                             onChange={this.clickHandler} disabled={this.props.disabled}/>
                     <span className="toggle-img" onClick={this.props.disabled ? null : this.clickHandler}>
