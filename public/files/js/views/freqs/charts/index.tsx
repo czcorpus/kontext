@@ -50,7 +50,6 @@ export function init(
     const BAR_CHART_MAX_LABEL_LENGTH = 50;
     const WORD_CLOUD_MAX_LABEL_LENGTH = 30;
     const PIE_CHART_MAX_LABEL_LENGTH = 30;
-    const PIE_CHART_LEGEND_MAX_LABEL_LENGTH = 60;
 
     const globalComponents = he.getLayoutViews();
 
@@ -150,8 +149,9 @@ export function init(
         sourceId:string;
         sortColumn:string;
         data:ResultBlock;
+        disabled:boolean;
 
-    }> = ({sourceId, sortColumn, data}) => {
+    }> = ({sourceId, sortColumn, data, disabled}) => {
 
         const handleOrderChange = (e) => {
             dispatcher.dispatch<typeof Actions.FreqChartsChangeOrder>({
@@ -166,7 +166,7 @@ export function init(
         return (
             <>
                 <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
-                <select id="sel-order" value={sortColumn} onChange={handleOrderChange}>
+                <select id="sel-order" value={sortColumn} onChange={handleOrderChange} disabled={disabled}>
                     <option value="0">{he.translate('freq__unit_value')}</option>
                     <option value="freq">{he.translate('freq__unit_abs')}</option>
                     {List.some(v => !!v.rel, data.Items) ?
@@ -212,11 +212,20 @@ export function init(
                     <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
                     <label htmlFor="input-max">{he.translate('freq__visualization_display_top_prefix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</label>
                     <globalComponents.ValidatedItem invalid={props.fmaxitems.isInvalid}>
-                        <input type="text" id="input-max" style={{width: '2em'}} value={props.fmaxitems.value} onChange={handlePageSizeChange} />
+                        <input type="text" id="input-max" style={{width: '2em'}} value={props.type === 'pie' ? props.data.Total : props.fmaxitems.value} onChange={handlePageSizeChange} disabled={props.type === 'pie'}/>
                     </globalComponents.ValidatedItem>
-                    {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}</span>
-                    {props.type === 'bar' || props.type === 'cloud' ?
-                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
+
+                    {'\u00a0'}<span>{he.translate('freq__visualization_display_top_suffix_{n}', {n: parseInt(props.fmaxitems.value) || 100})}
+                    {
+                        props.type === 'pie' ?
+                        <globalComponents.InlineHelp noSuperscript={true}>
+                            {he.translate('freq__pie_chart_need_all_items_help')}
+                        </globalComponents.InlineHelp> :
+                        null
+                    }
+                    </span>
+                    {props.type === 'bar' || props.type === 'cloud' || props.type === 'pie' ?
+                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} disabled={props.type === 'pie'} /> :
                         null
                     }
                     <label>{he.translate('freq__download_chart')}:</label>
