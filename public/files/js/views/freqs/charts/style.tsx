@@ -88,7 +88,7 @@ export const FreqChartSection = styled.section`
     }
 
     .cloud-wrapper {
-        padding-top: 1em;
+        padding-top: 2em;
         width: 70%;
         margin: 0 auto;
     }
