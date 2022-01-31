@@ -373,7 +373,7 @@ export const QueryArea = styled.div`
     > textarea,
     pre.cql-input,
     > span.simple-input, input.simple-input {
-        background-color: ${theme.colorWhiteText};
+        background-color: ${theme.colorDefaultTextBg};
         padding: 0.5em 0.3em 0.3em 0.3em;
         border-style: solid;
         border-width: 0.05em;
