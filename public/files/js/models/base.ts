@@ -34,7 +34,7 @@ export function validateNumber(s:string):boolean {
  * number greater than zero.
  */
 export function validateGzNumber(s:string):boolean {
-    return !!/^([1-9]\d*)?$/.exec(s);
+    return !!/^[1-9]\d*?$/.exec(s);
 }
 
 export function setFormItemInvalid(item:Kontext.FormValue<string>,

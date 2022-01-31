@@ -285,21 +285,21 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
                 } else {
                     state.fmaxitems[action.payload.sourceId].value = action.payload.value;
-                    if (!validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
-                        state.fmaxitems[action.payload.sourceId].isInvalid = true;
-                        state.fmaxitems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
-
-                    } else {
+                    if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
                         state.fmaxitems[action.payload.sourceId].isInvalid = false;
                         state.fmaxitems[action.payload.sourceId].errorDesc = undefined;
+                        this.debouncedAction$.next(action);
+
+                    } else {
+                        state.fmaxitems[action.payload.sourceId].isInvalid = true;
+                        state.fmaxitems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
                     }
-                    this.debouncedAction$.next(action);
                 }
 
             },
             (state, action, dispatch) => {
-                if (action.payload.debouncedFor) {
-                    if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
+                if (validateGzNumber(state.fmaxitems[action.payload.sourceId].value)) {
+                    if (action.payload.debouncedFor) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(
                                 this.getSubmitArgs(state, action.payload.sourceId)
@@ -307,10 +307,10 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                             state,
                             dispatch,
                         );
-
-                    } else {
-                        this.pageModel.showMessage('error', this.pageModel.translate('options__value_must_be_gt_0'));
                     }
+
+                } else {
+                    this.pageModel.showMessage('error', this.pageModel.translate('options__value_must_be_gt_0'));
                 }
             }
         );
