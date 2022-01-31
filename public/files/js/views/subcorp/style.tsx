@@ -250,7 +250,7 @@ export const ListPublic = styled.div`
     }
 
     .loader {
-        background-color: ${theme.colorWhiteText};
+        background-color: ${theme.colorDefaultTextBg};
         text-align: center;
         border: 1px solid ${theme.colorDefaultGreen};
         padding: 0.7em 1em 0.3em 1em;
@@ -269,7 +269,7 @@ export const DataList = styled.ul`
     padding: 0;
     list-style-type: none;
     border: 1px solid ${theme.colorDefaultGreen};
-    background-color: ${theme.colorWhiteText};
+    background-color: ${theme.colorDefaultTextBg};
 
     .no-result {
         text-align: center;
