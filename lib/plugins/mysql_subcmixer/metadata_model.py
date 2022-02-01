@@ -18,6 +18,9 @@
 import numpy as np
 import pulp
 
+from lib.plugins.mysql_subcmixer.category_tree import CategoryTree
+from lib.plugins.mysql_subcmixer.database import Database
+
 
 class CorpusComposition(object):
 
@@ -46,7 +49,7 @@ class MetadataModel:
     id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(self, meta_db, category_tree, id_attr):
+    def __init__(self, meta_db: Database, category_tree: CategoryTree, id_attr: str):
         self._db = meta_db
         self.c_tree = category_tree
         self._id_attr = id_attr
@@ -135,7 +138,7 @@ class MetadataModel:
             for child in node.children:
                 self._init_ab(child, used_ids)
 
-    def solve(self):
+    def solve(self) -> CorpusComposition:
         """
         A method that converts the matrix notation of LP model to format used by PULP
         library and solves it.

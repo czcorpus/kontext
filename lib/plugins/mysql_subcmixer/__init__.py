@@ -15,16 +15,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from ast import Tuple
 import json
 from collections import defaultdict
 import struct
-from typing import List
+from typing import Any, Dict, List, TypedDict
+from lib.controller.plg import PluginCtx
+from lib.corplib.corpus import KCorpus
+from lib.plugins.abstract.corparch import AbstractCorporaArchive
+from lib.plugins.abstract.integration_db import IntegrationDatabase
 
-from plugins.abstract.subcmixer import AbstractSubcMixer
+from werkzeug.wrappers import Request
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
+
+from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
 from plugins import inject
 import plugins
 from plugins.errors import PluginException
-from controller import exposed
+from controller import Controller, exposed
 import actions.subcorpus
 import corplib
 
@@ -33,8 +42,20 @@ from .category_tree import CategoryTree, CategoryExpression, TaskArgs
 from .metadata_model import MetadataModel
 
 
+class RealSizes(TypedDict):
+    attrs: List[Tuple[str, float]]
+    total: int
+
+
+class ProcessResponse(TypedDict):
+    attrs: List[Tuple[str, float]]
+    total: int
+    ids: List[int]
+    structs: List[str]
+
+
 @exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_run_calc(ctrl, request):
+def subcmixer_run_calc(ctrl: Controller, request: Request) -> ProcessResponse:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(plugin_ctx=ctrl._plugin_ctx, corpus=ctrl.corp,
@@ -47,7 +68,7 @@ def subcmixer_run_calc(ctrl, request):
 
 
 @exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_create_subcorpus(ctrl, request):
+def subcmixer_create_subcorpus(ctrl: Controller, request: Request) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -88,77 +109,78 @@ class ResultNotFoundException(SubcMixerException):
     pass
 
 
-class SubcMixer(AbstractSubcMixer):
+class SubcMixer(AbstractSubcMixer[ProcessResponse]):
 
     CORPUS_MAX_SIZE = 500000000  # TODO
 
-    def __init__(self, corparch, integration_db):
+    def __init__(self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
         self._corparch = corparch
         self._db = integration_db
 
     @staticmethod
-    def _calculate_real_sizes(cat_tree, sizes, total_size):
-        expressions = [item[3] for item in cat_tree.category_list if item[3]]
-        ans = dict(attrs=[], total=total_size)
-        for i, expression in enumerate(expressions):
-            ans['attrs'].append((str(expression), float(sizes[i]) / float(total_size),))
-        return ans
+    def _calculate_real_sizes(cat_tree: CategoryTree, sizes: List[int], total_size: int) -> RealSizes:
+        return RealSizes(
+            attrs=[
+                (str(expression), float(sizes[i]) / float(total_size))
+                for i, expression in enumerate(item.expression for item in cat_tree.category_list if item.expression)
+            ],
+            total=total_size
+        )
 
     @staticmethod
-    def _import_task_args(args) -> List[TaskArgs]:
+    def _import_task_args(args: List[ExpressionItem]) -> List[TaskArgs]:
         """
         generate IDs and parent IDs for
         passed conditions
         """
         ans: List[List[TaskArgs]] = [[TaskArgs(0, None, 1, None)]]
-        grouped = defaultdict(lambda: [])
+        grouped: Dict[str, List[ExpressionItem]] = defaultdict(lambda: [])
         for item in args:
             grouped[item['attrName']].append(item)
 
         counter = 1
-        for expressions in list(grouped.values()):
+        for expressions in grouped.values():
             tmp: List[TaskArgs] = []
-            for pg in ans[-1]:
-                for item in expressions:
-                    tmp.append(
-                        TaskArgs(
-                            counter,
-                            pg.node_id,
-                            float(item['ratio']) / 100.,
-                            CategoryExpression(item['attrName'], '==', item['attrValue'])
-                        )
-                    )
+            for parent in ans[-1]:
+                for expr in expressions:
+                    tmp.append(TaskArgs(
+                        counter,
+                        parent.node_id,
+                        float(expr['ratio']) / 100.,
+                        CategoryExpression(expr['attrName'], '==', expr['attrValue'])
+                    ))
                     counter += 1
             ans.append(tmp)
-        ret: List[TaskArgs] = []
-        for item in ans:
-            for subitem in item:
-                ret.append(subitem)
-        return ret
+        return [subitem for item in ans for subitem in item]
 
-    def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
+    def process(self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str], args: List[ExpressionItem]) -> ProcessResponse:
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
+        conditions = self._import_task_args(args)
+
         db = Database(db=self._db, corpus_id=corpus_info.id,
                       id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
-        conditions = self._import_task_args(args)
-        cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
+        cat_tree = CategoryTree(conditions, self._db, 'item', SubcMixer.CORPUS_MAX_SIZE)
         mm = MetadataModel(meta_db=db, category_tree=cat_tree,
                            id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:
-            ans = {}
-            ans.update(self._calculate_real_sizes(
-                cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
-            doc_indices = [item[0] for item in [item for item in (
-                x for x in enumerate(corpus_items.variables)) if item[1] > 0]]
-            ans['ids'] = doc_indices,
-            ans['structs'] = list(used_structs)
-            return ans
+            doc_indices = [
+                item[0] for item in (
+                    item for item in (
+                        x for x in enumerate(corpus_items.variables)
+                    ) if item[1] > 0
+                )
+            ]
+            return ProcessResponse(
+                ids=doc_indices,
+                structs=used_structs,
+                **self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled)
+            )
 
         else:
             raise ResultNotFoundException('ucnk_subcm__failed_to_find_suiteable_mix')
@@ -168,5 +190,5 @@ class SubcMixer(AbstractSubcMixer):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(settings, corparch, integration_db):
+def create_instance(settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
     return SubcMixer(corparch, integration_db)

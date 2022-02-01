@@ -20,13 +20,24 @@ plug-in which provides input arguments used by 'subcmixer'.
 """
 
 import abc
+from typing import Any, List, Optional, TypeVar, TypedDict, Dict, Generic
 from corplib.corpus import KCorpus
+from lib.controller.plg import PluginCtx
 
 
-class AbstractSubcMixer(abc.ABC):
+class ExpressionItem(TypedDict):
+    attrName: str
+    attrValue: str
+    ratio: Optional[float]
+
+
+T = TypeVar('T')
+
+
+class AbstractSubcMixer(abc.ABC, Generic[T]):
 
     @abc.abstractmethod
-    def process(self, plugin_ctx, corpus: KCorpus, corpname, aligned_corpora, args):
+    def process(self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str], args: List[ExpressionItem]) -> T:
         """
         arguments:
             plugin_ctx -- kontext.PluginCtx instance

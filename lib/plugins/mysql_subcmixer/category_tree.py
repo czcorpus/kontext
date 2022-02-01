@@ -20,6 +20,10 @@
 from typing import List, NamedTuple, Optional, Union
 import numpy as np
 import copy
+from lib.plugins.abstract.integration_db import IntegrationDatabase
+
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 
 from plugins.mysql_subcmixer import TaskArgs
 
@@ -116,7 +120,7 @@ class CategoryTree(object):
 
     """
 
-    def __init__(self, category_list: List[TaskArgs], db, table_name: str, corpus_max_size: int):
+    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], table_name: str, corpus_max_size: int):
         self.category_list = category_list
         self.num_categories = len(category_list)
         self.table_name = table_name
@@ -125,7 +129,7 @@ class CategoryTree(object):
                                           self.category_list[0].ratio, self.category_list[0].expression)
         self._db = db
 
-    def _add_virtual_cats(self):
+    def _add_virtual_cats(self) -> None:
         updated_list = copy.deepcopy(self.category_list)
         cats_updated = [False] * self.num_categories
         for cat in self.category_list:
@@ -144,7 +148,7 @@ class CategoryTree(object):
                     self.num_categories += 1
                     self.category_list = updated_list
 
-    def _build(self):
+    def _build(self) -> None:
         for i in range(1, self.num_categories):
             cat = self.category_list[i]
             node_id, parent_id, ratio, mc = cat
@@ -189,7 +193,7 @@ class CategoryTree(object):
                     sizes[i] = data_size * ratios[i]
         return max_sizes
 
-    def compute_sizes(self, node: CategoryTreeNode):
+    def compute_sizes(self, node: CategoryTreeNode) -> None:
         if len(node.children) > 0:
             sizes = []
             ratios = []
@@ -209,7 +213,7 @@ class CategoryTree(object):
                     self.compute_sizes(n)
                 i += 1
 
-    def initialize_bounds(self):
+    def initialize_bounds(self) -> None:
         for i in range(1, len(self.category_list)):
             node = self._get_node_by_id(self.root_node, i)
             node.size = self._get_category_size(node.metadata_condition)

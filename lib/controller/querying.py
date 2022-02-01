@@ -97,7 +97,7 @@ class Querying(Kontext):
                 use_history = not self._curr_conc_form_args.data.no_query_history
         return use_history, data
 
-    def _update_output_with_conc_params(self, op_id, tpl_data):
+    def _update_output_with_conc_params(self, op_id: str, tpl_data: Dict[str, Any]) -> None:
         """
         Updates template data dictionary tpl_data with stored operation values.
 
@@ -140,7 +140,8 @@ class Querying(Kontext):
             if action_metadata['mutates_result']:
                 next_query_keys, history_ts = self._store_conc_params()
             else:
-                next_query_keys = [self._active_q_data.get('id', None)] if self._active_q_data else []
+                next_query_keys = [self._active_q_data.get(
+                    'id', None)] if self._active_q_data else []
                 history_ts = None
             self.on_conc_store(next_query_keys, history_ts, result)
             self._update_output_with_conc_params(
@@ -174,14 +175,14 @@ class Querying(Kontext):
                 ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
             return ans, history_ts
 
-    def _select_current_aligned_corpora(self, active_only: bool):
+    def _select_current_aligned_corpora(self, active_only: bool) -> List[str]:
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
     def _attach_query_params(
             self, tpl_out: Dict[str, Any], query: Optional[QueryFormArgs] = None,
             filter: Optional[FilterFormArgs] = None, sort: Optional[SortFormArgs] = None,
             sample: Optional[SampleFormArgs] = None, shuffle: Optional[ShuffleFormArgs] = None,
-            firsthits: Optional[FirstHitsFilterFormArgs] = None):
+            firsthits: Optional[FirstHitsFilterFormArgs] = None) -> None:
         """
         Attach data required by client-side forms which are
         part of the current query pipeline (i.e. initial query, filters,
@@ -222,7 +223,7 @@ class Querying(Kontext):
             firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
-    def _attach_aligned_query_params(self, tpl_out: Dict[str, Any]):
+    def _attach_aligned_query_params(self, tpl_out: Dict[str, Any]) -> None:
         """
         Adds template data required to generate components for adding/overviewing
         aligned corpora. This is called by individual actions.
