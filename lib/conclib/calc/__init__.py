@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Union
 import os
 import time
 import logging
@@ -27,7 +27,7 @@ import plugins
 from plugins.abstract.conc_cache import AbstractConcCache, ConcCacheStatus
 from corplib import CorpusManager
 from conclib.empty import InitialConc
-from corplib.corpus import KCorpus, AbstractKCorpus
+from corplib.corpus import AbstractKCorpus
 import manatee
 from conclib.pyconc import PyConc
 from conclib.calc.base import GeneralWorker
@@ -138,7 +138,7 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def require_existing_conc(corp: KCorpus, q: Tuple[str, ...]) -> manatee.Concordance:
+def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]]) -> manatee.Concordance:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.

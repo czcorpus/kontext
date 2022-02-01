@@ -945,8 +945,9 @@ class Actions(Querying):
             self, fcrit: Tuple[str, ...], fcrit_async: Tuple[str, ...], flimit: int, freq_sort: str,
             ml: int, force_cache: int):
 
-        self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
-                                    MainMenu.CONCORDANCE('query-overview'))
+        self.disabled_menu_items = (
+            MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
+            MainMenu.CONCORDANCE('query-overview'))
 
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
