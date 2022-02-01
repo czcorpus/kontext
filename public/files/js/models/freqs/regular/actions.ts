@@ -67,7 +67,7 @@ export class Actions {
     };
 
     static ResultSortByColumn:Action<{
-        value:string;
+        value:FreqChartsAvailableOrder;
         sourceId:string;
     }> = {
         name: 'FREQ_RESULT_SORT_BY_COLUMN'

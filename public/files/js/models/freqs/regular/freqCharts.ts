@@ -33,7 +33,7 @@ import { StructuralAttribute, FormValue, newFormValue, AttrItem } from '../../..
 import { validateGzNumber } from '../../base';
 
 
-export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'freq'|'rel';
 
 export type FreqChartsAvailableData = 'freq'|'rel';
 

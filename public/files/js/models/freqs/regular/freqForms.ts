@@ -26,13 +26,14 @@ import { PageModel } from '../../../app/page';
 import { FreqServerArgs } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
+import { FreqChartsAvailableOrder } from './freqCharts';
 
 
 export interface FreqFormInputs {
     fttattr:Array<string>;
     ftt_include_empty:boolean;
     flimit:string;
-    freq_sort:string;
+    freq_sort:FreqChartsAvailableOrder;
 
     mlxattr:Array<string>;
     mlxicase:Array<boolean>;

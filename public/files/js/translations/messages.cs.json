@@ -765,7 +765,7 @@
         "freq__unit_abs": "absolutní frekvence",
         "freq__unit_rel": "relativní frekvence (ipm)",
         "freq__unit_time": "datum/čas",
-        "freq__unit_value": "textová hodnota",
+        "freq__unit_value": "abecedy",
         "freq__tab_tables_button": "Tabulkové zobrazení",
         "freq__tab_charts_button": "Zobrazení v grafech",
         "freq__pie_chart_max_items_input_label": "Max. počet samostatných položek v koláčovém grafu (další v sekci \"ostatní\")",

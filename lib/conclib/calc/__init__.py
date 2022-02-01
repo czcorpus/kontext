@@ -138,7 +138,7 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]]) -> manatee.Concordance:
+def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]]) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.

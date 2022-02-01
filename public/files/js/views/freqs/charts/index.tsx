@@ -22,13 +22,13 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
 import {
-    FreqChartsAvailableData, FreqChartsAvailableTypes, FreqChartsModel,
+    FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes, FreqChartsModel,
     FreqChartsModelState
 } from '../../../models/freqs/regular/freqCharts';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line,
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
-    Legend, Label
+    Legend, Label, ErrorBar
 } from 'recharts';
 import { Dict, List, pipe, Strings } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -143,7 +143,7 @@ export function init(
 
     const FreqSortBySelector:React.FC<{
         sourceId:string;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         data:ResultBlock;
         disabled:boolean;
 
@@ -158,16 +158,15 @@ export function init(
                 }
             });
         }
-
         return (
             <>
                 <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
                 <select id="sel-order" value={sortColumn} onChange={handleOrderChange} disabled={disabled}>
                     <option value="0">{he.translate('freq__unit_value')}</option>
                     <option value="freq">{he.translate('freq__unit_abs')}</option>
-                    {List.some(v => !!v.rel, data.Items) ?
-                        <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                        null
+                    {data.NoRelSorting ?
+                        null :
+                        <option value="rel">{he.translate('freq__unit_rel')}</option>
                     }
                 </select>
             </>
@@ -254,7 +253,7 @@ export function init(
         dataKey:FreqChartsAvailableData;
         data:ResultBlock;
         fmaxitems:Kontext.FormValue<string>;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         isBusy:boolean;
         dtFormat:string;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
@@ -294,7 +293,7 @@ export function init(
         isBusy:boolean;
         dtFormat:string;
         fmaxitems:Kontext.FormValue<string>;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
     }> = (props) => {
 
@@ -327,9 +326,11 @@ export function init(
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
                             <Tooltip />
-                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
+                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue}>
+                                <ErrorBar dataKey="errorX" width={0} strokeWidth={1} stroke="blue" opacity={0.8} direction="x" />
+                            </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer>;
                 case 'cloud':
                     return (
                         <div className="cloud-wrapper">

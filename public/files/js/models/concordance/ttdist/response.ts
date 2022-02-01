@@ -24,16 +24,11 @@ import { TTCrit } from './common';
 
 interface FreqItem {
     Word:Array<{n:string}>;
-    fbar:number;
     freq:number;
-    freqbar:number;
-    nbar:number;
-    nfilter:{[key:string]:string};
-    norel:number;
     norm:number;
-    pfilter:{[key:string]:string};
     rel:number;
-    relbar:number;
+    pfilter:{[key:string]:string};
+    nfilter:{[key:string]:string};
 }
 
 interface FreqBlock {
@@ -41,6 +36,7 @@ interface FreqBlock {
     TotalPages:number;
     Items:Array<FreqItem>;
     Head:Array<{s:string; n:string}>;
+    NoRelSorting:boolean;
 }
 
 export interface FreqData {

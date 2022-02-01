@@ -252,10 +252,6 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
                              args.collator_locale)
              for cr in args.fcrit]
-    for item in freqs:
-        if 'Items' not in item:
-            item['Items'] = []
-            item['Total'] = len(item['Items'])
     return dict(freqs=freqs, conc_size=conc.size())
 
 
@@ -305,6 +301,7 @@ def calculate_freqs(args: FreqCalcArgs):
             Items=freq_block['Items'][fstart:fmaxitems - 1],
             Head=freq_block.get('Head', []),
             SkippedEmpty=freq_block.get('SkippedEmpty', False),
+            NoRelSorting=freq_block['NoRelSorting'],
             fcrit=args.fcrit[i]))
     return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=conc_size)
 

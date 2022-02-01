@@ -76,31 +76,26 @@ export function importData(
     return {
         Items: List.map(
             (item, i) => ({
+                ...item,
                 idx: i + (currentPage - 1) * pageSize,
                 Word: List.map(x => x.n, item.Word),
                 pfilter: createQuickFilterUrl(pageModel, item.pfilter),
-                nfilter: createQuickFilterUrl(pageModel, item.nfilter),
-                fbar: item.fbar,
-                freqbar: item.freqbar,
-                rel: item.rel,
-                relbar: item.relbar,
-                freq: item.freq,
-                nbar: item.nbar,
-                norm: item.norm,
-                norel: item.norel
+                nfilter: createQuickFilterUrl(pageModel, item.nfilter)
             }),
             data.Items
         ),
         Head: List.map(
             item => ({
                 ...item,
-                isPosTag: List.some(v => v === item.n, posTagAttrs)
+                isPosTag: List.some(v => v === item.n, posTagAttrs),
+                allowSorting: !data.NoRelSorting
             }),
             data.Head
         ),
         TotalPages: data.TotalPages,
         Total: data.Total,
         SkippedEmpty: data.SkippedEmpty,
+        NoRelSorting: data.NoRelSorting,
         fcrit: data.fcrit
     };
 }
