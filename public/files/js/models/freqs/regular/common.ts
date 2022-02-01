@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP, List, pipe } from 'cnc-tskit';
+import { HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
@@ -37,7 +37,9 @@ export interface ResultItem {
     pfilter:string;
     nfilter:string;
     rel:number;
+    relConfidence:[number, number];
     freq:number;
+    freqConfidence:[number, number];
     norm:number;
 }
 
@@ -90,6 +92,7 @@ export interface BaseFreqModelState {
     flimit:string;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
+    alphaLevel:Maths.AlphaLevel;
 }
 
 export interface FreqServerArgs extends ConcServerArgs {
@@ -141,7 +144,9 @@ export function reduceNumResultItems(data:Array<ResultItem>, maxItems:number, re
                 pfilter: '',
                 nfilter: '',
                 rel: 0,
+                relConfidence: tuple(0, 0),
                 freq: 0,
+                freqConfidence: tuple(0, 0),
                 norm: 0,
             }
         )
@@ -173,3 +178,26 @@ export class FreqDataLoader {
 
 
 export type FreqDisplayMode = 'tables'|'charts';
+
+
+export function recalculateConfIntervals(block:ResultBlock, alphaLevel:Maths.AlphaLevel):ResultBlock {
+    block.Items = List.map(
+        item => {
+            const [normLeftConfidence, normRightConfidence] = Maths.wilsonConfInterval(
+                item.freq, item.norm, alphaLevel);
+            return {
+                ...item,
+                relConfidence: tuple(
+                    Maths.roundToPos(normLeftConfidence * 1e6, 2),
+                    Maths.roundToPos(normRightConfidence * 1e6, 2)
+                ),
+                freqConfidence: tuple(
+                    Maths.roundToPos(normLeftConfidence * item.norm, 2),
+                    Maths.roundToPos(normRightConfidence * item.norm, 2)
+                ),
+            }
+        },
+        block.Items
+    );
+    return block;
+}

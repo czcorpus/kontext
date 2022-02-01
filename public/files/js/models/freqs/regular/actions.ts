@@ -24,6 +24,7 @@ import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
 import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from './freqCharts';
+import { Maths } from 'cnc-tskit';
 
 
 export class Actions {
@@ -44,6 +45,13 @@ export class Actions {
     static isResultSetMinFreqVal(a:Action):a is typeof Actions.ResultSetMinFreqVal {
         return a.name === Actions.ResultSetMinFreqVal.name;
     }
+
+    static ResultSetAlphaLevel:Action<{
+        value:Maths.AlphaLevel;
+
+    }> = {
+        name: 'FREQ_RESULT_SET_ALPHA_LEVEL'
+    };
 
     static ReloadData:Action<{
         sourceId:string;

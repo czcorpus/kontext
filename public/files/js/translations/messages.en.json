@@ -772,6 +772,7 @@
         "freq__pie_other_group_label": "(other)",
         "freq__download_chart": "download the chart",
         "freq__pie_chart_need_all_items_help": "In order for the pie chart area to represent 100%, all the items have to be included. However, the chart allows configuring how many items should have their own slice. The rest is then included in the \"other\" slice.",
+        "freq__binom_conf_interval_hd": "binom. conf. interval",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",

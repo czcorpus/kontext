@@ -47,6 +47,10 @@ export const FilterForm = styled.form`
         display: flex;
         align-items: center;
     }
+
+    label:not(:first-child) {
+        margin-left: 1em;
+    }
 `;
 
 // ---------------- <FreqResultLoaderView /> ----------------------

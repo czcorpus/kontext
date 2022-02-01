@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Dict, List, pipe } from 'cnc-tskit';
+import { Dict, List, Maths, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
@@ -160,10 +160,40 @@ export function init(
         );
     };
 
+    // ----------------------- <ConfidenceLevelSelector /> ------------
+
+    const ConfidenceLevelSelector:React.FC<{
+        value: Maths.AlphaLevel;
+
+    }> = ({value}) => {
+
+        const handleChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<typeof Actions.ResultSetAlphaLevel>({
+                name: Actions.ResultSetAlphaLevel.name,
+                payload: {
+                    value: evt.target.value as Maths.AlphaLevel
+                }
+            });
+        }
+
+        return (
+            <label>
+                {he.translate('freq__ct_conf_level_label')}:
+                {'\u00a0'}
+                <select value={value} onChange={handleChange}>
+                    <option value={Maths.AlphaLevel.LEVEL_1}>{Maths.AlphaLevel.LEVEL_1}</option>
+                    <option value={Maths.AlphaLevel.LEVEL_5}>{Maths.AlphaLevel.LEVEL_5}</option>
+                    <option value={Maths.AlphaLevel.LEVEL_10}>{Maths.AlphaLevel.LEVEL_10}</option>
+                </select>
+            </label>
+        )
+    }
+
     // ----------------------- <FilterForm /> -------------------------
 
     interface FilterFormProps {
         minFreqVal:string;
+        alphaLevel:Maths.AlphaLevel;
     }
 
     const FilterForm:React.FC<FilterFormProps> = (props) => {
@@ -171,6 +201,7 @@ export function init(
         return (
             <S.FilterForm>
                 <MinFreqInput minFreqVal={props.minFreqVal} />
+                <ConfidenceLevelSelector value={props.alphaLevel} />
             </S.FilterForm>
         );
     };
@@ -229,7 +260,7 @@ export function init(
 
         return (
             <S.FreqResultView>
-                <FilterForm minFreqVal={props.flimit} />
+                <FilterForm minFreqVal={props.flimit} alphaLevel={props.alphaLevel} />
                 <hr />
                 <globalComponents.TabView
                         className="FreqViewSelector"

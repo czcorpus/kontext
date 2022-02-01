@@ -42,7 +42,7 @@ import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { Dict, List, pipe, tuple, URL as CURL } from 'cnc-tskit';
+import { List, Maths, pipe, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
@@ -290,11 +290,12 @@ class FreqPage {
                     pageModel: this.layoutModel
                 });
                 const initialData = List.map(
-                    block =>importFreqData(
+                    block => importFreqData(
                         this.layoutModel,
                         block,
                         this.layoutModel.getConf<number>('CurrentPage'),
-                        this.layoutModel.getConf<number>('FreqItemsPerPage')
+                        this.layoutModel.getConf<number>('FreqItemsPerPage'),
+                        Maths.AlphaLevel.LEVEL_5
                     ),
                     this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                 );
