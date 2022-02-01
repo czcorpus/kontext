@@ -19,7 +19,7 @@ import numpy as np
 import pulp
 
 from lib.plugins.mysql_subcmixer.category_tree import CategoryTree
-from lib.plugins.mysql_subcmixer.database import Database
+from lib.plugins.mysql_subcmixer.backend import Backend
 
 
 class CorpusComposition(object):
@@ -49,7 +49,7 @@ class MetadataModel:
     id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(self, meta_db: Database, category_tree: CategoryTree, id_attr: str):
+    def __init__(self, meta_db: Backend, category_tree: CategoryTree, id_attr: str):
         self._db = meta_db
         self.c_tree = category_tree
         self._id_attr = id_attr

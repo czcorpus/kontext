@@ -37,7 +37,7 @@ from controller import Controller, exposed
 import actions.subcorpus
 import corplib
 
-from .database import Database
+from .backend import Backend
 from .category_tree import CategoryTree, CategoryExpression, TaskArgs
 from .metadata_model import MetadataModel
 
@@ -47,9 +47,7 @@ class RealSizes(TypedDict):
     total: int
 
 
-class ProcessResponse(TypedDict):
-    attrs: List[Tuple[str, float]]
-    total: int
+class ProcessResponse(RealSizes):
     ids: List[int]
     structs: List[str]
 
@@ -161,8 +159,9 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
         conditions = self._import_task_args(args)
 
-        db = Database(db=self._db, corpus_id=corpus_info.id,
-                      id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
+        db = Backend(db=self._db, corpus_id=corpus_info.id,
+                     id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
+
         cat_tree = CategoryTree(conditions, self._db, 'item', SubcMixer.CORPUS_MAX_SIZE)
         mm = MetadataModel(meta_db=db, category_tree=cat_tree,
                            id_attr=corpus_info.metadata.id_attr.replace('.', '_'))

@@ -65,7 +65,7 @@ class CategoryExpression(object):
     def negate(self):
         return CategoryExpression(self.attr, CategoryExpression.OPERATORS[self.op], self.value)
 
-    def __init__(self, attr, op, value):
+    def __init__(self, attr: str, op: str, value: str):  # TODO struct_attr
         self.attr = attr.replace('.', '_')
         if op not in CategoryExpression.OPERATORS:
             raise Exception('Invalid operator: %s' % op)
@@ -120,10 +120,9 @@ class CategoryTree(object):
 
     """
 
-    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], table_name: str, corpus_max_size: int):
+    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], corpus_max_size: int):
         self.category_list = category_list
         self.num_categories = len(category_list)
-        self.table_name = table_name
         self.corpus_max_size = corpus_max_size
         self.root_node = CategoryTreeNode(self.category_list[0].node_id, self.category_list[0].parent_id,
                                           self.category_list[0].ratio, self.category_list[0].expression)
@@ -171,7 +170,7 @@ class CategoryTree(object):
         else:
             return node
 
-    def _get_max_group_sizes(self, sizes: List[int], ratios: List[float], parent_size: int) -> List[Union[int, float]]:
+    def _get_max_group_sizes(self, sizes: List[float], ratios: List[float], parent_size: float) -> List[Union[int, float]]:
         num_g = len(sizes)
         children_size = sum(sizes)
         data_size = min(children_size, parent_size)
@@ -218,6 +217,16 @@ class CategoryTree(object):
             node = self._get_node_by_id(self.root_node, i)
             node.size = self._get_category_size(node.metadata_condition)
 
+        sql = '''
+            SELECT t1.id, t1.structure_name, t1.structattr_name, t1.value
+            FROM corpus_structattr_value as t1
+            INNER JOIN corpus_structattr_value as t2
+                ON t2.corpus_name = %s
+                    AND t2.structure_name = t1.structure_name
+                    AND t2.structattr_name = t1.structattr_name
+                    AND t2.value = t1.value
+            WHERE t1.corpus_name = %s
+        '''
         sql = 'SELECT SUM(m1.{0}) FROM item AS m1 '.format(self._db.count_col)
         args = []
         sql, args = self._db.append_aligned_corp_sql(sql, args)
