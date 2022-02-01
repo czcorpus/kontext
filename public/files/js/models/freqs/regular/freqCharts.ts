@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
@@ -26,6 +26,7 @@ import { FreqResultResponse } from '../common';
 import { Actions } from './actions';
 import {
     BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    recalculateConfIntervals,
     ResultBlock, validateNumber } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
@@ -33,7 +34,7 @@ import { StructuralAttribute, FormValue, newFormValue, AttrItem } from '../../..
 import { validateGzNumber } from '../../base';
 
 
-export type FreqChartsAvailableOrder = '0'|'freq'|'rel';
+export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'freq'|'rel';
 
 export type FreqChartsAvailableData = 'freq'|'rel';
 
@@ -155,7 +156,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 dataKey: pipe(
                     allCrits,
                     List.map(
-                        k => tuple<string, FreqChartsAvailableData>(k.n, 'freq')
+                        k => tuple<string, FreqChartsAvailableData>(k.n, 'rel')
                     ),
                     Dict.fromEntries()
                 ),
@@ -187,7 +188,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                         k => tuple(k.n, newFormValue('5', true))
                     ),
                     Dict.fromEntries()
-                )
+                ),
+                alphaLevel: Maths.AlphaLevel.LEVEL_5
             }
         );
 
@@ -420,6 +422,22 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 state.isBusy[action.payload.sourceId] = false;
             }
         );
+
+        this.addActionHandler(
+            Actions.ResultSetAlphaLevel,
+            (state, action) => {
+                state.alphaLevel = action.payload.value;
+                state.data = Dict.map(
+                    block => {
+                        if (isEmptyResultBlock(block)) {
+                            return block;
+                        }
+                        return recalculateConfIntervals(block, state.alphaLevel);
+                    },
+                    state.data
+                )
+            }
+        );
     }
 
     private dispatchLoad(
@@ -438,7 +456,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                     this.pageModel,
                                     block,
                                     1,
-                                    data.fmaxitems
+                                    data.fmaxitems,
+                                    state.alphaLevel
                                 )
                             },
                         });
@@ -460,7 +479,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ...this.pageModel.getConcArgs(),
             fcrit,
             flimit: parseInt(state.flimit),
-            freq_sort: state.type[fcrit] === 'timeline' ?
+            freq_sort: state.type[fcrit] === 'timeline' || state.type[fcrit] === 'timescatter' ?
                 '0' :
                 // pie chart always sorts by selected units
                 state.type[fcrit] === 'pie' ?

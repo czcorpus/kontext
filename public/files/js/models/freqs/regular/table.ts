@@ -24,9 +24,10 @@ import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import {
-    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    recalculateConfIntervals,
     ResultBlock, validateNumber } from './common';
-import { Dict, List, pipe, tuple } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
@@ -71,39 +72,49 @@ export function importData(
     data:Block,
     currentPage:number,
     pageSize:number,
+    alphaLevel:Maths.AlphaLevel
+
 ):ResultBlock {
     const posTagAttrs = getPositionalTagAttrs(pageModel);
     return {
         Items: List.map(
-            (item, i) => ({
-                idx: i + (currentPage - 1) * pageSize,
-                Word: List.map(x => x.n, item.Word),
-                pfilter: createQuickFilterUrl(pageModel, item.pfilter),
-                nfilter: createQuickFilterUrl(pageModel, item.nfilter),
-                fbar: item.fbar,
-                freqbar: item.freqbar,
-                rel: item.rel,
-                relbar: item.relbar,
-                freq: item.freq,
-                nbar: item.nbar,
-                norm: item.norm,
-                norel: item.norel
-            }),
+            (item, i) => {
+                const [normLeftConfidence, normRightConfidence] = Maths.wilsonConfInterval(
+                    item.freq, item.norm, alphaLevel);
+                return {
+                    ...item,
+                    relConfidence: tuple(
+                        Maths.roundToPos(normLeftConfidence * 1e6, 2),
+                        Maths.roundToPos(normRightConfidence * 1e6, 2)
+                    ),
+                    freqConfidence: tuple(
+                        Maths.roundToPos(normLeftConfidence * item.norm, 2),
+                        Maths.roundToPos(normRightConfidence * item.norm, 2)
+                    ),
+                    idx: i + (currentPage - 1) * pageSize,
+                    Word: List.map(x => x.n, item.Word),
+                    pfilter: createQuickFilterUrl(pageModel, item.pfilter),
+                    nfilter: createQuickFilterUrl(pageModel, item.nfilter)
+                }
+            },
             data.Items
         ),
         Head: List.map(
             item => ({
                 ...item,
-                isPosTag: List.some(v => v === item.n, posTagAttrs)
+                isPosTag: List.some(v => v === item.n, posTagAttrs),
+                allowSorting: !data.NoRelSorting
             }),
             data.Head
         ),
         TotalPages: data.TotalPages,
         Total: data.Total,
         SkippedEmpty: data.SkippedEmpty,
+        NoRelSorting: data.NoRelSorting,
         fcrit: data.fcrit
     };
 }
+
 
 function createQuickFilterUrl(pageModel:PageModel, args:ConcQuickFilterServerArgs):string {
     if (args) {
@@ -188,7 +199,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     Dict.fromEntries()
                 ),
                 isActive: true,
-                saveFormActive: false
+                saveFormActive: false,
+                alphaLevel: Maths.AlphaLevel.LEVEL_5
             }
         );
         this.pageModel = pageModel;
@@ -423,6 +435,22 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 this.pageModel.setLocationPost(action.payload.url, {}, action.payload.blankWindow);
             }
         );
+
+        this.addActionHandler(
+            Actions.ResultSetAlphaLevel,
+            (state, action) => {
+                state.alphaLevel = action.payload.value;
+                state.data = Dict.map(
+                    block => {
+                        if (isEmptyResultBlock(block)) {
+                            return block;
+                        }
+                        return recalculateConfIntervals(block, state.alphaLevel);
+                    },
+                    state.data
+                )
+            }
+        );
     }
 
     private dispatchLoad(
@@ -443,6 +471,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                     block,
                                     parseInt(state.currentPage[block.fcrit]),
                                     data.fmaxitems,
+                                    state.alphaLevel
                                 )
                             },
                         });

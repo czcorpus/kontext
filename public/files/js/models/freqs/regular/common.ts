@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP, List, pipe } from 'cnc-tskit';
+import { HTTP, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
 import { FreqResultResponse } from '../common';
 import { AttrItem } from '../../../types/kontext';
+import { FreqChartsAvailableOrder } from './freqCharts';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
@@ -35,20 +36,18 @@ export interface ResultItem {
     Word:Array<string>;
     pfilter:string;
     nfilter:string;
-    fbar:number;
-    freqbar:number;
     rel:number;
-    relbar:number;
+    relConfidence:[number, number];
     freq:number;
-    nbar:number;
+    freqConfidence:[number, number];
     norm:number;
-    norel:number; // 0|1 (TODO bool?)
 }
 
 export interface ResultHeader {
-    s:string;
+    s:FreqChartsAvailableOrder;
     n:string;
     isPosTag:boolean;
+    allowSorting:boolean;
 }
 
 export interface ResultBlock {
@@ -57,6 +56,7 @@ export interface ResultBlock {
     Items:Array<ResultItem>;
     Head:Array<ResultHeader>;
     SkippedEmpty:boolean;
+    NoRelSorting:boolean;
     fcrit:string; // original encoded freq. criterium (serves as an identifier of the result)
 }
 
@@ -85,13 +85,14 @@ export function clearResultBlock(res:ResultBlock|EmptyResultBlock):EmptyResultBl
 export interface BaseFreqModelState {
     data:{[sourceId:string]:ResultBlock|EmptyResultBlock};
     currentPage:{[sourceId:string]:string};
-    sortColumn:{[sourceId:string]:string};
+    sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
     ftt_include_empty:boolean;
     flimit:string;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
+    alphaLevel:Maths.AlphaLevel;
 }
 
 export interface FreqServerArgs extends ConcServerArgs {
@@ -142,14 +143,11 @@ export function reduceNumResultItems(data:Array<ResultItem>, maxItems:number, re
                 Word: [restLabel],
                 pfilter: '',
                 nfilter: '',
-                fbar: 0,
-                freqbar: 0,
                 rel: 0,
-                relbar: 0,
+                relConfidence: tuple(0, 0),
                 freq: 0,
-                nbar: 0,
+                freqConfidence: tuple(0, 0),
                 norm: 0,
-                norel: 0
             }
         )
     );
@@ -180,3 +178,26 @@ export class FreqDataLoader {
 
 
 export type FreqDisplayMode = 'tables'|'charts';
+
+
+export function recalculateConfIntervals(block:ResultBlock, alphaLevel:Maths.AlphaLevel):ResultBlock {
+    block.Items = List.map(
+        item => {
+            const [normLeftConfidence, normRightConfidence] = Maths.wilsonConfInterval(
+                item.freq, item.norm, alphaLevel);
+            return {
+                ...item,
+                relConfidence: tuple(
+                    Maths.roundToPos(normLeftConfidence * 1e6, 2),
+                    Maths.roundToPos(normRightConfidence * 1e6, 2)
+                ),
+                freqConfidence: tuple(
+                    Maths.roundToPos(normLeftConfidence * item.norm, 2),
+                    Maths.roundToPos(normRightConfidence * item.norm, 2)
+                ),
+            }
+        },
+        block.Items
+    );
+    return block;
+}

@@ -23,7 +23,7 @@ import * as React from 'react';
 import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common';
 import { IActionDispatcher } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
-import { List } from 'cnc-tskit';
+import { List, Strings } from 'cnc-tskit';
 import * as S from './style';
 
 
@@ -39,6 +39,12 @@ interface DataTableProps {
 interface ExportedComponents {
     DataTable:React.FC<DataTableProps>;
 }
+
+function splitFracPart(n:string|number) {
+    const [dec, frac] = (n + '').split(/[.,]/);
+    return <span>{dec}<span className="frac">.{Strings.overwriteStringFromRight('00', frac || '')}</span></span>;
+}
+
 
 export function init(
         dispatcher:IActionDispatcher,
@@ -109,33 +115,18 @@ export function init(
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
                 <td className="num">{props.data.freq}</td>
+                <td className="bci">
+                    {splitFracPart(he.formatNumber(props.data.freqConfidence[0], 2))}
+                    <span className="range">{'\u2026'}</span>
+                    {splitFracPart(he.formatNumber(props.data.freqConfidence[1], 2))}
+                </td>
                 <td className="num">{props.data.rel}</td>
-                <td>
-                    <div className="bar" style={{height: '10px', width: `${props.data.relbar}px`}} />
+                <td className="bci">
+                    {splitFracPart(he.formatNumber(props.data.relConfidence[0], 2))}
+                    <span className="range">{'\u2026'}</span>
+                    {splitFracPart(he.formatNumber(props.data.relConfidence[1], 2))}
                 </td>
             </S.DataRowTR>
-        );
-    };
-
-    // ----------------------- <DataRowNoRel /> --------------------------------
-
-    interface DataRowNoRelProps {
-        data: ResultItem;
-        monospaceCols: Array<boolean>;
-    }
-
-    const DataRowNoRel:React.FC<DataRowNoRelProps> = (props) => {
-
-        return (
-            <tr>
-                <td className="num">{props.data.idx + 1}</td>
-                <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-                {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
-                <td className="num">{props.data.freq}</td>
-                <td>
-                    <div className="bar" style={{height: '10px', width: `${props.data.fbar}px`}} />
-                </td>
-            </tr>
         );
     };
 
@@ -162,13 +153,16 @@ export function init(
         };
 
         const renderSortingIcon = () => {
-            if (props.sortColumn === props.data.s) {
+            if (props.data.s === 'rel' && !props.data.allowSorting) {
+                return <span>{props.data.n}</span>;
+
+            } else if (props.sortColumn === props.data.s) {
                 return (
                     <span title={he.translate('global__sorted')}>
                          {props.data.n}
                         <img className="sort-flag" src={he.createStaticUrl('img/sort_desc.svg')} />
                     </span>
-                )
+                );
 
             } else {
                 return (
@@ -179,6 +173,14 @@ export function init(
             }
         };
 
+        if (props.data.s === 'rel' || props.data.s === 'freq') {
+            return <>
+                <th key={props.data.n} title={props.data.s || ''}>
+                    {renderSortingIcon()}
+                </th>
+                <th>{props.data.n} ({he.translate('freq__binom_conf_interval_hd')})</th>
+            </>;
+        }
         return (
             <th key={props.data.n}
                     title={props.data.s || ''}>
@@ -190,30 +192,14 @@ export function init(
     /**
      * ----------------------- <DataTable /> --------------------------------
      */
-    const DataTable: React.FC<DataTableProps> = (props) => {
-
-        const getBarChartTitle = () => {
-            if (props.head.length > 0) {
-                return List.last(props.head).s || '';
-            }
-            return '';
-        };
+    const DataTable:React.FC<DataTableProps> = (props) => {
 
         const renderRows = () => {
             const monospaceCols = List.map(v => v.isPosTag, props.head)
-
-            if (props.rows.length === 0 || props.rows[0].relbar) {
-                return List.map(
-                    item => <DataRow key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols} />,
-                    props.rows
-                );
-
-            } else {
-                return List.map(
-                    item => <DataRowNoRel key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols}/>,
-                    props.rows
-                );
-            }
+            return List.map(
+                item => <DataRow key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols} />,
+                props.rows
+            );
         };
 
         return (
@@ -227,7 +213,6 @@ export function init(
                                 (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} sourceId={props.sourceId} />,
                                 props.head
                             )}
-                            <th title={getBarChartTitle()} />
                         </tr>
                     </thead>
                     <tbody>

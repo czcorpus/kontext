@@ -16,8 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import List
-
+from typing import List, Dict, Any
 import os
 from sys import stderr
 import re
@@ -28,7 +27,6 @@ import l10n
 from strings import escape_attr_val
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
-from functools import reduce
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
 from corplib.corpus import KCorpus
 
@@ -237,24 +235,6 @@ class PyConc(manatee.Concordance):
         ftt_include_empty -- str, TODO
         rel_mode -- {0, 1} (0 for structural attrs. , 1 for positional ones ??)
         """
-        # ml = determines how the bar appears (multilevel x text type)
-        # import math
-        normwidth_freq = 100
-        normwidth_rel = 100
-
-        def calc_scale(freqs, norms):
-            """
-            Create proper scaling coefficients for freqs and norms
-            to match a 100 units length bar.
-            """
-            from operator import add
-            sumn = float(reduce(add, norms))
-            if sumn == 0:
-                return float(normwidth_rel) / max(freqs), 0
-            else:
-                sumf = float(reduce(add, freqs))
-                corr = min(sumf / max(freqs), sumn / max(norms))
-                return normwidth_rel / sumf * corr, normwidth_rel / sumn * corr
 
         def label(attr):
             if '/' in attr:
@@ -272,75 +252,24 @@ class PyConc(manatee.Concordance):
         freqs = manatee.NumVector()
         norms = manatee.NumVector()
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
-        if not len(freqs):
-            return {}
-        # now we intentionally rewrite norms as filled in by freq_dist()
+        if len(freqs) == 0:
+            return dict(Head=[], Items=[], SkippedEmpty=False, NoRelSorting=True)
+
+        # for structural attrs, we intentionally rewrite norms as filled in by Corpus.freq_dist()
         # because of "hard to explain" metrics they lead to
         if rel_mode == 0:
             norms2_dict = self.get_attr_values_sizes(crit)
             norms = [norms2_dict.get(x, 0) for x in words]
+        # For positional attrs, the norm is the size of the actual corpus/subcorpus. Please note that
+        # for an "ad hoc" (or unnamed) subcorpus, this may be misleading as we still calculate against orig. corpus
+        else:
+            norms = [self.pycorp.search_size for _ in words]
 
-        sumf = float(sum([x for x in freqs]))
         attrs = crit.split()
-        head = [dict(n=label(attrs[x]), s=x / 2)
-                for x in range(0, len(attrs), 2)]
+        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2) for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
-        tofbar, tonbar = calc_scale(freqs, norms)
-        if tonbar and not ml:
-            maxf = max(freqs)  # because of bar height
-            minf = min(freqs)
-            maxrel = 0
-            # because of bar width
-            for index, (f, nf) in enumerate(zip(freqs, norms)):
-                if nf == 0:
-                    nf = 100000
-                    norms[index] = 100000
-                newrel = (f * tofbar / (nf * tonbar))
-                if maxrel < newrel:
-                    maxrel = newrel
-            if rel_mode == 0:
-                head.append(dict(
-                    n='i.p.m.',
-                    title=translate(
-                        'instances per million positions (refers to the respective category)'),
-                    s='rel'
-                ))
-            else:
-                head.append(dict(n='Freq [%]', title='', s='rel'))
-
-            lines = []
-            for w, f, nf in zip(words, freqs, norms):
-                rel_norm_freq = {
-                    0: round(f * 1e6 / nf, 2),
-                    1: round(f / sumf * 100, 2)
-                }[rel_mode]
-
-                rel_bar = {
-                    0: 1 + int(f * tofbar * normwidth_rel / (nf * tonbar * maxrel)),
-                    1: 1 + int(float(f) / maxf * normwidth_rel)
-                }[rel_mode]
-
-                freq_bar = {
-                    0: int(normwidth_freq * float(f) / (maxf - minf + 1) + 1),
-                    1: 10
-                }[rel_mode]
-                word = export_word(w)
-                if test_word_empty(word):
-                    has_empty_item = True
-                    continue
-                lines.append(dict(
-                    Word=word,
-                    freq=f,
-                    fbar=int(f * tofbar) + 1,
-                    norm=nf,
-                    nbar=int(nf * tonbar),
-                    relbar=rel_bar,
-                    norel=ml,
-                    freqbar=freq_bar,
-                    rel=rel_norm_freq
-                ))
-        else:
+        if ml:
             lines = []
             for w, f, nf in zip(words, freqs, norms):
                 word = export_word(w)
@@ -350,10 +279,26 @@ class PyConc(manatee.Concordance):
                 lines.append(dict(
                     Word=word,
                     freq=f,
-                    fbar=int(f * tofbar) + 1,
-                    norel=1,
                     relbar=None
                 ))
+        else:
+            head.append(dict(
+                    n='i.p.m.',
+                    title=translate('instances per million positions (refers to the respective category)'),
+                    s='rel'))
+
+            lines = []
+            for w, f, nf in zip(words, freqs, norms):
+                word = export_word(w)
+                if test_word_empty(word):
+                    has_empty_item = True
+                    continue
+                lines.append(dict(
+                    Word=word,
+                    freq=f,
+                    norm=nf,
+                    rel=round(f / nf * 1e6, 2)))
+
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
@@ -365,12 +310,7 @@ class PyConc(manatee.Concordance):
                     Word=[{'n': v}],
                     freq=0,
                     rel=0,
-                    norm=0,
-                    nbar=0,
-                    relbar=0,
-                    norel=ml,
-                    freqbar=0,
-                    fbar=0
+                    norm=0
                 ))
         if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
             sortkey = int(sortkey)
@@ -379,7 +319,7 @@ class PyConc(manatee.Concordance):
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
             lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
-        return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item)
+        return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
 
     def xdistribution(self, xrange, yrange):
         """

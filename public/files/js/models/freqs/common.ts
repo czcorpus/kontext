@@ -19,30 +19,26 @@
  */
 
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
+import { FreqChartsAvailableOrder } from './regular/freqCharts';
 
 
 export interface HistoryState {
     currentPage:{[sourceId:string]:string};
     flimit:string;
-    sortColumn:{[sourceId:string]:string};
+    sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
 }
 
 export interface Item {
     Word:Array<{n:string}>;
     pfilter:ConcQuickFilterServerArgs;
     nfilter:ConcQuickFilterServerArgs;
-    fbar:number;
-    freqbar:number;
     rel:number;
-    relbar:number;
     freq:number;
-    nbar:number;
     norm:number;
-    norel:0|1; // (TODO bool?)
 }
 
 export interface Header {
-    s:string;
+    s:FreqChartsAvailableOrder;
     n:string;
 }
 
@@ -52,6 +48,7 @@ export interface Block {
     Head:Array<Header>;
     Total:number;
     SkippedEmpty:boolean;
+    NoRelSorting:boolean;
     fcrit:string; // original encoded freq. criterium (serves as an identifier of the result)
 }
 

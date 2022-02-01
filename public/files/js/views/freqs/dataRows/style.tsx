@@ -29,6 +29,21 @@ export const DataRowTR = styled.tr`
     .bar {
         background-color: ${theme.colorLogoBlue};
     }
+
+    td.bci {
+        text-align: center;
+
+        .range {
+            color: ${theme.colorLogoGreen};
+            display: inline-block;
+            padding-left: 0.2em;
+            padding-right: 0.2em;
+        }
+    }
+
+    .frac {
+        color: ${theme.colorLightText};
+    }
 `;
 
 // -------------- <ValueTD /> --------------

@@ -170,7 +170,9 @@ class CorpusManager:
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def get_corpus(self, corpname: str, corp_variant: str = '', subcname: str = '', decode_desc: bool = True) -> KCorpus:
+    def get_corpus(
+            self, corpname: str, corp_variant: str = '', subcname: str = '',
+            decode_desc: bool = True) -> Union[KCorpus, KSubcorpus]:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -198,7 +200,7 @@ class CorpusManager:
                     subc = KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
                     self._cache[cache_key] = subc
                     return subc
-            raise RuntimeError(_('Subcorpus "{}" not found').format(subcname))
+            raise RuntimeError(_('Subcorpus "{}" not found').format(subcname))   # TODO error type
         else:
             kcorp = KCorpus(corp, corpname)
             self._cache[cache_key] = kcorp

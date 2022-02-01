@@ -14,11 +14,12 @@
 # GNU General Public License for more details.
 
 from collections import defaultdict
-from typing import List, Tuple
+from typing import Tuple
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
 from conclib.search import get_conc
 from conclib.freq import multi_level_crit
+from conclib.pyconc import PyConc
 from bgcalc import freq_calc
 from plugins.abstract.query_suggest import AbstractBackend
 import manatee
@@ -35,7 +36,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         fixed_corp = conf.get('corpus')
         self._preset_corp = CorpusManager().get_corpus(fixed_corp) if fixed_corp else None
 
-    def _freq_dist(self, corp: KCorpus, conc: manatee.Concordance, fcrit: str, user_id: int):
+    def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = freq_calc.FreqCalcArgs(
             corpname=corp.corpname,
             subcname=corp.subcname,

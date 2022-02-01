@@ -38,7 +38,7 @@
     "@types/diff": "^5.0.2",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
-    "cnc-tskit": "^1.4.1",
+    "cnc-tskit": "^1.5.0",
     "d3": "^7.3.0",
     "d3-color": "^3.0.1",
     "diff": "^5.0.0",

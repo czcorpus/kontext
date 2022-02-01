@@ -945,8 +945,9 @@ class Actions(Querying):
             self, fcrit: Tuple[str, ...], fcrit_async: Tuple[str, ...], flimit: int, freq_sort: str,
             ml: int, force_cache: int):
 
-        self.disabled_menu_items = (MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
-                                    MainMenu.CONCORDANCE('query-overview'))
+        self.disabled_menu_items = (
+            MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
+            MainMenu.CONCORDANCE('query-overview'))
 
         def parse_fcrit(fcrit):
             attrs, marks, ranges = [], [], []
@@ -1043,19 +1044,16 @@ class Actions(Querying):
                         if '.' not in attr:
                             if attr in self.corp.get_posattrs():
                                 wwords = item['Word'][level]['n'].split('  ')  # two spaces
-                                fquery = '%s %s 0 ' % (begin, end)
-                                fquery += ''.join(['[%s="%s%s"]'
-                                                   % (attr, icase, escape_attr_val(w)) for w in wwords])
+                                fquery = f'{begin} {end} 0 '
+                                fquery += ''.join([f'[{attr}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                             else:  # structure number
-                                fquery = '0 0 1 [] within <%s #%s/>' % \
-                                         (attr, item['Word'][0]['n'].split('#')[1])
+                                fquery = '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
                                 block['unprecise'] = True
-                            fquery = '0 0 1 [] within <%s %s="%s" />' \
-                                     % (structname, attrname,
-                                        escape_attr_val(item['Word'][0]['n']))
+                            fquery = '0 0 1 [] within <{} {}="{}" />'.format(
+                                structname, attrname, escape_attr_val(item['Word'][0]['n']))
                         if not item['freq']:
                             continue
                         item['pfilter']['q2'] = f'p{fquery}'
@@ -1085,14 +1083,13 @@ class Actions(Querying):
                     # TODO err/corr stuff is untested
                     err_nfilter = {'q': 'p0 0 1 ([] within <err/>) within ! <corr/>'}
                     corr_nfilter = {'q': 'p0 0 1 ([] within ! <err/>) within <corr/>'}
+                result['NoRelSorting'] = True
                 result['Blocks'][err_block]['Items'].append(
                     {'Word': [{'n': 'no error'}], 'freq': freq,
-                     'pfilter': pfilter, 'nfilter': err_nfilter,
-                     'norel': 1, 'fbar': 0})
+                     'pfilter': pfilter, 'nfilter': err_nfilter})
                 result['Blocks'][corr_block]['Items'].append(
                     {'Word': [{'n': 'no correction'}], 'freq': freq,
-                     'pfilter': pfilter, 'nfilter': corr_nfilter,
-                     'norel': 1, 'fbar': 0})
+                     'pfilter': pfilter, 'nfilter': corr_nfilter})
 
             self._add_save_menu_item('CSV', save_format='csv',
                                      hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(

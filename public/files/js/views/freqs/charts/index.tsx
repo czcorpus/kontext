@@ -22,15 +22,15 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
 import {
-    FreqChartsAvailableData, FreqChartsAvailableTypes, FreqChartsModel,
+    FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes, FreqChartsModel,
     FreqChartsModelState
 } from '../../../models/freqs/regular/freqCharts';
 import {
-    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line,
+    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
-    Legend, Label
+    Legend, Label, ErrorBar, Line, Area, ComposedChart
 } from 'recharts';
-import { Dict, List, pipe, Strings } from 'cnc-tskit';
+import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
@@ -39,6 +39,29 @@ import { isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem } fro
 import { useCurrentPng } from 'recharts-to-png';
 import * as FileSaver from 'file-saver';
 import { WordCloudItemCalc } from './wordCloud/calc';
+
+
+
+function transformDataForErrorBars(block:ResultBlock):Array<ResultItem> {
+    return List.map(
+        item => {
+            return {
+                ...item,
+                relConfidence: tuple(
+                    item.rel - item.relConfidence[0],
+                    item.relConfidence[1] - item.rel
+                ),
+                freqConfidence: tuple(
+                    item.freq - item.freqConfidence[0],
+                    item.freqConfidence[1] - item.freq
+                )
+            }
+        },
+        block.Items
+    );
+}
+
+
 
 export function init(
     dispatcher:IActionDispatcher,
@@ -143,7 +166,7 @@ export function init(
 
     const FreqSortBySelector:React.FC<{
         sourceId:string;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         data:ResultBlock;
         disabled:boolean;
 
@@ -158,16 +181,15 @@ export function init(
                 }
             });
         }
-
         return (
             <>
                 <label htmlFor="sel-order">{he.translate('freq__visualization_sort_by')}:</label>
                 <select id="sel-order" value={sortColumn} onChange={handleOrderChange} disabled={disabled}>
                     <option value="0">{he.translate('freq__unit_value')}</option>
                     <option value="freq">{he.translate('freq__unit_abs')}</option>
-                    {List.some(v => !!v.rel, data.Items) ?
-                        <option value="rel">{he.translate('freq__unit_rel')}</option> :
-                        null
+                    {data.NoRelSorting ?
+                        null :
+                        <option value="rel">{he.translate('freq__unit_rel')}</option>
                     }
                 </select>
             </>
@@ -254,7 +276,7 @@ export function init(
         dataKey:FreqChartsAvailableData;
         data:ResultBlock;
         fmaxitems:Kontext.FormValue<string>;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         isBusy:boolean;
         dtFormat:string;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
@@ -294,7 +316,7 @@ export function init(
         isBusy:boolean;
         dtFormat:string;
         fmaxitems:Kontext.FormValue<string>;
-        sortColumn:string;
+        sortColumn:FreqChartsAvailableOrder;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
     }> = (props) => {
 
@@ -314,11 +336,12 @@ export function init(
         const xUnits = props.dataKey === 'freq' ?
             he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
 
+
         const renderChart = () => {
             switch (props.type)  {
                 case 'bar':
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
-                        <BarChart data={props.data.Items} layout='vertical' ref={ref}>
+                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50}>
                                 <Label value={xUnits} position="insideBottom" />
@@ -327,9 +350,14 @@ export function init(
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
                             <Tooltip />
-                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} />
+                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} isAnimationActive={false}>
+                                {props.dataKey === 'rel' ?
+                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" /> :
+                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
+                                }
+                            </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer>;
                 case 'cloud':
                     return (
                         <div className="cloud-wrapper">
@@ -386,26 +414,34 @@ export function init(
                             </PieChart>
                         </ResponsiveContainer>
                     );
-                case 'timeline':
+                case 'timeline': {
+                    const dataKey = props.dataKey === 'rel' ? 'relConfidence' : 'freqConfidence';
                     return <ResponsiveContainer width="95%" height={300}>
-                        <LineChart data={props.data.Items} ref={ref}>
+                        <ComposedChart data={props.data.Items} ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
                             <Tooltip />
                             <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
-                        </LineChart>
+                            <Area dataKey={dataKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink} />
+                        </ComposedChart>
                     </ResponsiveContainer>;
+                }
                 case 'timescatter':
-                        return <ResponsiveContainer width="95%" height={300}>
-                            <ScatterChart ref={ref}>
-                                <CartesianGrid strokeDasharray='3 3'/>
-                                <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
-                                <YAxis type='number' />
-                                <Tooltip />
-                                <Scatter data={props.data.Items} dataKey={props.dataKey} fill={theme.colorLogoBlue} />
-                            </ScatterChart>
-                        </ResponsiveContainer>;
+                    return <ResponsiveContainer width="95%" height={300}>
+                        <ScatterChart ref={ref}>
+                            <CartesianGrid strokeDasharray='3 3'/>
+                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
+                            <YAxis type='number' />
+                            <Tooltip />
+                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)} fill={theme.colorLogoBlue} isAnimationActive={false}>
+                                {props.dataKey === 'rel' ?
+                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="y" /> :
+                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
+                                }
+                            </Scatter>
+                        </ScatterChart>
+                    </ResponsiveContainer>;
                 default:
                     return <div>ERROR: unknown chart type <strong>{props.type}</strong></div>;
             }
@@ -440,7 +476,7 @@ export function init(
                         name: Actions.FreqChartsSetParameters.name,
                         payload: {
                             sourceId,
-                            type: 'timeline',
+                            type: 'timescatter',
                             dataKey: 'rel',
                             sortColumn: '0'
                         }

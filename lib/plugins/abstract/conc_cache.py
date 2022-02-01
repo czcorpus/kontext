@@ -30,7 +30,7 @@ import importlib
 import logging
 import abc
 from typing import Dict, Any, Optional, Union, Tuple, List
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from dataclasses import dataclass, field, asdict
 
 
@@ -259,7 +259,7 @@ class AbstractCacheMappingFactory(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_mapping(self, corpus: KCorpus) -> AbstractConcCache:
+    def get_mapping(self, corpus: AbstractKCorpus) -> AbstractConcCache:
         """
         returns:
         an AbstractConcCache compatible instance
