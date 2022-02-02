@@ -40,16 +40,22 @@ interface ExportedComponents {
     DataTable:React.FC<DataTableProps>;
 }
 
-function splitFracPart(n:string|number) {
-    const [dec, frac] = (n + '').split(/[.,]/);
-    return <span>{dec}<span className="frac">.{Strings.overwriteStringFromRight('00', frac || '')}</span></span>;
-}
-
 
 export function init(
         dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers
 ):ExportedComponents {
+
+    const SAMPLE_FLOATING_NUM = he.formatNumber(3.1, 1);
+
+    function prettifyNumber(v:number) {
+        const dec = ~~v;
+        const decNorm = he.formatNumber(dec);
+        const frac = v - dec;
+        const separ = SAMPLE_FLOATING_NUM.substring(1, SAMPLE_FLOATING_NUM.length - 1);
+        const fracNorm = Strings.overwriteStringFromRight('00', he.formatNumber(frac, 2).substring(2) || '0');
+        return <span>{decNorm}<span className="frac">{separ}{fracNorm}</span></span>;
+    }
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
 
@@ -114,17 +120,21 @@ export function init(
                 <td className="num">{props.data.idx + 1}</td>
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
-                <td className="num">{props.data.freq}</td>
-                <td className="bci">
-                    {splitFracPart(he.formatNumber(props.data.freqConfidence[0], 2))}
-                    <span className="range">{'\u2026'}</span>
-                    {splitFracPart(he.formatNumber(props.data.freqConfidence[1], 2))}
+                <td className="num">
+                    {prettifyNumber(props.data.freq)}
                 </td>
-                <td className="num">{props.data.rel}</td>
                 <td className="bci">
-                    {splitFracPart(he.formatNumber(props.data.relConfidence[0], 2))}
+                    {prettifyNumber(props.data.freqConfidence[0])}
                     <span className="range">{'\u2026'}</span>
-                    {splitFracPart(he.formatNumber(props.data.relConfidence[1], 2))}
+                    {prettifyNumber(props.data.freqConfidence[1])}
+                </td>
+                <td className="num">
+                    {prettifyNumber(props.data.rel)}
+                </td>
+                <td className="bci">
+                    {prettifyNumber(props.data.relConfidence[0])}
+                    <span className="range">{'\u2026'}</span>
+                    {prettifyNumber(props.data.relConfidence[1])}
                 </td>
             </S.DataRowTR>
         );

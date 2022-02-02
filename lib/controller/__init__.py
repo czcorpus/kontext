@@ -241,6 +241,7 @@ class Controller(ABC):
             :6]) if deployment_id else ''
         result['current_action'] = '/'.join([x for x in self.get_current_action() if x])
         result['user_id'] = self.session_get('user', 'id')
+        result['locale'] = self.ui_lang
 
     def get_current_url(self) -> str:
         return self._routing.get_current_url()

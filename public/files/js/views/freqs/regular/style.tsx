@@ -59,6 +59,8 @@ export const FreqResultLoaderView = styled.div`
     padding: 1em 2em;
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
+    height: 5em;
+    width: 70%;
 `;
 
 // ----------------- <Paginator /> -------------------------------------

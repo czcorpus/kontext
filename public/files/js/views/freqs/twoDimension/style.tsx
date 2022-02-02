@@ -92,3 +92,27 @@ export const CTFreqForm = styled.div`
         }
     }
 `;
+
+
+// ---------------- <FieldsetAdvancedOptions /> ----------------------------------
+
+export const FieldsetAdvancedOptions = styled.div`
+
+    fieldset h3 {
+        font-size: 1.2em;
+        margin: 1em 0 0.4em 0.1em;
+        text-align: left;
+    }
+
+    fieldset ul.items {
+        padding: 0;
+        margin: 0;
+        list-style-type: none;
+        display: flex;
+
+        > li:not(:last-child) {
+            margin-right: 1.5em;
+        }
+    }
+
+`;

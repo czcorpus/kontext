@@ -27,6 +27,7 @@ import { GeneralFreq2DModel } from '../../../../models/freqs/twoDimension/genera
 import { init as ctViewOptsFactory } from '../viewOpts';
 import { Actions } from '../../../../models/freqs/twoDimension/actions';
 import * as S from './style';
+import * as S2 from '../style';
 
 
 // ----------------------- exported types ------------------------------------
@@ -151,7 +152,7 @@ export function init(
         render() {
             return (
                 <S.CTFlatFreqResultView>
-                    <div className="toolbar">
+                    <S2.FieldsetAdvancedOptions>
                         <form>
                             <fieldset>
                                 <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
@@ -170,7 +171,7 @@ export function init(
                                 </div>
                             </fieldset>
                         </form>
-                    </div>
+                    </S2.FieldsetAdvancedOptions>
                     <table className="data">
                         <tbody>
                             <tr>
