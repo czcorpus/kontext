@@ -110,4 +110,19 @@ export class Actions {
         name: 'CONC_ARGS_UPDATED'
     };
 
+    static ConvertSVG:Action<{
+        format:'svg'|'png';
+        filename:string;
+        blob:string;
+    }> = {
+        name: 'GLOBAL_CONVERT_SVG'
+    };
+
+    static ConvertSVGDone:Action<{
+        target:'svg'|'png'|'jpg';
+        filename:string;
+        blob:string;
+    }> = {
+        name: 'GLOBAL_CONVERT_SVG_DONE'
+    };
 }

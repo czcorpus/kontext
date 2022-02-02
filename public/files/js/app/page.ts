@@ -68,13 +68,15 @@ export enum DownloadType {
     COLL = 'coll_download',
     WORDLIST = 'wordlist_download',
     LINE_SELECTION = 'line_selection_download',
-    PQUERY = 'pquery_download'
+    PQUERY = 'pquery_download',
+    CHART = 'chart_download'
 }
 
 export function isDownloadType(s:string):s is DownloadType {
     return s === DownloadType.CONCORDANCE || s === DownloadType.COLL  ||
         s === DownloadType.FREQ || s === DownloadType.FREQ2D || s === DownloadType.WORDLIST ||
-        s === DownloadType.LINE_SELECTION || s === DownloadType.PQUERY;
+        s === DownloadType.LINE_SELECTION || s === DownloadType.PQUERY ||
+        s === DownloadType.CHART;
 }
 
 /**
@@ -274,7 +276,8 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             if (
                     type === DownloadType.FREQ2D ||
                     type === DownloadType.LINE_SELECTION ||
-                    type === DownloadType.WORDLIST) {
+                    type === DownloadType.WORDLIST ||
+                    type === DownloadType.CHART) {
                 return HTTP.Method.POST;
             }
             return HTTP.Method.GET;

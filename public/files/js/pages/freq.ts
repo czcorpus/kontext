@@ -52,6 +52,7 @@ import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 import { FreqDataLoader } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
+import { ImageConversionModel } from '../models/common/imgConv';
 
 /**
  *
@@ -83,6 +84,8 @@ class FreqPage {
     private queryReplayModel:IndirectQueryReplayModel;
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
+
+    private imgConversionModel:ImageConversionModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -163,6 +166,11 @@ class FreqPage {
             this.mlFreqModel,
             this.ttFreqModel,
             this.cTFreqFormModel
+        );
+
+        this.imgConversionModel = new ImageConversionModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel
         );
 
         // -------------------- coll form -------------------
