@@ -101,7 +101,7 @@ export const DownloadButton = styled.img`
     width: 1.2em;
     height: 1.2em;
     vertical-align: 'middle';
-    margin: 0;
+    margin: 0 0 0 0.5em;
     cursor: pointer;
 
 `;

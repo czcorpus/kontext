@@ -161,6 +161,9 @@ class WsgiApp(object):
         elif path_info.startswith('/pquery'):
             from actions.pquery import ParadigmaticQuery
             return ParadigmaticQuery(request, ui_lang, self._tt_cache)
+        elif path_info.startswith('/tools'):
+            from actions.tools import Tools
+            return Tools(request, ui_lang, self._tt_cache)
         elif path_info.startswith('/wordlist'):
             from actions.wordlist import Wordlist
             return Wordlist(request, ui_lang, self._tt_cache)

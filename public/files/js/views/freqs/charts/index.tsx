@@ -19,6 +19,7 @@
  */
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
 import {
@@ -32,12 +33,11 @@ import {
 } from 'recharts';
 import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
+import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
 import { isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
-import { useCurrentPng } from 'recharts-to-png';
-import * as FileSaver from 'file-saver';
 import { WordCloudItemCalc } from './wordCloud/calc';
 
 
@@ -268,6 +268,29 @@ export function init(
         );
     }
 
+    // ---------------------- <DownloadFormatSelector /> --------------
+
+    const DownloadFormatSelector:React.FC<{
+        sourceId:string;
+        format:'png'|'svg';
+
+    }> = ({ sourceId, format }) => {
+
+        const onChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<typeof Actions.FreqChartsSetDownloadFormat>({
+                name: Actions.FreqChartsSetDownloadFormat.name,
+                payload: {
+                    sourceId,
+                    format: evt.target.value as 'svg'|'png'
+                }
+            });
+        };
+
+        return <select value={format} onChange={onChange}>
+            <option value="png">PNG</option>
+            <option value="svg">SVG</option>
+        </select>;
+    }
 
     // ----------------------- <FreqChartsParams /> -------------------
 
@@ -281,6 +304,7 @@ export function init(
         isBusy:boolean;
         dtFormat:string;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
+        downloadFormat:'png'|'svg';
         handleDownload:()=>void;
 
     }> = (props) => (
@@ -294,6 +318,7 @@ export function init(
                     null
                 }
                 <label>{he.translate('freq__download_chart')}:</label>
+                <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
                 <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
                 {props.isBusy ?
                     <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
@@ -319,20 +344,43 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
+        downloadFormat:'png'|'svg';
     }> = (props) => {
+
+        const ref = React.useRef(null);
 
         const maxLabelLength = (List.maxItem(
             v => v.length,
             List.map(v => v.Word.join(' | '), props.data.Items)
         ) as string).length;
 
-        const [getPng, {ref, isLoading}] = useCurrentPng();
-        const handleDownload = React.useCallback(async () => {
-            const png = await getPng();
-            if (png) {
-                FileSaver.saveAs(png, 'freq-chart.png')
+        const handleDownload = () => {
+            const container = ReactDOM.findDOMNode(ref.current);
+            if (container instanceof Text) {
+                return;
             }
-        }, [getPng]);
+            const svg = container.querySelector('svg');
+            let svgURL = new XMLSerializer().serializeToString(svg);
+            let svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+            svgBlob.text().then(
+                (blob) => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertSVG>({
+                        name: GlobalActions.ConvertSVG.name,
+                        payload: {
+                            format: props.downloadFormat,
+                            filename: 'freq-chart.svg',
+                            blob
+                        }
+                    });
+                },
+                (error) => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertSVG>({
+                        name: GlobalActions.ConvertSVG.name,
+                        error
+                    });
+                }
+            )
+        }
 
         const xUnits = props.dataKey === 'freq' ?
             he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
@@ -455,7 +503,8 @@ export function init(
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
-                        pieChartMaxIndividualItems={props.pieChartMaxIndividualItems} />
+                        pieChartMaxIndividualItems={props.pieChartMaxIndividualItems}
+                        downloadFormat={props.downloadFormat} />
                 <div className="chart-wrapper">
                     {renderChart()}
                 </div>
@@ -521,7 +570,8 @@ export function init(
                                     isBusy={props.isBusy[sourceId]}
                                     dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                     sortColumn={props.sortColumn[sourceId]}
-                                    pieChartMaxIndividualItems={props.pieChartMaxIndividualItems[sourceId]} />
+                                    pieChartMaxIndividualItems={props.pieChartMaxIndividualItems[sourceId]}
+                                    downloadFormat={props.downloadFormat[sourceId]} />
                     )
                 )
             )}

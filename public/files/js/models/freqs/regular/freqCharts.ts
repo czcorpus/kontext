@@ -57,6 +57,7 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
+    downloadFormat:{[sourceId:string]:'png'|'svg'};
     pieChartMaxIndividualItems:{[sourceId:string]:FormValue<string>};
 }
 
@@ -189,7 +190,12 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                alphaLevel: Maths.AlphaLevel.LEVEL_5
+                alphaLevel: Maths.AlphaLevel.LEVEL_5,
+                downloadFormat: pipe(
+                    allCrits,
+                    List.map(k => tuple<string, 'png'|'svg'>(k.n, 'png')),
+                    Dict.fromEntries()
+                )
             }
         );
 
@@ -436,6 +442,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     },
                     state.data
                 )
+            }
+        );
+
+        this.addActionHandler(
+            Actions.FreqChartsSetDownloadFormat,
+            (state, action) => {
+                state.downloadFormat[action.payload.sourceId] = action.payload.format;
             }
         );
     }

@@ -290,4 +290,11 @@ export class Actions {
     }> = {
         name: 'FREQ_CHARTS_PIE_SET_MAX_INDIVIDUAL_ITEMS_DONE'
     }
+
+    static FreqChartsSetDownloadFormat:Action<{
+        sourceId:string;
+        format:'png'|'svg';
+    }> = {
+        name: 'FREQ_CHARTS_SET_DOWNLOAD_FORMAT'
+    }
 }
