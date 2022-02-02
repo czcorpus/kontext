@@ -555,7 +555,8 @@ export function generate(
                     innerHeight: window.innerHeight
                 }))
             )
-        )
+        ),
+        getLocale: () => 'en_US'
     };
     const gen = new TreeGenerator(options, helpers, {});
     gen.generate(data, zone, tree, target);

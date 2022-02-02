@@ -176,14 +176,16 @@ export function init(
             });
         }
 
+        const alphaToCoeff = (v:string) => he.formatNumber(Maths.roundToPos(100 * (1 - parseFloat(v)), 2), 0);
+
         return (
             <label>
                 {he.translate('freq__ct_conf_level_label')}:
                 {'\u00a0'}
                 <select value={value} onChange={handleChange}>
-                    <option value={Maths.AlphaLevel.LEVEL_1}>{Maths.AlphaLevel.LEVEL_1}</option>
-                    <option value={Maths.AlphaLevel.LEVEL_5}>{Maths.AlphaLevel.LEVEL_5}</option>
-                    <option value={Maths.AlphaLevel.LEVEL_10}>{Maths.AlphaLevel.LEVEL_10}</option>
+                    <option value={Maths.AlphaLevel.LEVEL_1}>{alphaToCoeff(Maths.AlphaLevel.LEVEL_1)}%</option>
+                    <option value={Maths.AlphaLevel.LEVEL_5}>{alphaToCoeff(Maths.AlphaLevel.LEVEL_5)}%</option>
+                    <option value={Maths.AlphaLevel.LEVEL_10}>{alphaToCoeff(Maths.AlphaLevel.LEVEL_10)}%</option>
                 </select>
             </label>
         )

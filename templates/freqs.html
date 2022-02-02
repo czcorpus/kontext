@@ -50,7 +50,10 @@ freqPage.init(__conf);
 
 {% block main %}
 <section>
-    <div class="bar"><h2>{% if freq_type == 'ct' %}{{ 'Two-attribute interrelationship'|_ }}{% else %}{{ "Frequency list"|_ }}{% endif %}</h2></div>
+    <div class="bar">
+        <h2>{% if freq_type == 'ct' %}{{ 'Two-attribute interrelationship'|_ }}{% else %}{{ "Frequency list"|_ }}{% endif %}</h2>
+        <span id="topbar-help-mount"></span>
+    </div>
     <div id="result-mount" class="no-margin"></div>
     <a id="download-link" style="display:none"></a>
 </section>

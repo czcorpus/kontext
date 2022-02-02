@@ -51,7 +51,7 @@ import { Block } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 import { FreqDataLoader } from '../models/freqs/regular/common';
-
+import { init as viewFreqCommonInit } from '../views/freqs/common';
 
 /**
  *
@@ -372,6 +372,20 @@ class FreqPage {
         }
     }
 
+    initHelp():void {
+        const views = viewFreqCommonInit(
+            this.layoutModel.dispatcher,
+            this.layoutModel.getComponentHelpers()
+        );
+        this.layoutModel.renderReactComponent(
+            views.FreqsHelp,
+            window.document.getElementById('topbar-help-mount'),
+            {
+                confIntervalLeftMinWarn: 0 // TODO
+            }
+        );
+    }
+
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
@@ -491,6 +505,7 @@ class FreqPage {
             const adhocSubcIdentifier = this.initAdhocSubcDetector();
             this.initAnalysisViews(adhocSubcIdentifier);
             this.initQueryOpNavigation();
+            this.initHelp();
             this.initFreqResult();
             this.setupBackButtonListening();
             this.layoutModel.initKeyShortcuts();

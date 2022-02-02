@@ -25,6 +25,7 @@ import { Maths } from 'cnc-tskit';
 import * as Kontext from '../../../types/kontext';
 import { FreqFilterQuantities } from '../../../models/freqs/twoDimension/common';
 import { Actions } from '../../../models/freqs/twoDimension/actions';
+import { init as commonViewsInit } from '../common';
 
 
 interface AlphaLevelSelectProps {
@@ -48,19 +49,18 @@ interface MinFreqInputProps {
 // -------------------
 
 interface ExportedComponents {
-    MinFreqInput:React.SFC<MinFreqInputProps>,
+    MinFreqInput:React.FC<MinFreqInputProps>,
     AlphaLevelSelect:React.ComponentClass<AlphaLevelSelectProps>;
 }
 
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):ExportedComponents {
 
-    const layoutViews = he.getLayoutViews();
+    const freqCommon = commonViewsInit(dispatcher, he);
 
-    /**
-     *
-     */
-    const MinFreqInput:React.SFC<MinFreqInputProps> = (props) => {
+    // ------------------ <MinFreqInput /> ----------------------------------
+
+    const MinFreqInput:React.FC<MinFreqInputProps> = (props) => {
 
         const handleInputChange = (evt) => {
             dispatcher.dispatch<typeof Actions.FreqctSetMinFreq>({
@@ -103,32 +103,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
         );
     };
 
-    // ----------------------- <ConfidenceIntervalHint /> --------------------
 
-    const ConfidenceIntervalHint = (props) => {
-        return (
-            <layoutViews.PopupBox onCloseClick={props.onCloseClick} takeFocus={true} customClass="hint">
-                <p>
-                    {he.translate('freq__ct_confidence_level_hint_paragraph_{threshold}',
-                        {threshold: props.confIntervalLeftMinWarn})}
-                </p>
-                <p>{he.translate('freq__ct_references')}:</p>
-                <ul className="references">
-                    <li>
-                        Wallis, Sean 2012 - <a href="https://corplingstats.wordpress.com/2012/04/30/inferential-statistics/" target="_blank">Inferential statistics – and other animals</a>
-                    </li>
-                    <li>
-                        <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval" target="_blank">Wilson score interval</a> (Wikipedia)
-                    </li>
-                </ul>
-            </layoutViews.PopupBox>
-        );
-    };
+    // ---------------------------- <AlphaLevelSelect /> --------------------
 
-
-    /**
-     *
-     */
     class AlphaLevelSelect extends React.Component<AlphaLevelSelectProps, AlphaLevelSelectState> {
 
         constructor(props) {
@@ -169,8 +146,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
                                     alt={he.translate('global__info_icon')} />
                         </sup>
                         {this.state.hintVisible ?
-                            <ConfidenceIntervalHint onCloseClick={this._onHintCloseClick}
-                                confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} /> :
+                            <freqCommon.ConfidenceIntervalHintBox
+                                    onCloseClick={this._onHintCloseClick}
+                                    confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} /> :
                             null
                         }
                     </span>
@@ -185,8 +163,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers):
     };
 
     return {
-        MinFreqInput: MinFreqInput,
-        AlphaLevelSelect: AlphaLevelSelect
+        MinFreqInput,
+        AlphaLevelSelect
     };
 
 }

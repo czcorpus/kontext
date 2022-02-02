@@ -105,3 +105,47 @@ export const DownloadButton = styled.img`
     cursor: pointer;
 
 `;
+
+
+// ------------------- <ConfidenceIntervalHint /> --------------------------
+
+export const ConfidenceIntervalHint = styled.div`
+
+    h3 {
+        font-weight: normal;
+        font-size: 1.3em;
+    }
+
+    ul.references {
+
+        li {
+            line-height: 1.4em;
+        }
+
+        li a {
+            margin-left: 0;
+            text-decoration: none;
+            color: ${theme.colorLogoBlue};
+        }
+
+        li a:hover {
+            text-decoration: underline;
+        }
+    }
+`;
+
+// ----------------------- <FreqsHelp /> -------------------------------------
+
+export const  FreqsHelp = styled.div`
+
+    h2 {
+        margin-left: 0;
+        padding-left: 0;
+        font-size: 1.5em;
+    }
+
+    h2:first-letter {
+        text-transform: capitalize;
+    }
+
+`;

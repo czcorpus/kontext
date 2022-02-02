@@ -38,6 +38,7 @@ import { DataPoint } from '../../../../charts/confIntervals';
 import { Actions } from '../../../../models/freqs/twoDimension/actions';
 import { Actions as MainMenuActions } from '../../../../models/mainMenu/actions';
 import * as S from './style';
+import * as S2 from '../style';
 
 
 const enum TableViewMode {
@@ -318,7 +319,7 @@ export function init(
         }
 
         return (
-            <div className="options">
+            <S.FieldsetBasicOptions>
                 <layoutViews.ExpandableArea alwaysExpanded={true}
                         initialExpanded={true}
                         label={he.translate('freq__ct_combo_actions_legend')}>
@@ -342,7 +343,7 @@ export function init(
                         </S.ComboActionsSelectorUL>
                     </fieldset>
                 </layoutViews.ExpandableArea>
-            </div>
+            </S.FieldsetBasicOptions>
         );
     };
 
@@ -365,7 +366,7 @@ export function init(
     // ---------------------------- <FieldsetAdvancedOptions /> --------------------------------
 
     const FieldsetAdvancedOptions:React.FC<FieldsetAdvancedOptionsProps> = (props) => (
-        <div className="options">
+        <S2.FieldsetAdvancedOptions>
             <layoutViews.ExpandableArea initialExpanded={false}
                     label={he.translate('freq__ct_advanced_fieldset_legend')}>
                 <fieldset>
@@ -399,7 +400,7 @@ export function init(
                     </ul>
                 </fieldset>
             </layoutViews.ExpandableArea>
-        </div>
+        </S2.FieldsetAdvancedOptions>
     );
 
     // ------------------------ <TbodyCellAttrVals /> -------------------------------------

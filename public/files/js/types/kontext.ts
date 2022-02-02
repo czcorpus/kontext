@@ -310,6 +310,8 @@ export interface ComponentHelpers extends Translator {
 
     getWindowResizeStream():Observable<ScreenProps>;
 
+    getLocale():string;
+
     browserInfo:IBrowserInfo;
 }
 

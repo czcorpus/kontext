@@ -116,4 +116,8 @@ export class ComponentTools {
     getWindowResizeStream():Observable<ScreenProps> {
         return this.windowResize$;
     }
+
+    getLocale():string {
+        return this.pageModel.getConf<string>('locale');
+    }
 }

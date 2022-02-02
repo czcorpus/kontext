@@ -19,7 +19,8 @@
  */
 
 import * as d3 from 'd3';
-import {PageModel} from '../app/page';
+import { PageModel } from '../app/page';
+import * as theme from '../views/theme/default';
 
 
 export type NumTriplet = [number, number, number];
@@ -107,7 +108,7 @@ export class ConfIntervals {
             .attr('y1', (_, i) => yScale(i))
             .attr('x2', (d, _) => xScale(d.data[2]))
             .attr('y2', (_, i) => yScale(i))
-            .attr('stroke', '#009EE0')
+            .attr('stroke', theme.colorLogoPink)
             .attr('stroke-width', 2);
 
         dataPoints
@@ -117,7 +118,7 @@ export class ConfIntervals {
             .attr('x2', (d, _) => xScale(d.data[0]))
             .attr('y2', (_, i) => yScale(i) - 10)
             .attr('transform', `translate(0, 5)`)
-            .attr('stroke', '#009EE0')
+            .attr('stroke', theme.colorLogoPink)
             .attr('stroke-width', 2);
 
         dataPoints
@@ -127,7 +128,7 @@ export class ConfIntervals {
             .attr('x2', (d, _) => xScale(d.data[2]))
             .attr('y2', (_, i) => yScale(i) - 10)
             .attr('transform', `translate(0, 5)`)
-            .attr('stroke', '#009EE0')
+            .attr('stroke', theme.colorLogoPink)
             .attr('stroke-width', 2);
 
         dataPoints
@@ -135,7 +136,7 @@ export class ConfIntervals {
             .attr('cx', d => xScale(d.data[1]))
             .attr('cy', (_, i) => yScale(i))
             .attr('r', 5)
-            .style('fill', d => d.data[1] !== 0 ? '#E2007A' : '#575154')
+            .style('fill', d => d.data[1] !== 0 ? theme.colorLogoBlue : theme.colorLogoBlueOpaque)
             .style('opacity', this.dataPointOpactity);
 
         dataPoints

@@ -42,7 +42,7 @@ import { WordCloudItemCalc } from './wordCloud/calc';
 
 
 
-function transformDataForErrorBars(block:ResultBlock):Array<ResultItem> {
+function transformDataForErrorBars(block:ResultBlock):Array<ResultItem & {z:number}> {
     return List.map(
         item => {
             return {
@@ -54,7 +54,8 @@ function transformDataForErrorBars(block:ResultBlock):Array<ResultItem> {
                 freqConfidence: tuple(
                     item.freq - item.freqConfidence[0],
                     item.freqConfidence[1] - item.freq
-                )
+                ),
+                z: 10
             }
         },
         block.Items
@@ -434,10 +435,11 @@ export function init(
                             <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
                             <Tooltip />
-                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)} fill={theme.colorLogoBlue} isAnimationActive={false}>
+                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)}
+                                    fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
                                 {props.dataKey === 'rel' ?
-                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="y" /> :
-                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
+                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" /> :
+                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
                                 }
                             </Scatter>
                         </ScatterChart>

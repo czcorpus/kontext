@@ -258,44 +258,6 @@ export const CTFreqResultView = styled.div`
 
     div.toolbar {
         margin-bottom: 1em;
-
-        .options {
-            a {
-                margin-left: 0.7em;
-                color: ${theme.colorLogoBlue};
-                text-decoration: none;
-            }
-
-            a:hover {
-                text-decoration: underline;
-            }
-
-            ul.items {
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-
-                > li {
-                    padding: 0;
-                    margin: 0 1em 0 0;
-                    display: inline-block;
-
-                    ul.references {
-                        list-style-type: circle;
-                    }
-                }
-            }
-
-            fieldset {
-
-                h3:first-child {
-                    padding-top: 0;
-                    margin-top: 0;
-                }
-
-            }
-        }
-
     }
 
     sup.hint {
@@ -303,6 +265,40 @@ export const CTFreqResultView = styled.div`
             width: 0.9em;
         }
         cursor: pointer;
+    }
+`;
+
+// ------------------- <FieldsetBasicOptions /> -------------------
+
+export const FieldsetBasicOptions = styled.div`
+    a {
+        margin-left: 0.7em;
+        color: ${theme.colorLogoBlue};
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    fieldset {
+
+        h3:first-child {
+            padding-top: 0;
+            margin-top: 0;
+        }
+    }
+
+    ul.items {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+
+        > li {
+            padding: 0;
+            margin: 0 1em 0 0;
+            display: inline-block;
+        }
     }
 `;
 
