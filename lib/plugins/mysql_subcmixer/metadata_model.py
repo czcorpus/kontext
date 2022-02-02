@@ -15,11 +15,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Set, Tuple, List, Dict
+
 import numpy as np
 import pulp
 
-from lib.plugins.mysql_subcmixer.category_tree import CategoryTree
-from lib.plugins.mysql_subcmixer.backend import Backend
+from lib.plugins.mysql_subcmixer.category_tree import CategoryTree, CategoryTreeNode
+from plugins.abstract.integration_db import IntegrationDatabase
+
+from mysql.connector.connection import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 
 
 class CorpusComposition(object):
@@ -49,24 +54,24 @@ class MetadataModel:
     id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(self, meta_db: Backend, category_tree: CategoryTree, id_attr: str):
-        self._db = meta_db
-        self.c_tree = category_tree
-        self._id_attr = id_attr
+    def __init__(self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+        self._db = db
+        self.category_tree = category_tree
+        self._id_struct, self._id_attr = id_attr.split('.')
 
         self.text_sizes, self._id_map = self._get_text_sizes()
         # text_sizes and _id_map both contain all the documents from the corpus
         # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
-        self.b = [0] * (self.c_tree.num_categories - 1)
-        self.A = np.zeros((self.c_tree.num_categories, self.num_texts))
-        used_ids = set()
-        self._init_ab(self.c_tree.root_node, used_ids)
+        self.b = [0] * (self.category_tree.num_categories - 1)
+        self.A = np.zeros((self.category_tree.num_categories, self.num_texts))
+        used_ids: Set[int] = set()
+        self._init_ab(self.category_tree.root_node, used_ids)
         # for items without aligned counterparts we create
         # conditions fulfillable only for x[i] = 0
         self._init_ab_nonalign(used_ids)
 
-    def _get_text_sizes(self):
+    def _get_text_sizes(self) -> Tuple[List[int], Dict[int, int]]:
         """
         List all the texts matching main corpus. This will be the
         base for the 'A' matrix in the optimization problem.
@@ -82,30 +87,38 @@ class MetadataModel:
         result a record has a different index then in
         all the records list).
         """
-        sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(
-            cc=self._db.count_col, tn=self.c_tree.table_name)
-        args = []
-        sql += ' WHERE m1.corpus_id = ? GROUP BY {} ORDER BY db_id'.format(self._id_attr)
-        args.append(self._db.corpus_id)
+
+        sql = f'''
+            SELECT MIN(t_tuple.id) AS db_id, SUM(t_tuple.poscount) AS poscount
+            FROM corpus_structattr_value AS t1
+            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
+            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
+            WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s
+            GROUP BY t1.value
+            ORDER BY db_id
+        '''
+
         sizes = []
         id_map = {}
-        i = 0
-        for row in self._db.execute(sql, args):
-            sizes.append(row[1])
-            id_map[row[0]] = i
-            i += 1
+
+        with self._db.cursor() as cursor:
+            cursor.execute(sql, (self.category_tree.corpus_id, self._id_struct, self._id_attr))
+            for i, row in enumerate(cursor):
+                sizes.append(row['poscount'])
+                id_map[row['db_id']] = i
+
         return sizes, id_map
 
-    def _init_ab_nonalign(self, used_ids):
+    def _init_ab_nonalign(self, used_ids: Set[int]) -> None:
         # Now we process items with no aligned counterparts.
         # In this case we must define a condition which will be
-        # fulfilled iff X[i] == 0
-        for k, v in list(self._id_map.items()):
+        # fulfilled if X[i] == 0
+        for k, v in self._id_map.items():
             if k not in used_ids:
                 for i in range(1, len(self.b)):
                     self.A[i][v] = self.b[i] * 2 if self.b[i] > 0 else 10000
 
-    def _init_ab(self, node, used_ids):
+    def _init_ab(self, node: CategoryTreeNode, used_ids: Set[int]) -> None:
         """
         Initialization method for coefficient matrix (A) and vector of bounds (b)
         Recursively traverses all nodes of given categoryTree starting from its root.
@@ -116,22 +129,43 @@ class MetadataModel:
         used_ids -- a set of ids used in previous nodes
         """
         if node.metadata_condition is not None:
-            sql_items = ['m1.{0} {1} ?'.format(mc.attr, mc.op)
-                         for subl in node.metadata_condition for mc in subl]
-            sql_args = []
-            sql = 'SELECT MIN(m1.id) AS db_id, SUM(m1.{cc}) FROM {tn} AS m1 '.format(cc=self._db.count_col,
-                                                                                     tn=self.c_tree.table_name)
+            sql_items = [
+                f'''
+                SELECT t_map.value_tuple_id
+                FROM corpus_structattr_value AS t_value
+                JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {mc.mysql_op} %s)
+                '''
+                for subl in node.metadata_condition
+                for mc in subl
+            ]
 
-            sql, sql_args = self._db.append_aligned_corp_sql(sql, sql_args)
+            aligned_join = [
+                f'INNER JOIN corpus_structattr_value_tuple AS a{i}.corpus_name = %s AND a{i} ON t_tuple.item_id = a{i}.item_id'
+                for i in range(len(self.category_tree.aligned_corpora))
+            ]
 
-            sql += ' WHERE {where} AND m1.corpus_id = ? GROUP BY {gb} ORDER BY db_id'.format(
-                where=' AND '.join(sql_items), gb=self._id_attr)
-            sql_args += [mc.value for subl in node.metadata_condition for mc in subl]  # 'WHERE' args
-            sql_args.append(self._db.corpus_id)
-            self._db.execute(sql, sql_args)
-            for row in self._db.fetchall():
-                self.A[node.node_id - 1][self._id_map[row[0]]] = row[1]
-                used_ids.add(row[0])
+            sql = f'''
+                SELECT MIN(t_map.value_tuple_id) AS db_id, SUM(t_tuple.poscount) AS poscount, t_value.value
+                FROM (
+                    {' INTERSECT '.join(sql_items)}
+                ) as t_map
+                JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
+                {' '.join(aligned_join)}
+                JOIN corpus_structattr_value AS t_value ON t_value.id = t_map.value_id
+                    AND t_value.corpus_name = %s
+                    AND t_value.struct_name = %s
+                    AND t_value.structattr_name = %s
+                GROUP BY t_value.value
+                ORDER BY db_id
+            '''
+
+            with self._db.cursor() as cursor:
+                cursor.execute(sql, tuple(v for subl in node.metadata_condition for mc in subl for v in (
+                    self.category_tree.corpus_id, mc.struct, mc.attr, mc.value)) + (self.category_tree.corpus_id, self._id_struct, self._id_attr))
+                for row in cursor:
+                    self.A[node.node_id - 1][self._id_map[row['db_id']]] = row['poscount']
+                    used_ids.add(row['db_id'])
             self.b[node.node_id - 1] = node.size
 
         if len(node.children) > 0:
@@ -174,7 +208,7 @@ class MetadataModel:
             variables[i] = np.round(v.varValue, decimals=0)
 
         category_sizes = []
-        for c in range(0, self.c_tree.num_categories - 1):
+        for c in range(0, self.category_tree.num_categories - 1):
             cat_size = self._get_category_size(variables, c)
             category_sizes.append(cat_size)
         size_assembled = self._get_assembled_size(variables)

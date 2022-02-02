@@ -62,21 +62,25 @@ class CategoryExpression(object):
             return CategoryExpression(**args)
         return None
 
-    def negate(self):
-        return CategoryExpression(self.attr, CategoryExpression.OPERATORS[self.op], self.value)
+    @property
+    def mysql_op(self):
+        return '=' if self.op == '==' else self.op
 
-    def __init__(self, attr: str, op: str, value: str):  # TODO struct_attr
-        self.attr = attr.replace('.', '_')
+    def negate(self):
+        return CategoryExpression(f'{self.struct}.{self.attr}', CategoryExpression.OPERATORS[self.op], self.value)
+
+    def __init__(self, structattr: str, op: str, value: str):
+        self.struct, self.attr = structattr.split('.')
         if op not in CategoryExpression.OPERATORS:
             raise Exception('Invalid operator: %s' % op)
         self.op = op
         self.value = value
 
-    def __iter__(self):
+    def __iter__(self):  # TODO why iterator?
         return [self].__iter__()
 
     def __str__(self):
-        return "%s %s '%s'" % (self.attr, self.op, self.value)
+        return f"{self.struct}.{self.attr} {self.op} '{self.value}'"
 
     def __repr__(self):
         return f'CategoryExpression{{{self.__str__()}}}'
@@ -120,13 +124,18 @@ class CategoryTree(object):
 
     """
 
-    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], corpus_max_size: int):
+    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], corpus_id: str, aligned_corpora: List[str], corpus_max_size: int):
         self.category_list = category_list
         self.num_categories = len(category_list)
         self.corpus_max_size = corpus_max_size
         self.root_node = CategoryTreeNode(self.category_list[0].node_id, self.category_list[0].parent_id,
                                           self.category_list[0].ratio, self.category_list[0].expression)
+        self.corpus_id = corpus_id
+        self.aligned_corpora = aligned_corpora
         self._db = db
+        self._add_virtual_cats()
+        self._build()
+        self.initialize_bounds()
 
     def _add_virtual_cats(self) -> None:
         updated_list = copy.deepcopy(self.category_list)
@@ -217,27 +226,32 @@ class CategoryTree(object):
             node = self._get_node_by_id(self.root_node, i)
             node.size = self._get_category_size(node.metadata_condition)
 
-        sql = '''
-            SELECT t1.id, t1.structure_name, t1.structattr_name, t1.value
-            FROM corpus_structattr_value as t1
-            INNER JOIN corpus_structattr_value as t2
-                ON t2.corpus_name = %s
-                    AND t2.structure_name = t1.structure_name
-                    AND t2.structattr_name = t1.structattr_name
-                    AND t2.value = t1.value
+        aligned_join = [f'''
+            INNER JOIN corpus_structattr_value AS t{1+i}
+                ON t{1+i}.corpus_name = %s
+                AND t{1+i}.structure_name = t1.structure_name
+                AND t{1+i}.structattr_name = t1.structattr_name
+                AND t{1+i}.value = t1.value
+            ''' for i in range(len(self.aligned_corpora))
+                        ]
+
+        sql = f'''
+            SELECT SUM(t_tuple.poscount) AS poscount
+            FROM corpus_structattr_value AS t1
+            {' '.join(aligned_join)}
+            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
+            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
             WHERE t1.corpus_name = %s
         '''
-        sql = 'SELECT SUM(m1.{0}) FROM item AS m1 '.format(self._db.count_col)
-        args = []
-        sql, args = self._db.append_aligned_corp_sql(sql, args)
-        sql += ' WHERE m1.corpus_id = ?'
-        args.append(self._db.corpus_id)
-        self._db.execute(sql, args)
-        max_available = self._db.fetchone()[0]
-        if not max_available:
+
+        with self._db.cursor() as cursor:
+            cursor.execute(sql, tuple(self.aligned_corpora) + (self.corpus_id,))
+            row = cursor.fetchone()
+
+        if row is None or not row['poscount']:
             raise CategoryTreeException('Failed to initialize bounds')
 
-        self.root_node.size = min(self.corpus_max_size, max_available)
+        self.root_node.size = min(self.corpus_max_size, row['poscount'])
         self.compute_sizes(self.root_node)
 
     def _get_category_size(self, mc: CategoryExpression) -> float:
@@ -248,15 +262,32 @@ class CategoryTree(object):
         arguments:
         mc -- A list of metadata sql conditions that determines if texts belongs to this category
         """
-        sql = 'SELECT SUM(m1.{0}) FROM item as m1'.format(self._db.count_col)
-        args = []
 
-        sql, args = self._db.append_aligned_corp_sql(sql, args)
+        aligned_join = [f'''
+            INNER JOIN corpus_structattr_value AS t{1+i}
+                ON t{1+i}.corpus_name = %s
+                AND t{1+i}.structure_name = t1.structure_name
+                AND t{1+i}.structattr_name = t1.structattr_name
+                AND t{1+i}.value = t1.value
+            ''' for i in range(len(self.aligned_corpora))
+                        ]
 
-        where_items = ['m1.{0} {1} ?'.format(expr.attr, expr.op) for subl in mc for expr in subl]
-        sql += ' WHERE {0} AND m1.corpus_id = ?'.format(' AND '.join(where_items))
-        args += [expr.value for subl in mc for expr in subl]
-        args.append(self._db.corpus_id)
-        self._db.execute(sql, args)
-        size = self._db.fetchone()[0]
-        return size if size is not None else 0
+        where_items = [
+            f'AND t1.structure_name = %s AND t1.structattr_name = %s AND t1.value = %s' for subl in mc for expr in subl]
+
+        sql = f'''
+            SELECT SUM(t_tuple.poscount) AS poscount
+            FROM corpus_structattr_value AS t1
+            {' '.join(aligned_join)}
+            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
+            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
+            WHERE t1.corpus_name = %s
+            {' '.join(where_items)}
+        '''
+
+        with self._db.cursor() as cursor:
+            cursor.execute(sql, (*self.aligned_corpora, self.corpus_id,) +
+                           tuple(v for subl in mc for expr in subl for v in (expr.struct, expr.attr, expr.val)))
+            row = cursor.fetchone()
+
+        return 0 if row is None else row['poscount']
