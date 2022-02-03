@@ -24,6 +24,7 @@ import { Kontext } from '../../types/common';
 import { PageModel } from '../../app/page';
 import { MultiDict } from '../../multidict';
 import { Actions, ActionName } from './actions';
+import { ActionName as MainMenuActionName } from '../mainMenu/actions';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
 import { CollServerArgs } from './common';
 
@@ -200,7 +201,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             ActionName.SaveFormSubmit,
             ActionName.ResultSortByColumn,
             ActionName.PopHistory,
-            ActionName.ResultReload
+            ActionName.ResultReload,
+            MainMenuActionName.DirectSave
         );
     }
 

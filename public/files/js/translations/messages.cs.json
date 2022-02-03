@@ -104,7 +104,7 @@
         "global__subc_search_in_subc": "Hledat v korpusu",
         "global__subc_all_the_tokens": "Vyber všechny pozice splňující podmínku",
         "global__subc_all_the_matching_tokens_{prev}": "... Z nich vyber pozice splňující podmínku",
-        "global__coll_save_max_lines_warning_{max_coll_save_size}": "Berte prosím na vědomí, že z důvodu výkonnostních omezení KonText uloží maximálně {max_coll_save_size, plural one{# položka} few{# položky} other{# položek}}.",
+        "global__coll_save_max_lines_warning_{max_coll_save_size}": "Berte prosím na vědomí, že z důvodu výkonnostních omezení KonText uloží maximálně {max_coll_save_size, plural, one{# položka} few{# položky} other{# položek}}.",
         "global__calculate": "Spočítat",
         "global__unknown_error": "Neznámá chyba",
         "global__warning_icon": "Ikonka varování",
