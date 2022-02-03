@@ -30,6 +30,7 @@ import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 import { isEmptyResultBlock } from '../../../models/freqs/regular/common';
+import { alphaToCoeffFormatter } from '../../../models/freqs/common';
 
 // --------------------------- exported types --------------------------------------
 
@@ -46,7 +47,7 @@ export function init(
     const drViews = dataRowsInit(dispatcher, he);
     const chartViews = initChartViews(dispatcher, he, freqChartsModel);
     const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
-
+    const alphaToCoeff = alphaToCoeffFormatter(he);
 
     // ----------------------- <Paginator /> -------------------------
 
@@ -176,8 +177,6 @@ export function init(
             });
         }
 
-        const alphaToCoeff = (v:string) => he.formatNumber(Maths.roundToPos(100 * (1 - parseFloat(v)), 2), 0);
-
         return (
             <label>
                 {he.translate('freq__ct_conf_level_label')}:
@@ -295,7 +294,8 @@ export function init(
                                                         sortColumn={props.sortColumn[sourceId]}
                                                         rows={block.Items}
                                                         hasSkippedEmpty={block.SkippedEmpty}
-                                                        sourceId={sourceId} />
+                                                        sourceId={sourceId}
+                                                        alphaLevel={props.alphaLevel} />
                                             </div>
                                             {props.saveFormActive ?
                                                 <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :

@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Maths } from 'cnc-tskit';
+import { ComponentHelpers } from '../../types/kontext';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
 
 
@@ -70,3 +72,8 @@ export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'
 export type FreqChartsAvailableData = 'freq'|'rel';
 
 export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'pie';
+
+
+export function alphaToCoeffFormatter (he:ComponentHelpers) {
+    return (v:string) => he.formatNumber(Maths.roundToPos(100 * (1 - parseFloat(v)), 2), 0);
+}

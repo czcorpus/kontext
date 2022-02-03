@@ -31,13 +31,22 @@ export const DataRowTR = styled.tr`
     }
 
     td.bci {
-        text-align: center;
 
-        .range {
-            color: ${theme.colorLogoGreen};
+        text-align: left;
+
+        .bracket {
+            font-size: 1.1em;
             display: inline-block;
             padding-left: 0.2em;
             padding-right: 0.2em;
+        }
+
+        .separ {
+            display: inline-block;
+            padding-left: 0.15em;
+            padding-right: 0.25em;
+            font-weight: bold;
+            font-size: 1.2em;
         }
     }
 
