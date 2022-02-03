@@ -22,7 +22,7 @@ plug-in which provides input arguments used by 'subcmixer'.
 import abc
 from typing import Any, List, Optional, TypeVar, TypedDict, Dict, Generic
 from corplib.corpus import KCorpus
-from lib.controller.plg import PluginCtx
+from controller.plg import PluginCtx
 
 
 class ExpressionItem(TypedDict):

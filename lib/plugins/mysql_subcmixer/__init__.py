@@ -20,10 +20,10 @@ import json
 from collections import defaultdict
 import struct
 from typing import Any, Dict, List, TypedDict
-from lib.controller.plg import PluginCtx
-from lib.corplib.corpus import KCorpus
-from lib.plugins.abstract.corparch import AbstractCorporaArchive
-from lib.plugins.abstract.integration_db import IntegrationDatabase
+from controller.plg import PluginCtx
+from corplib.corpus import KCorpus
+from plugins.abstract.corparch import AbstractCorporaArchive
+from plugins.abstract.integration_db import IntegrationDatabase
 
 from werkzeug.wrappers import Request
 from mysql.connector.connection import MySQLConnection

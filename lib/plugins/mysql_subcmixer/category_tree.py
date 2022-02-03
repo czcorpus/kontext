@@ -76,7 +76,7 @@ class CategoryExpression(object):
         self.op = op
         self.value = value
 
-    def __iter__(self):  # TODO why iterator?
+    def __iter__(self):
         return [self].__iter__()
 
     def __str__(self):
@@ -226,26 +226,25 @@ class CategoryTree(object):
             node = self._get_node_by_id(self.root_node, i)
             node.size = self._get_category_size(node.metadata_condition)
 
-        aligned_join = [f'''
-            INNER JOIN corpus_structattr_value AS t{1+i}
-                ON t{1+i}.corpus_name = %s
-                AND t{1+i}.structure_name = t1.structure_name
-                AND t{1+i}.structattr_name = t1.structattr_name
-                AND t{1+i}.value = t1.value
-            ''' for i in range(len(self.aligned_corpora))
-                        ]
+        aligned_join = [
+            f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t_tuple.item_id'
+            for i in range(len(self.aligned_corpora))
+        ]
 
         sql = f'''
             SELECT SUM(t_tuple.poscount) AS poscount
-            FROM corpus_structattr_value AS t1
+            FROM (
+                SELECT DISTINCT t_map.value_tuple_id
+                FROM corpus_structattr_value AS t_value
+                JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
+                WHERE t_value.corpus_name = %s
+            ) AS tuple_ids
+            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = tuple_ids.value_tuple_id
             {' '.join(aligned_join)}
-            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
-            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
-            WHERE t1.corpus_name = %s
         '''
 
         with self._db.cursor() as cursor:
-            cursor.execute(sql, tuple(self.aligned_corpora) + (self.corpus_id,))
+            cursor.execute(sql, (self.corpus_id, *self.aligned_corpora))
             row = cursor.fetchone()
 
         if row is None or not row['poscount']:
@@ -263,31 +262,40 @@ class CategoryTree(object):
         mc -- A list of metadata sql conditions that determines if texts belongs to this category
         """
 
-        aligned_join = [f'''
-            INNER JOIN corpus_structattr_value AS t{1+i}
-                ON t{1+i}.corpus_name = %s
-                AND t{1+i}.structure_name = t1.structure_name
-                AND t{1+i}.structattr_name = t1.structattr_name
-                AND t{1+i}.value = t1.value
-            ''' for i in range(len(self.aligned_corpora))
-                        ]
+        sql_items = [
+            f'''
+                SELECT t_map.value_tuple_id
+                FROM corpus_structattr_value AS t_value
+                JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {expr.mysql_op} %s
+                '''
+            for subl in mc for expr in subl
+        ]
 
-        where_items = [
-            f'AND t1.structure_name = %s AND t1.structattr_name = %s AND t1.value = %s' for subl in mc for expr in subl]
+        aligned_join = [
+            f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t_tuple.item_id'
+            for i in range(len(self.aligned_corpora))
+        ]
 
         sql = f'''
             SELECT SUM(t_tuple.poscount) AS poscount
-            FROM corpus_structattr_value AS t1
+            FROM (
+                {' INTERSECT '.join(sql_items)}
+            ) as tuple_ids
+            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = tuple_ids.value_tuple_id
             {' '.join(aligned_join)}
-            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
-            JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
-            WHERE t1.corpus_name = %s
-            {' '.join(where_items)}
         '''
 
+        params = tuple(
+            param
+            for subl in mc
+            for expr in subl
+            for param in (self.corpus_id, expr.struct, expr.attr, expr.val)
+        )
+        params += tuple(self.aligned_corpora)
+
         with self._db.cursor() as cursor:
-            cursor.execute(sql, (*self.aligned_corpora, self.corpus_id,) +
-                           tuple(v for subl in mc for expr in subl for v in (expr.struct, expr.attr, expr.val)))
+            cursor.execute(sql, params)
             row = cursor.fetchone()
 
         return 0 if row is None else row['poscount']

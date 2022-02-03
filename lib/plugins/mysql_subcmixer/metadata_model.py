@@ -90,11 +90,11 @@ class MetadataModel:
 
         sql = f'''
             SELECT MIN(t_tuple.id) AS db_id, SUM(t_tuple.poscount) AS poscount
-            FROM corpus_structattr_value AS t1
-            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t1.id
+            FROM corpus_structattr_value AS t_value
+            JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
             JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
-            WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s
-            GROUP BY t1.value
+            WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s
+            GROUP BY t_value.value
             ORDER BY db_id
         '''
 
@@ -134,35 +134,42 @@ class MetadataModel:
                 SELECT t_map.value_tuple_id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {mc.mysql_op} %s)
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {mc.mysql_op} %s
                 '''
                 for subl in node.metadata_condition
                 for mc in subl
             ]
 
             aligned_join = [
-                f'INNER JOIN corpus_structattr_value_tuple AS a{i}.corpus_name = %s AND a{i} ON t_tuple.item_id = a{i}.item_id'
+                f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t_tuple.item_id'
                 for i in range(len(self.category_tree.aligned_corpora))
             ]
 
             sql = f'''
-                SELECT MIN(t_map.value_tuple_id) AS db_id, SUM(t_tuple.poscount) AS poscount, t_value.value
+                SELECT MIN(tuple_ids.value_tuple_id) AS db_id, SUM(t_tuple.poscount) AS poscount
                 FROM (
                     {' INTERSECT '.join(sql_items)}
-                ) as t_map
-                JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = t_map.value_tuple_id
-                {' '.join(aligned_join)}
+                ) as tuple_ids
+                JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_tuple_id = tuple_ids.value_tuple_id
                 JOIN corpus_structattr_value AS t_value ON t_value.id = t_map.value_id
-                    AND t_value.corpus_name = %s
-                    AND t_value.struct_name = %s
-                    AND t_value.structattr_name = %s
+                JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = tuple_ids.value_tuple_id
+                {' '.join(aligned_join)}
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s
                 GROUP BY t_value.value
                 ORDER BY db_id
             '''
 
+            params = tuple(
+                param
+                for subl in node.metadata_condition
+                for mc in subl
+                for param in (self.category_tree.corpus_id, mc.struct, mc.attr, mc.value)
+            )
+            params += tuple(self.category_tree.aligned_corpora)
+            params += (self.category_tree.corpus_id, self._id_struct, self._id_attr)
+
             with self._db.cursor() as cursor:
-                cursor.execute(sql, tuple(v for subl in node.metadata_condition for mc in subl for v in (
-                    self.category_tree.corpus_id, mc.struct, mc.attr, mc.value)) + (self.category_tree.corpus_id, self._id_struct, self._id_attr))
+                cursor.execute(sql, params)
                 for row in cursor:
                     self.A[node.node_id - 1][self._id_map[row['db_id']]] = row['poscount']
                     used_ids.add(row['db_id'])
