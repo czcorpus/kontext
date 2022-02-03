@@ -23,13 +23,15 @@ import * as React from 'react';
 import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common';
 import { IActionDispatcher } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
-import { List, Strings } from 'cnc-tskit';
+import { List, Maths, Strings } from 'cnc-tskit';
 import * as S from './style';
+import { alphaToCoeffFormatter } from '../../../models/freqs/common';
 
 
 interface DataTableProps {
     head:Array<ResultHeader>;
     rows:Array<ResultItem>;
+    alphaLevel:Maths.AlphaLevel;
     sortColumn:string;
     hasSkippedEmpty:boolean;
     sourceId:string;
@@ -45,6 +47,8 @@ export function init(
         dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers
 ):ExportedComponents {
+
+    const alphaToCoeff = alphaToCoeffFormatter(he);
 
     const SAMPLE_FLOATING_NUM = he.formatNumber(3.1, 1);
 
@@ -121,20 +125,26 @@ export function init(
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
                 {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
                 <td className="num">
-                    {prettifyNumber(props.data.freq)}
+                    {he.formatNumber(props.data.freq)}
                 </td>
                 <td className="bci">
+                    <span className="bracket">[</span>
                     {prettifyNumber(props.data.freqConfidence[0])}
-                    <span className="range">{'\u2026'}</span>
+                    <span className="separ">,{'\u00a0'}</span>
                     {prettifyNumber(props.data.freqConfidence[1])}
+                    <span className="bracket">]</span>
                 </td>
                 <td className="num">
                     {prettifyNumber(props.data.rel)}
                 </td>
                 <td className="bci">
-                    {prettifyNumber(props.data.relConfidence[0])}
-                    <span className="range">{'\u2026'}</span>
-                    {prettifyNumber(props.data.relConfidence[1])}
+                    <span className="bracket">[</span>
+                    <span className="val">
+                        {prettifyNumber(props.data.relConfidence[0])}
+                        <span className="separ">,{'\u00a0'}</span>
+                        {prettifyNumber(props.data.relConfidence[1])}
+                    </span>
+                    <span className="bracket">]</span>
                 </td>
             </S.DataRowTR>
         );
@@ -147,6 +157,7 @@ export function init(
     interface TableColHeadProps {
         data:ResultHeader;
         sortColumn:string;
+        alphaLevel:Maths.AlphaLevel;
         sourceId:string;
     }
 
@@ -188,7 +199,10 @@ export function init(
                 <th key={props.data.n} title={props.data.s || ''}>
                     {renderSortingIcon()}
                 </th>
-                <th>{props.data.n} ({he.translate('freq__binom_conf_interval_hd')})</th>
+                <th>
+                    {props.data.n}{'\u00a0'}
+                    ({he.translate('freq__binom_conf_interval_hd')}, {alphaToCoeff(props.alphaLevel)}% Cl)
+                </th>
             </>;
         }
         return (
@@ -220,7 +234,13 @@ export function init(
                             <th />
                             <th>{he.translate('freq__ct_filter_th')}</th>
                             {List.map(
-                                (item, i) => <TableColHead key={`${item.n}:${i}`} sortColumn={props.sortColumn} data={item} sourceId={props.sourceId} />,
+                                (item, i) => (
+                                    <TableColHead key={`${item.n}:${i}`}
+                                            sortColumn={props.sortColumn}
+                                            data={item}
+                                            sourceId={props.sourceId}
+                                            alphaLevel={props.alphaLevel} />
+                                ),
                                 props.head
                             )}
                         </tr>
