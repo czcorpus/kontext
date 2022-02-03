@@ -22,23 +22,18 @@ import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
-import { FreqResultResponse } from '../common';
+import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqResultResponse } from '../common';
 import { Actions } from './actions';
 import {
-    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
-    recalculateConfIntervals,
-    ResultBlock, validateNumber } from './common';
+    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs,
+    isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS, recalculateConfIntervals,
+    ResultBlock, validateNumber
+} from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute, FormValue, newFormValue, AttrItem } from '../../../types/kontext';
+import { StructuralAttribute, FormValue, newFormValue, AttrItem, ChartExportFormat } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
 
-
-export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'freq'|'rel';
-
-export type FreqChartsAvailableData = 'freq'|'rel';
-
-export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'pie';
 
 
 export interface FreqChartsModelArgs {
@@ -57,7 +52,7 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     dataKey:{[sourceId:string]:FreqChartsAvailableData};
     fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
-    downloadFormat:{[sourceId:string]:'png'|'svg'};
+    downloadFormat:{[sourceId:string]:ChartExportFormat};
     pieChartMaxIndividualItems:{[sourceId:string]:FormValue<string>};
 }
 
@@ -193,7 +188,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,
                 downloadFormat: pipe(
                     allCrits,
-                    List.map(k => tuple<string, 'png'|'svg'>(k.n, 'png')),
+                    List.map(k => tuple<string, ChartExportFormat>(k.n, 'png')),
                     Dict.fromEntries()
                 )
             }

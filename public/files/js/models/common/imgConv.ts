@@ -37,16 +37,17 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
         this.layoutModel = layoutModel;
 
         this.addActionHandler(
-            Actions.ConvertSVG,
-            (state, action) => {
-            },
+            Actions.ConvertChartSVG,
+            null,
             (state, action, dispatch) => {
                 this.layoutModel.bgDownload({
-                    filename: `freq-chart.${action.payload.format}`, // TODO
+                    filename: `${action.payload.filename}.${action.payload.format}`,
                     url: this.layoutModel.createActionUrl(
-                        'tools/convert_svg',
+                        'tools/convert_chart_svg',
                         {
-                            outFormat: action.payload.format
+                            outFormat: action.payload.format,
+                            chartType: action.payload.chartType,
+                            vertBarChartMaxLabel: action.payload.vertBarChartMaxLabel
                         }
                     ),
                     contentType: action.payload.format === 'png' ? 'image/png' : 'image/svg+xml',

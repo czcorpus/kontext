@@ -26,7 +26,7 @@ import { PageModel } from '../../../app/page';
 import { FreqServerArgs } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { Actions } from './actions';
-import { FreqChartsAvailableOrder } from './freqCharts';
+import { FreqChartsAvailableOrder } from '../common';
 
 
 export interface FreqFormInputs {

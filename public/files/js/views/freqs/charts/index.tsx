@@ -22,10 +22,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
-import {
-    FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes, FreqChartsModel,
-    FreqChartsModelState
-} from '../../../models/freqs/regular/freqCharts';
+import { FreqChartsModel, FreqChartsModelState } from '../../../models/freqs/regular/freqCharts';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
     ResponsiveContainer, ScatterChart, Scatter, PieChart, Pie, Cell,
@@ -37,8 +34,11 @@ import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
-import { isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem } from '../../../models/freqs/regular/common';
+import {
+    isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem
+} from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
+import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes } from '../../../models/freqs/common';
 
 
 
@@ -272,7 +272,7 @@ export function init(
 
     const DownloadFormatSelector:React.FC<{
         sourceId:string;
-        format:'png'|'svg';
+        format:Kontext.ChartExportFormat;
 
     }> = ({ sourceId, format }) => {
 
@@ -281,7 +281,7 @@ export function init(
                 name: Actions.FreqChartsSetDownloadFormat.name,
                 payload: {
                     sourceId,
-                    format: evt.target.value as 'svg'|'png'
+                    format: evt.target.value as Kontext.ChartExportFormat
                 }
             });
         };
@@ -304,7 +304,7 @@ export function init(
         isBusy:boolean;
         dtFormat:string;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
-        downloadFormat:'png'|'svg';
+        downloadFormat:Kontext.ChartExportFormat;
         handleDownload:()=>void;
 
     }> = (props) => (
@@ -344,7 +344,7 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         pieChartMaxIndividualItems:Kontext.FormValue<string>;
-        downloadFormat:'png'|'svg';
+        downloadFormat:Kontext.ChartExportFormat;
     }> = (props) => {
 
         const ref = React.useRef(null);
@@ -365,18 +365,20 @@ export function init(
             let svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
             svgBlob.text().then(
                 (blob) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertSVG>({
-                        name: GlobalActions.ConvertSVG.name,
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
                         payload: {
                             format: props.downloadFormat,
                             filename: 'freq-chart.svg',
-                            blob
+                            blob,
+                            chartType: props.type,
+                            vertBarChartMaxLabel: maxLabelLength
                         }
                     });
                 },
                 (error) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertSVG>({
-                        name: GlobalActions.ConvertSVG.name,
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
                         error
                     });
                 }

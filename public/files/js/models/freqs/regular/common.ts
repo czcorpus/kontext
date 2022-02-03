@@ -23,9 +23,8 @@ import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
-import { FreqResultResponse } from '../common';
+import { FreqChartsAvailableOrder, FreqResultResponse } from '../common';
 import { AttrItem } from '../../../types/kontext';
-import { FreqChartsAvailableOrder } from './freqCharts';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;

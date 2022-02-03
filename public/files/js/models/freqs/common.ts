@@ -19,7 +19,6 @@
  */
 
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
-import { FreqChartsAvailableOrder } from './regular/freqCharts';
 
 
 export interface HistoryState {
@@ -64,3 +63,10 @@ export interface FreqResultResponse extends AjaxConcResponse {
     fmaxitems:number;
     concsize:number;
 }
+
+
+export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'freq'|'rel';
+
+export type FreqChartsAvailableData = 'freq'|'rel';
+
+export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'pie';
