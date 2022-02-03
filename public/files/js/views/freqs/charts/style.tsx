@@ -24,10 +24,14 @@ import * as theme from '../../theme/default';
 // ---------------- <FreqResultLoaderView /> ----------------------
 
 export const FreqResultLoaderView = styled.div`
-
-    box-shadow: ${theme.portalBoxShadow};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
-    padding: 1em 2em;
+    height: 8em;
+    width: 70%;
 
     &:not(:first-child) {
         margin-top: 1.5em;

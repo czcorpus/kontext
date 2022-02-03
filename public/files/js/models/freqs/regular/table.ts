@@ -497,7 +497,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         const firstCrit = List.head(state.freqCrit);
         const args = {
             ...this.getSubmitArgs(state, firstCrit.n),
-            fcrit_async: state.freqCritAsync,
+            fcrit_async: List.map(v => v.n, state.freqCritAsync),
             format: undefined
         };
         this.pageModel.getHistory().pushState(

@@ -77,7 +77,7 @@ export function clearResultBlock(res:ResultBlock|EmptyResultBlock):EmptyResultBl
         {
             TotalPages: 0,
             fcrit: res.fcrit,
-            heading: res.Head[0].n,
+            heading: res.Head[0] ? res.Head[0].n : '-',
             isEmpty: true
         };
 }

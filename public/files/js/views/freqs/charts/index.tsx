@@ -349,10 +349,11 @@ export function init(
 
         const ref = React.useRef(null);
 
-        const maxLabelLength = (List.maxItem(
-            v => v.length,
-            List.map(v => v.Word.join(' | '), props.data.Items)
-        ) as string).length;
+        const maxLabelLength = pipe(
+            List.map(v => v.Word.join(' | '), props.data.Items),
+            List.maxItem(v => v.length),
+            x => x ? x.length : 0
+        );
 
         const handleDownload = () => {
             const container = ReactDOM.findDOMNode(ref.current);
