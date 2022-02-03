@@ -279,7 +279,7 @@ export function init(
                             Dict.toEntries(),
                             List.map(([sourceId, block], i) => (
                                 <S.FreqBlock key={`block:${sourceId}`}>
-                                    <div>
+                                    <div className={isEmptyResultBlock(block) ? 'loading' : null}>
                                     {isEmptyResultBlock(block) ?
                                         <FreqResultLoaderView sourceId={sourceId} label={block.heading} /> :
                                         <>

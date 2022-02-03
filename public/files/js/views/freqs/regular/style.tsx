@@ -56,10 +56,13 @@ export const FilterForm = styled.form`
 // ---------------- <FreqResultLoaderView /> ----------------------
 
 export const FreqResultLoaderView = styled.div`
-    padding: 1em 2em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
-    height: 5em;
+    height: 8em;
     width: 70%;
 `;
 
@@ -90,6 +93,10 @@ export const FreqBlock = styled.div`
     > div {
         display: inline-flex;
         flex-direction: column;
+    }
+
+    > div.loading {
+        display: flex;
     }
 
     &:nth-child(n+2) {

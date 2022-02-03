@@ -1,0 +1,27 @@
+[
+  {
+    "username": "anonymous",
+    "pwd": "---",
+    "firstname": "Anonymous",
+    "lastname": "User",
+    "email": "anonymous@localhost",
+    "permitted_corpora": ["susanne"]
+  },
+  {
+    "username": "jodoe",
+    "pwd": "mypassword",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "john.doe@localhost",
+    "permitted_corpora": ["susanne", "intercorp_v11_cs", "intercorp_v11_en"]
+  },
+  {
+    "username": "tomas1",
+    "pwd": "asdf123",
+    "firstname": "Tomik",
+    "lastname": "Machalek",
+    "email": "tomas.machalek@gmail.com",
+    "affiliation": "Motofoko",
+    "permitted_corpora": ["syn2015", "susanne", "oral2013", "intercorp_v11_cs", "intercorp_v11_en", "online_now"]
+  }
+]

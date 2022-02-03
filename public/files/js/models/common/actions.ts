@@ -21,6 +21,7 @@
 import { Action } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { ConcServerArgs } from '../concordance/common';
+import { FreqChartsAvailableTypes } from '../freqs/common';
 
 
 export interface CorpusSwitchModelRestorePayload {
@@ -110,19 +111,20 @@ export class Actions {
         name: 'CONC_ARGS_UPDATED'
     };
 
-    static ConvertSVG:Action<{
-        format:'svg'|'png';
+    static ConvertChartSVG:Action<{
+
+        format:Kontext.ChartExportFormat;
+
+        /**
+         * filename without suffix
+         */
         filename:string;
+
         blob:string;
+        chartType:FreqChartsAvailableTypes;
+        vertBarChartMaxLabel?:number; // this is for server to correct issues with text overlapping the view
     }> = {
         name: 'GLOBAL_CONVERT_SVG'
     };
 
-    static ConvertSVGDone:Action<{
-        target:'svg'|'png'|'jpg';
-        filename:string;
-        blob:string;
-    }> = {
-        name: 'GLOBAL_CONVERT_SVG_DONE'
-    };
 }

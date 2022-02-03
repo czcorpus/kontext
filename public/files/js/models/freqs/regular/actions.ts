@@ -23,8 +23,9 @@ import { FreqDisplayMode, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
-import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from './freqCharts';
+import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from '../common';
 import { Maths } from 'cnc-tskit';
+import { ChartExportFormat } from '../../../types/kontext';
 
 
 export class Actions {
@@ -293,7 +294,7 @@ export class Actions {
 
     static FreqChartsSetDownloadFormat:Action<{
         sourceId:string;
-        format:'png'|'svg';
+        format:ChartExportFormat;
     }> = {
         name: 'FREQ_CHARTS_SET_DOWNLOAD_FORMAT'
     }

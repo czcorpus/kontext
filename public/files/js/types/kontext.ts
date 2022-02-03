@@ -464,3 +464,6 @@ export enum ConcFormTypes {
     LOCKED = 'locked',
     LGROUP = 'lgroup'
 }
+
+
+export type ChartExportFormat = 'png' | 'svg';
