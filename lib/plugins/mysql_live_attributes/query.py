@@ -117,7 +117,7 @@ class QueryBuilder:
     bib_id: StructAttr
     bib_label: StructAttr
     autocomplete_attr: StructAttr
-    empty_val_placeholder: Any
+    empty_val_placeholder: str
 
     def initial_sql(self) -> Tuple[str, List[str]]:
         if self.aligned_corpora:
