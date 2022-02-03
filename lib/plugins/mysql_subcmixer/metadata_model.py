@@ -15,12 +15,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Set, Tuple, List, Dict
+from typing import Optional, Set, Tuple, List, Dict
 
 import numpy as np
 import pulp
 
-from lib.plugins.mysql_subcmixer.category_tree import CategoryTree, CategoryTreeNode
+from plugins.mysql_subcmixer.category_tree import CategoryTree, CategoryTreeNode
 from plugins.abstract.integration_db import IntegrationDatabase
 
 from mysql.connector.connection import MySQLConnection
@@ -29,13 +29,13 @@ from mysql.connector.cursor import MySQLCursor
 
 class CorpusComposition(object):
 
-    def __init__(self, status, variables, size_assembled, category_sizes, used_bounds, num_texts=None):
+    def __init__(self, status: Optional[str], variables: List[int], size_assembled: int, category_sizes: List[int], used_bounds: List[float], num_texts: Optional[int]=None):
         self.status = status
         self.variables = variables
         self.size_assembled = size_assembled
         self.category_sizes = category_sizes
         self.num_texts = num_texts
-        self.used_bounds = [np.round(b) for b in used_bounds]
+        self.used_bounds: List[int] = [np.round(b) for b in used_bounds]
 
     def __repr__(self):
         return 'CorpusComposition(status: %s, size: %s, num_texts: %s, num_vars: %s)' % (
@@ -63,7 +63,7 @@ class MetadataModel:
         # text_sizes and _id_map both contain all the documents from the corpus
         # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
-        self.b = [0] * (self.category_tree.num_categories - 1)
+        self.b = [0.] * (self.category_tree.num_categories - 1)
         self.A = np.zeros((self.category_tree.num_categories, self.num_texts))
         used_ids: Set[int] = set()
         self._init_ab(self.category_tree.root_node, used_ids)
@@ -223,9 +223,9 @@ class MetadataModel:
         return CorpusComposition(status=pulp.LpStatus[stat], variables=variables, size_assembled=size_assembled,
                                  category_sizes=category_sizes, used_bounds=self.b, num_texts=sum(variables))
 
-    def _get_assembled_size(self, results):
+    def _get_assembled_size(self, results: List[int]) -> int:
         return np.dot(results, self.text_sizes)
 
-    def _get_category_size(self, results, cat_id):
+    def _get_category_size(self, results: List[int], cat_id: int) -> int:
         category_sizes = self.A[cat_id][:]
         return np.dot(results, category_sizes)

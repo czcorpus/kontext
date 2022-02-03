@@ -20,37 +20,12 @@
 from typing import List, NamedTuple, Optional, Union
 import numpy as np
 import copy
-from lib.plugins.abstract.integration_db import IntegrationDatabase
+from plugins.abstract.integration_db import IntegrationDatabase
 
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
 from plugins.mysql_subcmixer import TaskArgs
-
-
-class ExpressionJoin(object):
-
-    def __init__(self, operator):
-        self.items = []
-        self.operator = operator
-
-    def add(self, item):
-        self.items.append(item)
-
-    def negate(self):
-        expr = ExpressionJoin('AND' if self.operator == 'OR' else 'OR')
-        for item in self.items:
-            expr.add(item.negate())
-        return expr
-
-    def __iter__(self):
-        return self.items.__iter__()
-
-    def __str__(self):
-        return (' %s ' % self.operator).join('%s' % item for item in self.items)
-
-    def __repr__(self):
-        return f'ExpressionJoin{{{self.__str__()}}}'
 
 
 class CategoryExpression(object):
@@ -84,6 +59,31 @@ class CategoryExpression(object):
 
     def __repr__(self):
         return f'CategoryExpression{{{self.__str__()}}}'
+
+
+class ExpressionJoin(object):
+
+    def __init__(self, operator: str):
+        self.items = []
+        self.operator = operator
+
+    def add(self, item: CategoryExpression):
+        self.items.append(item)
+
+    def negate(self):
+        expr = ExpressionJoin('AND' if self.operator == 'OR' else 'OR')
+        for item in self.items:
+            expr.add(item.negate())
+        return expr
+
+    def __iter__(self):
+        return self.items.__iter__()
+
+    def __str__(self):
+        return (' %s ' % self.operator).join('%s' % item for item in self.items)
+
+    def __repr__(self):
+        return f'ExpressionJoin{{{self.__str__()}}}'
 
 
 class CategoryTreeNode(object):
@@ -179,11 +179,11 @@ class CategoryTree(object):
         else:
             return node
 
-    def _get_max_group_sizes(self, sizes: List[float], ratios: List[float], parent_size: float) -> List[Union[int, float]]:
+    def _get_max_group_sizes(self, sizes: List[float], ratios: List[float], parent_size: float) -> List[float]:
         num_g = len(sizes)
         children_size = sum(sizes)
         data_size = min(children_size, parent_size)
-        required_sizes = [0] * num_g
+        required_sizes = [0.] * num_g
         max_sizes: List[Union[int, float]] = None
         while True:
             for i in range(0, num_g):
