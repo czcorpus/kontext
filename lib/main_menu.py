@@ -451,7 +451,7 @@ class MenuGenerator(object):
             .add_args(
                 ('fcrit', 'lemma/e 0~0>0'),
                 ('ml', 0))
-            .enable_if(lambda d: 'tag' in [x['n'] for x in self._args.get('AttrList', ())])
+            .enable_if(lambda d: 'lemma' in [x['n'] for x in self._args.get('AttrList', ())])
         )
 
         self.freq_node_forms_i = (
