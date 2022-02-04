@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from decimal import Decimal
-from typing import Any, Dict, List, TypedDict, Tuple
+from typing import Any, Dict, List, TypedDict, Tuple, Union
 from collections import defaultdict
 import json
 import struct
@@ -46,6 +46,10 @@ class RealSizes(TypedDict):
     total: int
 
 
+class EmptyResponse(TypedDict):
+    pass
+
+
 class ProcessResponse(TypedDict):
     attrs: List[Tuple[str, float]]
     total: int
@@ -54,7 +58,7 @@ class ProcessResponse(TypedDict):
 
 
 @exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_run_calc(ctrl: Controller, request: Request) -> ProcessResponse:
+def subcmixer_run_calc(ctrl: Controller, request: Request) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(plugin_ctx=ctrl._plugin_ctx, corpus=ctrl.corp,
@@ -132,13 +136,13 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         generate IDs and parent IDs for
         passed conditions
         """
-        ans: List[List[TaskArgs]] = [[TaskArgs(0, None, 1, None)]]
+        ans: List[List[TaskArgs]] = [[TaskArgs(0, None, Decimal(1), None)]]  # root node
         grouped: Dict[str, List[ExpressionItem]] = defaultdict(lambda: [])
         for item in args:
             grouped[item['attrName']].append(item)
 
         counter = 1
-        for expressions in grouped.values():
+        for attrName, expressions in grouped.items():
             tmp: List[TaskArgs] = []
             for parent in ans[-1]:
                 for expr in expressions:
@@ -146,7 +150,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
                         counter,
                         parent.node_id,
                         Decimal(expr['ratio']) / 100,
-                        CategoryExpression(expr['attrName'], '==', expr['attrValue'])
+                        CategoryExpression(attrName, '==', expr['attrValue'])
                     ))
                     counter += 1
             ans.append(tmp)
