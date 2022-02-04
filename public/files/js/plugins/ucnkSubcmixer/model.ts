@@ -29,7 +29,6 @@ import { Actions } from './actions';
 import {
     SubcMixerExpression, CalculationResults, CalculationResponse,
     TextTypeAttrVal } from './common';
-import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';

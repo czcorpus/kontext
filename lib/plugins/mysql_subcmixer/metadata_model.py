@@ -1,6 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
-# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
-#                    Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Institute of the Czech National Corpus
+# Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; version 2
@@ -19,12 +19,11 @@ from typing import Optional, Set, Tuple, List, Dict
 
 import numpy as np
 import pulp
-
-from plugins.mysql_subcmixer.category_tree import CategoryTree, CategoryTreeNode
-from plugins.abstract.integration_db import IntegrationDatabase
-
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
+
+from plugins.abstract.integration_db import IntegrationDatabase
+from .category_tree import CategoryTree, CategoryTreeNode
 
 
 class CorpusComposition(object):

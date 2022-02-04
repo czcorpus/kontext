@@ -1,7 +1,6 @@
-# Copyright (c) 2015 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2022 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
-#                    Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,14 +17,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import List, NamedTuple, Optional, Union
-import numpy as np
 import copy
-from plugins.abstract.integration_db import IntegrationDatabase
 
+import numpy as np
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
-from plugins.mysql_subcmixer import TaskArgs
+from plugins.abstract.integration_db import IntegrationDatabase
 
 
 class CategoryExpression(object):
@@ -290,7 +288,7 @@ class CategoryTree(object):
             param
             for subl in mc
             for expr in subl
-            for param in (self.corpus_id, expr.struct, expr.attr, expr.val)
+            for param in (self.corpus_id, expr.struct, expr.attr, expr.value)
         )
         params += tuple(self.aligned_corpora)
 

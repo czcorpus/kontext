@@ -1,5 +1,5 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
-# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Institute of the Czech National Corpus
+# Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,27 +15,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from ast import Tuple
-import json
+from typing import Any, Dict, List, TypedDict, Tuple
 from collections import defaultdict
+import json
 import struct
-from typing import Any, Dict, List, TypedDict
-from controller.plg import PluginCtx
-from corplib.corpus import KCorpus
-from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.integration_db import IntegrationDatabase
 
 from werkzeug.wrappers import Request
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
-from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
-from plugins import inject
 import plugins
+from plugins import inject
 from plugins.errors import PluginException
+from plugins.abstract.corparch import AbstractCorporaArchive
+from plugins.abstract.integration_db import IntegrationDatabase
+from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
 from controller import Controller, exposed
-import actions.subcorpus
+from controller.plg import PluginCtx
 import corplib
+from corplib.corpus import KCorpus
+import actions.subcorpus
 
 from .category_tree import CategoryTree, CategoryExpression, TaskArgs
 from .metadata_model import MetadataModel
