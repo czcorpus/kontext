@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from decimal import Decimal
 from typing import List, NamedTuple, Optional, Union
 import copy
 
@@ -62,7 +63,7 @@ class CategoryExpression(object):
 class ExpressionJoin(object):
 
     def __init__(self, operator: str):
-        self.items = []
+        self.items: List[Union[ExpressionJoin, CategoryExpression]] = []
         self.operator = operator
 
     def add(self, item: CategoryExpression):
@@ -85,12 +86,12 @@ class ExpressionJoin(object):
 
 
 class CategoryTreeNode(object):
-    def __init__(self, node_id: int, parent_id: Optional[int], requested_ratio: float, metadata_condition: Optional[CategoryExpression]):
+    def __init__(self, node_id: int, parent_id: Optional[int], requested_ratio: Decimal, metadata_condition: Optional[Union[CategoryExpression, ExpressionJoin]]):
         self.node_id = node_id
         self.parent_id = parent_id
         self.ratio = requested_ratio
         self.metadata_condition = metadata_condition
-        self.size: float = None
+        self.size: Optional[Decimal] = None
         self.children: List[CategoryTreeNode] = []
 
     def __repr__(self):
@@ -101,8 +102,8 @@ class CategoryTreeNode(object):
 class TaskArgs(NamedTuple):
     node_id: int
     parent_id: Optional[int]
-    ratio: float
-    expression: Optional[CategoryExpression]
+    ratio: Decimal
+    expression: Optional[Union[CategoryExpression, ExpressionJoin]]
 
 
 class CategoryTreeException(Exception):
@@ -144,12 +145,12 @@ class CategoryTree(object):
                 i = 0
                 mdc = ExpressionJoin('AND')
                 for other_cat in self.category_list:
-                    if other_cat.parent_id == par_id and par_id > 0:
+                    if other_cat.parent_id == par_id and par_id > 0 and other_cat.expression is not None:
                         cond = other_cat.expression.negate()
                         mdc.add(cond)
                         i += 1
                 if not cats_updated[par_id]:
-                    updated_list.append([self.num_categories, par_id, 0, mdc])
+                    updated_list.append(TaskArgs(self.num_categories, par_id, 0, mdc))
                     cats_updated[par_id] = True
                     self.num_categories += 1
                     self.category_list = updated_list
@@ -161,13 +162,13 @@ class CategoryTree(object):
             parent_node = self._get_node_by_id(self.root_node, parent_id)
             pmc = parent_node.metadata_condition
             if pmc is not None:
-                res = [mc] + pmc
+                res = [mc] + [v for v in pmc]
             else:
                 res = [mc]
             cat_node = CategoryTreeNode(node_id, parent_id, ratio, res)
             parent_node.children.append(cat_node)
 
-    def _get_node_by_id(self, node: CategoryTreeNode, wanted_id: int) -> CategoryTreeNode:
+    def _get_node_by_id(self, node: CategoryTreeNode, wanted_id: int) -> Optional[CategoryTreeNode]:
         if node.node_id != wanted_id:
             if node.children is not None:
                 for child in node.children:
@@ -177,12 +178,12 @@ class CategoryTree(object):
         else:
             return node
 
-    def _get_max_group_sizes(self, sizes: List[float], ratios: List[float], parent_size: float) -> List[float]:
+    def _get_max_group_sizes(self, sizes: List[int], ratios: List[Decimal], parent_size: int) -> List[Decimal]:
         num_g = len(sizes)
         children_size = sum(sizes)
         data_size = min(children_size, parent_size)
-        required_sizes = [0.] * num_g
-        max_sizes: List[Union[int, float]] = None
+        required_sizes = [Decimal(0)] * num_g
+        max_sizes: List[Decimal] = []
         while True:
             for i in range(0, num_g):
                 required_sizes[i] = data_size * ratios[i]
@@ -193,16 +194,16 @@ class CategoryTree(object):
             if lowest_reserve > -0.001:
                 max_sizes = required_sizes
                 break
-            data_size = sizes[ilr] / float(ratios[ilr])
+            data_size = sizes[ilr] / ratios[ilr]
             for i in range(num_g):
                 if i != ilr:
-                    sizes[i] = data_size * ratios[i]
+                    sizes[i] = int(data_size * ratios[i])
         return max_sizes
 
     def compute_sizes(self, node: CategoryTreeNode) -> None:
         if len(node.children) > 0:
-            sizes = []
-            ratios = []
+            sizes: List[int] = []
+            ratios: List[Decimal] = []
             for child in node.children:
                 self.compute_sizes(child)
                 sizes.append(child.size)
@@ -248,7 +249,7 @@ class CategoryTree(object):
         if row is None or not row['poscount']:
             raise CategoryTreeException('Failed to initialize bounds')
 
-        self.root_node.size = min(self.corpus_max_size, row['poscount'])
+        self.root_node.size = min(self.corpus_max_size, int(row['poscount']))
         self.compute_sizes(self.root_node)
 
     def _get_category_size(self, mc: CategoryExpression) -> float:
@@ -296,4 +297,4 @@ class CategoryTree(object):
             cursor.execute(sql, params)
             row = cursor.fetchone()
 
-        return 0 if row is None else row['poscount']
+        return 0 if row is None else int(row['poscount'])

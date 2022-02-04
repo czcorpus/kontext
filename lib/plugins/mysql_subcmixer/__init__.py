@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from decimal import Decimal
 from typing import Any, Dict, List, TypedDict, Tuple
 from collections import defaultdict
 import json
@@ -41,11 +42,13 @@ from .metadata_model import MetadataModel
 
 
 class RealSizes(TypedDict):
-    attrs: List[Tuple[str, float]]
+    attrs: List[Tuple[str, Decimal]]
     total: int
 
 
-class ProcessResponse(RealSizes):
+class ProcessResponse(TypedDict):
+    attrs: List[Tuple[str, float]]
+    total: int
     ids: List[int]
     structs: List[str]
 
@@ -117,7 +120,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
     def _calculate_real_sizes(cat_tree: CategoryTree, sizes: List[int], total_size: int) -> RealSizes:
         return RealSizes(
             attrs=[
-                (str(expression), float(sizes[i]) / float(total_size))
+                (str(expression), Decimal(sizes[i]) / Decimal(total_size))
                 for i, expression in enumerate(item.expression for item in cat_tree.category_list if item.expression)
             ],
             total=total_size
@@ -142,7 +145,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
                     tmp.append(TaskArgs(
                         counter,
                         parent.node_id,
-                        float(expr['ratio']) / 100.,
+                        Decimal(expr['ratio']) / 100,
                         CategoryExpression(expr['attrName'], '==', expr['attrValue'])
                     ))
                     counter += 1
@@ -170,10 +173,13 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
                     ) if item[1] > 0
                 )
             ]
+            real_sizes = self._calculate_real_sizes(
+                cat_tree, corpus_items.category_sizes, corpus_items.size_assembled)
             return ProcessResponse(
                 ids=doc_indices,
-                structs=used_structs,
-                **self._calculate_real_sizes(cat_tree, corpus_items.category_sizes, corpus_items.size_assembled)
+                structs=list(used_structs),
+                total=real_sizes['total'],
+                attrs=[(k, float(v)) for k, v in real_sizes['attrs']],
             )
 
         else:

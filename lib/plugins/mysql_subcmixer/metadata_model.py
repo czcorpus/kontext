@@ -62,7 +62,7 @@ class MetadataModel:
         # text_sizes and _id_map both contain all the documents from the corpus
         # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
-        self.b = [0.] * (self.category_tree.num_categories - 1)
+        self.b = np.zeros(self.category_tree.num_categories - 1)
         self.A = np.zeros((self.category_tree.num_categories, self.num_texts))
         used_ids: Set[int] = set()
         self._init_ab(self.category_tree.root_node, used_ids)
@@ -103,7 +103,7 @@ class MetadataModel:
         with self._db.cursor() as cursor:
             cursor.execute(sql, (self.category_tree.corpus_id, self._id_struct, self._id_attr))
             for i, row in enumerate(cursor):
-                sizes.append(row['poscount'])
+                sizes.append(int(row['poscount']))
                 id_map[row['db_id']] = i
 
         return sizes, id_map
@@ -170,7 +170,7 @@ class MetadataModel:
             with self._db.cursor() as cursor:
                 cursor.execute(sql, params)
                 for row in cursor:
-                    self.A[node.node_id - 1][self._id_map[row['db_id']]] = row['poscount']
+                    self.A[node.node_id - 1][self._id_map[row['db_id']]] = int(row['poscount'])
                     used_ids.add(row['db_id'])
             self.b[node.node_id - 1] = node.size
 
@@ -194,7 +194,7 @@ class MetadataModel:
         x_max = 1
         num_conditions = len(self.b)
         x = pulp.LpVariable.dicts('x', list(range(self.num_texts)), x_min, x_max)
-        lp_prob = pulp.LpProblem('Minmax Problem', pulp.LpMaximize)
+        lp_prob = pulp.LpProblem('Minmax_Problem', pulp.LpMaximize)
         lp_prob += pulp.lpSum(x), 'Minimize_the_maximum'
         for i in range(num_conditions):
             label = 'Max_constraint_%d' % i
@@ -204,7 +204,7 @@ class MetadataModel:
 
         stat = lp_prob.solve()
 
-        variables = [0] * self.num_texts
+        variables = np.zeros(self.num_texts)
         # transform Pulp's variables (x_[number]) back to
         # the indices we need
         for v in lp_prob.variables():
