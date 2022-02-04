@@ -190,7 +190,7 @@ class Frequency:
         ).add_args(
             ('fcrit', 'lemma/e 0~0>0'),
             ('ml', 0)
-        ).enable_if(lambda d: 'tag' in [x['n'] for x in args.get('AttrList', ())])
+        ).enable_if(lambda d: 'lemma' in [x['n'] for x in args.get('AttrList', ())])
     )
 
     freq_node_forms_i: ConcMenuItem = field(
