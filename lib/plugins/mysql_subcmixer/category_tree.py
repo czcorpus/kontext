@@ -1,6 +1,8 @@
 # Copyright (c) 2022 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
+#                    Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,8 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from decimal import Decimal
-from typing import List, NamedTuple, Optional, Union
+from typing import Iterator, List, NamedTuple, Optional, Union
 import copy
 
 import numpy as np
@@ -37,68 +38,69 @@ class CategoryExpression(object):
         return None
 
     @property
-    def mysql_op(self):
+    def mysql_op(self) -> str:
         return '=' if self.op == '==' else self.op
 
-    def negate(self):
+    def negate(self) -> 'CategoryExpression':
         return CategoryExpression(f'{self.struct}.{self.attr}', CategoryExpression.OPERATORS[self.op], self.value)
 
     def __init__(self, structattr: str, op: str, value: str):
-        self.struct, self.attr = structattr.split('.')
         if op not in CategoryExpression.OPERATORS:
-            raise Exception('Invalid operator: %s' % op)
+            raise Exception(f'Invalid operator: {op}')
+
+        self.struct, self.attr = structattr.split('.')
         self.op = op
         self.value = value
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator['CategoryExpression']:
         return [self].__iter__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.struct}.{self.attr} {self.op} '{self.value}'"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'CategoryExpression{{{self.__str__()}}}'
 
 
 class ExpressionJoin(object):
 
     def __init__(self, op: str):
-        self.items: List[Union[ExpressionJoin, CategoryExpression]] = []
+        self.items: List[CategoryExpression] = []
         self.op = op
 
     def add(self, item: CategoryExpression):
         self.items.append(item)
 
-    def negate(self):
+    def negate(self) -> 'ExpressionJoin':
         expr = ExpressionJoin('AND' if self.op == 'OR' else 'OR')
         for item in self.items:
             expr.add(item.negate())
         return expr
 
     @property
-    def mysql_op(self):
+    def mysql_op(self) -> str:
         return self.op
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CategoryExpression]:
         return self.items.__iter__()
 
-    def __str__(self):
-        return (' %s ' % self.op).join('%s' % item for item in self.items)
+    def __str__(self) -> str:
+        return f' {self.op} '.join(str(item) for item in self.items)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'ExpressionJoin{{{self.__str__()}}}'
 
 
 class CategoryTreeNode(object):
-    def __init__(self, node_id: int, parent_id: Optional[int], requested_ratio: Decimal, metadata_condition: Optional[List[Union[CategoryExpression, ExpressionJoin]]]):
+    def __init__(self, node_id: int, parent_id: Optional[int], requested_ratio: Union[int, float], metadata_condition: Optional[List[Union[CategoryExpression, ExpressionJoin]]]):
         self.node_id = node_id
         self.parent_id = parent_id
         self.ratio = requested_ratio
         self.metadata_condition = metadata_condition
-        self.size: Decimal = Decimal(0)
+        self.size: Union[int, float] = 0
         self.children: List[CategoryTreeNode] = []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'CategoryTreeNode(id: {0}, parent: {1}, ratio: {2}, metadata: {3}, size: {4})'.format(
             self.node_id, self.parent_id, self.ratio, self.metadata_condition, self.size)
 
@@ -106,7 +108,7 @@ class CategoryTreeNode(object):
 class TaskArgs(NamedTuple):
     node_id: int
     parent_id: Optional[int]
-    ratio: Decimal
+    ratio: Union[int, float]
     expression: Optional[Union[CategoryExpression, ExpressionJoin]]
 
 
@@ -154,11 +156,12 @@ class CategoryTree(object):
                 i = 0
                 mdc = ExpressionJoin('AND')
                 for other_cat in self.category_list:
-                    if other_cat.parent_id == par_id and other_cat.expression is not None:
+                    # in the initialization there are no ExpressionJoin in category_list, here checking from typing reasons
+                    if other_cat.parent_id == par_id and isinstance(other_cat.expression, CategoryExpression):
                         cond = other_cat.expression.negate()
                         mdc.add(cond)
                         i += 1
-                updated_list.append(TaskArgs(self.num_categories, par_id, Decimal(0), mdc))
+                updated_list.append(TaskArgs(self.num_categories, par_id, 0, mdc))
                 self.num_categories += 1
                 cats_updated[par_id] = True
         self.category_list = updated_list
@@ -193,8 +196,8 @@ class CategoryTree(object):
 
         return None
 
-    def _get_max_group_sizes(self, sizes: List[Decimal], ratios: List[Decimal], parent_size: Decimal) -> List[Decimal]:
-        children_size = Decimal(sum(sizes))
+    def _get_max_group_sizes(self, sizes: List[Union[int, float]], ratios: List[Union[int, float]], parent_size: Union[int, float]) -> List[Union[int, float]]:
+        children_size = sum(sizes)
         data_size = min(children_size, parent_size)
 
         while True:
@@ -221,7 +224,7 @@ class CategoryTree(object):
             )
 
             # update group size
-            node.size = Decimal(sum(max_sizes))
+            node.size = sum(max_sizes)
             # update child node sizes
             for i, child in enumerate(node.children):
                 d = child.size - max_sizes[i]
@@ -260,10 +263,10 @@ class CategoryTree(object):
         if row is None or not row['poscount']:
             raise CategoryTreeException('Failed to initialize bounds')
 
-        self.root_node.size = Decimal(min(self.corpus_max_size, row['poscount']))
+        self.root_node.size = min(self.corpus_max_size, int(row['poscount']))
         self.compute_sizes(self.root_node)
 
-    def _get_category_size(self, mc: List[Union[CategoryExpression, ExpressionJoin]]) -> Decimal:
+    def _get_category_size(self, mc: List[Union[CategoryExpression, ExpressionJoin]]) -> int:
         """
         This method only computes the maximal available size of category described by provided
         list of metadata conditions
@@ -308,4 +311,4 @@ class CategoryTree(object):
             cursor.execute(sql, params)
             row = cursor.fetchone()
 
-        return Decimal(0) if row is None else Decimal(row['poscount'])
+        return 0 if row is None else int(row['poscount'])

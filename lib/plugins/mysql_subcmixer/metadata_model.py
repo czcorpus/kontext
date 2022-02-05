@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Institute of the Czech National Corpus
 # Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2015 Martin Stepan <martin.stepan@ff.cuni.cz>,
+#                    Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,13 +30,13 @@ from .category_tree import CategoryTree, CategoryTreeNode
 
 class CorpusComposition(object):
 
-    def __init__(self, status: Optional[str], variables: List[int], size_assembled: int, category_sizes: List[int], used_bounds: List[float], num_texts: Optional[int]=None):
+    def __init__(self, status: Optional[str], variables: List[int], size_assembled: int, category_sizes: List[int], used_bounds: List[int], num_texts: Optional[int]=None):
         self.status = status
         self.variables = variables
         self.size_assembled = size_assembled
         self.category_sizes = category_sizes
         self.num_texts = num_texts
-        self.used_bounds: List[int] = [np.round(b) for b in used_bounds]
+        self.used_bounds = used_bounds
 
     def __repr__(self):
         return 'CorpusComposition(status: %s, size: %s, num_texts: %s, num_vars: %s)' % (
@@ -62,7 +64,7 @@ class MetadataModel:
         # text_sizes and _id_map both contain all the documents from the corpus
         # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
-        self.b = np.zeros(self.category_tree.num_categories - 1)
+        self.b = np.zeros(self.category_tree.num_categories - 1)  # required sizes, bounds
         self.A = np.zeros((self.category_tree.num_categories, self.num_texts))
         used_ids: Set[int] = set()
         self._init_ab(self.category_tree.root_node, used_ids)
@@ -190,41 +192,35 @@ class MetadataModel:
         if sum(self.b) == 0:
             return CorpusComposition(None, [], 0, [], [], 0)
 
-        x_min = 0
-        x_max = 1
-        num_conditions = len(self.b)
-        x = pulp.LpVariable.dicts('x', list(range(self.num_texts)), x_min, x_max)
-        lp_prob = pulp.LpProblem('Minmax_Problem', pulp.LpMaximize)
+        x = pulp.LpVariable.dicts('x', list(range(self.num_texts)), 0, 1)
+        lp_prob: pulp.LpProblem = pulp.LpProblem('Minmax_Problem', pulp.LpMaximize)
         lp_prob += pulp.lpSum(x), 'Minimize_the_maximum'
-        for i in range(num_conditions):
-            label = 'Max_constraint_%d' % i
-            condition = pulp.lpSum([self.A[i][j] * x[j]
-                                    for j in range(self.num_texts)]) <= self.b[i]
-            lp_prob += condition, label
+        for i in range(len(self.b)):
+            condition = pulp.lpSum([
+                self.A[i][j] * x[j]
+                for j in range(self.num_texts)
+            ]) <= self.b[i]
+            lp_prob += condition, f'Max_constraint_{i}'
 
         stat = lp_prob.solve()
 
-        variables = np.zeros(self.num_texts)
+        variables = np.zeros(self.num_texts, dtype=int)
         # transform Pulp's variables (x_[number]) back to
         # the indices we need
         for v in lp_prob.variables():
             if v.name == '__dummy':
                 continue
-            i = int(v.name[2:len(v.name)])
-            variables[i] = np.round(v.varValue, decimals=0)
+            i = int(v.name[2:])
+            variables[i] = int(np.round(v.varValue))
 
-        category_sizes = []
-        for c in range(0, self.category_tree.num_categories - 1):
-            cat_size = self._get_category_size(variables, c)
-            category_sizes.append(cat_size)
-        size_assembled = self._get_assembled_size(variables)
-
-        return CorpusComposition(status=pulp.LpStatus[stat], variables=variables, size_assembled=size_assembled,
-                                 category_sizes=category_sizes, used_bounds=self.b, num_texts=sum(variables))
-
-    def _get_assembled_size(self, results: List[int]) -> int:
-        return np.dot(results, self.text_sizes)
-
-    def _get_category_size(self, results: List[int], cat_id: int) -> int:
-        category_sizes = self.A[cat_id][:]
-        return np.dot(results, category_sizes)
+        return CorpusComposition(
+            status=pulp.LpStatus[stat],
+            variables=list(variables),
+            size_assembled=int(np.dot(variables, self.text_sizes)),
+            category_sizes=[
+                int(np.dot(variables, self.A[cat_id][:]))
+                for cat_id in range(self.category_tree.num_categories - 1)
+            ],
+            used_bounds=[int(np.round(b)) for b in self.b],
+            num_texts=sum(variables)
+        )

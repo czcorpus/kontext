@@ -1,5 +1,6 @@
 # Copyright (c) 2022 Institute of the Czech National Corpus
 # Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from decimal import Decimal
 from typing import Any, Dict, List, TypedDict, Tuple, Union
 from collections import defaultdict
 import json
@@ -42,7 +42,7 @@ from .metadata_model import MetadataModel
 
 
 class RealSizes(TypedDict):
-    attrs: List[Tuple[str, Decimal]]
+    attrs: List[Tuple[str, float]]
     total: int
 
 
@@ -61,10 +61,13 @@ class ProcessResponse(TypedDict):
 def subcmixer_run_calc(ctrl: Controller, request: Request) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
-            return sm.process(plugin_ctx=ctrl._plugin_ctx, corpus=ctrl.corp,
-                              corpname=request.form['corpname'],
-                              aligned_corpora=request.form.getlist('aligned_corpora'),
-                              args=json.loads(request.form['expression']))
+            return sm.process(
+                plugin_ctx=ctrl._plugin_ctx,
+                corpus=ctrl.corp,
+                corpname=request.form['corpname'],
+                aligned_corpora=request.form.getlist('aligned_corpora'),
+                args=json.loads(request.form['expression'])
+            )
     except ResultNotFoundException as err:
         ctrl.add_system_message('error', str(err))
         return {}
@@ -124,7 +127,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
     def _calculate_real_sizes(cat_tree: CategoryTree, sizes: List[int], total_size: int) -> RealSizes:
         return RealSizes(
             attrs=[
-                (str(expression), Decimal(sizes[i]) / Decimal(total_size))
+                (str(expression), sizes[i] / float(total_size))
                 for i, expression in enumerate(item.expression for item in cat_tree.category_list if item.expression)
             ],
             total=total_size
@@ -136,7 +139,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         generate IDs and parent IDs for
         passed conditions
         """
-        ans: List[List[TaskArgs]] = [[TaskArgs(0, None, Decimal(1), None)]]  # root node
+        ans: List[List[TaskArgs]] = [[TaskArgs(0, None, 1, None)]]  # root node
         grouped: Dict[str, List[ExpressionItem]] = defaultdict(lambda: [])
         for item in args:
             grouped[item['attrName']].append(item)
@@ -149,7 +152,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
                     tmp.append(TaskArgs(
                         counter,
                         parent.node_id,
-                        Decimal(expr['ratio']) / 100,
+                        expr['ratio'] / 100.,
                         CategoryExpression(attrName, '==', expr['attrValue'])
                     ))
                     counter += 1
@@ -170,20 +173,14 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:
-            doc_indices = [
-                item[0] for item in (
-                    item for item in (
-                        x for x in enumerate(corpus_items.variables)
-                    ) if item[1] > 0
-                )
-            ]
+            doc_indices = [i for i, variable in enumerate(corpus_items.variables) if variable > 0]
             real_sizes = self._calculate_real_sizes(
                 cat_tree, corpus_items.category_sizes, corpus_items.size_assembled)
             return ProcessResponse(
                 ids=doc_indices,
                 structs=list(used_structs),
                 total=real_sizes['total'],
-                attrs=[(k, float(v)) for k, v in real_sizes['attrs']],
+                attrs=real_sizes['attrs'],
             )
 
         else:
