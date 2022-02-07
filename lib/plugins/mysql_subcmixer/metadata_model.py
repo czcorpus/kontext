@@ -30,7 +30,9 @@ from .category_tree import CategoryTree, CategoryTreeNode
 
 class CorpusComposition(object):
 
-    def __init__(self, status: Optional[str], variables: List[int], size_assembled: int, category_sizes: List[int], used_bounds: List[int], num_texts: Optional[int]=None):
+    def __init__(
+            self, status: Optional[str], variables: List[int], size_assembled: int,
+            category_sizes: List[int], used_bounds: List[int], num_texts: Optional[int] = None):
         self.status = status
         self.variables = variables
         self.size_assembled = size_assembled
@@ -55,7 +57,8 @@ class MetadataModel:
     id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+    def __init__(
+            self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
         self._db = db
         self.category_tree = category_tree
         self._id_struct, self._id_attr = id_attr.split('.')
@@ -135,7 +138,8 @@ class MetadataModel:
                 SELECT t_map.value_tuple_id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {mc.mysql_op} %s
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s 
+                    AND t_value.value {mc.mysql_op} %s
                 '''
                 for subl in node.metadata_condition
                 for mc in subl

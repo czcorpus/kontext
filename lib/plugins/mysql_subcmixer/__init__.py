@@ -27,11 +27,12 @@ from mysql.connector.cursor import MySQLCursor
 
 import plugins
 from plugins import inject
-from plugins.errors import PluginException
 from plugins.abstract.corparch import AbstractCorporaArchive
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
-from controller import Controller, exposed
+from plugins.abstract.subcmixer.error import SubcMixerException, ResultNotFoundException
+from controller import exposed
+from actions.subcorpus import Subcorpus
 from controller.plg import PluginCtx
 import corplib
 from corplib.corpus import KCorpus
@@ -39,6 +40,15 @@ import actions.subcorpus
 
 from .category_tree import CategoryTree, CategoryExpression, TaskArgs
 from .metadata_model import MetadataModel
+
+"""
+This module provides a mysql-based implementation for the subc-mixer plug-in. It requires mysql_integration_db.
+To be able to use the plug-in, the following requirements must be met:
+
+- enabled mysql_integration_db (i.e. the mysql_subcmixer does not provide its individual db connection)
+- enabled mysql_live_attributes
+- also, a corpus we want to used the plug-in with must have bib_id_struct, bib_id_attr configured 
+"""
 
 
 class RealSizes(TypedDict):
@@ -58,7 +68,7 @@ class ProcessResponse(TypedDict):
 
 
 @exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_run_calc(ctrl: Controller, request: Request) -> Union[ProcessResponse, EmptyResponse]:
+def subcmixer_run_calc(ctrl: Subcorpus, request: Request) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(
@@ -74,7 +84,7 @@ def subcmixer_run_calc(ctrl: Controller, request: Request) -> Union[ProcessRespo
 
 
 @exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_create_subcorpus(ctrl: Controller, request: Request) -> Dict[str, Any]:
+def subcmixer_create_subcorpus(ctrl: Subcorpus, request: Request) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -107,21 +117,18 @@ def subcmixer_create_subcorpus(ctrl: Controller, request: Request) -> Dict[str, 
         return dict(status=True)
 
 
-class SubcMixerException(PluginException):
-    pass
-
-
-class ResultNotFoundException(SubcMixerException):
-    pass
-
-
 class SubcMixer(AbstractSubcMixer[ProcessResponse]):
 
     CORPUS_MAX_SIZE = 500000000  # TODO
 
-    def __init__(self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+    def __init__(
+            self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
         self._corparch = corparch
         self._db = integration_db
+
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        return bool(info.metadata.id_attr)
 
     @staticmethod
     def _calculate_real_sizes(cat_tree: CategoryTree, sizes: List[int], total_size: int) -> RealSizes:
@@ -159,7 +166,10 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
             ans.append(tmp)
         return [subitem for item in ans for subitem in item]
 
-    def process(self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str], args: List[ExpressionItem]) -> ProcessResponse:
+    def process(
+            self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str],
+            args: List[ExpressionItem]) -> ProcessResponse:
+
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException(
@@ -191,5 +201,6 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+def create_instance(
+        settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
     return SubcMixer(corparch, integration_db)

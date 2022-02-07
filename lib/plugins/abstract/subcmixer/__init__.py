@@ -20,9 +20,10 @@ plug-in which provides input arguments used by 'subcmixer'.
 """
 
 import abc
-from typing import Any, List, Optional, TypeVar, TypedDict, Dict, Generic
-from corplib.corpus import KCorpus
+from typing import List, Optional, TypeVar, TypedDict, Generic
+from corplib.corpus import AbstractKCorpus
 from controller.plg import PluginCtx
+from plugins.abstract import CorpusDependentPlugin
 
 
 class ExpressionItem(TypedDict):
@@ -34,15 +35,14 @@ class ExpressionItem(TypedDict):
 T = TypeVar('T')
 
 
-class AbstractSubcMixer(abc.ABC, Generic[T]):
+class AbstractSubcMixer(CorpusDependentPlugin, Generic[T]):
 
     @abc.abstractmethod
-    def process(self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str], args: List[ExpressionItem]) -> T:
+    def process(
+            self, plugin_ctx: PluginCtx, corpus: AbstractKCorpus, corpname: str,
+            aligned_corpora: List[str], args: List[ExpressionItem]) -> T:
         """
         arguments:
-            plugin_ctx -- kontext.PluginCtx instance
-            corpus --
-            corpname -- a corpus name
             aligned_corpora -- corpora we want our result to respect as aligned ones
                             (i.e. only results witch matching items in these corpora
                             can be included)
