@@ -18,6 +18,7 @@
 import json
 from collections import defaultdict
 import struct
+from typing import Any, Dict
 
 from plugins.abstract.subcmixer import AbstractSubcMixer
 from plugins import inject
@@ -87,7 +88,7 @@ class ResultNotFoundException(SubcMixerException):
     pass
 
 
-class SubcMixer(AbstractSubcMixer):
+class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
 
     CORPUS_MAX_SIZE = 500000000  # TODO
 

@@ -29,7 +29,6 @@ import { Actions } from './actions';
 import {
     SubcMixerExpression, CalculationResults, CalculationResponse,
     TextTypeAttrVal } from './common';
-import { Actions as QueryActions } from '../../models/query/actions';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
@@ -182,8 +181,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 state.numOfErrors = 0;
             },
             (state, action, dispatch) => {
-                this.submitTask(state).subscribe(
-                    (data) => {
+                this.submitTask(state).subscribe({
+                    next: data => {
                         if (!data.attrs || !data.ids) {
                             const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
                             this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
@@ -208,14 +207,14 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                             });
                         }
                     },
-                    (err) => {
+                    error: err => {
                         this.pluginApi.showMessage('error', err);
                         dispatch<typeof Actions.SubmitTaskDone>({
                             name: Actions.SubmitTaskDone.name,
                             error: err
                         });
                     }
-                );
+                });
             }
         );
 
@@ -247,21 +246,21 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 );
             },
             (state, action, dispatch) => {
-                this.submitCreateSubcorpus(state).subscribe(
-                    (resp) => {
+                this.submitCreateSubcorpus(state).subscribe({
+                    next: resp => {
                         window.location.href = this.pluginApi.createActionUrl('subcorpus/list');
                         dispatch<typeof Actions.CreateSubcorpusDone>({
                             name: Actions.CreateSubcorpusDone.name
                         });
                     },
-                    (err) => {
+                    error: err => {
                         this.pluginApi.showMessage('error', err);
                         dispatch<typeof Actions.CreateSubcorpusDone>({
                             name: Actions.CreateSubcorpusDone.name,
                             error: err
                         });
                     }
-                );
+                });
             }
         );
 

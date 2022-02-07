@@ -14,7 +14,9 @@ import os
 import logging
 import time
 import hashlib
-from typing import List, Dict, Union
+from typing import Any, List, Dict, Union
+
+from werkzeug.wrappers import Request
 
 from dataclasses import dataclass
 from controller import exposed
@@ -72,7 +74,7 @@ class Subcorpus(Querying):
     def get_mapping_url_prefix(self):
         return '/subcorpus/'
 
-    def prepare_subc_path(self, corpname, subcname, publish):
+    def prepare_subc_path(self, corpname: str, subcname: str, publish: bool) -> str:
         if publish:
             code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
                 'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
@@ -86,7 +88,7 @@ class Subcorpus(Querying):
                 os.makedirs(path)
             return os.path.join(path, subcname) + '.subc'
 
-    def _deserialize_custom_within(self, data):
+    def _deserialize_custom_within(self, data: Dict[str, Any]) -> str:
         """
          return this.lines.filter((v)=>v != null).map(
             (v:WithinLine) => (
@@ -98,7 +100,7 @@ class Subcorpus(Querying):
         return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
             item['structure_name'], item['attribute_cql']) for item in [item for item in data if bool(item)]])
 
-    def _create_subcorpus(self, request):
+    def _create_subcorpus(self, request: Request) -> Dict[str, Any]:
         """
         req. arguments:
         subcname -- name of new subcorpus
@@ -205,14 +207,14 @@ class Subcorpus(Querying):
 
     @exposed(access_level=1, template='subcorpus/subcorp_form.html', page_model='subcorpForm',
              http_method='POST', return_type='json', action_log_mapper=log_mapping.new_subcorpus)
-    def create(self, request):
+    def create(self, request: Request) -> Dict[str, Any]:
         try:
             return self._create_subcorpus(request)
         except (SubcorpusError, RuntimeError) as e:
             raise UserActionException(str(e)) from e
 
     @exposed(access_level=1, apply_semi_persist_args=True, page_model='subcorpForm')
-    def new(self, request):
+    def new(self, request: Request) -> Dict[str, Any]:
         """
         Displays a form to create a new subcorpus
         """
@@ -244,14 +246,14 @@ class Subcorpus(Querying):
         return out
 
     @exposed(access_level=1, return_type='json', http_method='POST')
-    def ajax_create_subcorpus(self, request):
+    def ajax_create_subcorpus(self, request: Request) -> Dict[str, Any]:
         return self._create_subcorpus(request)
 
     def _create_full_subc_list(self, queries, subc_files):
         pass
 
     @exposed(access_level=1, http_method='POST', return_type='json')
-    def delete(self, _):
+    def delete(self, _) -> Dict[str, Any]:
         spath = self.corp.spath
         orig_spath = self.corp.orig_spath
         if orig_spath:
@@ -273,7 +275,7 @@ class Subcorpus(Querying):
         return {}
 
     @exposed(access_level=1, skip_corpus_init=True, page_model='subcorpList')
-    def list(self, request):
+    def list(self, request: Request) -> Dict[str, Any]:
         """
         Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
         installed then the list is enriched by additional re-use/undelete information.
@@ -348,7 +350,7 @@ class Subcorpus(Querying):
         return ans
 
     @exposed(access_level=1, return_type='json')
-    def subcorpus_info(self, request):
+    def subcorpus_info(self, _) -> Dict[str, Any]:
         if not self.corp.is_subcorpus:
             raise UserActionException('Not a subcorpus')
         ans = dict(
@@ -373,7 +375,7 @@ class Subcorpus(Querying):
         return ans
 
     @exposed(access_level=1, return_type='json', http_method='POST')
-    def ajax_wipe_subcorpus(self, request):
+    def ajax_wipe_subcorpus(self, request: Request) -> Dict[str, Any]:
         if plugins.runtime.SUBC_RESTORE.exists:
             corpus_id = request.form['corpname']
             subcorp_name = request.form['subcname']
@@ -387,7 +389,7 @@ class Subcorpus(Querying):
         return {}
 
     @exposed(access_level=1, return_type='json', http_method='POST')
-    def publish_subcorpus(self, request):
+    def publish_subcorpus(self, request: Request) -> Dict[str, Any]:
         subcname = request.form['subcname']
         corpname = request.form['corpname']
         description = request.form['description']
@@ -401,14 +403,14 @@ class Subcorpus(Querying):
             raise UserActionException('Subcorpus {0} not found'.format(subcname))
 
     @exposed(access_level=1, return_type='json', http_method='POST')
-    def update_public_desc(self, request):
+    def update_public_desc(self, request: Request) -> Dict[str, Any]:
         if not self.corp.is_published:
             raise UserActionException('Corpus is not published - cannot change description')
         self.corp.save_subc_description(request.form['description'])
         return {}
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')
-    def list_published(self, request):
+    def list_published(self, request: Request) -> Dict[str, Any]:
         self.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                     MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 

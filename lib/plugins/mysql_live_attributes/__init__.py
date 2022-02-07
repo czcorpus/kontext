@@ -80,12 +80,13 @@ def fill_attrs(self, request):
 class MysqlLiveAttributes(CachedLiveAttributes):
 
     def __init__(
-            self, corparch: AbstractCorporaArchive,
-            db: KeyValueStorage,
-            integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor],
-            max_attr_list_size,
-            empty_val_placeholder,
-            max_attr_visible_chars):
+        self, corparch: AbstractCorporaArchive,
+        db: KeyValueStorage,
+        integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+        max_attr_list_size: int,
+        empty_val_placeholder: str,
+        max_attr_visible_chars: int
+    ):
         super().__init__(db)
         self.corparch = corparch
         self.integ_db = integ_db
@@ -121,7 +122,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                     data[k] = int(data[k])
         return data
 
-    def on_soft_reset(self):
+    def on_soft_reset(self) -> None:
         logging.getLogger(__name__).warning('soft reset, cleaning all liveattrs caches')
         self.clear_cache()
 
@@ -137,7 +138,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         return set(StructAttr.get(x) for x in corpus.get_structattrs())
 
     @staticmethod
-    def _group_bib_items(data: Dict[str, Set[AttrValue]], bib_label: StructAttr):
+    def _group_bib_items(data: Dict[str, Set[AttrValue]], bib_label: StructAttr) -> None:
         """
         In bibliography column, items with the same title (column number 2)
         can be set to be grouped together (corpus/metadata/group_duplicates tag).
@@ -193,32 +194,21 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             '''
             args.append(corpora[0])
 
-        if len(corpora) > 1:
-            aligned_corpus_select = 'SELECT item_id FROM corpus_structattr_value_tuple WHERE corpus_name = %s'
-            sql = f'''
-                SELECT sum(tuple.poscount)
-                FROM (
-                    SELECT tuple.item_id
-                    FROM ({sql_sub}) t
-                    JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
-                    INTERSECT
-                    {" INTERSECT ".join(aligned_corpus_select for _ in corpora[1:])}
-                ) t
-                JOIN corpus_structattr_value_tuple AS tuple ON tuple.item_id = t.item_id
-                WHERE tuple.corpus_name = %s
-            '''
-            args.extend(corpora[1:])
-            args.append(corpora[0])
-        else:
-            sql = f'''
-                SELECT SUM(tuple.poscount)
-                FROM ({sql_sub}) t
-                JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = t.value_tuple_id
-            '''
+        aligned_join = [
+            f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t.item_id'
+            for i in range(len(corpora) - 1)
+        ]
+        sql = f'''
+            SELECT SUM(tuple.poscount)
+            FROM ({sql_sub}) AS tuple_ids
+            JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = tuple_ids.value_tuple_id
+            {' '.join(aligned_join)}
+        '''
+        args.extend(corpora[1:])
 
-        cursor = self.integ_db.cursor()
-        cursor.execute(sql, args)
-        return cursor.fetchone()[0]
+        with self.integ_db.cursor() as cursor:
+            cursor.execute(sql, args)
+            return cursor.fetchone()[0]
 
     @cached
     def get_attr_values(
@@ -277,20 +267,21 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
         query_components = query_builder.create_sql()
-        cursor = self.integ_db.cursor()
-        cursor.execute(query_components.sql_template, query_components.where_values)
-        for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
-            for col_key in query_components.selected_attrs:
-                data_key = col_key if isinstance(col_key, str) else col_key.key()
-                if col_key not in query_components.hidden_attrs and data_key in data:
-                    attr_val_key = AttrValueKey(
-                        full_name=data[data_key],
-                        short_name=shorten_val(data[data_key]),
-                        ident=data[bib_id.key()] if col_key == bib_label else data[data_key]
-                    )
-                    poscounts[col_key][attr_val_key] += row['poscount']
-            total_poscount += row['poscount']
+
+        with self.integ_db.cursor() as cursor:
+            cursor.execute(query_components.sql_template, query_components.where_values)
+            for row in cursor:
+                data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+                for col_key in query_components.selected_attrs:
+                    data_key = col_key if isinstance(col_key, str) else col_key.key()
+                    if col_key not in query_components.hidden_attrs and data_key in data:
+                        attr_val_key = AttrValueKey(
+                            full_name=data[data_key],
+                            short_name=shorten_val(data[data_key]),
+                            ident=data[bib_id.key()] if col_key == bib_label else data[data_key]
+                        )
+                        poscounts[col_key][attr_val_key] += row['poscount']
+                total_poscount += row['poscount']
 
         # here we append position count information to the respective items
         ans: Dict[StructAttr, Set[AttrValue]] = {attr: set() for attr in srch_attrs}
@@ -321,26 +312,25 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
 
-        cursor = self.integ_db.cursor()
-        cursor.execute(
-            '''
-            SELECT GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
-            FROM (
-                SELECT value_tuple_id as id
-                FROM corpus_structattr_value AS t_value
-                JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
-                WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value = %s
-                LIMIT 1
-            ) as t
-            JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
-            JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
-            GROUP BY t.id
-            ''',
-            (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
-        return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
+        with self.integ_db.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
+                FROM (
+                    SELECT value_tuple_id as id
+                    FROM corpus_structattr_value AS t_value
+                    JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value.id = t_value_mapping.value_id
+                    WHERE corpus_name = %s AND structure_name = %s AND structattr_name = %s AND value = %s
+                    LIMIT 1
+                ) as t
+                JOIN corpus_structattr_value_mapping AS t_value_mapping ON t_value_mapping.value_tuple_id = t.id
+                JOIN corpus_structattr_value AS t_value ON t_value_mapping.value_id = t_value.id
+                GROUP BY t.id
+                ''',
+                (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
+            return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
 
-    def _find_attrs(self, corpus_id: str, search: StructAttr, values: List[str], fill: List[StructAttr]):
-        cursor = self.integ_db.cursor()
+    def _find_attrs(self, cursor: MySQLCursor, corpus_id: str, search: StructAttr, values: List[str], fill: List[StructAttr]) -> None:
         if len(values) == 0:
             cursor.execute('SELECT 1 FROM dual WHERE false')
         else:
@@ -363,32 +353,33 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 GROUP BY t.id
                 ''',
                 (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
-        return cursor
 
     def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
         bib_label = self.import_key(corpus_info.metadata.label_attr)
 
-        cursor = self._find_attrs(corpus_id, bib_id, id_list, [bib_id, bib_label])
-
         ans = []
-        for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
-            ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
+        with self.integ_db.cursor() as cursor:
+            self._find_attrs(cursor, corpus_id, bib_id, id_list, [bib_id, bib_label])
+            for row in cursor:
+                data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+                ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
+
         return ans
 
     def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
 
-        cursor = self._find_attrs(corpus_id, search_structattr, values, [
-                                  search_structattr, *fill_structattrs])
-
         ans = {}
-        for row in cursor:
-            data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
-            ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
+        with self.integ_db.cursor() as cursor:
+            cursor = self._find_attrs(corpus_id, search_structattr, values, [
+                search_structattr, *fill_structattrs])
+            for row in cursor:
+                data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+                ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
+
         return {'data': ans}
 
 
@@ -419,4 +410,5 @@ def create_instance(
                 'corpora', 'empty_attr_value_placeholder'),
             max_attr_visible_chars=int(la_settings.get('max_attr_visible_chars', 20)))
     else:
-        raise PluginCompatibilityException('mysql_live_attributes works only with integration_db enabled')
+        raise PluginCompatibilityException(
+            'mysql_live_attributes works only with integration_db enabled')
