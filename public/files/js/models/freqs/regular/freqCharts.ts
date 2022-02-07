@@ -53,13 +53,11 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
     downloadFormat:{[sourceId:string]:ChartExportFormat};
-    pieChartMaxIndividualItems:{[sourceId:string]:FormValue<string>};
 }
 
 
 type DebouncedActions =
-    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal |
-        typeof Actions.FreqChartsPieSetMaxIndividualItems;
+    typeof Actions.FreqChartsChangePageSize |  typeof Actions.ResultSetMinFreqVal;
 
 
 function getDtFormat(pageModel:PageModel, fcrit:string):string {
@@ -178,13 +176,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                pieChartMaxIndividualItems: pipe(
-                    allCrits,
-                    List.map(
-                        k => tuple(k.n, newFormValue('5', true))
-                    ),
-                    Dict.fromEntries()
-                ),
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,
                 downloadFormat: pipe(
                     allCrits,
@@ -249,19 +240,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsChangeUnits,
             (state, action) => {
                 state.dataKey[action.payload.sourceId] = action.payload.value;
-                if (state.type[action.payload.sourceId] === 'pie') {
-                    state.isBusy[action.payload.sourceId] = true;
-                }
-            },
-            (state, action, dispatch) => {
-                // pie chart sorts by selected units automatically
-                if (state.type[action.payload.sourceId] === 'pie') {
-                    this.dispatchLoad(
-                        this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
-                        state,
-                        dispatch,
-                    );
-                }
             }
         );
 
@@ -391,40 +369,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         );
 
         this.addActionHandler(
-            Actions.FreqChartsPieSetMaxIndividualItems,
-            (state, action) => {
-                if (action.payload.debouncedFor) {
-                    state.isBusy[action.payload.sourceId] = true;
-
-                } else {
-                    state.pieChartMaxIndividualItems[action.payload.sourceId].value = action.payload.value;
-                    if (!validateGzNumber(state.pieChartMaxIndividualItems[action.payload.sourceId].value)) {
-                        state.pieChartMaxIndividualItems[action.payload.sourceId].isInvalid = true;
-                        state.pieChartMaxIndividualItems[action.payload.sourceId].errorDesc = this.pageModel.translate('options__value_must_be_gt_0');
-
-                    } else {
-                        state.pieChartMaxIndividualItems[action.payload.sourceId].isInvalid = false;
-                        state.pieChartMaxIndividualItems[action.payload.sourceId].errorDesc = undefined;
-                    }
-                    this.debouncedAction$.next(action);
-                }
-            },
-            (state, action, dispatch) => {
-                dispatch<typeof Actions.FreqChartsPieSetMaxIndividualItemsDone>({
-                    name: Actions.FreqChartsPieSetMaxIndividualItemsDone.name,
-                    payload: {sourceId: action.payload.sourceId}
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.FreqChartsPieSetMaxIndividualItemsDone,
-            (state, action) => {
-                state.isBusy[action.payload.sourceId] = false;
-            }
-        );
-
-        this.addActionHandler(
             Actions.ResultSetAlphaLevel,
             (state, action) => {
                 state.alphaLevel = action.payload.value;
@@ -483,29 +427,18 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
     }
 
     getSubmitArgs(state:FreqChartsModelState, fcrit:string):FreqServerArgs {
-        const args = {
+        return {
             ...this.pageModel.getConcArgs(),
             fcrit,
             flimit: parseInt(state.flimit),
             freq_sort: state.type[fcrit] === 'timeline' || state.type[fcrit] === 'timescatter' ?
                 '0' :
-                // pie chart always sorts by selected units
-                state.type[fcrit] === 'pie' ?
-                    state.dataKey[fcrit] :
-                    state.sortColumn[fcrit],
+                state.sortColumn[fcrit],
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: state.fmaxitems[fcrit].value,
             format: 'json'
-        } as FreqServerArgs;
-        // pie chart always needs to have all items
-        if (state.type[fcrit] === 'pie') {
-            const data = state.data[fcrit];
-            if (!isEmptyResultBlock(data)) {
-                args.fmaxitems = data.Total;
-            }
-        }
-        return args;
+        };
     }
 }
