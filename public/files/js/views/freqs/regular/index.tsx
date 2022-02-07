@@ -267,11 +267,14 @@ export function init(
                         className="FreqViewSelector"
                         callback={handleTabSelection}
                         items={[
-                            {id: 'tables', label: he.translate('freq__tab_tables_button')},
-                            {id: 'charts', label: he.translate('freq__tab_charts_button')}
+                            {id: 'charts', label: he.translate('freq__tab_charts_button')},
+                            {id: 'tables', label: he.translate('freq__tab_tables_button')}
                         ]}
-                        defaultId="tables"
+                        defaultId="charts"
                         noButtonSeparator={true} >
+                    <div>
+                        <chartViews.FreqChartsView />
+                    </div>
                     <div className="FreqResultView">
                         {pipe(
                             props.data,
@@ -308,9 +311,6 @@ export function init(
                                 )
                             )
                         )}
-                    </div>
-                    <div>
-                        <chartViews.FreqChartsView />
                     </div>
                 </globalComponents.TabView>
             </S.FreqResultView>
