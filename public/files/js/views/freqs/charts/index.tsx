@@ -25,8 +25,8 @@ import { Bound, IActionDispatcher } from "kombo";
 import { FreqChartsModel, FreqChartsModelState } from '../../../models/freqs/regular/freqCharts';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-    ResponsiveContainer, ScatterChart, Scatter, Cell,
-    Legend, Label, ErrorBar, Line, Area, ComposedChart
+    ResponsiveContainer, ScatterChart, Scatter,
+    Label, ErrorBar, Line, Area, ComposedChart
 } from 'recharts';
 import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
@@ -35,7 +35,7 @@ import * as theme from '../../theme/default';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
 import {
-    isEmptyResultBlock, reduceNumResultItems, ResultBlock, ResultItem
+    isEmptyResultBlock, ResultBlock, ResultItem
 } from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
 import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes } from '../../../models/freqs/common';
@@ -86,7 +86,9 @@ export function init(
             tooltip: [
                 {
                     label: unit === 'freq' ? he.translate('freq__unit_abs') : he.translate('freq__unit_rel'),
-                    value: unit === 'freq' ? item.freq : item.rel
+                    value: unit === 'freq' ?
+                        `${item.freq} [${item.freqConfidence[0]}, ${item.freqConfidence[1]}]` :
+                        `${item.rel} [${item.relConfidence[0]}, ${item.relConfidence[1]}]`
                 }
             ]
         }
@@ -342,8 +344,15 @@ export function init(
         const xUnits = props.dataKey === 'freq' ?
             he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
 
-
         const renderChart = () => {
+            const confidenceKey = props.dataKey === 'rel' ? 'relConfidence' : 'freqConfidence';
+            const tooltipFormatter = (value, name, props) => {
+                if (props.payload[props.dataKey] === undefined) {  // scatter chart heading
+                    return value
+                }
+                return [`${props.payload[props.dataKey]} [${(props.payload[props.dataKey]-props.payload[confidenceKey][0]).toFixed(2)}, ${(props.payload[props.dataKey]+props.payload[confidenceKey][1]).toFixed(2)}]`, null];
+            }
+
             switch (props.type)  {
                 case 'bar':
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
@@ -355,12 +364,9 @@ export function init(
                             <YAxis type="category" interval={0} dataKey={v => v.Word[0]}
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
-                            <Tooltip />
+                            <Tooltip formatter={tooltipFormatter}/>
                             <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} isAnimationActive={false}>
-                                {props.dataKey === 'rel' ?
-                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" /> :
-                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
-                                }
+                                <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
                             </Bar>
                         </BarChart>
                     </ResponsiveContainer>;
@@ -374,7 +380,6 @@ export function init(
                         </div>
                     );
                 case 'timeline': {
-                    const dataKey = props.dataKey === 'rel' ? 'relConfidence' : 'freqConfidence';
                     return <ResponsiveContainer width="95%" height={300}>
                         <ComposedChart data={props.data.Items} ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
@@ -382,7 +387,7 @@ export function init(
                             <YAxis type='number' />
                             <Tooltip />
                             <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
-                            <Area dataKey={dataKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink} />
+                            <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink} />
                         </ComposedChart>
                     </ResponsiveContainer>;
                 }
@@ -392,13 +397,10 @@ export function init(
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
                             <YAxis type='number' />
-                            <Tooltip />
+                            <Tooltip formatter={tooltipFormatter}/>
                             <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)}
                                     fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
-                                {props.dataKey === 'rel' ?
-                                    <ErrorBar dataKey="relConfidence" width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" /> :
-                                    <ErrorBar dataKey="freqConfidence" width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
-                                }
+                                <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
                             </Scatter>
                         </ScatterChart>
                     </ResponsiveContainer>;
