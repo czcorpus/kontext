@@ -18,12 +18,12 @@
 import json
 from collections import defaultdict
 import struct
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from plugins.abstract.subcmixer import AbstractSubcMixer
+from plugins.abstract.subcmixer.error import SubcMixerException, ResultNotFoundException
 from plugins import inject
 import plugins
-from plugins.errors import PluginException
 from controller import exposed
 import actions.subcorpus
 import corplib
@@ -80,20 +80,16 @@ def subcmixer_create_subcorpus(ctrl, request):
         return dict(status=True)
 
 
-class SubcMixerException(PluginException):
-    pass
-
-
-class ResultNotFoundException(SubcMixerException):
-    pass
-
-
 class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
 
     CORPUS_MAX_SIZE = 500000000  # TODO
 
     def __init__(self, corparch):
         self._corparch = corparch
+
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        return bool(info.metadata.id_attr)
 
     @staticmethod
     def _calculate_real_sizes(cat_tree, sizes, total_size):
@@ -158,7 +154,7 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
             return ans
 
         else:
-            raise ResultNotFoundException('ucnk_subcm__failed_to_find_suiteable_mix')
+            raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
 
     def export_actions(self):
         return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}

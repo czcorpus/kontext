@@ -50,7 +50,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <CalculatedRatio /> -------------------------------------
 
-    const CalculatedRatio:React.SFC<{
+    const CalculatedRatio:React.FC<{
         ratio:number;
         success:boolean;
         limit:number;
@@ -60,7 +60,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             {props.success ?
                 null :
                 <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')} alt={he.translate('global__warning_icon')}
-                            title={he.translate('ucnk_subc__condition_failed_{limit}', {limit: props.limit * 100})}/>
+                            title={he.translate('subcmixer__condition_failed_{limit}', {limit: props.limit * 100})}/>
             }
             <strong>{he.formatNumber(props.ratio, 1) + '%'}</strong>
         </>;
@@ -68,7 +68,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <ValueShareInput /> -------------------------------------
 
-    const ValueShareInput:React.SFC<{
+    const ValueShareInput:React.FC<{
         hasResults:boolean;
         attrName:string;
         attrValue:string;
@@ -102,7 +102,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <ValueShare /> -------------------------------------
 
-    const ValueShare:React.SFC<{
+    const ValueShare:React.FC<{
         rowId:number;
         hasResults:boolean;
         attrName:string;
@@ -138,26 +138,26 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <ValuesTable /> -------------------------------------
 
-    const ValuesTable:React.SFC<{
+    const ValuesTable:React.FC<{
         currentResult:CalculationResults;
         hasResults:boolean;
         items:Array<SubcMixerExpression>;
         ratioLimit:number;
 
     }> = (props) => {
-
+        console.log('xxx: ', props.currentResult)
         return (
             <table className="data subcmixer-ratios">
                 <tbody>
                     <tr>
                         <th />
-                        <th>{he.translate('ucnk_subc__ratios_th_expression')}</th>
-                        <th>{he.translate('ucnk_subc__ratios_th_orig_ratio')}</th>
-                        <th>{he.translate('ucnk_subc__ratios_th_required_ratio')}</th>
-                        <th>{he.translate('ucnk_subc__ratios_th_calculated_ratio')}</th>
+                        <th>{he.translate('subcmixer__ratios_th_expression')}</th>
+                        <th>{he.translate('subcmixer__ratios_th_orig_ratio')}</th>
+                        <th>{he.translate('subcmixer__ratios_th_required_ratio')}</th>
+                        <th>{he.translate('subcmixer__ratios_th_calculated_ratio')}</th>
                     </tr>
-                    {props.items.map((item, i) => (
-                        <ValueShare key={i}
+                    {List.map(
+                        (item, i) => <ValueShare key={i}
                                 rowId={i + 1}
                                 attrName={item.attrName}
                                 hasResults={props.hasResults}
@@ -165,8 +165,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 baseRatio={item.baseRatio}
                                 ratio={item.ratio}
                                 result={props.currentResult ? props.currentResult.attrs[i] : null}
-                                ratioLimit={props.ratioLimit} />
-                    ))}
+                                ratioLimit={props.ratioLimit} />,
+                        props.items
+                    )}
                 </tbody>
             </table>
         );
@@ -174,7 +175,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <ReenterArgsButton /> -------------------------------------
 
-    const ReenterArgsButton:React.SFC<{
+    const ReenterArgsButton:React.FC<{
         css:{[key:string]:string};
 
     }> = (props) => {
@@ -189,14 +190,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             <button className="default-button" type="button"
                     style={props.css}
                     onClick={handleUpdateParamsButton}>
-                {he.translate('ucnk_subc__modify_params_btn') + '\u2026'}
+                {he.translate('subcmixer__modify_params_btn') + '\u2026'}
             </button>
         );
     };
 
     // ------------ <ResultsControls /> -------------------------------------
 
-    const ResultsControls:React.SFC<{
+    const ResultsControls:React.FC<{
         numOfErrors:number;
         totalSize:number;
         numConditions:number;
@@ -228,7 +229,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <img className="icon"
                                 src={he.createStaticUrl('img/info-icon.svg')}
                                 alt={he.translate('global__info_icon')} />
-                        {he.translate('ucnk_subc__subc_found_{size}',
+                        {he.translate('subcmixer__subc_found_{size}',
                             {size: he.formatNumber(props.totalSize)})}
                     </span>
                 );
@@ -239,12 +240,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <img className="icon"
                                 src={he.createStaticUrl('img/error-icon.svg')}
                                 alt={he.translate('global__error_icon')} />
-                        {he.translate('ucnk_subc__subc_not_found')}
+                        {he.translate('subcmixer__subc_not_found')}
                     </span>
                 );
 
             } else {
-                return he.translate('ucnk_subc__subc_found_with_errors{size}',
+                return he.translate('subcmixer__subc_found_with_errors{size}',
                         {size: he.formatNumber(props.totalSize)});
             }
         };
@@ -255,7 +256,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <div>
                         <p>
                             <label>
-                                {he.translate('ucnk_subcm__new_subc_name')}:{'\u00a0'}
+                                {he.translate('subcmixer__new_subc_name')}:{'\u00a0'}
                                 <layoutViews.ValidatedItem invalid={props.currentSubcname.isInvalid}>
                                     <input type="text" value={props.currentSubcname.value}
                                             onChange={handleSubcnameInputChange} />
@@ -282,7 +283,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <p>
                             <button className="default-button" type="button"
                                     onClick={handleCreateSubcorpClick}>
-                                {he.translate('ucnk_subcm__create_subc')}
+                                {he.translate('subcmixer__create_subc')}
                             </button>
                             <ReenterArgsButton css={{display: 'inline-block', marginLeft: '0.7em'}} />
                         </p>
@@ -306,7 +307,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <Controls /> -------------------------------------
 
-    const Controls:React.SFC<{
+    const Controls:React.FC<{
         isBusy:boolean;
         hasResults:boolean;
         totalSize:number;
@@ -346,13 +347,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             (<p className="attr-warning">
                                 <img className="warning" src={he.createStaticUrl('img/warning-icon.svg')}
                                         alt={he.translate('global__warning_icon')} />
-                                {he.translate('ucnk_subc__multiple_attrs_mixing_warning{attrs}',
+                                {he.translate('subcmixer__multiple_attrs_mixing_warning{attrs}',
                                     {attrs: Dict.keys(props.usedAttributes).join(', ')})}
                             </p>)
                             : null}
                         <button className="default-button" type="button"
                                 onClick={handleCalculateCategoriesClick}>
-                            {he.translate('ucnk_subcm__calculate')}
+                            {he.translate('subcmixer__calculate')}
                         </button>
                     </div>
                 );
@@ -368,7 +369,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <SubcMixer /> -------------------------------------
 
-    const SubcMixer:React.SFC<{
+    const SubcMixer:React.FC<{
         selectedValues:Array<SubcMixerExpression>;
         currentResult:CalculationResults;
         numOfErrors:number;
@@ -388,7 +389,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <img src={he.createStaticUrl('img/info-icon.svg')}
                             style={{width: '1em', marginRight: '0.3em', verticalAlign: 'middle'}}
                             alt={he.translate('global__info_icon')} />
-                    {he.translate('ucnk_subcm__there_are_aligned_corpora_msg')}:{'\u00a0'}
+                    {he.translate('subcmixer__there_are_aligned_corpora_msg')}:{'\u00a0'}
                     <strong>{props.alignedCorpora.join(', ')}</strong>
                 </p>
             );
@@ -398,7 +399,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <layoutViews.ModalOverlay onCloseKey={props.closeClickHandler}>
                 <layoutViews.CloseableFrame onCloseClick={props.closeClickHandler}
-                        label={he.translate('ucnk_subcm__widget_header')}>
+                        label={he.translate('subcmixer__widget_header')}>
                     <S.SubcmixerWidget>
                         {List.empty(props.alignedCorpora) ? null : renderAlignedCorpInfo()}
                         <ValuesTable items={props.selectedValues}
@@ -422,7 +423,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ------------ <Widget /> -------------------------------------
 
-    const Widget:React.SFC<WidgetProps & SubcMixerModelState> = (props) => {
+    const Widget:React.FC<WidgetProps & SubcMixerModelState> = (props) => {
 
         const handleCloseWidget = () => {
             dispatcher.dispatch<typeof Actions.HideWidget>({
@@ -440,17 +441,17 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (props.isActive) {
                 return (
                     <a className="trigger util-button"
-                            title={he.translate('ucnk_subcm__set_shares')}
+                            title={he.translate('subcmixer__set_shares')}
                             onClick={handleActivationButton}>
-                        {he.translate('ucnk_subcm__define_proportions')}
+                        {he.translate('subcmixer__define_proportions')}
                     </a>
                 );
 
             } else {
                 return (
                     <span className="util-button disabled"
-                            title={he.translate('ucnk_subcm__currently_disabled_refine_to_enable')}>
-                        {he.translate('ucnk_subcm__define_proportions')}
+                            title={he.translate('subcmixer__currently_disabled_refine_to_enable')}>
+                        {he.translate('subcmixer__define_proportions')}
                     </span>
                 );
             }

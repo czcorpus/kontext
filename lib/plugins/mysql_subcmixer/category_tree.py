@@ -156,7 +156,8 @@ class CategoryTree(object):
                 i = 0
                 mdc = ExpressionJoin('AND')
                 for other_cat in self.category_list:
-                    # in the initialization there are no ExpressionJoin in category_list, here checking from typing reasons
+                    # in the initialization there are no ExpressionJoin in category_list,
+                    # here checking for typing reasons
                     if other_cat.parent_id == par_id and isinstance(other_cat.expression, CategoryExpression):
                         cond = other_cat.expression.negate()
                         mdc.add(cond)
@@ -196,7 +197,9 @@ class CategoryTree(object):
 
         return None
 
-    def _get_max_group_sizes(self, sizes: List[Union[int, float]], ratios: List[Union[int, float]], parent_size: Union[int, float]) -> List[Union[int, float]]:
+    def _get_max_group_sizes(
+            self, sizes: List[Union[int, float]], ratios: List[Union[int, float]],
+            parent_size: Union[int, float]) -> List[Union[int, float]]:
         children_size = sum(sizes)
         data_size = min(children_size, parent_size)
 
@@ -280,7 +283,8 @@ class CategoryTree(object):
                 SELECT t_map.value_tuple_id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s AND t_value.value {expr.mysql_op} %s
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s 
+                  AND t_value.value {expr.mysql_op} %s
                 '''
             for subl in mc for expr in subl
         ]

@@ -68,15 +68,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<typeof TTActions.SelectionChanged>(
-            TTActions.SelectionChanged.name,
+        this.addActionHandler(
+            TTActions.SelectionChanged,
             (state, action) => {
                 state.ttAttributes = action.payload.attributes;
             }
         );
 
-        this.addActionHandler<typeof SubcActions.FormSetSubcName>(
-            SubcActions.FormSetSubcName.name,
+        this.addActionHandler(
+            SubcActions.FormSetSubcName,
             (state, action) => {
                 state.subcname = Kontext.updateFormValue(
                     state.subcname,
@@ -87,15 +87,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof SubcActions.FormSetSubcAsPublic>(
-            SubcActions.FormSetSubcAsPublic.name,
+        this.addActionHandler(
+            SubcActions.FormSetSubcAsPublic,
             (state, action) => {
                 state.subcIsPublic = !!action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof SubcActions.FormSetDescription>(
-            SubcActions.FormSetDescription.name,
+        this.addActionHandler(
+            SubcActions.FormSetDescription,
             (state, action) => {
                 state.description = Kontext.updateFormValue(
                     state.description,
@@ -106,8 +106,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof TTActions.FilterWholeSelection>(
-            TTActions.FilterWholeSelection.name,
+        this.addActionHandler(
+            TTActions.FilterWholeSelection,
             (state, action) => {
                 const newSelections:TextTypes.ExportedSelection = action.payload.selectedTypes;
                 state.liveattrsSelections = {
@@ -117,24 +117,24 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.ShowWidget>(
-            Actions.ShowWidget.name,
+        this.addActionHandler(
+            Actions.ShowWidget,
             (state, action) => {
                 state.isVisible = true;
                 this.refreshData(state);
             }
         );
 
-        this.addActionHandler<typeof Actions.HideWidget>(
-            Actions.HideWidget.name,
+        this.addActionHandler(
+            Actions.HideWidget,
             (state, action) => {
                 state.isVisible = false;
                 state.currentResult = null;
             }
         );
 
-        this.addActionHandler<typeof Actions.SetRatio>(
-            Actions.SetRatio.name,
+        this.addActionHandler(
+            Actions.SetRatio,
             (state, action) => {
                 this.updateRatio(
                     state,
@@ -159,8 +159,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SetRatioValidate>(
-            Actions.SetRatioValidate.name,
+        this.addActionHandler(
+            Actions.SetRatioValidate,
             (state, action) => {
                 const val = this.getRatio(state, action.payload.attrName, action.payload.attrValue);
                 if (val) {
@@ -174,8 +174,15 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SubmitTask>(
-            Actions.SubmitTask.name,
+        this.addActionHandler(
+            Actions.ClearResult,
+            (state, action) => {
+                state.currentResult = null;
+            }
+        )
+
+        this.addActionHandler(
+            Actions.SubmitTask,
             (state, action) => {
                 state.isBusy = true;
                 state.numOfErrors = 0;
@@ -186,12 +193,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                         if (!data.attrs || !data.ids) {
                             const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
                             this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
-                            const err = new Error(msgText);
+                            const error = new Error(msgText);
                             dispatch<typeof Actions.SubmitTaskDone>({
                                 name: Actions.SubmitTaskDone.name,
-                                error: err
+                                error
                             });
-                            this.pluginApi.showMessage('error', err);
+                            this.pluginApi.showMessage('error', error);
 
                         } else {
                             dispatch<typeof Actions.SubmitTaskDone>({
@@ -218,8 +225,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SubmitTaskDone>(
-            Actions.SubmitTaskDone.name,
+        this.addActionHandler(
+            Actions.SubmitTaskDone,
             (state, action) => {
                 state.isBusy = false;
                 if (!action.error) {
@@ -234,8 +241,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SubmitCreateSubcorpus>(
-            Actions.SubmitCreateSubcorpus.name,
+        this.addActionHandler(
+            Actions.SubmitCreateSubcorpus,
             (state, action) => {
                 state.isBusy = true;
                 validateSubcProps(
@@ -264,8 +271,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.CreateSubcorpusDone>(
-            Actions.CreateSubcorpusDone.name,
+        this.addActionHandler(
+            Actions.CreateSubcorpusDone,
             null,
             (state, action, dispatch) => {
                 state.isBusy = false;
@@ -279,20 +286,24 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
     /**
      * Parse attr value expression strings like
-     * "doc_txtype == 'LEI: journalism'"
+     * "doc.txtype == 'LEI: journalism'"
      * into elements: ['doc.txtype', 'LEI: journalism']
      *
      */
-    private parseServerExpression(ex:string):[string, string] {
-        const srch = /^([\w_]+)\s+==\s+'([^']+)'/.exec(ex);
+    private parseServerExpression(ex:string):[string, string]|[null, null] {
+        const srch = /^([\w_.]+)\s+==\s+'([^']+)'/.exec(ex);
         if (srch) {
-            return [srch[1].replace('_', '.'), srch[2]];
+            return tuple(srch[1], srch[2]);
         }
-        return [null, null];
+        return tuple(null, null);
     }
 
-    private importResults(shares:Array<SubcMixerExpression>,
-            sizeErrorRatio:number, data:Array<[string, number]>):Array<[string, number, boolean]> {
+    private importResults(
+        shares:Array<SubcMixerExpression>,
+        sizeErrorRatio:number,
+        data:Array<[string, number]>
+    ):Array<[string, number, boolean]> {
+
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(shares[idx].ratio.value) / 100;
             return Math.abs(v - userRatio) < sizeErrorRatio;
@@ -301,25 +312,32 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         // single ones. Here we assume that the conditions are split
         // in a way ensuring the sum of ratios for each key is actually 100%.
         let tmp:Array<[string, number]> = [];
-        data.forEach(([key, value]) => {
-            const srchIdx = List.findIndex(([v,]) => v === key, tmp);
-            if (srchIdx > -1) {
-                tmp[srchIdx] = tuple(key, tmp[srchIdx][1] + value);
+        List.forEach(
+            ([key, value]) => {
+                const srchIdx = List.findIndex(([v,]) => v === key, tmp);
+                if (srchIdx > -1) {
+                    tmp[srchIdx] = tuple(key, tmp[srchIdx][1] + value);
 
-            } else {
-                tmp.push(tuple(key, value));
-            }
-        });
-
+                } else {
+                    tmp.push(tuple(key, value));
+                }
+            },
+            data
+        );
         const mappedData:Array<[string, number, boolean]> = pipe(
             tmp,
-            List.map((item:[string, number]) => {
-                const ans = this.parseServerExpression(item[0]);
-                return {
-                    data: item,
-                    sharesIdx: shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
-                };
-            }),
+            List.map(
+                (item:[string, number]) => {
+                    const [attrName, attrValue] = this.parseServerExpression(item[0]);
+                    return {
+                        data: item,
+                        sharesIdx: List.findIndex(
+                            x => x.attrName === attrName && x.attrValue === attrValue && !x.zeroFixed,
+                            shares
+                        )
+                    };
+                }
+            ),
             List.filter(x => x.sharesIdx > - 1 && !shares[x.sharesIdx].zeroFixed),
             List.map((item, _) => tuple(
                 item.data[0],
@@ -357,7 +375,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         for (let k in sums) {
             if (sums[k] !== 100) {
                 return rxThrowError(new Error(this.pluginApi.translate(
-                    'ucnk_subcm__ratios_cannot_over_100_{struct_name}{over_val}',
+                    'subcmixer__ratios_cannot_over_100_{struct_name}{over_val}',
                     {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
             }
         }
@@ -419,7 +437,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         if (/^(\d*\.\d+|\d+)$/.exec(ratio)) {
             return null;
         }
-        return new Error(this.pluginApi.translate('ucnk_subcm__invalid_value'));
+        return new Error(this.pluginApi.translate('subcmixer__invalid_value'));
     }
 
     private getRatio(state:SubcMixerModelState, attrName:string, attrValue:string):Kontext.FormValue<string>|undefined {
