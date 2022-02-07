@@ -276,22 +276,6 @@ export class Actions {
         name: 'FREQ_CHARTS_SET_PARAMETERS'
     };
 
-    static FreqChartsPieSetMaxIndividualItems:Action<{
-        sourceId:string;
-        value:string;
-        debouncedFor?:boolean;
-    }> = {
-        name: 'FREQ_CHARTS_PIE_SET_MAX_INDIVIDUAL_ITEMS'
-    }
-
-    // this action is currently just for triggering change in model
-    // (as we don't actually need different data from server when changing the value)
-    static FreqChartsPieSetMaxIndividualItemsDone:Action<{
-        sourceId:string;
-    }> = {
-        name: 'FREQ_CHARTS_PIE_SET_MAX_INDIVIDUAL_ITEMS_DONE'
-    }
-
     static FreqChartsSetDownloadFormat:Action<{
         sourceId:string;
         format:ChartExportFormat;
