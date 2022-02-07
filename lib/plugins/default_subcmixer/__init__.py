@@ -16,7 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
-from abc import ABC
 from collections import defaultdict
 import struct
 from typing import Any, Dict, List
@@ -155,7 +154,7 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
             return ans
 
         else:
-            raise ResultNotFoundException('ucnk_subcm__failed_to_find_suiteable_mix')
+            raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
 
     def export_actions(self):
         return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}
