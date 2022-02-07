@@ -71,7 +71,7 @@ export type FreqChartsAvailableOrder = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'
 
 export type FreqChartsAvailableData = 'freq'|'rel';
 
-export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter'|'pie';
+export type FreqChartsAvailableTypes = 'bar'|'cloud'|'timeline'|'timescatter';
 
 
 export function alphaToCoeffFormatter (he:ComponentHelpers) {
