@@ -175,6 +175,13 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         );
 
         this.addActionHandler(
+            Actions.ClearResult,
+            (state, action) => {
+                state.currentResult = null;
+            }
+        )
+
+        this.addActionHandler(
             Actions.SubmitTask,
             (state, action) => {
                 state.isBusy = true;
@@ -186,12 +193,12 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                         if (!data.attrs || !data.ids) {
                             const [msgType, msgText] = data.messages[0] || ['error', 'global__unknown_error'];
                             this.pluginApi.showMessage(msgType, this.pluginApi.translate(msgText));
-                            const err = new Error(msgText);
+                            const error = new Error(msgText);
                             dispatch<typeof Actions.SubmitTaskDone>({
                                 name: Actions.SubmitTaskDone.name,
-                                error: err
+                                error
                             });
-                            this.pluginApi.showMessage('error', err);
+                            this.pluginApi.showMessage('error', error);
 
                         } else {
                             dispatch<typeof Actions.SubmitTaskDone>({
@@ -275,26 +282,28 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 }
             }
         );
-
-        this.DEBUG_logActions();
     }
 
     /**
      * Parse attr value expression strings like
-     * "doc_txtype == 'LEI: journalism'"
+     * "doc.txtype == 'LEI: journalism'"
      * into elements: ['doc.txtype', 'LEI: journalism']
      *
      */
-    private parseServerExpression(ex:string):[string, string] {
-        const srch = /^([\w_]+)\s+==\s+'([^']+)'/.exec(ex);
+    private parseServerExpression(ex:string):[string, string]|[null, null] {
+        const srch = /^([\w_.]+)\s+==\s+'([^']+)'/.exec(ex);
         if (srch) {
-            return [srch[1].replace('_', '.'), srch[2]];
+            return tuple(srch[1], srch[2]);
         }
-        return [null, null];
+        return tuple(null, null);
     }
 
-    private importResults(shares:Array<SubcMixerExpression>,
-            sizeErrorRatio:number, data:Array<[string, number]>):Array<[string, number, boolean]> {
+    private importResults(
+        shares:Array<SubcMixerExpression>,
+        sizeErrorRatio:number,
+        data:Array<[string, number]>
+    ):Array<[string, number, boolean]> {
+
         const evalDist = (v, idx) => {
             const userRatio = parseFloat(shares[idx].ratio.value) / 100;
             return Math.abs(v - userRatio) < sizeErrorRatio;
@@ -303,25 +312,32 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         // single ones. Here we assume that the conditions are split
         // in a way ensuring the sum of ratios for each key is actually 100%.
         let tmp:Array<[string, number]> = [];
-        data.forEach(([key, value]) => {
-            const srchIdx = List.findIndex(([v,]) => v === key, tmp);
-            if (srchIdx > -1) {
-                tmp[srchIdx] = tuple(key, tmp[srchIdx][1] + value);
+        List.forEach(
+            ([key, value]) => {
+                const srchIdx = List.findIndex(([v,]) => v === key, tmp);
+                if (srchIdx > -1) {
+                    tmp[srchIdx] = tuple(key, tmp[srchIdx][1] + value);
 
-            } else {
-                tmp.push(tuple(key, value));
-            }
-        });
-
+                } else {
+                    tmp.push(tuple(key, value));
+                }
+            },
+            data
+        );
         const mappedData:Array<[string, number, boolean]> = pipe(
             tmp,
-            List.map((item:[string, number]) => {
-                const ans = this.parseServerExpression(item[0]);
-                return {
-                    data: item,
-                    sharesIdx: shares.findIndex(x => x.attrName === ans[0] && x.attrValue === ans[1] && !x.zeroFixed)
-                };
-            }),
+            List.map(
+                (item:[string, number]) => {
+                    const [attrName, attrValue] = this.parseServerExpression(item[0]);
+                    return {
+                        data: item,
+                        sharesIdx: List.findIndex(
+                            x => x.attrName === attrName && x.attrValue === attrValue && !x.zeroFixed,
+                            shares
+                        )
+                    };
+                }
+            ),
             List.filter(x => x.sharesIdx > - 1 && !shares[x.sharesIdx].zeroFixed),
             List.map((item, _) => tuple(
                 item.data[0],

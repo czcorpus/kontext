@@ -145,7 +145,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         ratioLimit:number;
 
     }> = (props) => {
-
+        console.log('xxx: ', props.currentResult)
         return (
             <table className="data subcmixer-ratios">
                 <tbody>
@@ -156,8 +156,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         <th>{he.translate('subcmixer__ratios_th_required_ratio')}</th>
                         <th>{he.translate('subcmixer__ratios_th_calculated_ratio')}</th>
                     </tr>
-                    {props.items.map((item, i) => (
-                        <ValueShare key={i}
+                    {List.map(
+                        (item, i) => <ValueShare key={i}
                                 rowId={i + 1}
                                 attrName={item.attrName}
                                 hasResults={props.hasResults}
@@ -165,8 +165,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 baseRatio={item.baseRatio}
                                 ratio={item.ratio}
                                 result={props.currentResult ? props.currentResult.attrs[i] : null}
-                                ratioLimit={props.ratioLimit} />
-                    ))}
+                                ratioLimit={props.ratioLimit} />,
+                        props.items
+                    )}
                 </tbody>
             </table>
         );
