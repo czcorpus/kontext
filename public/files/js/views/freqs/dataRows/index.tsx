@@ -35,6 +35,7 @@ interface DataTableProps {
     sortColumn:string;
     hasSkippedEmpty:boolean;
     sourceId:string;
+    displayConfidence:boolean;
 }
 
 
@@ -115,6 +116,7 @@ export function init(
     interface DataRowProps {
         data: ResultItem;
         monospaceCols: Array<boolean>;
+        displayConfidence: boolean;
     }
 
     const DataRow: React.FC<DataRowProps> = (props) => {
@@ -127,25 +129,29 @@ export function init(
                 <td className="num">
                     {he.formatNumber(props.data.freq)}
                 </td>
-                <td className="bci">
-                    <span className="bracket">[</span>
-                    {prettifyNumber(props.data.freqConfidence[0])}
-                    <span className="separ">,{'\u00a0'}</span>
-                    {prettifyNumber(props.data.freqConfidence[1])}
-                    <span className="bracket">]</span>
-                </td>
+                {props.displayConfidence ?
+                    <td className="bci">
+                        <span className="bracket">[</span>
+                        {prettifyNumber(props.data.freqConfidence[0])}
+                        <span className="separ">,{'\u00a0'}</span>
+                        {prettifyNumber(props.data.freqConfidence[1])}
+                        <span className="bracket">]</span>
+                    </td> :
+                    null }
                 <td className="num">
                     {prettifyNumber(props.data.rel)}
                 </td>
-                <td className="bci">
-                    <span className="bracket">[</span>
-                    <span className="val">
-                        {prettifyNumber(props.data.relConfidence[0])}
-                        <span className="separ">,{'\u00a0'}</span>
-                        {prettifyNumber(props.data.relConfidence[1])}
-                    </span>
-                    <span className="bracket">]</span>
-                </td>
+                {props.displayConfidence ?
+                    <td className="bci">
+                        <span className="bracket">[</span>
+                        <span className="val">
+                            {prettifyNumber(props.data.relConfidence[0])}
+                            <span className="separ">,{'\u00a0'}</span>
+                            {prettifyNumber(props.data.relConfidence[1])}
+                        </span>
+                        <span className="bracket">]</span>
+                    </td> :
+                    null }
             </S.DataRowTR>
         );
     };
@@ -159,6 +165,7 @@ export function init(
         sortColumn:string;
         alphaLevel:Maths.AlphaLevel;
         sourceId:string;
+        displayConfidence:boolean;
     }
 
     const TableColHead:React.FC<TableColHeadProps> = (props) => {
@@ -199,10 +206,12 @@ export function init(
                 <th key={props.data.n} title={props.data.s || ''}>
                     {renderSortingIcon()}
                 </th>
-                <th>
-                    {props.data.n}{'\u00a0'}
-                    ({he.translate('freq__binom_conf_interval_hd')}, {alphaToCoeff(props.alphaLevel)}% Cl)
-                </th>
+                {props.displayConfidence ?
+                    <th>
+                        {props.data.n}{'\u00a0'}
+                        ({he.translate('freq__binom_conf_interval_hd')}, {alphaToCoeff(props.alphaLevel)}% Cl)
+                    </th> :
+                    null }
             </>;
         }
         return (
@@ -221,7 +230,7 @@ export function init(
         const renderRows = () => {
             const monospaceCols = List.map(v => v.isPosTag, props.head)
             return List.map(
-                item => <DataRow key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols} />,
+                item => <DataRow key={`${item.Word}:${item.idx}`} data={item} monospaceCols={monospaceCols} displayConfidence={props.displayConfidence} />,
                 props.rows
             );
         };
@@ -239,7 +248,8 @@ export function init(
                                             sortColumn={props.sortColumn}
                                             data={item}
                                             sourceId={props.sourceId}
-                                            alphaLevel={props.alphaLevel} />
+                                            alphaLevel={props.alphaLevel}
+                                            displayConfidence={props.displayConfidence} />
                                 ),
                                 props.head
                             )}

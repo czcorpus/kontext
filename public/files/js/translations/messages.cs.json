@@ -773,6 +773,7 @@
         "freq__pie_other_group_label": "(ostatní)",
         "freq__download_chart": "stáhnout graf",
         "freq__main_help_box_hd": "Nápověda - frekvenční seznam",
+        "freq__confidence_toggle": "Zobrazit konfidenční intervaly",
         "user__password_change": "Změna hesla",
         "user__new_password": "Nové heslo",
         "user__new_password_again": "Nové heslo (znovu)",

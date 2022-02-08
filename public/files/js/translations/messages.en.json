@@ -773,6 +773,7 @@
         "freq__download_chart": "download the chart",
         "freq__binom_conf_interval_hd": "interval estimation",
         "freq__main_help_box_hd": "Help - frequency list",
+        "freq__confidence_toggle": "Display confidence intervals",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",

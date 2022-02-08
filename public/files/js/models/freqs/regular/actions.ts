@@ -94,6 +94,12 @@ export class Actions {
         return a.name === Actions.ResultSetCurrentPage.name;
     }
 
+    static ToggleDisplayConfidence:Action<{
+        value:boolean;
+    }> = {
+        name: 'FREQ_RESULT_TOGGLE_DISPLAY_CONFIDENCE'
+    };
+
     static ResultCloseSaveForm:Action<{
     }> = {
         name: 'FREQ_RESULT_CLOSE_SAVE_FORM'

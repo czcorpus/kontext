@@ -24,9 +24,9 @@ import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import {
-    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
-    recalculateConfIntervals,
-    ResultBlock, validateNumber } from './common';
+    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader,
+    FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    recalculateConfIntervals, ResultBlock, validateNumber } from './common';
 import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
@@ -52,6 +52,7 @@ export interface FreqDataRowsModelArgs {
 
 export interface FreqDataRowsModelState extends BaseFreqModelState {
     saveFormActive:boolean;
+    displayConfidence:boolean;
 }
 
 function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
@@ -200,7 +201,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 ),
                 isActive: true,
                 saveFormActive: false,
-                alphaLevel: Maths.AlphaLevel.LEVEL_5
+                alphaLevel: Maths.AlphaLevel.LEVEL_5,
+                displayConfidence: false,
             }
         );
         this.pageModel = pageModel;
@@ -232,7 +234,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             }
         );
 
-        this.addActionHandler>(
+        this.addActionHandler(
             MainMenuActions.ShowSaveForm,
             (state, action) => {state.saveFormActive = true}
         );
@@ -241,6 +243,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultCloseSaveForm,
             (state, action) => {
                 state.saveFormActive = false;
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ToggleDisplayConfidence,
+            (state, action) => {
+                state.displayConfidence = action.payload.value;
             }
         );
 
@@ -401,7 +410,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 1)) {
                         this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                            this.freqLoader.loadPage(
+                                this.getSubmitArgs(state, action.payload.sourceId)
+                            ),
                             state,
                             dispatch,
                             true
