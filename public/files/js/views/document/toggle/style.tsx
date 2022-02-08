@@ -25,6 +25,9 @@ import toggleOnImg from '../../../../img/toggle_on.svg';
 import toggleOffImg from '../../../../img/toggle_off.svg';
 import toggleOff1Img from '../../../../img/toggle_off_1.svg';
 import toggleOff2Img from '../../../../img/toggle_off_2.svg';
+import { preloadImages } from '../../theme/default';
+
+preloadImages(toggleOffImg, toggleOff1Img, toggleOff2Img, toggleOnImg);
 
 const switchingOn = keyframes`
     0%, 50% {

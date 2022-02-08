@@ -22,6 +22,19 @@ import styled from 'styled-components';
 import {keyframes} from 'styled-components';
 import backgroundSrc from '../../../../img/groovepaper2.jpg';
 
+export function preloadImages(...images) {
+    if (window['preloadedImages'] === undefined) window['preloadedImages'] = {};
+    images.forEach(src => {
+        if (window['preloadedImages'][src] === undefined) {
+            const img = new Image();
+            img.src = src;
+            window['preloadedImages'][src] = img;
+        }
+    })
+}
+
+preloadImages(backgroundSrc);
+
 export const mediaPhone = '@media screen and (max-width: 479px)';
 export const mediaTablet = '@media screen and (max-width: 1200px), screen and (orientation:portrait)';
 
