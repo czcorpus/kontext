@@ -259,6 +259,15 @@ export function init(
             });
         }
 
+        const handleConfidenceToggle = (checked:boolean) => {
+            dispatcher.dispatch<typeof Actions.ToggleDisplayConfidence>({
+                name: Actions.ToggleDisplayConfidence.name,
+                payload: {
+                    value: checked
+                }
+            });
+        }
+
         return (
             <S.FreqResultView>
                 <FilterForm minFreqVal={props.flimit} alphaLevel={props.alphaLevel} />
@@ -276,6 +285,15 @@ export function init(
                         <chartViews.FreqChartsView />
                     </div>
                     <div className="FreqResultView">
+                        <S.TableViewToolbar>
+                            <span>
+                                <label htmlFor="display-confidence">{he.translate('freq__confidence_toggle')}</label>
+                                <globalComponents.ToggleSwitch
+                                    id="display-confidence"
+                                    checked={props.displayConfidence}
+                                    onChange={handleConfidenceToggle} />
+                            </span>
+                        </S.TableViewToolbar>
                         {pipe(
                             props.data,
                             Dict.toEntries(),
@@ -298,7 +316,8 @@ export function init(
                                                         rows={block.Items}
                                                         hasSkippedEmpty={block.SkippedEmpty}
                                                         sourceId={sourceId}
-                                                        alphaLevel={props.alphaLevel} />
+                                                        alphaLevel={props.alphaLevel}
+                                                        displayConfidence={props.displayConfidence} />
                                             </div>
                                             {props.saveFormActive ?
                                                 <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :

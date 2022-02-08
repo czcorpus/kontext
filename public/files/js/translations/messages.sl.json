@@ -778,6 +778,7 @@
         "freq__download_chart": "download the chart UNTRANSLATED",
         "freq__binom_conf_interval_hd": "interval estimation UNTRANSLATED",
         "freq__main_help_box_hd": "Help - frequency list UNTRANSLATED",
+        "freq__confidence_toggle": "Display confidence intervals UNTRANSLATED",
         "user__password_change": "Sprememba gesla",
         "user__new_password": "Novo geslo",
         "user__new_password_again": "Potrditev novega gesla",
