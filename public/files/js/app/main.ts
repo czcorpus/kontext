@@ -28,7 +28,6 @@ import { L10n } from './l10n';
 import { UserSettings } from './userSettings';
 import { AppNavigation } from './navigation';
 import { ActionDispatcher } from 'kombo';
-import { Dict, List } from 'cnc-tskit';
 import { IPluginApi } from '../types/plugins/common';
 
 
