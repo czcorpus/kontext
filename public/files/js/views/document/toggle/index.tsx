@@ -25,6 +25,11 @@ import * as CoreViews from '../../../types/coreViews';
 import * as S from './style';
 import { Keyboard } from 'cnc-tskit';
 
+import toggleOnImg from '../../../../img/toggle_on.svg';
+import toggleOffImg from '../../../../img/toggle_off.svg';
+import toggleOff1Img from '../../../../img/toggle_off_1.svg';
+import toggleOff2Img from '../../../../img/toggle_off_2.svg';
+
 
 
 export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews.ToggleSwitch.Props, CoreViews.ToggleSwitch.State> {
@@ -39,6 +44,19 @@ export function init(he:Kontext.ComponentHelpers):React.ComponentClass<CoreViews
             }
             this.clickHandler = this.clickHandler.bind(this);
             this.keyHandler = this.keyHandler.bind(this);
+        }
+
+        componentDidMount(): void {
+            if (window['preloadedImages'] === undefined) {
+                window['preloadedImages'] = {};
+            }
+            [toggleOffImg, toggleOff1Img, toggleOff2Img, toggleOnImg].forEach(image => {
+                if (window['preloadedImages'][image] === undefined) {
+                    const img = new Image();
+                    img.src = image;
+                    window['preloadedImages'][image] = img;
+                }
+            });
         }
 
         componentDidUpdate(prevProps) {
