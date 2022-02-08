@@ -16,7 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Any, Dict, List, TypedDict, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
 from collections import defaultdict
 import json
 import struct

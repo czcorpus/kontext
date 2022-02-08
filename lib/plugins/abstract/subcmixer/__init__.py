@@ -20,7 +20,11 @@ plug-in which provides input arguments used by 'subcmixer'.
 """
 
 import abc
-from typing import List, Optional, TypeVar, TypedDict, Generic
+from typing import List, Optional, Generic, TypeVar
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
 from corplib.corpus import AbstractKCorpus
 from controller.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
