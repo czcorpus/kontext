@@ -330,7 +330,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
             return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
 
-    def _find_attrs(self, cursor: MySQLCursor, corpus_id: str, search: StructAttr, values: List[str], fill: List[StructAttr]) -> None:
+    def _find_attrs(
+            self, cursor: MySQLCursor, corpus_id: str, search: StructAttr, values:
+            List[str], fill: List[StructAttr]):
         if len(values) == 0:
             cursor.execute('SELECT 1 FROM dual WHERE false')
         else:
@@ -368,19 +370,19 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
         return ans
 
-    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+    def fill_attrs(self, corpus_id, search, values, fill):
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
-
         ans = {}
-        with self.integ_db.cursor() as cursor:
-            cursor = self._find_attrs(corpus_id, search_structattr, values, [
-                search_structattr, *fill_structattrs])
-            for row in cursor:
-                data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
-                ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
 
-        return {'data': ans}
+        with self.integ_db.cursor() as cursor:
+            self._find_attrs(
+                cursor=cursor, corpus_id=corpus_id, search=search_structattr, values=values,
+                fill=[search_structattr, *fill_structattrs])
+            for row in cursor:
+                data: Dict[str, str] = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+                ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
+        return dict(data=ans)
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB, plugins.runtime.INTEGRATION_DB)
