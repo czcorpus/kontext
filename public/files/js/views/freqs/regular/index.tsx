@@ -293,6 +293,13 @@ export function init(
                                     checked={props.displayConfidence}
                                     onChange={handleConfidenceToggle} />
                             </span>
+                            {props.displayConfidence ?
+                                null :
+                                <globalComponents.InlineHelp noSuperscript={true}
+                                            isWarning={true} customStyle={{width: '15em'}}>
+                                    {he.translate('freq__hidden_ci_warning')}
+                                </globalComponents.InlineHelp>
+                            }
                         </S.TableViewToolbar>
                         {pipe(
                             props.data,

@@ -230,6 +230,10 @@ export const MLMoveLevelControl = styled.div`
 // ---------------- <TableViewToolbar /> --------------------------------------
 
 export const TableViewToolbar = styled.div`
+
+    display: flex;
+    align-items: center;
+
     .ToggleSwitch {
         margin: 0 0.5em;
     }

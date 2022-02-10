@@ -310,20 +310,42 @@ export const TooltipBox = styled.section`
 
 export const InlineHelp = styled.span`
 
-    > span { // => noSuperscript === true
+    display: inline-flex;
+    align-items: center;
 
+    > sup { // => superscript mode
         display: inline-block;
-        height: 100%;
+        width: 0.8em;
+        height: 0.8em;
+        padding-left: 0.1em;
+        padding-right: 0.1em;
 
-        img {
-            width: 1em;
-            margin-top: 0.2em;
+        a.context-help {
+
             display: block;
-        }
+            padding: 0;
 
-        a {
-            display: flex;
-            align-items: center;
+            img {
+                display: block;
+                width: 100%;
+            }
+        }
+    }
+
+    > span { // => noSuperscript mode
+        width: 1em;
+        padding-left: 0.1em;
+        padding-right: 0.1em;
+
+        a.context-help {
+
+            display: block;
+            padding: 0;
+
+            img {
+                display: block;
+                width: 100%;
+            }
         }
     }
 

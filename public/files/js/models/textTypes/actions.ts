@@ -196,9 +196,4 @@ export class Actions {
     }> = {
         name: 'TT_SET_ATTR_SUMMARY'
     };
-
-    static ToggleMetaInfoView:Action<{
-    }> = {
-        name: 'TT_TOGGLE_META_INFO_VIEW'
-    };
 }

@@ -20,9 +20,34 @@
 
 
 export interface Props {
+    /**
+     * The content to be shown inside a PopupBox when clicked.
+     */
     children:React.ReactNode;
+
+    /**
+     * If true then the icon is rather an exclamation mark (instead
+     * of the default question mark) and additional tooltips/mouseovers
+     * are also slightly different to match the "seriousness" of the message.
+     */
+    isWarning?:boolean;
+
+    /**
+     * By default the icon is displayed within the <sup> element. This
+     * setting can switch it to a standard <span>.
+     */
     noSuperscript?:boolean;
+
+    /**
+     * Custom style for the PopupBox (this is directly passed to its
+     * customStyle property)
+     */
     customStyle?:{[key:string]:string};
+
+    /**
+     * If defined, then the widget also displays a clickable link
+     * (typically for more detailed info)
+     */
     url?:string;
 }
 
@@ -30,4 +55,4 @@ export interface State {
     helpVisible:boolean;
 }
 
-export type Component = React.ComponentClass<Props>;
+export type Component = React.FC<Props>;

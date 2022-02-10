@@ -574,18 +574,6 @@ export const GlobalStyle = createGlobalStyle`
         font-size: 130%;
     }
 
-    a.context-help {
-        text-decoration: none;
-        padding: 0 0 0 0.2em;
-    }
-
-    a.context-help img {
-        display: inline-block;
-        vertical-align: top;
-        width: 0.6em;
-        padding-bottom: 0.1em;
-    }
-
     a.util-button,
     button.util-button {
         display: inline-block;

@@ -303,9 +303,6 @@ export function init(
                 <div className="progress-info">
                     <div>
                         {utils.translate('global__calculating')}
-                        <a className="context-help">
-                            <img src={utils.createStaticUrl('img/question-mark.svg')} />
-                        </a>
                     </div>
                     <div id="progress_scale">
                         <div id="processbar" style={{width: `${props.status}%`}} />
