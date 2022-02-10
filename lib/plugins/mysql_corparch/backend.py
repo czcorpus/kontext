@@ -20,6 +20,7 @@
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
+from plugins.abstract.auth import CorpusAccess
 from plugins.abstract.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 from mysql.connector.connection import MySQLConnection
@@ -347,7 +348,7 @@ class Backend(DatabaseBackend):
             (corpus_id,))
         return cursor.fetchall()
 
-    def corpus_access(self, user_id: str, corpus_id: str) -> Tuple[bool, bool, str]:
+    def corpus_access(self, user_id: str, corpus_id: str) -> CorpusAccess:
         cursor = self._db.cursor()
         cursor.execute('SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                        'FROM ( '

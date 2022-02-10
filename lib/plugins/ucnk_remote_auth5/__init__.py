@@ -26,6 +26,7 @@ produce another HTTP request).
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
+from typing import List
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -35,7 +36,7 @@ import ssl
 import logging
 
 import plugins
-from plugins.abstract.auth import AbstractRemoteAuth
+from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
@@ -187,13 +188,13 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
                 plugin_ctx.session['user'] = self.anonymous_user()
 
-    def corpus_access(self, user_dict, corpus_name):
+    def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
         _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
         return False, access, variant
 
-    def permitted_corpora(self, user_dict):
+    def permitted_corpora(self, user_dict) -> List[str]:
         """
         Fetches list of corpora available to the current user
 

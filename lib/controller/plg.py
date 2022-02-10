@@ -12,10 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional, Dict, Any, TypeVar, Union, TYPE_CHECKING
+from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
 from corplib.abstract import AbstractKCorpus
-from corplib.corpus import KCorpus, KSubcorpus
-from corplib.fallback import EmptyCorpus
 from werkzeug import Request
 from secure_cookie.session import Session
 from . import KonTextCookie

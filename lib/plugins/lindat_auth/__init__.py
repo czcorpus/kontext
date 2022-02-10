@@ -9,11 +9,12 @@
 """
 import logging
 import os
+from typing import List
 import plugins
 from actions import corpora, user
 from controller import exposed
 from controller.errors import ImmediateRedirectException
-from plugins.abstract.auth import AbstractSemiInternalAuth
+from plugins.abstract.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
 from plugins.errors import PluginException
 from translation import ugettext as _
 
@@ -121,13 +122,13 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._sessions.delete(session)
         session.clear()
 
-    def corpus_access(self, user_dict, corpus_name):
+    def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         corpora = self.permitted_corpora(user_dict)
         if corpus_name in corpora:
             return False, True, ''
         return False, False, ''
 
-    def permitted_corpora(self, user_dict):
+    def permitted_corpora(self, user_dict) -> List[str]:
         """
         Returns a dictionary containing corpora IDs user can access.
 

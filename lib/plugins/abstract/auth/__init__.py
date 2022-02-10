@@ -12,7 +12,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
+from typing import Dict, Any, NamedTuple, Optional, Tuple, List, TYPE_CHECKING
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
 from secure_cookie.session import Session
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
@@ -21,6 +25,18 @@ if TYPE_CHECKING:
 import abc
 from translation import ugettext as _
 from controller.errors import CorpusForbiddenException, ImmediateRedirectException
+
+
+class UserInfo(TypedDict):
+    id: int
+    user: str
+    fullname: str
+
+
+class CorpusAccess(NamedTuple):
+    is_owner: bool
+    has_read_access: bool
+    corpus_variant: str
 
 
 class MetaAbstractAuth(abc.ABCMeta):
@@ -63,13 +79,13 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         """
         self._anonymous_id = anonymous_id
 
-    def anonymous_user(self) -> Dict[str, Any]:
+    def anonymous_user(self) -> UserInfo:
         """
         Returns a dictionary containing (key, value) pairs
         specifying anonymous user. By default it is ID = 0,
         user = 'anonymous', fullname = _('anonymous')
         """
-        return dict(
+        return UserInfo(
             id=self._anonymous_id,
             user='anonymous',
             fullname=_('anonymous'))
@@ -88,13 +104,13 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         return False
 
     @abc.abstractmethod
-    def corpus_access(self, user_dict: Dict[str, Any], corpus_name: str) -> Tuple[bool, bool, str]:
+    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
         """
         Return a 3-tuple (is owner, has read access, corpus variant)
         """
 
     @abc.abstractmethod
-    def permitted_corpora(self, user_dict: Dict[str, Any]) -> List[str]:
+    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         """
         Return a list of corpora accessible by a user
 
@@ -104,7 +120,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
                      of AbstractRemoteAuth implementations).
         """
 
-    def validate_access(self, corpus_name: str, user_dict: Dict[str, Any]) -> Tuple[bool, str]:
+    def validate_access(self, corpus_name: str, user_dict: UserInfo) -> Tuple[bool, str]:
         """
         returns a 2-tuple ( "has access?", accessible variant )
         """
@@ -130,7 +146,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             raise ImmediateRedirectException(plugin_ctx.create_url('corpora/corplist', {}))
 
     @abc.abstractmethod
-    def get_user_info(self, plugin_ctx: 'PluginCtx') -> Dict[str, Any]:
+    def get_user_info(self, plugin_ctx: 'PluginCtx') -> UserInfo:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
@@ -150,7 +166,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
 class AbstractSemiInternalAuth(AbstractAuth):
 
     @abc.abstractmethod
-    def validate_user(self, plugin_ctx: 'PluginCtx', username: str, password: str) -> Dict[str, Any]:
+    def validate_user(self, plugin_ctx: 'PluginCtx', username: str, password: str) -> UserInfo:
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
