@@ -31,9 +31,9 @@ import logging
 from collections import defaultdict
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-from typing import Union
+from typing import List, Union
 
-from plugins.abstract.auth import AbstractInternalAuth, AuthException, SignUpNeedsUpdateException
+from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException, UserInfo
 from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from plugins.abstract.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
@@ -141,19 +141,19 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def _variant_prefix(corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
-    def corpus_access(self, user_dict, corpus_name):
+    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
         cursor = self.db.cursor()
         cursor.execute(
             'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-            'FROM ' 
+            'FROM '
             '  (SELECT c.name, gr.limited '
             '   FROM kontext_corpus AS c '
             '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
             '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
             '   WHERE ku.id = %s AND c.name = %s '
-            '   UNION ' 
+            '   UNION '
             '   SELECT c.name, ucr.limited '
             '   FROM kontext_corpus AS c '
             '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
@@ -165,7 +165,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
-    def permitted_corpora(self, user_dict):
+    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         cursor = self.db.cursor()
         cursor.execute(
             'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
@@ -193,7 +193,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def get_user_info(self, plugin_ctx):
         cursor = self.db.cursor()
         cursor.execute(
-            'SELECT id, username, firstname, lastname, email ' 
+            'SELECT id, username, firstname, lastname, email '
             'FROM kontext_user '
             'WHERE id = %s', (plugin_ctx.user_id, ))
         return cursor.fetchone()
@@ -343,7 +343,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
                      token.pwd_hash, token.email, token.affiliation))
                 for corp in self._on_register_get_corpora:
                     cursor.execute(
-                        'INSERT INTO kontext_user_access (user_id, corpus_name, limited) ' 
+                        'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
                         'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
                 token.delete(self.db)
                 self.db.commit()

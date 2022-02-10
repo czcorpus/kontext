@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Iterable, List, Any, Tuple, Dict, Optional
+from plugins.abstract.auth import CorpusAccess
 from plugins.abstract.corparch.corpus import TagsetInfo
 from plugins.abstract.corparch.install import InstallJson
 from plugins.abstract.corparch.registry import RegistryConf
@@ -119,7 +120,7 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def corpus_access(self, user_id: int, corpus_id: str) -> Tuple[bool, bool, str]:
+    def corpus_access(self, user_id: int, corpus_id: str) -> CorpusAccess:
         pass
 
     @abc.abstractmethod

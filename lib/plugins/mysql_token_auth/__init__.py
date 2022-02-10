@@ -26,11 +26,7 @@ very secure.
 required xml conf: please see ./config.rng
 """
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
+from typing import Any, Dict, List, Optional
 
 from dataclasses import dataclass
 import hashlib
@@ -40,7 +36,7 @@ from mysql.connector.cursor import MySQLCursor
 from controller.plg import PluginCtx
 
 import plugins
-from plugins.abstract.auth import AbstractRemoteAuth
+from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 from plugins.abstract.integration_db import IntegrationDatabase
 
 
@@ -50,12 +46,6 @@ class ApiTokenZone:
     user_id: int
     user_info: str
     corpora: Dict[str, str]  # normalized name => full name
-
-
-class UserInfo(TypedDict):
-    id: int
-    username: str
-    fullname: str
 
 
 class TokenAuth(AbstractRemoteAuth):
@@ -74,21 +64,6 @@ class TokenAuth(AbstractRemoteAuth):
         self._db = db
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
-
-        self._zones = {}
-        for zone in zones:
-            norm_corpora = {}
-            for corp in zone.get('corpora', []):
-                tmp = corp.split('/')
-                if len(tmp) == 2:
-                    norm_corpora[tmp[1].lower()] = tmp[0]
-                else:
-                    norm_corpora[tmp[0].lower()] = None
-            self._zones[zone['api_key']] = ApiTokenZone(
-                user_id=zone['user_id'],
-                user_info=zone.get('user_info', 'User {}'.format(zone['user_id'])),
-                api_key=zone['api_key'],
-                corpora=norm_corpora)
 
     def anonymous_user(self) -> UserInfo:
         return UserInfo(
@@ -109,7 +84,7 @@ class TokenAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id: int) -> bool:
         return False
 
-    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> Tuple[bool, bool, str]:
+    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
         zone = self._find_user(user_dict['id'])
         if zone is None or corpus_id not in zone.corpora:
             return False, False, ''
@@ -174,7 +149,7 @@ class TokenAuth(AbstractRemoteAuth):
                 WHERE t1.value = %s AND
                       t1.user_id = %s AND
                       t1.active = 1 AND
-                      t1.valid_until >= %s            
+                      t1.valid_until >= %s
             ''', (api_key, user_id, datetime.now()))
             return list(cursor.fetchone()['corpora'].split(','))
 

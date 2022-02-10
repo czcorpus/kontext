@@ -26,10 +26,10 @@ very secure.
 required xml conf: please see ./config.rng
 """
 import hashlib
-from plugins.abstract.auth import AbstractRemoteAuth
+from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 import plugins
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -64,8 +64,8 @@ class StaticAuth(AbstractRemoteAuth):
                 api_key=zone['api_key'],
                 corpora=norm_corpora)
 
-    def anonymous_user(self):
-        return dict(
+    def anonymous_user(self) -> UserInfo:
+        return UserInfo(
             id=self._anonymous_id,
             username='unauthorized',
             fullname='Unauthorized user')
@@ -82,7 +82,7 @@ class StaticAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id):
         return False
 
-    def corpus_access(self, user_dict, corpus_id):
+    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
         zone = self._find_user(user_dict['id'])
         if zone is None:
             return False, False, []
@@ -90,7 +90,7 @@ class StaticAuth(AbstractRemoteAuth):
             return False, False, ''
         return False, True, zone.corpora[corpus_id]
 
-    def permitted_corpora(self, user_dict):
+    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
             return []
         else:
