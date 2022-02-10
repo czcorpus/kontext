@@ -122,13 +122,13 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._sessions.delete(session)
         session.clear()
 
-    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
+    def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         corpora = self.permitted_corpora(user_dict)
         if corpus_name in corpora:
             return False, True, ''
         return False, False, ''
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    def permitted_corpora(self, user_dict) -> List[str]:
         """
         Returns a dictionary containing corpora IDs user can access.
 

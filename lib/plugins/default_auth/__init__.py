@@ -27,7 +27,7 @@ import time
 import datetime
 import mailing
 from collections import defaultdict
-from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException, UserInfo
+from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
 from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from .sign_up import SignUpToken
 from translation import ugettext as _
@@ -137,7 +137,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def _variant_prefix(corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
-    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
+    def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
         corpora = self.db.get(mk_list_key(user_dict['id']), [])
@@ -145,7 +145,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    def permitted_corpora(self, user_dict) -> List[str]:
         corpora = self.db.get(mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)

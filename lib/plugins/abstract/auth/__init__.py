@@ -29,7 +29,7 @@ from controller.errors import CorpusForbiddenException, ImmediateRedirectExcepti
 
 class UserInfo(TypedDict):
     id: int
-    username: str
+    user: str
     fullname: str
 
 

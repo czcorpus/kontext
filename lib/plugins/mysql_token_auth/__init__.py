@@ -40,17 +40,11 @@ from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 from plugins.abstract.integration_db import IntegrationDatabase
 
 
-@dataclass
-class ApiTokenZone:
-    api_key: str
-    user_id: int
-    user_info: str
-    corpora: Dict[str, str]  # normalized name => full name
+class ApiUserInfo(UserInfo):
+    api_key: Optional[str]
 
 
 class TokenAuth(AbstractRemoteAuth):
-
-    _zones: Dict[str, ApiTokenZone]
 
     def __init__(
         self,
@@ -65,18 +59,13 @@ class TokenAuth(AbstractRemoteAuth):
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
 
-    def anonymous_user(self) -> UserInfo:
-        return UserInfo(
+    def anonymous_user(self) -> ApiUserInfo:
+        return ApiUserInfo(
             id=self._anonymous_id,
-            username='unauthorized',
+            user='unauthorized',
             fullname='Unauthorized user',
+            api_key=None,
         )
-
-    def _find_user(self, user_id) -> Optional[ApiTokenZone]:
-        for item in self._zones.values():
-            if item.user_id == user_id:
-                return item
-        return None
 
     def is_anonymous(self, user_id: int) -> bool:
         return user_id == self._anonymous_id
@@ -84,24 +73,20 @@ class TokenAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id: int) -> bool:
         return False
 
-    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
-        zone = self._find_user(user_dict['id'])
-        if zone is None or corpus_id not in zone.corpora:
+    def corpus_access(self, user_dict: ApiUserInfo, corpus_id: str) -> CorpusAccess:
+        corpora = self._get_permitted_corpora(user_dict)
+        if corpus_id not in corpora:
             return False, False, ''
-        return False, True, zone.corpora[corpus_id]
+        return False, True, corpus_id
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    def permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
             return []
         else:
-            zone = self._find_user(user_dict['id'])
-            return list(zone.corpora.keys())
+            return self._get_permitted_corpora(user_dict)
 
-    def get_user_info(self, plugin_ctx: PluginCtx) -> Dict[str, Any]:
+    def get_user_info(self, plugin_ctx: PluginCtx) -> ApiUserInfo:
         return plugin_ctx.session['user']
-
-    def _hash_key(self, k) -> str:
-        return hashlib.sha256(k.encode()).hexdigest()
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:
         if self._api_key_cookie_name:
@@ -110,35 +95,40 @@ class TokenAuth(AbstractRemoteAuth):
         elif self._api_key_http_header:
             key = 'HTTP_{0}'.format(self._api_key_http_header.upper().replace('-', '_'))
             return plugin_ctx.get_from_environ(key)
+        return None
 
     def revalidate(self, plugin_ctx: PluginCtx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_ctx)
-        hash_key = self._hash_key(api_key)
-        if api_key and hash_key in self._zones:
-            zone = self._zones[hash_key]
+        if api_key:
+            user_info = self._find_user(api_key)
             if self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
-            plugin_ctx.session['user'] = UserInfo(
-                id=zone.user_id, user='api_user', fullname=zone.user_info)
+            if user_info is None:
+                plugin_ctx.session['user'] = self.anonymous_user()
+            else:
+                plugin_ctx.session['user'] = user_info
         else:
             if not self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = self.anonymous_user()
 
-    def _validate_api_token(self, api_key, user_id) -> bool:
+    def _find_user(self, api_key: str) -> Optional[UserInfo]:
         with self._db.cursor() as cursor:
             cursor.execute('''
-                SELECT COUNT(*) AS count
-                FROM kontext_api_token
+                SELECT t_token.user_id AS id, t_user.username, CONCAT_WS(" ", t_user.firstname, t_user.lastname) AS fullname
+                FROM kontext_api_token AS t_token
+                JOIN kontext_user AS t_user
                 WHERE value = %s AND
-                      user_id = %s AND
                       active = 1 AND
-                      valid_until > %s
-            ''', (api_key, user_id, datetime.now()))
-            return cursor.fetchone()['count'] == 1
+                      valid_until >= %s
+            ''', (api_key, datetime.now()))
+            data = cursor.fetchone()
+            if data is None:
+                return None
+            return UserInfo(data['id'], data['username'], data['fullname'], api_key)
 
-    def _get_permitted_corpora(self, api_key, user_id) -> List[str]:
+    def _get_permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
         with self._db.cursor() as cursor:
             cursor.execute('''
                 SELECT GROUP_CONCAT(t2.corpus_name SEPARATOR ',') AS corpora
@@ -150,7 +140,7 @@ class TokenAuth(AbstractRemoteAuth):
                       t1.user_id = %s AND
                       t1.active = 1 AND
                       t1.valid_until >= %s
-            ''', (api_key, user_id, datetime.now()))
+            ''', (user_dict['api_key'], user_dict['user_id'], datetime.now()))
             return list(cursor.fetchone()['corpora'].split(','))
 
 

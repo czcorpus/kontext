@@ -33,7 +33,7 @@ from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from typing import List, Union
 
-from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException, UserInfo
+from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
 from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from plugins.abstract.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
@@ -141,7 +141,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def _variant_prefix(corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
-    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
+    def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
         cursor = self.db.cursor()
@@ -165,7 +165,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    def permitted_corpora(self, user_dict) -> List[str]:
         cursor = self.db.cursor()
         cursor.execute(
             'SELECT guaccess.name, MAX(guaccess.limited) AS limited '

@@ -67,7 +67,7 @@ class StaticAuth(AbstractRemoteAuth):
     def anonymous_user(self) -> UserInfo:
         return UserInfo(
             id=self._anonymous_id,
-            username='unauthorized',
+            user='unauthorized',
             fullname='Unauthorized user')
 
     def _find_user(self, user_id) -> Optional[ApiTokenZone]:
