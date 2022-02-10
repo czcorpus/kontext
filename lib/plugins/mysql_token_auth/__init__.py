@@ -17,19 +17,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A simple auth for users with private API key.
-
-Please note that this is not intended for installation with many
-users as sharing a single token between many people is not
-very secure.
+An integration db token auth for users with private API keys.
 
 required xml conf: please see ./config.rng
+         mysql schema: please see ./scripts/schema.sql
 """
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-
-from dataclasses import dataclass
-import hashlib
+from typing import List, Optional
 
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
@@ -77,7 +71,7 @@ class TokenAuth(AbstractRemoteAuth):
         corpora = self._get_permitted_corpora(user_dict)
         if corpus_id not in corpora:
             return False, False, ''
-        return False, True, corpus_id
+        return False, True, ''
 
     def permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
@@ -90,7 +84,7 @@ class TokenAuth(AbstractRemoteAuth):
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:
         if self._api_key_cookie_name:
-            api_key_cookie = plugin_ctx.cookies.get('api_key')
+            api_key_cookie = plugin_ctx.cookies.get(self._api_key_cookie_name)
             return api_key_cookie.value if api_key_cookie else None
         elif self._api_key_http_header:
             key = 'HTTP_{0}'.format(self._api_key_http_header.upper().replace('-', '_'))
@@ -113,12 +107,12 @@ class TokenAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = self.anonymous_user()
 
-    def _find_user(self, api_key: str) -> Optional[UserInfo]:
+    def _find_user(self, api_key: str) -> Optional[ApiUserInfo]:
         with self._db.cursor() as cursor:
             cursor.execute('''
                 SELECT t_token.user_id AS id, t_user.username, CONCAT_WS(" ", t_user.firstname, t_user.lastname) AS fullname
                 FROM kontext_api_token AS t_token
-                JOIN kontext_user AS t_user
+                JOIN kontext_user AS t_user ON t_user.id = t_token.user_id
                 WHERE value = %s AND
                       active = 1 AND
                       valid_until >= %s
@@ -126,22 +120,22 @@ class TokenAuth(AbstractRemoteAuth):
             data = cursor.fetchone()
             if data is None:
                 return None
-            return UserInfo(data['id'], data['username'], data['fullname'], api_key)
+            return ApiUserInfo(
+                id=data['id'],
+                username=data['username'],
+                fullname=data['fullname'],
+                api_key=api_key,
+            )
 
     def _get_permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
         with self._db.cursor() as cursor:
             cursor.execute('''
-                SELECT GROUP_CONCAT(t2.corpus_name SEPARATOR ',') AS corpora
-                FROM kontext_api_token AS t1
-                JOIN kontext_api_token_corpus_access AS t2
-                ON t1.value = t2.token_value AND
-                   t1.user_id = t2.user_id
-                WHERE t1.value = %s AND
-                      t1.user_id = %s AND
-                      t1.active = 1 AND
-                      t1.valid_until >= %s
-            ''', (user_dict['api_key'], user_dict['user_id'], datetime.now()))
-            return list(cursor.fetchone()['corpora'].split(','))
+                SELECT GROUP_CONCAT(corpus_name SEPARATOR ',') AS corpora
+                FROM kontext_api_token_corpus_access
+                WHERE token_value = %s AND user_id = %s
+            ''', (user_dict['api_key'], user_dict['id']))
+            data = cursor.fetchone()
+            return [] if data['corpora'] is None else list(data['corpora'].split(','))
 
 
 @plugins.inject(plugins.runtime.INTEGRATION_DB)

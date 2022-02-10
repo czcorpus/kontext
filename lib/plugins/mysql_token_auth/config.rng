@@ -9,6 +9,9 @@
             <element name="anonymous_user_id">
                 <data type="nonNegativeInteger" />
             </element>
+            <element name="auth_cookie_name">
+                <text />
+            </element>
             <optional>
                 <element name="api_key_cookie_name">
                     <text />
