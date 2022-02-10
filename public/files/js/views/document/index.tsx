@@ -374,51 +374,51 @@ export function init(
 
     // ------------------------------ <InlineHelp /> -----------------------------
 
-    class InlineHelp extends React.Component<CoreViews.InlineHelp.Props, CoreViews.InlineHelp.State> {
+    const InlineHelp:React.FC<CoreViews.InlineHelp.Props> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._clickHandler = this._clickHandler.bind(this);
-            this.state = {helpVisible: false};
-        }
+        const [state, changeState] = React.useState<CoreViews.InlineHelp.State>({helpVisible: false});
 
-        _clickHandler() {
-            this.setState({helpVisible: !this.state.helpVisible});
-        }
+        const clickHandler = () => {
+            changeState({helpVisible: !state.helpVisible});
+        };
 
-        _renderLink() {
-            return <a className="context-help" onClick={this._clickHandler}
-                        title={he.translate('global__click_to_see_help')}>
-                <ImgWithMouseover
-                        htmlClass="over-img"
-                        src={he.createStaticUrl('img/question-mark.svg')}
-                        alt={he.translate('global__click_to_see_help')} />
-            </a>;
-        }
-
-        render() {
+        const renderLink = () => {
+            const label = props.isWarning ?
+                he.translate('global__click_to_see_more_info') :
+                he.translate('global__click_to_see_help');
             return (
-                <S.InlineHelp>
-                    {this.props.noSuperscript ?
-                        <span>{this._renderLink()}</span> :
-                        <sup>{this._renderLink()}</sup>
-                    }
-                    {this.state.helpVisible ?
-                            <PopupBox onCloseClick={this._clickHandler}
-                                    customStyle={this.props.customStyle}>
-                                {this.props.children}
-                                {this.props.url ?
-                                    <div className="link">
-                                        <hr />
-                                        <a href={this.props.url} target='_blank'>
-                                            {he.translate('global__get_more_info')}
-                                        </a>
-                                    </div> : null}
-                            </PopupBox>
-                            : null}
-                </S.InlineHelp>
+                <a className="context-help" onClick={clickHandler}
+                            title={label}>
+                    <ImgWithMouseover
+                        htmlClass="over-img"
+                        src={he.createStaticUrl(props.isWarning ? 'img/warning-icon.svg' : 'img/question-mark.svg')}
+                        src2={he.createStaticUrl(props.isWarning ? 'img/warning-icon.svg' : 'img/question-mark_s.svg')}
+                        alt={label} />
+                </a>
             );
-        }
+        };
+
+        return (
+            <S.InlineHelp>
+                {props.noSuperscript ?
+                    <span>{renderLink()}</span> :
+                    <sup>{renderLink()}</sup>
+                }
+                {state.helpVisible ?
+                        <PopupBox onCloseClick={clickHandler}
+                                customStyle={props.customStyle ? props.customStyle : null}>
+                            {props.children}
+                            {props.url ?
+                                <div className="link">
+                                    <hr />
+                                    <a href={props.url} target='_blank'>
+                                        {he.translate('global__get_more_info')}
+                                    </a>
+                                </div> : null}
+                        </PopupBox>
+                        : null}
+            </S.InlineHelp>
+        );
     }
 
     // ------------------------------ <Abbreviation /> -----------------------------------

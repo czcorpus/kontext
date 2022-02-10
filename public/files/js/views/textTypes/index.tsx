@@ -242,37 +242,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             return null;
         }
 
-        const metaInfoHelpClickHandler = () => {
-            dispatcher.dispatch<typeof Actions.ToggleMetaInfoView>({
-                name: Actions.ToggleMetaInfoView.name
-            });
-        }
-
-        const helpCloseHandler = () => {
-            dispatcher.dispatch<typeof Actions.ToggleMetaInfoView>({
-                name: Actions.ToggleMetaInfoView.name
-            });
-        }
-
         const renderMetaInfo = () => {
             if (props.metaInfo) {
                 return (
                     <span>
                         {props.metaInfo.text}
                         {'\u00A0'}
-                        <a className="context-help" onClick={metaInfoHelpClickHandler}>
-                            <layoutViews.ImgWithMouseover
-                                src={he.createStaticUrl('img/question-mark.svg')}
-                                htmlClass="over-img"
-                                alt="question-mark.svg"
-                                title={he.translate('global__alt_hint')} />
-                        </a>
-                        {props.metaInfoHelpVisible
-                            ? (<layoutViews.PopupBox onCloseClick={helpCloseHandler} status="info"
-                                        autoWidth={CoreViews.AutoWidth.NARROW}>
-                                {props.metaInfo.help}
-                                </layoutViews.PopupBox>)
-                            : null}
+                        <layoutViews.InlineHelp>
+                            {props.metaInfo.help}
+                        </layoutViews.InlineHelp>
                     </span>
                 );
 

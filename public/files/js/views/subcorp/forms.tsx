@@ -467,9 +467,11 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                             <tr>
                                 <th>
                                     {he.translate('subcform__set_as_public')}:
-                                    <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
-                                        <p>{he.translate('subcform__publication_notes')}</p>
-                                        <p>{he.translate('subcform__publication_notes_2')}</p>
+                                    <layoutViews.InlineHelp noSuperscript={false}>
+                                        <div style={{width: '20em'}}>
+                                            <p>{he.translate('subcform__publication_notes')}</p>
+                                            <p>{he.translate('subcform__publication_notes_2')}</p>
+                                        </div>
                                     </layoutViews.InlineHelp>
                                 </th>
                                 <td>
