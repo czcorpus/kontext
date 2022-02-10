@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from .kontext import Kontext
 from corplib import CorpusManager
 import settings
+from plugins.abstract.auth import UserInfo
 
 
 T = TypeVar('T')
@@ -80,7 +81,7 @@ class PluginCtx(object):
         return self._request.session.get('user', {'id': None}).get('id')
 
     @property
-    def user_dict(self) -> Dict[str, Any]:
+    def user_dict(self) -> UserInfo:
         return self._request.session.get('user', {'id': None})
 
     @property

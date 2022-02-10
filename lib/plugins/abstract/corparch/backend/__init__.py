@@ -127,7 +127,7 @@ class DatabaseBackend:
     def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         pass
 
-    def load_interval_attrs(self, corpus_id: str) -> List[str]:
+    def load_interval_attrs(self, corpus_id: str) -> List[Tuple[str, int]]:
         """
         Load structural attributes selectable via
         numeric range (typically - publication date).
