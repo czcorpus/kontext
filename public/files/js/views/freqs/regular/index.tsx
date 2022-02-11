@@ -296,7 +296,8 @@ export function init(
                             {props.displayConfidence ?
                                 null :
                                 <globalComponents.InlineHelp noSuperscript={true}
-                                            isWarning={true} customStyle={{width: '15em'}}>
+                                            isWarning={true} customStyle={{width: '15em'}}
+                                            url="https://wiki.korpus.cz/doku.php/pojmy:konfidencni_intervaly">
                                     {he.translate('freq__hidden_ci_warning')}
                                 </globalComponents.InlineHelp>
                             }
