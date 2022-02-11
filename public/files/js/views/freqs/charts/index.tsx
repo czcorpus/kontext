@@ -250,6 +250,7 @@ export function init(
 
         return <select value={format} onChange={onChange}>
             <option value="png">PNG</option>
+            <option value="png-print">PNG ({he.translate('freq__print_quality')})</option>
             <option value="svg">SVG</option>
         </select>;
     }

@@ -465,5 +465,5 @@ export enum ConcFormTypes {
     LGROUP = 'lgroup'
 }
 
-
-export type ChartExportFormat = 'png' | 'svg';
+// structured as `{file format}-{subformat}`
+export type ChartExportFormat = 'png' | 'svg' | 'png-print';

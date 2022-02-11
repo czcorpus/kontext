@@ -41,7 +41,7 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
             null,
             (state, action, dispatch) => {
                 this.layoutModel.bgDownload({
-                    filename: `${action.payload.filename}.${action.payload.format}`,
+                    filename: `${action.payload.filename}.${action.payload.format.split('-')[0]}`,
                     url: this.layoutModel.createActionUrl(
                         'tools/convert_chart_svg',
                         {
@@ -50,7 +50,7 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
                             vertBarChartMaxLabel: action.payload.vertBarChartMaxLabel
                         }
                     ),
-                    contentType: action.payload.format === 'png' ? 'image/png' : 'image/svg+xml',
+                    contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
                     type: DownloadType.CHART,
                     args: action.payload.blob
                 });
