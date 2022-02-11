@@ -42,6 +42,7 @@ import werkzeug.exceptions
 from werkzeug import Request
 
 import plugins
+from plugins.abstract.auth import UserInfo
 import settings
 from translation import ugettext as translate
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
@@ -179,11 +180,17 @@ class Controller(ABC):
     def _session(self) -> Dict[str, Any]:
         return self._request.session
 
+    def session_get_user(self) -> UserInfo:
+        """
+        This is a convenience method for obtaining typed user info from HTTP session
+        """
+        return self._request.session['user']
+
     def session_get(self, *nested_keys: str) -> Any:
         """
-        This is just a convenience method to retrieve session's nested values:
-        E.g. self._session['user']['car']['name'] can be rewritten
-        as self.session_get('user', 'car', 'name').
+        Retrieve any HTTP session value. The method supports nested
+        keys - e.g. to get self._session['user']['car']['name'] we
+        can just call self.session_get('user', 'car', 'name').
         If no matching keys are found then None is returned.
 
         Arguments:
@@ -546,8 +553,8 @@ class Controller(ABC):
             err = (ex, None)
             self._response.set_http_status(ex.code)
             msg_args = self._create_err_action_args(ex, action_metadata['return_type'])
-            tmpl, result = self._run_message_action(msg_args, action_metadata,
-                                                    'error', '{0}: {1}'.format(ex.name, ex.description))
+            tmpl, result = self._run_message_action(
+                msg_args, action_metadata, 'error', '{0}: {1}'.format(ex.name, ex.description))
         except Exception as ex:
             # an error outside the action itself (i.e. pre_dispatch, action validation,
             # post_dispatch etc.)

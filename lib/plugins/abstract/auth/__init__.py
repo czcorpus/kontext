@@ -28,9 +28,33 @@ from controller.errors import CorpusForbiddenException, ImmediateRedirectExcepti
 
 
 class UserInfo(TypedDict):
+    """
+    UserInfo contains essential user credential needed to authenticate
+    and communicate with a user.
+
+    Please note that this should be never serialized directly to any
+    response.
+    """
+
     id: int
+    "this is typically a database ID of the user"
+
     user: str
+    "username as used when logging in"
+
     fullname: str
+    "space separated full name"
+
+    email: Optional[str]
+    "user e-mail (this should not be publicly accessible)"
+
+    api_key: Optional[str]
+    """
+    api_key serves two purposes:
+      1) it identifies the client
+      2) even for the same user, we can distinguish their regular vs. API
+         requests (and possible set different rules for both)
+    """
 
 
 class CorpusAccess(NamedTuple):
@@ -88,7 +112,9 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         return UserInfo(
             id=self._anonymous_id,
             user='anonymous',
-            fullname=_('anonymous'))
+            fullname=_('anonymous'),
+            email=None,
+            api_key=None)
 
     def is_anonymous(self, user_id: int) -> bool:
         return user_id == self._anonymous_id

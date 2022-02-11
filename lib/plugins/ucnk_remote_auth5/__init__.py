@@ -26,7 +26,6 @@ produce another HTTP request).
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
-from typing import List
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -36,7 +35,7 @@ import ssl
 import logging
 
 import plugins
-from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess
+from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 from plugins.abstract.corparch.backend import DatabaseBackend
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
@@ -177,12 +176,13 @@ class CentralAuth(AbstractRemoteAuth):
             plugin_ctx.refresh_session_id()
             if response_obj['user']['id'] != self._anonymous_id:
                 # user logged in => keep session data (except for credentials)
-                plugin_ctx.session['user'] = dict(
+                plugin_ctx.session['user'] = UserInfo(
                     id=int(response_obj['user']['id']),
                     user=response_obj['user'].get('user'),
                     fullname='%s %s' % (response_obj['user'].get('firstName'),
                                         response_obj['user'].get('surname')),
-                    email=response_obj['user'].get('email'))
+                    email=response_obj['user'].get('email'),
+                    api_key=None)
                 # reload available corpora from remote server
             else:  # logout => clear current user's session data and set new credentials
                 plugin_ctx.session.clear()
@@ -190,18 +190,18 @@ class CentralAuth(AbstractRemoteAuth):
 
     def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
-            return False, True, ''
+            return CorpusAccess(False, True, '')
         _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
-        return False, access, variant
+        return CorpusAccess(False, access, variant)
 
-    def permitted_corpora(self, user_dict) -> List[str]:
+    def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
 
         arguments:
         user_dict -- a user credentials dictionary
         """
-        corpora = self._db.get_permitted_corpora(user_dict['id'])
+        corpora = self._db.get_permitted_corpora(str(user_dict['id']))
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return corpora

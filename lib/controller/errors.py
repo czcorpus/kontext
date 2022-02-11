@@ -107,6 +107,12 @@ class AlignedCorpusForbiddenException(ForbiddenException):
         self.variant = variant
 
 
+class ServiceUnavailableException(UserActionException):
+
+    def __init__(self, message, internal_message=None):
+        super().__init__(message, 503, internal_message=internal_message)
+
+
 class ImmediateRedirectException(UserActionException):
     """
     ImmediateRedirectException is used to trigger

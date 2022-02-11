@@ -7,8 +7,14 @@
             <element name="module">
                 <value>ucnk_dispatch_hook</value>
             </element>
-            <element name="queue_key">
+            <element name="bot_clients_key">
                 <text />
+            </element>
+            <element name="num_reports_threshold">
+                <data type="positiveInteger" />
+            </element>
+            <element name="ban_length_hours">
+                <data type="positiveInteger" />
             </element>
         </element>
     </start>

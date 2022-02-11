@@ -34,10 +34,6 @@ from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 from plugins.abstract.integration_db import IntegrationDatabase
 
 
-class ApiUserInfo(UserInfo):
-    api_key: Optional[str]
-
-
 class TokenAuth(AbstractRemoteAuth):
 
     def __init__(
@@ -53,13 +49,12 @@ class TokenAuth(AbstractRemoteAuth):
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
 
-    def anonymous_user(self) -> ApiUserInfo:
-        return ApiUserInfo(
+    def anonymous_user(self) -> UserInfo:
+        return UserInfo(
             id=self._anonymous_id,
             user='unauthorized',
             fullname='Unauthorized user',
-            api_key=None,
-        )
+            api_key=None)
 
     def is_anonymous(self, user_id: int) -> bool:
         return user_id == self._anonymous_id
@@ -67,19 +62,19 @@ class TokenAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id: int) -> bool:
         return False
 
-    def corpus_access(self, user_dict: ApiUserInfo, corpus_id: str) -> CorpusAccess:
+    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
         corpora = self._get_permitted_corpora(user_dict)
         if corpus_id not in corpora:
-            return False, False, ''
-        return False, True, ''
+            return CorpusAccess(False, False, '')
+        return CorpusAccess(False, True, '')
 
-    def permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
+    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
             return []
         else:
             return self._get_permitted_corpora(user_dict)
 
-    def get_user_info(self, plugin_ctx: PluginCtx) -> ApiUserInfo:
+    def get_user_info(self, plugin_ctx: PluginCtx) -> UserInfo:
         return plugin_ctx.session['user']
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:
@@ -107,10 +102,11 @@ class TokenAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = self.anonymous_user()
 
-    def _find_user(self, api_key: str) -> Optional[ApiUserInfo]:
+    def _find_user(self, api_key: str) -> Optional[UserInfo]:
         with self._db.cursor() as cursor:
             cursor.execute('''
-                SELECT t_token.user_id AS id, t_user.username, CONCAT_WS(" ", t_user.firstname, t_user.lastname) AS fullname
+                SELECT t_token.user_id AS id, t_user.username, t_user.email,
+                   CONCAT_WS(" ", t_user.firstname, t_user.lastname) AS fullname
                 FROM kontext_api_token AS t_token
                 JOIN kontext_user AS t_user ON t_user.id = t_token.user_id
                 WHERE value = %s AND
@@ -120,14 +116,14 @@ class TokenAuth(AbstractRemoteAuth):
             data = cursor.fetchone()
             if data is None:
                 return None
-            return ApiUserInfo(
+            return UserInfo(
                 id=data['id'],
-                username=data['username'],
+                user=data['username'],
                 fullname=data['fullname'],
-                api_key=api_key,
-            )
+                email=data['email'],
+                api_key=api_key)
 
-    def _get_permitted_corpora(self, user_dict: ApiUserInfo) -> List[str]:
+    def _get_permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         with self._db.cursor() as cursor:
             cursor.execute('''
                 SELECT GROUP_CONCAT(corpus_name SEPARATOR ',') AS corpora

@@ -368,8 +368,8 @@ class Backend(DatabaseBackend):
                        (user_id, user_id, user_id, corpus_id))
         row = cursor.fetchone()
         if not row:
-            return False, False, ''
-        return False, True, row['variant'] if row['variant'] else ''
+            return CorpusAccess(False, False, '')
+        return CorpusAccess(False, True, row['variant'] if row['variant'] else '')
 
     def get_permitted_corpora(self, user_id: str) -> List[str]:
         cursor = self._db.cursor()
@@ -419,7 +419,7 @@ class Backend(DatabaseBackend):
             for row in cursor
         ]
 
-    def load_interval_attrs(self, corpus_id: str) -> List[str]:
+    def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT interval_struct, interval_attr, widget '
                        'FROM kontext_interval_attr '
