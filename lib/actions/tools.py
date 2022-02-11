@@ -85,11 +85,12 @@ class Tools(Kontext):
             svg_src = normalize_wcloud_svg(request.get_data())
         if request.args.get('outFormat', '') == 'png':
             self._response.set_header('Content-Type', 'image/png')
-            return svg2png(bytestring=svg_src, scale=5, background_color='#FFFFFF')
+            return svg2png(bytestring=svg_src, output_width=1200, background_color='#FFFFFF')
+        elif request.args.get('outFormat', '') == 'png-print':
+            self._response.set_header('Content-Type', 'image/png')
+            return svg2png(bytestring=svg_src, output_width=4961, background_color='#FFFFFF')
         elif request.args.get('outFormat', '') == 'svg':
             self._response.set_header('Content-Type', 'image/svg+xml')
             return svg2svg(bytestring=svg_src, scale=5, background_color='#FFFFFF')
         else:
             raise UserActionException('Invalid data format', code=422)
-
-
