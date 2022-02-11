@@ -210,7 +210,7 @@ class KResponse:
         'plain' + str
         A callable 'result' can be used for lazy result evaluation or for JSON encoding with a custom encoder
         """
-        if 400 < self._status >= 300 or result is None:
+        if 300 <= self._status < 400 or result is None:
             return ''
         if callable(result):
             result = result()
