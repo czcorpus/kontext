@@ -23,6 +23,7 @@ required xml conf: please see ./config.rng
          mysql schema: please see ./scripts/schema.sql
 """
 from datetime import datetime
+import hashlib
 from typing import List, Optional
 
 from mysql.connector.connection import MySQLConnection
@@ -90,7 +91,8 @@ class TokenAuth(AbstractRemoteAuth):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_ctx)
         if api_key:
-            user_info = self._find_user(api_key)
+            hash_key = hashlib.sha256(api_key.encode()).hexdigest()
+            user_info = self._find_user(hash_key)
             if self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
             if user_info is None:
