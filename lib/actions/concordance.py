@@ -884,8 +884,8 @@ class Actions(Querying):
                     out['next_action_args'] = {
                         'fcrit': request.args.get('fcrit'),
                         'flimit': request.args.get('flimit'),
-                        'freq_sort': request.args.get('freq_sort'),
-                        'ml': request.args.get('ml'),
+                        'freq_sort': request.args.get('freq_sort', 'freq'),  # client does not always fills this
+                        'ml': request.args.get('ml', 0),  # ditto
                         'force_cache': request.args.get('force_cache', '0')}
                 elif request.args.get('next') == 'freqml':
                     out['next_action'] = 'freqml'
