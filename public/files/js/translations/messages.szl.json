@@ -772,7 +772,7 @@
         "freq__pie_chart_max_items_input_label": "Max. number of individual pie chart items (additional items will be in \"others\") UNTRANSLATED",
         "freq__pie_other_group_label": "(other) UNTRANSLATED",
         "freq__download_chart": "download the chart UNTRANSLATED",
-        "freq__hidden_ci_warning": "[TODO] Please note that the results without confidence intervals may lead to a biased data interpretation. UNTRANSLATED",
+        "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of similar structure and size. UNTRANSLATED",
         "freq__binom_conf_interval_hd": "interval estimatino UNTRANSLATED",
         "freq__main_help_box_hd": "Help - frequency list UNTRANSLATED",
         "freq__confidence_toggle": "Display confidence intervals UNTRANSLATED",
