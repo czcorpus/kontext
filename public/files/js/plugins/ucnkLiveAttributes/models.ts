@@ -494,13 +494,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         const selectedAligned = state.alignedCorpora.filter(item=>item.selected);
 
         if (List.empty(state.selectionSteps) && !List.empty(selectedAligned)) {
-            const mainLang = this.pluginApi.getCorpusIdent().id;
-            state.alignedCorpora.splice(0, 0, {
-                value: mainLang,
-                label: mainLang,
-                selected: true,
-                locked: true
-            });
             const newStep:AlignedLangSelectionStep = {
                 num: 1,
                 numPosInfo: newAttrs.length > 0 ? 0 : poscount,
