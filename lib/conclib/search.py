@@ -94,7 +94,11 @@ def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Opti
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_sync_conc(worker, corp, q, subchash, samplesize):
+def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int):
+    """
+    Calculate a concordance via a provided worker. On the Manatee side,
+    wait until the concordance is complete.
+    """
     status = worker.create_new_calc_status()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     try:
@@ -103,10 +107,10 @@ def _get_sync_conc(worker, corp, q, subchash, samplesize):
         status.finished = True
         status.concsize = conc.size()
         status = cache_map.add_to_map(subchash, q[:1], status)
-        conc.save(status.cachefile)
-        cache_map.update_calc_status(subchash, q[:1], readable=True)
         if os.getuid() == os.stat(status.cachefile).st_uid:
             os.chmod(status.cachefile, 0o664)
+        conc.save(status.cachefile)
+        cache_map.update_calc_status(subchash, q[:1], readable=True)
         # update size in map file
         cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
         return conc
