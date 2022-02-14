@@ -725,6 +725,7 @@ export function init({
         sourceId:string;
         matchCaseValue:boolean;
         disabled:boolean;
+        useRegexp:boolean;
 
     }> = (props) => {
 
@@ -739,14 +740,22 @@ export function init({
             });
         };
 
-        return <span>
-            <label htmlFor={'match-case-switch-'+props.sourceId}>{he.translate('query__match_case')}</label>
-            <layoutViews.ToggleSwitch
-                id={'match-case-switch-'+props.sourceId}
-                checked={props.matchCaseValue}
-                onChange={handleCheckbox}
-                disabled={props.disabled} />
-        </span>;
+        return (
+            <S.MatchCaseSelector>
+                <label htmlFor={'match-case-switch-'+props.sourceId}>{he.translate('query__match_case')}</label>
+                <layoutViews.ToggleSwitch
+                    id={'match-case-switch-'+props.sourceId}
+                    checked={props.matchCaseValue}
+                    onChange={handleCheckbox}
+                    disabled={props.disabled} />
+                <span style={props.useRegexp ? {} : {visibility: 'hidden'}} className="help">
+                    <layoutViews.InlineHelp noSuperscript={true}
+                            customStyle={{maxWidth: '30em'}}>
+                        {he.translate('query__tip_07')}
+                    </layoutViews.InlineHelp>
+                </span>
+            </S.MatchCaseSelector>
+        );
     };
 
     // -------------------- <DefaultAttrSelector /> ------------------------
@@ -1070,13 +1079,8 @@ export function init({
                                 <MatchCaseSelector matchCaseValue={query.qmcase || query.use_regexp}
                                     sourceId={this.props.sourceId}
                                     formType={this.props.formType}
-                                    disabled={query.use_regexp} />
-                                <span style={query.use_regexp ? {} : {visibility: 'hidden'}}>
-                                    <layoutViews.InlineHelp noSuperscript={true}
-                                            customStyle={{maxWidth: '30em'}}>
-                                        {he.translate('query__tip_07')}
-                                    </layoutViews.InlineHelp>
-                                </span>
+                                    disabled={query.use_regexp}
+                                    useRegexp={query.use_regexp} />
                             </div>
                             <div className={"option"}>
                                 <UseRegexpSelector sourceId={this.props.sourceId} formType={this.props.formType}

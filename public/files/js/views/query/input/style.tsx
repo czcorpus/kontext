@@ -208,6 +208,19 @@ export const AdvancedFormFieldset = styled.section`
     }
 `;
 
+// --------------------- <MatchCaseSelector /> ----------------------------------
+
+export const MatchCaseSelector = styled.span`
+    display: flex;
+    align-items: center;
+
+    .help {
+        display: flex;
+        align-items: center;
+        margin-left: 0.3em;
+    }
+`;
+
 // --------------------- <AlignedCorpora /> ----------------------------
 
 export const AlignedCorpora = styled(AdvancedFormFieldset);
@@ -547,3 +560,4 @@ export const SuggestionsWidget = styled.div`
         text-decoration: underline;
     }
 `;
+
