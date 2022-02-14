@@ -37,7 +37,9 @@ export class MultiDict<T={[k:string]:string|number|boolean}> implements Kontext.
                 if (this.data[k] === undefined) {
                     this.data[k] = [];
                 }
-                this.data[k].push(this.importValue(v));
+                if (this.importValue(v) !== undefined) {
+                    this.data[k].push(this.importValue(v));
+                }
             }
         }
     }
