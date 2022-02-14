@@ -615,7 +615,7 @@ class Actions(Querying):
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
         ag_op_idx = append_filter(ag_op_idx,
                                   lemmaattr,
-                                  data.fc_lemword.split(),
+                                  data.fc_lemword.split() if data.fc_lemword else None,
                                   (data.fc_lemword_wsize[0], data.fc_lemword_wsize[1], 1),
                                   data.fc_lemword_type)
         append_filter(ag_op_idx,
