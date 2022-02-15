@@ -19,6 +19,7 @@ describe('Concordance - general view options', () => {
     it('tests page size option', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url().should('include', '/view');
 
         // check default page size
         cy.get('#conc-dashboard-mount table tbody tr').should('have.length', 40);
@@ -36,6 +37,7 @@ describe('Concordance - general view options', () => {
     it('tests page size option', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url().should('include', '/view');
 
         // check default kwic size
         cy.get('#conc-dashboard-mount table tbody tr').first().find('td.lc').children().should('have.length', 10);
@@ -55,6 +57,7 @@ describe('Concordance - general view options', () => {
     it('tests line numbers', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url().should('include', '/view');
 
         // check default line numbers options
         cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.line-num').should('contain.text', '');
@@ -76,6 +79,7 @@ describe('Concordance - general view options', () => {
     it('tests line shuffle', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url().should('include', '/view');
 
         // line shuffeling
         cy.hoverNthMenuItem(8);
@@ -90,6 +94,7 @@ describe('Concordance - general view options', () => {
             cy.clickMenuItem(1, 1);
             cy.get('.simple-input').type('and');
             cy.get('.query .default-button').click();
+            cy.url().should('include', '/view');
 
             // check new line numbers options
             cy.get('#conc-dashboard-mount table tbody tr:nth-child(1) td.lc').should('not.have.text', text);
