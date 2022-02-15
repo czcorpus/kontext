@@ -211,6 +211,7 @@
         "global__human_readable_502": "Server nezvládl zpracování požadované operace. Příčinou může být příliš velká konkordance či komplikovaný dotaz. Zkuste použít vhodnou podmnožinu dat (subkorpus, náhodný vzorek).",
         "global__result_no_more_avail_for_download_pls_update": "Výsledek již není připraven k okamžitému stažení. Načtěte prosím znovu aktuální stránku.",
         "global__note_heading": "Poznámka",
+        "global__corpus_has_no_structattrs": "Korpus nemá žádné strukturní atributy",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

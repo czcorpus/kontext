@@ -311,7 +311,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             item = items_index.get(f'{row["structure_name"]}{row["name"]}')
             if item is None:
                 logging.getLogger(__name__).warning(
-                    f'get_structattrs_info: structure {row["structure_name"]} appears to be superfluous')
+                    f'get_structattrs_info: structure {row["structure_name"]} '
+                    f'appears to be missing in corpus configuration file of {corp_name}')
                 continue
             item.dt_format = row['dt_format']
         return items
