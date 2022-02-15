@@ -19,7 +19,7 @@ describe('Concordance - general view options', () => {
     it('tests page size option', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
-        cy.url().should('include', '/view');
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // check default page size
         cy.get('#conc-dashboard-mount table tbody tr').should('have.length', 40);
@@ -37,7 +37,7 @@ describe('Concordance - general view options', () => {
     it('tests page size option', () => {
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
-        cy.url().should('include', '/view');
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // check default kwic size
         cy.get('#conc-dashboard-mount table tbody tr').first().find('td.lc').children().should('have.length', 10);

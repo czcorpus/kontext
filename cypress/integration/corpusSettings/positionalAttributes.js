@@ -24,6 +24,7 @@ describe('corpus settings - positional attributes', () => {
         // create concordance
         cy.get('.simple-input').type('car');
         cy.get('.query .default-button').click();
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // display additional tag attribute
         cy.hoverNthMenuItem(8);
@@ -54,6 +55,7 @@ describe('corpus settings - positional attributes', () => {
         // create concordance
         cy.get('.simple-input').type('car');
         cy.get('.query .default-button').click();
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // set visible kwic option
         cy.hoverNthMenuItem(8);
