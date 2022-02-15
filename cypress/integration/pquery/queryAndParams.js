@@ -22,7 +22,7 @@ describe('Paradigmatic query', () => {
         cy.get('#pquery-form-mount .submit').click();
 
         // test result page
-        cy.url().should('include', '/pquery/result');
+        cy.url({timeout: 8000}).should('include', '/pquery/result');
         cy.get('#pquery-result-mount .data tbody tr').should('have.length', 7);
         cy.get('#pquery-result-mount .data thead tr:nth-child(2) th:nth-child(9) a img.sort-flag').should('exist');
 
@@ -52,7 +52,7 @@ describe('Paradigmatic query', () => {
         cy.get('.corpus-and-query ul li a.args').click();
         cy.get('.closeable-frame input#freq_pqitem_0').clear().type(10);
         cy.get('.closeable-frame button.submit').click();
-        cy.url().should('include', '/pquery/result');
+        cy.url({timeout: 8000}).should('include', '/pquery/result');
         cy.get('#pquery-result-mount .data tbody tr').should('have.length', 2);
 
     });
