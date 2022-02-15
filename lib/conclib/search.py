@@ -94,6 +94,11 @@ def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Opti
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
+def _normalize_permissions(path: str):
+    if os.path.isfile(path) and os.getuid() == os.stat(path).st_uid:
+        os.chmod(path, 0o664)
+
+
 def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int):
     """
     Calculate a concordance via a provided worker. On the Manatee side,
@@ -107,9 +112,9 @@ def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: 
         status.finished = True
         status.concsize = conc.size()
         status = cache_map.add_to_map(subchash, q[:1], status)
-        if os.getuid() == os.stat(status.cachefile).st_uid:
-            os.chmod(status.cachefile, 0o664)
+        _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
+        _normalize_permissions(status.cachefile)
         cache_map.update_calc_status(subchash, q[:1], readable=True)
         # update size in map file
         cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
@@ -208,8 +213,7 @@ def get_conc(
                 calc_status.concsize = conc.size()
                 calc_status = cache_map.add_to_map(subchash, q[:act + 1], calc_status)
                 conc.save(calc_status.cachefile)
-                if os.getuid() == os.stat(calc_status.cachefile).st_uid:
-                    os.chmod(calc_status.cachefile, 0o664)
+                _normalize_permissions(calc_status.cachefile)
                 # TODO can we be sure here that conc is finished even if its not the first query op.?
                 cache_map.update_calc_status(
                     subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
