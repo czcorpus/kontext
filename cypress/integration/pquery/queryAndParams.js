@@ -13,7 +13,7 @@ describe('Paradigmatic query', () => {
 
     it('defines a query using separate sub-queries, submits, changes min freq. and re-evaluates', () => {
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 2);
+        cy.clickMenuItem(1, 3);
 
         cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
         cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
@@ -59,7 +59,7 @@ describe('Paradigmatic query', () => {
 
     it('defines a query using a single query, submits, changes page size', () => {
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 2);
+        cy.clickMenuItem(1, 3);
 
         cy.get('#pquery-form-mount label[for="pqtype-switch"]').click();
         cy.get('#pquery-form-mount .cql-input').type(

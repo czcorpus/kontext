@@ -21,7 +21,7 @@ describe('Paradigmatic query vs. general view options', () => {
 
 
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 2);
+        cy.clickMenuItem(1, 3);
 
         cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
         cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
