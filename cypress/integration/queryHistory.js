@@ -114,12 +114,14 @@ describe('Query History', () => {
         // create new concordance query
         cy.get('.simple-input').type('general archive test query');
         cy.get('.query .default-button').click();
+        cy.get('.query .default-button', {timeout: 5000}).should('be.visible');
 
         // open history
         cy.hoverNthMenuItem(1);
         cy.clickMenuItem(1, 2);
 
         // check item is in the list, remove it and check it is gone
+        cy.get('#query-history-mount .history-entries', {timeout: 5000}).should('be.visible');
         cy.get('#query-history-mount .history-entries').children().first().should('contain', 'general archive test query');
         cy.get('#query-history-mount .history-entries').children().first().find('.tools img').click();
         cy.get('#query-history-mount .history-entries').children().first().find('.tools button').eq(0).click();

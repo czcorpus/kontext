@@ -12,6 +12,7 @@ describe('corpus settings - structures', () => {
         // create concordance
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // test there are no <head> and <p> structures by default
         cy.get('#conc-dashboard-mount table tbody').should('not.contain', '</head>');

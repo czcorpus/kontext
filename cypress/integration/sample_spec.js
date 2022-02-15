@@ -14,6 +14,7 @@ describe('Initial testing experiments', () => {
         cy.get('.query .options label[for="match-case-switch-susanne"]').click();
         cy.get('.simple-input').type('London');
         cy.get('.query .default-button').click();
+        cy.url({timeout: 5000}).should('include', '/view');
 
         cy.hoverNthMenuItem(6);
         cy.clickMenuItem(6, 1);

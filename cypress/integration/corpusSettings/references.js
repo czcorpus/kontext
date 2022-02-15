@@ -12,6 +12,7 @@ describe('corpus settings - references', () => {
         // create concordance
         cy.get('.simple-input').type('and');
         cy.get('.query .default-button').click();
+        cy.url({timeout: 5000}).should('include', '/view');
 
         // test there are default references
         cy.get('#conc-dashboard-mount table tbody tr td.ref a').invoke('text').should('not.be.empty');
