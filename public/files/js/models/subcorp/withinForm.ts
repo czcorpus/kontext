@@ -83,17 +83,21 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         super(
             dispatcher,
             {
-                lines: [new WithinLine(
-                    0,
-                    false,
-                    pipe(
-                        structsAndAttrs,
-                        Dict.keys(),
-                        List.sortedAlphaBy(v => v),
-                        List.head()
-                    ),
-                    {value: '', isRequired: true, isInvalid: false}
-                )],
+                lines: Dict.empty(structsAndAttrs) ?
+                    [] :
+                    [
+                        new WithinLine(
+                            0,
+                            false,
+                            pipe(
+                                structsAndAttrs,
+                                Dict.keys(),
+                                List.sortedAlphaBy(v => v),
+                                List.head()
+                            ),
+                            { value: '', isRequired: true, isInvalid: false }
+                        )
+                    ],
                 lineIdGen: 0,
                 inputMode,
                 structsAndAttrs,

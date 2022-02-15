@@ -225,7 +225,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
     const WithinBuilder:React.FC<{
         structsAndAttrs:Kontext.StructsAndAttrs;
         lines:Array<WithinLine>;
-    }> = (props) => {
+    }> = ({ structsAndAttrs, lines }) => {
 
         const addLineHandler = () => {
             dispatcher.dispatch<typeof Actions.FormWithinLineAdded>({
@@ -233,7 +233,7 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                 payload: {
                     negated: false,
                     structureName: pipe(
-                        props.structsAndAttrs,
+                        structsAndAttrs,
                         Dict.keys(),
                         List.sortAlphaBy(v => v),
                         List.head()
@@ -250,20 +250,27 @@ export function init({dispatcher, he, CorparchComponent, subcorpFormModel,
                         <React.Fragment key ={'wl' + line.rowIdx}>
                             <ExpressionDescLine viewIdx={i} />
                             <StructLine rowIdx={line.rowIdx}
-                                lineData={line} structsAndAttrs={props.structsAndAttrs} />
+                                lineData={line} structsAndAttrs={structsAndAttrs} />
                         </React.Fragment>,
-                        props.lines
+                        lines
                     )}
                     <tr className="button-row">
-                        <td>
-                            <a className="add-within"
-                                    onClick={addLineHandler}
-                                    title={he.translate('global__add_within')}>
-                                <img src={he.createStaticUrl('img/plus.svg')} style={{width: '1em'}} />
-                            </a>
-                        </td>
-                        <td></td>
-                        <td></td>
+                        {Dict.empty(structsAndAttrs) ?
+                            <td colSpan={3}>
+                                {he.translate('global__corpus_has_no_structattrs')}
+                            </td> :
+                            <>
+                                <td>
+                                    <a className="add-within"
+                                            onClick={addLineHandler}
+                                            title={he.translate('global__add_within')}>
+                                        <img src={he.createStaticUrl('img/plus.svg')} style={{width: '1em'}} />
+                                    </a>
+                                </td>
+                                <td></td>
+                                <td></td>
+                            </>
+                        }
                     </tr>
                 </tbody>
             </table>

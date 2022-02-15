@@ -6,7 +6,7 @@
     "subcmixer__invalid_value": "Invalid value",
     "subcmixer__set_shares": "Mix documents to match custom text type proportions",
     "subcmixer__calculate": "Find a matching selection",
-    "subcmixer__create_subc": "Create a subcorpus",
+    "subcmixer__create_subc": "Create the subcorpus",
     "subcmixer__new_subc_name": "New subcorpus name",
     "subcmixer__subc_found_{size}": "Required subcorpus found. Calculated size: {size} tokens.",
     "subcmixer__subc_found_with_errors{size}": "Found only an approximate subcorpus. Calculated size: {size} tokens.",
