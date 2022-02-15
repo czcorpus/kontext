@@ -265,7 +265,7 @@ class Querying(Kontext):
 
     def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
-        attrs = (t for t in self.corp.get_structattrs() if t != '')
+        attrs = [t for t in self.corp.get_structattrs() if t != '']
         with plugins.runtime.CORPARCH as ca:
             for attr in ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
                 structs_and_attrs[attr.structure_name].append(attr)
