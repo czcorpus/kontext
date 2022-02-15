@@ -7,7 +7,7 @@ describe('Word List', () => {
         cy.actionLogin();
 
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 3);
+        cy.clickMenuItem(1, 4);
     });
 
     afterEach(() => {
@@ -162,9 +162,9 @@ describe('Word List', () => {
         // TODO Freqs page?
 
         cy.url().should('include', '/freqs');
-        const dataTable = cy.get('.freq-blocks .data');
-        dataTable.should('be.visible');
-        dataTable.get('tbody tr').should('have.length', 7);
+        const svgCharts = cy.get('#result-mount svg');
+        svgCharts.should('be.visible');
+        svgCharts.should('have.length', 1);
 
         // test last query
         cy.openLastHistoryItem();

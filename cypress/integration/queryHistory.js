@@ -15,14 +15,14 @@ describe('Query History', () => {
 
             // paradigmatic query
             cy.hoverNthMenuItem(1);
-            cy.clickMenuItem(1, 2);
+            cy.clickMenuItem(1, 3);
             cy.get('#pquery-form-mount .cql-input').eq(0).type('[word="e.*"]');
             cy.get('#pquery-form-mount .cql-input').eq(1).type('[tag="N.*"]');
             cy.get('#pquery-form-mount .submit').click().then(() => {
 
                 // word list query
                 cy.hoverNthMenuItem(1);
-                cy.clickMenuItem(1, 3);
+                cy.clickMenuItem(1, 4);
                 cy.get('#wl-pattern-input').type('.*ining');
                 cy.get('#wordlist-form-mount .default-button').click();
             });
@@ -36,7 +36,7 @@ describe('Query History', () => {
 
         // open query history modal from menu
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.clickMenuItem(1, 2);
     });
 
     afterEach(() => {
@@ -117,7 +117,7 @@ describe('Query History', () => {
 
         // open history
         cy.hoverNthMenuItem(1);
-        cy.clickMenuItem(1, 4);
+        cy.clickMenuItem(1, 2);
 
         // check item is in the list, remove it and check it is gone
         cy.get('#query-history-mount .history-entries').children().first().should('contain', 'general archive test query');

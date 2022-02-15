@@ -18,8 +18,9 @@ describe('Initial testing experiments', () => {
         cy.hoverNthMenuItem(6);
         cy.clickMenuItem(6, 1);
 
-        const dataTable = cy.get('.freq-blocks .data');
-        dataTable.should('be.visible');
-        dataTable.get('tbody tr').should('have.length', 1);
+        cy.url().should('include', '/freqs');
+        const svgCharts = cy.get('#result-mount svg');
+        svgCharts.should('be.visible');
+        svgCharts.should('have.length', 1);
     })
   })
