@@ -38,17 +38,27 @@ export const FreqResultLoaderView = styled.div`
     }
 `;
 
+// ---------------- <FreqChartsView /> ---------------------------------
+
+export const FreqChartsView = styled.div`
+    max-width: 80em;
+
+`;
+
 // ---------------- <FreqChartsParamsFieldset /> -----------------------
 
 export const FreqChartsParamsFieldset = styled.fieldset`
 
-    > div:not(:first-child) {
-        margin-top: 1.5em;
-    }
-
     > div {
+
+        margin-bottom: 1em;
+
+        > div.opts-line {
+
         display: flex;
         align-items: center;
+        padding-left: 1em;
+        padding-top: 1em;
 
         label {
             margin-right: 0.5em;
@@ -80,9 +90,10 @@ export const FreqChartSection = styled.section`
     h3 {
         margin: 0;
         padding-top: 0;
-        padding-bottom: 1.2em;
+        padding-bottom: .2em;
         text-align: center;
         font-size: 1.6em;
+        font-weight: normal;
         color: ${theme.colorLightText};
         letter-spacing: 0.1em;
     }
