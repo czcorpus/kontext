@@ -48,6 +48,7 @@ module.exports = {
             pquery: mkpath('js/pages/pquery.ts'),
             pqueryResult: mkpath('js/pages/pqueryResult.ts'),
             freq: mkpath('js/pages/freq.ts'),
+            dispersion: mkpath('js/pages/dispersion.ts'),
             message: mkpath('js/pages/message.ts'),
             subcorpForm: mkpath('js/pages/subcorpForm.ts'),
             subcorpList: mkpath('js/pages/subcorpList.ts'),
