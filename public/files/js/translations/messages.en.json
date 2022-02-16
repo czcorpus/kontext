@@ -779,6 +779,8 @@
         "freq__confidence_toggle": "Display confidence intervals",
         "freq__print_quality": "for printing",
         "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of a similar structure and size.",
+        "freq__chart_options": "Options",
+        "freq__chart_date_%Y": "Year",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",
