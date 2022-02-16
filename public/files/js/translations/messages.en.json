@@ -778,7 +778,7 @@
         "freq__main_help_box_hd": "Help - frequency list",
         "freq__confidence_toggle": "Display confidence intervals",
         "freq__print_quality": "for printing",
-        "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of similar structure and size.",
+        "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of a similar structure and size.",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",

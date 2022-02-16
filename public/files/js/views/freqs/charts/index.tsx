@@ -271,21 +271,25 @@ export function init(
 
     }> = (props) => (
         <S.FreqChartsParamsFieldset>
-            <div>
-                <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
-                <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
-                <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
-                {props.type === 'bar' || props.type === 'cloud' ?
-                    <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
-                    null
-                }
-                <label>{he.translate('freq__download_chart')}:</label>
-                <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
-                <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
-                {props.isBusy ?
-                    <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
-                    null}
-            </div>
+            <globalComponents.ExpandableArea initialExpanded={false} label="Options">
+                <div className="opts-line">
+                    <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
+                    <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
+                    <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
+                    {props.type === 'bar' || props.type === 'cloud' ?
+                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
+                        null
+                    }
+                </div>
+                <div className="opts-line">
+                    <label>{he.translate('freq__download_chart')}:</label>
+                    <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
+                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                    {props.isBusy ?
+                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
+                        null}
+                </div>
+            </globalComponents.ExpandableArea>
         </S.FreqChartsParamsFieldset>
     );
 
@@ -357,7 +361,7 @@ export function init(
             switch (props.type)  {
                 case 'bar':
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
-                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref}>
+                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref} barGap="7">
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50}>
                                 <Label value={xUnits} position="insideBottom" />
@@ -366,7 +370,7 @@ export function init(
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
                             <Tooltip formatter={tooltipFormatter}/>
-                            <Bar dataKey={props.dataKey} barSize={15} fill={theme.colorLogoBlue} isAnimationActive={false}>
+                            <Bar dataKey={props.dataKey} fill={theme.colorLogoBlue} isAnimationActive={false} barSize={14}>
                                 <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={3} stroke={theme.colorLogoPink} opacity={0.8} direction="x" />
                             </Bar>
                         </BarChart>
@@ -467,7 +471,7 @@ export function init(
     // --------------------- <FreqChartsView /> -----------------------------------------
 
     const FreqChartsView:React.FC<FreqChartsModelState> = (props) => (
-        <div>
+        <S.FreqChartsView>
             {pipe(
                 props.data,
                 Dict.toEntries(),
@@ -486,7 +490,7 @@ export function init(
                     )
                 )
             )}
-        </div>
+        </S.FreqChartsView>
     );
 
     return {
