@@ -22,10 +22,12 @@
 
 import { IActionQueue, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
+import { Actions } from './actions';
 
 
 export interface DispersionResultModelState {
     isBusy:boolean;
+    concordanceId:string;
 }
 
 
@@ -37,5 +39,20 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
     constructor(dispatcher:IActionQueue, layoutModel:PageModel, initialState:DispersionResultModelState) {
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
+
+        this.addActionHandler(
+            Actions.SubmitForm,
+            (state, action) => {
+
+            },
+            (state, action, dispatch) => {
+                if (action.payload.reloadPage) {
+                    window.location.href = this.layoutModel.createActionUrl(
+                        'dispersion/index',
+                        {q: `~${state.concordanceId}`}
+                    );
+                }
+            }
+        )
     }
 }

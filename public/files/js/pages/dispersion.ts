@@ -40,7 +40,8 @@ export class DispersionPage {
                 this.layoutModel.dispatcher,
                 this.layoutModel,
                 {
-                    isBusy: false
+                    isBusy: false,
+                    concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId')
                 }
             );
 

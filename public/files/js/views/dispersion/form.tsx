@@ -3,7 +3,6 @@
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
  * Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
-
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,19 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action } from 'kombo';
+import { Bound, IActionDispatcher } from 'kombo';
+import * as React from 'react';
+import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
+import { ComponentHelpers } from '../../types/kontext';
 
 
 
-export class Actions {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:ComponentHelpers,
+    dispersionModel:DispersionResultModel
+) {
+
+    const DispersionForm:React.FC<DispersionResultModelState> = (props) => {
+
+        return (
+            <fieldset>
+                Dispersion args inputs
+            </fieldset>
+        )
+    }
 
 
-    static SubmitForm:Action<{
-        reloadPage?:boolean;
-
-    }> = {
-        name: 'FREQ_DISPERSION_SUBMIT_FORM'
-    };
-
-
+    return Bound(DispersionForm, dispersionModel);
 }

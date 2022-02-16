@@ -15,6 +15,9 @@ from texttypes.cache import TextTypesCache
 import werkzeug
 from controller.querying import Querying
 from controller import exposed
+from controller.errors import ImmediateRedirectException
+from conclib.calc import require_existing_conc
+from conclib.errors import ConcNotFoundException
 
 
 class Dispersion(Querying):
@@ -36,13 +39,9 @@ class Dispersion(Querying):
 
     @exposed(page_model='dispersion', template='dispersion.html')
     def index(self, request):
-        # TODO the action will require at least some concordance ID
-        """
         try:
             require_existing_conc(self.corp, self.args.q)
-            ... do a job using the conc. ...
         except ConcNotFoundException:
             args = list(self._request.args.items()) + [('next', 'dispersion')]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
-        """
         return {}

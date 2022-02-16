@@ -26,11 +26,14 @@ import { init as freqFormsFactory } from './regular/freqForms';
 import { Actions as ActionsRF } from '../../models/freqs/regular/actions';
 import { Actions as Actions2DF } from '../../models/freqs/twoDimension/actions';
 import { init as ctFreqFormFactory } from './twoDimension/form';
+import { init as dispersionFormFactory } from '../dispersion/form';
 import { Freq2DFormModel } from '../../models/freqs/twoDimension/form';
 import { MLFreqFormModel, TTFreqFormModel } from '../../models/freqs/regular/freqForms';
+import { Actions as ActionsDp } from '../../models/dispersion/actions';
 
 
 import * as S from './regular/style';
+import { DispersionResultModel } from '../../models/dispersion/result';
 
 
 // -------------------------- exported component ----------
@@ -53,11 +56,14 @@ export function init(
         he:Kontext.ComponentHelpers,
         mlFreqFormModel:MLFreqFormModel,
         ttFreqFormModel:TTFreqFormModel,
-        cTFreqFormModel:Freq2DFormModel):FormsViews {
+        cTFreqFormModel:Freq2DFormModel,
+        dispersionModel:DispersionResultModel
+):FormsViews {
 
     const layoutViews = he.getLayoutViews();
     const ctFreqForm = ctFreqFormFactory(dispatcher, he, cTFreqFormModel);
     const freqForms = freqFormsFactory(dispatcher, he, ttFreqFormModel, mlFreqFormModel);
+    const DispersionForm = dispersionFormFactory(dispatcher, he, dispersionModel);
 
     // ---------------------- <FrequencyForm /> ---------------------
 
@@ -88,6 +94,14 @@ export function init(
                         name: ActionsRF.TTSubmit.name
                     });
                 break;
+                case 'dp':
+                    dispatcher.dispatch<typeof ActionsDp.SubmitForm>({
+                        name: ActionsDp.SubmitForm.name,
+                        payload: {
+                            reloadPage: true
+                        }
+                    });
+                break;
                 case 'ct':
                     dispatcher.dispatch<typeof Actions2DF.FreqctFormSubmit>({
                         name: Actions2DF.FreqctFormSubmit.name
@@ -99,7 +113,8 @@ export function init(
             const items = [
                 {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
                 {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
-                {id: 'ct', label: he.translate('freq__sel_form_type_ct')},
+                {id: 'dp', label: he.translate('freq__sel_form_type_dp')},
+                {id: 'ct', label: he.translate('freq__sel_form_type_ct')}
             ];
 
             return (
@@ -113,6 +128,7 @@ export function init(
 
                             <freqForms.MLFreqForm />
                             <freqForms.TTFreqForm />
+                            <DispersionForm />
                             <ctFreqForm.CTFreqForm />
                         </layoutViews.TabView>
 
@@ -129,7 +145,7 @@ export function init(
 
 
     return {
-        FrequencyForm: FrequencyForm
+        FrequencyForm
     };
 }
 
