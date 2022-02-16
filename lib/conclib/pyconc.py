@@ -269,35 +269,22 @@ class PyConc(manatee.Concordance):
         head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2) for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
-        if ml:
-            lines = []
-            for w, f, nf in zip(words, freqs, norms):
-                word = export_word(w)
-                if len(word) == 1 and (word[0]['n'] == '' or word[0]['n'] == '===NONE==='):
-                    has_empty_item = True
-                    continue
-                lines.append(dict(
-                    Word=word,
-                    freq=f,
-                    relbar=None
-                ))
-        else:
-            head.append(dict(
-                    n='i.p.m.',
-                    title=translate('instances per million positions (refers to the respective category)'),
-                    s='rel'))
+        head.append(dict(
+                n='i.p.m.',
+                title=translate('instances per million positions (refers to the respective category)'),
+                s='rel'))
 
-            lines = []
-            for w, f, nf in zip(words, freqs, norms):
-                word = export_word(w)
-                if test_word_empty(word):
-                    has_empty_item = True
-                    continue
-                lines.append(dict(
-                    Word=word,
-                    freq=f,
-                    norm=nf,
-                    rel=round(f / nf * 1e6, 2)))
+        lines = []
+        for w, f, nf in zip(words, freqs, norms):
+            word = export_word(w)
+            if test_word_empty(word):
+                has_empty_item = True
+                continue
+            lines.append(dict(
+                Word=word,
+                freq=f,
+                norm=nf,
+                rel=round(f / nf * 1e6, 2)))
 
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
