@@ -53,6 +53,7 @@ import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 import { FreqDataLoader } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
 import { ImageConversionModel } from '../models/common/imgConv';
+import { DispersionResultModel } from '../models/dispersion/result';
 
 /**
  *
@@ -76,6 +77,8 @@ class FreqPage {
     private ctFlatFreqModel:Freq2DFlatViewModel;
 
     private cTFreqFormModel:Freq2DFormModel;
+
+    private dispersionModel:DispersionResultModel;
 
     private ctResultSaveModel:FreqCTResultsSaveModel;
 
@@ -159,13 +162,22 @@ class FreqPage {
             this.ctFreqModel,
             this.ctFlatFreqModel
         );
+        this.dispersionModel = new DispersionResultModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                isBusy: false,
+                concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId')
+            }
+        );
 
         const freqFormViews = freqFormFactory(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.mlFreqModel,
             this.ttFreqModel,
-            this.cTFreqFormModel
+            this.cTFreqFormModel,
+            this.dispersionModel
         );
 
         this.imgConversionModel = new ImageConversionModel(

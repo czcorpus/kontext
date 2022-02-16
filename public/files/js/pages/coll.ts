@@ -41,6 +41,7 @@ import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/coll/actions';
+import { DispersionResultModel } from '../models/dispersion/result';
 
 
 /**
@@ -55,6 +56,8 @@ export class CollPage {
     private mlFreqModel:MLFreqFormModel;
 
     private ttFreqModel:TTFreqFormModel;
+
+    private dispersionModel:DispersionResultModel;
 
     private ctFreqFormModel:Freq2DFormModel;
 
@@ -105,6 +108,15 @@ export class CollPage {
             freqFormProps
         );
 
+        this.dispersionModel = new DispersionResultModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                isBusy: false,
+                concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId')
+            }
+        );
+
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
         const tt = this.initAdhocSubcDetector();
         const ctFormProps:CTFormProperties = {
@@ -132,7 +144,8 @@ export class CollPage {
             this.layoutModel.getComponentHelpers(),
             this.mlFreqModel,
             this.ttFreqModel,
-            this.ctFreqFormModel
+            this.ctFreqFormModel,
+            this.dispersionModel
         );
 
         // collocations ------------------------------------

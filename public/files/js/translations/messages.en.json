@@ -781,6 +781,7 @@
         "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of a similar structure and size.",
         "freq__chart_options": "Options",
         "freq__chart_date_%Y": "Year",
+        "freq__sel_form_type_dp": "Dispersion",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",
