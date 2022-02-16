@@ -25,8 +25,7 @@ import * as srcData from './srcdata';
 import {
     DetailAttrOrders, OverflowHandler, Options, Sentence, TreeNodeMap, DetailValue,
     Edge, Label, Token, ReferencedValues } from './common';
-import { ScreenProps } from '../../views/document/responsiveWrapper';
-import { debounceTime, fromEvent, map, Observable } from 'rxjs';
+import { debounceTime, fromEvent, map } from 'rxjs';
 
 
 /**
@@ -95,7 +94,7 @@ class TreeGenerator {
 
     private static NODE_DIV_WIDTH = 80;
 
-    private static NODE_DIV_HEIGHT = 40;
+    private static NODE_DIV_ROW_HEIGHT = 16;
 
     private static DETAIL_DIV_VERT_OFFSET = 80;
 
@@ -150,10 +149,12 @@ class TreeGenerator {
             t => !nodeMap[t.id].hidden,
             this.importSentence(data[0], nodes)
         );
-        this.calcViewSize(tokens, nodeMap);
+        const rowCount = nodes[0].labels.length;
+        
+        this.calcViewSize(tokens, nodeMap, rowCount);
         this.generateNodeCoords(tokens, nodeMap);
         const edges = this.generateEdges(nodeMap);
-        this.d3Draw(tokens, nodeMap, edges, target);
+        this.d3Draw(tokens, nodeMap, edges, target, rowCount);
     }
 
     private importSentence(data:srcData.Data, nodes:Array<srcData.Node>):Sentence {
@@ -172,15 +173,15 @@ class TreeGenerator {
      * Calculate all the required drawing parameters
      * (widht/height if set to auto, y-step, x-step)
      */
-    private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap):void {
+    private calcViewSize(tokens:Sentence, nodeMap:TreeNodeMap, rowCount:number):void {
         const maxDepth = Object.keys(nodeMap).map(k => nodeMap[k].depth).reduce((p, c) => c > p ? c : p, 0);
 
         if (!this.params.width) {
             this.params.width = Math.min(this.params.maxWidth, tokens.length * TreeGenerator.NODE_DIV_WIDTH);
         }
         if (!this.params.height) {
-            this.params.height = (maxDepth + 1) * TreeGenerator.NODE_DIV_HEIGHT +
-                    TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth + TreeGenerator.DETAIL_DIV_MIN_HEIGHT;
+            this.params.height = (maxDepth + 1) * TreeGenerator.NODE_DIV_ROW_HEIGHT +
+                    TreeGenerator.DYNAMIC_VERTICAL_SPACING * maxDepth + rowCount * TreeGenerator.DETAIL_DIV_MIN_HEIGHT;
         }
         if (this.params.height > this.params.maxHeight && typeof this.onOverflow === 'function') {
             [this.params.width, this.params.height] = this.onOverflow(this.params.width, this.params.height);
@@ -335,7 +336,8 @@ class TreeGenerator {
     private renderNodeDiv(
         nodeMap:TreeNodeMap,
         target:d3.Selection<any, srcData.Token, any, any>,
-        group:d3.Selection<any, Token, any, any>
+        group:d3.Selection<any, Token, any, any>,
+        rowCount:number,
     ) {
         const self = this;
         const foreignObj = group.append('foreignObject');
@@ -344,7 +346,7 @@ class TreeGenerator {
             .attr('y', d => this.params.paddingTop + nodeMap[d.id].depth * this.params.depthStep)
             .attr('transform', () => `translate(-10, 0)`)
             .attr('width', (d) => TreeGenerator.NODE_DIV_WIDTH + (1.1 * d.value.length ))
-            .attr('height', TreeGenerator.NODE_DIV_HEIGHT + 5);
+            .attr('height', rowCount * TreeGenerator.NODE_DIV_ROW_HEIGHT + 5);
 
         const body = foreignObj
             .append("xhtml:body")
@@ -447,7 +449,7 @@ class TreeGenerator {
             });
     }
 
-    private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement):void {
+    private d3Draw(tokens:Sentence, nodeMap:TreeNodeMap, edges:Array<Edge>, target:HTMLElement, rowCount:number):void {
         const wrapper = d3.select<HTMLElement, srcData.Token>(target);
 
         const sentDiv = wrapper
@@ -488,7 +490,7 @@ class TreeGenerator {
             .attr('stroke', this.params.nodeStrokeColor)
             .attr('stroke-width', '2');
 
-        this.renderNodeDiv(nodeMap, wrapper, group);
+        this.renderNodeDiv(nodeMap, wrapper, group, rowCount);
 
     }
 }
