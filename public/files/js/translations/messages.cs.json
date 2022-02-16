@@ -779,6 +779,8 @@
         "freq__confidence_toggle": "Zobrazit konfidenční intervaly",
         "freq__print_quality": "pro tisk",
         "freq__hidden_ci_warning": "Konfidenční interval udává rozsah, v němž by se frekvence vyskytovala v jiných, podobně sestavených korpusech srovnatelné velikosti",
+        "freq__chart_options": "Volby",
+        "freq__chart_date_%Y": "Rok",
         "user__password_change": "Změna hesla",
         "user__new_password": "Nové heslo",
         "user__new_password_again": "Nové heslo (znovu)",

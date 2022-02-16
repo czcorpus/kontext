@@ -271,7 +271,7 @@ export function init(
 
     }> = (props) => (
         <S.FreqChartsParamsFieldset>
-            <globalComponents.ExpandableArea initialExpanded={false} label="Options">
+            <globalComponents.ExpandableArea initialExpanded={false} label={he.translate('freq__chart_options')}>
                 <div className="opts-line">
                     <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
                     <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
@@ -388,8 +388,12 @@ export function init(
                     return <ResponsiveContainer width="95%" height={300}>
                         <ComposedChart data={props.data.Items} ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
-                            <YAxis type='number' />
+                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
+                                <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
+                            </XAxis>
+                            <YAxis type="number">
+                                <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}} />
+                            </YAxis>
                             <Tooltip />
                             <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
                             <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink} />
@@ -400,8 +404,12 @@ export function init(
                     return <ResponsiveContainer width="95%" height={300}>
                         <ScatterChart ref={ref}>
                             <CartesianGrid strokeDasharray='3 3'/>
-                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}/>
-                            <YAxis type='number' />
+                            <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
+                                <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
+                            </XAxis>
+                            <YAxis type="number">
+                                <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}}  />
+                            </YAxis>
                             <Tooltip formatter={tooltipFormatter}/>
                             <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)}
                                     fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
