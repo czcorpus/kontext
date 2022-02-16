@@ -18,12 +18,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import * as theme from '../../theme/default';
+
+// ---------------------------------------------
+
+const ChartH3 = css`
+
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: .2em;
+    text-align: center;
+    font-size: 1.6em;
+    font-weight: normal;
+    color: ${theme.colorLightText};
+    letter-spacing: 0.1em;
+
+`;
 
 // ---------------- <FreqResultLoaderView /> ----------------------
 
 export const FreqResultLoaderView = styled.div`
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -31,11 +47,13 @@ export const FreqResultLoaderView = styled.div`
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
     height: 8em;
-    width: 70%;
+    width: 100%;
 
     &:not(:first-child) {
         margin-top: 1.5em;
     }
+
+    h3 { ${ChartH3} }
 `;
 
 // ---------------- <FreqChartsView /> ---------------------------------
@@ -55,25 +73,27 @@ export const FreqChartsParamsFieldset = styled.fieldset`
 
         > div.opts-line {
 
-        display: flex;
-        align-items: center;
-        padding-left: 1em;
-        padding-top: 1em;
+            display: flex;
+            align-items: center;
+            padding-left: 1em;
+            padding-top: 1em;
 
-        label {
-            margin-right: 0.5em;
-        }
+            label {
+                margin-right: 0.5em;
+            }
 
-        label:first-letter {
-            text-transform: capitalize;
-        }
+            label:first-letter {
+                text-transform: capitalize;
+            }
 
-        label:not(:first-of-type) {
-            margin-left: 1.2em;
+            label:not(:first-of-type) {
+                margin-left: 1.2em;
+            }
+
         }
     }
-
 `;
+
 
 // --------------- <FreqChartSection /> ------------------------------------
 
@@ -88,14 +108,7 @@ export const FreqChartSection = styled.section`
     }
 
     h3 {
-        margin: 0;
-        padding-top: 0;
-        padding-bottom: .2em;
-        text-align: center;
-        font-size: 1.6em;
-        font-weight: normal;
-        color: ${theme.colorLightText};
-        letter-spacing: 0.1em;
+       ${ChartH3}
     }
 
     .chart-wrapper {
