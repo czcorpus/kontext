@@ -37,4 +37,12 @@ class Dispersion(Querying):
     @exposed(page_model='dispersion', template='dispersion.html')
     def index(self, request):
         # TODO the action will require at least some concordance ID
+        """
+        try:
+            require_existing_conc(self.corp, self.args.q)
+            ... do a job using the conc. ...
+        except ConcNotFoundException:
+            args = list(self._request.args.items()) + [('next', 'dispersion')]
+            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+        """
         return {}
