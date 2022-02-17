@@ -880,6 +880,8 @@
         "pquery__only_one_field_can_be_of_{type}": "Only a single sub-query can be of the \"{type}\" type",
         "pquery__condition_never": "never",
         "pquery__condition_always": "always",
-        "dispersion__resolution": "Resolution"
+        "dispersion__resolution": "resolution",
+        "dispersion__download_chart": "download the chart",
+        "dispersion__print_quality": "for printing"
     }
 }

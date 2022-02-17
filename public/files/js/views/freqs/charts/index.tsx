@@ -330,7 +330,7 @@ export function init(
                         name: GlobalActions.ConvertChartSVG.name,
                         payload: {
                             format: props.downloadFormat,
-                            filename: 'freq-chart.svg',
+                            filename: 'freq-chart',
                             blob,
                             chartType: props.type,
                             vertBarChartMaxLabel: maxLabelLength

@@ -21,12 +21,12 @@
  */
 
 import { Action } from 'kombo';
+import { ChartExportFormat } from '../../types/kontext';
 import { DispersionDataRow } from './result';
 
 
 
 export class Actions {
-
 
     static SubmitForm:Action<{
         reloadPage?:boolean;
@@ -49,5 +49,11 @@ export class Actions {
         name: 'FREQ_DISPERSION_CHANGE_RESOLUTION'
     };
 
+    static SetDownloadFormat:Action<{
+        format:ChartExportFormat;
+
+    }> = {
+        name: 'FREQ_DISPERSION_SET_DOWNLOAD_FORMAT'
+    };
 
 }

@@ -29,9 +29,32 @@ export const FreqDispersionSection = styled.section`
 // ---------------- <FreqDispersionParamFieldset /> -----------------------
 
 export const FreqDispersionParamFieldset = styled.fieldset`
+    display: flex;
+    align-items: center;
+    padding-left: 1em;
+    padding-top: 1em;
 
     label {
         margin-right: 0.5em;
     }
+
+    label:first-letter {
+        text-transform: capitalize;
+    }
+
+    label:not(:first-of-type) {
+        margin-left: 1.2em;
+    }
+
+`;
+
+// --------------- <DownloadButton /> ------------------------------------
+
+export const DownloadButton = styled.img`
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: 'middle';
+    margin: 0 0 0 0.5em;
+    cursor: pointer;
 
 `;

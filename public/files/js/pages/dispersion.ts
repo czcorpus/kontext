@@ -21,6 +21,7 @@
 
 import { KontextPage } from '../app/main';
 import { DispersionDataRow, DispersionResultModel } from '../models/dispersion/result';
+import { ImageConversionModel } from '../models/common/imgConv';
 import { Conf } from '../types/kontext';
 import { init as viewInit } from '../views/dispersion/result';
 
@@ -29,8 +30,15 @@ export class DispersionPage {
 
     private readonly layoutModel:KontextPage;
 
+    private imgConversionModel:ImageConversionModel;
+
     constructor(layoutModel:KontextPage) {
         this.layoutModel = layoutModel;
+
+        this.imgConversionModel = new ImageConversionModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel
+        );
     }
 
     init() {
@@ -44,6 +52,7 @@ export class DispersionPage {
                     concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
                     resolution: this.layoutModel.getConf<number>('dispersionResolution'),
                     data: this.layoutModel.getConf<Array<DispersionDataRow>>('dispersionData'),
+                    downloadFormat: 'png',
                 }
             );
 
