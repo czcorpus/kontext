@@ -23,6 +23,7 @@ import { Bound, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
 import { ComponentHelpers } from '../../types/kontext';
+import { Actions } from '../../models/dispersion/actions';
 
 
 
@@ -31,12 +32,22 @@ export function init(
     he:ComponentHelpers,
     dispersionModel:DispersionResultModel
 ) {
+    const handleResolutionChange = (evt) => {
+        const value = parseInt(evt.target.value);
+        if (value && value > 0) {
+            dispatcher.dispatch({
+                name: Actions.ChangeResolution.name,
+                payload: {value}
+            });
+        }
+    }
 
     const DispersionForm:React.FC<DispersionResultModelState> = (props) => {
 
         return (
             <fieldset>
-                Dispersion args inputs
+                <label htmlFor='resolution-input'>Resolution TODO</label>
+                <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
             </fieldset>
         )
     }

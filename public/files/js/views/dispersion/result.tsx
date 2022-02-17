@@ -23,6 +23,8 @@ import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
 import { ComponentHelpers } from '../../types/kontext';
+import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
+import * as theme from '../theme/default';
 
 
 
@@ -43,7 +45,13 @@ export function init(
                 {props.isBusy ?
                     <globalComponents.AjaxLoaderImage /> :
                     <div>
-                        Charts etc.
+                        <BarChart width={730} height={250} data={props.data}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="position" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill={theme.colorLogoBlue} />
+                        </BarChart>
                     </div>
                 }
             </section>

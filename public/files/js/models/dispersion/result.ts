@@ -25,9 +25,16 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 
 
+export interface DispersionDataRow {
+    position: number;
+    value: number;
+}
+
 export interface DispersionResultModelState {
     isBusy:boolean;
     concordanceId:string;
+    resolution:number;
+    data:Array<DispersionDataRow>;
 }
 
 
@@ -41,6 +48,13 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
         this.layoutModel = layoutModel;
 
         this.addActionHandler(
+            Actions.ChangeResolution,
+            (state, action) => {
+                state.resolution = action.payload.value;
+            }
+        )
+
+        this.addActionHandler(
             Actions.SubmitForm,
             (state, action) => {
 
@@ -49,7 +63,10 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
                 if (action.payload.reloadPage) {
                     window.location.href = this.layoutModel.createActionUrl(
                         'dispersion/index',
-                        {q: `~${state.concordanceId}`}
+                        {
+                            q: `~${state.concordanceId}`,
+                            resolution: state.resolution,
+                        }
                     );
                 }
             }

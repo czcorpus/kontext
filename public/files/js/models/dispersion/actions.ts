@@ -34,5 +34,12 @@ export class Actions {
         name: 'FREQ_DISPERSION_SUBMIT_FORM'
     };
 
+    static ChangeResolution:Action<{
+        value:number;
+
+    }> = {
+        name: 'FREQ_DISPERSION_CHANGE_RESOLUTION'
+    };
+
 
 }

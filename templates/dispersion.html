@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% block title %}KonText - {{ page_title }} - ({{ "Dispersion"|_|lower }}){% endblock %}
 
 {% block bodyonload %}
+__conf.dispersionResolution = {{ dispersion_resolution|to_json }};
+__conf.dispersionData = {{ initial_data|to_json }};
 dispersionPage.init(__conf);
 {% endblock %}
 

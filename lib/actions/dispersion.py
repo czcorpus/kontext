@@ -38,10 +38,17 @@ class Dispersion(Querying):
         return '/dispersion/'
 
     @exposed(page_model='dispersion', template='dispersion.html')
-    def index(self, request):
+    def index(self, request: werkzeug.Request):
         try:
-            require_existing_conc(self.corp, self.args.q)
+            conc = require_existing_conc(self.corp, self.args.q)
         except ConcNotFoundException:
             args = list(self._request.args.items()) + [('next', 'dispersion')]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
-        return {}
+
+        res = request.args.get('resolution', 100, type=int)
+        data = conc.xdistribution([0] * res, res)
+
+        return {
+            'dispersion_resolution': res,
+            'initial_data': [{'position': beg, 'value': val} for val, beg in data],
+        }

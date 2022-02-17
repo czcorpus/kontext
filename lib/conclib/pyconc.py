@@ -266,7 +266,8 @@ class PyConc(manatee.Concordance):
             norms = [self.pycorp.search_size for _ in words]
 
         attrs = crit.split()
-        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2) for x in range(0, len(attrs), 2)]
+        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2)
+                                      for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
         if ml:
@@ -283,9 +284,10 @@ class PyConc(manatee.Concordance):
                 ))
         else:
             head.append(dict(
-                    n='i.p.m.',
-                    title=translate('instances per million positions (refers to the respective category)'),
-                    s='rel'))
+                n='i.p.m.',
+                title=translate(
+                    'instances per million positions (refers to the respective category)'),
+                s='rel'))
 
             lines = []
             for w, f, nf in zip(words, freqs, norms):
@@ -322,9 +324,6 @@ class PyConc(manatee.Concordance):
         return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
 
     def xdistribution(self, xrange, yrange):
-        """
-        TODO: no direct call found for this
-        """
         begs = manatee.IntVector(xrange)
         vals = manatee.IntVector(xrange)
         self.distribution(vals, begs, yrange)
