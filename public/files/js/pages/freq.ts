@@ -209,7 +209,7 @@ class FreqPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: this.layoutModel.getConf<string>('FreqType')
+                initialFreqFormVariant: this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')
             }
         );
     }
@@ -291,9 +291,9 @@ class FreqPage {
     }
 
     private initFreqResult():void {
-        switch (this.layoutModel.getConf<string>('FreqType')) {
-            case 'ml':
-            case 'tt':
+        switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
+            case 'tokens':
+            case 'text-types':
                 this.freqLoader = new FreqDataLoader({
                     pageModel: this.layoutModel
                 });
@@ -312,6 +312,7 @@ class FreqPage {
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
+                    freqType: this.layoutModel.getConf<Kontext.BasicFreqModuleType>('FreqType'),
                     freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
@@ -324,6 +325,7 @@ class FreqPage {
                 this.freqChartsModel = new FreqChartsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
+                    freqType: this.layoutModel.getConf<Kontext.BasicFreqModuleType>('FreqType'),
                     freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
@@ -354,7 +356,7 @@ class FreqPage {
                     {} as FreqDataRowsModelState
                 );
             break;
-            case 'ct':
+            case '2-attribute':
                 const data = this.layoutModel.getConf<CTFreqResultData>(
                     'CTFreqResultData'
                 );
@@ -416,8 +418,8 @@ class FreqPage {
             }
         });
 
-        switch (this.layoutModel.getConf<string>('FreqType')) {
-            case 'ct': {
+        switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
+            case '2-attribute': {
                 const args = {
                     ...this.ctFreqModel.getSubmitArgs(),
                     format: undefined
@@ -429,13 +431,14 @@ class FreqPage {
                 );
             }
             break;
-            case 'tt':
-            case 'ml': {
+            case 'text-types':
+            case 'tokens': {
                 const state = this.freqResultModel.getState(); // no antipattern here
                 const firstCrit = List.head(state.freqCrit);
                 const args = {
                     ...this.freqResultModel.getSubmitArgs(state, firstCrit.n),
                     fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                    freq_type: state.freqType,
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(

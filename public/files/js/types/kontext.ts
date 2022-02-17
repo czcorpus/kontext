@@ -63,6 +63,10 @@ export type PqueryExpressionRoles = 'specification'|'subset'|'superset';
  */
 export type PqueryType = 'full'|'split';
 
+export type BasicFreqModuleType = 'text-types' | 'tokens';
+
+export type FreqModuleType = BasicFreqModuleType | '2-attribute' | 'dispersion';
+
 
 export interface FormValue<T> {
 

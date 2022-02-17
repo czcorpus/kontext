@@ -207,6 +207,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
             ftt_include_empty: undefined,
+            fpage: 1,
             flimit: parseInt(state.flimit.value),
             ...pipe(
                 state.mlxattr,
@@ -322,6 +323,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
             fttattr_async: List.tail(state.fttattr),
             ftt_include_empty: state.fttIncludeEmpty,
             flimit: parseInt(state.flimit.value),
+            fpage: 1,
             freq_sort: state.freqSort,
             freqlevel: undefined
         };

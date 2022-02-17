@@ -55,7 +55,6 @@ import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel } from '../models/concordance/ttdist/model';
-import { TTCrit } from '../models/concordance/ttdist/common';
 import { DummySyntaxViewModel } from '../models/concordance/syntax';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
@@ -851,7 +850,7 @@ export class ViewPage {
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'ml'
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
             }
         );
     }
@@ -1027,7 +1026,7 @@ export class ViewPage {
             this.layoutModel.dispatcher
         );
 
-        const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
+        const showFreqInfo = this.layoutModel.getConf<Array<string>>('TTCrit').length > 0 &&
                 this.layoutModel.getConf<Array<string>>(
                     'ConcDashboardModules').indexOf('freqs') > -1;
         this.viewModels.dashboardModel = new ConcDashboard(
@@ -1044,7 +1043,7 @@ export class ViewPage {
                 this.layoutModel,
                 this.viewModels.lineViewModel,
                 {
-                    ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
+                    ttCrit: this.layoutModel.getConf<Array<string>>('TTCrit')
                 }
             );
         }

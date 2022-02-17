@@ -189,7 +189,7 @@ class Frequency:
             MainMenu.FREQUENCY('lemmas'), te('Lemmas'), 'freqs'
         ).add_args(
             ('fcrit', 'lemma/e 0~0>0'),
-            ('ml', 0)
+            ('freq_type', 'tokens')
         ).enable_if(lambda d: 'lemma' in [x['n'] for x in args.get('AttrList', ())])
     )
 
@@ -198,7 +198,7 @@ class Frequency:
             MainMenu.FREQUENCY('node-forms'), te('Node forms') + ' [A=a]', 'freqs', hint=te('case insensitive')
         ).add_args(
             ('fcrit', 'word/ie 0~0>0'),
-            ('ml', 0))
+            ('freq_type', 'tokens'))
     )
 
     freq_doc_ids: Callable[[OutData], ConcMenuItem] = field(
@@ -206,7 +206,7 @@ class Frequency:
             MainMenu.FREQUENCY('doc-ids'), te('Doc IDs'), 'freqs'
         ).add_args(
             ('fcrit', args['fcrit_shortref']),
-            ('ml', 0)
+            ('freq_type', 'tokens')
         ).enable_if(lambda d: 'fcrit_shortref' in args and '.' in args['fcrit_shortref'].split('/')[0])
     )
 
@@ -226,7 +226,7 @@ class Frequency:
         ).add_args(
             *fcrit_async_args
         ).add_args(
-            ('ml', 0)
+            ('freq_type', 'text-types')
         ).enable_if(lambda d: bool(d['ttcrit']))
 
     freq_text_types: Callable[[OutData], ConcMenuItem] = field(

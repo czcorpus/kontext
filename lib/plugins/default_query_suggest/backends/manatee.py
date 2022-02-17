@@ -46,7 +46,6 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             samplesize=0,
             flimit=1,
             fcrit=[fcrit],
-            ml=2,
             ftt_include_empty=0,
             rel_mode=1,
             freq_sort='freq',
@@ -55,7 +54,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             fpage=1,
             force_cache=False)
         freqs = [conc.xfreq_dist(
-            cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+            cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
             for cr in args.fcrit]
         return freqs[0].get('Items', [])
 

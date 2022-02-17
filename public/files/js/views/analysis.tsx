@@ -36,7 +36,7 @@ export interface AnalysisModuleArgs {
 }
 
 export interface AnalysisFrameProps {
-    initialFreqFormVariant:string;
+    initialFreqFormVariant:Kontext.FreqModuleType;
 }
 
 export interface FormsViews {

@@ -28,12 +28,12 @@ import { ConcordanceModel } from '../main';
 import { Actions as ConcActions } from '../actions';
 import { SampleServerArgs } from '../../query/common';
 import { FreqServerArgs } from '../../freqs/regular/common';
-import { FreqBlock, TextTypesDistModelProps, TTCrit } from './common';
+import { FreqBlock, TextTypesDistModelProps } from './common';
 import { FreqData, Reduce } from './response';
 
 
 export interface TextTypesDistModelState {
-    ttCrit:TTCrit;
+    ttCrit:Array<string>;
     blocks:Array<FreqBlock>;
     flimit:number;
     sampleSize:number;
@@ -85,7 +85,11 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
             ConcActions.AsyncCalculationUpdated.name,
             action => {
-                this.state.blockedByAsyncConc = !action.payload.finished;
+                this.changeState(
+                    state => {
+                        state.blockedByAsyncConc = !action.payload.finished;
+                    }
+                );
                 this.suspendWithTimeout(5000, {}, (action, syncData) => {
                     if (ConcActions.isConcordanceRecalculationReady(action)) {
                         return null;
@@ -132,16 +136,22 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         this.addActionHandler<typeof ConcActions.RemoveChartItemsLimit>(
             ConcActions.RemoveChartItemsLimit.name,
             action => {
-                this.state.maxBlockItems = -1;
-                this.emitChange();
+                this.changeState(
+                    state => {
+                        state.maxBlockItems = -1;
+                    }
+                );
             }
         );
 
         this.addActionHandler<typeof ConcActions.RestoreChartItemsLimit>(
             ConcActions.RestoreChartItemsLimit.name,
             action => {
-                this.state.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
-                this.emitChange();
+                this.changeState(
+                    state => {
+                        state.maxBlockItems = TextTypesDistModel.DEFAULT_MAX_BLOCK_ITEMS;
+                    }
+                );
             }
         );
     }
@@ -150,17 +160,26 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         if (!this.state.blockedByAsyncConc && concSize > 0) {
             const args = this.layoutModel.getConcArgs();
             if (this.state.lastArgs !== List.head(args.q)) {
-                this.state.isBusy = true;
-                this.emitChange();
+                this.changeState(
+                    state => {
+                        state.isBusy = true;
+                    }
+                );
                 this.loadData({...args, rlines: 0}, concSize, flimit).subscribe({
                     next: ans => {
-                        this.state.isBusy = false;
-                        this.emitChange();
+                        this.changeState(
+                            state => {
+                                state.isBusy = false;
+                            }
+                        );
                     },
                     error: err => {
-                        this.state.isBusy = false;
+                        this.changeState(
+                            state => {
+                                state.isBusy = false;
+                            }
+                        );
                         this.layoutModel.showMessage('error', err);
-                        this.emitChange();
                     }
                 });
             }
@@ -168,7 +187,12 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
     }
 
     private loadData(args:SampleServerArgs, concSize:number, flimit:number):Observable<boolean> {
-
+        const freqArgs = this.layoutModel.getConcArgs() as FreqServerArgs;
+        this.changeState(
+            state => {
+                state.blocks = [];
+            }
+        );
         return (() => {
             if (concSize > TextTypesDistModel.SAMPLE_SIZE) {
                 args.rlines = TextTypesDistModel.SAMPLE_SIZE;
@@ -181,56 +205,78 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 );
 
             } else {
-                return rxOf({sampled_size: 0, conc_persistence_op_id: ''});
+                return rxOf({
+                    sampled_size: 0,
+                    conc_persistence_op_id: freqArgs.q[0].substring(1) // TODO it would be better to have the raw value here
+                });
             }
         })().pipe(
-            map(
-                (reduceAns) => tuple(reduceAns, this.layoutModel.getConcArgs() as FreqServerArgs)
+            concatMap(
+                reduceAns => rxOf(...List.map(
+                    (fcrit, i) => tuple(reduceAns, freqArgs, fcrit, i),
+                    this.state.ttCrit
+                ))
             ),
-            concatMap(([reduceAns, args]) => {  // TODO side effects here
-                this.state.flimit = flimit;
-                args.fcrit = this.state.ttCrit
-                args.ml = 0;
-                args.flimit = this.state.flimit;
-                args.force_cache = '1';
-                args.format = 'json';
-                if (reduceAns.conc_persistence_op_id) {
-                    this.state.sampleSize = reduceAns.sampled_size;
-                    args.q = [`~${reduceAns.conc_persistence_op_id}`];
+            tap(
+                ([reduceAns,]) => {
+                    this.changeState(
+                        state => {
+                            state.flimit = flimit;
+                            if (reduceAns.conc_persistence_op_id) {
+                                state.sampleSize = reduceAns.sampled_size;
+                            }
+                        }
+                    );
                 }
-                return this.layoutModel.ajax$<FreqData>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl('freqs'),
-                    args
-                );
-            }),
-            tap((data) => {
-                this.state.blocks = pipe(
-                    data.Blocks,
-                    List.filter(block => block.Items.length > 0),
-                    List.map(block => {
-                        const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
-                        return {
-                            label: block.Head && block.Head[0] ?
-                                block.Head.length > 0 && block.Head[0].n :
-                                null,
-                            items: pipe(
-                                block.Items,
-                                List.sortBy(v => v.rel),
-                                List.map((v, i) => ({
-                                    value: v.Word.map(v => v.n).join(', '),
-                                    ipm: v.rel,
-                                    abs: v.freq,
-                                    barWidth: Math.round(
-                                        v.rel / sumRes * TextTypesDistModel.IPM_BAR_WIDTH),
-                                    color: TextTypesDistModel.COLORS[
-                                        i % TextTypesDistModel.COLORS.length]
-                                }))
-                            )
-                        };
-                    })
-                );
-            }),
+            ),
+            concatMap(
+                ([reduceAns, args, fcrit, idx]) => {
+                    args.fcrit = fcrit;
+                    args.flimit = flimit;
+                    args.force_cache = 1;
+                    args.format = 'json';
+                    if (reduceAns.conc_persistence_op_id) {
+                        args.q = [`~${reduceAns.conc_persistence_op_id}`];
+                    }
+                    return this.layoutModel.ajax$<FreqData>(
+                        HTTP.Method.GET,
+                        this.layoutModel.createActionUrl('freqs'),
+                        args
+                    ).pipe(
+                        map(
+                            resp => tuple(resp, idx)
+                        )
+                    )
+                }
+            ),
+            tap(
+                ([data, idx]) => {
+                    const block = List.head(data.Blocks);
+                    const sumRes = block.Items.reduce((r, v) => r + v.rel, 0);
+                    this.changeState(
+                        state => {
+                            state.blocks[idx] = {
+                                label: block.Head && block.Head[0] ?
+                                    block.Head.length > 0 && block.Head[0].n :
+                                    null,
+                                items: pipe(
+                                    block.Items,
+                                    List.sortBy(v => v.rel),
+                                    List.map((v, i) => ({
+                                        value: v.Word.map(v => v.n).join(', '),
+                                        ipm: v.rel,
+                                        abs: v.freq,
+                                        barWidth: Math.round(
+                                            v.rel / sumRes * TextTypesDistModel.IPM_BAR_WIDTH),
+                                        color: TextTypesDistModel.COLORS[
+                                            i % TextTypesDistModel.COLORS.length]
+                                    }))
+                                )
+                            };
+                        }
+                    );
+                }
+            ),
             map(_ => true)
         );
     }

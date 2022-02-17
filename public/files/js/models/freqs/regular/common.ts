@@ -24,7 +24,7 @@ import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
 import { FreqChartsAvailableOrder, FreqResultResponse } from '../common';
-import { AttrItem } from '../../../types/kontext';
+import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
@@ -82,6 +82,7 @@ export function clearResultBlock(res:ResultBlock|EmptyResultBlock):EmptyResultBl
 }
 
 export interface BaseFreqModelState {
+    freqType:BasicFreqModuleType;
     data:{[sourceId:string]:ResultBlock|EmptyResultBlock};
     currentPage:{[sourceId:string]:string};
     sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
@@ -94,14 +95,33 @@ export interface BaseFreqModelState {
     alphaLevel:Maths.AlphaLevel;
 }
 
+/**
+ * @todo this probably mixes two types where one represents a higher level approach
+ * to freq. args (fttattr, fttattr_async) and the other (fcrit) represents an already
+ * encoded arguments as required by the Manatee engine.
+ */
 export interface FreqServerArgs extends ConcServerArgs {
     flimit:number;
+    fpage:number;
+    fmaxitems?:number; // TODO this one vs. 'flimit'?
     freqlevel:number;
     freq_sort:string;
     ftt_include_empty:boolean;
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
-    [other:string]:any;
+    fcrit?:string;
+    force_cache?:0|1;
+}
+
+
+export interface MulticritFreqServerArgs extends ConcServerArgs {
+    flimit:number;
+    fpage:number;
+    fmaxitems?:number;
+    freqlevel:number;
+    freq_sort:string;
+    ftt_include_empty:boolean;
+    fcrit:Array<string>;
 }
 
 export function validateNumber(v:string, minNum:number):boolean {
