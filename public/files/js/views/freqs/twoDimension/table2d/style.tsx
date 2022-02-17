@@ -237,24 +237,6 @@ export const CTFreqResultView = styled.div`
 
     margin: 1em;
 
-    .mode-switch {
-
-        text-align: center;
-        font-size: 110%;
-
-        a {
-            color: ${theme.colorLogoBlue};
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        a.current {
-            text-decoration: underline;
-        }
-    }
 
     div.toolbar {
         margin-bottom: 1em;

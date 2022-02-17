@@ -1279,7 +1279,7 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='plain', http_method='POST', skip_corpus_init=True)
     def export_freqct(self, request):
         with plugins.runtime.EXPORT_FREQ2D as plg:
-            data = json.loads(request.form['data'])
+            data = request.json
             exporter = plg.load_plugin(request.args['saveformat'])
             if request.args['savemode'] == 'table':
                 exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
