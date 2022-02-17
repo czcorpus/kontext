@@ -113,7 +113,9 @@ export class CollPage {
             this.layoutModel,
             {
                 isBusy: false,
-                concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId')
+                concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                resolution: 100,
+                data: [],
             }
         );
 

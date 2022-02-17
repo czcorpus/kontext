@@ -20,7 +20,7 @@
  */
 
 import { KontextPage } from '../app/main';
-import { DispersionResultModel } from '../models/dispersion/result';
+import { DispersionDataRow, DispersionResultModel } from '../models/dispersion/result';
 import { Conf } from '../types/kontext';
 import { init as viewInit } from '../views/dispersion/result';
 
@@ -41,7 +41,9 @@ export class DispersionPage {
                 this.layoutModel,
                 {
                     isBusy: false,
-                    concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId')
+                    concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                    resolution: this.layoutModel.getConf<number>('dispersionResolution'),
+                    data: this.layoutModel.getConf<Array<DispersionDataRow>>('dispersionData'),
                 }
             );
 

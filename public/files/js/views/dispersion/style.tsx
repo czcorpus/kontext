@@ -1,9 +1,7 @@
 /*
- * Copyright (c) 2022 Charles University, Faculty of Arts,
+ * Copyright (c) 2022 Charles University in Prague, Faculty of Arts,
  *                    Institute of the Czech National Corpus
  * Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
- * Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
-
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,34 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Action } from 'kombo';
-import { DispersionDataRow } from './result';
+import styled from 'styled-components';
 
+// ---------------- <FreqDispersionSection /> -----------------------
 
+export const FreqDispersionSection = styled.section`
 
-export class Actions {
+`;
 
+// ---------------- <FreqDispersionParamFieldset /> -----------------------
 
-    static SubmitForm:Action<{
-        reloadPage?:boolean;
+export const FreqDispersionParamFieldset = styled.fieldset`
 
-    }> = {
-        name: 'FREQ_DISPERSION_SUBMIT_FORM'
-    };
+    label {
+        margin-right: 0.5em;
+    }
 
-    static ReloadDone:Action<{
-        data:Array<DispersionDataRow>;
-
-    }> = {
-        name: 'FREQ_DISPERSION_RELOAD_DONE'
-    };
-
-    static ChangeResolution:Action<{
-        value:number;
-
-    }> = {
-        name: 'FREQ_DISPERSION_CHANGE_RESOLUTION'
-    };
-
-
-}
+`;
