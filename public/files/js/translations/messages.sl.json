@@ -879,6 +879,7 @@
         "pquery__pquery_type_split": "Enter as partial sub-queries UNTRANSLATED",
         "pquery__only_one_field_can_be_of_{type}": "Only a single sub-query can be of the \"{type}\" type UNTRANSLATED",
         "pquery__condition_never": "never UNTRANSLATED",
-        "pquery__condition_always": "always UNTRANSLATED"
+        "pquery__condition_always": "always UNTRANSLATED",
+        "dispersion__resolution": "Resolution UNTRANSLATED"
     }
 }

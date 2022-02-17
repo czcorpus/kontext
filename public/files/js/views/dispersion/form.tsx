@@ -25,6 +25,8 @@ import { DispersionResultModel, DispersionResultModelState } from '../../models/
 import { ComponentHelpers } from '../../types/kontext';
 import { Actions } from '../../models/dispersion/actions';
 
+import * as S from './style';
+
 
 
 export function init(
@@ -35,7 +37,7 @@ export function init(
     const handleResolutionChange = (evt) => {
         const value = parseInt(evt.target.value);
         if (value && value > 0) {
-            dispatcher.dispatch({
+            dispatcher.dispatch<typeof Actions.ChangeResolution>({
                 name: Actions.ChangeResolution.name,
                 payload: {value}
             });
@@ -45,10 +47,10 @@ export function init(
     const DispersionForm:React.FC<DispersionResultModelState> = (props) => {
 
         return (
-            <fieldset>
-                <label htmlFor='resolution-input'>Resolution TODO</label>
+            <S.FreqDispersionParamFieldset>
+                <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}</label>
                 <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
-            </fieldset>
+            </S.FreqDispersionParamFieldset>
         )
     }
 

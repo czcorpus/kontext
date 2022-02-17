@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import os
 from sys import stderr
 import re
@@ -323,11 +323,11 @@ class PyConc(manatee.Concordance):
             lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
         return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
 
-    def xdistribution(self, xrange, yrange):
+    def xdistribution(self, xrange: List[int], amplitude: int) -> Tuple[List[int], List[int]]:
         begs = manatee.IntVector(xrange)
-        vals = manatee.IntVector(xrange)
-        self.distribution(vals, begs, yrange)
-        return list(zip(vals, begs))
+        values = manatee.IntVector(xrange)
+        self.distribution(values, begs, amplitude)
+        return begs, values
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
         statdesc = {'t': translate('T-score'),

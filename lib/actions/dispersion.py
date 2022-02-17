@@ -11,13 +11,27 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import List
 from texttypes.cache import TextTypesCache
 import werkzeug
 from controller.querying import Querying
 from controller import exposed
 from controller.errors import ImmediateRedirectException
+from conclib.pyconc import PyConc
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
+
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
+
+
+@dataclass_json
+@dataclass
+class FreqDispersionBin:
+    start: float
+    position: float
+    end: float
+    freq: int
 
 
 class Dispersion(Querying):
@@ -37,6 +51,38 @@ class Dispersion(Querying):
         """
         return '/dispersion/'
 
+    def _get_freq_dispersion(self, conc: PyConc, resolution: int) -> List[FreqDispersionBin]:
+        conc_begs, values = conc.xdistribution([0] * resolution, 101)
+
+        abs_freq = []
+        last_valid_item = None
+        for beg in reversed(conc_begs):
+            if beg > 0:
+                if last_valid_item is None:
+                    abs_freq.append(int(conc.size()) - beg)
+                else:
+                    abs_freq.append(last_valid_item - beg)
+                last_valid_item = beg
+            else:
+                abs_freq.append(0)
+
+        freq_dispersion = [
+            FreqDispersionBin(
+                100 * i / len(conc_begs),
+                100 * (i + 0.5) / len(conc_begs),
+                100 * (i + 1) / len(conc_begs),
+                freq,
+            ) for i, freq in enumerate(reversed(abs_freq))
+        ]
+
+        return freq_dispersion
+
+    @exposed(return_type='json')
+    def ajax_get_freq_dispersion(self, request: werkzeug.Request) -> List[FreqDispersionBin]:
+        conc = require_existing_conc(self.corp, self.args.q)
+        resolution = request.args.get('resolution', 100, type=int)
+        return self._get_freq_dispersion(conc, resolution)
+
     @exposed(page_model='dispersion', template='dispersion.html')
     def index(self, request: werkzeug.Request):
         try:
@@ -45,10 +91,10 @@ class Dispersion(Querying):
             args = list(self._request.args.items()) + [('next', 'dispersion')]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-        res = request.args.get('resolution', 100, type=int)
-        data = conc.xdistribution([0] * res, res)
+        resolution = request.args.get('resolution', 100, type=int)
+        freq_dispersion = self._get_freq_dispersion(conc, resolution)
 
         return {
-            'dispersion_resolution': res,
-            'initial_data': [{'position': beg, 'value': val} for val, beg in data],
+            'dispersion_resolution': resolution,
+            'initial_data': freq_dispersion,
         }

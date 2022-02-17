@@ -23,8 +23,13 @@ import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
 import { ComponentHelpers } from '../../types/kontext';
-import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
+import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts';
 import * as theme from '../theme/default';
+
+import { Actions } from '../../models/dispersion/actions';
+import { List } from 'cnc-tskit';
+
+import * as S from './style';
 
 
 
@@ -39,22 +44,41 @@ export function init(
 
     const DispersionResults:React.FC<DispersionResultModelState> = (props) => {
 
+        const handleResolutionChange = (evt) => {
+            const value = parseInt(evt.target.value);
+            if (value && value > 0) {
+                dispatcher.dispatch<typeof Actions.ChangeResolution>({
+                    name: Actions.ChangeResolution.name,
+                    payload: {value}
+                });
+                dispatcher.dispatch<typeof Actions.SubmitForm>({
+                    name: Actions.SubmitForm.name,
+                    payload: {reloadPage: false}
+                });
+            }
+        }
+
         return (
-            <section>
-                <h2>Results</h2>
+            <S.FreqDispersionSection>
+                <S.FreqDispersionParamFieldset>
+                    <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}</label>
+                    <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
+                </S.FreqDispersionParamFieldset>
                 {props.isBusy ?
                     <globalComponents.AjaxLoaderImage /> :
                     <div>
-                        <BarChart width={730} height={250} data={props.data}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="position" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="value" fill={theme.colorLogoBlue} />
-                        </BarChart>
+                        <ResponsiveContainer width="95%" height={250}>
+                            <BarChart data={props.data}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="position" type="number" unit="%" domain={[0, 100]} allowDataOverflow={true} />
+                                <YAxis />
+                                <Tooltip labelFormatter={(label, data) => data[0] ? `${data[0].payload.start} - ${data[0].payload.end} %` : label} />
+                                <Bar dataKey="freq" fill={theme.colorLogoBlue} barSize={List.size(props.data) === 1 ? 100 : null} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 }
-            </section>
+            </S.FreqDispersionSection>
         );
     }
 
