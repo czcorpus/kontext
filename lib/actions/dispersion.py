@@ -16,7 +16,7 @@ from texttypes.cache import TextTypesCache
 import werkzeug
 from controller.querying import Querying
 from controller import exposed
-from controller.errors import ImmediateRedirectException
+from controller.errors import ImmediateRedirectException, UserActionException
 from conclib.pyconc import PyConc
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
@@ -81,7 +81,9 @@ class Dispersion(Querying):
     def ajax_get_freq_dispersion(self, request: werkzeug.Request) -> List[FreqDispersionBin]:
         conc = require_existing_conc(self.corp, self.args.q)
         resolution = request.args.get('resolution', 100, type=int)
-        return self._get_freq_dispersion(conc, resolution)
+        if 0 < resolution < 1000:
+            return self._get_freq_dispersion(conc, resolution)
+        raise UserActionException('Invalid dispersion resolution. Acceptable values [1, 1000].')
 
     @exposed(page_model='dispersion', template='dispersion.html')
     def index(self, request: werkzeug.Request):
@@ -92,9 +94,12 @@ class Dispersion(Querying):
             raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
         resolution = request.args.get('resolution', 100, type=int)
-        freq_dispersion = self._get_freq_dispersion(conc, resolution)
+        if resolution > 1000:
+            resolution = 1000
+        elif resolution < 1:
+            resolution = 1
 
         return {
             'dispersion_resolution': resolution,
-            'initial_data': freq_dispersion,
+            'initial_data': self._get_freq_dispersion(conc, resolution),
         }

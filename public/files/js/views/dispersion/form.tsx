@@ -36,7 +36,7 @@ export function init(
 ) {
     const handleResolutionChange = (evt) => {
         const value = parseInt(evt.target.value);
-        if (value && value > 0) {
+        if (value) {
             dispatcher.dispatch<typeof Actions.ChangeResolution>({
                 name: Actions.ChangeResolution.name,
                 payload: {value}

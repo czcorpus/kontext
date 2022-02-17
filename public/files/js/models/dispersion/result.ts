@@ -60,7 +60,13 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
         this.addActionHandler(
             Actions.ChangeResolution,
             (state, action) => {
-                state.resolution = action.payload.value;
+                if (action.payload.value > 1000) {
+                    state.resolution = 1000;
+                } else if (action.payload.value < 1) {
+                    state.resolution = 1;
+                } else {
+                    state.resolution = action.payload.value;
+                }
             }
         )
 
