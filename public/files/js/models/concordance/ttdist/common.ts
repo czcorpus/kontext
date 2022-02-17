@@ -19,11 +19,8 @@
  */
 
 
-export type TTCrit = Array<[string, string]>;
-
-
 export interface TextTypesDistModelProps {
-    ttCrit:TTCrit;
+    ttCrit:Array<string>;
 }
 
 

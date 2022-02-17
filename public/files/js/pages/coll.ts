@@ -169,7 +169,7 @@ export class CollPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'ml'
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
             }
         );
 

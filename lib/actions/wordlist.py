@@ -115,10 +115,15 @@ class Wordlist(Kontext):
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
         bg_result = async_res.get()
         if isinstance(bg_result, MissingSubCorpFreqFile):
-            for subtask in freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr):
-                self._store_async_task(subtask)
-                ans['subtasks'].append(subtask.to_dict())
-            ans['freq_files_avail'] = False
+            data_calc = freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr)
+            if type(data_calc) is list:
+                for subtask in data_calc:
+                    self._store_async_task(subtask)
+                    ans['subtasks'].append(subtask.to_dict())
+                ans['freq_files_avail'] = False
+            else:
+                # TODO we should join the current calculation here instead of throwing an error
+                raise WordlistError('The data calculation is already running')
         elif isinstance(bg_result, Exception):
             raise bg_result
         self._curr_wlform_args = form_args

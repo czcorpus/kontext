@@ -25,7 +25,7 @@ import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import {
     BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader,
-    FreqServerArgs, isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
+    FreqServerArgs, isEmptyResultBlock, MulticritFreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
     recalculateConfIntervals, ResultBlock, validateNumber } from './common';
 import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
@@ -34,12 +34,13 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
-import { AttrItem } from '../../../types/kontext';
+import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 
 
 export interface FreqDataRowsModelArgs {
     dispatcher:IFullActionControl;
     pageModel:PageModel;
+    freqType:BasicFreqModuleType;
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
@@ -148,13 +149,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private readonly debouncedAction$:Subject<DebouncedActions>;
 
     constructor({
-        dispatcher, pageModel, freqCrit, freqCritAsync, formProps, saveLinkFn,
+        dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps, saveLinkFn,
         quickSaveRowLimit, initialData, currentPage, freqLoader
     }:FreqDataRowsModelArgs) {
         const allCrit = List.concat(freqCrit, freqCritAsync);
         super(
             dispatcher,
             {
+                freqType,
                 data: pipe(
                     initialData,
                     List.map(v => tuple(v.fcrit, v)),
@@ -433,7 +435,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 dispatch<typeof Actions.ResultPrepareSubmitArgsDone>({
                     name: Actions.ResultPrepareSubmitArgsDone.name,
                     payload: {
-                        data: this.getSubmitArgs(state, action.payload.sourceId)
+                        data: this.getAllCritSubmitArgs(state)
                     }
                 });
             }
@@ -534,7 +536,20 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             fcrit,
             flimit: parseInt(state.flimit),
             freq_sort: state.sortColumn[fcrit],
-            fpage: state.currentPage[fcrit],
+            fpage: parseInt(state.currentPage[fcrit]),
+            ftt_include_empty: state.ftt_include_empty,
+            freqlevel: 1,
+            format: 'json'
+        };
+    }
+
+    getAllCritSubmitArgs(state:FreqDataRowsModelState):MulticritFreqServerArgs {
+        return {
+            ...this.pageModel.getConcArgs(),
+            fcrit: Dict.keys(state.data),
+            flimit: parseInt(state.flimit),
+            freq_sort: 'freq',
+            fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json'

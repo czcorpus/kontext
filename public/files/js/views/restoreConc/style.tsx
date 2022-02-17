@@ -28,8 +28,11 @@ export const ConcRestore = styled.div`
 
     text-align: center;
     font-size: 120%;
+    max-width: 80em;
 
     a.result-link {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
         font-size: 80%;
         color: ${theme.colorLogoBlue};
     }

@@ -45,6 +45,7 @@ export function init(
             ctFlatFreqDataRowsModel:Freq2DFlatViewModel):Views {
 
     const ctViewOpts = ctViewOptsFactory(dispatcher, he);
+    const layoutViews = he.getLayoutViews();
 
     /**
      *
@@ -154,22 +155,24 @@ export function init(
                 <S.CTFlatFreqResultView>
                     <S2.FieldsetAdvancedOptions>
                         <form>
-                            <fieldset>
-                                <legend>{he.translate('freq__ct_data_parameters_legend')}</legend>
-                                <div>
-                                    <ul className="items">
-                                        <li>
-                                            <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType}
-                                                    canProvideIpm={Freq2DFlatViewModel.canProvideIpm(this.props)} />
-                                        </li>
-                                        <li>
-                                            <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel}
-                                                    availAlphaLevels={this.props.availAlphaLevels}
-                                                    confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
-                                        </li>
-                                    </ul>
-                                </div>
-                            </fieldset>
+                            <layoutViews.ExpandableArea alwaysExpanded={true} initialExpanded={true}
+                                    label={he.translate('freq__ct_data_parameters_legend')}>
+                                <fieldset>
+                                    <div>
+                                        <ul className="items">
+                                            <li>
+                                                <ctViewOpts.MinFreqInput currVal={this.props.minFreq} freqType={this.props.minFreqType}
+                                                        canProvideIpm={Freq2DFlatViewModel.canProvideIpm(this.props)} />
+                                            </li>
+                                            <li>
+                                                <ctViewOpts.AlphaLevelSelect alphaLevel={this.props.alphaLevel}
+                                                        availAlphaLevels={this.props.availAlphaLevels}
+                                                        confIntervalLeftMinWarn={this.props.confIntervalLeftMinWarn} />
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </fieldset>
+                            </layoutViews.ExpandableArea>
                         </form>
                     </S2.FieldsetAdvancedOptions>
                     <table className="data">

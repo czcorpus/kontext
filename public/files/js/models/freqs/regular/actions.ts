@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { FreqDisplayMode, ResultBlock } from './common';
+import { FreqDisplayMode, MulticritFreqServerArgs, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
@@ -106,7 +106,7 @@ export class Actions {
     };
 
     static ResultPrepareSubmitArgsDone:Action<{
-        data:{};
+        data:MulticritFreqServerArgs;
     }> = {
         name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
     };

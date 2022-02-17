@@ -30,7 +30,7 @@ export interface ConcRestoreModelState {
     isBusy:boolean;
     concPersistenceId:string;
     nextAction:string;
-    nextActionArgs:{[k:string]:string|number};
+    nextActionArgs:{[k:string]:string|number|Array<string>|Array<number>};
     nextActionLink:string|undefined;
 }
 
@@ -88,16 +88,13 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
     }
 
     private generateNextLink(state:ConcRestoreModelState):void {
-        const args = this.layoutModel.getConcArgs();
-        Dict.forEach(
-            (v, k) => {
-                args[k] = v;
-            },
-            state.nextActionArgs
-        )
+        console.log('JSON: ', JSON.stringify(state.nextActionArgs))
         state.nextActionLink = this.layoutModel.createActionUrl(
             state.nextAction,
-            args
+            {
+                ...this.layoutModel.getConcArgs(),
+                ...state.nextActionArgs
+            }
         );
     }
 

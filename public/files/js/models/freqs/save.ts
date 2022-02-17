@@ -75,8 +75,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
-            MainMenuActions.ShowSaveForm.name,
+        this.addActionHandler(
+            MainMenuActions.ShowSaveForm,
             action => {
                 this.changeState(state => {
                     state.formIsActive = true;
@@ -85,8 +85,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             }
         );
 
-        this.addActionHandler<typeof MainMenuActions.DirectSave>(
-            MainMenuActions.DirectSave.name,
+        this.addActionHandler(
+            MainMenuActions.DirectSave,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
@@ -98,8 +98,9 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                     });
                     this.suspend({}, (action, syncData) =>
                         action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
+
                     ).subscribe(
-                        (action) => {
+                        action => {
                             this.submit(
                                 (action as typeof Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
@@ -108,38 +109,38 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
-            Actions.ResultCloseSaveForm.name,
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
             action => this.changeState(state => {state.formIsActive = false})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
-            Actions.SaveFormSetFormat.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFormat,
             action => this.changeState(state => {state.saveformat = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
-            Actions.SaveFormSetFromLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFromLine,
             action => this.changeState(state => {state.fromLine.value = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
-            Actions.SaveFormSetToLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetToLine,
             action => this.changeState(state => {state.toLine.value = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetIncludeHeading>(
-            Actions.SaveFormSetIncludeHeading.name,
+        this.addActionHandler(
+            Actions.SaveFormSetIncludeHeading,
             action => this.changeState(state => {state.includeHeading = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetIncludeColHeading>(
-            Actions.SaveFormSetIncludeColHeading.name,
+        this.addActionHandler(
+            Actions.SaveFormSetIncludeColHeading,
             action => this.changeState(state => {state.includeColHeaders = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSubmit>(
-            Actions.SaveFormSubmit.name,
+        this.addActionHandler(
+            Actions.SaveFormSubmit,
             action => {
                 let err;
                 this.changeState(state => {err = this.validateForm(state)});
@@ -194,6 +195,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             heading: this.state.includeHeading,
             from_line: this.state.fromLine.value,
             to_line: this.state.toLine.value,
+            fpage: 1,
             format: undefined
         };
         this.saveLinkFn(
@@ -203,6 +205,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
     }
 }
 
+// TODO the stuff below should go to a separate module
 
 export interface FreqCTResultsSaveModelState {
     saveMode:string;

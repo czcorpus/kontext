@@ -52,14 +52,13 @@ class FreqCalcArgs:
     collator_locale: str
     pagesize: int
     flimit: int
-    fcrit: Union[List[str], Tuple[str,...]]
+    fcrit: Union[List[str], Tuple[str, ...]]
     freq_sort: str
-    ftt_include_empty: int  # 0, 1
-    rel_mode: int  # 0, 1
+    ftt_include_empty: int  # 0, 1  # TODO should be bool
+    rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
     cache_path: Optional[str] = None
     force_cache: Optional[bool] = False
-    ml: Optional[int] = 0  # default ??
     subcname: Optional[str] = None
     subcpath: Optional[List[str]] = field(default_factory=list)
     fpage: Optional[int] = 1  # ??
@@ -166,10 +165,15 @@ def write_log_header(corp, logfile):
         f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
-def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> List[AsyncTaskStatus]:
+def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
     """
     Provides a higher level wrapper to create_arf_db(). Function creates
-    a background process where create_arf_db() is run.
+    a background process where create_arf_db() is run. In case the
+    calculation is already running, the function returns a float value from 0 to 100
+    specifying current progress.
+
+    TODO: we should always return a list of async tasks - i.e. even in case the calculation
+          is already running (possibly triggered by someone else).
     """
     base_path = corp_freqs_cache_path(corp, attrname)
     _clear_old_calc_status(base_path)
@@ -187,11 +191,10 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> List[AsyncTaskSt
                                (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
                                time_limit=TASK_TIME_LIMIT)
         logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
-        async_task = AsyncTaskStatus(status=res.status, ident=res.id,
-                                     category=AsyncTaskStatus.CATEGORY_FREQ_PRECALC,
-                                     label='Subc. related data precalculation',  # TODO !!
-                                     args={},
-                                     url=None)
+        async_task = AsyncTaskStatus(
+            status=res.status, ident=res.id,
+            category=AsyncTaskStatus.CATEGORY_FREQ_PRECALC,
+            label='Subc. related data precalculation')  # TODO !!
         tasks.append(async_task)
     return tasks
 
@@ -215,16 +218,16 @@ class FreqCalcCache(object):
         self._samplesize = samplesize
         self._subcpath = subcpath
 
-    def _cache_file_path(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
+    def _cache_file_path(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
         v = (str(self._corpname) + str(self._subcname) + str(self._user_id) +
-             ''.join(self._q) + str(fcrit) + str(flimit) + str(freq_sort) + str(ml) +
+             ''.join(self._q) + str(fcrit) + str(flimit) + str(freq_sort) +
              str(ftt_include_empty) + str(rel_mode) + str(collator_locale))
         filename = '%s.pkl' % hashlib.sha1(v.encode('utf-8')).hexdigest()
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
 
-    def get(self, fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale):
+    def get(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
         cache_path = self._cache_file_path(
-            fcrit, flimit, freq_sort, ml, ftt_include_empty, rel_mode, collator_locale)
+            fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale)
         if os.path.isfile(cache_path):
             with open(cache_path, 'rb') as f:
                 data = pickle.load(f)
@@ -249,8 +252,8 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     if not conc.finished():
         raise UnfinishedConcordanceError(
             _('Cannot calculate yet - source concordance not finished. Please try again later.'))
-    freqs = [conc.xfreq_dist(cr, args.flimit, args.freq_sort, args.ml, args.ftt_include_empty, args.rel_mode,
-                             args.collator_locale)
+    freqs = [conc.xfreq_dist(
+                cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
              for cr in args.fcrit]
     return dict(freqs=freqs, conc_size=conc.size())
 
@@ -267,7 +270,7 @@ def calculate_freqs(args: FreqCalcArgs):
         corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
         q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
     calc_result, cache_path = cache.get(
-        fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort, ml=args.ml,
+        fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort,
         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
         collator_locale=args.collator_locale)
 
