@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 from werkzeug import Request
-from cairosvg import svg2png, svg2svg
+from cairosvg import svg2png, svg2svg, svg2pdf
 from lxml import etree
 from io import BytesIO
 from typing import Tuple
@@ -92,5 +92,8 @@ class Tools(Kontext):
         elif request.args.get('outFormat', '') == 'svg':
             self._response.set_header('Content-Type', 'image/svg+xml')
             return svg2svg(bytestring=svg_src, scale=5, background_color='#FFFFFF')
+        elif request.args.get('outFormat', '') == 'pdf':
+            self._response.set_header('Content-Type', 'application/pdf')
+            return svg2pdf(bytestring=svg_src, scale=5, background_color='#FFFFFF')
         else:
             raise UserActionException('Invalid data format', code=422)
