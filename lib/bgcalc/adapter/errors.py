@@ -13,27 +13,6 @@
 # GNU General Public License for more details.
 
 
-class BgCalcError(Exception):
+class BgCalcAdapterError(Exception):
     pass
 
-
-class CalcTaskNotFoundError(BgCalcError):
-    pass
-
-
-class UnfinishedConcordanceError(BgCalcError):
-    """
-    This error is used whenever a concordance
-    used by some background calculation is
-    not completed yet (i.e. this applies only
-    in case asnc=1).
-    """
-    pass
-
-
-class CalcArgsAssertionError(BgCalcError):
-    """
-    CalcArgsAssertionError represents a semantically
-    incorrect combination of function arguments for
-    a background calculation.
-    """

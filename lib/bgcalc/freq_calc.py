@@ -20,8 +20,7 @@ import math
 import hashlib
 import logging
 import pickle
-from structures import FixedDict
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Union, Tuple, Dict, Any
 from dataclasses import dataclass, field, asdict
 
 import manatee
@@ -30,8 +29,8 @@ from corplib.corpus import KCorpus
 from conclib.calc import require_existing_conc
 import settings
 import bgcalc
-from bgcalc.errors import UnfinishedConcordanceError, CalcBackendError
-from bgcalc import AsyncTaskStatus
+from bgcalc.errors import UnfinishedConcordanceError, BgCalcError
+from bgcalc.task import AsyncTaskStatus
 from translation import ugettext as _
 from controller.errors import UserActionException
 from .errors import CalcArgsAssertionError
@@ -187,9 +186,10 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, Lis
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
-        res = worker.send_task(f'compile_{m}',
-                               (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
-                               time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task(
+            f'compile_{m}', object.__class__,
+            (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
+            time_limit=TASK_TIME_LIMIT)
         logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
         async_task = AsyncTaskStatus(
             status=res.status, ident=res.id,
@@ -277,12 +277,13 @@ def calculate_freqs(args: FreqCalcArgs):
     if calc_result is None:
         args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task('calculate_freqs', args=(asdict(args),), time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task(
+            'calculate_freqs', object.__class__, args=(asdict(args),), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
 
     if calc_result is None:
-        raise CalcBackendError('Failed to get result')
+        raise BgCalcError('Failed to get result')
     elif isinstance(calc_result, Exception):
         raise calc_result
     data = calc_result['freqs']
@@ -327,29 +328,32 @@ def clean_freqs_cache():
     return dict(total_files=len(all_files), num_removed=num_removed, num_error=num_error)
 
 
-# ------------------ Contingency table freq. distribution --------------
+# ------------------ 2-attribute freq. distribution --------------
+
+@dataclass
+class Freq2DCalcArgs:
+    q: List[str]
+    user_id: int
+    corpname: str
+    ctminfreq: int
+    ctminfreq_type: str
+    fcrit: str
+    cache_path: Optional[str] = None
+    subcpath: List[str] = field(default_factory=list)
+    subcname: Optional[str] = None
+    collator_locale: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
-class CTFreqCalcArgs(FixedDict):
-    q = None
-    user_id = None
-    corpname = None
-    collator_locale = None
-    subcname = None
-    subcpath = None
-    ctminfreq = None
-    ctminfreq_type = None
-    fcrit = None
-    cache_path = None
-
-
-class CTCalculationError(Exception):
+class Freq2DCalculationError(Exception):
     pass
 
 
-class CTCalculation(object):
+class Freq2DCalculation:
 
-    def __init__(self, args):
+    def __init__(self, args: Freq2DCalcArgs):
         self._args = args
         self._corp: Optional[KCorpus] = None
         self._conc = None
@@ -378,7 +382,7 @@ class CTCalculation(object):
             attrs.append(crit_lx[i])
 
         if len(attrs) > 2:
-            raise CTCalculationError(
+            raise Freq2DCalculationError(
                 'Exactly two attributes (either positional or structural) can be used')
 
         words = [tuple(w.split('\t')) for w in words]
@@ -407,33 +411,28 @@ class CTCalculation(object):
             ans = values[plimit:]
         if len(ans) > 1000:
             raise UserActionException(
-                'The result size is too high. Please try to increase the minimum frequency.')
+                'The result is too large. Please try to increase the minimum frequency.')
         return ans, len(mans)
 
     def run(self):
         """
-        note: this is called by Celery worker
+        note: this is called by a background worker
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = require_existing_conc(corp=self._corp, q=self._args.q)
-        result, full_size = self.ct_dist(self._args.fcrit, limit=self._args.ctminfreq,
-                                         limit_type=self._args.ctminfreq_type)
+        result, full_size = self.ct_dist(
+            self._args.fcrit, limit=self._args.ctminfreq, limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
 
 
-def calculate_freqs_ct(args):
+def calculate_freq2d(args):
     """
-    note: this is called by webserver
+    note: this is called directly by webserver
     """
-    try:
-        worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task('calculate_freqs_ct', args=(args.to_dict(),),
-                               time_limit=TASK_TIME_LIMIT)
-        calc_result = res.get()
-    except Exception as ex:
-        if worker.is_wrapped_user_error(ex):
-            raise UserActionException(str(ex)) from ex
-        else:
-            raise ex
+    worker = bgcalc.calc_backend_client(settings)
+    res = worker.send_task('calculate_freq2d', dict.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
+    calc_result = res.get()
+    if isinstance(calc_result, Exception):
+        raise calc_result
     return calc_result

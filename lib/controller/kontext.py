@@ -52,7 +52,7 @@ from .plg import PluginCtx
 from .req_args import RequestArgsProxy, JSONRequestArgsProxy
 from texttypes import TextTypes, TextTypesCache
 import bgcalc
-from bgcalc import AsyncTaskStatus
+from bgcalc.task import AsyncTaskStatus
 
 
 JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]

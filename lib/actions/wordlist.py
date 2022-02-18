@@ -22,7 +22,7 @@ from main_menu.model import MainMenu
 from translation import ugettext as translate
 from controller.errors import UserActionException
 from bgcalc import freq_calc, calc_backend_client
-from bgcalc.errors import CalcBackendError
+from bgcalc.errors import BgCalcError
 from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 import plugins
 import settings
@@ -111,7 +111,7 @@ class Wordlist(Kontext):
         ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
                    freq_files_avail=True, subtasks=[])
         async_res = worker.send_task(
-            'get_wordlist',
+            'get_wordlist', object.__class__,
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
         bg_result = async_res.get()
         if isinstance(bg_result, MissingSubCorpFreqFile):
@@ -288,5 +288,5 @@ class Wordlist(Kontext):
             for t in worker_tasks:
                 tr = worker.AsyncResult(t)
                 if tr.status == 'FAILURE':
-                    raise CalcBackendError(f'Task {t} failed')
+                    raise BgCalcError(f'Task {t} failed')
         return {'status': freq_calc.build_arf_db_status(self.corp, attrname)}

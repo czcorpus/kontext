@@ -191,13 +191,13 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
         this.changeState(
             state => {
                 state.blocks = [];
+                state.lastArgs = List.head(args.q);
             }
         );
         return (() => {
             if (concSize > TextTypesDistModel.SAMPLE_SIZE) {
                 args.rlines = TextTypesDistModel.SAMPLE_SIZE;
                 args.format = 'json';
-                this.state.lastArgs = List.head(args.q);
                 return this.layoutModel.ajax$<Reduce>(
                     HTTP.Method.POST,
                     this.layoutModel.createActionUrl('reduce', args),
