@@ -880,6 +880,8 @@
         "pquery__only_one_field_can_be_of_{type}": "Typ \"{type}\" může mít pouze jeden dílčí dotaz",
         "pquery__condition_never": "nikdy",
         "pquery__condition_always": "vždy",
-        "dispersion__resolution": "Rozlišení"
+        "dispersion__resolution": "rozlišení",
+        "dispersion__download_chart": "stáhnout graf",
+        "dispersion__print_quality": "pro tisk"
     }
 }

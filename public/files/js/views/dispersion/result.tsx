@@ -22,14 +22,17 @@
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
 import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
-import { ComponentHelpers } from '../../types/kontext';
+import { ChartExportFormat, ComponentHelpers } from '../../types/kontext';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts';
 import * as theme from '../theme/default';
+
+import { Actions as GlobalActions } from '../../models/common/actions';
 
 import { Actions } from '../../models/dispersion/actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
+import * as ReactDOM from 'react-dom';
 
 
 
@@ -42,7 +45,63 @@ export function init(
     const globalComponents = he.getLayoutViews();
 
 
+    // ---------------------- <DownloadFormatSelector /> --------------
+
+    const DownloadFormatSelector:React.FC<{
+        format:ChartExportFormat;
+
+    }> = ({ format }) => {
+
+        const onChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            dispatcher.dispatch<typeof Actions.SetDownloadFormat>({
+                name: Actions.SetDownloadFormat.name,
+                payload: {
+                    format: evt.target.value as ChartExportFormat
+                }
+            });
+        };
+
+        return <select value={format} onChange={onChange}>
+            <option value="png">PNG</option>
+            <option value="png-print">PNG ({he.translate('freq__print_quality')})</option>
+            <option value="svg">SVG</option>
+        </select>;
+    }
+
+    // ---------------------- <DispersionResults /> --------------
+
     const DispersionResults:React.FC<DispersionResultModelState> = (props) => {
+
+        const ref = React.useRef(null);
+
+        const handleDownload = () => {
+            const container = ReactDOM.findDOMNode(ref.current);
+            if (container instanceof Text) {
+                return;
+            }
+            const svg = container.querySelector('svg');
+            let svgURL = new XMLSerializer().serializeToString(svg);
+            let svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+            svgBlob.text().then(
+                (blob) => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
+                        payload: {
+                            format: props.downloadFormat,
+                            filename: 'dispersion-chart',
+                            blob,
+                            chartType: 'bar',
+                        }
+                    });
+                },
+                (error) => {
+                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                        name: GlobalActions.ConvertChartSVG.name,
+                        error
+                    });
+                }
+            )
+        }
 
         const handleResolutionChange = (evt) => {
             const value = parseInt(evt.target.value);
@@ -61,19 +120,22 @@ export function init(
         return (
             <S.FreqDispersionSection>
                 <S.FreqDispersionParamFieldset>
-                    <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}</label>
+                    <label htmlFor='resolution-input'>{he.translate('dispersion__resolution')}:</label>
                     <input id='resolution-input' onChange={handleResolutionChange} value={props.resolution}/>
+                    <label>{he.translate('dispersion__download_chart')}:</label>
+                    <DownloadFormatSelector format={props.downloadFormat} />
+                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('dispersion__download_chart')} onClick={handleDownload} />
                 </S.FreqDispersionParamFieldset>
                 {props.isBusy ?
                     <globalComponents.AjaxLoaderImage /> :
                     <div>
                         <ResponsiveContainer width="95%" height={250}>
-                            <BarChart data={props.data}>
+                            <BarChart data={props.data} ref={ref}>
                                 <CartesianGrid strokeDasharray="3 3" />
+                                <Bar dataKey="freq" fill={theme.colorLogoBlue} barSize={List.size(props.data) === 1 ? 100 : null} />
                                 <XAxis dataKey="position" type="number" unit="%" domain={[0, 100]} allowDataOverflow={true} />
                                 <YAxis />
                                 <Tooltip labelFormatter={(label, data) => data[0] ? `${data[0].payload.start} - ${data[0].payload.end} %` : label} />
-                                <Bar dataKey="freq" fill={theme.colorLogoBlue} barSize={List.size(props.data) === 1 ? 100 : null} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

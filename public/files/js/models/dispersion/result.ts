@@ -24,6 +24,7 @@ import { HTTP } from 'cnc-tskit';
 import { IActionQueue, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import { PageModel } from '../../app/page';
+import { ChartExportFormat } from '../../types/kontext';
 import { Actions } from './actions';
 
 
@@ -39,6 +40,7 @@ export interface DispersionResultModelState {
     concordanceId:string;
     resolution:number;
     data:Array<DispersionDataRow>;
+    downloadFormat:ChartExportFormat;
 }
 
 
@@ -81,6 +83,13 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
                 }
             }
         )
+
+        this.addActionHandler(
+            Actions.SetDownloadFormat,
+            (state, action) => {
+                state.downloadFormat = action.payload.format;
+            }
+        );
 
         this.addActionHandler(
             Actions.SubmitForm,

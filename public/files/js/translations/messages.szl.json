@@ -879,6 +879,8 @@
         "pquery__only_one_field_can_be_of_{type}": "Only a single sub-query can be of the \"{type}\" type UNTRANSLATED",
         "pquery__condition_never": "never UNTRANSLATED",
         "pquery__condition_always": "always UNTRANSLATED",
-        "dispersion__resolution": "Resolution UNTRANSLATED"
+        "dispersion__resolution": "resolution UNTRANSLATED",
+        "dispersion__download_chart": "download the chart UNTRANSLATED",
+        "dispersion__print_quality": "for printing UNTRANSLATED"
     }
 }

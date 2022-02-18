@@ -844,6 +844,7 @@ export class ViewPage {
                 concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
                 resolution: 100,
                 data: [],
+                downloadFormat: 'png',
             }
         );
 
