@@ -13,6 +13,10 @@
 # GNU General Public License for more details.
 
 from celery import Celery
+from typing import Type, TypeVar
+from bgcalc.adapter.abstract import AbstractBgClient
+
+T = TypeVar('T')
 
 
 class Config(object):
@@ -24,16 +28,12 @@ class Config(object):
     timezone = None
 
 
-class CeleryClient:
+class CeleryClient(AbstractBgClient):
 
     def __init__(self, worker: Celery):
         self._worker = worker
 
-    @property
-    def worker_impl(self):
-        return self._worker
-
-    def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
+    def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None):
         return self._worker.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
 
     def get_task_error(self, task_id):

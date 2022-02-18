@@ -43,12 +43,12 @@ if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
 from worker import general
-import bgcalc
+from bgcalc.adapter.factory import init_backend
 
-worker = bgcalc.calc_backend_server(settings, '').worker_impl
+worker = init_backend(settings, '').worker_impl
 
 
-class CustomTasks(object):
+class CustomTasks:
     """
     Dynamically register tasks exposed by active plug-ins.
 
@@ -118,9 +118,9 @@ def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
-@worker.task(name='calculate_freqs_ct')
-def calculate_freqs_ct(args):
-    return general.calculate_freqs_ct(args)
+@worker.task(name='calculate_freq2d')
+def calculate_freq2d(args):
+    return general.calculate_freq2d(args)
 
 
 @worker.task(name='clean_freqs_cache')

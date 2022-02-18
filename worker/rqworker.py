@@ -34,10 +34,10 @@ if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
 import general
-import bgcalc
+from bgcalc.adapter.factory import init_backend
 import logging
 
-worker = bgcalc.calc_backend_server(settings, 'rq')
+worker = init_backend(settings, 'rq')
 
 
 class TaskWrapper:
@@ -50,7 +50,8 @@ class TaskWrapper:
 
 
 def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
-    return general.conc_register(TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
+    return general.conc_register(
+        TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
 
 
 def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
@@ -79,8 +80,8 @@ def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
-def calculate_freqs_ct(args):
-    return general.calculate_freqs_ct(args)
+def calculate_freq2d(args):
+    return general.calculate_freq2d(args)
 
 
 def clean_freqs_cache():

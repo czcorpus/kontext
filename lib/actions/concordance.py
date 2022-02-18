@@ -1244,22 +1244,20 @@ class Actions(Querying):
             self._go_to_restore_conc('freqct')
 
     def _freqct(self, request):
-        args = freq_calc.CTFreqCalcArgs()
-        args.corpname = self.corp.corpname
-        args.subcname = getattr(self.corp, 'subcname', None)
-        args.subcpath = self.subcpath
-        args.user_id = self.session_get('user', 'id')
-        args.q = self.args.q
-        args.ctminfreq = int(request.args.get('ctminfreq', '1'))
-        args.ctminfreq_type = request.args.get('ctminfreq_type')
-        args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
-                                              self.args.ctattr2, self.args.ctfcrit2)
+        args = freq_calc.Freq2DCalcArgs(
+            corpname=self.corp.corpname,
+            subcname=getattr(self.corp, 'subcname', None),
+            subcpath=self.subcpath,
+            user_id=self.session_get('user', 'id'),
+            q=self.args.q,
+            ctminfreq=int(request.args.get('ctminfreq', '1')),
+            ctminfreq_type=request.args.get('ctminfreq_type'),
+            fcrit=f'{self.args.ctattr1} {self.args.ctfcrit1} {self.args.ctattr2} {self.args.ctfcrit2}')
         try:
-            freq_data = freq_calc.calculate_freqs_ct(args)
+            freq_data = freq_calc.calculate_freq2d(args)
         except UserActionException as ex:
             freq_data = dict(data=[], full_size=0)
             self.add_system_message('error', str(ex))
-
         self._add_save_menu_item('XLSX', save_format='xlsx')
 
         ans = dict(

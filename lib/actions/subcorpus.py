@@ -21,7 +21,7 @@ from werkzeug.wrappers import Request
 from dataclasses import dataclass
 from controller import exposed
 from controller.errors import FunctionNotSupported, UserActionException
-from bgcalc import AsyncTaskStatus
+from bgcalc.task import AsyncTaskStatus
 from controller.querying import Querying
 from corplib.corpus import list_public_subcorpora
 from main_menu.model import MainMenu
@@ -176,10 +176,11 @@ class Subcorpus(Querying):
                     'user', 'fullname'), data.description)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)
-            res = worker.send_task('create_subcorpus',
-                                   (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                                    tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
-                                   time_limit=TASK_TIME_LIMIT)
+            res = worker.send_task(
+                'create_subcorpus', object.__class__,
+                (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
+                    tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
+                time_limit=TASK_TIME_LIMIT)
             self._store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
                                                    category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                                                    label=f'{self.args.corpname}/{data.subcname}',
