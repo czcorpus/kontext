@@ -40,7 +40,7 @@ sys.path.insert(0, f'{APP_PATH}/../lib')
 import settings
 import initializer
 import translation
-from worker.stderr2f import get_stderr_redirector
+from stderr2f import get_stderr_redirector
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):

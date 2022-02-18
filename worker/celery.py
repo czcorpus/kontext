@@ -45,7 +45,7 @@ if settings.get('global', 'manatee_path', None):
 from worker import general
 from bgcalc.adapter.factory import init_backend
 
-worker = init_backend(settings, '').worker_impl
+worker = init_backend(settings, '')
 
 
 class CustomTasks:
