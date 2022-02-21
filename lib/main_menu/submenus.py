@@ -91,13 +91,6 @@ class NewQuery:
                 if len(args['align']) else [('align', None)]).mark_indirect()
     )
 
-    recent_queries: EventTriggeringItem = field(
-        default_factory=lambda: EventTriggeringItem(
-            MainMenu.NEW_QUERY('history'), te('Recent queries'),
-            'MAIN_MENU_SHOW_QUERY_HISTORY', key_code=72, key_mod='shift'  # key = 'h'
-        ).mark_indirect()
-    )
-
     pquery: MenuItemInternal = field(
         default_factory=lambda: lambda args: MenuItemInternal(
             MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery/index'
@@ -113,6 +106,13 @@ class NewQuery:
         ).add_args(
             ('corpname', args['corpname']),
             ('include_nonwords', 1)
+        ).mark_indirect()
+    )
+
+    recent_queries: EventTriggeringItem = field(
+        default_factory=lambda: EventTriggeringItem(
+            MainMenu.NEW_QUERY('history'), te('Recent queries'),
+            'MAIN_MENU_SHOW_QUERY_HISTORY', key_code=72, key_mod='shift'  # key = 'h'
         ).mark_indirect()
     )
 
