@@ -22,17 +22,17 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 
-import * as Kontext from '../../types/kontext';
-import { ConcLinesStorage } from './selectionStorage';
-import { PageModel } from '../../app/page';
-import { HTTP, List } from 'cnc-tskit';
+import * as Kontext from '../../../types/kontext';
+import { ConcLinesStorage } from '../selectionStorage';
+import { DownloadType, PageModel } from '../../../app/page';
+import { Dict, HTTP, List, pipe } from 'cnc-tskit';
 import { LineSelections, LineSelectionModes, LineSelValue, ConcLineSelection, AjaxConcResponse,
-    LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs
-} from './common';
-import { Actions } from './actions';
-import { Actions as UserActions } from '../user/actions';
-import { Actions as GlobalActions } from '../common/actions';
-import { IPageLeaveVoter } from '../common/pageLeave';
+    LineGroupId, attachColorsToIds, mapIdToIdWithColors, AjaxLineGroupRenameResponse, ConcServerArgs, LineGroupChartData
+} from '../common';
+import { Actions } from '../actions';
+import { Actions as UserActions } from '../../user/actions';
+import { Actions as GlobalActions } from '../../common/actions';
+import { IPageLeaveVoter } from '../../common/pageLeave';
 
 
 interface ReenableEditResponse extends AjaxConcResponse {
@@ -42,6 +42,11 @@ interface ReenableEditResponse extends AjaxConcResponse {
 interface SendSelToMailResponse extends AjaxConcResponse {
     ok:boolean;
 }
+
+interface LineGroupStats extends Kontext.AjaxResponse {
+    groups:{[groupId:string]:number};
+}
+
 
 
 export interface LineSelectionModelState {
@@ -56,6 +61,10 @@ export interface LineSelectionModelState {
      * it is hashed here again)
      */
     data:LineSelections;
+
+    groupsChartData:LineGroupChartData;
+
+    exportFormats:Array<string>;
 
     /**
      * An internal hash of actual query. It hashes
@@ -86,6 +95,7 @@ export interface LineSelectionModelArgs {
     layoutModel:PageModel;
     dispatcher:IFullActionControl;
     clStorage:ConcLinesStorage<LineSelectionModelState>;
+    exportFormats:Array<string>;
 }
 
 /**
@@ -114,6 +124,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
         state:LineSelectionModelState,
         clStorage:ConcLinesStorage<LineSelectionModelState>,
         queryId:string
+
     ):void {
         clStorage.init(state, queryId);
     }
@@ -129,7 +140,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             };
     }
 
-    constructor({layoutModel, dispatcher, clStorage}:LineSelectionModelArgs) {
+    constructor({layoutModel, dispatcher, clStorage, exportFormats}:LineSelectionModelArgs) {
         const query = layoutModel.getConf<string>('concPersistenceOpId');
         const initState:LineSelectionModelState = {
             corpusId: layoutModel.getCorpusIdent().id,
@@ -144,6 +155,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             isLeavingPage: false,
             emailDialogCredentials: null,
             data: {},
+            groupsChartData: null,
+            exportFormats,
             queryHash: '',
             lastCheckpointUrl: layoutModel.createActionUrl(
                 'view',
@@ -540,6 +553,53 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 });
             }
         );
+
+        this.addActionHandler<typeof Actions.DownloadSelectionOverview>(
+            Actions.DownloadSelectionOverview.name,
+            action => {
+                this.layoutModel.bgDownload({
+                    format: 'xlsx',
+                    datasetType: DownloadType.LINE_SELECTION,
+                    url: this.layoutModel.createActionUrl('export_line_groups_chart'),
+                    contentType: 'application/json',
+                    args: {
+                        title: this.layoutModel.translate('linesel__saved_line_groups_heading'),
+                        data: this.state.groupsChartData,
+                        corpname: this.state.corpusId,
+                        cformat: action.payload.format,
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler(
+            Actions.GetGroupStats,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = true;
+                    }
+                );
+                this.getGroupsStats();
+            }
+        );
+
+        this.addActionHandler(
+            Actions.GetGroupStatsDone,
+            action => {
+                this.changeState(
+                    state => {
+                        state.isBusy = false;
+                        if (action.error) {
+                            this.layoutModel.showMessage('error', action.error);
+
+                        } else {
+                            state.groupsChartData = action.payload.data;
+                        }
+                    }
+                );
+            }
+        )
     }
 
     getRegistrationId():string {
@@ -766,6 +826,51 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                     this.layoutModel.getConcArgs()),
             {}
         ));
+    }
+
+    private getGroupsStats():void {
+        this.layoutModel.ajax$<LineGroupStats>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl(
+                'ajax_get_line_groups_stats',
+                this.layoutModel.getConcArgs()
+            ),
+            {}
+
+        ).subscribe({
+            next: resp => {
+                const data:LineGroupChartData = attachColorsToIds(
+                    pipe(
+                        resp.groups,
+                        Dict.toEntries(),
+                        List.map(([ident, num]) => ({
+                            groupId: parseInt(ident, 10),
+                            group: `#${ident}`,
+                            count: num,
+                            fgColor: '#abcdef',
+                            bgColor: '#111111'
+                        })),
+                        List.sortBy(v => v.groupId)
+                    ),
+                    item => item.groupId,
+                    (item, fgColor, bgColor) => ({
+                        ...item,
+                        fgColor,
+                        bgColor
+                    })
+                );
+                this.dispatchSideEffect<typeof Actions.GetGroupStatsDone>({
+                    name: Actions.GetGroupStatsDone.name,
+                    payload: {data}
+                });
+            },
+            error: error => {
+                this.dispatchSideEffect<typeof Actions.GetGroupStatsDone>({
+                    name: Actions.GetGroupStatsDone.name,
+                    error
+                });
+            }
+        });
     }
 
     private importData(

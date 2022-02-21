@@ -44,7 +44,7 @@ import { ConcDashboard, ConcDashboardState } from '../../../models/concordance/d
 import { UsageTipsModel } from '../../../models/usageTips';
 import { MainMenuModelState } from '../../../models/mainMenu';
 import { Actions } from '../../../models/concordance/actions';
-import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
+import { LineSelectionModes } from '../../../models/concordance/common';
 import { Actions as UserActions } from '../../../models/user/actions';
 import * as S2 from '../style';
 import * as S from './style';
@@ -83,7 +83,6 @@ export interface ConcordanceDashboardProps {
         canSendEmail:boolean;
         ShowConcToolbar:boolean;
         anonymousUserConcLoginPrompt:boolean;
-        onLineSelChartFrameReady:DrawLineSelectionChart;
     };
     kwicConnectView:PluginInterfaces.KwicConnect.WidgetWiew;
 }
@@ -149,7 +148,6 @@ export function init({
         isBusy:boolean;
         corpusId:string;
         onCloseClick:()=>void;
-        onChartFrameReady:DrawLineSelectionChart;
 
     }> = (props) => {
 
@@ -159,8 +157,7 @@ export function init({
                             <lineSelViews.LockedLineGroupsMenu
                                 canSendEmail={props.canSendEmail}
                                 mode={props.mode}
-                                corpusId={props.corpusId}
-                                onChartFrameReady={props.onChartFrameReady} />,
+                                corpusId={props.corpusId} />,
                             props.mode === 'simple' ?
                                 he.translate('linesel__unsaved_line_selection_heading') :
                                 he.translate('linesel__saved_line_groups_heading')
@@ -188,7 +185,6 @@ export function init({
     interface LineSelectionOpsProps {
         numLinesInLockedGroups:number;
         visible:boolean;
-        onChartFrameReady:DrawLineSelectionChart;
     }
 
     const _LineSelectionOps:React.FC<LineSelectionOpsProps & LineSelectionModelState> = (props) => {
@@ -272,8 +268,7 @@ export function init({
                             isLocked={props.isLocked}
                             onCloseClick={_closeMenuHandler}
                             canSendEmail={!!props.emailDialogCredentials}
-                            corpusId={props.corpusId}
-                            onChartFrameReady={props.onChartFrameReady} />
+                            corpusId={props.corpusId} />
                     :  null}
             </S.LineSelectionOps>
         );
@@ -458,15 +453,13 @@ export function init({
         viewMode:ViewOptions.AttrViewMode;
         lineSelOpsVisible:boolean;
         numLinesInLockedGroups:number;
-        onChartFrameReady:DrawLineSelectionChart;
     }
 
     const _ConcToolbarWrapper:React.FC<ConcToolbarWrapperProps & LineSelectionModelState> = (props) => (
         <div className="toolbar-level">
             <LineSelectionOps
                     visible={props.lineSelOpsVisible}
-                    numLinesInLockedGroups={props.numLinesInLockedGroups}
-                    onChartFrameReady={props.onChartFrameReady} />
+                    numLinesInLockedGroups={props.numLinesInLockedGroups} />
             {props.showConcToolbar ?
                 <ConcOptions viewMode={props.viewMode} />
                 : null}
@@ -605,8 +598,7 @@ export function init({
                                 canSendEmail={this.props.canSendEmail}
                                 showConcToolbar={this.props.ShowConcToolbar}
                                 numLinesInLockedGroups={this.props.numItemsInLockedGroups}
-                                viewMode={this.props.attrViewMode}
-                                onChartFrameReady={this.props.onLineSelChartFrameReady} />
+                                viewMode={this.props.attrViewMode} />
                         {this.props.showAnonymousUserWarn && this.props.anonymousUserConcLoginPrompt ?
                             <AnonymousUserLoginPopup onCloseClick={this._handleAnonymousUserWarning} /> : null}
                     </S.ConcTopBar>
@@ -667,8 +659,7 @@ export function init({
                         KWICCorps={this.props.concViewProps.KWICCorps}
                         canSendEmail={this.props.concViewProps.canSendEmail}
                         ShowConcToolbar={this.props.concViewProps.ShowConcToolbar}
-                        anonymousUserConcLoginPrompt={this.props.concViewProps.anonymousUserConcLoginPrompt}
-                        onLineSelChartFrameReady={this.props.concViewProps.onLineSelChartFrameReady} />
+                        anonymousUserConcLoginPrompt={this.props.concViewProps.anonymousUserConcLoginPrompt} />
                 </S.ConcordanceDashboard>
             );
         }

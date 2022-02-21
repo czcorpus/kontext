@@ -24,7 +24,8 @@ import * as Kontext from '../../../types/kontext';
 import { LineSelectionModel, LineSelectionModelState } from '../../../models/concordance/lineSelection';
 import { Actions } from '../../../models/concordance/actions';
 import { Actions as UserActions } from '../../../models/user/actions';
-import { LineSelectionModes, DrawLineSelectionChart } from '../../../models/concordance/common';
+import { LineSelectionModes } from '../../../models/concordance/common';
+import { init as chartViewInit } from './groupChart';
 import * as S from './style';
 
 
@@ -32,7 +33,6 @@ export interface LockedLineGroupsMenuProps {
     corpusId:string;
     canSendEmail:boolean;
     mode:LineSelectionModes;
-    onChartFrameReady:DrawLineSelectionChart;
 }
 
 export interface LineSelectionViews {
@@ -45,9 +45,10 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     lineSelectionModel:LineSelectionModel
+
 ):LineSelectionViews {
 
-    const layoutViews = he.getLayoutViews();
+    const ChartView = chartViewInit(he, dispatcher);
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
@@ -303,34 +304,6 @@ export function init(
         );
     };
 
-    // ----------------------------- <LockedLineGroupsChart /> -----------------------------
-
-    const LockedLineGroupsChart:React.FC<{
-        corpusId:string;
-        onReady:DrawLineSelectionChart;
-
-    }> = (props) => {
-
-        const ref = React.useRef(null);
-        React.useEffect(
-            () => {
-                if (ref.current) {
-                    const width = ref.current.getBoundingClientRect().width;
-                    const height = ref.current.getBoundingClientRect().height;
-                    props.onReady(ref.current, props.corpusId, [width, height]);
-                }
-            },
-            []
-        );
-
-        return (
-            <S.LockedLineGroupsChartFieldset className="chart-area" ref={ref}>
-                {ref.current ? null : <layoutViews.AjaxLoaderBarImage />}
-            </S.LockedLineGroupsChartFieldset>
-        );
-    };
-
-
     // ----------------------------- <LockedLineGroupsMenu /> ------------------------------
 
     class _LockedLineGroupsMenu extends React.Component<LockedLineGroupsMenuProps & LineSelectionModelState> {
@@ -418,7 +391,7 @@ export function init(
                         <RenameLabelPanel handleCancel={this._handleRenameCancel} /> :
                         <ActionSwitch waiting={this.props.isBusy} changeHandler={this._actionSwitchHandler} />}
 
-                    <LockedLineGroupsChart onReady={this.props.onChartFrameReady} corpusId={this.props.corpusId} />
+                    <ChartView {...this.props} />
 
                     <SelectionLinkAndTools
                             lastCheckpointUrl={this.props.lastCheckpointUrl}
