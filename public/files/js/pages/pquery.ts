@@ -169,10 +169,10 @@ class ParadigmaticQueryPage {
         });
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.PQUERY,
+            format,
+            datasetType: DownloadType.PQUERY,
             contentType: 'multipart/form-data',
             url
         });

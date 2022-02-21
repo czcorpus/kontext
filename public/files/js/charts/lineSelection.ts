@@ -96,7 +96,7 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
         );
 
         this.layoutModel = pageModel;
-        
+
         this.exportFormats = exportFormats;
 
         const lineSelectionOverviewView = initView(this.layoutModel.getComponentHelpers(), dispatcher);
@@ -105,8 +105,8 @@ export class LineSelGroupsRatiosChartModel extends StatelessModel<LineSelGroupsR
             Actions.DownloadSelectionOverview.name,
             (state, action) => {
                 this.layoutModel.bgDownload({
-                    filename: 'line-selection-overview.xlsx',
-                    type: DownloadType.LINE_SELECTION,
+                    format: 'xlsx',
+                    datasetType: DownloadType.LINE_SELECTION,
                     url: this.layoutModel.createActionUrl('export_line_groups_chart'),
                     contentType: 'application/json',
                     args: {

@@ -19,7 +19,7 @@
  */
 
 import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import { PageModel, SaveLinkHandler } from '../../app/page';
 import { Freq2DTableModel } from './twoDimension/table2d';
 import { Freq2DFlatViewModel } from './twoDimension/flatTable';
 import { IFullActionControl, StatefulModel } from 'kombo';
@@ -35,7 +35,7 @@ export interface FreqResultsSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
 }
 
 export interface FreqResultsSaveModelState {
@@ -54,9 +54,9 @@ export interface FreqResultsSaveModelState {
  */
 export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelState> {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private saveLinkFn:(file:string, url:string)=>void;
+    private readonly saveLinkFn:SaveLinkHandler;
 
     constructor({dispatcher, layoutModel, saveLinkFn, quickSaveRowLimit}:FreqResultsSaveModelArgs) {
         super(
@@ -199,7 +199,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             format: undefined
         };
         this.saveLinkFn(
-            `frequencies.${this.state.saveformat}`,
+            this.state.saveformat,
             this.layoutModel.createActionUrl('savefreq', args)
         );
     }

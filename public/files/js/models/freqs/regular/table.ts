@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel } from '../../../app/page';
+import { PageModel, SaveLinkHandler } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
@@ -45,7 +45,7 @@ export interface FreqDataRowsModelArgs {
     freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
     quickSaveRowLimit:number;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
     initialData:Array<ResultBlock|EmptyResultBlock>;
     currentPage:number;
     freqLoader:FreqDataLoader;

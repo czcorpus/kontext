@@ -73,10 +73,10 @@ export class WordlistPage {
         );
     }
 
-    setDownloadLink(filename:string, url:string, args:WordlistSaveArgs):void {
+    setDownloadLink(format:string, url:string, args:WordlistSaveArgs):void {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.WORDLIST,
+            format,
+            datasetType: DownloadType.WORDLIST,
             url,
             contentType: 'application/json',
             args

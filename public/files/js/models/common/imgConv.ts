@@ -41,7 +41,9 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
             null,
             (state, action, dispatch) => {
                 this.layoutModel.bgDownload({
-                    filename: `${action.payload.filename}.${action.payload.format.split('-')[0]}`,
+                    name: action.payload.filename,
+                    format: action.payload.format.split('-')[0],
+                    datasetType: DownloadType.CHART,
                     url: this.layoutModel.createActionUrl(
                         'tools/convert_chart_svg',
                         {
@@ -51,7 +53,6 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
                         }
                     ),
                     contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
-                    type: DownloadType.CHART,
                     args: action.payload.blob
                 });
             }

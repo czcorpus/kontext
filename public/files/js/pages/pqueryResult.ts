@@ -120,10 +120,10 @@ class ParadigmaticQueryPage {
             const saveModel = new PqueryResultsSaveModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
-                saveLinkFn: (filename:string, url:string) => {
+                saveLinkFn: (format:string, url:string) => {
                     this.layoutModel.bgDownload({
-                        filename,
-                        type: DownloadType.PQUERY,
+                        format,
+                        datasetType: DownloadType.PQUERY,
                         url,
                         contentType: 'multipart/form-data'
                     });

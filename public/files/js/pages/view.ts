@@ -1050,10 +1050,10 @@ export class ViewPage {
         return lineViewProps;
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.CONCORDANCE,
+            format,
+            datasetType: DownloadType.CONCORDANCE,
             contentType: 'multipart/form-data',
             url
         });
