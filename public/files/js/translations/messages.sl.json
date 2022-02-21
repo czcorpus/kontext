@@ -662,6 +662,7 @@
         "coll__save_form_label": "Shrani kolokacije",
         "coll__save_form_select_label": "Format podatkov",
         "coll__save_form_incl_col_hd": "Vključi naslove stolpcev",
+        "coll__save_form_multi_sheet_file": "Data in separate sheets UNTRANSLATED",
         "coll__save_form_leave_to_load_to_end": "Zgornjo mejo pustite prazno, če želite shraniti vrednosti do konca.",
         "coll__save_form_lines_to_store": "Vrstice za shranjevanje",
         "coll__save_form_incl_heading": "Vključi naslov",

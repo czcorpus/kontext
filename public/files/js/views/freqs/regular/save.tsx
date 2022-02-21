@@ -55,7 +55,7 @@ export function init(
     /**
      *
      */
-    const TRSaveFormatSelect:React.SFC<TRSaveFormatSelectProps> = (props) => {
+    const TRSaveFormatSelect:React.FC<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch<typeof Actions.SaveFormSetFormat>({
@@ -91,7 +91,7 @@ export function init(
     /**
      *
      */
-    const TRIncludeHeadingCheckbox:React.SFC<TRIncludeHeadingCheckboxProps> = (props) => {
+    const TRIncludeHeadingCheckbox:React.FC<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch<typeof Actions.SaveFormSetIncludeHeading>({
@@ -126,7 +126,7 @@ export function init(
     /**
      *
      */
-    const TRColHeadersCheckbox:React.SFC<TRColHeadersCheckboxProps> = (props) => {
+    const TRColHeadersCheckbox:React.FC<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch<typeof Actions.SaveFormSetIncludeColHeading>({
@@ -148,6 +148,37 @@ export function init(
     };
 
     // --------------------------------------------------------------------------------------
+    // ---------------------------- <TRMultiSheetFileCheckboxCheckbox /> --------------------------------
+
+    interface TRMultiSheetFileCheckboxProps {
+        value:boolean;
+    }
+
+    /**
+     *
+     */
+    const TRMultiSheetFileCheckboxCheckbox:React.FC<TRMultiSheetFileCheckboxProps> = (props) => {
+
+        const handleChange = () => {
+            dispatcher.dispatch<typeof Actions.SaveFormSetMultiSheetFile>({
+                name: Actions.SaveFormSetMultiSheetFile.name,
+                payload: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr className="separator">
+                <th><label htmlFor="tr-multi-sheet-file-checkbox">{utils.translate('coll__save_form_multi_sheet_file')}</label>:</th>
+                <td>
+                    <input id="tr-multi-sheet-file-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
+                </td>
+            </tr>
+        );
+    };
+
+    // --------------------------------------------------------------------------------------
     // ---------------------------- <TRSelLineRangeInputs /> --------------------------------
 
     interface TRSelLineRangeInputsProps {
@@ -155,7 +186,7 @@ export function init(
         toValue:Kontext.FormValue<string>;
     }
 
-    const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
+    const TRSelLineRangeInputs:React.FC<TRSelLineRangeInputsProps> = (props) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({
@@ -227,8 +258,12 @@ export function init(
                 case 'xml':
                     return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
                 case 'csv':
+                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />;
                 case 'xlsx':
-                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
+                    return [
+                        <TRColHeadersCheckbox value={this.props.includeColHeaders} />,
+                        <TRMultiSheetFileCheckboxCheckbox value={this.props.multiSheetFile} />,
+                    ]
                 default:
                 return <tr><td colSpan={2} /></tr>;
             }

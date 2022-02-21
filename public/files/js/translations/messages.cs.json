@@ -657,6 +657,7 @@
         "coll__save_form_label": "Uložit kolokace",
         "coll__save_form_select_label": "Formát dat",
         "coll__save_form_incl_col_hd": "Přidat nadpisy sloupců",
+        "coll__save_form_multi_sheet_file": "Data v samostatných listech",
         "coll__save_form_lines_to_store": "řádků k uložení",
         "coll__save_form_incl_heading": "Připojit hlavičku",
         "coll__save_form_leave_to_load_to_end": "Ponechte horní limit prázdný pro uložení řádků až do konce.",

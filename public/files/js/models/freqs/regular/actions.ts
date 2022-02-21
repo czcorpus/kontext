@@ -148,6 +148,12 @@ export class Actions {
         name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
     };
 
+    static SaveFormSetMultiSheetFile:Action<{
+        value:boolean;
+    }> = {
+        name: 'FREQ_SAVE_FORM_SET_MULTI_SHEET_FILE'
+    };
+
     static SaveFormSubmit:Action<{
         sourceId:string;
     }> = {

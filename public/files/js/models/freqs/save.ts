@@ -46,6 +46,7 @@ export interface FreqResultsSaveModelState {
     fromLine:Kontext.FormValue<string>;
     toLine:Kontext.FormValue<string>;
     quickSaveRowLimit:number;
+    multiSheetFile:boolean;
 }
 
 
@@ -68,7 +69,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                 toLine: {value: '', isInvalid: false, isRequired: false},
                 includeHeading: false,
                 includeColHeaders: false,
-                quickSaveRowLimit: quickSaveRowLimit
+                quickSaveRowLimit: quickSaveRowLimit,
+                multiSheetFile: false,
             }
         );
 
@@ -140,6 +142,11 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
         );
 
         this.addActionHandler(
+            Actions.SaveFormSetMultiSheetFile,
+            action => this.changeState(state => {state.multiSheetFile = action.payload.value})
+        );
+
+        this.addActionHandler(
             Actions.SaveFormSubmit,
             action => {
                 let err;
@@ -195,6 +202,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             heading: this.state.includeHeading,
             from_line: this.state.fromLine.value,
             to_line: this.state.toLine.value,
+            multi_sheet_file: this.state.multiSheetFile,
             fpage: 1,
             format: undefined
         };
