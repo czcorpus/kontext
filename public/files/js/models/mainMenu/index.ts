@@ -284,12 +284,12 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         this.addActionHandler(
             Actions.ToggleDisabled,
             (state, action) => {
-                this.toggleMenuItem(
-                    state,
-                    action.payload.menuId,
-                    action.payload.submenuId,
-                    action.payload.disabled
-                );
+                List.forEach(
+                    ({menuId, submenuId, disabled}) => {
+                        this.toggleMenuItem(state, menuId, submenuId, disabled);
+                    },
+                    action.payload.items
+                )
             }
         );
 

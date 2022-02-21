@@ -238,8 +238,10 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 this.dispatchSideEffect(
                     MainMenuActions.ToggleDisabled,
                     {
-                        menuId: 'menu-save',
-                        disabled: List.empty(resp.rows)
+                        items: [{
+                            menuId: 'menu-save',
+                            disabled: List.empty(resp.rows)
+                        }]
                     }
                 );
                 this.changeState(state => {

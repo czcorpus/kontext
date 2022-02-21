@@ -61,8 +61,9 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
-                 calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
+def _get_bg_conc(
+        corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
+        calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results

@@ -1743,7 +1743,7 @@ class Actions(Querying):
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._response.set_header('Content-Type', ce.get_content_type(format))
             self._response.set_header('Content-Disposition',
-                                      f'attachment; filename="{format(filename)}"')
+                                      f'attachment; filename="{filename}.{format}"')
             data = sorted(request.json.get('data', {}), key=lambda x: int(x['groupId']))
             total = sum(x['count'] for x in data)
             data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])

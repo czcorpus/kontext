@@ -194,7 +194,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-
+                this.loadDataAction(state, dispatch);
             }
         );
 
@@ -209,8 +209,8 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 );
                 state.isBusy = true;
             },
-            (state, action, dispatcher) => {
-                this.loadDataAction(state, dispatcher);
+            (state, action, dispatch) => {
+                this.loadDataAction(state, dispatch);
             }
         );
 

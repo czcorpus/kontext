@@ -19,36 +19,44 @@
  */
 
 import * as React from 'react';
-import * as Kontext from '../types/kontext';
+import * as Kontext from '../../../types/kontext';
 import { Cell, LabelList, Legend, Pie, PieChart } from 'recharts';
-import { LineGroupChartData } from './lineSelection';
 import { List } from 'cnc-tskit';
-import { IFullActionControl } from 'kombo';
-import { Actions } from './lineSelection';
+import { Bound, IActionDispatcher } from 'kombo';
+import { Actions } from '../../../models/concordance/actions';
+import * as S from './style';
+import { LineSelectionModelState } from '../../../models/concordance/lineSelection';
+import { LineGroupChartData } from '../../../models/concordance/common';
 
 
-interface LineGroupChart {
-    width: number;
-    height: number;
-    data: LineGroupChartData;
+export interface LineGroupChartProps {
+    data:LineGroupChartData;
+    exportFormats:Array<string>;
+    corpusId:string;
 }
 
-export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl):React.FC<{
-    chartWidth: number;
-    chartHeight: number;
-    data: LineGroupChartData;
-    exportFormats:Array<string>;
-    corpusId: string;
-}> {
+export function init(
+    he:Kontext.ComponentHelpers,
+    dispatcher:IActionDispatcher
 
-    const LineGroupChart:React.FC<LineGroupChart> = (props) => {
+):React.FC<LineSelectionModelState> {
+
+
+    const globalViews = he.getLayoutViews();
+
+
+    // -------------------- <LineGroupChart /> --------------------------------
+
+    const LineGroupChart:React.FC<{
+        data:LineGroupChartData;
+    }> = (props) => {
 
         const legendFormatter = (value, entry) => {
             return <span style={{color: '#000'}}><b>{value}</b> {he.formatNumber(100*entry.payload.percent, 1)}% ({entry.payload.count}x)</span>;
         };
 
         return (
-            <PieChart width={props.width} height={props.height}>
+            <PieChart width={300} height={300}>
                 <Pie
                         data={props.data}
                         isAnimationActive={false}
@@ -62,8 +70,10 @@ export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl)
         );
     };
 
+    // -------------------- <ExportLinks /> --------------------------------
+
     const ExportLinks:React.FC<{
-        data: LineGroupChartData;
+        data:LineGroupChartData;
         exportFormats:Array<string>;
         corpusId: string;
     }> = (props) => {
@@ -86,18 +96,35 @@ export function init(he:Kontext.ComponentHelpers, dispatcher:IFullActionControl)
             null
     }
 
-    const GroupsStats:React.FC<{
-        chartWidth: number;
-        chartHeight: number;
-        data: LineGroupChartData;
-        exportFormats:Array<string>;
-        corpusId: string;
-    }> = (props) => {
-        return <div>
-            <legend>{he.translate('linesel__groups_stats_heading')}</legend>
-            <LineGroupChart width={props.chartWidth} height={props.chartHeight} data={props.data}/>
-            <ExportLinks data={props.data} exportFormats={props.exportFormats} corpusId={props.corpusId} />
-        </div>
+    // -------------------- <GroupsStats /> --------------------------------
+
+    const GroupsStats:React.FC<LineSelectionModelState> = (props) => {
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch<typeof Actions.GetGroupStats>({
+                    name: Actions.GetGroupStats.name
+                })
+            },
+            []
+        );
+
+        return (
+            <S.LockedLineGroupsChartFieldset>
+                <div>
+                    <legend>{he.translate('linesel__groups_stats_heading')}</legend>
+                    {props.isBusy ?
+                        <globalViews.AjaxLoaderImage /> :
+                        props.groupsChartData ?
+                            <>
+                                <LineGroupChart data={props.groupsChartData} />
+                                <ExportLinks data={props.groupsChartData} exportFormats={props.exportFormats} corpusId={props.corpusId} />
+                            </> :
+                            null
+                    }
+                </div>
+            </S.LockedLineGroupsChartFieldset>
+        );
     }
 
     return GroupsStats;

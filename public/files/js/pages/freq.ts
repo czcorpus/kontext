@@ -281,10 +281,10 @@ class FreqPage {
         );
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.FREQ,
+            format,
+            datasetType: DownloadType.FREQ,
             url,
             contentType: 'multipart/form-data'
         });

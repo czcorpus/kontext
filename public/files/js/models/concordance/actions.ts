@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { AudioPlayerActions, DetailExpandPositions, LineSelectionModes, LineSelValue,
-    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions } from './common';
+    AjaxConcResponse, LineGroupId, RefsColumn, PaginationActions, LineGroupChartData } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { DataSaveFormat } from '../../app/navigation/save';
 
@@ -420,6 +420,24 @@ export class Actions {
         mode:LineSelectionModes;
     }> = {
         name: 'CONCORDANCE_PUBLISH_STORED_LINE_SELECTIONS'
+    };
+
+    static DownloadSelectionOverview:Action<{
+        format:string;
+    }> = {
+        name: 'LINE_SELECTION_OVERVIEW_DOWNLOAD'
+    };
+
+    static GetGroupStats:Action<{
+
+    }> = {
+        name: 'LINE_SELECTION_GET_GROUP_STATS'
+    }
+
+    static GetGroupStatsDone:Action<{
+        data:LineGroupChartData;
+    }> = {
+        name: 'LINE_SELECTION_GET_GROUP_STATS_DONE'
     };
 
     static ToggleLineGroupRenameForm:Action<{}> = {

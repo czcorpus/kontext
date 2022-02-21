@@ -214,21 +214,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.groupsSelected = true;
             },
             (state, action, dispatch) => {
-                List.forEach(([menuId, submenuId]) => {
-                    dispatch<typeof MainMenuActions.ToggleDisabled>({
-                        name: MainMenuActions.ToggleDisabled.name,
-                        payload: {
-                            menuId,
-                            submenuId,
-                            disabled: true
-                        }
-                    });
-                }, [
-                    tuple('menu-filter', null),
-                    tuple('menu-concordance', 'shuffle'),
-                    tuple('menu-concordance', 'sorting'),
-                    tuple('menu-concordance', 'sample')
-                ]);
+                dispatch<typeof MainMenuActions.ToggleDisabled>({
+                    name: MainMenuActions.ToggleDisabled.name,
+                    payload: {
+                        items: [
+                            {menuId: 'menu-filter', disabled: true},
+                            {menuId: 'menu-concordance', submenuId: 'shuffle', disabled: true},
+                            {menuId: 'menu-concordance', submenuId: 'sorting', disabled: true},
+                            {menuId: 'menu-concordance', submenuId: 'sample', disabled: true}
+                        ]
+                    }
+                })
             }
         );
 
@@ -238,21 +234,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.groupsSelected = false;
             },
             (state, action, dispatch) => {
-                List.forEach(([menuId, submenuId]) => {
-                    dispatch<typeof MainMenuActions.ToggleDisabled>({
-                        name: MainMenuActions.ToggleDisabled.name,
-                        payload: {
-                            menuId,
-                            submenuId,
-                            disabled: false
-                        }
-                    });
-                }, [
-                    tuple('menu-filter', null),
-                    tuple('menu-concordance', 'shuffle'),
-                    tuple('menu-concordance', 'sorting'),
-                    tuple('menu-concordance', 'sample')
-                ]);
+                dispatch<typeof MainMenuActions.ToggleDisabled>({
+                    name: MainMenuActions.ToggleDisabled.name,
+                    payload: {
+                        items: [
+                            {menuId: 'menu-filter', disabled: true},
+                            {menuId: 'menu-concordance', submenuId: 'shuffle', disabled: false},
+                            {menuId: 'menu-concordance', submenuId: 'sorting', disabled: false},
+                            {menuId: 'menu-concordance', submenuId: 'sample', disabled: false}
+                        ]
+                    }
+                });
             }
         );
 

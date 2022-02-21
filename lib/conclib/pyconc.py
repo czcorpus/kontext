@@ -28,7 +28,7 @@ from strings import escape_attr_val
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 
 
 def get_conc_labelmap(infopath):
@@ -63,7 +63,7 @@ def lngrp_sortstr(lab, separator='.'):
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
-    def __init__(self, corp: KCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None):
+    def __init__(self, corp: AbstractKCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp

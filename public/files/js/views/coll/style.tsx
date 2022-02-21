@@ -24,7 +24,12 @@ import * as theme from '../theme/default';
 // ---------------- <CollForm /> --------------------------------------
 
 export const CollForm = styled.form`
+
     margin-bottom: 2em;
+
+    .buttons {
+        padding-top: 1.4em;
+    }
 `;
 
 // ---------------- <CollMetricsSelection /> --------------------------------------

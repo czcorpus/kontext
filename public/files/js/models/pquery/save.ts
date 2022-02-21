@@ -19,7 +19,7 @@
  */
 
 import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import { PageModel, SaveLinkHandler } from '../../app/page';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
@@ -32,7 +32,7 @@ export interface PqueryResultsSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
 }
 
 export interface PqueryResultsSaveModelState {
@@ -51,9 +51,9 @@ export interface PqueryResultsSaveModelState {
  */
 export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModelState> {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private saveLinkFn:(file:string, url:string)=>void;
+    private readonly saveLinkFn:SaveLinkHandler;
 
     constructor({dispatcher, layoutModel, saveLinkFn, quickSaveRowLimit}:PqueryResultsSaveModelArgs) {
         super(
@@ -187,7 +187,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
 
     private submit(pqueryResultArgs:{queryId:string; sort:string; reverse:number}):void {
         this.saveLinkFn(
-            `pquery.${this.state.saveformat}`,
+            this.state.saveformat,
             this.layoutModel.createActionUrl(
                 'pquery/download',
                 {

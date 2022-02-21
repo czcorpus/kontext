@@ -19,7 +19,7 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { PageModel } from '../../app/page';
+import { PageModel, SaveLinkHandler } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -31,7 +31,7 @@ export interface COllResultsSaveModelArgs {
     dispatcher:IActionDispatcher;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
 }
 
 export interface CollResultsSaveModelState {
@@ -50,7 +50,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
 
     private readonly layoutModel:PageModel;
 
-    private readonly saveLinkFn:(file:string, url:string)=>void;
+    private readonly saveLinkFn:SaveLinkHandler;
 
     constructor({
             dispatcher,
@@ -204,7 +204,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                                 undefined
                 };
                 this.saveLinkFn(
-                    `collocation.${state.saveformat}`,
+                    state.saveformat,
                     this.layoutModel.createActionUrl('savecoll', args)
                 );
             }

@@ -22,7 +22,7 @@ import { IFullActionControl, StatefulModel } from 'kombo';
 
 import * as Kontext from '../../types/kontext';
 import { validateNumber } from '../base';
-import { PageModel } from '../../app/page';
+import { PageModel, SaveLinkHandler } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { DataSaveFormat } from '../../app/navigation/save';
@@ -33,7 +33,7 @@ export interface ConcSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     concSize:number;
-    saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
+    saveLinkFn:SaveLinkHandler;
     quickSaveRowLimit:number;
 }
 
@@ -54,7 +54,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
 
     private concSize:number;
 
-    private saveLinkFn:(filename:string, url:string)=>Promise<boolean>;
+    private saveLinkFn:SaveLinkHandler;
 
     private quickSaveRowLimit:number;
 
@@ -208,7 +208,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             align_kwic: this.state.alignKwic
         };
         this.saveLinkFn(
-            `concordance.${this.state.saveformat}`,
+            this.state.saveformat,
             this.layoutModel.createActionUrl('saveconc', args)
         );
     }
