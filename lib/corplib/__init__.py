@@ -21,7 +21,7 @@ from typing import List, Any, Optional, Tuple, Dict, Union
 from manatee import SubCorpus, Concordance, StrVector
 from array import array
 import logging
-from .corpus import KCorpus, KSubcorpus
+from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
 from .fallback import EmptyCorpus
 
 import os
@@ -161,7 +161,7 @@ class CorpusManager:
             subcpath: a list of paths where user corpora are located
         """
         self.subcpath: List[str] = list(subcpath)
-        self._cache: Dict[Tuple[str, str, Optional[str]], KCorpus] = {}
+        self._cache: Dict[Tuple[str, str, Optional[str]], AbstractKCorpus] = {}
 
     def get_subc_public_name(self, corpname: str, subcname: str) -> Optional[str]:
         if len(self.subcpath) > 0:
@@ -172,7 +172,7 @@ class CorpusManager:
 
     def get_corpus(
             self, corpname: str, corp_variant: str = '', subcname: str = '',
-            decode_desc: bool = True) -> Union[KCorpus, KSubcorpus]:
+            decode_desc: bool = True) -> AbstractKCorpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -249,9 +249,9 @@ class CorpusManager:
                 for s in self.subc_files(corpname)]
 
 
-def texttype_values(corp: KCorpus, subcorpattrs: str, maxlistsize: int,
-                    shrink_list: Union[Tuple[str, ...], List[str]] = (),
-                    collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
+def texttype_values(
+        corp: AbstractKCorpus, subcorpattrs: str, maxlistsize: int, shrink_list: Union[Tuple[str, ...],
+        List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     arguments:
     corp --
@@ -372,14 +372,14 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
             full_value = label[len(hsep):] + hsep + item
         else:
             full_value = item
-        result.append({'v': full_value,
-                       'key': label,
-                       'label': item,
-                       'shift': level * 16,
-                       'startdiv': startdiv,
-                       'enddiv': 0,
-                       'display_plus': display_plus,
-                       })
+        result.append({
+            'v': full_value,
+            'key': label,
+            'label': item,
+            'shift': level * 16,
+            'startdiv': startdiv,
+            'enddiv': 0,
+            'display_plus': display_plus})
         startdiv = False
         result.extend(sub)
     if level > 0:
@@ -387,7 +387,7 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     return result
 
 
-def frq_db(corp: KCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
+def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
     filename = (corp.freq_precalc_file(attrname) + '.' + nums)
     if not id_range:
