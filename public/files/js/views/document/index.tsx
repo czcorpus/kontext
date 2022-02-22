@@ -224,6 +224,12 @@ export function init(
             window.addEventListener('resize', this._windowResizeHandler);
         }
 
+        componentDidUpdate(prevProps: Readonly<CoreViews.PopupBox.Props>, prevState: Readonly<CoreViews.PopupBox.State>, snapshot?: any): void {
+            if (this.props.takeFocus) {
+                this.closeBtnRef.current.focus();
+            }
+        }
+
         componentWillUnmount() {
             window.removeEventListener('resize', this._windowResizeHandler);
         }
