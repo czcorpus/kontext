@@ -18,17 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { PageModel, SaveLinkHandler } from '../../app/page';
-import { Freq2DTableModel } from './twoDimension/table2d';
-import { Freq2DFlatViewModel } from './twoDimension/flatTable';
+import * as Kontext from '../../../types/kontext';
+import { PageModel, SaveLinkHandler } from '../../../app/page';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './regular/actions';
-import { Actions as Actions2df } from './twoDimension/actions';
-import { DataSaveFormat } from '../../app/navigation/save';
-
-
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
+import { Actions } from './actions';
+import { DataSaveFormat } from '../../../app/navigation/save';
 
 
 export interface FreqResultsSaveModelArgs {
@@ -205,39 +200,3 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
     }
 }
 
-// TODO the stuff below should go to a separate module
-
-export interface FreqCTResultsSaveModelState {
-    saveMode:string;
-}
-
-export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModelState> {
-
-    ctTableModel:Freq2DTableModel;
-
-    ctFlatModel:Freq2DFlatViewModel;
-
-    constructor(dispatcher:IFullActionControl, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
-        super(dispatcher, {saveMode: null});
-        this.ctTableModel = ctTableModel;
-        this.ctFlatModel = ctFlatModel;
-
-        this.addActionHandler<typeof Actions2df.SetCtSaveMode>(
-            Actions2df.SetCtSaveMode.name,
-            action => this.changeState(state => {state.saveMode = action.payload.value})
-        );
-
-        this.addActionHandler<typeof MainMenuActions.DirectSave>(
-            MainMenuActions.DirectSave.name,
-            action => {
-                if (this.state.saveMode === 'table') {
-                    this.ctTableModel.submitDataConversion(action.payload.saveformat);
-
-                } else if (this.state.saveMode === 'list') {
-                    this.ctFlatModel.submitDataConversion(action.payload.saveformat);
-                }
-            }
-        );
-    }
-
-}

@@ -31,6 +31,8 @@ import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 import { isEmptyResultBlock } from '../../../models/freqs/regular/common';
 import { alphaToCoeffFormatter } from '../../../models/freqs/common';
+import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
+import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
 
 // --------------------------- exported types --------------------------------------
 
@@ -41,12 +43,15 @@ export function init(
         dispatcher:IActionDispatcher,
         he:Kontext.ComponentHelpers,
         freqChartsModel:FreqChartsModel,
-        freqDataRowsModel:FreqDataRowsModel
+        freqChartsSaveModel:FreqChartsSaveFormModel,
+        freqDataRowsModel:FreqDataRowsModel,
+        freqTableSaveModel:FreqResultsSaveModel
 ) {
     const globalComponents = he.getLayoutViews();
     const drViews = dataRowsInit(dispatcher, he);
-    const chartViews = initChartViews(dispatcher, he, freqChartsModel);
-    const saveViews = initSaveViews(dispatcher, he, freqDataRowsModel.getSaveModel());
+    const chartViews = initChartViews(
+        dispatcher, he, freqChartsModel, freqChartsSaveModel);
+    const saveViews = initSaveViews(dispatcher, he, freqTableSaveModel);
     const alphaToCoeff = alphaToCoeffFormatter(he);
 
     // ----------------------- <Paginator /> -------------------------
@@ -236,10 +241,9 @@ export function init(
     const FreqResultView:React.FC<FreqDataRowsModelState> = (props) => {
 
         const handleSaveFormClose = () => {
-            dispatcher.dispatch<typeof Actions.ResultCloseSaveForm>({
-                name: Actions.ResultCloseSaveForm.name,
-                payload: {}
-            });
+            dispatcher.dispatch(
+                Actions.ResultCloseSaveForm,
+            );
         }
 
         const hasNextPage = (state:FreqDataRowsModelState, sourceId:string):boolean => {
@@ -327,10 +331,6 @@ export function init(
                                                         alphaLevel={props.alphaLevel}
                                                         displayConfidence={props.displayConfidence} />
                                             </div>
-                                            {props.saveFormActive ?
-                                                <saveViews.SaveFreqForm onClose={handleSaveFormClose} sourceId={sourceId} /> :
-                                                null
-                                            }
                                         </>
                                     }
                                     </div>
@@ -338,6 +338,10 @@ export function init(
                                 )
                             )
                         )}
+                        {props.saveFormActive ?
+                            <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
+                            null
+                        }
                     </div>
                 </globalComponents.TabView>
             </S.FreqResultView>

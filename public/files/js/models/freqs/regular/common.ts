@@ -93,6 +93,7 @@ export interface BaseFreqModelState {
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
     alphaLevel:Maths.AlphaLevel;
+    saveFormActive:boolean;
 }
 
 /**
