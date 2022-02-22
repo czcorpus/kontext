@@ -22,7 +22,6 @@ import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Actions } from './actions';
-import { Actions as GlobalActions } from '../../common/actions';
 
 export interface FreqChartsSaveFormModelState {
     formIsActive:boolean;

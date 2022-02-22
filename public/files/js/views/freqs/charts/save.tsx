@@ -108,7 +108,8 @@ export function init(
                     sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
                     format: props.formats[props.sourceId]
                 }
-            )
+            );
+            props.onClose();
         };
 
         return (
