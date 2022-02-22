@@ -188,7 +188,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         // by default which means only the "Custom..." item
         const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data);
         const freqsPrevItems = customSaveItem.items;
-        customSaveItem.items = [List.last(customSaveItem.items)];
+        customSaveItem.items = List.empty(customSaveItem.items) ? [] : [List.last(customSaveItem.items)];
         super(
             dispatcher,
             {
