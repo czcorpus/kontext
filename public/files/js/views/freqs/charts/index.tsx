@@ -32,13 +32,16 @@ import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
+import { init as initSaveViews } from './save';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
 import {
     isEmptyResultBlock, ResultBlock, ResultItem
 } from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
-import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes } from '../../../models/freqs/common';
+import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes
+} from '../../../models/freqs/common';
+import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
 
 
 
@@ -63,11 +66,11 @@ function transformDataForErrorBars(block:ResultBlock):Array<ResultItem & {z:numb
 }
 
 
-
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     freqChartsModel:FreqChartsModel,
+    chartSaveFormModel:FreqChartsSaveFormModel
 ) {
 
     // max chart label lengths
@@ -75,7 +78,7 @@ export function init(
     const WORD_CLOUD_MAX_LABEL_LENGTH = 30;
 
     const globalComponents = he.getLayoutViews();
-
+    const SaveForm = initSaveViews(dispatcher, he, chartSaveFormModel);
     const WordCloud = initWordCloud<ResultItem>(he);
 
     const dataTransform = (unit:FreqChartsAvailableData) => (item:ResultItem):WordCloudItemCalc => {
@@ -317,34 +320,47 @@ export function init(
             x => x ? x.length : 0
         );
 
-        const handleDownload = () => {
-            const container = ReactDOM.findDOMNode(ref.current);
-            if (container instanceof Text) {
-                return;
-            }
-            const svg = container.querySelector('svg');
-            let svgURL = new XMLSerializer().serializeToString(svg);
-            let svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
-            svgBlob.text().then(
-                (blob) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                        name: GlobalActions.ConvertChartSVG.name,
-                        payload: {
-                            format: props.downloadFormat,
-                            filename: 'freq-chart.svg',
-                            blob,
-                            chartType: props.type,
-                            vertBarChartMaxLabel: maxLabelLength
-                        }
-                    });
-                },
-                (error) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                        name: GlobalActions.ConvertChartSVG.name,
-                        error
-                    });
+        React.useEffect(
+            () => {
+                const container = ReactDOM.findDOMNode(ref.current);
+                if (container instanceof Text || !container) {
+                    return;
                 }
-            )
+                const svg = container.querySelector('svg');
+                const svgURL = new XMLSerializer().serializeToString(svg);
+                const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+                svgBlob.text().then(
+                    value => {
+                        dispatcher.dispatch<typeof GlobalActions.SetChartDownloadSVG>({
+                            name: GlobalActions.SetChartDownloadSVG.name,
+                            payload: {
+                                sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
+                                value,
+                                type: props.type,
+                                // the maxLabelLength is for server to correct issues with text overlapping the view
+                                args: {maxLabelLength}
+                            }
+                        })
+                    },
+                    error => {
+                        dispatcher.dispatch(
+                            GlobalActions.SetChartDownloadSVG,
+                            error
+                        )
+                    }
+                );
+            }
+        )
+
+        const handleDownload = () => {
+            dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                name: GlobalActions.ConvertChartSVG.name,
+                payload: {
+                    sourceId: `${FreqChartsSaveFormModel.SVG_SAVE_ID_PREFIX}${props.sourceId}`,
+                    format: props.downloadFormat,
+                    chartType: props.type
+                }
+            });
         }
 
         const xUnits = props.dataKey === 'freq' ?
@@ -479,28 +495,42 @@ export function init(
 
     // --------------------- <FreqChartsView /> -----------------------------------------
 
-    const FreqChartsView:React.FC<FreqChartsModelState> = (props) => (
-        <S.FreqChartsView>
-            {pipe(
-                props.data,
-                Dict.toEntries(),
-                List.map(
-                    ([sourceId, block]) => (
-                        isEmptyResultBlock(block) ?
-                            <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]}
-                                    heading={block.heading} /> :
-                            <FreqChart key={sourceId} sourceId={sourceId} data={block}
-                                    dataKey={props.dataKey[sourceId]}
-                                    type={props.type[sourceId]}
-                                    isBusy={props.isBusy[sourceId]}
-                                    dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
-                                    sortColumn={props.sortColumn[sourceId]}
-                                    downloadFormat={props.downloadFormat[sourceId]} />
+
+    const FreqChartsView:React.FC<FreqChartsModelState> = (props) => {
+
+        const handleSaveFormClose = () => {
+            dispatcher.dispatch(
+                Actions.ResultCloseSaveForm,
+            );
+        }
+
+        return (
+            <S.FreqChartsView>
+                {pipe(
+                    props.data,
+                    Dict.toEntries(),
+                    List.map(
+                        ([sourceId, block]) => (
+                            isEmptyResultBlock(block) ?
+                                <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]}
+                                        heading={block.heading} /> :
+                                <FreqChart key={sourceId} sourceId={sourceId} data={block}
+                                        dataKey={props.dataKey[sourceId]}
+                                        type={props.type[sourceId]}
+                                        isBusy={props.isBusy[sourceId]}
+                                        dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
+                                        sortColumn={props.sortColumn[sourceId]}
+                                        downloadFormat={props.downloadFormat[sourceId]} />
+                        )
                     )
-                )
-            )}
-        </S.FreqChartsView>
-    );
+                )}
+                {props.saveFormActive ?
+                    <SaveForm onClose={handleSaveFormClose} /> :
+                    null
+                }
+            </S.FreqChartsView>
+        );
+    };
 
     return {
         FreqChartsView: Bound(FreqChartsView, freqChartsModel)

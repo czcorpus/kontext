@@ -149,7 +149,6 @@ export class Actions {
     };
 
     static SaveFormSubmit:Action<{
-        sourceId:string;
     }> = {
         name: 'FREQ_SAVE_FORM_SUBMIT'
     };
@@ -287,5 +286,16 @@ export class Actions {
         format:ChartExportFormat;
     }> = {
         name: 'FREQ_CHARTS_SET_DOWNLOAD_FORMAT'
+    }
+
+    static ChartSaveFormSelectChart:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_CHARTS_CHART_SAVE_FORM_SELECT_CHART'
+    }
+
+    static ChartSaveFormSubmit:Action<{
+    }> = {
+        name: 'FREQ_CHARTS_CHART_SAVE_FORM_SUBMIT'
     }
 }

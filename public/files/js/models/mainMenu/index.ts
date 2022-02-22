@@ -28,6 +28,7 @@ import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as GeneralOptsActions } from '../options/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
+import { Actions as FreqActions } from '../freqs/regular/actions';
 import { ConcServerArgs } from '../concordance/common';
 
 
@@ -161,6 +162,7 @@ export interface MainMenuModelState {
     data:Array<Kontext.MenuEntry>;
     isBusy:boolean;
     concArgs:ConcServerArgs;
+    freqsPrevItems:Array<Kontext.SubmenuItem>;
     corpname:string;
     humanCorpname:string;
     usesubcorp?:string;
@@ -178,16 +180,24 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
         initialData:InitialMenuData,
-        concArgs:ConcServerArgs) {
-
+        concArgs:ConcServerArgs
+    ) {
+        const data = importMenuData(initialData.submenuItems);
+        // here we have to make a kind of correction as traditionally, server
+        // sends "save" menu items but starting from v0.16 we display charts
+        // by default which means only the "Custom..." item
+        const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data);
+        const freqsPrevItems = customSaveItem.items;
+        customSaveItem.items = [List.last(customSaveItem.items)];
         super(
             dispatcher,
             {
                 activeItem: null,
                 visibleSubmenu: null,
-                data: importMenuData(initialData.submenuItems),
+                data,
                 isBusy: false,
                 concArgs,
+                freqsPrevItems,
                 corpname: pageModel.getCorpusIdent().id,
                 humanCorpname: pageModel.getCorpusIdent().name,
                 usesubcorp: pageModel.getCorpusIdent().usesubcorp,
@@ -346,6 +356,16 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
                 state.foreignSubcorp = action.payload.foreign;
             }
         );
+
+        this.addActionHandler(
+            FreqActions.ResultSetActiveTab,
+            (state, action) => {
+                const [,srch] = List.find(([id,]) => id === 'menu-save', state.data);
+                const tmp = state.freqsPrevItems;
+                state.freqsPrevItems = srch.items;
+                srch.items = tmp;
+            }
+        )
     }
 
     private findMenuItem(

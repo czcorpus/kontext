@@ -111,20 +111,32 @@ export class Actions {
         name: 'CONC_ARGS_UPDATED'
     };
 
+    /**
+     *  this is typically triggered by SVG producing component's side effect
+     */
+    static SetChartDownloadSVG:Action<{
+        /**
+         * SourceId must fully identify the source. In case of multiple views storing
+         * data here it is advised to use additional prefixes, e.g. 'freq_tables:doc.genre 0'
+         */
+        sourceId:string;
+        value:string;
+        type:FreqChartsAvailableTypes;
+        args?:{[k:string]:string|number};
+    }> = {
+        name: 'GLOBAL__SET_CHART_DOWNLOAD_SVG'
+    }
+
     static ConvertChartSVG:Action<{
+
+        sourceId:string;
 
         format:Kontext.ChartExportFormat;
 
-        /**
-         * filename without suffix
-         */
-        filename:string;
-
-        blob:string;
         chartType:FreqChartsAvailableTypes;
-        vertBarChartMaxLabel?:number; // this is for server to correct issues with text overlapping the view
+
     }> = {
-        name: 'GLOBAL_CONVERT_SVG'
+        name: 'GLOBAL_CONVERT_CHART_SVG'
     };
 
 }

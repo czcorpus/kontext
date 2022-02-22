@@ -18,13 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Dict } from 'cnc-tskit';
 import { StatelessModel, IActionQueue } from 'kombo';
 import { DownloadType, PageModel } from '../../app/page';
 import { Actions } from '../common/actions';
+import { FreqChartsAvailableTypes } from '../freqs/common';
 
 
 export interface ImageConversionModelState {
-
+    data:{[sourceId:string]:{
+        src:string;
+        type:FreqChartsAvailableTypes;
+        serverArgs:{[k:string]:string|number};
+    }};
 }
 
 
@@ -33,28 +39,45 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
     private layoutModel:PageModel;
 
     constructor(dispatcher:IActionQueue, layoutModel:PageModel) {
-        super(dispatcher, {});
+        super(dispatcher, {
+            data: {}
+        });
         this.layoutModel = layoutModel;
+
+        this.addActionHandler(
+            Actions.SetChartDownloadSVG,
+            (state, action) => {
+                state.data[action.payload.sourceId] = {
+                    src: action.payload.value,
+                    type: action.payload.type,
+                    serverArgs: action.payload.args ? action.payload.args : {}
+                };
+            }
+        );
 
         this.addActionHandler(
             Actions.ConvertChartSVG,
             null,
             (state, action, dispatch) => {
-                this.layoutModel.bgDownload({
-                    name: action.payload.filename,
-                    format: action.payload.format.split('-')[0],
-                    datasetType: DownloadType.CHART,
-                    url: this.layoutModel.createActionUrl(
-                        'tools/convert_chart_svg',
-                        {
-                            outFormat: action.payload.format,
-                            chartType: action.payload.chartType,
-                            vertBarChartMaxLabel: action.payload.vertBarChartMaxLabel
-                        }
-                    ),
-                    contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
-                    args: action.payload.blob
-                });
+                    if (!state.data[action.payload.sourceId]) {
+                        this.layoutModel.showMessage('error', `Chart data ${action.payload.sourceId} not available. Known data: ${Dict.keys(state.data).join(', ')}`)
+                        return;
+                    }
+                    const { src, type, serverArgs } = state.data[action.payload.sourceId];
+                    this.layoutModel.bgDownload({
+                        format: action.payload.format.split('-')[0],
+                        datasetType: DownloadType.CHART,
+                        url: this.layoutModel.createActionUrl(
+                            'tools/convert_chart_svg',
+                            {
+                                ...serverArgs,
+                                chartType: type,
+                                outFormat: action.payload.format
+                            }
+                        ),
+                        contentType: action.payload.format.startsWith('png') ? 'image/png' : 'image/svg+xml',
+                        args: src // the naming is a bit confusing here
+                    });
             }
         );
     }

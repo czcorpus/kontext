@@ -24,6 +24,7 @@ import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqResultResponse } from '../common';
 import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import {
     BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs,
     isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS, recalculateConfIntervals,
@@ -183,7 +184,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     allCrits,
                     List.map(k => tuple<string, ChartExportFormat>(k.n, 'png')),
                     Dict.fromEntries()
-                )
+                ),
+                saveFormActive: false
             }
         );
 
@@ -390,6 +392,18 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsSetDownloadFormat,
             (state, action) => {
                 state.downloadFormat[action.payload.sourceId] = action.payload.format;
+            }
+        );
+
+        this.addActionHandler(
+            MainMenuActions.ShowSaveForm,
+            (state, action) => {state.saveFormActive = true}
+        );
+
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
+            (state, action) => {
+                state.saveFormActive = false;
             }
         );
     }

@@ -20,13 +20,12 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../../models/freqs/save';
+import { FreqResultsSaveModel, FreqResultsSaveModelState } from '../../../models/freqs/regular/save';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 
 
 interface SaveFreqFormProps {
-    sourceId:string;
     onClose:()=>void;
 }
 
@@ -55,7 +54,7 @@ export function init(
     /**
      *
      */
-    const TRSaveFormatSelect:React.SFC<TRSaveFormatSelectProps> = (props) => {
+    const TRSaveFormatSelect:React.FC<TRSaveFormatSelectProps> = (props) => {
 
         const handleSelect = (evt) => {
             dispatcher.dispatch<typeof Actions.SaveFormSetFormat>({
@@ -91,7 +90,7 @@ export function init(
     /**
      *
      */
-    const TRIncludeHeadingCheckbox:React.SFC<TRIncludeHeadingCheckboxProps> = (props) => {
+    const TRIncludeHeadingCheckbox:React.FC<TRIncludeHeadingCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch<typeof Actions.SaveFormSetIncludeHeading>({
@@ -126,7 +125,7 @@ export function init(
     /**
      *
      */
-    const TRColHeadersCheckbox:React.SFC<TRColHeadersCheckboxProps> = (props) => {
+    const TRColHeadersCheckbox:React.FC<TRColHeadersCheckboxProps> = (props) => {
 
         const handleChange = () => {
             dispatcher.dispatch<typeof Actions.SaveFormSetIncludeColHeading>({
@@ -147,15 +146,12 @@ export function init(
         );
     };
 
-    // --------------------------------------------------------------------------------------
     // ---------------------------- <TRSelLineRangeInputs /> --------------------------------
 
-    interface TRSelLineRangeInputsProps {
+    const TRSelLineRangeInputs:React.FC<{
         fromValue:Kontext.FormValue<string>;
         toValue:Kontext.FormValue<string>;
-    }
-
-    const TRSelLineRangeInputs:React.SFC<TRSelLineRangeInputsProps> = (props) => {
+    }> = ({ fromValue, toValue }) => {
 
         const handleFromInput = (evt) => {
             dispatcher.dispatch<typeof Actions.SaveFormSetFromLine>({
@@ -182,27 +178,26 @@ export function init(
                 </th>
                 <td>
                     {utils.translate('coll__save_form_line_from')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={props.fromValue.isInvalid}>
-                        <input type="text" name="from_line" value={props.fromValue.value}
+                    <layoutViews.ValidatedItem invalid={fromValue.isInvalid}>
+                        <input type="text" name="from_line" value={fromValue.value}
                                 onChange={handleFromInput}  style={{width: '4em'}} />
                     </layoutViews.ValidatedItem>
                     {'\u00a0'}
                     {utils.translate('coll__save_form_line_to')}:{'\u00a0'}
-                    <layoutViews.ValidatedItem invalid={props.toValue.isInvalid}>
-                        <input type="text" name="to_line" value={props.toValue.value}
+                    <layoutViews.ValidatedItem invalid={toValue.isInvalid}>
+                        <input type="text" name="to_line" value={toValue.value}
                                 onChange={handleToInput} style={{width: '4em'}}
                                 placeholder="MAX" />
                     </layoutViews.ValidatedItem>
 
                     <p className="hint">
-                        ({utils.translate('coll__save_form_leave_to_load_to_end')}
+                        ({utils.translate('coll__save_form_leave_to_load_to_end')})
                     </p>
                 </td>
             </tr>
         );
     };
 
-    // --------------------------------------------------------------------------------------
     // ---------------------------- <SaveFreqForm /> ----------------------------------------
 
     /**
@@ -216,10 +211,9 @@ export function init(
         }
 
         _handleSubmitClick() {
-            dispatcher.dispatch<typeof Actions.SaveFormSubmit>({
-                name: Actions.SaveFormSubmit.name,
-                payload: {sourceId: this.props.sourceId}
-            });
+            dispatcher.dispatch(
+                Actions.SaveFormSubmit
+            );
         }
 
         _renderFormatDependentOptions() {

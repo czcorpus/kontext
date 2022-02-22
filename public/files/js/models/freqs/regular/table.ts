@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { PageModel, SaveLinkHandler } from '../../../app/page';
+import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
-import { FreqResultsSaveModel } from '../save';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { debounceTime, Observable, Subject } from 'rxjs';
 import {
@@ -44,15 +43,12 @@ export interface FreqDataRowsModelArgs {
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
     formProps:FreqFormInputs;
-    quickSaveRowLimit:number;
-    saveLinkFn:SaveLinkHandler;
     initialData:Array<ResultBlock|EmptyResultBlock>;
     currentPage:number;
     freqLoader:FreqDataLoader;
 }
 
 export interface FreqDataRowsModelState extends BaseFreqModelState {
-    saveFormActive:boolean;
     displayConfidence:boolean;
 }
 
@@ -142,15 +138,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     private pageModel:PageModel;
 
-    private saveModel:FreqResultsSaveModel;
-
     private freqLoader:FreqDataLoader;
 
     private readonly debouncedAction$:Subject<DebouncedActions>;
 
     constructor({
-        dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps, saveLinkFn,
-        quickSaveRowLimit, initialData, currentPage, freqLoader
+        dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
+        initialData, currentPage, freqLoader
     }:FreqDataRowsModelArgs) {
         const allCrit = List.concat(freqCrit, freqCritAsync);
         super(
@@ -220,13 +214,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     payload: {...value.payload, debouncedFor: 'tables'}
                 });
             }
-        });
-
-        this.saveModel = new FreqResultsSaveModel({
-            dispatcher,
-            layoutModel: pageModel,
-            saveLinkFn,
-            quickSaveRowLimit
         });
 
         this.addActionHandler(
@@ -554,10 +541,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             freqlevel: 1,
             format: 'json'
         };
-    }
-
-    getSaveModel():FreqResultsSaveModel {
-        return this.saveModel;
     }
 
 }
