@@ -177,14 +177,15 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 SELECT t2.value_tuple_id
                 FROM corpus_structattr_value as t1
                 JOIN corpus_structattr_value_mapping as t2 ON t1.id = t2.value_id
-                WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s AND value = IN ({",".join("%s" for _ in values)})
+                WHERE t1.corpus_name = %s AND t1.structure_name = %s AND t1.structattr_name = %s AND value IN ({",".join("%s" for _ in values)})
             ''')
             struct_attr = self.import_key(key)
             args.extend([corpora[0], struct_attr.struct, struct_attr.attr])
             args.extend(values)
 
         if tmp:
-            sql_sub = ' INTERSECT '.join(tmp)
+            un = ' UNION ALL '.join(tmp)
+            sql_sub = f'SELECT value_tuple_id, COUNT(*) AS num FROM ({un}) AS tmp GROUP BY tmp.value_tuple_id HAVING num = {len(tmp)}'
         else:
             sql_sub = '''
                 SELECT t2.value_tuple_id
@@ -193,13 +194,12 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 WHERE t1.corpus_name = %s
             '''
             args.append(corpora[0])
-
         aligned_join = [
             f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t.item_id'
             for i in range(len(corpora) - 1)
         ]
         sql = f'''
-            SELECT SUM(tuple.poscount)
+            SELECT SUM(tuple.poscount) as total
             FROM ({sql_sub}) AS tuple_ids
             JOIN corpus_structattr_value_tuple AS tuple ON tuple.id = tuple_ids.value_tuple_id
             {' '.join(aligned_join)}
@@ -208,7 +208,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
         with self.integ_db.cursor() as cursor:
             cursor.execute(sql, args)
-            return cursor.fetchone()[0]
+            return int(cursor.fetchone()['total'])
 
     @cached
     def get_attr_values(

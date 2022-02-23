@@ -90,7 +90,8 @@ class AttrArgs:
                 sql_values.append(corpus_name)
 
         if subqueries:
-            return " INTERSECT ".join(subqueries), sql_values
+            tmp = " UNION ALL ".join(subqueries)
+            return f'SELECT value_tuple_id, COUNT(*) AS num FROM ({tmp}) AS tmp GROUP BY value_tuple_id HAVING num = {len(subqueries)} ', sql_values
 
         sql_values.append(corpus_name)
         return f'''
