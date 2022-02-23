@@ -19,6 +19,7 @@
 
 import sys
 import os
+from collections import defaultdict
 
 sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.realpath(__file__))))
 
@@ -26,7 +27,7 @@ import sqlite3
 import argparse
 import datetime
 import initializer
-initializer.init_plugin('integration_db')
+import settings
 import plugins
 
 
@@ -65,6 +66,10 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--chunk_size', type=int, default=1000,
                         help='Chunk size for import cycle. Default is 1000')
     args = parser.parse_args()
+    conf_path = os.path.realpath(os.path.join(os.path.dirname(
+        __file__), '..', '..', '..', '..', 'conf', 'config.xml'))
+    settings.load(conf_path, defaultdict(lambda: None))
+    initializer.init_plugin('integration_db')
     try:
         import_sqlite_db(args.path, args.chunk_size)
         print('Data imported')
