@@ -19,7 +19,7 @@
 ### Client-side code in general
 
 * except for unit/integration tests, everything should be written in TypeScript
-* eny asynchronous code should be based on RxJS (i.e. no async/await, no Promise etc.)
+* any asynchronous code should be based on RxJS (i.e. no async/await, no Promise etc.)
 * state management and binding to components is realized via [kombo](https://github.com/tomachalek/kombo) framework
 * array and object manipulation is done via [cnc-tskit](https://github.com/czcorpus/cnc-tskit)
 * locations:
