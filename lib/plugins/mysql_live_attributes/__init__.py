@@ -184,6 +184,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             args.extend(values)
 
         if tmp:
+            # we dont want to use INTERSECT because old MariaDB version does not support it
             un = ' UNION ALL '.join(tmp)
             sql_sub = f'SELECT value_tuple_id, COUNT(*) AS num FROM ({un}) AS tmp GROUP BY tmp.value_tuple_id HAVING num = {len(tmp)}'
         else:
@@ -380,7 +381,8 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 cursor=cursor, corpus_id=corpus_id, search=search_structattr, values=values,
                 fill=[search_structattr, *fill_structattrs])
             for row in cursor:
-                data: Dict[str, str] = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
+                data: Dict[str, str] = dict(tuple(pair.split('=', 1))
+                                            for pair in row['data'].split('\n'))
                 ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}
         return dict(data=ans)
 
