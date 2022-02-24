@@ -245,6 +245,7 @@ export interface ParsedPQItem {
                                         }
                                         return null;
                                     }),
+                                    List.filter(v => v !== null),
                                     List.map<[CharsRule, CharsRule], ParsedAttr>(([nameRule, valueRule]) => ({
                                         name: this.ruleToSubstring(nameRule),
                                         value: this.ruleToSubstring(valueRule),
