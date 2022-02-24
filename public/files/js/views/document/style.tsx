@@ -25,7 +25,7 @@ import * as theme from '../theme/default';
 import closeIconImg from '../../../img/close-icon.svg';
 import closeIconSImg from '../../../img/close-icon_s.svg';
 import movableImg from '../../../img/movable.svg';
-import externalLinkImg from '../../../img/external-link.png';
+import externalLinkImg from '../../../img/external-link.svg';
 import warningIconImg from '../../../img/warning-icon.svg';
 
 // ---------------- <ModalOverlay /> --------------------------------------
