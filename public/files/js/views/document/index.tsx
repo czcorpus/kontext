@@ -142,7 +142,7 @@ export function init(
     const StatusIcon:CoreViews.StatusIcon.Component = (props) => {
         const m = {
             info: 'img/info-icon.svg',
-            message: 'img/message-icon.png',
+            mail: 'img/envelope.svg',
             warning: 'img/warning-icon.svg',
             error: 'img/error-icon.svg'
         };
