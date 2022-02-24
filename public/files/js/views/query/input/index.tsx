@@ -610,9 +610,9 @@ export function init({
                     <span className="with-icon">
                         <a onClick={this._handleQueryStructureWidget} className={hasExpandedTokens ? 'highlighted' : null}>{he.translate('query__query_structure')}</a>
                         {this.props.suggestionsEnabled[this.props.sourceId] ?
-                            <img src={he.createStaticUrl(hasExpandedTokens ? 'img/lightbulb-pink-horiz.svg' : 'img/lightbulb-blue-horiz.svg')}
+                            <img src={he.createStaticUrl(hasExpandedTokens ? 'img/lightbulb-pink.svg' : 'img/lightbulb-blue.svg')}
                                     alt={he.translate('query_suggestions_are_enabled')}
-                                    title={he.translate('query_suggestions_are_enabled')} style={{width: '1.3em'}} /> :
+                                    title={he.translate('query_suggestions_are_enabled')} /> :
                             null
                         }
                     </span>
