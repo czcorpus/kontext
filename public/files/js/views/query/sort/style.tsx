@@ -23,36 +23,47 @@ import * as theme from '../../theme/default';
 
 // ---------------- <SortKeySelector /> --------------------------------------
 
-export const SortKeySelector = styled.table`
+export const SortKeySelector = styled.div`
 
     font-size: 0.9em;
     border-spacing: 0.2em 1em;
+    display: flex;
 
-    td {
+    > div {
         border: 1px solid ${theme.colorLightText};
         padding: 0;
 
         a {
             display: block;
-            padding: 0.3em 0.6em;
+            padding: 0.5em 0.9em;
             text-decoration: none;
             color: ${theme.colorLogoBlue};
             text-align: center;
         }
+
+        a:hover {
+            background-color: ${theme.colorLogoBlue};
+            color: #ffffff;
+        }
     }
 
-    td:hover {
+    > div.selected {
         background-color: ${theme.colorLogoBlue};
         a {
             color: #ffffff;
         }
     }
 
-    td.selected {
-        background-color: ${theme.colorLogoPink};
-        a {
-            color: #ffffff;
-        }
+    > div.kw a {
+        color: ${theme.colorLogoPink};
+    }
+
+    > div.kw:hover a {
+        color: ${theme.colorLightPink};
+    }
+
+    > div.kw.selected a {
+        color: #ffffff;
     }
 `;
 

@@ -111,27 +111,23 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         };
 
         return (
-            <table className="radio-like-sel">
-                <tbody>
-                    <tr>
-                        <td className={props.currValue === 'lc' ? 'selected' : null}>
-                            <a onClick={handleSelectFn('lc')}>
-                                {'\u2026' + he.translate('query__sort_label_left_context') + '\u2026'}
-                            </a>
-                        </td>
-                        <td className={props.currValue === 'kw' ? 'selected' : null}>
-                            <a onClick={handleSelectFn('kw')}>
-                                {he.translate('query__sort_label_node')}
-                            </a>
-                        </td>
-                        <td className={props.currValue === 'rc' ? 'selected' : null}>
-                            <a onClick={handleSelectFn('rc')}>
-                                {'\u2026' + he.translate('query__sort_label_right_context') + '\u2026'}
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <S.SortKeySelector>
+                <div className={props.currValue === 'lc' ? 'selected' : null}>
+                    <a onClick={handleSelectFn('lc')}>
+                        {'\u2026' + he.translate('query__sort_label_left_context') + '\u2026'}
+                    </a>
+                </div>
+                <div className={props.currValue === 'kw' ? 'kw selected' : 'kw'}>
+                    <a onClick={handleSelectFn('kw')}>
+                        {he.translate('query__sort_label_node')}
+                    </a>
+                </div>
+                <div className={props.currValue === 'rc' ? 'selected' : null}>
+                    <a onClick={handleSelectFn('rc')}>
+                        {'\u2026' + he.translate('query__sort_label_right_context') + '\u2026'}
+                    </a>
+                </div>
+            </S.SortKeySelector>
         );
     };
 
@@ -274,35 +270,31 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
         };
 
         return (
-            <table className="radio-like-sel">
-                <tbody>
-                    <tr>
-                        <td className={props.currentValue === 0 ? 'selected' : null}>
-                            <a onClick={setValFn(0)}>3L</a>
-                        </td>
-                        <td className={props.currentValue === 1 ? 'selected' : null}>
-                            <a onClick={setValFn(1)}>2L</a>
-                        </td>
-                        <td className={props.currentValue === 2 ? 'selected' : null}>
-                            <a onClick={setValFn(2)}>1L</a>
-                        </td>
-                        <td className={props.currentValue === 3 ? 'selected' : null}>
-                            <a onClick={setValFn(3)}>
-                                {he.translate('query__sort_label_node')}
-                            </a>
-                        </td>
-                        <td className={props.currentValue === 4 ? 'selected' : null}>
-                            <a onClick={setValFn(4)}>1R</a>
-                        </td>
-                        <td className={props.currentValue === 5 ? 'selected' : null}>
-                            <a onClick={setValFn(5)}>2R</a>
-                        </td>
-                        <td className={props.currentValue === 6 ? 'selected' : null}>
-                            <a onClick={setValFn(6)}>3R</a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <S.SortKeySelector>
+                <div className={props.currentValue === 0 ? 'selected' : null}>
+                    <a onClick={setValFn(0)}>3L</a>
+                </div>
+                <div className={props.currentValue === 1 ? 'selected' : null}>
+                    <a onClick={setValFn(1)}>2L</a>
+                </div>
+                <div className={props.currentValue === 2 ? 'selected' : null}>
+                    <a onClick={setValFn(2)}>1L</a>
+                </div>
+                <div className={props.currentValue === 3 ? 'kw selected' : 'kw'}>
+                    <a onClick={setValFn(3)}>
+                        {he.translate('query__sort_label_node')}
+                    </a>
+                </div>
+                <div className={props.currentValue === 4 ? 'selected' : null}>
+                    <a onClick={setValFn(4)}>1R</a>
+                </div>
+                <div className={props.currentValue === 5 ? 'selected' : null}>
+                    <a onClick={setValFn(5)}>2R</a>
+                </div>
+                <div className={props.currentValue === 6 ? 'selected' : null}>
+                    <a onClick={setValFn(6)}>3R</a>
+                </div>
+            </S.SortKeySelector>
         );
     };
 
@@ -542,8 +534,8 @@ function initSortForms({dispatcher, he, sortModel, multiLevelConcSortModel}:Sort
     }
 
     return {
-        SimpleSortForm: BoundWithProps(SimpleSortForm, sortModel),
-        MultiLevelSortForm: BoundWithProps(MultiLevelSortForm, multiLevelConcSortModel)
+        SimpleSortForm: BoundWithProps<SimpleSortFormProps, ConcSortModelState>(SimpleSortForm, sortModel),
+        MultiLevelSortForm: BoundWithProps<MultiLevelSortFormProps, MultiLevelConcSortModelState>(MultiLevelSortForm, multiLevelConcSortModel)
     };
 }
 
@@ -641,6 +633,6 @@ export function init({dispatcher, he, sortModel, multiLevelConcSortModel}:SortMo
     }
 
     return {
-        SortForm: SortForm
+        SortForm
     };
 }
