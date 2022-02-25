@@ -146,6 +146,38 @@ export function init(
         );
     };
 
+    // --------------------------------------------------------------------------------------
+    // ---------------------------- <TRMultiSheetFileCheckboxCheckbox /> --------------------------------
+
+    interface TRMultiSheetFileCheckboxProps {
+        value:boolean;
+    }
+
+    /**
+     *
+     */
+    const TRMultiSheetFileCheckboxCheckbox:React.FC<TRMultiSheetFileCheckboxProps> = (props) => {
+
+        const handleChange = () => {
+            dispatcher.dispatch<typeof Actions.SaveFormSetMultiSheetFile>({
+                name: Actions.SaveFormSetMultiSheetFile.name,
+                payload: {
+                    value: !props.value
+                }
+            });
+        };
+
+        return (
+            <tr className="separator">
+                <th><label htmlFor="tr-multi-sheet-file-checkbox">{utils.translate('coll__save_form_multi_sheet_file')}</label>:</th>
+                <td>
+                    <input id="tr-multi-sheet-file-checkbox" type="checkbox" checked={props.value} onChange={handleChange} />
+                </td>
+            </tr>
+        );
+    };
+
+    // --------------------------------------------------------------------------------------
     // ---------------------------- <TRSelLineRangeInputs /> --------------------------------
 
     const TRSelLineRangeInputs:React.FC<{
@@ -221,8 +253,12 @@ export function init(
                 case 'xml':
                     return <TRIncludeHeadingCheckbox value={this.props.includeHeading} />;
                 case 'csv':
+                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />;
                 case 'xlsx':
-                    return <TRColHeadersCheckbox value={this.props.includeColHeaders} />
+                    return [
+                        <TRColHeadersCheckbox value={this.props.includeColHeaders} />,
+                        <TRMultiSheetFileCheckboxCheckbox value={this.props.multiSheetFile} />,
+                    ]
                 default:
                 return <tr><td colSpan={2} /></tr>;
             }

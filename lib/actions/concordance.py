@@ -893,7 +893,8 @@ class Actions(Querying):
                         'fcrit': request.args.get('fcrit'),
                         'fcrit_async': request.args.getlist('fcrit_async'),
                         'flimit': request.args.get('flimit'),
-                        'freq_sort': request.args.get('freq_sort', 'freq'),  # client does not always fills this
+                        # client does not always fills this
+                        'freq_sort': request.args.get('freq_sort', 'freq'),
                         'freq_type': request.args.get('freq_type'),
                         'force_cache': request.args.get('force_cache', '0')}
                 elif request.args.get('next') == 'freqml':
@@ -1063,7 +1064,8 @@ class Actions(Querying):
                                 fquery = f'{begin} {end} 0 '
                                 fquery += ''.join([f'[{attr}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                             else:  # structure number
-                                fquery = '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])
+                                fquery = '0 0 1 [] within <{} #{}/>'.format(
+                                    attr, item['Word'][0]['n'].split('#')[1])
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
@@ -1133,7 +1135,7 @@ class Actions(Querying):
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(
             self, fcrit=(), flimit=0, freq_sort='', saveformat='text', from_line=1, to_line='',
-            colheaders=0, heading=0):
+            colheaders=0, heading=0, multi_sheet_file=0):
         """
         save a frequency list
         """
@@ -1177,6 +1179,9 @@ class Actions(Querying):
                                       f'attachment; filename="{mkfilename(saveformat)}"')
 
             for block in result['Blocks']:
+                if hasattr(writer, 'new_sheet') and multi_sheet_file:
+                    writer.new_sheet(block['Head'][0]['n'])
+
                 col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
                 if saveformat == 'xml':
                     col_names.insert(0, 'str')
