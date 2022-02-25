@@ -657,6 +657,7 @@
         "coll__save_form_label": "Save collocations",
         "coll__save_form_select_label": "Data format",
         "coll__save_form_incl_col_hd": "Include column headers",
+        "coll__save_form_multi_sheet_file": "Data in separate sheets",
         "coll__save_form_leave_to_load_to_end": "Leave the upper limit empty to save values up to the end.",
         "coll__save_form_lines_to_store": "Lines to store",
         "coll__save_form_incl_heading": "Include heading",

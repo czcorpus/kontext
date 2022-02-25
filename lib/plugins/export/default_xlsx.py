@@ -31,6 +31,7 @@ from translation import ugettext as _
 class XLSXExport(AbstractExport):
 
     def __init__(self, subtype):
+        self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()
         self._col_types = ()
@@ -59,11 +60,11 @@ class XLSXExport(AbstractExport):
         return output.getvalue()
 
     def writeheading(self, data):
-        self._curr_line = 1
         if type(data) is dict:
-            data = ['%s: %s' % (k, v) for (k, v) in list(data.items())]
+            data = [f'{k}: {v}' for k, v in data.items()]
         self._sheet.append(data)
         self._sheet.append([])
+        self._written_lines += 2
 
     def write_ref_headings(self, data):
         cells = []
@@ -73,6 +74,7 @@ class XLSXExport(AbstractExport):
             cells.append(cell)
         self._sheet.append(cells)
         self._sheet.merged_cells.ranges.append('A1:G1')
+        self._written_lines += 1
 
     def set_col_types(self, *types):
         self._col_types = types
@@ -101,6 +103,12 @@ class XLSXExport(AbstractExport):
         for lang_row in lang_rows:
             row += self._import_row(lang_row)
         self._sheet.append([self._get_cell(*self._import_value(d, i)) for i, d in enumerate(row)])
+        self._written_lines += 1
+
+    def new_sheet(self, name):
+        if self._written_lines > 1:
+            self._sheet = self._wb.create_sheet()
+        self._sheet.title = name
 
     def _get_cell(self, value, cell_format):
         cell = WriteOnlyCell(self._sheet, value)
