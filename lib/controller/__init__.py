@@ -40,6 +40,7 @@ from abc import abstractmethod, ABC
 import werkzeug.urls
 import werkzeug.exceptions
 from werkzeug import Request
+from action.decorators import handler as exposed
 
 import plugins
 from plugins.abstract.auth import UserInfo
@@ -51,7 +52,6 @@ from argmapping.func import convert_func_mapping_types
 from .errors import (ForbiddenException, UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
 from .response import KResponse, ResultType
-from .routing import Routing
 from .cookie import KonTextCookie
 import werkzeug.wrappers
 import http.cookies
@@ -62,46 +62,6 @@ T = TypeVar('T')
 # this is fix to include `SameSite` as reserved cookie keyword (added in Python 3.8)
 http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
 
-
-def exposed(access_level: int = 0, template: Optional[str] = None, vars: Tuple = (), page_model: Optional[str] = None,
-            func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_result: bool = False,
-            http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None,
-            apply_semi_persist_args: bool = False, return_type: str = 'template',
-            action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
-    """
-    This decorator allows more convenient way how to
-    set methods' attributes. Please note that there is
-    always an implicit property '__exposed__' set to True.
-
-    arguments:
-    access_level -- 0,1,... (0 = public user, 1 = logged in user)
-    template -- a Jinja2 template source path
-    vars -- deprecated; do not use
-    page_model -- a JavaScript page module
-    func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
-    skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
-    mutates_result -- store a new set of result parameters under a new key to query_peristence db
-    http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
-    accept_kwargs -- True/False
-    apply_semi_persist_args -- if True hen use session to initialize action args first
-    return_type -- {plain, json, template, xml}
-    """
-    def wrapper(func):
-        func.__dict__['access_level'] = access_level
-        func.__dict__['template'] = template
-        func.__dict__['vars'] = vars
-        func.__dict__['page_model'] = page_model
-        func.__dict__['func_arg_mapped'] = func_arg_mapped
-        func.__dict__['skip_corpus_init'] = skip_corpus_init
-        func.__dict__['mutates_result'] = mutates_result
-        func.__dict__['http_method'] = http_method
-        func.__dict__['accept_kwargs'] = accept_kwargs
-        func.__dict__['apply_semi_persist_args'] = apply_semi_persist_args
-        func.__dict__['return_type'] = return_type
-        func.__dict__['action_log_mapper'] = action_log_mapper
-        func.__dict__['__exposed__'] = True
-        return func
-    return wrapper
 
 
 def get_protocol(environ):
@@ -135,7 +95,7 @@ class Controller(ABC):
         """
         self._request: werkzeug.wrappers.Request = request
         self.environ: Dict[str, str] = request.environ  # for backward compatibility
-        self._routing: Routing = Routing(self.environ, self.get_mapping_url_prefix(), get_protocol(self.environ))
+        self._routing: KRequest = KRequest(self.environ, self.get_mapping_url_prefix(), get_protocol(self.environ))
         self._response: KResponse = KResponse(self._routing)
         self.ui_lang: str = ui_lang
         self._cookies: KonTextCookie = KonTextCookie(self.environ.get('HTTP_COOKIE', ''))

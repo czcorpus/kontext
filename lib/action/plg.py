@@ -14,12 +14,9 @@
 
 from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
 from corplib.abstract import AbstractKCorpus
-from werkzeug import Request
+from sanic.request import Request
 from secure_cookie.session import Session
-from . import KonTextCookie
-# this is to fix cyclic imports when running the app caused by typing
-if TYPE_CHECKING:
-    from .kontext import Kontext
+from .cookie import KonTextCookie
 from corplib import CorpusManager
 import settings
 from plugins.abstract.auth import UserInfo
@@ -28,7 +25,7 @@ from plugins.abstract.auth import UserInfo
 T = TypeVar('T')
 
 
-class PluginCtx(object):
+class PluginCtx:
 
     """
     PluginCtx provides a runtime context for plug-ins.

@@ -37,7 +37,7 @@ from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
 from plugins.abstract.subcmixer.error import SubcMixerException, ResultNotFoundException
 from controller import exposed
 from actions.subcorpus import Subcorpus
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 import corplib
 from corplib.corpus import KCorpus
 import actions.subcorpus

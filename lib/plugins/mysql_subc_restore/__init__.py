@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import urllib.request

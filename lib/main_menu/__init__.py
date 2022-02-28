@@ -22,7 +22,7 @@ from typing import Tuple, Dict, Any, Optional, Callable, List, Union
 from translation import ugettext as te
 from argmapping import Args
 import plugins
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from .model import (
     OutData, MenuItemInternal, MainMenu, EventTriggeringItem, HideOnCustomCondItem, ConcMenuItem,
     MainMenuItemId, AbstractMenuItem)

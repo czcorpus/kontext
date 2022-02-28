@@ -21,7 +21,7 @@ from typing import Dict, List, NamedTuple, Optional, Union, Any
 from functools import wraps
 from hashlib import md5
 
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 from corplib.corpus import KCorpus
 from dataclasses import dataclass
