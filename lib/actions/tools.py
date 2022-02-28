@@ -23,8 +23,8 @@ from controller.errors import UserActionException
 from controller.kontext import Kontext
 
 
-def parse_viewbox(vb: str) -> Tuple[int, int, int, int]:
-    items = [int(v) for v in vb.split(' ')]
+def parse_viewbox(vb: str) -> Tuple[float, float, float, float]:
+    items = [float(v) for v in vb.split(' ')]
     try:
         return items[0], items[1], items[2], items[3]
     except IndexError:

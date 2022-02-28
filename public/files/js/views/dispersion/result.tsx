@@ -21,9 +21,9 @@
 
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import * as React from 'react';
-import { DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
+import { DispersionDataRow, DispersionResultModel, DispersionResultModelState } from '../../models/dispersion/result';
 import { ChartExportFormat, ComponentHelpers } from '../../types/kontext';
-import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts';
+import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
 import * as theme from '../theme/default';
 
 import { Actions as GlobalActions } from '../../models/common/actions';
@@ -43,6 +43,34 @@ export function init(
 ) {
 
     const globalComponents = he.getLayoutViews();
+
+    const storeChartData = (ref) => {
+        const container = ReactDOM.findDOMNode(ref.current);
+        if (container instanceof Text || !container) {
+            return;
+        }
+        const svg = container.querySelector('svg');
+        const svgURL = new XMLSerializer().serializeToString(svg);
+        const svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
+        svgBlob.text().then(
+            value => {
+                dispatcher.dispatch<typeof GlobalActions.SetChartDownloadSVG>({
+                    name: GlobalActions.SetChartDownloadSVG.name,
+                    payload: {
+                        sourceId: 'dispersion',
+                        value,
+                        type: 'bar',
+                    }
+                })
+            },
+            error => {
+                dispatcher.dispatch(
+                    GlobalActions.SetChartDownloadSVG,
+                    error
+                )
+            }
+        );
+    }
 
 
     // ---------------------- <DownloadFormatSelector /> --------------
@@ -64,43 +92,44 @@ export function init(
         return <select value={format} onChange={onChange}>
             <option value="png">PNG</option>
             <option value="png-print">PNG ({he.translate('freq__print_quality')})</option>
-            <option value="svg">SVG</option>
+            <option value="pdf">PDF</option>
         </select>;
+    }
+
+    // ---------------------- <DispersionChart /> --------------
+
+    const DispersionChart:React.FC<{
+        data:Array<DispersionDataRow>;
+        width:number;
+        height:number;
+
+    }> = ({ data, width, height }) => {
+
+        const ref = React.useRef(null);
+        React.useEffect(() => {storeChartData(ref)});
+
+        return <BarChart data={data} width={width} height={height} ref={ref} >
+            <CartesianGrid strokeDasharray="3 3" />
+            <Bar dataKey="freq" isAnimationActive={false} fill={theme.colorLogoBlue} barSize={List.size(data) === 1 ? 100 : null} />
+            <XAxis dataKey="position" type="number" unit="%" domain={[0, 100]} allowDataOverflow={true} />
+            <YAxis />
+            <Tooltip labelFormatter={(label, data) => data[0] ? `${data[0].payload.start} - ${data[0].payload.end} %` : label} />
+        </BarChart>
     }
 
     // ---------------------- <DispersionResults /> --------------
 
     const DispersionResults:React.FC<DispersionResultModelState> = (props) => {
 
-        const ref = React.useRef(null);
-
         const handleDownload = () => {
-            const container = ReactDOM.findDOMNode(ref.current);
-            if (container instanceof Text) {
-                return;
-            }
-            const svg = container.querySelector('svg');
-            let svgURL = new XMLSerializer().serializeToString(svg);
-            let svgBlob = new Blob([svgURL], {type: "image/svg+xml;charset=utf-8"});
-            svgBlob.text().then(
-                (blob) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                        name: GlobalActions.ConvertChartSVG.name,
-                        payload: {
-                            format: props.downloadFormat,
-                            filename: 'dispersion-chart',
-                            blob,
-                            chartType: 'bar',
-                        }
-                    });
-                },
-                (error) => {
-                    dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
-                        name: GlobalActions.ConvertChartSVG.name,
-                        error
-                    });
+            dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
+                name: GlobalActions.ConvertChartSVG.name,
+                payload: {
+                    sourceId: 'dispersion',
+                    format: props.downloadFormat,
+                    chartType: 'bar'
                 }
-            )
+            });
         }
 
         const handleResolutionChange = (evt) => {
@@ -128,16 +157,11 @@ export function init(
                 </S.FreqDispersionParamFieldset>
                 {props.isBusy ?
                     <globalComponents.AjaxLoaderImage /> :
-                    <div>
-                        <ResponsiveContainer width="95%" height={250}>
-                            <BarChart data={props.data} ref={ref}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <Bar dataKey="freq" fill={theme.colorLogoBlue} barSize={List.size(props.data) === 1 ? 100 : null} />
-                                <XAxis dataKey="position" type="number" unit="%" domain={[0, 100]} allowDataOverflow={true} />
-                                <YAxis />
-                                <Tooltip labelFormatter={(label, data) => data[0] ? `${data[0].payload.start} - ${data[0].payload.end} %` : label} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div style={{width: '95%', height: '300px'}}>
+                        <globalComponents.ResponsiveWrapper render={(width, height) =>
+                            <DispersionChart data={props.data} width={width} height={height} />
+                        }/>
+
                     </div>
                 }
             </S.FreqDispersionSection>
