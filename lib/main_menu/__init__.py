@@ -20,9 +20,9 @@ from dataclasses import fields, Field
 from typing import Tuple, Dict, Any, Optional, Callable, List, Union
 
 from translation import ugettext as te
-from argmapping import Args
+from action.argmapping import Args
 import plugins
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 from .model import (
     OutData, MenuItemInternal, MainMenu, EventTriggeringItem, HideOnCustomCondItem, ConcMenuItem,
     MainMenuItemId, AbstractMenuItem)

@@ -13,8 +13,8 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any
-from argmapping.conc.base import ConcFormArgs
-from argmapping.error import ValidationError
+from action.argmapping.conc.base import ConcFormArgs
+from action.argmapping.error import ValidationError
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 

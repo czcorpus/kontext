@@ -17,10 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from plugins.abstract.dispatch_hook import AbstractDispatchHook
-from plugins.abstract.general_storage import KeyValueStorage
-from action.plg import PluginCtx
-from controller.errors import ServiceUnavailableException
+from plugin_types.dispatch_hook import AbstractDispatchHook
+from plugin_types.general_storage import KeyValueStorage
+from action.plugin.ctx import PluginCtx
+from action.errors import ServiceUnavailableException
 import plugins
 from plugins import inject
 import logging

@@ -71,7 +71,7 @@ e.g.: <p>you're logged in as <strong>{username}</strong></p>
 import os
 import os.path
 import logging
-from plugins.abstract.appbar import AbstractApplicationBar
+from plugin_types.appbar import AbstractApplicationBar
 import plugins
 
 

@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugins.abstract.corparch import CorplistProvider
+from plugin_types.corparch import CorplistProvider
 import l10n
 import re
 
@@ -55,7 +55,7 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         arguments:
         plugin_ctx -- a controller.PluginCtx instance
-        corparch -- a plugins.abstract.corparch.AbstractSearchableCorporaArchive instance
+        corparch -- a plugin_types.corparch.AbstractSearchableCorporaArchive instance
         tag_prefix -- a string determining how a tag (= keyword or label) is recognized
         """
         self._plugin_ctx = plugin_ctx

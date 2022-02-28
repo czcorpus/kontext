@@ -60,13 +60,13 @@ from typing import Union, List
 import uuid
 
 import plugins
-from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInfo
-from plugins.abstract.corparch.error import CorparchError
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInfo
+from plugin_types.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
 from controller import exposed
 from actions import corpora
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 
 
 @dataclass_json

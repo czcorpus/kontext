@@ -46,7 +46,7 @@ element dispatch_hook {
 from piwikapi.tracking import PiwikTracker
 from piwikapi.tests.request import FakeRequest
 
-from plugins.abstract.dispatch_hook import AbstractDispatchHook
+from plugin_types.dispatch_hook import AbstractDispatchHook
 
 
 def create_instance(conf):

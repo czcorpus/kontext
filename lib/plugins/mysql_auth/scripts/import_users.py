@@ -23,7 +23,7 @@ import initializer
 initializer.init_plugin('integration_db')
 initializer.init_plugin('auth')
 import plugins
-from plugins.abstract.auth.hash import mk_pwd_hash_default
+from plugin_types.auth.hash import mk_pwd_hash_default
 
 
 def import_user(data):

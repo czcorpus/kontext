@@ -15,7 +15,7 @@
 import json
 import logging
 
-from plugins.abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
+from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
 import l10n

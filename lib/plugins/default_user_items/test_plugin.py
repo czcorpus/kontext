@@ -19,7 +19,7 @@ import plugins
 from mocks.storage import TestingKeyValueStorage
 from mocks.request import Request, Controller, PluginCtx
 from mocks import mplugins
-from plugins.abstract.user_items import FavoriteItem
+from plugin_types.user_items import FavoriteItem
 from plugins.default_user_items import UserItems
 
 

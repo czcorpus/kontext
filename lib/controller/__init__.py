@@ -40,19 +40,19 @@ from abc import abstractmethod, ABC
 import werkzeug.urls
 import werkzeug.exceptions
 from werkzeug import Request
-from action.decorators import handler as exposed
+from action.decorators import http_action
 
 import plugins
-from plugins.abstract.auth import UserInfo
+from plugin_types.auth import UserInfo
 import settings
 from translation import ugettext as translate
-from .req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
-from argmapping import Persistence, Args
-from argmapping.func import convert_func_mapping_types
-from .errors import (ForbiddenException, UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
+from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
+from action.argmapping import Persistence, Args
+from action.argmapping.func import convert_func_mapping_types
+from action.errors import (ForbiddenException, UserActionException, NotFoundException, get_traceback, fetch_exception_msg,
                      CorpusForbiddenException, ImmediateRedirectException)
 from .response import KResponse, ResultType
-from .cookie import KonTextCookie
+from action.cookie import KonTextCookie
 import werkzeug.wrappers
 import http.cookies
 
@@ -64,13 +64,6 @@ http.cookies.Morsel._reserved['samesite'] = ['SameSite']  # type: ignore
 
 
 
-def get_protocol(environ):
-    if 'HTTP_X_FORWARDED_PROTO' in environ:
-        return environ['HTTP_X_FORWARDED_PROTO']
-    elif 'HTTP_X_FORWARDED_PROTOCOL' in environ:
-        return environ['HTTP_X_FORWARDED_PROTOCOL']
-    else:
-        return environ['wsgi.url_scheme']
 
 
 class Controller(ABC):
@@ -573,12 +566,6 @@ class Controller(ABC):
             tpl_path = os.path.join(self.get_mapping_url_prefix()[
                                     1:], '{0}.html'.format(methodname))
         return tpl_path, method_ans
-
-    def urlencode(self, key_val_pairs: List[Tuple[str, Union[str, str, bool, int, float]]]) -> str:
-        """
-        Recodes values of key-value pairs and encodes them (by urllib.urlencode)
-        """
-        return werkzeug.urls.url_encode(key_val_pairs)
 
     def inject_globals(self, methodname: str, action_metadata: Dict[str, Any], result: ResultType):
         self.add_globals(self._request, result, methodname, action_metadata)

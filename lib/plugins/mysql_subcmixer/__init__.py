@@ -31,13 +31,13 @@ from mysql.connector.cursor import MySQLCursor
 
 import plugins
 from plugins import inject
-from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.subcmixer import AbstractSubcMixer, ExpressionItem
-from plugins.abstract.subcmixer.error import SubcMixerException, ResultNotFoundException
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.subcmixer import AbstractSubcMixer, ExpressionItem
+from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
 from controller import exposed
 from actions.subcorpus import Subcorpus
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 import corplib
 from corplib.corpus import KCorpus
 import actions.subcorpus

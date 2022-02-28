@@ -66,7 +66,7 @@ def init_plugin(name, module=None, optional=False):
             logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
                                              % (name, e))
         except (PluginException, Exception) as e:
-            from controller.errors import get_traceback
+            from action.errors import get_traceback
             logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))
             logging.getLogger(__name__).error(''.join(get_traceback()))
             raise e

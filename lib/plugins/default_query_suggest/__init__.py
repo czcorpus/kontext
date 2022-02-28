@@ -15,13 +15,13 @@
 from typing import Any, List
 import importlib
 
-from plugins.abstract.query_suggest import AbstractQuerySuggest
+from plugin_types.query_suggest import AbstractQuerySuggest
 import plugins
-import plugins.abstract.corparch
+import plugin_types.corparch
 from controller import exposed
 from controller.kontext import Kontext
 from actions import concordance
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 
 
 @exposed(return_type='json')
@@ -44,7 +44,7 @@ def fetch_query_suggestions(self: Kontext, request):
 
 class DefaultQuerySuggest(AbstractQuerySuggest):
 
-    def __init__(self, providers, corparch: plugins.abstract.corparch.AbstractCorporaArchive):
+    def __init__(self, providers, corparch: plugin_types.corparch.AbstractCorporaArchive):
         self._providers = providers
         self._corparch = corparch
 

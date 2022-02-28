@@ -70,11 +70,11 @@ from mysql.connector.cursor import MySQLCursor
 from typing import Union
 
 import plugins
-from plugins.abstract.query_persistence import AbstractQueryPersistence
-from plugins.abstract.query_persistence.common import generate_idempotent_id
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence.common import generate_idempotent_id
+from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
-from controller.errors import ForbiddenException, NotFoundException
+from action.errors import ForbiddenException, NotFoundException
 import logging
 from plugins.common.mysql import MySQLOps, MySQLConf
 from .archive import get_iso_datetime, is_archived

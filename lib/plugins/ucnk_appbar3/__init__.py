@@ -43,7 +43,7 @@ dependencies info structure:
     'main': 'https://www.korpus.cz/toolbar/js/toolbar.js'
 }
 """
-from plugins.abstract.appbar import AbstractApplicationBar
+from plugin_types.appbar import AbstractApplicationBar
 
 
 class ApplicationBar3(AbstractApplicationBar):

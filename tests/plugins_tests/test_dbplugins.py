@@ -29,7 +29,7 @@ import os
 
 import redis
 
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 from plugins.redis_db import RedisDb
 from plugins.sqlite3_db import DefaultDb
 

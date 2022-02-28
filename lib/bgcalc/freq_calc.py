@@ -32,7 +32,7 @@ import bgcalc
 from bgcalc.errors import UnfinishedConcordanceError, BgCalcError
 from bgcalc.task import AsyncTaskStatus
 from translation import ugettext as _
-from controller.errors import UserActionException
+from action.errors import UserActionException
 from .errors import CalcArgsAssertionError
 
 MAX_LOG_FILE_AGE = 1800  # in seconds

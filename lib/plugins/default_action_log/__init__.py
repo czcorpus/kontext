@@ -17,8 +17,8 @@ import json
 import datetime
 import settings
 from typing import Tuple, Union, Optional
-from plugins.abstract.action_log import AbstractActionLog
-from controller.errors import UserActionException, ImmediateRedirectException
+from plugin_types.action_log import AbstractActionLog
+from action.errors import UserActionException, ImmediateRedirectException
 
 
 class DefaultActionLog(AbstractActionLog):

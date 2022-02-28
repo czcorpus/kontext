@@ -23,7 +23,7 @@ import time
 import random
 import logging
 
-from plugins.abstract.query_history import AbstractQueryHistory
+from plugin_types.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from manatee import Corpus

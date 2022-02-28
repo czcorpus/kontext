@@ -17,9 +17,9 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 
 import plugins
-from action.plg import PluginCtx
-from argmapping.error import ArgumentMappingError
-from argmapping.conc.base import ConcFormArgs
+from action.plugin.ctx import PluginCtx
+from action.argmapping.error import ArgumentMappingError
+from action.argmapping.conc.base import ConcFormArgs
 
 
 @dataclass_json

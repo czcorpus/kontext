@@ -48,7 +48,7 @@ from typing import Optional
 import os
 import settings
 import logging
-from plugins.abstract.audio_provider import AbstractAudioProvider
+from plugin_types.audio_provider import AbstractAudioProvider
 from plugins import inject
 import time
 import sox

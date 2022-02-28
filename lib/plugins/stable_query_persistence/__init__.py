@@ -37,9 +37,9 @@ import logging
 
 from plugins import inject
 import plugins
-from plugins.abstract.query_persistence import AbstractQueryPersistence
-from plugins.abstract.query_persistence.common import generate_idempotent_hex_id
-from controller.errors import ForbiddenException, NotFoundException
+from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence.common import generate_idempotent_hex_id
+from action.errors import ForbiddenException, NotFoundException
 
 QUERY_KEY = 'q'
 ID_KEY = 'id'

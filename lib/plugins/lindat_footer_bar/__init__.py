@@ -22,7 +22,7 @@ Required plug-in configuration: please see config.rng schema
 import logging
 import os
 
-from plugins.abstract.footer_bar import AbstractFootbar
+from plugin_types.footer_bar import AbstractFootbar
 
 
 class FootBar(AbstractFootbar):

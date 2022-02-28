@@ -22,7 +22,7 @@ import json
 from collections import defaultdict
 import re
 from lxml import etree
-from plugins.abstract.taghelper import AbstractTagsetInfoLoader
+from plugin_types.taghelper import AbstractTagsetInfoLoader
 from translation import ugettext as _
 from typing import DefaultDict, Set, List, Union
 

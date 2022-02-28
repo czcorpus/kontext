@@ -22,7 +22,7 @@ import logging
 import os
 import imp
 
-from controller.errors import UserActionException
+from action.errors import UserActionException
 
 
 class ExportPluginException(Exception):
