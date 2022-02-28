@@ -17,7 +17,7 @@ A simple settings storage which relies on default_db plug-in.
 """
 
 import plugins
-from plugins.abstract.settings_storage import AbstractSettingsStorage
+from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject
 from collections import defaultdict
 import logging

@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
-from plugins.abstract.token_connect import AbstractFrontend
+from plugin_types.token_connect import AbstractFrontend
 
 
 class VallexFrontend(AbstractFrontend):

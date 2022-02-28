@@ -25,7 +25,7 @@ import numpy as np
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.integration_db import IntegrationDatabase
 
 
 class CategoryExpression(object):

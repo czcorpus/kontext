@@ -21,7 +21,7 @@ import os
 import json
 from collections import defaultdict
 
-from plugins.abstract.taghelper import AbstractTagsetInfoLoader
+from plugin_types.taghelper import AbstractTagsetInfoLoader
 
 
 class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):

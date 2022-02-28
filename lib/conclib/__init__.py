@@ -24,7 +24,7 @@ import settings
 from translation import ugettext as _
 from kwiclib_common import tokens2strclass
 import plugins
-from corplib.corpus import KCorpus
+from corplib.corpus import KCorpus, AbstractKCorpus
 
 
 def conc_is_sorted(q: Tuple[str, ...]) -> bool:
@@ -37,7 +37,7 @@ def conc_is_sorted(q: Tuple[str, ...]) -> bool:
     return ans
 
 
-def get_conc_desc(corpus: KCorpus, q=None, translate=True, skip_internals=True):
+def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True):
     """
     arguments:
     corpus -- a KCorpus instance

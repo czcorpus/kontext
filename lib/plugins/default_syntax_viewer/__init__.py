@@ -49,12 +49,12 @@ import os
 from typing import Dict
 
 import plugins
-from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
 from actions import concordance
 from controller import exposed
-from controller.errors import UserActionException
-from action.plg import PluginCtx
+from action.errors import UserActionException
+from action.plugin.ctx import PluginCtx
 from .manatee_backend import ManateeBackend
 from translation import ugettext as _
 

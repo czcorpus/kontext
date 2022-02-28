@@ -23,17 +23,17 @@ import sys
 from werkzeug import Request
 from controller import exposed
 from controller.kontext import Kontext
-from controller.errors import UserActionException, NotFoundException
+from action.errors import UserActionException, NotFoundException
 from argmapping.pquery import PqueryFormArgs
-from argmapping.conc.query import QueryFormArgs
-from argmapping.conc.filter import FilterFormArgs
+from action.argmapping.conc.query import QueryFormArgs
+from action.argmapping.conc.filter import FilterFormArgs
 import plugins
 from texttypes import TextTypesCache
 import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 from bgcalc.task import AsyncTaskStatus
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 from translation import ugettext as translate
 from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
 import settings

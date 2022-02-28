@@ -20,7 +20,7 @@
 from functools import wraps
 from hashlib import md5
 
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 def mk_token_connect_hash(corpora, token_id, num_tokens, query_args, lang, context=None):

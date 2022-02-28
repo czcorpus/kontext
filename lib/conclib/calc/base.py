@@ -26,7 +26,7 @@ from dataclasses import dataclass
 
 from corplib import CorpusManager
 from corplib.corpus import AbstractKCorpus
-from plugins.abstract.conc_cache import ConcCacheStatus
+from plugin_types.conc_cache import ConcCacheStatus
 import plugins
 from conclib.errors import ConcCalculationStatusException
 from conclib.pyconc import PyConc

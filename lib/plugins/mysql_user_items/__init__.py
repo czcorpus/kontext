@@ -17,7 +17,7 @@ import logging
 
 from .backend import Backend
 
-from plugins.abstract.user_items import AbstractUserItems, UserItemException, FavoriteItem
+from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
 from controller import exposed

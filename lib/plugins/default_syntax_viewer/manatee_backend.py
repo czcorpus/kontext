@@ -58,7 +58,7 @@ from corplib.abstract import AbstractKCorpus
 import manatee
 from typing import Dict, Any, List, Optional
 
-from plugins.abstract.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
+from plugin_types.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
 
 
 class TreeConf(object):

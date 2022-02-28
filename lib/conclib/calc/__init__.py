@@ -24,7 +24,7 @@ import logging
 
 import settings
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, ConcCacheStatus
+from plugin_types.conc_cache import AbstractConcCache, ConcCacheStatus
 from corplib import CorpusManager
 from conclib.empty import InitialConc
 from corplib.corpus import AbstractKCorpus

@@ -17,10 +17,10 @@ from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
 from controller import exposed
 from controller.kontext import Kontext
-from controller.errors import ForbiddenException
+from action.errors import ForbiddenException
 import plugins
-from plugins.abstract.corparch import AbstractSearchableCorporaArchive
-from plugins.abstract.corparch.corpus import CitationInfo
+from plugin_types.corparch import AbstractSearchableCorporaArchive
+from plugin_types.corparch.corpus import CitationInfo
 from translation import ugettext as translate
 
 

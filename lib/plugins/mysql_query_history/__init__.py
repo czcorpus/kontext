@@ -34,14 +34,14 @@ import logging
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
-from plugins.abstract.auth import AbstractAuth
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.auth import AbstractAuth
+from plugin_types.integration_db import IntegrationDatabase
 from corplib.abstract import AbstractKCorpus
-from plugins.abstract.query_history import AbstractQueryHistory
+from plugin_types.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from corplib.fallback import EmptyCorpus
-from plugins.abstract.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence import AbstractQueryPersistence
 
 
 class CorpusCache:

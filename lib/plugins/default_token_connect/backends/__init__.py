@@ -24,7 +24,7 @@ import urllib.error
 import logging
 from plugins.default_token_connect.backends.cache import cached
 
-from plugins.abstract.token_connect import AbstractBackend, BackendException
+from plugin_types.token_connect import AbstractBackend, BackendException
 
 
 class HTTPBackend(AbstractBackend):

@@ -24,7 +24,7 @@ from datetime import datetime
 
 from plugins import inject
 import plugins
-from plugins.abstract.issue_reporting import AbstractIssueReporting, DynamicReportingAction
+from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
 import actions.user
 from controller import exposed
 from translation import ugettext as _

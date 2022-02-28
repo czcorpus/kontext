@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from collections import defaultdict
-from plugins.abstract.taghelper import AbstractValueSelectionFetcher
+from plugin_types.taghelper import AbstractValueSelectionFetcher
 
 UD_KEYS = {  # taken from `universaldependencies.org` specification
     'POS': 'part of speech',  # added artificially

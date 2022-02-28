@@ -3,7 +3,7 @@ from .templating import TplEngine
 from texttypes import TextTypesCache
 import plugins
 from werkzeug.http import parse_accept_header
-from .cookie import KonTextCookie
+from action.cookie import KonTextCookie
 from sanic.request import Request
 
 
@@ -12,8 +12,16 @@ class ActionContext:
     def __init__(self, templating: TplEngine, tt_cache: TextTypesCache):
         self._templating = templating
         self._installed_langs = dict(
-            [(x.split('_')[0], x) for x in os.listdir('%s/../locale' % os.path.dirname(__file__))])
+            [(x.split('_')[0], x) for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))])
         self._tt_cache = tt_cache
+
+    @property
+    def templating(self):
+        return self._templating
+
+    @property
+    def tt_cache(self):
+        return self._tt_cache
 
     @staticmethod
     def cleanup_runtime_modules():

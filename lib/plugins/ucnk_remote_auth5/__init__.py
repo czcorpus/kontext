@@ -35,8 +35,8 @@ import ssl
 import logging
 
 import plugins
-from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
-from plugins.abstract.corparch.backend import DatabaseBackend
+from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
+from plugin_types.corparch.backend import DatabaseBackend
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
 

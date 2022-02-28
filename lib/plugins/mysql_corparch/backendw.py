@@ -23,12 +23,12 @@ import pytz
 import logging
 import re
 import mysql.connector
-from plugins.abstract.corparch.backend import DatabaseWriteBackend
+from plugin_types.corparch.backend import DatabaseWriteBackend
 from plugins.mysql_corparch.backend import (
     Backend,
     DFLT_USER_TABLE, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE, DFLT_USER_ACC_CORP_ATTR,
     DFLT_GROUP_ACC_CORP_ATTR, DFLT_GROUP_ACC_GROUP_ATTR)
-from plugins.abstract.corparch.backend.regkeys import (
+from plugin_types.corparch.backend.regkeys import (
     REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
 
 

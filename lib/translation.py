@@ -25,64 +25,11 @@ To use common underscore function just make the following:
 from translation import ugettext as _
 """
 
-
-from threading import local
-import gettext
-import os
-import logging
-from typing import List, Union, Tuple
-
-_translations = {}  # global (all requests share this)
-_current = local()  # thread local is used to allow per-request translation
-
-
-def load_translations(languages: Union[List[str], Tuple[str]]):
-    """
-    arguments:
-    languages -- list of required languages; languages should be encoded in xx_YY form
-                 but basically it can have any form matching locale/ subdirectories names
-                 (i.e. if you have locale/klingon subdirectory containing gettext translations
-                 then languages = ('klingon',) is a valid argument)
-    """
-    global _translations
-
-    gettext.install('kontext', '%s/../locale' % os.path.dirname(__file__))
-    languages = (x.replace('-', '_')
-                 for x in languages if x != 'en-US')  # english translation is implicit
-    for lang in languages:
-        try:
-            _translations[lang] = gettext.translation('kontext',
-                                                      localedir='%s/../locale' % os.path.dirname(
-                                                          __file__),
-                                                      languages=[lang])
-        except IOError as e:
-            logging.getLogger(__name__).warning(
-                'Failed to load translations for %s with error: %r' % (lang, e))
-
-
-def get_avail_languages():
-    """
-    Return a list of installed language codes ('en', 'cs', 'de', ...)
-    """
-    return ['en'] + [x[:2] for x in list(_translations.keys())]
-
-
-def activate(lang):
-    """
-    Activates translation for current thread
-
-    arguments:
-    lang -- a language code
-    """
-    t = _translations.get(lang)
-    if t is not None:
-        _current.gettext = t.gettext
-    else:
-        _current.gettext = lambda s: s
+# TODO integrate with babel, sanic_babael
 
 
 def ugettext(s):
     """
     Translates a string according to the current (thread local) translation
     """
-    return _current.gettext(s)
+    return s

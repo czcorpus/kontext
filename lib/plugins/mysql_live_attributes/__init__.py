@@ -33,16 +33,16 @@ from mysql.connector.cursor import MySQLCursor
 import l10n
 from plugins import inject
 import plugins
-from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.corparch.corpus import CorpusInfo
-from plugins.abstract.general_storage import KeyValueStorage
-from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.live_attributes import (
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.corparch.corpus import CorpusInfo
+from plugin_types.general_storage import KeyValueStorage
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 from plugins.errors import PluginCompatibilityException
 import strings
 from controller import exposed
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 from actions import concordance
 from . import query
 

@@ -21,7 +21,7 @@ HTTPBackend mock to be used in the default_token_connect plugin unittests
 
 import os
 
-from plugins.abstract.token_connect import AbstractBackend
+from plugin_types.token_connect import AbstractBackend
 from plugins.default_token_connect.backends import cached
 
 

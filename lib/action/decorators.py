@@ -1,9 +1,13 @@
 from sanic.request import Request
-from sanic import HTTPResponse
-from typing import Optional, Tuple, Union, Callable, Any, Dict
+from sanic import HTTPResponse, Sanic
+from sanic import response
+from typing import Optional, Tuple, Union, Callable, Any, Dict, Type
 from functools import wraps
 from .templating import CustomJSONEncoder, TplEngine
 from dataclasses_json import DataClassJsonMixin
+from action.model.globals import add_globals
+from action.model.base import BaseActionModel
+from action.errors import ImmediateRedirectException
 import json
 
 
@@ -16,8 +20,11 @@ ResultType = Union[
 
 
 def _output_result(
+        app: Sanic,
+        request: Request,
         tpl_engine: TplEngine,
         template: str,
+        page_model: str,
         result: ResultType,
         status: int,
         return_type: str) -> Union[str, bytes]:
@@ -50,15 +57,16 @@ def _output_result(
     elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
     elif isinstance(result, dict):
+        result = add_globals(app, request, page_model, result)
         return tpl_engine.render(template, result)
     raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
 
-def handler(
-        access_level: int = 0, template: Optional[str] = None, page_model: Optional[str] = None,
-        func_arg_mapped: bool = False, skip_corpus_init: bool = False, mutates_result: bool = False,
-        http_method: Union[Optional[str], Tuple[str, ...]] = 'GET', accept_kwargs: bool = None,
-        apply_semi_persist_args: bool = False, return_type: str = 'template',
+def http_action(
+        access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel]  = None,
+        page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
+        mutates_result: bool = False, http_method: Union[Optional[str], Tuple[str, ...]] = 'GET',
+        accept_kwargs: bool = None, apply_semi_persist_args: bool = False, return_type: str = 'template',
         action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
     """
     This decorator allows more convenient way how to
@@ -81,13 +89,25 @@ def handler(
     def decorator(func):
         @wraps(func)
         async def wrapper(request: Request, *args, **kw):
-            ans, status = func(request, *args, **kw)
-            return HTTPResponse(_output_result(
-                tpl_engine=request.ctx.templating,
-                template=func.__dict__.get('template'),
-                result=ans,
-                status=status,
-                return_type=return_type))
+            application = Sanic.get_app('kontext')
+            amodel = action_model(request, application.ctx.tt_cache) if action_model else None
+            try:
+                ans, status = await func(request, amodel, *args, **kw)
+                return HTTPResponse(
+                    body=_output_result(
+                        app=application,
+                        request=request,
+                        tpl_engine=application.ctx.templating,
+                        template=template,
+                        page_model=page_model,
+                        result=ans,
+                        status=status,
+                        return_type=return_type),
+                    status=status)
+            except ImmediateRedirectException as ex:
+                print('fuck ', ex)
+                return response.redirect(ex.url, status=ex.code)
+
         return wrapper
     return decorator
 
