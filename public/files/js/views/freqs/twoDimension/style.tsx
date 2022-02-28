@@ -98,10 +98,9 @@ export const CTFreqForm = styled.div`
 
 export const FieldsetAdvancedOptions = styled.div`
 
-    fieldset h3 {
-        font-size: 1.2em;
-        margin: 1em 0 0.4em 0.1em;
-        text-align: left;
+    fieldset {
+        margin-top: 0.7em;
+        margin-bottom: 2.3em;
     }
 
     fieldset ul.items {

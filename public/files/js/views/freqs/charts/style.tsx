@@ -164,7 +164,7 @@ export const ConfidenceIntervalHint = styled.div`
 
 // ----------------------- <FreqsHelp /> -------------------------------------
 
-export const  FreqsHelp = styled.div`
+export const FreqsHelp = styled.div`
 
     h2 {
         margin-left: 0;
@@ -174,6 +174,21 @@ export const  FreqsHelp = styled.div`
 
     h2:first-letter {
         text-transform: capitalize;
+    }
+
+`;
+
+// ------------------------- <FreqChartsSaveViewForm /> --------------------------
+
+export const FreqChartsSaveViewForm = styled.form`
+
+    .block {
+        display: flex;
+        padding: 1em;
+
+        > label:not(:first-child) {
+            margin-left: 1em;
+        }
     }
 
 `;

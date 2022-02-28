@@ -79,6 +79,10 @@ export function isDownloadType(s:string):s is DownloadType {
         s === DownloadType.CHART;
 }
 
+export interface SaveLinkHandler {
+    (suffix:string, url:string):void;
+}
+
 /**
  * PageEnvironment represents a core functionality which must be initialized
  * on any KonText page before any of page's own functionalities are
@@ -262,37 +266,45 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
      *
      */
     bgDownload<T=Kontext.AjaxArgs>(
-        {filename, type, url, contentType, args}:
+        {name, format, datasetType, url, contentType, args}:
         {
-            filename:string,
-            type:DownloadType,
+            name?:string,
+            format:string,
+            datasetType:DownloadType,
             url:string,
             contentType:string,
             args?:T
         }):void {
 
+
+        function generateFileIdentifier() {
+            const dt = new Date().toISOString().split('T')[0];
+            return `kontext-${name ? name + '-' : ''}${datasetType}-${dt}.${format}`;
+        }
+
         const taskId = `${new Date().getTime()}:${url}`;
         const method = () => { // TODO this is an antipattern (should be part of download types)
             if (
-                    type === DownloadType.FREQ2D ||
-                    type === DownloadType.LINE_SELECTION ||
-                    type === DownloadType.WORDLIST ||
-                    type === DownloadType.CHART) {
+                datasetType === DownloadType.FREQ2D ||
+                datasetType === DownloadType.LINE_SELECTION ||
+                datasetType === DownloadType.WORDLIST ||
+                datasetType === DownloadType.CHART) {
                 return HTTP.Method.POST;
             }
             return HTTP.Method.GET;
         };
 
+        const fullname = generateFileIdentifier();
         this.dispatcher.dispatch(
             ATActions.InboxAddAsyncTask,
             {
                 ident: taskId,
-                label: filename,
-                category: type as string
+                label: fullname,
+                category: datasetType as string
             }
         );
         this.appNavig.bgDownload<T>({
-            filename,
+            filename: fullname,
             url,
             method: method(),
             contentType,

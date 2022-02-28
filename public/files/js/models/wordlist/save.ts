@@ -21,7 +21,7 @@ import { Observable, of as rxOf } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
+import { PageModel, SaveLinkHandler } from '../../app/page';
 import { IFullActionControl, StatelessModel } from 'kombo';
 import { Actions } from './actions';
 import { Actions as MainMenuActions } from '../mainMenu/actions';
@@ -29,12 +29,17 @@ import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 
+export interface WordlistSaveLinkHandler {
+    (suffix:string, url:string, args:WordlistSaveArgs):void;
+}
+
+
 export interface WordlistSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
     queryId:string;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
 }
 
 export interface WordlistSaveModelState {
@@ -52,7 +57,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly saveLinkFn:(file:string, url:string, args:WordlistSaveArgs)=>void;
+    private readonly saveLinkFn:WordlistSaveLinkHandler;
 
 
     constructor({dispatcher, layoutModel, quickSaveRowLimit, queryId, saveLinkFn}:WordlistSaveModelArgs) {
@@ -227,7 +232,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             submitArgs.colheaders = true;
         }
         this.saveLinkFn(
-            `word-list.${state.saveFormat}`,
+            state.saveFormat,
             this.layoutModel.createActionUrl('wordlist/savewl'),
             submitArgs
         );

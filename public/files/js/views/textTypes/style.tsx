@@ -21,7 +21,7 @@
 import styled from 'styled-components';
 import * as theme from '../theme/default';
 
-import externalLinkImg from '../../../img/external-link.png';
+import externalLinkImg from '../../../img/external-link.svg';
 
 // ----------- <TextTypesPanel /> ----------------------------
 

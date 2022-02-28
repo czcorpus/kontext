@@ -196,8 +196,8 @@ export function init({dispatcher, he, concDetailModel, refsDetailModel}:DetailMo
             he.translate('concview__expand_right_symbol');
 
         const createImgPath = () => props.position === 'left' ?
-            he.createStaticUrl('/img/prev-page.svg') :
-            he.createStaticUrl('/img/next-page.svg');
+            he.createStaticUrl('/img/sort_asc.svg') :
+            he.createStaticUrl('/img/sort_desc.svg');
 
         if (!props.isWaiting) {
             return (

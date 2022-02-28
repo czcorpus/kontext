@@ -185,7 +185,7 @@ export class CollPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'ml'
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
             }
         );
 
@@ -295,10 +295,11 @@ export class CollPage {
         );
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(name:string, format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.COLL,
+            name,
+            format,
+            datasetType: DownloadType.COLL,
             contentType: 'multipart/form-data',
             url
         });

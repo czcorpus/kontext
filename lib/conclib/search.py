@@ -49,9 +49,10 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     status = cache_map.get_calc_status(subchash, q)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
-        ans = worker.send_task('conc_register', (user_id, corp.corpname, getattr(corp, 'subcname', None),
-                                                 subchash, q, samplesize, TASK_TIME_LIMIT),
-                               time_limit=CONC_REGISTER_TASK_LIMIT)
+        ans = worker.send_task(
+            'conc_register', object.__class__,
+            (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize, TASK_TIME_LIMIT),
+            time_limit=CONC_REGISTER_TASK_LIMIT)
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
@@ -60,8 +61,9 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
-                 calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
+def _get_bg_conc(
+        corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
+        calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results
@@ -81,9 +83,10 @@ def _get_bg_conc(corp: KCorpus, user_id: int, q: Tuple[str, ...], subchash: Opti
                 logging.getLogger(__name__).warning(
                     f'Removed unbound conc. cache file {status.cachefile}')
         worker = bgcalc.calc_backend_client(settings)
-        worker.send_task('conc_sync_calculate',
-                         (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
-                         time_limit=TASK_TIME_LIMIT)
+        worker.send_task(
+            'conc_sync_calculate', object.__class__,
+            (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
+            time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)

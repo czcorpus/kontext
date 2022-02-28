@@ -19,7 +19,6 @@
  */
 
 import * as Kontext from '../../../types/kontext';
-import { TTCrit } from './common';
 
 
 interface FreqItem {
@@ -40,7 +39,7 @@ interface FreqBlock {
 }
 
 export interface FreqData {
-    FCrit:TTCrit;
+    FCrit:Array<string>;
     Blocks:Array<FreqBlock>;
     paging:number;
     concsize:number;

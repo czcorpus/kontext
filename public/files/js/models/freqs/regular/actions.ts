@@ -19,7 +19,7 @@
  */
 
 import { Action } from 'kombo';
-import { FreqDisplayMode, ResultBlock } from './common';
+import { FreqDisplayMode, MulticritFreqServerArgs, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
 import { HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
@@ -106,7 +106,7 @@ export class Actions {
     };
 
     static ResultPrepareSubmitArgsDone:Action<{
-        data:{};
+        data:MulticritFreqServerArgs;
     }> = {
         name: 'FREQ_RESULT_PREPARE_SUBMIT_ARGS_DONE'
     };
@@ -148,8 +148,13 @@ export class Actions {
         name: 'FREQ_SAVE_FORM_SET_INCLUDE_COL_HEADERS'
     };
 
+    static SaveFormSetMultiSheetFile:Action<{
+        value:boolean;
+    }> = {
+        name: 'FREQ_SAVE_FORM_SET_MULTI_SHEET_FILE'
+    };
+
     static SaveFormSubmit:Action<{
-        sourceId:string;
     }> = {
         name: 'FREQ_SAVE_FORM_SUBMIT'
     };
@@ -287,5 +292,16 @@ export class Actions {
         format:ChartExportFormat;
     }> = {
         name: 'FREQ_CHARTS_SET_DOWNLOAD_FORMAT'
+    }
+
+    static ChartSaveFormSelectChart:Action<{
+        sourceId:string;
+    }> = {
+        name: 'FREQ_CHARTS_CHART_SAVE_FORM_SELECT_CHART'
+    }
+
+    static ChartSaveFormSubmit:Action<{
+    }> = {
+        name: 'FREQ_CHARTS_CHART_SAVE_FORM_SUBMIT'
     }
 }

@@ -32,7 +32,7 @@ from texttypes import TextTypesCache
 import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
-from bgcalc import AsyncTaskStatus
+from bgcalc.task import AsyncTaskStatus
 from controller.plg import PluginCtx
 from translation import ugettext as translate
 from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
@@ -227,9 +227,8 @@ class ParadigmaticQuery(Kontext):
             self.subcpath,
             self.session_get('user', 'id'),
             corp_info.collator_locale if corp_info.collator_locale else 'en_US')
-        task_status = worker.send_task('calc_merged_freqs', args=calc_args,
-                                       time_limit=TASK_TIME_LIMIT)
-
+        task_status = worker.send_task(
+            'calc_merged_freqs', object.__class__, args=calc_args, time_limit=TASK_TIME_LIMIT)
         sq_items = []
         for conc_id in self._curr_pquery_args.conc_ids:
             sq_items.append(conc_forms[conc_id]['curr_queries'][self.args.corpname])

@@ -307,11 +307,11 @@ export class Freq2DFlatViewModel extends GeneralFreq2DModel<Freq2DFlatViewModelS
             savemode: 'flat'
         };
         this.pageModel.bgDownload({
-            filename: `2d-frequency.${format}`,
-            type: DownloadType.FREQ2D,
+            format,
+            datasetType: DownloadType.FREQ2D,
             url: this.pageModel.createActionUrl('export_freqct', args),
-            contentType: 'multipart/form-data',
-            args: {data: JSON.stringify(this.exportData())}
+            contentType: 'application/json',
+            args: this.exportData()
         });
     }
 }

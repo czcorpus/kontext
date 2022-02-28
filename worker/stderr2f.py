@@ -9,7 +9,7 @@ import io
 import os
 import sys
 import tempfile
-from .errors import CalcBackendInitError
+from bgcalc.adapter.errors import BgCalcAdapterError
 
 libc = ctypes.CDLL('')
 c_stderr = ctypes.c_void_p.in_dll(libc, 'stderr')
@@ -57,4 +57,4 @@ def get_stderr_redirector(conf):
         return stderr_redirector
     elif app_type == 'rq':
         return dummy_redirector
-    raise CalcBackendInitError('No such calc backend: {}'.format(app_type))
+    raise BgCalcAdapterError('No such calc backend: {}'.format(app_type))

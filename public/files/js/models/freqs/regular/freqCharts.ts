@@ -24,6 +24,7 @@ import { debounceTime, Observable, Subject } from 'rxjs';
 import { PageModel } from '../../../app/page';
 import { FreqChartsAvailableData, FreqChartsAvailableTypes, FreqResultResponse } from '../common';
 import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import {
     BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader, FreqServerArgs,
     isEmptyResultBlock, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS, recalculateConfIntervals,
@@ -31,12 +32,13 @@ import {
 } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute, FormValue, newFormValue, AttrItem, ChartExportFormat } from '../../../types/kontext';
+import { StructuralAttribute, FormValue, newFormValue, AttrItem, ChartExportFormat, BasicFreqModuleType } from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
 
 
 
 export interface FreqChartsModelArgs {
+    freqType:BasicFreqModuleType;
     dispatcher:IFullActionControl;
     pageModel:PageModel;
     freqCrit:Array<AttrItem>;
@@ -83,13 +85,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
 
     constructor({
-        dispatcher, pageModel, freqCrit, freqCritAsync, formProps,
+        dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
         initialData, fmaxitems, freqLoader
     }:FreqChartsModelArgs) {
         const allCrits = List.concat(freqCritAsync, freqCrit);
         super(
             dispatcher,
             {
+                freqType,
                 data: pipe(
                     initialData,
                     // if initial data are time data we'll change chart parameters and reload on view init
@@ -181,7 +184,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     allCrits,
                     List.map(k => tuple<string, ChartExportFormat>(k.n, 'png')),
                     Dict.fromEntries()
-                )
+                ),
+                saveFormActive: false
             }
         );
 
@@ -390,6 +394,18 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 state.downloadFormat[action.payload.sourceId] = action.payload.format;
             }
         );
+
+        this.addActionHandler(
+            MainMenuActions.ShowSaveForm,
+            (state, action) => {state.saveFormActive = true}
+        );
+
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
+            (state, action) => {
+                state.saveFormActive = false;
+            }
+        );
     }
 
     private dispatchLoad(
@@ -437,7 +453,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
-            fmaxitems: state.fmaxitems[fcrit].value,
+            fmaxitems: parseInt(state.fmaxitems[fcrit].value),
             format: 'json'
         };
     }

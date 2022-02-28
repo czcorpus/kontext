@@ -19,15 +19,19 @@ from rq.job import Job
 from rq.exceptions import NoSuchJobError
 from redis import Redis
 from rq_scheduler import Scheduler
-from bgcalc.errors import CalcTaskNotFoundError, CalcBackendError
+from bgcalc.errors import CalcTaskNotFoundError, BgCalcError
+from bgcalc.adapter.abstract import AbstractBgClient, AbstractResultWrapper
 from controller.errors import UserActionException
 import json
 import re
 import importlib
 import sys
+from typing import TypeVar, Generic, Union, Type
+
+T = TypeVar('T')
 
 
-class ResultWrapper:
+class ResultWrapper(AbstractResultWrapper[T]):
 
     status_map = dict(
         queued='PENDING',
@@ -39,9 +43,9 @@ class ResultWrapper:
 
     def __init__(self, job):
         self._job = job
-        self.result = None
+        self.result: Union[T, Exception] = None
 
-    def infer_error(self, exc_info, job_id):
+    def _infer_error(self, exc_info, job_id):
         last = [x for x in re.split(r'\n', exc_info) if x.strip() != ''][-1]
         srch = re.match(r'^([\w_\.]+):\s+(.+)$', last)
         if srch is not None:
@@ -72,7 +76,7 @@ class ResultWrapper:
                     break
                 elif self._job.is_failed:
                     self._job.refresh()
-                    self.result = self.infer_error(self._job.exc_info, self._job.id)
+                    self.result = self._infer_error(self._job.exc_info, self._job.id)
                     break
                 elif timeout and total_time > timeout:
                     self.result = Exception(f'Task result timeout: {self._job}')
@@ -93,7 +97,7 @@ class ResultWrapper:
         return self._job.id
 
 
-class RqConfig(object):
+class RqConfig:
     HOST = None
     PORT = None
     DB = None
@@ -113,7 +117,7 @@ class Control:
             raise CalcTaskNotFoundError(str(ex))
 
 
-class RqClient:
+class RqClient(AbstractBgClient):
 
     def __init__(self, conf: RqConfig, prefix: str = ''):
         self.redis_conn = Redis(host=conf.HOST, port=conf.PORT, db=conf.DB)
@@ -121,7 +125,7 @@ class RqClient:
         self.prefix = prefix
         self.scheduler = Scheduler(connection=self.redis_conn, queue=self.queue)
         self.scheduler_conf_path = conf.SCHEDULER_CONF_PATH
-        self.control = Control(self.redis_conn)
+        self._control = Control(self.redis_conn)
 
     def init_scheduler(self):
         # remove old scheduled tasks
@@ -155,10 +159,10 @@ class RqClient:
         return None
 
     @property
-    def worker_impl(self):
-        return self.queue
+    def control(self):
+        return self._control
 
-    def send_task(self, name, args=None, time_limit=None, soft_time_limit=None):
+    def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> ResultWrapper[T]:
         """
         Send a task to the worker.
 
@@ -177,7 +181,7 @@ class RqClient:
         try:
             job = Job.fetch(task_id, connection=self.redis_conn)
             if job.get_status() == 'failed':
-                return CalcBackendError(job.exc_info)
+                return BgCalcError(job.exc_info)
         except NoSuchJobError as ex:
             return CalcTaskNotFoundError(ex)
         return None

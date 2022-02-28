@@ -1040,49 +1040,34 @@ export function init(
 
         constructor(props) {
             super(props);
-            this.state = {mode: TableViewMode.TABLE};
             this._handleModeSwitch = this._handleModeSwitch.bind(this);
         }
 
-        _handleModeSwitch(evt) {
+        _handleModeSwitch(value:string) {
             dispatcher.dispatch<typeof Actions.SetCtSaveMode>({
                 name: Actions.SetCtSaveMode.name,
-                payload: {value: evt.target.value}
+                payload: {value}
             });
-            this.setState({mode: evt.target.value});
-        }
-
-        _renderContents() {
-            switch (this.state.mode) {
-                case TableViewMode.TABLE:
-                    return <BoundCT2dFreqResultView {...this.props} />
-                case TableViewMode.LIST:
-                    return <flatResultViews.CTFlatFreqResultView {...this.props} />
-                default:
-                    return null;
-            }
         }
 
         componentDidMount() {
             dispatcher.dispatch<typeof Actions.SetCtSaveMode>({
                 name: Actions.SetCtSaveMode.name,
-                payload: {value: this.state.mode}
+                payload: {value: TableViewMode.TABLE}
             });
         }
 
         render() {
+            const modeMenu = [
+                {id: TableViewMode.TABLE, label: he.translate('freq__ct_switch_table_view')},
+                {id: TableViewMode.LIST, label: he.translate('freq__ct_switch_list_view')}
+            ];
             return (
                 <S.CTFreqResultView>
-                    <p className="mode-switch">
-                        <label>
-                            {he.translate('freq__ct_view_mode')}:{'\u00a0'}
-                            <select onChange={this._handleModeSwitch}>
-                                <option value="table">{he.translate('freq__ct_switch_table_view')}</option>
-                                <option value="list">{he.translate('freq__ct_switch_list_view')}</option>
-                            </select>
-                        </label>
-                    </p>
-                    {this._renderContents()}
+                    <layoutViews.TabView items={modeMenu} callback={this._handleModeSwitch} defaultId={TableViewMode.TABLE}>
+                        <BoundCT2dFreqResultView {...this.props} />
+                        <flatResultViews.CTFlatFreqResultView {...this.props} />
+                    </layoutViews.TabView>
                 </S.CTFreqResultView>
             );
         }

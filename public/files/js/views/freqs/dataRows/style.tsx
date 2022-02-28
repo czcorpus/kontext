@@ -51,7 +51,7 @@ export const DataRowTR = styled.tr`
     }
 
     .frac {
-        color: ${theme.colorLightText};
+        // color: ${theme.colorLightText};
     }
 `;
 

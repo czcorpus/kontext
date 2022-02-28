@@ -37,12 +37,12 @@ import { init as resultViewFactory } from '../views/freqs/regular';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData,
     FreqDataRowsModelState } from '../models/freqs/regular/table';
-import { FreqCTResultsSaveModel } from '../models/freqs/save';
+import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, Maths, pipe, URL as CURL } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, tuple, URL as CURL } from 'cnc-tskit';
 import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
@@ -54,6 +54,8 @@ import { FreqDataLoader } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
 import { ImageConversionModel } from '../models/common/imgConv';
 import { DispersionResultModel } from '../models/dispersion/result';
+import { FreqResultsSaveModel } from '../models/freqs/regular/save';
+import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
 
 /**
  *
@@ -89,6 +91,10 @@ class FreqPage {
     private querySaveAsFormModel:QuerySaveAsFormModel;
 
     private imgConversionModel:ImageConversionModel;
+
+    private saveTablesModel:FreqResultsSaveModel;
+
+    private saveChartFormModel:FreqChartsSaveFormModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -224,7 +230,7 @@ class FreqPage {
             analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: this.layoutModel.getConf<string>('FreqType')
+                initialFreqFormVariant: this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')
             }
         );
     }
@@ -296,19 +302,19 @@ class FreqPage {
         );
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.FREQ,
+            format,
+            datasetType: DownloadType.FREQ,
             url,
             contentType: 'multipart/form-data'
         });
     }
 
     private initFreqResult():void {
-        switch (this.layoutModel.getConf<string>('FreqType')) {
-            case 'ml':
-            case 'tt':
+        switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
+            case 'tokens':
+            case 'text-types':
                 this.freqLoader = new FreqDataLoader({
                     pageModel: this.layoutModel
                 });
@@ -324,21 +330,50 @@ class FreqPage {
                 );
                 const currentPage = this.layoutModel.getConf<number>('CurrentPage');
 
+                const saveLinkFn = this.setDownloadLink.bind(this);
+
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
+                    freqType: this.layoutModel.getConf<Kontext.BasicFreqModuleType>('FreqType'),
                     freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
-                    saveLinkFn: this.setDownloadLink.bind(this),
-                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
                     initialData,
                     currentPage,
                     freqLoader: this.freqLoader
                 });
+
+                this.saveTablesModel = new FreqResultsSaveModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    layoutModel: this.layoutModel,
+                    saveLinkFn,
+                    quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
+                });
+
+                const allCrit = List.concat(
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
+                    this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit')
+                );
+                this.saveChartFormModel = new FreqChartsSaveFormModel(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    {
+                        formIsActive: false,
+                        formats: pipe(
+                            allCrit,
+                            List.map(crit => tuple<string, Kontext.ChartExportFormat>(crit.n, 'png')),
+                            Dict.fromEntries()
+                        ),
+                        criteria: allCrit,
+                        sourceId: List.head(allCrit).n
+                    }
+                );
+
                 this.freqChartsModel = new FreqChartsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
+                    freqType: this.layoutModel.getConf<Kontext.BasicFreqModuleType>('FreqType'),
                     freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
@@ -361,7 +396,9 @@ class FreqPage {
                     this.layoutModel.dispatcher,
                     this.layoutModel.getComponentHelpers(),
                     this.freqChartsModel,
-                    this.freqResultModel
+                    this.saveChartFormModel,
+                    this.freqResultModel,
+                    this.saveTablesModel
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
@@ -369,7 +406,7 @@ class FreqPage {
                     {} as FreqDataRowsModelState
                 );
             break;
-            case 'ct':
+            case '2-attribute':
                 const data = this.layoutModel.getConf<CTFreqResultData>(
                     'CTFreqResultData'
                 );
@@ -431,8 +468,8 @@ class FreqPage {
             }
         });
 
-        switch (this.layoutModel.getConf<string>('FreqType')) {
-            case 'ct': {
+        switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
+            case '2-attribute': {
                 const args = {
                     ...this.ctFreqModel.getSubmitArgs(),
                     format: undefined
@@ -444,13 +481,14 @@ class FreqPage {
                 );
             }
             break;
-            case 'tt':
-            case 'ml': {
+            case 'text-types':
+            case 'tokens': {
                 const state = this.freqResultModel.getState(); // no antipattern here
                 const firstCrit = List.head(state.freqCrit);
                 const args = {
                     ...this.freqResultModel.getSubmitArgs(state, firstCrit.n),
                     fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                    freq_type: state.freqType,
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(

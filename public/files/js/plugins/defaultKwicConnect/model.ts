@@ -436,8 +436,8 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
         const args:FreqServerArgs = {
             ...this.pluginApi.getConcArgs(),
             fcrit: `${fDistType}/ie 0~0>0`,
-            ml: false,
             flimit,
+            fpage: 1,
             freq_sort: 'freq',
             fmaxitems: KwicConnectModel.UNIQ_KWIC_FREQ_PAGESIZE,
             freqlevel: undefined,

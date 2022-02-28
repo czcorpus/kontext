@@ -156,9 +156,11 @@ export class Actions {
      * the whole section should be disabled/enabled
      */
     static ToggleDisabled:Action<{
-        menuId:string;
-        submenuId?:string;
-        disabled:boolean;
+        items:Array<{
+            menuId:string;
+            submenuId?:string;
+            disabled:boolean;
+        }>;
 
     }> = {
         name: 'MAIN_MENU_TOGGLE_DISABLED'

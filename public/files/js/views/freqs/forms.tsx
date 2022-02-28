@@ -39,11 +39,11 @@ import { DispersionResultModel } from '../../models/dispersion/result';
 // -------------------------- exported component ----------
 
 interface FrequencyFormProps {
-    initialFreqFormVariant:string;
+    initialFreqFormVariant:Kontext.FreqModuleType;
 }
 
 interface FrequencyFormState {
-    formType:string;
+    formType:Kontext.FreqModuleType;
 }
 
 export interface FormsViews {
@@ -84,37 +84,34 @@ export function init(
 
         _handleSubmitClick() {
             switch (this.state.formType) {
-                case 'ml':
+                case 'tokens':
                     dispatcher.dispatch<typeof ActionsRF.MLSubmit>({
                         name: ActionsRF.MLSubmit.name
                     });
                 break;
-                case 'tt':
+                case 'text-types':
                     dispatcher.dispatch<typeof ActionsRF.TTSubmit>({
                         name: ActionsRF.TTSubmit.name
                     });
                 break;
-                case 'dp':
-                    dispatcher.dispatch<typeof ActionsDp.SubmitForm>({
-                        name: ActionsDp.SubmitForm.name,
-                        payload: {
-                            reloadPage: true
-                        }
-                    });
-                break;
-                case 'ct':
+                case '2-attribute':
                     dispatcher.dispatch<typeof Actions2DF.FreqctFormSubmit>({
                         name: Actions2DF.FreqctFormSubmit.name
                     });
+                    break;
+                case 'dispersion':
+                    dispatcher.dispatch<typeof ActionsDp.SubmitForm>({
+                        name: ActionsDp.SubmitForm.name
+                    })
             }
         }
 
         render() {
-            const items = [
-                {id: 'ml', label: he.translate('freq__sel_form_type_ml')},
-                {id: 'tt', label: he.translate('freq__sel_form_type_tt')},
-                {id: 'dp', label: he.translate('freq__sel_form_type_dp')},
-                {id: 'ct', label: he.translate('freq__sel_form_type_ct')}
+            const items:Array<{id:Kontext.FreqModuleType; label:string}> = [
+                {id: 'tokens', label: he.translate('freq__sel_form_type_ml')},
+                {id: 'text-types', label: he.translate('freq__sel_form_type_tt')},
+                {id: '2-attribute', label: he.translate('freq__sel_form_type_ct')},
+                {id: 'dispersion', label: he.translate('freq__sel_form_type_dp')}
             ];
 
             return (

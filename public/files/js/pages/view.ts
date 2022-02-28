@@ -55,7 +55,6 @@ import { Freq2DFormModel } from '../models/freqs/twoDimension/form';
 import { ConcSaveModel } from '../models/concordance/save';
 import { ConcDashboard } from '../models/concordance/dashboard';
 import { TextTypesDistModel } from '../models/concordance/ttdist/model';
-import { TTCrit } from '../models/concordance/ttdist/common';
 import { DummySyntaxViewModel } from '../models/concordance/syntax';
 import { init as queryFormInit, MainViews as QueryMainViews } from '../views/query/first';
 import { init as filterFormInit, FilterFormViews } from '../views/query/filter';
@@ -66,7 +65,6 @@ import { init as sampleFormInit, SampleFormViews } from '../views/query/miscActi
 import { init as analysisFrameInit, FormsViews as AnalysisFrameViews } from '../views/analysis';
 import { init as collFormInit, FormsViews as CollFormsViews } from '../views/coll/forms';
 import { init as freqFormInit, FormsViews as FreqFormViews } from '../views/freqs/forms';
-import { LineSelGroupsRatiosChartModel } from '../charts/lineSelection';
 import { ViewConfiguration, ConcSummary, ServerPagination, ServerLineData, WideCtxArgs, ConcServerArgs }
     from '../models/concordance/common';
 import { RefsDetailModel } from '../models/concordance/refsDetail';
@@ -74,7 +72,6 @@ import { openStorage, ConcLinesStorage } from '../models/concordance/selectionSt
 import { Actions } from '../models/concordance/actions';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
-import { Actions as LinSelOverviewActions } from '../charts/lineSelection';
 import { ConcSortModel } from '../models/query/sort/single';
 import { importMultiLevelArg, SortFormProperties, fetchSortFormArgs }
     from '../models/query/sort/common';
@@ -143,8 +140,6 @@ export class ViewPage {
 
     private analysisViews:AnalysisFrameViews;
 
-    private lineGroupsChartModel:LineSelGroupsRatiosChartModel;
-
     private queryFormViews:QueryMainViews;
 
     private queryOverviewViews:QueryOverviewViews;
@@ -183,16 +178,11 @@ export class ViewPage {
         this.queryModels = new QueryModels();
         this.concFormsInitialArgs = this.layoutModel.getConf<formArgs.ConcFormsInitialArgs>(
             'ConcFormsInitialArgs');
-        this.lineGroupsChartModel = new LineSelGroupsRatiosChartModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.layoutModel.getConf<Array<string>>('ChartExportFormats')
-        );
         this.hitReloader = new HitReloader(this.layoutModel);
     }
 
     private deserializeHashAction(v:string):HashedActionsTypes {
-        const [actionName, rawArgs] = (v || '').substr(1).split('/');
+        const [actionName, rawArgs] = (v || '').substring(1).split('/');
         const args = Dict.fromEntries(parseUrlArgs(rawArgs || ''));
 
             function fetchRequired(k:string):string {
@@ -867,7 +857,7 @@ export class ViewPage {
             this.analysisViews.AnalysisFrame,
             window.document.getElementById('analysis-forms-mount'),
             {
-                initialFreqFormVariant: 'ml'
+                initialFreqFormVariant: 'tokens' as Kontext.FreqModuleType
             }
         );
     }
@@ -952,17 +942,7 @@ export class ViewPage {
             supportsTokenConnect: tokenConnect.providesAnyTokenInfo(),
             anonymousUserConcLoginPrompt: this.layoutModel.getConf<boolean>(
                 'anonymousUserConcLoginPrompt'
-            ),
-            onLineSelChartFrameReady:(rootElm:HTMLElement, corpusId:string, size:[number, number]) => {
-                this.layoutModel.dispatcher.dispatch<typeof LinSelOverviewActions.RenderLineSelectionOverview>({
-                    name: LinSelOverviewActions.RenderLineSelectionOverview.name,
-                    payload: {
-                        rootElm,
-                        size,
-                        corpname: corpusId,
-                    }
-                });
-            }
+            )
         };
 
         this.viewModels = new ViewPageModels();
@@ -1021,7 +1001,8 @@ export class ViewPage {
         this.viewModels.lineSelectionModel = new LineSelectionModel({
             layoutModel: this.layoutModel,
             dispatcher: this.layoutModel.dispatcher,
-            clStorage: lineSelStorage
+            clStorage: lineSelStorage,
+            exportFormats: this.layoutModel.getConf<Array<string>>('ChartExportFormats')
         });
 
         this.viewModels.concDetailModel = new ConcDetailModel(
@@ -1043,7 +1024,7 @@ export class ViewPage {
             this.layoutModel.dispatcher
         );
 
-        const showFreqInfo = this.layoutModel.getConf<TTCrit>('TTCrit').length > 0 &&
+        const showFreqInfo = this.layoutModel.getConf<Array<string>>('TTCrit').length > 0 &&
                 this.layoutModel.getConf<Array<string>>(
                     'ConcDashboardModules').indexOf('freqs') > -1;
         this.viewModels.dashboardModel = new ConcDashboard(
@@ -1060,17 +1041,17 @@ export class ViewPage {
                 this.layoutModel,
                 this.viewModels.lineViewModel,
                 {
-                    ttCrit: this.layoutModel.getConf<TTCrit>('TTCrit')
+                    ttCrit: this.layoutModel.getConf<Array<string>>('TTCrit')
                 }
             );
         }
         return lineViewProps;
     }
 
-    setDownloadLink(filename:string, url:string) {
+    setDownloadLink(format:string, url:string) {
         this.layoutModel.bgDownload({
-            filename,
-            type: DownloadType.CONCORDANCE,
+            format,
+            datasetType: DownloadType.CONCORDANCE,
             contentType: 'multipart/form-data',
             url
         });

@@ -18,24 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import * as Kontext from '../../types/kontext';
-import { PageModel } from '../../app/page';
-import { Freq2DTableModel } from './twoDimension/table2d';
-import { Freq2DFlatViewModel } from './twoDimension/flatTable';
+import * as Kontext from '../../../types/kontext';
+import { PageModel, SaveLinkHandler } from '../../../app/page';
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Actions as MainMenuActions } from '../mainMenu/actions';
-import { Actions } from './regular/actions';
-import { Actions as Actions2df } from './twoDimension/actions';
-import { DataSaveFormat } from '../../app/navigation/save';
-
-
+import { Actions as MainMenuActions } from '../../mainMenu/actions';
+import { Actions } from './actions';
+import { DataSaveFormat } from '../../../app/navigation/save';
 
 
 export interface FreqResultsSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
     quickSaveRowLimit:number;
-    saveLinkFn:(file:string, url:string)=>void;
+    saveLinkFn:SaveLinkHandler;
 }
 
 export interface FreqResultsSaveModelState {
@@ -46,6 +41,7 @@ export interface FreqResultsSaveModelState {
     fromLine:Kontext.FormValue<string>;
     toLine:Kontext.FormValue<string>;
     quickSaveRowLimit:number;
+    multiSheetFile:boolean;
 }
 
 
@@ -54,9 +50,9 @@ export interface FreqResultsSaveModelState {
  */
 export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelState> {
 
-    private layoutModel:PageModel;
+    private readonly layoutModel:PageModel;
 
-    private saveLinkFn:(file:string, url:string)=>void;
+    private readonly saveLinkFn:SaveLinkHandler;
 
     constructor({dispatcher, layoutModel, saveLinkFn, quickSaveRowLimit}:FreqResultsSaveModelArgs) {
         super(
@@ -68,15 +64,16 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                 toLine: {value: '', isInvalid: false, isRequired: false},
                 includeHeading: false,
                 includeColHeaders: false,
-                quickSaveRowLimit: quickSaveRowLimit
+                quickSaveRowLimit: quickSaveRowLimit,
+                multiSheetFile: false,
             }
         );
 
         this.layoutModel = layoutModel;
         this.saveLinkFn = saveLinkFn;
 
-        this.addActionHandler<typeof MainMenuActions.ShowSaveForm>(
-            MainMenuActions.ShowSaveForm.name,
+        this.addActionHandler(
+            MainMenuActions.ShowSaveForm,
             action => {
                 this.changeState(state => {
                     state.formIsActive = true;
@@ -85,8 +82,8 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             }
         );
 
-        this.addActionHandler<typeof MainMenuActions.DirectSave>(
-            MainMenuActions.DirectSave.name,
+        this.addActionHandler(
+            MainMenuActions.DirectSave,
             action => {
                 if (window.confirm(this.layoutModel.translate(
                     'global__quicksave_limit_warning_{format}{lines}',
@@ -98,8 +95,9 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
                     });
                     this.suspend({}, (action, syncData) =>
                         action.name === Actions.ResultPrepareSubmitArgsDone.name ? null : syncData
+
                     ).subscribe(
-                        (action) => {
+                        action => {
                             this.submit(
                                 (action as typeof Actions.ResultPrepareSubmitArgsDone).payload.data);
                         }
@@ -108,38 +106,43 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             }
         );
 
-        this.addActionHandler<typeof Actions.ResultCloseSaveForm>(
-            Actions.ResultCloseSaveForm.name,
+        this.addActionHandler(
+            Actions.ResultCloseSaveForm,
             action => this.changeState(state => {state.formIsActive = false})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFormat>(
-            Actions.SaveFormSetFormat.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFormat,
             action => this.changeState(state => {state.saveformat = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetFromLine>(
-            Actions.SaveFormSetFromLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetFromLine,
             action => this.changeState(state => {state.fromLine.value = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetToLine>(
-            Actions.SaveFormSetToLine.name,
+        this.addActionHandler(
+            Actions.SaveFormSetToLine,
             action => this.changeState(state => {state.toLine.value = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetIncludeHeading>(
-            Actions.SaveFormSetIncludeHeading.name,
+        this.addActionHandler(
+            Actions.SaveFormSetIncludeHeading,
             action => this.changeState(state => {state.includeHeading = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSetIncludeColHeading>(
-            Actions.SaveFormSetIncludeColHeading.name,
+        this.addActionHandler(
+            Actions.SaveFormSetIncludeColHeading,
             action => this.changeState(state => {state.includeColHeaders = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.SaveFormSubmit>(
-            Actions.SaveFormSubmit.name,
+        this.addActionHandler(
+            Actions.SaveFormSetMultiSheetFile,
+            action => this.changeState(state => {state.multiSheetFile = action.payload.value})
+        );
+
+        this.addActionHandler(
+            Actions.SaveFormSubmit,
             action => {
                 let err;
                 this.changeState(state => {err = this.validateForm(state)});
@@ -194,47 +197,14 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             heading: this.state.includeHeading,
             from_line: this.state.fromLine.value,
             to_line: this.state.toLine.value,
+            multi_sheet_file: this.state.multiSheetFile,
+            fpage: 1,
             format: undefined
         };
         this.saveLinkFn(
-            `frequencies.${this.state.saveformat}`,
+            this.state.saveformat,
             this.layoutModel.createActionUrl('savefreq', args)
         );
     }
 }
 
-
-export interface FreqCTResultsSaveModelState {
-    saveMode:string;
-}
-
-export class FreqCTResultsSaveModel extends StatefulModel<FreqCTResultsSaveModelState> {
-
-    ctTableModel:Freq2DTableModel;
-
-    ctFlatModel:Freq2DFlatViewModel;
-
-    constructor(dispatcher:IFullActionControl, ctTableModel:Freq2DTableModel, ctFlatModel:Freq2DFlatViewModel) {
-        super(dispatcher, {saveMode: null});
-        this.ctTableModel = ctTableModel;
-        this.ctFlatModel = ctFlatModel;
-
-        this.addActionHandler<typeof Actions2df.SetCtSaveMode>(
-            Actions2df.SetCtSaveMode.name,
-            action => this.changeState(state => {state.saveMode = action.payload.value})
-        );
-
-        this.addActionHandler<typeof MainMenuActions.DirectSave>(
-            MainMenuActions.DirectSave.name,
-            action => {
-                if (this.state.saveMode === 'table') {
-                    this.ctTableModel.submitDataConversion(action.payload.saveformat);
-
-                } else if (this.state.saveMode === 'list') {
-                    this.ctFlatModel.submitDataConversion(action.payload.saveformat);
-                }
-            }
-        );
-    }
-
-}

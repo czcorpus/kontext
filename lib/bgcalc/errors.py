@@ -13,19 +13,15 @@
 # GNU General Public License for more details.
 
 
-class CalcBackendError(Exception):
+class BgCalcError(Exception):
     pass
 
 
-class CalcBackendInitError(CalcBackendError):
+class CalcTaskNotFoundError(BgCalcError):
     pass
 
 
-class CalcTaskNotFoundError(CalcBackendError):
-    pass
-
-
-class UnfinishedConcordanceError(CalcBackendError):
+class UnfinishedConcordanceError(BgCalcError):
     """
     This error is used whenever a concordance
     used by some background calculation is
@@ -35,7 +31,7 @@ class UnfinishedConcordanceError(CalcBackendError):
     pass
 
 
-class CalcArgsAssertionError(CalcBackendError):
+class CalcArgsAssertionError(BgCalcError):
     """
     CalcArgsAssertionError represents a semantically
     incorrect combination of function arguments for

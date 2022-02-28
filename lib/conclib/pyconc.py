@@ -28,7 +28,7 @@ from strings import escape_attr_val
 from kwiclib import lngrp_sortcrit
 from translation import ugettext as translate
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 
 
 def get_conc_labelmap(infopath):
@@ -63,7 +63,7 @@ def lngrp_sortstr(lab, separator='.'):
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
-    def __init__(self, corp: KCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None):
+    def __init__(self, corp: AbstractKCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
@@ -220,8 +220,9 @@ class PyConc(manatee.Concordance):
             ans[value] = cnt
         return ans
 
-    def xfreq_dist(self, crit, limit=1, sortkey='f', ml='', ftt_include_empty='', rel_mode=0,
-                   collator_locale='en_US'):
+    def xfreq_dist(
+            self, crit, limit=1, sortkey='f', ftt_include_empty: int = 0, rel_mode=0,
+            collator_locale='en_US'):
         """
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
@@ -231,7 +232,6 @@ class PyConc(manatee.Concordance):
         limit -- str type!, minimal frequency accepted, this value is exclusive! (i.e. accepted
                  values must be greater than the limit)
         sortkey -- a key according to which the distribution will be sorted
-        ml -- str, if non-empty then multi-level freq. distribution is generated
         ftt_include_empty -- str, TODO
         rel_mode -- {0, 1} (0 for structural attrs. , 1 for positional ones ??)
         """
@@ -270,37 +270,22 @@ class PyConc(manatee.Concordance):
                                       for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
-        if ml:
-            lines = []
-            for w, f, nf in zip(words, freqs, norms):
-                word = export_word(w)
-                if len(word) == 1 and (word[0]['n'] == '' or word[0]['n'] == '===NONE==='):
-                    has_empty_item = True
-                    continue
-                lines.append(dict(
-                    Word=word,
-                    freq=f,
-                    relbar=None
-                ))
-        else:
-            head.append(dict(
+        head.append(dict(
                 n='i.p.m.',
-                title=translate(
-                    'instances per million positions (refers to the respective category)'),
+                title=translate('instances per million positions (refers to the respective category)'),
                 s='rel'))
 
-            lines = []
-            for w, f, nf in zip(words, freqs, norms):
-                word = export_word(w)
-                if test_word_empty(word):
-                    has_empty_item = True
-                    continue
-                lines.append(dict(
-                    Word=word,
-                    freq=f,
-                    norm=nf,
-                    rel=round(f / nf * 1e6, 2)))
-
+        lines = []
+        for w, f, nf in zip(words, freqs, norms):
+            word = export_word(w)
+            if test_word_empty(word):
+                has_empty_item = True
+                continue
+            lines.append(dict(
+                Word=word,
+                freq=f,
+                norm=nf,
+                rel=round(f / nf * 1e6, 2)))
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]

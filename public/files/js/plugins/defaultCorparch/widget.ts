@@ -32,6 +32,7 @@ import { Actions as GlobalActions } from '../../models/common/actions';
 import { Actions as QueryActions } from '../../models/query/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
+import { highlightSyntax } from '../../models/cqleditor/parser';
 
 /**
  *

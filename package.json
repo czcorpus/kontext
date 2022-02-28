@@ -2,7 +2,7 @@
   "name": "kontext",
   "description": "An advanced web front-end for the Manatee-open corpus search engine",
   "license": "GPL-2.0",
-  "version": "0.16.0-beta",
+  "version": "0.17.0-alpha",
   "repository": {
     "type": "git",
     "url": "https://github.com/czcorpus/kontext"
@@ -42,7 +42,7 @@
     "d3": "^7.3.0",
     "d3-color": "^3.0.1",
     "diff": "^5.0.0",
-    "kombo": "^0.93.0",
+    "kombo": "^0.93.8",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-is": "^17.0.2",

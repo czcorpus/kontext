@@ -332,7 +332,7 @@ class KSubcorpus(KCorpus):
         return f'KSubcorpus(ident={self.corpname}, subcname={self.subcname})'
 
     @staticmethod
-    def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KCorpus':
+    def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KSubcorpus':
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """

@@ -153,7 +153,8 @@ def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     if collocs is None:
         coll_args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task('calculate_colls', args=(coll_args,), time_limit=TASK_TIME_LIMIT)
+        res = worker.send_task(
+            'calculate_colls', object.__class__, args=(coll_args,), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         ans = res.get()
     else:

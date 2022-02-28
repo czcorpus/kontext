@@ -178,6 +178,14 @@ class Actions(Querying):
             out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
                                                    out['query_overview'][0].get('nicearg'))
 
+    def _go_to_restore_conc(self, return_action: str):
+        args = []
+        for k in self._request.args.keys():
+            for val in self._request.args.getlist(k):
+                args.append((k, val))
+        args.append(('next', return_action))
+        raise ImmediateRedirectException(self.create_url('restore_conc', args))
+
     @exposed(vars=('orig_query', ), mutates_result=False, action_log_mapper=log_mapping.view)
     def view(self, request):
         """
@@ -883,9 +891,11 @@ class Actions(Querying):
                     out['next_action'] = 'freqs'
                     out['next_action_args'] = {
                         'fcrit': request.args.get('fcrit'),
+                        'fcrit_async': request.args.getlist('fcrit_async'),
                         'flimit': request.args.get('flimit'),
-                        'freq_sort': request.args.get('freq_sort', 'freq'),  # client does not always fills this
-                        'ml': request.args.get('ml', 0),  # ditto
+                        # client does not always fills this
+                        'freq_sort': request.args.get('freq_sort', 'freq'),
+                        'freq_type': request.args.get('freq_type'),
                         'force_cache': request.args.get('force_cache', '0')}
                 elif request.args.get('next') == 'freqml':
                     out['next_action'] = 'freqml'
@@ -933,20 +943,28 @@ class Actions(Querying):
         return out
 
     @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
-    def freqs(self, fcrit=(), fcrit_async=(), flimit=0, freq_sort='', ml=0, force_cache=0):
+    def freqs(self, fcrit=(), fcrit_async=(), flimit=0, freq_sort='', force_cache=0, freq_type='', format=''):
         """
-        display a frequency list
+        Display a frequency list (tokens, text types) based on more low-level arguments. In case the
+        function runs in HTML return mode, 'freq_type' must be specified so the client part is able
+        to determine proper views.
+
+        Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
         """
         try:
             require_existing_conc(self.corp, self.args.q)
-            return self._freqs(fcrit, fcrit_async, flimit, freq_sort, ml, force_cache)
+            ans = self._freqs(
+                fcrit=fcrit, fcrit_async=fcrit_async, flimit=flimit, freq_sort=freq_sort, force_cache=force_cache)
+            if freq_type not in ('tokens', 'text-types', '2-attribute') and format != 'json':
+                raise UserActionException(f'Unknown freq type {freq_type}', code=422)
+            ans['freq_type'] = freq_type
+            return ans
         except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'freqs')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+            self._go_to_restore_conc('freqs')
 
     def _freqs(
             self, fcrit: Tuple[str, ...], fcrit_async: Tuple[str, ...], flimit: int, freq_sort: str,
-            ml: int, force_cache: int):
+            force_cache: int):
 
         self.disabled_menu_items = (
             MainMenu.CONCORDANCE('query-save-as'), MainMenu.VIEW('kwic-sent-switch'),
@@ -989,7 +1007,6 @@ class Actions(Querying):
             flimit=flimit,
             fcrit=fcrit,
             freq_sort=freq_sort,
-            ml=ml,
             ftt_include_empty=self.args.ftt_include_empty,
             rel_mode=rel_mode,
             collator_locale=corp_info.collator_locale,
@@ -1050,7 +1067,8 @@ class Actions(Querying):
                                 fquery = f'{begin} {end} 0 '
                                 fquery += ''.join([f'[{attr}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                             else:  # structure number
-                                fquery = '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])
+                                fquery = '0 0 1 [] within <{} #{}/>'.format(
+                                    attr, item['Word'][0]['n'].split('#')[1])
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
@@ -1108,7 +1126,6 @@ class Actions(Querying):
                                          self.CONC_QUICK_SAVE_MAX_LINES)))
             self._add_save_menu_item(translate('Custom'))
 
-        result['freq_type'] = 'ml' if ml > 0 else 'tt'
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
@@ -1119,8 +1136,9 @@ class Actions(Querying):
         return result
 
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
-    def savefreq(self, fcrit=(), flimit=0, freq_sort='', ml=0,
-                 saveformat='text', from_line=1, to_line='', colheaders=0, heading=0):
+    def savefreq(
+            self, fcrit=(), flimit=0, freq_sort='', saveformat='text', from_line=1, to_line='',
+            colheaders=0, heading=0, multi_sheet_file=0):
         """
         save a frequency list
         """
@@ -1131,7 +1149,7 @@ class Actions(Querying):
         self.args.fmaxitems = to_line - from_line + 1
 
         # following piece of sh.t has hidden parameter dependencies
-        result = self.freqs(fcrit, flimit, (), freq_sort, ml)
+        result = self.freqs(fcrit=fcrit, flimit=flimit, freq_sort=freq_sort, format='json')
         saved_filename = self.args.corpname
         output = None
         if saveformat == 'text':
@@ -1144,7 +1162,6 @@ class Actions(Querying):
             output['fcrit'] = fcrit
             output['flimit'] = flimit
             output['freq_sort'] = freq_sort
-            output['ml'] = ml
             output['saveformat'] = saveformat
             output['from_line'] = from_line
             output['to_line'] = to_line
@@ -1165,6 +1182,9 @@ class Actions(Querying):
                                       f'attachment; filename="{mkfilename(saveformat)}"')
 
             for block in result['Blocks']:
+                if hasattr(writer, 'new_sheet') and multi_sheet_file:
+                    writer.new_sheet(block['Head'][0]['n'])
+
                 col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
                 if saveformat == 'xml':
                     col_names.insert(0, 'str')
@@ -1188,15 +1208,15 @@ class Actions(Querying):
             require_existing_conc(self.corp, self.args.q)
             return self._freqml(flimit, freqlevel, **kwargs)
         except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'freqml')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+            self._go_to_restore_conc('freqml')
 
     def _freqml(self, flimit=0, freqlevel=1, **kwargs):
         """
         multilevel frequency list
         """
         fcrit = multi_level_crit(freqlevel, **kwargs)
-        result = self.freqs([fcrit], (), flimit, '', 1)
+        result = self.freqs(
+            fcrit=(fcrit,), fcrit_async=(), flimit=flimit, freq_sort='', force_cache=1, freq_type='tokens')
         result['ml'] = 1
         self._session['last_freq_level'] = freqlevel
         tmp = defaultdict(lambda: [])
@@ -1208,13 +1228,18 @@ class Actions(Querying):
             tmp['flimit'] = flimit
             tmp['freq_sort'] = self.args.freq_sort
         result['freq_form_args'] = tmp
+        result['freq_type'] = 'tokens'
         return result
 
     @exposed(access_level=1, template='freqs.html', page_model='freq', func_arg_mapped=True)
     def freqtt(self, flimit=0, fttattr=(), fttattr_async=()):
         if not fttattr:
             raise ConcordanceQueryParamsError(translate('No text type selected'))
-        return self.freqs(['%s 0' % a for a in fttattr], ['%s 0' % a for a in fttattr_async], flimit)
+        ans = self.freqs(
+            fcrit=tuple('%s 0' % a for a in fttattr), fcrit_async=['%s 0' % a for a in fttattr_async], flimit=flimit,
+            freq_type='text-types')
+        ans['freq_type'] = 'text-types'
+        return ans
 
     @exposed(access_level=1, page_model='freq', template='freqs.html')
     def freqct(self, request):
@@ -1224,30 +1249,27 @@ class Actions(Querying):
             require_existing_conc(self.corp, self.args.q)
             return self._freqct(request)
         except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'freqct')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+            self._go_to_restore_conc('freqct')
 
     def _freqct(self, request):
-        args = freq_calc.CTFreqCalcArgs()
-        args.corpname = self.corp.corpname
-        args.subcname = getattr(self.corp, 'subcname', None)
-        args.subcpath = self.subcpath
-        args.user_id = self.session_get('user', 'id')
-        args.q = self.args.q
-        args.ctminfreq = int(request.args.get('ctminfreq', '1'))
-        args.ctminfreq_type = request.args.get('ctminfreq_type')
-        args.fcrit = '{0} {1} {2} {3}'.format(self.args.ctattr1, self.args.ctfcrit1,
-                                              self.args.ctattr2, self.args.ctfcrit2)
+        args = freq_calc.Freq2DCalcArgs(
+            corpname=self.corp.corpname,
+            subcname=getattr(self.corp, 'subcname', None),
+            subcpath=self.subcpath,
+            user_id=self.session_get('user', 'id'),
+            q=self.args.q,
+            ctminfreq=int(request.args.get('ctminfreq', '1')),
+            ctminfreq_type=request.args.get('ctminfreq_type'),
+            fcrit=f'{self.args.ctattr1} {self.args.ctfcrit1} {self.args.ctattr2} {self.args.ctfcrit2}')
         try:
-            freq_data = freq_calc.calculate_freqs_ct(args)
+            freq_data = freq_calc.calculate_freq2d(args)
         except UserActionException as ex:
             freq_data = dict(data=[], full_size=0)
             self.add_system_message('error', str(ex))
-
         self._add_save_menu_item('XLSX', save_format='xlsx')
 
         ans = dict(
-            freq_type='ct',
+            freq_type='2-attribute',
             attr1=self.args.ctattr1,
             attr2=self.args.ctattr2,
             data=freq_data,
@@ -1263,7 +1285,7 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='plain', http_method='POST', skip_corpus_init=True)
     def export_freqct(self, request):
         with plugins.runtime.EXPORT_FREQ2D as plg:
-            data = json.loads(request.form['data'])
+            data = request.json
             exporter = plg.load_plugin(request.args['saveformat'])
             if request.args['savemode'] == 'table':
                 exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
@@ -1314,8 +1336,7 @@ class Actions(Querying):
             self._attach_query_overview(ans)
             return ans
         except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'collx')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+            self._go_to_restore_conc('collx')
 
     def _collx(self, collpage, citemsperpage) -> CalculateCollsResult:
 
@@ -1390,8 +1411,7 @@ class Actions(Querying):
                 raise UserActionException(f'Unknown format: {saveformat}')
             return out_data
         except ConcNotFoundException:
-            args = list(self._request.args.items()) + [('next', 'collx')]
-            raise ImmediateRedirectException(self.create_url('restore_conc', args))
+            self._go_to_restore_conc('collx')
 
     @exposed(access_level=1, func_arg_mapped=True, return_type='json')
     def structctx(self, pos=0, struct='doc'):
@@ -1731,7 +1751,7 @@ class Actions(Querying):
             filename = 'line-groups-{0}.{1}'.format(self.args.corpname, ce.get_suffix(format))
             self._response.set_header('Content-Type', ce.get_content_type(format))
             self._response.set_header('Content-Disposition',
-                                      f'attachment; filename="{format(filename)}"')
+                                      f'attachment; filename="{filename}.{format}"')
             data = sorted(request.json.get('data', {}), key=lambda x: int(x['groupId']))
             total = sum(x['count'] for x in data)
             data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
