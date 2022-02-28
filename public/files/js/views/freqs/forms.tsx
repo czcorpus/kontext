@@ -101,8 +101,9 @@ export function init(
                     break;
                 case 'dispersion':
                     dispatcher.dispatch<typeof ActionsDp.SubmitForm>({
-                        name: ActionsDp.SubmitForm.name
-                    })
+                        name: ActionsDp.SubmitForm.name,
+                        payload: {reloadPage: true}
+                    });
             }
         }
 
@@ -110,8 +111,8 @@ export function init(
             const items:Array<{id:Kontext.FreqModuleType; label:string}> = [
                 {id: 'tokens', label: he.translate('freq__sel_form_type_ml')},
                 {id: 'text-types', label: he.translate('freq__sel_form_type_tt')},
-                {id: '2-attribute', label: he.translate('freq__sel_form_type_ct')},
-                {id: 'dispersion', label: he.translate('freq__sel_form_type_dp')}
+                {id: 'dispersion', label: he.translate('freq__sel_form_type_dp')},
+                {id: '2-attribute', label: he.translate('freq__sel_form_type_ct')}
             ];
 
             return (
