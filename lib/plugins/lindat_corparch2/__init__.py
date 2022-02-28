@@ -127,7 +127,7 @@ from plugins.abstract.corparch import CorplistProvider
 from plugins import inject
 import l10n
 from controller import exposed
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 import actions.user
 from translation import ugettext as _
 from settings import import_bool

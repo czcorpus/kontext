@@ -19,7 +19,7 @@ from dataclasses_json import dataclass_json
 
 import plugins
 from plugins.abstract.corparch.corpus import TagsetInfo
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from argmapping.error import ArgumentMappingError, ValidationError
 from argmapping.conc.base import ConcFormArgs
 from .query import QueryFormArgs

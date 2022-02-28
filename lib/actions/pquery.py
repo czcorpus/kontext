@@ -33,7 +33,7 @@ import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 from bgcalc.task import AsyncTaskStatus
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from translation import ugettext as translate
 from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
 import settings

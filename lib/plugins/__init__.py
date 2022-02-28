@@ -49,7 +49,7 @@ from .abstract.audio_provider import AbstractAudioProvider
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from .abstract.auth import AbstractAuth
-    from controller.plg import PluginCtx
+    from action.plg import PluginCtx
 
 import logging
 

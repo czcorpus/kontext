@@ -66,7 +66,7 @@ from plugins.abstract.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
 from controller import exposed
 from actions import corpora
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 
 
 @dataclass_json

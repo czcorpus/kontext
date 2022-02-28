@@ -19,7 +19,7 @@
 
 from plugins.abstract.dispatch_hook import AbstractDispatchHook
 from plugins.abstract.general_storage import KeyValueStorage
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from controller.errors import ServiceUnavailableException
 import plugins
 from plugins import inject
