@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import os
 from sys import stderr
 import re
@@ -266,7 +266,8 @@ class PyConc(manatee.Concordance):
             norms = [self.pycorp.search_size for _ in words]
 
         attrs = crit.split()
-        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2) for x in range(0, len(attrs), 2)]
+        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2)
+                                      for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
         head.append(dict(
@@ -285,7 +286,6 @@ class PyConc(manatee.Concordance):
                 freq=f,
                 norm=nf,
                 rel=round(f / nf * 1e6, 2)))
-
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
@@ -308,14 +308,11 @@ class PyConc(manatee.Concordance):
             lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
         return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
 
-    def xdistribution(self, xrange, yrange):
-        """
-        TODO: no direct call found for this
-        """
+    def xdistribution(self, xrange: List[int], amplitude: int) -> Tuple[List[int], List[int]]:
         begs = manatee.IntVector(xrange)
-        vals = manatee.IntVector(xrange)
-        self.distribution(vals, begs, yrange)
-        return list(zip(vals, begs))
+        values = manatee.IntVector(xrange)
+        self.distribution(values, begs, amplitude)
+        return begs, values
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
         statdesc = {'t': translate('T-score'),

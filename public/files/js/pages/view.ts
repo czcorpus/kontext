@@ -87,6 +87,7 @@ import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcSummaryModel } from '../models/concordance/summary';
 import * as formArgs from '../models/query/formArgs';
+import { DispersionResultModel } from '../models/dispersion/result';
 
 
 export class QueryModels {
@@ -160,6 +161,8 @@ export class ViewPage {
     private ttFreqModel:TTFreqFormModel;
 
     private ctFreqFormModel:Freq2DFormModel;
+
+    private dispersionModel:DispersionResultModel;
 
     private freqFormViews:FreqFormViews;
 
@@ -823,12 +826,25 @@ export class ViewPage {
             ctFormProps
         );
 
+        this.dispersionModel = new DispersionResultModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            {
+                isBusy: false,
+                concordanceId: this.layoutModel.getConf<string>('concPersistenceOpId'),
+                resolution: 100,
+                data: [],
+                downloadFormat: 'png',
+            }
+        );
+
         this.freqFormViews = freqFormInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.mlFreqModel,
             this.ttFreqModel,
-            this.ctFreqFormModel
+            this.ctFreqFormModel,
+            this.dispersionModel
         );
         this.analysisViews = analysisFrameInit({
             dispatcher: this.layoutModel.dispatcher,

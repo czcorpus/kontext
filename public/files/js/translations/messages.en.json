@@ -785,6 +785,7 @@
         "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of a similar structure and size.",
         "freq__chart_options": "Options",
         "freq__chart_date_%Y": "Year",
+        "freq__sel_form_type_dp": "Dispersion",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",
@@ -882,6 +883,9 @@
         "pquery__pquery_type_split": "Enter as partial sub-queries",
         "pquery__only_one_field_can_be_of_{type}": "Only a single sub-query can be of the \"{type}\" type",
         "pquery__condition_never": "never",
-        "pquery__condition_always": "always"
+        "pquery__condition_always": "always",
+        "dispersion__resolution": "resolution",
+        "dispersion__download_chart": "download the chart",
+        "dispersion__print_quality": "for printing"
     }
 }

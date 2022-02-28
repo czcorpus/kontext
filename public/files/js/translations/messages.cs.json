@@ -785,6 +785,7 @@
         "freq__hidden_ci_warning": "Konfidenční interval udává rozsah, v němž by se frekvence vyskytovala v jiných, podobně sestavených korpusech srovnatelné velikosti",
         "freq__chart_options": "Volby",
         "freq__chart_date_%Y": "Rok",
+        "freq__sel_form_type_dp": "Disperze",
         "user__password_change": "Změna hesla",
         "user__new_password": "Nové heslo",
         "user__new_password_again": "Nové heslo (znovu)",
@@ -882,6 +883,9 @@
         "pquery__pquery_type_split": "Zapisovat po dílčích dotazech",
         "pquery__only_one_field_can_be_of_{type}": "Typ \"{type}\" může mít pouze jeden dílčí dotaz",
         "pquery__condition_never": "nikdy",
-        "pquery__condition_always": "vždy"
+        "pquery__condition_always": "vždy",
+        "dispersion__resolution": "rozlišení",
+        "dispersion__download_chart": "stáhnout graf",
+        "dispersion__print_quality": "pro tisk"
     }
 }

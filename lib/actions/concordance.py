@@ -928,6 +928,9 @@ class Actions(Querying):
                         'citemsperpage': request.args.get('citemsperpage'),
                         'collpage': request.args.get('collpage'),
                         'num_lines': request.args.get('num_lines')}
+                elif request.args.get('next') == 'dispersion':
+                    out['next_action'] = 'dispersion'
+                    out['next_action_args'] = {}
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)

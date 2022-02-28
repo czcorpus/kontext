@@ -350,7 +350,7 @@ export function init(
                     }
                 );
             }
-        )
+        );
 
         const handleDownload = () => {
             dispatcher.dispatch<typeof GlobalActions.ConvertChartSVG>({
