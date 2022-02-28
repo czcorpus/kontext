@@ -35,7 +35,7 @@ from corplib.corpus import AbstractKCorpus
 import settings
 import plugins
 from translation import ugettext as _
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
 

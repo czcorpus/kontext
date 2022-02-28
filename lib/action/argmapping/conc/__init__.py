@@ -14,7 +14,7 @@
 
 from typing import Dict, Any, List
 
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from argmapping.conc.base import ConcFormArgs
 from .query import QueryFormArgs
 from .filter import FilterFormArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs

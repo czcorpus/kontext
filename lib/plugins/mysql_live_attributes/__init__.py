@@ -42,7 +42,7 @@ from plugins.abstract.live_attributes import (
 from plugins.errors import PluginCompatibilityException
 import strings
 from controller import exposed
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from actions import concordance
 from . import query
 

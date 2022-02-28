@@ -50,7 +50,7 @@ from plugins import inject
 import l10n
 from controller import exposed
 import actions.user
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from translation import ugettext as _
 from settings import import_bool
 

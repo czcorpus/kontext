@@ -28,7 +28,7 @@ from typing import List, Optional
 
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 
 import plugins
 from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo

@@ -25,7 +25,7 @@ if settings.get_bool('global', 'legacy_support', False):
 else:
     from legacy.concordance import nop_upgrade_stored_record as upgrade_stored_record
 from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from argmapping.conc import ConcFormArgs
 
 
