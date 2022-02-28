@@ -9,7 +9,7 @@
                 <value>default_token_connect</value>
             </element>
             <element name="js_module">
-                <value>defaultTokenConnect</value>
+                <value>tokenConnect</value>
             </element>
             <element name="ttl">
                 <data type="nonNegativeInteger" />

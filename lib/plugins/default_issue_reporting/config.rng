@@ -8,7 +8,7 @@
                 <value>default_issue_reporting</value>
             </element>
             <element name="js_module">
-                <value>defaultIssueReporting</value>
+                <value>issueReporting</value>
             </element>
             <element name="smtp_server">
                 <text />

@@ -24,8 +24,8 @@ import * as PluginInterfaces from '../../types/plugins';
 import { init as viewInit } from './view';
 import { init as overviewViewInit } from '../../views/overview';
 import { CorplistTableModel } from './corplist';
-import { Plugin as DCPlugin } from '../defaultCorparch/init';
-import { CorplistServerData } from '../defaultCorparch/corplist';
+import { Plugin as DCPlugin } from '../corparch/init';
+import { CorplistServerData } from '../corparch/corplist';
 import { IPluginApi } from '../../types/plugins/common';
 
 class Plugin extends DCPlugin {

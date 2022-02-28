@@ -8,7 +8,7 @@
                 <value>mysql_auth</value>
             </element>
             <element name="js_module">
-                <value>defaultAuth</value>
+                <value>auth</value>
             </element>
             <element name="anonymous_user_id">
                 <data type="nonNegativeInteger" />

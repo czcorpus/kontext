@@ -19,7 +19,7 @@
 """
 This module contains supported frontends for default_token_connect.
 Please note that each of the frontends is paired with a concrete React component
-on the client-side (see plugins/defaultTokenConnect/init.py method selectRenderer()).
+on the client-side (see plugins/tokenConnect/init.py method selectRenderer()).
 """
 
 import ujson as json

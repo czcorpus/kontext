@@ -9,7 +9,7 @@
             <element name="js_module">
                 <choice>
                     <value>ucnkCorparch</value>
-                    <value>defaultCorparch</value>
+                    <value>corparch</value>
                 </choice>
             </element>
             <element name="default_page_list_size">

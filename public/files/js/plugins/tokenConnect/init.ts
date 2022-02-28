@@ -20,7 +20,7 @@
 
 import * as PluginInterfaces from '../../types/plugins';
 import { init as initView, Views as DefaultTokenConnectRenderers } from './views';
-import { KnownRenderers } from '../defaultKwicConnect/model';
+import { KnownRenderers } from '../kwicConnect/model';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HTTP, List, pipe } from 'cnc-tskit';

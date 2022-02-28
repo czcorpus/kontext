@@ -81,7 +81,7 @@
         <application_bar/>
         <auth>
             <module>default_auth</module>
-            <js_module>defaultAuth</js_module>
+            <js_module>auth</js_module>
             <anonymous_user_id>0</anonymous_user_id>
             <auth_cookie_name>kontext_session</auth_cookie_name>
             <login_url>/user/login?continue=%s</login_url>
@@ -103,7 +103,7 @@
         </query_persistence>
         <corparch>
             <module>default_corparch</module>
-            <js_module>defaultCorparch</js_module>
+            <js_module>corparch</js_module>
             <file>/opt/kontext/conf/corplist.xml</file>
             <root_elm_path>/corplist</root_elm_path>
             <tag_prefix>+</tag_prefix>
@@ -134,7 +134,7 @@
         </export_freq2d>
         <footer_bar>
             <module>default_footer_bar</module>
-            <js_module>defaultFooterBar</js_module>
+            <js_module>footerBar</js_module>
         </footer_bar>
         <getlang>
             <module>default_getlang</module>
