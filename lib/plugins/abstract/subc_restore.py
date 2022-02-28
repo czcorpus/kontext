@@ -25,7 +25,7 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 from typing import Any, Dict, List, Optional
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from dataclasses import asdict, dataclass
 import datetime
 

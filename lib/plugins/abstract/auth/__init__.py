@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+    # Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -20,7 +20,7 @@ except ImportError:
 from secure_cookie.session import Session
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginCtx
+    from action.plg import PluginCtx
 
 import abc
 from translation import ugettext as _

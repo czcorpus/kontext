@@ -23,7 +23,7 @@ import abc
 from typing import List, Dict, Any, Generic, TypeVar
 from dataclasses_json import DataClassJsonMixin
 from corplib.corpus import KCorpus
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 
 
 class AbstractQuerySuggest(abc.ABC):

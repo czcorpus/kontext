@@ -26,7 +26,7 @@ try:
 except ImportError:
     from typing_extensions import TypedDict
 from corplib.corpus import AbstractKCorpus
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from plugins.abstract import CorpusDependentPlugin
 
 

@@ -49,7 +49,7 @@ from corplib.corpus import KCorpus
 from plugins.abstract.general_storage import KeyValueStorage
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginCtx
+    from action.plg import PluginCtx
 
 import importlib
 from plugins.abstract import CorpusDependentPlugin

@@ -54,7 +54,7 @@ from plugins.abstract.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumCo
 from actions import concordance
 from controller import exposed
 from controller.errors import UserActionException
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from .manatee_backend import ManateeBackend
 from translation import ugettext as _
 

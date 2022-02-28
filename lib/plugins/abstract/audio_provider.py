@@ -18,7 +18,7 @@
 
 import abc
 from typing import Tuple, Callable, Dict, Optional, List
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 from werkzeug import Request
 
 

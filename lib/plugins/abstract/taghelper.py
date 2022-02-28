@@ -32,7 +32,7 @@ a new version of 'taghelper'.
 import abc
 from typing import TypeVar, Generic
 from werkzeug.wrappers import Request
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 
 T = TypeVar('T')
 U = TypeVar('U')

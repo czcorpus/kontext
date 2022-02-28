@@ -17,29 +17,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Dict, Any, Tuple, Union, List
+from sanic.request import Request
 
 from urllib.parse import quote
 
 import settings
 
 
-class Routing:
+class KRequest:
     """
     Routing provides some basic routing functionality like generating action URLs,
     getting correct root URL, obtaining required action name etc.
     """
 
-    def __init__(self, environ: Dict[str, str], mapping_url_prefix: str, http_protocol: str):
-        self._environ = environ
+    def __init__(self, request: Request, mapping_url_prefix: str):
+        self._request = request
         self._mapping_url_prefix = mapping_url_prefix
-        self._http_protocol = http_protocol
 
     def get_current_url(self) -> str:
         """
         Returns an URL representing current application state
         """
         action_str = '/'.join([x for x in self.get_current_action() if x])
-        qs = self._environ.get('QUERY_STRING', '')
+        qs = self._request.query_string
         return self.get_root_url() + action_str + (f'?{qs}' if qs else '')
 
     def get_current_action(self) -> Tuple[str, str]:
@@ -48,7 +48,7 @@ class Routing:
         1st item = module name (or an empty string if an implicit one is in use)
         2nd item = action method name
         """
-        prefix, action = self._environ.get('PATH_INFO', '').rsplit('/', 1)
+        prefix, action = self._request.server_path.rsplit('/', 1)
         return prefix.rsplit('/', 1)[-1], action
 
     def get_root_url(self) -> str:
@@ -61,7 +61,7 @@ class Routing:
         Please note that KonText always normalizes PATH_INFO environment
         variable to '/' (see public/app.py).
         """
-        module, _ = self._environ.get('PATH_INFO', '').rsplit('/', 1)
+        module, _ = self._request.server_path.rsplit('/', 1)
         module = '%s/' % module
         if module.endswith(self._mapping_url_prefix):
             action_module_path = module[:-len(self._mapping_url_prefix)]
@@ -70,8 +70,8 @@ class Routing:
         if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
             action_module_path = action_module_path[1:]
         url_items = ('{}://{}'.format(
-                self._http_protocol, settings.get_str(
-                    'global', 'http_host', self._environ.get('HTTP_HOST'))),
+                self._request.scheme, settings.get_str(
+                    'global', 'http_host', self._request.host)),
                     settings.get_str('global', 'action_path_prefix', ''),
                     action_module_path)
         return '/'.join([x for x in [x.strip('/') for x in url_items] if bool(x)]) + '/'

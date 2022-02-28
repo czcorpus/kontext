@@ -45,6 +45,12 @@ import translation
 from controller import KonTextCookie, get_protocol
 from initializer import setup_plugins
 from texttypes.cache import TextTypesCache
+from sanic import Sanic
+from views.root import bp as root_bp
+from views.concordance import bp as conc_bp
+from action.template import TplEngine
+from action.context import ActionContext
+
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
@@ -55,39 +61,38 @@ class JSONRequest(JSONMixin, Request):
     pass
 
 
+def setup_logger(conf):
+    """
+    Sets up file-based rotating logger based on XML config.xml.
+    """
+    if conf.contains('logging', 'stderr'):
+        handler = logging.StreamHandler(sys.stderr)
+    elif conf.contains('logging', 'stdout'):
+        handler = logging.StreamHandler(sys.stdout)
+    else:
+        try:
+            from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
+        except ImportError:
+            from logging.handlers import RotatingFileHandler as HandlerClass
+        handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
+                               maxBytes=conf.get_int(
+                                   'logging', 'file_size', 8000000),
+                               backupCount=conf.get_int('logging', 'num_files', 10))
+
+    handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
+
+
 class WsgiApp(object):
 
     def __init__(self):
-        self.setup_logger(settings)
-        self._installed_langs = dict([(x.split('_')[0], x)
-                                      for x in os.listdir('%s/../locale' % os.path.dirname(__file__))])
-        self._tt_cache = None
+
 
     def __call__(self, environ, start_response):
         raise NotImplementedError()
 
-    @staticmethod
-    def setup_logger(conf):
-        """
-        Sets up file-based rotating logger based on XML config.xml.
-        """
-        if conf.contains('logging', 'stderr'):
-            handler = logging.StreamHandler(sys.stderr)
-        elif conf.contains('logging', 'stdout'):
-            handler = logging.StreamHandler(sys.stdout)
-        else:
-            try:
-                from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
-            except ImportError:
-                from logging.handlers import RotatingFileHandler as HandlerClass
-            handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
-                                   maxBytes=conf.get_int(
-                                       'logging', 'file_size', 8000000),
-                                   backupCount=conf.get_int('logging', 'num_files', 10))
 
-        handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
     @staticmethod
     def cleanup_runtime_modules():
@@ -97,35 +102,7 @@ class WsgiApp(object):
         """
         plugins.flush_plugins()
 
-    def get_lang(self, environ):
-        """
-        Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
 
-        arguments:
-        environ -- WSGI environment variable
-
-        returns:
-        underscore-separated ISO 639 language code and ISO 3166 country code
-        """
-        cookies = KonTextCookie(environ.get('HTTP_COOKIE', ''))
-
-        if plugins.runtime.GETLANG.exists:
-            lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
-        else:
-            lang_cookie = cookies.get('kontext_ui_lang')
-            if not lang_cookie:
-                lgs_string = parse_accept_header(environ.get('HTTP_ACCEPT_LANGUAGE')).best
-            else:
-                lgs_string = lang_cookie.value
-            if lgs_string is None:
-                lgs_string = 'en_US'
-            if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
-                lgs_string = self._installed_langs.get(lgs_string)
-            else:
-                lgs_string = lgs_string.replace('-', '_')
-        if lgs_string is None:
-            lgs_string = 'en_US'
-        return lgs_string
 
     def create_controller(self, path_info, request, ui_lang):
         """
@@ -143,6 +120,7 @@ class WsgiApp(object):
         returns:
         a class matching provided path_info
         """
+
         if path_info.startswith('/fcs'):
             from actions.fcs import Actions
             return Actions(request, ui_lang, self._tt_cache)
@@ -291,38 +269,23 @@ if settings.get('global', 'umask', None):
     os.umask(int(settings.get('global', 'umask'), 8))
 
 if not settings.get_bool('global', 'maintenance'):
-    application = KonTextWsgiApp()
+    templating = TplEngine(settings)
+    application = Sanic('kontext', ctx=ActionContext(templating=templating))
 else:
+    # TODO
     application = MaintenanceWsgiApp()
+application.blueprint(root_bp)
+application.blueprint(conc_bp)
 
-robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
-if os.path.isfile(robots_path):
-    from werkzeug.wsgi import SharedDataMiddleware
-    application = SharedDataMiddleware(application, {
-        '/robots.txt': robots_path
-    })
-
-
-def set_debug_mode(app):
-    from werkzeug.debug import DebuggedApplication
-    app = DebuggedApplication(app)
-    # profiling
-    if settings.debug_level() == settings.DEBUG_AND_PROFILE:
-        from werkzeug.middleware.profiler import ProfilerMiddleware
-        app = ProfilerMiddleware(application, sys.stdout)
-        profile_log_path = settings.get('global', 'profile_log_path')
-        if profile_log_path:
-            app = ProfilerMiddleware(app, open(profile_log_path), 'w')
-    return app
-
-
-if settings.is_debug_mode():
-    application = set_debug_mode(application)
+#robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
+#if os.path.isfile(robots_path):
+#    from werkzeug.wsgi import SharedDataMiddleware
+#    application = SharedDataMiddleware(application, {
+#        '/robots.txt': robots_path
+#    })
 
 
 if __name__ == '__main__':
-    from werkzeug.serving import run_simple
-    from werkzeug.middleware.shared_data import SharedDataMiddleware
     import argparse
 
     DEFAULT_PORT = 5000
@@ -348,11 +311,6 @@ if __name__ == '__main__':
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
     if args.debugmode and not settings.is_debug_mode():
-        application = set_debug_mode(application)
         settings.activate_debug()
-
-    application = SharedDataMiddleware(application, {
-        '/files':  os.path.join(os.path.dirname(__file__), 'files')
-    })
-    run_simple(args.address, int(args.port_num), application,
-               use_debugger=True, use_reloader=args.use_reloader)
+    print('APPP:: {}'.format(application))
+    application.run(host=args.address, port=int(args.port_num), workers=2, debug=settings.is_debug_mode())

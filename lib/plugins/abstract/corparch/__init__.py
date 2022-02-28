@@ -41,7 +41,7 @@ import abc
 from typing import Optional, Dict, Any, List, Iterable, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from controller.plg import PluginCtx
+    from action.plg import PluginCtx
 import l10n
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json

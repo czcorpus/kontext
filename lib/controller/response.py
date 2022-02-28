@@ -30,7 +30,7 @@ from translation import ugettext
 import l10n
 import strings
 import settings
-from .routing import Routing
+from .krequest import KRequest
 from .cookie import KonTextCookie
 from .errors import ForbiddenException
 
@@ -68,7 +68,7 @@ class KResponse:
     (templating engine, JSON encoding,...) etc.
     """
 
-    def __init__(self, routing: Routing):
+    def __init__(self, routing: KRequest):
         self._routing = routing
         self._template_dir: str = os.path.realpath(os.path.join(
             os.path.dirname(__file__), '..', '..', 'templates'))
@@ -84,13 +84,10 @@ class KResponse:
             shorten=strings.shorten,
             camelize=l10n.camelize,
             _=translat_filter,
-            xmle=escape,
-            create_action=lambda a, p=None: self._routing.create_url(a, p if p is not None else {})
-        )
+            xmle=escape)
         self._redirect_safe_domains: Tuple[str, ...] = (
             urlparse(self._routing.get_root_url()).netloc,
-            *settings.get('global', 'redirect_safe_domains', ())
-        )
+            *settings.get('global', 'redirect_safe_domains', ()))
         self._status: int = 200
         self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
         self._new_cookies: KonTextCookie = KonTextCookie()

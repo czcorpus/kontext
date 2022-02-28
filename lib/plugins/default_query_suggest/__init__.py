@@ -21,7 +21,7 @@ import plugins.abstract.corparch
 from controller import exposed
 from controller.kontext import Kontext
 from actions import concordance
-from controller.plg import PluginCtx
+from action.plg import PluginCtx
 
 
 @exposed(return_type='json')
