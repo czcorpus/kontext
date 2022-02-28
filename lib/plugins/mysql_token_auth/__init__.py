@@ -28,11 +28,11 @@ from typing import List, Optional
 
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 
 import plugins
-from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
+from plugin_types.integration_db import IntegrationDatabase
 
 
 class TokenAuth(AbstractRemoteAuth):

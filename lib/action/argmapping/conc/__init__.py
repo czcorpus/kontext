@@ -14,8 +14,8 @@
 
 from typing import Dict, Any, List
 
-from action.plg import PluginCtx
-from argmapping.conc.base import ConcFormArgs
+from action.plugin.ctx import PluginCtx
+from action.argmapping.conc.base import ConcFormArgs
 from .query import QueryFormArgs
 from .filter import FilterFormArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs
 from .sort import SortFormArgs

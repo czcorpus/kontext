@@ -38,11 +38,11 @@ except ImportError:
 import l10n
 from plugins import inject
 import plugins
-from plugins.abstract.live_attributes import (
+from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 import strings
 from controller import exposed
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 from actions import concordance
 from . import query
 

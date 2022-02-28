@@ -26,7 +26,7 @@ import os
 import http.cookies
 from collections import defaultdict
 
-from plugins.abstract.getlang import AbstractGetLang
+from plugin_types.getlang import AbstractGetLang
 
 
 def normalize_lang(s): return s.replace('-', '_')

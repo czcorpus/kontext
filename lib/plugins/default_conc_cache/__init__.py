@@ -36,9 +36,9 @@ from typing import Union, Tuple, Optional
 import logging
 
 import plugins
-from plugins.abstract.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, ConcCacheStatus
+from plugin_types.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, ConcCacheStatus
 from plugins import inject
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 from corplib.corpus import KCorpus
 
 

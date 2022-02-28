@@ -41,13 +41,13 @@ import os
 
 import plugins
 from plugins import inject
-from plugins.abstract.corparch import CorpusListItem
-from plugins.abstract.corparch import CorpusInfo
+from plugin_types.corparch import CorpusListItem
+from plugin_types.corparch import CorpusInfo
 from plugins.mysql_corparch import MySQLCorparch
 from plugins.mysql_corparch.corplist import parse_query
 from plugins.mysql_corparch.backend import Backend
 from controller import exposed
-from controller.errors import ForbiddenException
+from action.errors import ForbiddenException
 import actions.user
 from translation import ugettext as _
 

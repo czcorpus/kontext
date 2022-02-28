@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugins.abstract.query_suggest import AbstractBackend
+from plugin_types.query_suggest import AbstractBackend
 from typing import List
 from plugins.common.http import HTTPClient
 import json

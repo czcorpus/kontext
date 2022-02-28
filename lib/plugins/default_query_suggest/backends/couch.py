@@ -30,7 +30,7 @@ function (doc) {
 """
 
 
-from plugins.abstract.query_suggest import AbstractBackend
+from plugin_types.query_suggest import AbstractBackend
 import couchdb
 from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion, SuggestionLemmaData
 from typing import Dict

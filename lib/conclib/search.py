@@ -24,7 +24,7 @@ import os
 
 import settings
 import plugins
-from plugins.abstract.conc_cache import ConcCacheStatus
+from plugin_types.conc_cache import ConcCacheStatus
 from conclib.pyconc import PyConc
 from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker

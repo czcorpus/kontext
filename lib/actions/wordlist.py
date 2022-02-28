@@ -20,18 +20,18 @@ from controller import exposed
 from controller.kontext import Kontext
 from main_menu.model import MainMenu
 from translation import ugettext as translate
-from controller.errors import UserActionException
+from action.errors import UserActionException
 from bgcalc import freq_calc, calc_backend_client
 from bgcalc.errors import BgCalcError
 from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 import plugins
 import settings
-from argmapping import log_mapping
+from action.argmapping import log_mapping
 from argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from werkzeug import Request
 from texttypes import TextTypesCache
-from argmapping import WordlistArgsMapping, ConcArgsMapping
-from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy
+from action.argmapping import WordlistArgsMapping, ConcArgsMapping
+from action.req_args import RequestArgsProxy, JSONRequestArgsProxy
 
 
 class WordlistError(UserActionException):

@@ -22,27 +22,27 @@ extended, re-editable query processing.
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-from argmapping.conc.query import ConcFormArgs
+from action.argmapping.conc.query import ConcFormArgs
 from werkzeug import Request
 from collections import defaultdict
 
-from controller.kontext import Kontext
+from action.model.base import BaseActionModel
 from main_menu.model import MainMenu
 from texttypes import TextTypesCache
 import plugins
-from plugins.abstract.query_persistence.error import QueryPersistenceRecNotFound
-from plugins.abstract.corparch.corpus import StructAttrInfo
-from argmapping.conc.query import QueryFormArgs
-from argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
-from argmapping.conc.sort import SortFormArgs
-from argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
+from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
+from plugin_types.corparch.corpus import StructAttrInfo
+from action.argmapping.conc.query import QueryFormArgs
+from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
+from action.argmapping.conc.sort import SortFormArgs
+from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from argmapping.conc import build_conc_form_args
 from translation import ugettext as translate
 from controller import exposed
-from controller.errors import NotFoundException
+from action.errors import NotFoundException
 
 
-class Querying(Kontext):
+class Querying(BaseActionModel):
     """
     A controller for actions which rely on
     query input form (either directly or indirectly).
@@ -51,12 +51,9 @@ class Querying(Kontext):
     by 'prev_id' reference (i.e. a reversed list).
     """
 
-    def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
-        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
+    def __init__(self, request: Request, tt_cache: TextTypesCache) -> None:
+        super().__init__(request=request, tt_cache=tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
-
-    def get_mapping_url_prefix(self) -> str:
-        return super(Kontext, self).get_mapping_url_prefix()
 
     def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
@@ -249,19 +246,6 @@ class Querying(Kontext):
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
-    @exposed(return_type='json', http_method='GET')
-    def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:
-        try:
-            # we must include only regular (i.e. the ones visible in the breadcrumb-like
-            # navigation bar) operations - otherwise the indices would not match.
-            with plugins.runtime.QUERY_PERSISTENCE as qp:
-                stored_ops = qp.load_pipeline_ops(
-                    self._plugin_ctx, request.args['last_key'], build_conc_form_args)
-            pipeline = [x for x in stored_ops if x.form_type != 'nop']
-            op_data = pipeline[int(request.args['idx'])]
-            return op_data.to_dict()
-        except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
-            raise NotFoundException(translate('Query information not stored: {}').format(ex))
 
     def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)

@@ -21,7 +21,7 @@ import urllib.parse
 import urllib.error
 
 from plugins import inject
-from plugins.abstract.issue_reporting import AbstractIssueReporting, StaticReportingAction
+from plugin_types.issue_reporting import AbstractIssueReporting, StaticReportingAction
 from translation import ugettext as _
 
 

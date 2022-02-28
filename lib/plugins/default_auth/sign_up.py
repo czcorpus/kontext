@@ -12,8 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugins.abstract.auth.sign_up import AbstractSignUpToken
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.auth.sign_up import AbstractSignUpToken
+from plugin_types.general_storage import KeyValueStorage
 import hashlib
 import uuid
 import time

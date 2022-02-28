@@ -42,14 +42,16 @@ import plugins
 import plugins.export
 import settings
 import translation
-from controller import KonTextCookie, get_protocol
 from initializer import setup_plugins
 from texttypes.cache import TextTypesCache
 from sanic import Sanic
+from sanic_babel import Babel
 from views.root import bp as root_bp
 from views.concordance import bp as conc_bp
-from action.template import TplEngine
+from action import get_protocol
+from action.templating import TplEngine
 from action.context import ActionContext
+from plugin_types.auth import UserInfo
 
 
 # we ensure that the application's locale is always the same
@@ -87,22 +89,10 @@ def setup_logger(conf):
 class WsgiApp(object):
 
     def __init__(self):
-
+        pass
 
     def __call__(self, environ, start_response):
         raise NotImplementedError()
-
-
-
-    @staticmethod
-    def cleanup_runtime_modules():
-        """
-        Makes app to forget previously faked modules which
-        ensures proper plugins initialization if not starting from scratch.
-        """
-        plugins.flush_plugins()
-
-
 
     def create_controller(self, path_info, request, ui_lang):
         """
@@ -151,27 +141,6 @@ class WsgiApp(object):
         else:
             from actions.concordance import Actions
             return Actions(request, ui_lang, self._tt_cache)
-
-
-class MaintenanceWsgiApp(WsgiApp):
-    """
-    This WSGI application shows only a single page informing about
-    current maintenance. It is activated via config.xml.
-    """
-
-    def __init__(self):
-        super(MaintenanceWsgiApp, self).__init__()
-        translation.load_translations(settings.get('global', 'translations'))
-
-    def __call__(self, environ, start_response):
-        from controller.maintenance import MaintenanceController
-        ui_lang = self.get_lang(environ)
-        translation.activate(ui_lang)
-        request = JSONRequest(environ)
-        app = MaintenanceController(request=request, ui_lang=ui_lang)
-        status, headers, sid_is_valid, body = app.run()
-        response = Response(response=body, status=status, headers=headers)
-        return response(environ, start_response)
 
 
 class KonTextWsgiApp(WsgiApp):
@@ -268,14 +237,19 @@ if settings.get('global', 'manatee_path', None):
 if settings.get('global', 'umask', None):
     os.umask(int(settings.get('global', 'umask'), 8))
 
-if not settings.get_bool('global', 'maintenance'):
-    templating = TplEngine(settings)
-    application = Sanic('kontext', ctx=ActionContext(templating=templating))
-else:
-    # TODO
-    application = MaintenanceWsgiApp()
+application = Sanic(
+        'kontext',
+        ctx=ActionContext(
+            templating=TplEngine(settings),
+            tt_cache=TextTypesCache(plugins.runtime.DB.instance)))
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
+
+
+@application.middleware('request')
+async def extract_user(request):
+    request.ctx.user_info = UserInfo(id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
+
 
 #robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
 #if os.path.isfile(robots_path):
@@ -312,5 +286,5 @@ if __name__ == '__main__':
 
     if args.debugmode and not settings.is_debug_mode():
         settings.activate_debug()
-    print('APPP:: {}'.format(application))
+    print('APP >>>>>>>>>>>> {}'.format(application))
     application.run(host=args.address, port=int(args.port_num), workers=2, debug=settings.is_debug_mode())

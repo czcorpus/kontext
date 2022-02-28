@@ -20,8 +20,8 @@ from collections import defaultdict
 import struct
 from typing import Any, Dict, List
 
-from plugins.abstract.subcmixer import AbstractSubcMixer
-from plugins.abstract.subcmixer.error import SubcMixerException, ResultNotFoundException
+from plugin_types.subcmixer import AbstractSubcMixer
+from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
 from plugins import inject
 import plugins
 from controller import exposed

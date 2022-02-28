@@ -19,7 +19,7 @@ from io import BytesIO
 from typing import Tuple
 
 from controller import exposed
-from controller.errors import UserActionException
+from action.errors import UserActionException
 from controller.kontext import Kontext
 
 

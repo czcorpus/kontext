@@ -32,10 +32,10 @@ from typing import Callable, Optional
 import io
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-import plugins.abstract.corparch.registry.parser
-from plugins.abstract.corparch.registry.tokenizer import Tokenizer
-from plugins.abstract.corparch.registry.parser import Parser
-from plugins.abstract.corparch.install import InstallJson
+import plugin_types.corparch.registry.parser
+from plugin_types.corparch.registry.tokenizer import Tokenizer
+from plugin_types.corparch.registry.parser import Parser
+from plugin_types.corparch.install import InstallJson
 from plugins.mysql_corparch.backendw import WriteBackend, Backend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',

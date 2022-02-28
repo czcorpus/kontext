@@ -21,7 +21,7 @@ from conclib.search import get_conc
 from conclib.freq import multi_level_crit
 from conclib.pyconc import PyConc
 from bgcalc import freq_calc
-from plugins.abstract.query_suggest import AbstractBackend
+from plugin_types.query_suggest import AbstractBackend
 import manatee
 from strings import re_escape
 import logging

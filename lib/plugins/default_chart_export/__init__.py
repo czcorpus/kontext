@@ -14,7 +14,7 @@
 
 from collections import OrderedDict
 
-from plugins.abstract.chart_export import AbstractChartExportPlugin, UnknownFormatException
+from plugin_types.chart_export import AbstractChartExportPlugin, UnknownFormatException
 from plugins.default_chart_export.excel import ExcelExport
 
 

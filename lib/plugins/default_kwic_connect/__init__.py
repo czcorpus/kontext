@@ -20,7 +20,7 @@
 Required XML configuration: please see ./config.rng
 """
 
-from plugins.abstract.kwic_connect import AbstractKwicConnect
+from plugin_types.kwic_connect import AbstractKwicConnect
 from plugins.default_token_connect import setup_providers
 import plugins
 import logging

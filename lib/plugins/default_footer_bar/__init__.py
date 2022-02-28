@@ -37,7 +37,7 @@ try:
 except ImportError:
     def markdown(s): return s
 
-from plugins.abstract.footer_bar import AbstractFootbar
+from plugin_types.footer_bar import AbstractFootbar
 
 
 class ImplicitFooterBar(AbstractFootbar):

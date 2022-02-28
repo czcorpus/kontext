@@ -37,7 +37,7 @@ import logging
 import manatee
 
 import plugins
-from plugins.abstract.token_connect import AbstractTokenConnect, find_implementation
+from plugin_types.token_connect import AbstractTokenConnect, find_implementation
 from actions import concordance
 from controller import exposed
 from corplib.corpus import KCorpus

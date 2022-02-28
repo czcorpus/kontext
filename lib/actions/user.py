@@ -14,12 +14,12 @@ import time
 import logging
 
 from controller import exposed
-from controller.errors import UserActionException, ImmediateRedirectException
+from action.errors import UserActionException, ImmediateRedirectException
 from controller.kontext import Kontext
 from main_menu.model import MainMenu
 from translation import ugettext as _
 import plugins
-from plugins.abstract.auth import SignUpNeedsUpdateException
+from plugin_types.auth import SignUpNeedsUpdateException
 import settings
 
 

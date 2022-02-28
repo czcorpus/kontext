@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 import urllib.request
@@ -25,9 +25,9 @@ from mysql.connector.cursor import MySQLCursor
 
 import werkzeug.urls
 import plugins
-from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.subc_restore import AbstractSubcRestore, SubcRestoreRow
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.subc_restore import AbstractSubcRestore, SubcRestoreRow
+from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
 from plugins import inject
 
