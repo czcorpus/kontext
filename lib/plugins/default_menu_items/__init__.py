@@ -58,7 +58,7 @@ to the main_menu.MainMenu class.
 
 import json
 
-from plugins.abstract.menu_items import AbstractMenuItems, StaticMenuItem, DynamicMenuItem
+from plugin_types.menu_items import AbstractMenuItems, StaticMenuItem, DynamicMenuItem
 
 
 class MenuItems(AbstractMenuItems):

@@ -20,7 +20,7 @@ from werkzeug.wrappers import Request
 
 from dataclasses import dataclass
 from controller import exposed
-from controller.errors import FunctionNotSupported, UserActionException
+from action.errors import FunctionNotSupported, UserActionException
 from bgcalc.task import AsyncTaskStatus
 from controller.querying import Querying
 from corplib.corpus import list_public_subcorpora
@@ -32,7 +32,7 @@ import corplib
 from texttypes import TextTypeCollector
 import settings
 import bgcalc
-from argmapping import log_mapping
+from action.argmapping import log_mapping
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 

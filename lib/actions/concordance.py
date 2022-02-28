@@ -26,17 +26,17 @@ from dataclasses import asdict
 
 from controller.kontext import LinesGroups, Kontext
 from controller import exposed
-from controller.errors import UserActionException, ImmediateRedirectException, NotFoundException
-from argmapping.conc.query import QueryFormArgs
-from argmapping.conc.filter import (
+from action.errors import UserActionException, ImmediateRedirectException, NotFoundException
+from action.argmapping.conc.query import QueryFormArgs
+from action.argmapping.conc.filter import (
     FilterFormArgs, ContextFilterArgsConv, QuickFilterArgsConv, SubHitsFilterFormArgs, FirstHitsFilterFormArgs)
-from argmapping.conc.sort import SortFormArgs
-from argmapping.conc.other import SampleFormArgs, ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, KwicSwitchArgs
+from action.argmapping.conc.sort import SortFormArgs
+from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs, LgroupOpArgs, LockedOpFormsArgs, KwicSwitchArgs
 from argmapping.conc import build_conc_form_args
-from argmapping import log_mapping
+from action.argmapping import log_mapping
 from argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
-from argmapping import ConcArgsMapping
-from plugins.abstract.corparch import CorpusInfo
+from action.argmapping import ConcArgsMapping
+from plugin_types.corparch import CorpusInfo
 import settings
 import conclib
 from conclib.empty import InitialConc
@@ -52,7 +52,7 @@ from bgcalc.coll_calc import CalculateCollsResult
 import plugins
 from kwiclib import Kwic, KwicPageArgs
 from translation import ugettext as translate
-from argmapping import WidectxArgsMapping
+from action.argmapping import WidectxArgsMapping
 from texttypes import TextTypeCollector
 from texttypes.cache import TextTypesCache
 from main_menu.model import MainMenu
@@ -61,7 +61,7 @@ from controller.querying import Querying
 import mailing
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
-from plugins.abstract.conc_cache import ConcCacheStatusException
+from plugin_types.conc_cache import ConcCacheStatusException
 
 
 class Actions(Querying):
@@ -419,31 +419,7 @@ class Actions(Querying):
                     return qf_args
         return None
 
-    @exposed(apply_semi_persist_args=True, action_log_mapper=log_mapping.query)
-    def query(self, _):
-        self.disabled_menu_items = (
-            MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-            MainMenu.VIEW('kwic-sent-switch'))
-        out = {'aligned_corpora': self.args.align}
-        tt_data = self.tt.export_with_norms(ret_nums=True)
-        out['Normslist'] = tt_data['Normslist']
-        out['text_types_data'] = tt_data
 
-        corp_info = self.get_corpus_info(self.args.corpname)
-        out['text_types_notes'] = corp_info.metadata.desc
-        out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
-
-        qf_args = self._fetch_prev_query('conc') if self._active_q_data is None else None
-        if qf_args is None:
-            qf_args = QueryFormArgs(
-                plugin_ctx=self._plugin_ctx,
-                corpora=[self.args.corpname] + self.args.align,
-                persist=False)
-        self.add_conc_form_args(qf_args)
-        self._attach_query_params(out)
-        self._attach_aligned_query_params(out)
-        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
-        return out
 
     @exposed(return_type='json')
     def get_conc_cache_status(self, _):

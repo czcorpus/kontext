@@ -15,7 +15,7 @@ from enum import Enum
 import logging
 from dataclasses import dataclass, field, Field
 
-from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
+from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
 
 
 class Persistence(Enum):

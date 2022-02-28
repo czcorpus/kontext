@@ -27,7 +27,7 @@ import json
 import redis
 from mysql.connector.cursor import MySQLCursor
 from plugins.common.mysql import MySQLOps
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 def redis_connection(host, port, db_id):

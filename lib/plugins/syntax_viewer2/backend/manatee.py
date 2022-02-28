@@ -18,7 +18,7 @@
 # 02110-1301, USA.
 
 import plugins.default_syntax_viewer.manatee_backend as mbk
-from plugins.abstract.syntax_viewer import BackendDataParseException
+from plugin_types.syntax_viewer import BackendDataParseException
 from plugins.syntax_viewer2.tree import UcnkTreeTemplate
 
 

@@ -15,7 +15,7 @@
 from openpyxl import Workbook
 from openpyxl.chart import PieChart, Reference
 
-from plugins.abstract.chart_export import AbstractChartExport
+from plugin_types.chart_export import AbstractChartExport
 import io
 
 

@@ -27,8 +27,8 @@ import time
 import datetime
 import mailing
 from collections import defaultdict
-from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
-from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
+from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
+from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from .sign_up import SignUpToken
 from translation import ugettext as _
 import plugins

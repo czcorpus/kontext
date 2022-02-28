@@ -12,7 +12,7 @@
 
 import json
 
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 class TestingKeyValueStorage(KeyValueStorage):

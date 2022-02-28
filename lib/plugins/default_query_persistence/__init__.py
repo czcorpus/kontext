@@ -32,10 +32,10 @@ import sqlite3
 import json
 import time
 
-from plugins.abstract.query_persistence import AbstractQueryPersistence
+from plugin_types.query_persistence import AbstractQueryPersistence
 import plugins
 from plugins import inject
-from controller.errors import ForbiddenException, UserActionException
+from action.errors import ForbiddenException, UserActionException
 
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \

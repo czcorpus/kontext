@@ -24,8 +24,8 @@ from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from typing import Union
 
-from plugins.abstract.user_items import FavoriteItem
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.user_items import FavoriteItem
+from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 
 

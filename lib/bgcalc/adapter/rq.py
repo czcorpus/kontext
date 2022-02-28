@@ -21,7 +21,7 @@ from redis import Redis
 from rq_scheduler import Scheduler
 from bgcalc.errors import CalcTaskNotFoundError, BgCalcError
 from bgcalc.adapter.abstract import AbstractBgClient, AbstractResultWrapper
-from controller.errors import UserActionException
+from action.errors import UserActionException
 import json
 import re
 import importlib

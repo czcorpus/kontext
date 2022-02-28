@@ -22,7 +22,7 @@ import sys
 import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugins.abstract.corparch.registry import RegModelSerializer, RegistryConf
+from plugin_types.corparch.registry import RegModelSerializer, RegistryConf
 from plugins.mysql_corparch.backend import Backend
 
 

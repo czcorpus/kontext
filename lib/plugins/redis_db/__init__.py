@@ -28,7 +28,7 @@ required XML: please see config.rng
 
 import json
 import redis
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 class RedisDb(KeyValueStorage):

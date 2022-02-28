@@ -38,9 +38,9 @@ element taghelper {
 """
 from translation import ugettext as _
 from controller import Controller, exposed
-from controller.errors import UserActionException
+from action.errors import UserActionException
 import plugins
-from plugins.abstract.taghelper import AbstractTaghelper
+from plugin_types.taghelper import AbstractTaghelper
 from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
 from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
 from plugins.default_taghelper.loaders import NullTagVariantLoader

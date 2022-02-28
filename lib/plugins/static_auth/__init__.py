@@ -26,7 +26,7 @@ very secure.
 required xml conf: please see ./config.rng
 """
 import hashlib
-from plugins.abstract.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
+from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
 import plugins
 from dataclasses import dataclass
 from typing import Dict, List, Optional

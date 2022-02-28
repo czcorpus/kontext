@@ -121,13 +121,13 @@ except ImportError:
 from lxml import etree
 
 import plugins
-from plugins.abstract.corparch import AbstractSearchableCorporaArchive
-from plugins.abstract.corparch.corpus import BrokenCorpusInfo, CorpusInfo
-from plugins.abstract.corparch import CorplistProvider
+from plugin_types.corparch import AbstractSearchableCorporaArchive
+from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
+from plugin_types.corparch import CorplistProvider
 from plugins import inject
 import l10n
 from controller import exposed
-from action.plg import PluginCtx
+from action.plugin.ctx import PluginCtx
 import actions.user
 from translation import ugettext as _
 from settings import import_bool
@@ -202,7 +202,7 @@ class DefaultCorplistProvider(CorplistProvider):
         arguments:
         plugin_ctx -- a controller.PluginCtx instance
         auth -- an auth plug-in instance
-        corparch -- a plugins.abstract.corparch.AbstractSearchableCorporaArchive instance
+        corparch -- a plugin_types.corparch.AbstractSearchableCorporaArchive instance
         tag_prefix -- a string determining how a tag (= keyword or label) is recognized
         """
         self._plugin_ctx = plugin_ctx

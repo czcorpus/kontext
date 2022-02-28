@@ -33,9 +33,9 @@ from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from typing import List, Union
 
-from plugins.abstract.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
-from plugins.abstract.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
+from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
+from plugin_types.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
 from translation import ugettext as _
 import plugins

@@ -13,8 +13,8 @@ from typing import List
 import plugins
 from actions import corpora, user
 from controller import exposed
-from controller.errors import ImmediateRedirectException
-from plugins.abstract.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
+from action.errors import ImmediateRedirectException
+from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
 from plugins.errors import PluginException
 from translation import ugettext as _
 

@@ -20,15 +20,15 @@
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
-from plugins.abstract.auth import CorpusAccess
-from plugins.abstract.integration_db import IntegrationDatabase
+from plugin_types.auth import CorpusAccess
+from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 
-from plugins.abstract.corparch.corpus import TagsetInfo, PosCategoryItem
-from plugins.abstract.corparch.backend import DatabaseBackend
-from plugins.abstract.corparch.backend.regkeys import (
+from plugin_types.corparch.corpus import TagsetInfo, PosCategoryItem
+from plugin_types.corparch.backend import DatabaseBackend
+from plugin_types.corparch.backend.regkeys import (
     REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
 
 

@@ -19,12 +19,12 @@
 
 import corplib
 import logging
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 BASE_KEY = 'ttcache'
 
 
-class TextTypesCache(object):
+class TextTypesCache:
     """
     Caches corpus text type information (= available structural attribute values).
     This can be helpful in case of large corpora with rich metadata. In case

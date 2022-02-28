@@ -12,7 +12,7 @@
 # GNU General Public License for more details.
 
 import os
-from plugins.abstract.appbar import AbstractApplicationBar
+from plugin_types.appbar import AbstractApplicationBar
 from translation import ugettext as _
 from plugins import inject
 import plugins

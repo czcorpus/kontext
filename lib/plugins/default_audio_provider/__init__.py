@@ -21,7 +21,7 @@ import os
 import settings
 import re
 import logging
-from plugins.abstract.audio_provider import AbstractAudioProvider
+from plugin_types.audio_provider import AbstractAudioProvider
 from plugins import inject
 try:
     import sox

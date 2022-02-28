@@ -27,7 +27,7 @@ required XML: please see config.rng
 
 from rejson import Path, Client
 from redis import ResponseError
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 import logging
 
 

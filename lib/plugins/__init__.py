@@ -19,37 +19,37 @@
 from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING, List
 from types import ModuleType
 from secure_cookie.session import Session
-from .abstract.general_storage import KeyValueStorage
-from .abstract.integration_db import IntegrationDatabase
-from .abstract.settings_storage import AbstractSettingsStorage
-from .abstract.query_persistence import AbstractQueryPersistence
-from .abstract.conc_cache import AbstractCacheMappingFactory
+from plugin_types.general_storage import KeyValueStorage
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.settings_storage import AbstractSettingsStorage
+from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.conc_cache import AbstractCacheMappingFactory
 from .export import Loader
 from .export_freq2d import Loader as LoaderFreq2d
-from .abstract.user_items import AbstractUserItems
-from .abstract.menu_items import AbstractMenuItems
-from .abstract.getlang import AbstractGetLang
-from .abstract.corparch import AbstractCorporaArchive
-from .abstract.query_history import AbstractQueryHistory
-from .abstract.appbar import AbstractApplicationBar
-from .abstract.footer_bar import AbstractFootbar
-from .abstract.live_attributes import AbstractLiveAttributes
-from .abstract.subc_restore import AbstractSubcRestore
-from .abstract.taghelper import AbstractTaghelper
-from .abstract.syntax_viewer import AbstractSyntaxViewerPlugin
-from .abstract.subcmixer import AbstractSubcMixer
-from .abstract.chart_export import AbstractChartExportPlugin
-from .abstract.issue_reporting import AbstractIssueReporting
-from .abstract.dispatch_hook import AbstractDispatchHook
-from .abstract.token_connect import AbstractTokenConnect
-from .abstract.kwic_connect import AbstractKwicConnect
-from .abstract.query_suggest import AbstractQuerySuggest
-from .abstract.action_log import AbstractActionLog
-from .abstract.audio_provider import AbstractAudioProvider
+from plugin_types.user_items import AbstractUserItems
+from plugin_types.menu_items import AbstractMenuItems
+from plugin_types.getlang import AbstractGetLang
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.query_history import AbstractQueryHistory
+from plugin_types.appbar import AbstractApplicationBar
+from plugin_types.footer_bar import AbstractFootbar
+from plugin_types.live_attributes import AbstractLiveAttributes
+from plugin_types.subc_restore import AbstractSubcRestore
+from plugin_types.taghelper import AbstractTaghelper
+from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
+from plugin_types.subcmixer import AbstractSubcMixer
+from plugin_types.chart_export import AbstractChartExportPlugin
+from plugin_types.issue_reporting import AbstractIssueReporting
+from plugin_types.dispatch_hook import AbstractDispatchHook
+from plugin_types.token_connect import AbstractTokenConnect
+from plugin_types.kwic_connect import AbstractKwicConnect
+from plugin_types.query_suggest import AbstractQuerySuggest
+from plugin_types.action_log import AbstractActionLog
+from plugin_types.audio_provider import AbstractAudioProvider
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from .abstract.auth import AbstractAuth
-    from action.plg import PluginCtx
+    from plugin_types.auth import AbstractAuth
+    from action.plugin.ctx import PluginCtx
 
 import logging
 

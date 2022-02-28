@@ -31,8 +31,8 @@ import l10n
 import strings
 import settings
 from .krequest import KRequest
-from .cookie import KonTextCookie
-from .errors import ForbiddenException
+from action.cookie import KonTextCookie
+from action.errors import ForbiddenException
 
 
 ResultType = Union[

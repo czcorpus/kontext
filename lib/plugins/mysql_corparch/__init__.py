@@ -29,10 +29,10 @@ from controller import exposed
 import actions.user
 import plugins
 from plugins import inject
-from plugins.abstract.corparch import AbstractSearchableCorporaArchive, CorpusListItem
-from plugins.abstract.corparch.backend import DatabaseBackend
-from plugins.abstract.integration_db import IntegrationDatabase
-from plugins.abstract.corparch.corpus import (
+from plugin_types.corparch import AbstractSearchableCorporaArchive, CorpusListItem
+from plugin_types.corparch.backend import DatabaseBackend
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.corparch.corpus import (
     BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo, StructAttrInfo)
 from plugins.mysql_corparch.backend import Backend
 from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query

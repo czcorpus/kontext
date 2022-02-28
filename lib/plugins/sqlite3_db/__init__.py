@@ -39,7 +39,7 @@ import time
 
 import sqlite3
 
-from plugins.abstract.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 thread_local = threading.local()
 

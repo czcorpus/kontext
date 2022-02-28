@@ -23,7 +23,7 @@ on the client-side (see plugins/defaultTokenConnect/init.py method selectRendere
 """
 
 import json
-from plugins.abstract.token_connect import AbstractFrontend
+from plugin_types.token_connect import AbstractFrontend
 
 
 class ErrorFrontend(AbstractFrontend):

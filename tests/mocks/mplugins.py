@@ -17,8 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from plugins.abstract.user_items import AbstractUserItems
-from plugins.abstract.auth import AbstractAuth
+from plugin_types.user_items import AbstractUserItems
+from plugin_types.auth import AbstractAuth
 
 
 class MockUserItems(AbstractUserItems):
