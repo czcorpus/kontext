@@ -26,6 +26,7 @@ import { GeneralViewOptionsModelState } from '../../../models/options/general';
 import { Actions } from '../../../models/options/actions';
 
 import * as S from './style';
+import { FreqResultViews } from '../../../models/freqs/common';
 
 
 export interface GeneralViews {
@@ -314,10 +315,42 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     }
 
+    // ------------- <TRDefaultView /> ---------------------
+
+    const TRDefaultView:React.FC<{
+        value:FreqResultViews;
+
+    }> = (props) => {
+
+        const handleSelectChange = (evt) => {
+            dispatcher.dispatch<typeof Actions.GeneralSetFDefaultView>({
+                name: Actions.GeneralSetFDefaultView.name,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    {he.translate('options__freq_default_view')}:
+                </th>
+                <td>
+                    <select value={props.value} onChange={handleSelectChange} >
+                        <option value='charts'>{he.translate('options__freq_default_view_charts')}</option>
+                        <option value='tables'>{he.translate('options__freq_default_view_tables')}</option>
+                    </select>
+                </td>
+            </tr>
+        );
+    }
+
     // ------------- <FieldsetFreqDistrib /> ---------------------
 
     const FieldsetFreqDistrib:React.FC<{
         fmaxItems:Kontext.FormValue<string>;
+        fdefaultView:FreqResultViews;
 
     }> = (props) => {
         return (
@@ -328,6 +361,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 <S.ResultRangeAndPagingTable>
                     <tbody>
                         <TRFmaxitemsInput value={props.fmaxItems} />
+                        <TRDefaultView value={props.fdefaultView} />
                     </tbody>
                 </S.ResultRangeAndPagingTable>
             </fieldset>
@@ -483,7 +517,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     shuffle={this.props.shuffle}
                                     useRichQueryEditor={this.props.useRichQueryEditor} />
                                 <FieldsetWordlist wlPageSize={this.props.wlpagesize}  />
-                                <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems} />
+                                <FieldsetFreqDistrib fmaxItems={this.props.fmaxitems}
+                                    fdefaultView={this.props.fdefaultView} />
                                 <FieldsetColl citemsPerPage={this.props.citemsperpage} />
                                 <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />
                             </> :

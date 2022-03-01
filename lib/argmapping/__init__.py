@@ -127,6 +127,7 @@ class Args(object):
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
     fmaxitems: int = field(default=50, metadata=mk_metdata())
+    fdefault_view: str = field(default='charts', metadata=mk_metdata(Persistence.PERSISTENT))
     ftt_include_empty: int = field(default=0, metadata=mk_metdata())
     subcsize: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
