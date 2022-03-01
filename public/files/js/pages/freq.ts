@@ -47,7 +47,7 @@ import { CTFormInputs, CTFormProperties, CTFreqResultData,
     AlignTypes } from '../models/freqs/twoDimension/common';
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/freqs/regular/actions';
-import { Block } from '../models/freqs/common';
+import { Block, FreqResultViews } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
 import { FreqDataLoader } from '../models/freqs/regular/common';
@@ -398,7 +398,8 @@ class FreqPage {
                     this.freqChartsModel,
                     this.saveChartFormModel,
                     this.freqResultModel,
-                    this.saveTablesModel
+                    this.saveTablesModel,
+                    this.layoutModel.getConf<FreqResultViews>('FreqDefaultView'),
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,

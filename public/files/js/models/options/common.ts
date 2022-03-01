@@ -19,6 +19,7 @@
  */
 
 import * as Kontext from '../../types/kontext';
+import { FreqResultViews } from '../freqs/common';
 
 export interface ViewOptsResponse extends Kontext.AjaxResponse {
     pagesize:number;
@@ -28,6 +29,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     shuffle:boolean;
     wlpagesize:number;
     fmaxitems:number;
+    fdefault_view:FreqResultViews;
     citemsperpage:number;
     pqueryitemsperpage:number;
     tt_overview:number;
