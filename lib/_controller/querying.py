@@ -28,7 +28,7 @@ from collections import defaultdict
 
 from action.model.base import BaseActionModel
 from main_menu.model import MainMenu
-from texttypes import TextTypesCache
+from texttypes.model import TextTypesCache
 import plugins
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.corparch.corpus import StructAttrInfo

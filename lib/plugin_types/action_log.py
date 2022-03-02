@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 from typing import Callable, Any, Tuple, Optional, Dict
-from werkzeug import Request
+from sanic.request import Request
 import abc
 from action.argmapping import Args
 
@@ -28,14 +28,14 @@ class AbstractActionLog:
     """
 
     def log_action(
-            self, request: Request, args_map: Args, action_log_mapper: Callable[[None], Any],
+            self, request: Request, args_map: Args, action_log_mapper: Callable[[Request], Any],
             full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]],
             proc_time: Optional[float]) -> str:
         self.write_action(
             self.collect_args(request, args_map, action_log_mapper, full_action_name, err_desc, proc_time))
 
     @abc.abstractmethod
-    def collect_args(self, request: Request, args_map: Args, action_log_mapper: Callable[[None], Any],
+    def collect_args(self, request: Request, args_map: Args, action_log_mapper: Callable[[Request], Any],
                      full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]],
                      proc_time: Optional[float]) -> Dict[str, Any]:
         """

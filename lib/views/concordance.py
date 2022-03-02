@@ -42,6 +42,8 @@ async def query(request, action_model: ConcActionModel):
     action_model._attach_query_params(out)
     action_model._attach_aligned_query_params(out)
     action_model._export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
+    import logging
+    logging.getLogger(__name__).warning('fooo>>>>>> {}'.format(out))
     return out, 200
 
 

@@ -20,7 +20,7 @@ import re
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../..')))
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../scripts')))
 import autoconf
-import initializer
+from action.plugin import initializer
 import plugins
 from plugins.default_auth import mk_list_key, mk_user_key, get_user_id_from_key, DefaultAuthHandler
 initializer.init_plugin('db')

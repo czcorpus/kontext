@@ -24,9 +24,14 @@ from plugin_types.kwic_connect import AbstractKwicConnect
 from plugins.default_token_connect import setup_providers
 import plugins
 import logging
-from actions import concordance
-from controller import exposed
 from multiprocessing.pool import ThreadPool
+from sanic.blueprints import Blueprint
+
+from action.decorators import http_action
+from action.model.concordance import ConcActionModel
+
+
+bp = Blueprint('default_kwic_connect')
 
 
 def merge_results(curr, new, word):
@@ -46,7 +51,8 @@ def handle_word_req(args):
         return word, kc.fetch_data(providers, corpora, word, ui_lang)
 
 
-@exposed(return_type='json')
+@bp.route('/fetch_external_kwic_info')
+@http_action(return_type='json', action_model=ConcActionModel)
 def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.CORPARCH as ca:
@@ -67,7 +73,8 @@ def fetch_external_kwic_info(self, request):
     return dict(data=ans)
 
 
-@exposed(return_type='json')
+@bp.route('/get_corpus_kc_providers')
+@http_action(return_type='json', action_model=ConcActionModel)
 def get_corpus_kc_providers(self, _):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
         corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
@@ -97,8 +104,9 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export(self, plugin_ctx):
         return dict(max_kwic_words=self._max_kwic_words, load_chunk_size=self._load_chunk_size)
 
-    def export_actions(self):
-        return {concordance.Actions: [fetch_external_kwic_info, get_corpus_kc_providers]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     def fetch_data(self, provider_ids, corpora, lemma, lang):
         ans = []

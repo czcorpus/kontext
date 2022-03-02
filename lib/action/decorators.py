@@ -4,10 +4,11 @@ from sanic import response
 from typing import Optional, Tuple, Union, Callable, Any, Dict, Type
 from functools import wraps
 from .templating import CustomJSONEncoder, TplEngine
+from action import ActionProps
+from action.krequest import KRequest
 from dataclasses_json import DataClassJsonMixin
-from action.model.globals import add_globals
-from action.model.base import BaseActionModel
 from action.errors import ImmediateRedirectException
+from action.model.base import BaseActionModel
 import json
 
 
@@ -21,6 +22,8 @@ ResultType = Union[
 
 def _output_result(
         app: Sanic,
+        action_model: BaseActionModel,
+        action_props: ActionProps,
         request: Request,
         tpl_engine: TplEngine,
         template: str,
@@ -57,13 +60,13 @@ def _output_result(
     elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
     elif isinstance(result, dict):
-        result = add_globals(app, request, page_model, result)
+        result = action_model.add_globals(app, action_props, result)
         return tpl_engine.render(template, result)
     raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
 
 def http_action(
-        access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel]  = None,
+        access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel] = None,
         page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
         mutates_result: bool = False, http_method: Union[Optional[str], Tuple[str, ...]] = 'GET',
         accept_kwargs: bool = None, apply_semi_persist_args: bool = False, return_type: str = 'template',
@@ -90,12 +93,35 @@ def http_action(
         @wraps(func)
         async def wrapper(request: Request, *args, **kw):
             application = Sanic.get_app('kontext')
-            amodel = action_model(request, application.ctx.tt_cache) if action_model else None
+            app_url_prefix = application.config['action_path_prefix']
+            if request.path.startswith(app_url_prefix):
+                norm_path = request.path[len(app_url_prefix):]
+            else:
+                norm_path = request.path
+            path_elms = norm_path.split('/')
+            action_name = path_elms[-1]
+            action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
+            aprops = ActionProps(
+                action_name=action_name, action_prefix=action_prefix, access_level=access_level,
+                skip_corpus_init=skip_corpus_init, http_method=http_method, return_type=return_type,
+                page_model=page_model, installed_langs=application.ctx.installed_langs,
+                mutates_result=mutates_result)
+
+            if action_model:
+                amodel = action_model(KRequest(request, aprops), aprops, application.ctx.tt_cache)
+            else:
+                amodel = BaseActionModel(KRequest(request, aprops), aprops, application.ctx.tt_cache)
+
             try:
+                amodel.init_session()
+                amodel.pre_dispatch(None)
                 ans, status = await func(request, amodel, *args, **kw)
+                amodel.post_dispatch(aprops, ans, None)  # TODO error desc
                 return HTTPResponse(
                     body=_output_result(
                         app=application,
+                        action_model=amodel,
+                        action_props=aprops,
                         request=request,
                         tpl_engine=application.ctx.templating,
                         template=template,
@@ -105,7 +131,6 @@ def http_action(
                         return_type=return_type),
                     status=status)
             except ImmediateRedirectException as ex:
-                print('fuck ', ex)
                 return response.redirect(ex.url, status=ex.code)
 
         return wrapper

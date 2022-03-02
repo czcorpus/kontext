@@ -27,6 +27,8 @@ from translation import ugettext as _
 
 # TODO integrate with babel, sanic_babael
 
+def load_translations():
+    pass
 
 def ugettext(s):
     """

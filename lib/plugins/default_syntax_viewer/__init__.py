@@ -47,19 +47,24 @@ import json
 import logging
 import os
 from typing import Dict
+from sanic.blueprints import Blueprint
 
 import plugins
 from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
-from actions import concordance
-from controller import exposed
 from action.errors import UserActionException
 from action.plugin.ctx import PluginCtx
 from .manatee_backend import ManateeBackend
 from translation import ugettext as _
+from action.decorators import http_action
+from action.model.concordance import ConcActionModel
 
 
-@exposed(return_type='json')
+bp = Blueprint('default_syntax_viewer')
+
+
+@bp.route('/get_syntax_data')
+@http_action(return_type='json', action_model=ConcActionModel)
 def get_syntax_data(ctrl, request):
     """
     This is the actual controller method exported by the plug-in.
@@ -96,8 +101,9 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
     def is_enabled_for(self, plugin_ctx, corpora):
         return any(corpname in self._conf for corpname in corpora)
 
-    def export_actions(self):
-        return {concordance.Actions: [get_syntax_data]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     def export(self, plugin_ctx: PluginCtx):
         return dict(

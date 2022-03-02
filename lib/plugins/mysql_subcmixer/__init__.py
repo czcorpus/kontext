@@ -28,6 +28,7 @@ import struct
 from werkzeug.wrappers import Request
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
+from sanic.blueprints import Blueprint
 
 import plugins
 from plugins import inject
@@ -35,13 +36,11 @@ from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.subcmixer import AbstractSubcMixer, ExpressionItem
 from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
-from controller import exposed
-from actions.subcorpus import Subcorpus
 from action.plugin.ctx import PluginCtx
 import corplib
 from corplib.corpus import KCorpus
-import actions.subcorpus
-
+from action.model.corpus import CorpusActionModel
+from action.decorators import http_action
 from .category_tree import CategoryTree, CategoryExpression, TaskArgs
 from .metadata_model import MetadataModel
 
@@ -53,6 +52,8 @@ To be able to use the plug-in, the following requirements must be met:
 - enabled mysql_live_attributes
 - also, a corpus we want to used the plug-in with must have bib_id_struct, bib_id_attr configured 
 """
+
+bp = Blueprint('mysql_subcmixer')
 
 
 class RealSizes(TypedDict):
@@ -71,24 +72,26 @@ class ProcessResponse(TypedDict):
     structs: List[str]
 
 
-@exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_run_calc(ctrl: Subcorpus, request: Request) -> Union[ProcessResponse, EmptyResponse]:
+@bp.route('/subcmixer_run_calc')
+@http_action(return_type='json', access_level=1, http_method='POST', action_model=CorpusActionModel)
+def subcmixer_run_calc(req, amodel) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(
-                plugin_ctx=ctrl._plugin_ctx,
-                corpus=ctrl.corp,
-                corpname=request.form['corpname'],
-                aligned_corpora=request.form.getlist('aligned_corpora'),
-                args=json.loads(request.form['expression'])
+                plugin_ctx=amodel.plugin_ctx,
+                corpus=amodel.corp,
+                corpname=req.form['corpname'],
+                aligned_corpora=req.form.getlist('aligned_corpora'),
+                args=json.loads(req.form['expression'])
             )
     except ResultNotFoundException as err:
-        ctrl.add_system_message('error', str(err))
+        amodel.add_system_message('error', str(err))
         return {}
 
 
-@exposed(return_type='json', access_level=1, http_method='POST')
-def subcmixer_create_subcorpus(ctrl: Subcorpus, request: Request) -> Dict[str, Any]:
+@bp.route('/subcmixer_create_subcorpus')
+@http_action(return_type='json', access_level=1, http_method='POST', action_model=CorpusActionModel)
+def subcmixer_create_subcorpus(req, amodel) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -97,26 +100,26 @@ def subcmixer_create_subcorpus(ctrl: Subcorpus, request: Request) -> Dict[str, A
     write by merging adjacent position intervals
     (Manatee does this).
     """
-    if not request.form['subcname']:
-        ctrl.add_system_message('error', 'Missing subcorpus name')
+    if not req.form['subcname']:
+        amodel.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        publish = bool(int(request.form.get('publish')))
-        subc_path = ctrl.prepare_subc_path(
-            request.form['corpname'], request.form['subcname'], publish=False)
-        struct_indices = sorted([int(x) for x in request.form['ids'].split(',')])
-        id_attr = request.form['idAttr'].split('.')
-        attr = ctrl.corp.get_struct(id_attr[0])
+        publish = bool(int(req.form.get('publish')))
+        subc_path = amodel.prepare_subc_path(
+            req.form['corpname'], req.form['subcname'], publish=False)
+        struct_indices = sorted([int(x) for x in req.form['ids'].split(',')])
+        id_attr = req.form['idAttr'].split('.')
+        attr = amodel.corp.get_struct(id_attr[0])
         with open(subc_path, 'wb') as fw:
             for idx in struct_indices:
                 fw.write(struct.pack('<q', attr.beg(idx)))
                 fw.write(struct.pack('<q', attr.end(idx)))
 
-        pub_path = ctrl.prepare_subc_path(
-            request.form['corpname'], request.form['subcname'], publish=publish) if publish else None
+        pub_path = amodel.prepare_subc_path(
+            req.form['corpname'], req.form['subcname'], publish=publish) if publish else None
         if pub_path:
-            corplib.mk_publish_links(subc_path, pub_path, ctrl.session_get('user', 'fullname'),
-                                     request.form['description'])
+            corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
+                                     req.form['description'])
 
         return dict(status=True)
 
@@ -200,8 +203,9 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         else:
             raise ResultNotFoundException('ucnk_subcm__failed_to_find_suiteable_mix')
 
-    def export_actions(self):
-        return {actions.subcorpus.Subcorpus: [subcmixer_run_calc, subcmixer_create_subcorpus]}
+    @staticmethod
+    def export_actions():
+        return bp
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)

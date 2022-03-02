@@ -35,16 +35,21 @@ Required XML configuration: please see config.rng
 import json
 import logging
 import manatee
+from sanic.blueprints import Blueprint
 
 import plugins
 from plugin_types.token_connect import AbstractTokenConnect, find_implementation
-from actions import concordance
-from controller import exposed
 from corplib.corpus import KCorpus
+from action.decorators import http_action
+from action.model.concordance import ConcActionModel
 from plugins.default_token_connect.frontends import ErrorFrontend
 
 
-@exposed(return_type='json')
+bp = Blueprint('default_token_connect')
+
+
+@bp.route('/fetch_token_detail')
+@http_action(return_type='json', action_model=ConcActionModel)
 def fetch_token_detail(self, request):
     """
     This is a controller action used by client to obtain
@@ -172,8 +177,9 @@ class DefaultTokenConnect(AbstractTokenConnect):
             plugin_ctx, plugin_ctx.current_corpus.corpname)
         return dict(providers=[dict(ident=k, is_kwic_view=bool(v)) for k, v in corpus_info.token_connect.providers])
 
-    def export_actions(self):
-        return {concordance.Actions: [fetch_token_detail]}
+    @staticmethod
+    def export_actions():
+        return bp
 
 
 def init_provider(conf, ident, db, ttl):

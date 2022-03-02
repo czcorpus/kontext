@@ -56,7 +56,7 @@ def send_mail(server, msg, recipients):
         server.sendmail(sender, recipients, msg.as_string())
         ans = True
     except Exception as ex:
-        logging.getLogger(__name__).warn(
+        logging.getLogger(__name__).warning(
             'There were errors sending e-mail: %s' % (ex,))
         ans = False
     finally:
