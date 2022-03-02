@@ -29,6 +29,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 from corplib.corpus import KCorpus
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
+from sanic.blueprints import Blueprint
 
 import l10n
 from plugins import inject
@@ -41,22 +42,26 @@ from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 from plugins.errors import PluginCompatibilityException
 import strings
-from controller import exposed
 from action.plugin.ctx import PluginCtx
-from actions import concordance
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
 from . import query
 
+bp = Blueprint('mysql_live_attributes')
 
-@exposed(return_type='json', http_method='POST')
-def filter_attributes(self, request):
-    attrs = json.loads(request.form.get('attrs', '{}'))
-    aligned = json.loads(request.form.get('aligned', '[]'))
+
+@bp.route('/filter_attributes')
+@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
+def filter_attributes(req, amodel):
+    attrs = json.loads(req.form.get('attrs', '{}'))
+    aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
+        return lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
                                      aligned_corpora=aligned)
 
 
-@exposed(return_type='json', http_method='POST')
+@bp.route('/attr_val_autocomplete')
+@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     attrs[request.form['patternAttr']] = '%{}%'.format(request.form['pattern'])
@@ -67,7 +72,8 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form['patternAttr'])
 
 
-@exposed(return_type='json', http_method='POST')
+@bp.route('/fill_attrs')
+@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
 def fill_attrs(self, request):
     search = request.json['search']
     values = request.json['values']
@@ -95,8 +101,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         self.shorten_value = partial(strings.shorten, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
 
-    def export_actions(self):
-        return {concordance.Actions: [filter_attributes, attr_val_autocomplete, fill_attrs]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     def is_enabled_for(self, plugin_ctx, corpora) -> bool:
         """

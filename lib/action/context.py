@@ -1,19 +1,21 @@
 import os
+from typing import Callable
 from .templating import TplEngine
-from texttypes import TextTypesCache
+from texttypes.model import TextTypesCache
 import plugins
-from werkzeug.http import parse_accept_header
 from action.cookie import KonTextCookie
 from sanic.request import Request
 
 
-class ActionContext:
+class ApplicationContext:
 
-    def __init__(self, templating: TplEngine, tt_cache: TextTypesCache):
+    def __init__(self, templating: TplEngine, tt_cache: Callable[[], TextTypesCache]):
         self._templating = templating
         self._installed_langs = dict(
             [(x.split('_')[0], x) for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))])
-        self._tt_cache = tt_cache
+        self._tt_cache = None
+        self._tt_cache_factory = tt_cache
+        self.redis = None  # TODO TYPE
 
     @property
     def templating(self):
@@ -21,7 +23,7 @@ class ActionContext:
 
     @property
     def tt_cache(self):
-        return self._tt_cache
+        return self._tt_cache if self._tt_cache is not None else self._tt_cache_factory()
 
     @staticmethod
     def cleanup_runtime_modules():
@@ -31,32 +33,6 @@ class ActionContext:
         """
         plugins.flush_plugins()
 
-    def get_lang(self, request: Request):
-        """
-        Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
-
-        arguments:
-        environ -- WSGI environment variable
-
-        returns:
-        underscore-separated ISO 639 language code and ISO 3166 country code
-        """
-        cookies = KonTextCookie(request.cookies.get('HTTP_COOKIE', ''))
-
-        if plugins.runtime.GETLANG.exists:
-            lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
-        else:
-            lang_cookie = cookies.get('kontext_ui_lang')
-            if not lang_cookie:
-                lgs_string = parse_accept_header(request.headers.get('HTTP_ACCEPT_LANGUAGE')).best
-            else:
-                lgs_string = lang_cookie.value
-            if lgs_string is None:
-                lgs_string = 'en_US'
-            if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
-                lgs_string = self._installed_langs.get(lgs_string)
-            else:
-                lgs_string = lgs_string.replace('-', '_')
-        if lgs_string is None:
-            lgs_string = 'en_US'
-        return lgs_string
+    @property
+    def installed_langs(self):
+        return self._installed_langs

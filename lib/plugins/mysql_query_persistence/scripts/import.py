@@ -29,7 +29,7 @@ import sqlite3
 import autoconf
 import argparse
 import datetime
-import initializer
+from action.plugin import initializer
 initializer.init_plugin('integration_db')
 import plugins
 

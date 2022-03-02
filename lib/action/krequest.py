@@ -18,10 +18,44 @@
 
 from typing import Dict, Any, Tuple, Union, List
 from sanic.request import Request
-
 from urllib.parse import quote
+from plugin_types.auth import UserInfo
+from action.cookie import KonTextCookie
+import plugins
+from werkzeug.http import parse_accept_header
 
-import settings
+from action import ActionProps
+
+
+def _get_lang(request: Request, installed_langs):
+    """
+    Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
+
+    arguments:
+    environ -- WSGI environment variable
+
+    returns:
+    underscore-separated ISO 639 language code and ISO 3166 country code
+    """
+    cookies = KonTextCookie(request.cookies.get('HTTP_COOKIE', ''))
+
+    if plugins.runtime.GETLANG.exists:
+        lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
+    else:
+        lang_cookie = cookies.get('kontext_ui_lang')
+        if not lang_cookie:
+            lgs_string = parse_accept_header(request.headers.get('HTTP_ACCEPT_LANGUAGE')).best
+        else:
+            lgs_string = lang_cookie.value
+        if lgs_string is None:
+            lgs_string = 'en_US'
+        if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
+            lgs_string = installed_langs.get(lgs_string)
+        else:
+            lgs_string = lgs_string.replace('-', '_')
+    if lgs_string is None:
+        lgs_string = 'en_US'
+    return lgs_string
 
 
 class KRequest:
@@ -30,9 +64,78 @@ class KRequest:
     getting correct root URL, obtaining required action name etc.
     """
 
-    def __init__(self, request: Request, mapping_url_prefix: str):
+    def __init__(self, request: Request, action_props: ActionProps):
         self._request = request
-        self._mapping_url_prefix = mapping_url_prefix
+        self._action_props = action_props
+        self._ui_lang = _get_lang(request, action_props.installed_langs)
+
+    @property
+    def unwrapped(self):
+        return self._request
+
+    @property
+    def cookies(self):
+        return self._request.cookies
+
+    @property
+    def ctx(self):
+        return self._request.ctx
+
+    @property
+    def args(self):
+        return self._request.args
+
+    @property
+    def form(self):
+        return self._request.form
+
+    @property
+    def json(self):
+        return self._request.json
+
+    @property
+    def method(self):
+        return self._request.method
+
+    @property
+    def headers(self):
+        return self._request.headers
+
+    @property
+    def ui_lang(self):
+        return self._ui_lang
+
+    @property
+    def session(self):
+        return self._request.ctx.session
+
+    def session_get_user(self) -> UserInfo:
+        """
+        This is a convenience method for obtaining typed user info from HTTP session
+        """
+        return self._request.ctx.session['user']
+
+    def session_get(self, *nested_keys: str) -> Any:
+        """
+        Retrieve any HTTP session value. The method supports nested
+        keys - e.g. to get self._session['user']['car']['name'] we
+        can just call self.session_get('user', 'car', 'name').
+        If no matching keys are found then None is returned.
+
+        Arguments:
+        *nested_keys -- keys to access required value
+        """
+        curr = dict(self._request.ctx.session)
+        for k in nested_keys:
+            if k in curr:
+                curr = curr[k]
+            else:
+                return None
+        return curr
+
+    @property
+    def remote_addr(self):
+        return self._request.remote_addr
 
     def get_current_url(self) -> str:
         """
@@ -61,20 +164,9 @@ class KRequest:
         Please note that KonText always normalizes PATH_INFO environment
         variable to '/' (see public/app.py).
         """
-        module, _ = self._request.server_path.rsplit('/', 1)
-        module = '%s/' % module
-        if module.endswith(self._mapping_url_prefix):
-            action_module_path = module[:-len(self._mapping_url_prefix)]
-        else:
-            action_module_path = ''
-        if len(action_module_path) > 0:  # => app is not installed in root path (e.g. http://127.0.0.1/app/)
-            action_module_path = action_module_path[1:]
-        url_items = ('{}://{}'.format(
-                self._request.scheme, settings.get_str(
-                    'global', 'http_host', self._request.host)),
-                    settings.get_str('global', 'action_path_prefix', ''),
-                    action_module_path)
-        return '/'.join([x for x in [x.strip('/') for x in url_items] if bool(x)]) + '/'
+        host_items = self._request.host.split(':')
+        port_str = f':{host_items[1]}' if len(host_items) > 1 else ''
+        return f'{self._request.scheme}://{host_items[0]}{port_str}/{self._action_props.action_prefix}'
 
     def updated_current_url(self, params: Dict[str, Any]) -> str:
         """

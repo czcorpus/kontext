@@ -298,6 +298,7 @@ export class QueryPage {
             );
 
             let queryId = '__new__';
+            console.log('currentArgs: ', this.layoutModel.getConf('currentArgs'))
             const q = this.layoutModel.getNestedConf<string>('currentArgs', 'q');
             if (q.length > 0) {
                 queryId = q[0].replace('~', '');

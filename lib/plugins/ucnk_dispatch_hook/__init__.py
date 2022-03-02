@@ -21,6 +21,7 @@ from plugin_types.dispatch_hook import AbstractDispatchHook
 from plugin_types.general_storage import KeyValueStorage
 from action.plugin.ctx import PluginCtx
 from action.errors import ServiceUnavailableException
+from action import ActionProps
 import plugins
 from plugins import inject
 import logging
@@ -53,7 +54,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
     def _check_client(self, plugin_ctx: PluginCtx):
         """
         """
-        client_ip = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_FOR', plugin_ctx.get_from_environ('REMOTE_ADDR', ''))
+        client_ip = plugin_ctx.client_ip
         rec = self._db.hash_get(self.bot_clients_key, client_ip)
         if rec:
             report: ActivityReport = ActivityReport.from_dict(rec)
@@ -69,7 +70,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
                     logging.getLogger(__name__).warning(f'client ban expired for IP {client_ip}')
                     self._db.hash_del(self.bot_clients_key, client_ip)
 
-    def pre_dispatch(self, plugin_ctx, action_name, action_metadata, request):
+    def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
         self._check_client(plugin_ctx)
 
 

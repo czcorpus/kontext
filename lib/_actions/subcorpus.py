@@ -29,7 +29,7 @@ from translation import ugettext as translate
 import plugins
 import l10n
 import corplib
-from texttypes import TextTypeCollector
+from texttypes.model import TextTypeCollector
 import settings
 import bgcalc
 from action.argmapping import log_mapping

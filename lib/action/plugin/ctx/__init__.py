@@ -20,7 +20,8 @@ from action.cookie import KonTextCookie
 from corplib import CorpusManager
 import settings
 from plugin_types.auth import UserInfo
-
+from action.krequest import KRequest
+from action.model.base import BaseActionModel
 
 T = TypeVar('T')
 
@@ -36,9 +37,9 @@ class PluginCtx:
     called during request processing.
     """
 
-    def __init__(self, controller: 'Kontext', request: Request, cookies: KonTextCookie) -> None:
-        self._controller: 'Kontext' = controller
-        self._request: Request = request
+    def __init__(self, action_model: 'BaseActionModel', request: KRequest, cookies: KonTextCookie) -> None:
+        self._action_model: 'BaseActionModel' = action_model
+        self._request: KRequest = request
         self._cookies: KonTextCookie = cookies
         self._shared_data: Dict[str, Any] = {}
 
@@ -48,14 +49,16 @@ class PluginCtx:
     def get_shared(self, key: str, default: Optional[T] = None) -> Any:
         return self._shared_data.get(key, default)
 
-    def get_from_environ(self, key: str, default: Optional[str] = None) -> Optional[str]:
-        """
-        Return a WSGI environment variable
-        """
-        return self._controller.environ.get(key, default)
+    @property
+    def client_ip(self) -> str:
+        return self._request.headers.get('HTTP_X_FORWARDED_FOR', self._request.remote_addr)
 
     @property
-    def request(self) -> Request:
+    def http_headers(self):
+        return self._request.headers
+
+    @property
+    def request(self) -> KRequest:
         return self._request
 
     @property
@@ -64,68 +67,68 @@ class PluginCtx:
 
     @property
     def session(self) -> Session:
-        return self._request.session
+        return self._request.ctx.session
 
     def refresh_session_id(self) -> None:
-        return self._controller.refresh_session_id()
+        return self._action_model.refresh_session_id()
 
     @property
     def user_lang(self) -> str:
-        return self._controller.ui_lang
+        return self._action_model.ui_lang
 
     @property
     def user_id(self) -> int:
-        return self._request.session.get('user', {'id': None}).get('id')
+        return self._request.ctx.session.get('user', {'id': None}).get('id')
 
     @property
     def user_dict(self) -> UserInfo:
-        return self._request.session.get('user', {'id': None})
+        return self._request.ctx.session.get('user', {'id': None})
 
     @property
     def user_is_anonymous(self) -> bool:
-        return self._controller.user_is_anonymous()
+        return self._action_model.user_is_anonymous()
 
     @property
     def current_corpus(self) -> AbstractKCorpus:
-        return self._controller.corp
+        return self._action_model.corp
 
     @property
     def aligned_corpora(self):
-        return getattr(self._controller.args, 'align')
+        return getattr(self._action_model.args, 'align')
 
     @property
     def available_aligned_corpora(self):
-        return self._controller.get_available_aligned_corpora()
+        return self._action_model.get_available_aligned_corpora()
 
     @property
     def current_url(self) -> str:
-        return self._controller.get_current_url()
+        return self._action_model.get_current_url()
 
     @property
     def root_url(self) -> str:
-        return self._controller.get_root_url()
+        return self._action_model.get_root_url()
 
     def create_url(self, action, params):
-        return self._controller.create_url(action, params)
+        return self._action_model.create_url(action, params)
 
     def updated_current_url(self, args):
-        return self._controller.updated_current_url(args)
+        return self._action_model.updated_current_url(args)
 
     def redirect(self, url: str, code: int = 303) -> None:
-        return self._controller.redirect(url, code=code)
+        return self._action_model.redirect(url, code=code)
 
     def set_not_found(self):
-        return self._controller.set_not_found()
+        return self._action_model.set_not_found()
 
     def set_respose_status(self, status: int):
-        self._controller.set_respose_status(status)
+        self._action_model.set_respose_status(status)
 
     def add_system_message(self, msg_type, text):
-        self._controller.add_system_message(msg_type, text)
+        self._action_model.add_system_message(msg_type, text)
 
     @property
     def corpus_manager(self) -> CorpusManager:
-        return self._controller.cm
+        return self._action_model.cm
 
     @property
     def text_types(self) -> Dict:
@@ -134,7 +137,7 @@ class PluginCtx:
         subcorpattrs = self.current_corpus.get_conf('SUBCORPATTRS')
         if not subcorpattrs:
             subcorpattrs = self.current_corpus.get_conf('FULLREF')
-        tt = self._controller.tt.export(subcorpattrs, maxlistsize)
+        tt = self._action_model.tt.export(subcorpattrs, maxlistsize)
         for item in tt:
             for tt2 in item['Line']:
                 ans[tt2['name']] = {'type': 'default', 'values': [x['v']

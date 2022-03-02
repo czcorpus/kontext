@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     import manatee
-    import initializer
+    from action.plugin import initializer
     import settings
     conf_path = args.conf if args.conf else os.path.realpath(
         os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'conf', 'config.xml'))

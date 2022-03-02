@@ -60,13 +60,13 @@ class DefaultActionLog(AbstractActionLog):
             log_data['error'] = dict(name=err_name, message=err_msg, anchor=err_anchor)
         log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
         log_data['action'] = full_action_name
-        log_data['user_id'] = request.session.get('user', {}).get('id')
+        log_data['user_id'] = request.ctx.session.get('user', {}).get('id')
         if proc_time is not None:
             log_data['proc_time'] = proc_time
         log_data['request'] = {
-            'REMOTE_ADDR': request.environ.get('REMOTE_ADDR'),
-            'HTTP_X_FORWARDED_FOR': request.environ.get('HTTP_X_FORWARDED_FOR'),
-            'HTTP_USER_AGENT': request.environ.get('HTTP_USER_AGENT')
+            'REMOTE_ADDR': request.remote_addr,
+            'HTTP_X_FORWARDED_FOR': request.headers.get('HTTP_X_FORWARDED_FOR'),
+            'HTTP_USER_AGENT': request.headers.get('HTTP_USER_AGENT')
         }
         return log_data
 
