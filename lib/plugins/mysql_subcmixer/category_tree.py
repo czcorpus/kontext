@@ -283,7 +283,7 @@ class CategoryTree(object):
                 SELECT t_map.value_tuple_id
                 FROM corpus_structattr_value AS t_value
                 JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s 
+                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s
                   AND t_value.value {expr.mysql_op} %s
                 '''
             for subl in mc for expr in subl
@@ -297,7 +297,13 @@ class CategoryTree(object):
         sql = f'''
             SELECT SUM(t_tuple.poscount) AS poscount
             FROM (
-                {' INTERSECT '.join(sql_items)}
+                -- we dont want to use INTERSECT because old MariaDB version does not support it
+                SELECT count(*) AS num, union_tuple_ids.value_tuple_id
+                FROM (
+                    {' UNION ALL '.join(sql_items)}
+                ) union_tuple_ids
+                GROUP BY union_tuple_ids.value_tuple_id
+                HAVING num = {len(sql_items)}
             ) as tuple_ids
             JOIN corpus_structattr_value_tuple AS t_tuple ON t_tuple.id = tuple_ids.value_tuple_id
             {' '.join(aligned_join)}
