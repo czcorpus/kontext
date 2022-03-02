@@ -17,7 +17,7 @@ The module contains functions matching a signature required by the 'action_log_m
 methods. The functions map request arguments to a more compact/readable form as required by action logging.
 """
 
-from werkzeug import Request
+from sanic.request import Request
 
 
 def query(request: Request):

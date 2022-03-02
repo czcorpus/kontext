@@ -173,7 +173,7 @@ if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath('%s/../../../scripts/' %
                                         os.path.dirname(os.path.realpath(__file__))))
     import autoconf
-    import initializer
+    from action.plugin import initializer
     settings = autoconf.settings
     logger = autoconf.logger
 

@@ -14,31 +14,35 @@
 
 from typing import Any, List
 import importlib
+from sanic.blueprints import Blueprint
 
 from plugin_types.query_suggest import AbstractQuerySuggest
 import plugins
 import plugin_types.corparch
-from controller import exposed
-from controller.kontext import Kontext
-from actions import concordance
 from action.plugin.ctx import PluginCtx
+from action.model.corpus import CorpusActionModel
+from action.decorators import http_action
 
 
-@exposed(return_type='json')
-def fetch_query_suggestions(self: Kontext, request):
+bp = Blueprint('default_query_suggest')
+
+
+@bp.route('/fetch_query_suggestions')
+@http_action(return_type='json', action_model=CorpusActionModel)
+def fetch_query_suggestions(req, amodel):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
         ans = plg.find_suggestions(
-            plugin_ctx=self._plugin_ctx,
-            corpora=request.args.getlist('corpora'),
-            subcorpus=request.args.get('subcorpus'),
-            value=request.args.get('value'),
-            value_type=request.args.get('value_type'),
-            value_subformat=request.args.get('value_subformat'),
-            query_type=request.args.get('query_type'),
-            p_attr=request.args.get('p_attr'), struct=request.args.get('struct'),
-            s_attr=request.args.get('s_attr'))
+            plugin_ctx=amodel.plugin_ctx,
+            corpora=req.args.getlist('corpora'),
+            subcorpus=req.args.get('subcorpus'),
+            value=req.args.get('value'),
+            value_type=req.args.get('value_type'),
+            value_subformat=req.args.get('value_subformat'),
+            query_type=req.args.get('query_type'),
+            p_attr=req.args.get('p_attr'), struct=req.args.get('struct'),
+            s_attr=req.args.get('s_attr'))
     return dict(items=ans)
 
 
@@ -81,8 +85,9 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
                 })
         return dict(providers=active_providers)
 
-    def export_actions(self):
-        return {concordance.Actions: [fetch_query_suggestions]}
+    @staticmethod
+    def export_actions():
+        return bp
 
 
 def find_implementation(path: str) -> Any:

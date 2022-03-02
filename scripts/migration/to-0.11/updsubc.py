@@ -19,7 +19,7 @@ import sys
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../scripts')))
 import autoconf
 import plugins
-import initializer
+from action.plugin import initializer
 initializer.init_plugin('db')
 
 if __name__ == '__main__':

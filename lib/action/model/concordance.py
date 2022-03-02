@@ -23,22 +23,25 @@ extended, re-editable query processing.
 
 from typing import Dict, Any, Optional, List, Tuple
 from action.argmapping.conc.query import ConcFormArgs
-from werkzeug import Request
 from collections import defaultdict
 
-from action.model.base import BaseActionModel
+from action import ActionProps
 from main_menu.model import MainMenu
-from texttypes import TextTypesCache
+from texttypes.model import TextTypesCache
 import plugins
 from plugin_types.corparch.corpus import StructAttrInfo
+from action.argmapping import ConcArgsMapping
 from action.argmapping.conc.query import QueryFormArgs
 from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from action.argmapping.conc import build_conc_form_args
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
+from action.errors import ImmediateRedirectException
 
 
-class ConcActionModel(BaseActionModel):
+class ConcActionModel(CorpusActionModel):
     """
     A controller for actions which rely on
     query input form (either directly or indirectly).
@@ -47,9 +50,51 @@ class ConcActionModel(BaseActionModel):
     by 'prev_id' reference (i.e. a reversed list).
     """
 
-    def __init__(self, request: Request, tt_cache: TextTypesCache) -> None:
-        super().__init__(request=request, tt_cache=tt_cache)
+    def __init__(self, request: KRequest, action_props: ActionProps, tt_cache: TextTypesCache):
+        super().__init__(request, action_props, tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
+
+    def _fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
+        curr = self._request.ctx.session.get('last_search', {})
+        last_op = curr.get(query_type, None)
+        if last_op:
+            with plugins.runtime.QUERY_PERSISTENCE as qp:
+                last_op_form = qp.open(last_op)
+                if last_op_form is None:  # probably a lost/deleted concordance record
+                    return None
+                prev_corpora = last_op_form.get('corpora', [])
+                prev_subcorp = last_op_form.get('usesubcorp', None)
+                curr_corpora = [self.args.corpname] + self.args.align
+                curr_subcorp = self.args.usesubcorp
+
+                if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
+                    args = [('corpname', prev_corpora[0])] + [('align', a)
+                                                              for a in prev_corpora[1:]]
+                    if prev_subcorp and not curr_subcorp and any(subc['n'] == prev_subcorp for subc in self.cm.subcorp_names(prev_corpora[0])):
+                        args += [('usesubcorp', prev_subcorp)]
+
+                    if len(args) > 1:
+                        raise ImmediateRedirectException(self._request.create_url('query', args))
+
+                if last_op_form:
+                    if query_type == 'conc:filter':
+                        qf_args = FilterFormArgs(
+                            plugin_ctx=self._plugin_ctx,
+                            maincorp=self.args.corpname,
+                            persist=False)
+                        qf_args.apply_last_used_opts(last_op_form.get('lastop_form', {}))
+                    else:
+                        qf_args = QueryFormArgs(
+                            plugin_ctx=self._plugin_ctx,
+                            corpora=self._select_current_aligned_corpora(active_only=False),
+                            persist=False)
+                        qf_args.apply_last_used_opts(
+                            data=last_op_form.get('lastop_form', {}),
+                            prev_corpora=prev_corpora,
+                            curr_corpora=[self.args.corpname] + self.args.align,
+                            curr_posattrs=self.corp.get_posattrs())
+                    return qf_args
+        return None
 
     def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
@@ -126,11 +171,11 @@ class ConcActionModel(BaseActionModel):
             self.disabled_menu_items += (MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
                                          MainMenu.CONCORDANCE('shuffle'), MainMenu.CONCORDANCE('sample'))
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
-        super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
+    def post_dispatch(self, action_props, result, err_desc):
+        super().post_dispatch(action_props, result, err_desc)
         # create and store concordance query key
         if type(result) is dict:
-            if action_metadata['mutates_result']:
+            if action_props.mutates_result:
                 next_query_keys, history_ts = self._store_conc_params()
             else:
                 next_query_keys = [self._active_q_data.get(
@@ -242,7 +287,6 @@ class ConcActionModel(BaseActionModel):
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
-
     def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = [t for t in self.corp.get_structattrs() if t != '']
@@ -251,12 +295,15 @@ class ConcActionModel(BaseActionModel):
                 structs_and_attrs[attr.structure_name].append(attr)
         return dict(structs_and_attrs)
 
-    def add_globals(self, request, result, methodname, action_metadata):
+    def add_globals(self, app, action_props, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        super().add_globals(request, result, methodname, action_metadata)
-
+        result = super().add_globals(app, action_props, result)
         result['structs_and_attrs'] = self._get_structs_and_attrs()
+        conc_args = self._get_mapped_attrs(ConcArgsMapping)
+        conc_args['q'] = [q for q in result.get('Q')]
+        result['Globals'] = conc_args
+        return result

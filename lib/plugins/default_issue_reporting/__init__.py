@@ -21,19 +21,23 @@ import smtplib
 from email.mime.text import MIMEText
 import json
 from datetime import datetime
+from sanic.blueprints import Blueprint
 
 from plugins import inject
 import plugins
 from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
-import actions.user
-from controller import exposed
 from translation import ugettext as _
+from action.decorators import http_action
+from action.model.base import BaseActionModel
 
 
-@exposed(return_type='json', http_method='POST', skip_corpus_init=True)
-def submit_issue(self, request):
+bp = Blueprint('default_issue_reporting')
+
+
+@http_action(return_type='json', http_method='POST', skip_corpus_init=True, action_model=BaseActionModel)
+def submit_issue(req, amodel):
     with plugins.runtime.ISSUE_REPORTING as p:
-        p.submit(self._plugin_ctx, request.form)
+        p.submit(amodel.plugin_ctx, req.form)
     return {}
 
 
@@ -82,15 +86,16 @@ class DefaultErrorReporting(AbstractIssueReporting):
             s.sendmail(self._mail_sender, self._mail_recipients, msg.as_string())
             ans = True
         except Exception as ex:
-            logging.getLogger(__name__).warn(
+            logging.getLogger(__name__).warning(
                 'There were errors sending an issue report link via e-mail(s): %s' % (ex,))
             ans = False
         finally:
             s.quit()
         return ans
 
-    def export_actions(self):
-        return {actions.user.User: [submit_issue]}
+    @staticmethod
+    def export_actions():
+        return bp
 
 
 @inject(plugins.runtime.AUTH)

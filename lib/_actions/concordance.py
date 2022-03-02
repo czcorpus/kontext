@@ -53,7 +53,7 @@ import plugins
 from kwiclib import Kwic, KwicPageArgs
 from translation import ugettext as translate
 from action.argmapping import WidectxArgsMapping
-from texttypes import TextTypeCollector
+from texttypes.model import TextTypeCollector
 from texttypes.cache import TextTypesCache
 from main_menu.model import MainMenu
 from main_menu import generate_main_menu
@@ -376,49 +376,6 @@ class Actions(Querying):
     def first_form(self, request):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
-
-    def _fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
-        curr = self._session.get('last_search', {})
-        last_op = curr.get(query_type, None)
-        if last_op:
-            with plugins.runtime.QUERY_PERSISTENCE as qp:
-                last_op_form = qp.open(last_op)
-                if last_op_form is None:  # probably a lost/deleted concordance record
-                    return None
-                prev_corpora = last_op_form.get('corpora', [])
-                prev_subcorp = last_op_form.get('usesubcorp', None)
-                curr_corpora = [self.args.corpname] + self.args.align
-                curr_subcorp = self.args.usesubcorp
-
-                if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
-                    args = [('corpname', prev_corpora[0])] + [('align', a)
-                                                              for a in prev_corpora[1:]]
-                    if prev_subcorp and not curr_subcorp and any(subc['n'] == prev_subcorp for subc in self.cm.subcorp_names(prev_corpora[0])):
-                        args += [('usesubcorp', prev_subcorp)]
-
-                    if len(args) > 1:
-                        raise ImmediateRedirectException(self.create_url('query', args))
-
-                if last_op_form:
-                    if query_type == 'conc:filter':
-                        qf_args = FilterFormArgs(
-                            plugin_ctx=self._plugin_ctx,
-                            maincorp=self.args.corpname,
-                            persist=False)
-                        qf_args.apply_last_used_opts(last_op_form.get('lastop_form', {}))
-                    else:
-                        qf_args = QueryFormArgs(
-                            plugin_ctx=self._plugin_ctx,
-                            corpora=self._select_current_aligned_corpora(active_only=False),
-                            persist=False)
-                        qf_args.apply_last_used_opts(
-                            data=last_op_form.get('lastop_form', {}),
-                            prev_corpora=prev_corpora,
-                            curr_corpora=[self.args.corpname] + self.args.align,
-                            curr_posattrs=self.corp.get_posattrs())
-                    return qf_args
-        return None
-
 
 
     @exposed(return_type='json')

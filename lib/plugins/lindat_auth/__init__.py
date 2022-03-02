@@ -197,7 +197,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             self._db.hash_set_map(username, user_d)
         else:
             if idp != db_user_d["idp"]:
-                _logger.warn("User's [%s] idp has changed [%s]->[%s]",
+                _logger.warning("User's [%s] idp has changed [%s]->[%s]",
                              username, idp, db_user_d["idp"])
                 return None
             user_d = db_user_d

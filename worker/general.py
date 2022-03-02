@@ -38,7 +38,7 @@ import pickle
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/../lib')
 import settings
-import initializer
+from action.plugin import initializer
 import translation
 from stderr2f import get_stderr_redirector
 

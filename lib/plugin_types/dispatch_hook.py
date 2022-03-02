@@ -17,11 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from action import ActionProps
 
 
 class AbstractDispatchHook(abc.ABC):
 
-    def pre_dispatch(self, plugin_ctx, action_name, action_metadata, request):
+    def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
         """
         A function run right after Controller.pre_dispatch and before
         any Kontext.pre_dispatch.
@@ -32,8 +33,8 @@ class AbstractDispatchHook(abc.ABC):
 
         Args:
             plugin_ctx -- an API available to plugins (controller.plg.PluginCtx)
-            action_name -- resolved action name
-            action_metadata -- action metadata (added by @inject)
+            action_props -- action properties as used by action models
+                            (derived mostly from @http_action decor.)
             request -- current request (Werkzeug Request)
         """
 
