@@ -30,7 +30,7 @@ from translation import ugettext
 import l10n
 import strings
 import settings
-from .krequest import KRequest
+from action.krequest import KRequest
 from action.cookie import KonTextCookie
 from action.errors import ForbiddenException
 

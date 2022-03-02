@@ -14,14 +14,18 @@
 
 import json
 import logging
+from sanic.blueprints import Blueprint
 
 from .backend import Backend
 
 from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
-from controller import exposed
-from actions.user import User as UserController
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
+
+
+bp = Blueprint('mysql_user_items')
 
 
 def import_legacy_record(data):
@@ -58,7 +62,8 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
+@bp.route('/set_favorite_item')
+@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST', action_model=CorpusActionModel)
 def set_favorite_item(ctrl, request):
     """
     """
@@ -85,11 +90,12 @@ def set_favorite_item(ctrl, request):
         return item.to_dict()
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
-def unset_favorite_item(ctrl, request):
+@bp.route('/unset_favorite_item')
+@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST', action_model=CorpusActionModel)
+def unset_favorite_item(req, amodel):
     with plugins.runtime.USER_ITEMS as uit:
-        uit.delete_user_item(ctrl._plugin_ctx, request.form['id'])
-        return dict(id=request.form['id'])
+        uit.delete_user_item(amodel.plugin_ctx, req.form['id'])
+        return dict(id=req.form['id'])
 
 
 class MySQLUserItems(AbstractUserItems):
@@ -126,8 +132,9 @@ class MySQLUserItems(AbstractUserItems):
     def delete_user_item(self, plugin_ctx, item_id):
         self._backend.delete_favitem(item_id)
 
-    def export_actions(self):
-        return {UserController: [set_favorite_item, unset_favorite_item]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     @property
     def max_num_favorites(self):

@@ -45,10 +45,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <script type="text/javascript">
 if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=function(s){return''+s}},DateTimeFormat:function(){this.format=function(s){return s.toString()}},PluralRules:function(){this.select=function(s){return'one'}},Collator:function(){this.compare=function(a,b){return a.localeCompare(b)}}}}
 </script>
-{% if use_phantom_polyfills -%}
-<script src="https://cdn.polyfill.io/v2/polyfill.js?features=Intl.~locale.en,Intl.~locale.cs"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js"></script>
-{% endif -%}
 <!-- plug-ins dependencies -->
 {% for abjs in app_bar_js %}
 <script type="text/javascript" src="{{ abjs }}"></script>

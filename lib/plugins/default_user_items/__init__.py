@@ -14,13 +14,15 @@
 
 import json
 import logging
+from sanic import Blueprint
 
 from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
 import plugins
 import l10n
-from controller import exposed
-from actions.user import User as UserController
+from action.decorators import http_action
+
+bp = Blueprint('default_user_items')
 
 
 def import_legacy_record(data):
@@ -57,7 +59,8 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
+@bp.route('/set_favorite_item')
+@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
 def set_favorite_item(ctrl, request):
     """
     """
@@ -83,7 +86,8 @@ def set_favorite_item(ctrl, request):
         return item.to_dict()
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
+@bp.route('/set_favorite_item')
+@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
 def unset_favorite_item(ctrl, request):
     with plugins.runtime.USER_ITEMS as uit:
         uit.delete_user_item(ctrl._plugin_ctx, request.form['id'])
@@ -138,8 +142,9 @@ class UserItems(AbstractUserItems):
     def delete_user_item(self, plugin_ctx, item_id):
         self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)
 
-    def export_actions(self):
-        return {UserController: [set_favorite_item, unset_favorite_item]}
+    @staticmethod
+    def export_actions():
+        return bp
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)

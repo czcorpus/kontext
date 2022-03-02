@@ -29,7 +29,7 @@ import settings
 from action.argmapping import log_mapping
 from argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from werkzeug import Request
-from texttypes import TextTypesCache
+from texttypes.model import TextTypesCache
 from action.argmapping import WordlistArgsMapping, ConcArgsMapping
 from action.req_args import RequestArgsProxy, JSONRequestArgsProxy
 

@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.real
 import sqlite3
 import argparse
 import datetime
-import initializer
+from action.plugin import initializer
 import settings
 import plugins
 

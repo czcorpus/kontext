@@ -24,7 +24,7 @@ from corplib import CorpusManager
 from bgcalc.errors import CalcTaskNotFoundError
 from bgcalc import calc_backend_client
 import plugins
-import initializer
+from action.plugin import initializer
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 initializer.init_plugin('db')

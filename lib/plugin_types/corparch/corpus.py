@@ -22,7 +22,7 @@ from dataclasses_json.api import LetterCase
 from corplib.abstract import AbstractKCorpus
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
-from plugins.abstract.corparch.error import CorpusInfoError
+from plugin_types.corparch.error import CorpusInfoError
 
 
 @dataclass_json
@@ -194,7 +194,7 @@ class CorpusInfo:
             raise CorpusInfoError('Corpus is missing collator locale config')
         else:
             return self._collator_locale
-    
+
     @collator_locale.setter
     def collator_locale(self, value):
         self._collator_locale = value

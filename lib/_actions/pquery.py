@@ -28,12 +28,13 @@ from argmapping.pquery import PqueryFormArgs
 from action.argmapping.conc.query import QueryFormArgs
 from action.argmapping.conc.filter import FilterFormArgs
 import plugins
-from texttypes import TextTypesCache
+from texttypes.model import TextTypesCache
 import bgcalc
 from bgcalc.pquery import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 from bgcalc.task import AsyncTaskStatus
 from action.plugin.ctx import PluginCtx
+from action import ActionProps
 from translation import ugettext as translate
 from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
 import settings
@@ -114,7 +115,7 @@ class ParadigmaticQuery(Kontext):
         attrs = self.corp.get_posattrs()
         return 'lemma' if 'lemma' in attrs else attrs[0]
 
-    def pre_dispatch(self, action_name, action_metadata=None):
+    def pre_dispatch(self, action_props: ActionProps):
         ans = super().pre_dispatch(action_name, action_metadata)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'pquery':

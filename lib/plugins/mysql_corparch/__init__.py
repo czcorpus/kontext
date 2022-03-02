@@ -24,9 +24,9 @@ from typing import Dict, List, Tuple, Iterable
 import json
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
+from sanic.blueprints import Blueprint
 
-from controller import exposed
-import actions.user
+from action.decorators import http_action
 import plugins
 from plugins import inject
 from plugin_types.corparch import AbstractSearchableCorporaArchive, CorpusListItem
@@ -43,7 +43,11 @@ except ImportError:
     def markdown(s): return s
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
+bp = Blueprint('mysql_corparch')
+
+
+@bp.route('/get_favorite_corpora')
+@http_action(return_type='json', access_level=1, skip_corpus_init=True)
 def get_favorite_corpora(ctrl, request):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
         return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
@@ -351,8 +355,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             }
         }
 
-    def export_actions(self):
-        return {actions.user.User: [get_favorite_corpora]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     def _export_featured(self, plugin_ctx):
         return [dict(r) for r in self.backend.load_featured_corpora(plugin_ctx.user_lang)]

@@ -103,41 +103,17 @@ class Controller(ABC):
     def set_respose_status(self, status: int):
         self._response.set_http_status(status)
 
-    def init_session(self) -> None:
-        """
-        Starts/reloads user's web session data. It can be called even
-        if there is no 'sessions' plugin installed (in such case, it just
-        creates an empty dictionary with some predefined keys to allow other
-        parts of the application to operate properly)
-        """
-        with plugins.runtime.AUTH as auth:
-            if auth is None:
-                raise RuntimeError('Auth plugin was not initialized')
 
-            if 'user' not in self._session:
-                self._session['user'] = auth.anonymous_user()
-
-            if hasattr(auth, 'revalidate'):
-                try:
-                    auth.revalidate(self._plugin_ctx)  # type: ignore
-                except Exception as ex:
-                    self._session['user'] = auth.anonymous_user()
-                    logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                    self.add_system_message(
-                        'error',
-                        translate(
-                            'User authentication error. Please try to reload the page or '
-                            'contact system administrator.'))
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property
     def _session(self) -> Dict[str, Any]:
-        return self._request.session
+        return self._request.ctx.session
 
     def session_get_user(self) -> UserInfo:
         """
         This is a convenience method for obtaining typed user info from HTTP session
         """
-        return self._request.session['user']
+        return self._request.ctx.session['user']
 
     def session_get(self, *nested_keys: str) -> Any:
         """
@@ -149,7 +125,7 @@ class Controller(ABC):
         Arguments:
         *nested_keys -- keys to access required value
         """
-        curr = dict(self._request.session)
+        curr = dict(self._request.ctx.session)
         for k in nested_keys:
             if k in curr:
                 curr = curr[k]
@@ -223,7 +199,7 @@ class Controller(ABC):
         hm = action_metadata.get('http_method', 'GET')
         if not isinstance(hm, tuple):
             hm = (hm,)
-        if self.get_http_method() not in hm:
+        if self._request.method not in hm:
             raise UserActionException(translate('Unknown action'), code=404)
 
     def _pre_action_validate(self) -> None:
@@ -328,9 +304,6 @@ class Controller(ABC):
     def set_forbidden(self):
         self._response.set_forbidden()
 
-    def get_http_method(self) -> str:
-        return self.environ.get('REQUEST_METHOD', '')
-
     @staticmethod
     def _get_attrs_by_persistence(persistence_types: Persistence) -> Tuple[str, ...]:
         """
@@ -357,23 +330,7 @@ class Controller(ABC):
                 ans[k] = getattr(self.args, k)
         return ans
 
-    def _install_plugin_actions(self) -> None:
-        """
-        Tests plug-ins whether they provide method 'export_actions' and if so
-        then attaches functions they provide to itself (if exported function's required
-        controller class matches current instance's one).
-        """
-        for plg in plugins.runtime:
-            if callable(getattr(plg.instance, 'export_actions', None)):
-                exported = getattr(plg.instance, 'export_actions')()
-                if self.__class__ in exported:
-                    for action in exported[self.__class__]:
-                        if not hasattr(self, action.__name__):
-                            setattr(self, action.__name__, types.MethodType(action, self))
-                        else:
-                            raise Exception(
-                                'Plugins cannot overwrite existing action methods (%s.%s)' % (
-                                    self.__class__.__name__, action.__name__))
+
 
     def pre_dispatch(
             self,
@@ -449,9 +406,7 @@ class Controller(ABC):
             ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
         return ans
 
-    @staticmethod
-    def _is_allowed_explicit_out_format(f: str) -> bool:
-        return f in ('template', 'json', 'xml', 'plain')
+
 
     def run(self, path: Optional[List[str]] = None) -> Tuple[str, List[Tuple[str, str]], bool, Union[str, bytes]]:
         """
@@ -463,7 +418,7 @@ class Controller(ABC):
         returns:
         a 4-tuple: HTTP status, HTTP headers, valid SID flag, response body
         """
-        self._install_plugin_actions()
+        self._install_plugin_actions() # TODO
         self._proc_time = time.time()
         path = path if path is not None else self._import_req_path()
         methodname = path[0]
@@ -573,10 +528,7 @@ class Controller(ABC):
             if k not in result:
                 result[k] = getattr(self.args, k)
 
-    # mypy error: missing return statement
-    def user_is_anonymous(self) -> bool:  # type: ignore
-        with plugins.runtime.AUTH as auth:
-            return getattr(auth, 'is_anonymous')(self.session_get('user', 'id'))
+
 
     @exposed()
     def nop(self, request: werkzeug.wrappers.Request, *args: Any) -> None:

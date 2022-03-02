@@ -21,7 +21,7 @@ from typing import Union, Tuple
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../..')))
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../scripts')))
 import autoconf
-import initializer
+from action.plugin import initializer
 import plugins
 initializer.init_plugin('integration_db')
 initializer.init_plugin('auth')

@@ -37,8 +37,8 @@ element taghelper {
 }
 """
 from translation import ugettext as _
-from controller import Controller, exposed
 from action.errors import UserActionException
+from sanic.blueprints import Blueprint
 import plugins
 from plugin_types.taghelper import AbstractTaghelper
 from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
@@ -47,28 +47,33 @@ from plugins.default_taghelper.loaders import NullTagVariantLoader
 from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
 from plugins.default_taghelper.fetchers.positional import PositionalSelectionFetcher
 from plugins.default_taghelper.fetchers import NullSelectionFetcher
-from actions import corpora
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
 
 
-@exposed(return_type='json')
-def ajax_get_tag_variants(ctrl: Controller, request):
+bp = Blueprint('default_taghelper')
+
+
+@bp.route('/ajax_get_tag_variants')
+@http_action(return_type='json', action_model=CorpusActionModel)
+def ajax_get_tag_variants(req, amodel):
     """
     """
-    corpname = request.args['corpname']
-    tagset_name = request.args['tagset']
+    corpname = req.args['corpname']
+    tagset_name = req.args['tagset']
 
     values_selection = plugins.runtime.TAGHELPER.instance.fetcher(
-        ctrl._plugin_ctx, corpname, tagset_name).fetch(request)
+        amodel.plugin_ctx, corpname, tagset_name).fetch(req)
     try:
         tag_loader = plugins.runtime.TAGHELPER.instance.loader(
-            ctrl._plugin_ctx, corpname, tagset_name)
+            amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
         raise UserActionException(
             _('Corpus %s is not supported by this widget.') % corpname)
-    if plugins.runtime.TAGHELPER.instance.fetcher(ctrl._plugin_ctx, corpname, tagset_name).is_empty(values_selection):
-        ans = tag_loader.get_initial_values(ctrl.ui_lang)
+    if plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name).is_empty(values_selection):
+        ans = tag_loader.get_initial_values(req.ui_lang)
     else:
-        ans = tag_loader.get_variant(values_selection, ctrl.ui_lang)
+        ans = tag_loader.get_variant(values_selection, amodel.ui_lang)
     return ans
 
 
@@ -120,8 +125,9 @@ class Taghelper(AbstractTaghelper):
                 return loader.is_available()
         return False
 
-    def export_actions(self):
-        return {corpora.Corpora: [ajax_get_tag_variants]}
+    @staticmethod
+    def export_actions():
+        return bp
 
     def export(self, plugin_ctx):
         tagsets = {}

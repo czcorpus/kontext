@@ -25,7 +25,7 @@ import os
 sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.realpath(__file__))))
 
 import settings
-import initializer
+from action.plugin import initializer
 import plugins
 from plugins import sqlite3_db
 

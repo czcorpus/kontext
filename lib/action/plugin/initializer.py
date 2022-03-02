@@ -16,12 +16,13 @@
 # 02110-1301, USA.
 
 import logging
-
+from sanic import Sanic
 import settings
 import plugins
 import plugins.export_freq2d
 import plugins.export
 from plugins.errors import PluginException
+from types import MethodType
 
 
 def has_configured_plugin(name):
@@ -63,7 +64,7 @@ def init_plugin(name, module=None, optional=False):
                     logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} environment OK')
 
         except ImportError as e:
-            logging.getLogger(__name__).warn('Plugin [%s] configured but following error occurred: %r'
+            logging.getLogger(__name__).warning('Plugin [%s] configured but following error occurred: %r'
                                              % (name, e))
         except (PluginException, Exception) as e:
             from action.errors import get_traceback
@@ -84,3 +85,15 @@ def setup_plugins():
     plugins.runtime.EXPORT_FREQ2D.force_module(plugins.export_freq2d)
     for plugin in plugins.runtime:
         init_plugin(plugin.name, optional=plugin.is_optional, module=plugin.forced_module)
+
+
+def install_plugin_actions(app: Sanic) -> None:
+    """
+    Tests plug-ins whether they provide method 'export_actions' and if so
+    then attaches functions they provide to itself (if exported function's required
+    controller class matches current instance's one).
+    """
+    for plg in plugins.runtime:
+        if callable(getattr(plg.instance, 'export_actions', None)):
+            app.blueprint(getattr(plg.instance, 'export_actions')())
+            # TODO watch for conflicting paths?

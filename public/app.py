@@ -29,9 +29,6 @@ import logging
 import locale
 import signal
 
-from werkzeug.http import parse_accept_header
-from werkzeug.wrappers import Request, Response
-from werkzeug.wrappers.json import JSONMixin
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
@@ -42,25 +39,23 @@ import plugins
 import plugins.export
 import settings
 import translation
-from initializer import setup_plugins
+from action.plugin.initializer import setup_plugins, install_plugin_actions
 from texttypes.cache import TextTypesCache
 from sanic import Sanic
 from sanic_babel import Babel
+from sanic_session import Session, AIORedisSessionInterface
+from redis import asyncio as aioredis
 from views.root import bp as root_bp
 from views.concordance import bp as conc_bp
 from action import get_protocol
 from action.templating import TplEngine
-from action.context import ActionContext
+from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 logger = logging.getLogger('')  # root logger
-
-
-class JSONRequest(JSONMixin, Request):
-    pass
 
 
 def setup_logger(conf):
@@ -187,9 +182,9 @@ class KonTextWsgiApp(WsgiApp):
         request = JSONRequest(environ)
         sid = request.cookies.get(sessions.get_cookie_name())
         if sid is None:
-            request.session = sessions.new()
+            request.ctx.session = sessions.new()
         else:
-            request.session = sessions.get(sid)
+            request.ctx.session = sessions.get(sid)
 
         sid_is_valid = True
         if environ['PATH_INFO'] in ('/', ''):
@@ -209,17 +204,17 @@ class KonTextWsgiApp(WsgiApp):
             status, headers, sid_is_valid, body = app.run()
         response = Response(response=body, status=status, headers=headers)
         if not sid_is_valid:
-            curr_data = dict(request.session)
-            request.session = sessions.new()
-            request.session.update(curr_data)
-            request.session.modified = True
-        if request.session.should_save:
-            sessions.save(request.session)
+            curr_data = dict(request.ctx.session)
+            request.ctx.session = sessions.new()
+            request.ctx.session.update(curr_data)
+            request.ctx.session.modified = True
+        if request.ctx.session.should_save:
+            sessions.save(request.ctx.session)
             cookie_path = settings.get_str('global', 'cookie_path_prefix', '/')
             cookies_same_site = settings.get('global', 'cookies_same_site', None)
             response.set_cookie(
                 sessions.get_cookie_name(),
-                request.session.sid,
+                request.ctx.session.sid,
                 path=cookie_path,
                 secure=cookies_same_site is not None,
                 samesite=cookies_same_site
@@ -237,13 +232,26 @@ if settings.get('global', 'manatee_path', None):
 if settings.get('global', 'umask', None):
     os.umask(int(settings.get('global', 'umask'), 8))
 
+os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
+
 application = Sanic(
         'kontext',
-        ctx=ActionContext(
+        ctx=ApplicationContext(
             templating=TplEngine(settings),
-            tt_cache=TextTypesCache(plugins.runtime.DB.instance)))
+            tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance)))
+application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
+session = Session()
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
+setup_plugins()
+install_plugin_actions(application)
+
+
+@application.listener('before_server_start')
+async def server_init(app, loop):
+    app.ctx.redis = aioredis.from_url('redis://ktm_redis_1:6379', decode_responses=True)
+    # init extensions fabrics
+    session.init_app(app, interface=AIORedisSessionInterface(app.ctx.redis))
 
 
 @application.middleware('request')
