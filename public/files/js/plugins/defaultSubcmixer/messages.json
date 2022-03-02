@@ -10,7 +10,7 @@
     "subcmixer__new_subc_name": "New subcorpus name",
     "subcmixer__subc_found_{size}": "Required subcorpus found. Calculated size: {size} tokens.",
     "subcmixer__subc_found_with_errors{size}": "Found only an approximate subcorpus. Calculated size: {size} tokens.",
-    "subcmixer__subc_not_found": "Unable to found a suitable subcorpus - all the conditions failed.",
+    "subcmixer__subc_not_found": "Unable to find a suitable subcorpus - all the conditions failed.",
     "subcmixer__missing_subc_name": "A subcorpus name is missing",
     "subcmixer__multiple_attrs_mixing_warning{attrs}": "Please note that using more than one structural attribute (currently: {attrs}) can easily lead to an unsolvable task specification.",
     "subcmixer__condition_failed_{limit}": "Ratio is more than {limit, plural, one{# percentage point} other{# percentage points}} off the required value.",
