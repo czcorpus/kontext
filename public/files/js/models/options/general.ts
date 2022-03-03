@@ -29,6 +29,7 @@ import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { Actions } from './actions';
 import { ViewOptsResponse } from './common';
 import { validateGzNumber } from '../base';
+import { FreqResultViews } from '../freqs/common';
 
 
 interface GeneralOptionsArgsSubmit {
@@ -39,6 +40,7 @@ interface GeneralOptionsArgsSubmit {
     shuffle:boolean;
     wlpagesize:number;
     fmaxitems:number;
+    fdefault_view:FreqResultViews;
     citemsperpage:number;
     pqueryitemsperpage:number;
     rich_query_editor:boolean;
@@ -53,6 +55,8 @@ export interface GeneralViewOptionsModelState {
     wlpagesize:Kontext.FormValue<string>;
 
     fmaxitems:Kontext.FormValue<string>;
+
+    fdefaultView:FreqResultViews;
 
     citemsperpage:Kontext.FormValue<string>;
 
@@ -108,6 +112,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 useRichQueryEditor: false,
                 wlpagesize: Kontext.newFormValue('0', true),
                 fmaxitems: Kontext.newFormValue('0', true),
+                fdefaultView: 'charts',
                 citemsperpage: Kontext.newFormValue('0', true),
                 pqueryitemsperpage: Kontext.newFormValue('0', true),
                 isBusy: false,
@@ -187,6 +192,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                         isInvalid: false,
                         isRequired: true
                     };
+                    state.fdefaultView = action.payload.data.fdefault_view;
                     state.citemsperpage = {
                         value: action.payload.data.citemsperpage + '',
                         isInvalid: false,
@@ -277,6 +283,13 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 } else {
                     this.debouncedAction$.next(action);
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.GeneralSetFDefaultView,
+            (state, action) => {
+                state.fdefaultView = action.payload.value;
             }
         );
 
@@ -440,6 +453,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             shuffle: state.shuffle,
             wlpagesize: parseInt(state.wlpagesize.value),
             fmaxitems: parseInt(state.fmaxitems.value),
+            fdefault_view: state.fdefaultView,
             citemsperpage: parseInt(state.citemsperpage.value),
             pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
             rich_query_editor: state.useRichQueryEditor

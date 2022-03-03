@@ -22,6 +22,7 @@ import { Action } from 'kombo';
 import { ViewOptsResponse, GeneralOptionsShared } from './common';
 import * as ViewOptions from '../../types/viewOptions';
 import { WideCtxArgs } from '../concordance/common';
+import { FreqResultViews } from '../freqs/common';
 
 
 export class Actions {
@@ -76,6 +77,12 @@ export class Actions {
         debounced?:boolean;
     }> = {
         name: 'GENERAL_VIEW_OPTIONS_SET_FMAXITEMS'
+    };
+
+    static GeneralSetFDefaultView:Action<{
+        value:FreqResultViews;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_SET_FDEFAULT_VIEW'
     };
 
     static GeneralSetCitemsPerPage:Action<{

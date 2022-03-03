@@ -197,9 +197,6 @@ export class FreqDataLoader {
 }
 
 
-export type FreqDisplayMode = 'tables'|'charts';
-
-
 export function recalculateConfIntervals(block:ResultBlock, alphaLevel:Maths.AlphaLevel):ResultBlock {
     block.Items = List.map(
         item => {
