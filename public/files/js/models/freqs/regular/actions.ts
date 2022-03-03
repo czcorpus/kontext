@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { FreqDisplayMode, MulticritFreqServerArgs, ResultBlock } from './common';
+import { MulticritFreqServerArgs, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
-import { HistoryState } from '../common';
+import { FreqResultViews, HistoryState } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
 import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from '../common';
 import { Maths } from 'cnc-tskit';
@@ -31,14 +31,14 @@ import { ChartExportFormat } from '../../../types/kontext';
 export class Actions {
 
     static ResultSetActiveTab:Action<{
-        value: FreqDisplayMode;
+        value: FreqResultViews;
     }> = {
         name: 'FREQ_RESULT_SET_ACTIVE_TAB'
     };
 
     static ResultSetMinFreqVal:Action<{
         value:string;
-        debouncedFor?:FreqDisplayMode;
+        debouncedFor?:FreqResultViews;
     }> = {
         name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
     };
@@ -85,7 +85,7 @@ export class Actions {
     static ResultSetCurrentPage:Action<{
         value:string;
         sourceId:string;
-        debouncedFor?:FreqDisplayMode;
+        debouncedFor?:FreqResultViews;
     }> = {
         name: 'FREQ_RESULT_SET_CURRENT_PAGE'
     };
@@ -248,7 +248,7 @@ export class Actions {
     static FreqChartsChangePageSize:Action<{
         value:string;
         sourceId:string;
-        debouncedFor?:FreqDisplayMode;
+        debouncedFor?:FreqResultViews;
     }> = {
         name: 'FREQ_CHARTS_CHANGE_PAGE_SIZE'
     };
