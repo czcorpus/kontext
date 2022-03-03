@@ -1732,15 +1732,17 @@ class Actions(Querying):
         for item in self._lines_groups:
             ans[item[2]] += 1
 
+        return dict(groups=ans)
+
+    @exposed(return_type='json')
+    def ajax_get_first_line_select_page(self, _):
         corpus_info = self.get_corpus_info(self.args.corpname)
         conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
                         q=self.args.q, fromp=self.args.fromp, pagesize=self.args.pagesize,
                         asnc=False, samplesize=corpus_info.sample_size)
         self._apply_linegroups(conc)
         kwic = Kwic(self.corp, self.args.corpname, conc)
-        first_page = int((kwic.get_groups_first_line() - 1) / self.args.pagesize) + 1
-
-        return dict(groups=ans, first_page=first_page)
+        return {'first_page': int((kwic.get_groups_first_line() - 1) / self.args.pagesize) + 1}
 
     @exposed(return_type='json', http_method='POST', mutates_result=True)
     def ajax_rename_line_group(self, request):

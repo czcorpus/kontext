@@ -108,16 +108,14 @@ export function init(
         );
 
         const handleGoToFirstSelect = () => {
-            dispatcher.dispatch(
-                Actions.ChangePage,
-                {action: 'customPage', pageNum: props.firstPage}
-            );
+            dispatcher.dispatch(Actions.SwitchFirstSelectPage);
         };
 
         return (
             <S.LockedLineGroupsChartFieldset>
                 <p>
-                    {props.firstPage ? <a onClick={handleGoToFirstSelect}>{he.translate('linesel__go_to_first_select')}</a> : null}
+                    <a onClick={handleGoToFirstSelect} style={{marginRight: '1em'}}>{he.translate('linesel__go_to_first_select')}</a>
+                    {props.gotoIsBusy ? <globalViews.AjaxLoaderBarImage /> : null}
                 </p>
                 <div>
                     <legend>{he.translate('linesel__groups_stats_heading')}</legend>
