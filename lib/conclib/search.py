@@ -30,9 +30,8 @@ from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
 from conclib.errors import ConcCalculationStatusException
-from corplib.corpus import KCorpus, AbstractKCorpus
+from corplib.corpus import AbstractKCorpus
 import bgcalc
-import manatee
 
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -51,7 +50,8 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         worker = bgcalc.calc_backend_client(settings)
         ans = worker.send_task(
             'conc_register', object.__class__,
-            (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize, TASK_TIME_LIMIT),
+            (user_id, corp.corpname, getattr(corp, 'subcname', None),
+             subchash, q, samplesize, TASK_TIME_LIMIT),
             time_limit=CONC_REGISTER_TASK_LIMIT)
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
@@ -102,7 +102,7 @@ def _normalize_permissions(path: str):
         os.chmod(path, 0o664)
 
 
-def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int):
+def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int) -> PyConc:
     """
     Calculate a concordance via a provided worker. On the Manatee side,
     wait until the concordance is complete.
@@ -143,7 +143,7 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 def get_conc(
         corp: AbstractKCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
-        samplesize=0) -> Union[manatee.Concordance, InitialConc]:
+        samplesize=0) -> Union[PyConc, InitialConc]:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -198,7 +198,8 @@ def get_conc(
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                conc = _get_sync_conc(worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
+                conc = _get_sync_conc(worker=worker, corp=corp, q=q,
+                                      subchash=subchash, samplesize=samplesize)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]

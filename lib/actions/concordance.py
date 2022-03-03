@@ -232,6 +232,8 @@ class Actions(Querying):
                 out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
                 out.update(kwic.kwicpage(kwic_args))
                 out.update(self.get_conc_sizes(conc))
+        except UnknownConcordanceAction as ex:
+            raise UserActionException(str(ex))
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
@@ -241,8 +243,6 @@ class Actions(Querying):
                 raise UserActionException(manatee_error, code=422)
             else:
                 raise ex
-        except UnknownConcordanceAction as ex:
-            raise UserActionException(str(ex))
 
         if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
