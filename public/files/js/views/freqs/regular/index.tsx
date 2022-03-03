@@ -30,7 +30,7 @@ import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 import { isEmptyResultBlock } from '../../../models/freqs/regular/common';
-import { alphaToCoeffFormatter } from '../../../models/freqs/common';
+import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common';
 import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
 import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
 
@@ -45,7 +45,8 @@ export function init(
         freqChartsModel:FreqChartsModel,
         freqChartsSaveModel:FreqChartsSaveFormModel,
         freqDataRowsModel:FreqDataRowsModel,
-        freqTableSaveModel:FreqResultsSaveModel
+        freqTableSaveModel:FreqResultsSaveModel,
+        defaultView: FreqResultViews,
 ) {
     const globalComponents = he.getLayoutViews();
     const drViews = dataRowsInit(dispatcher, he);
@@ -258,7 +259,7 @@ export function init(
             dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
                 name: Actions.ResultSetActiveTab.name,
                 payload: {
-                    value: value as 'tables'|'charts'
+                    value: value as FreqResultViews
                 }
             });
         }
@@ -283,7 +284,7 @@ export function init(
                             {id: 'charts', label: he.translate('freq__tab_charts_button')},
                             {id: 'tables', label: he.translate('freq__tab_tables_button')}
                         ]}
-                        defaultId="charts"
+                        defaultId={defaultView}
                         noButtonSeparator={true} >
                     <div>
                         <chartViews.FreqChartsView />

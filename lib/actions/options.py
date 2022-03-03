@@ -27,7 +27,7 @@ class Options(Kontext):
 
     def _set_new_viewopts(
             self, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
-            fmaxitems=0, citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
+            fmaxitems=0, fdefault_view='charts', citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
         self.args.pagesize = pagesize
         if ctxunit == '@pos':
             ctxunit = ''
@@ -39,6 +39,7 @@ class Options(Kontext):
         self.args.shuffle = int(shuffle)
         self.args.wlpagesize = wlpagesize
         self.args.fmaxitems = fmaxitems
+        self.args.fdefault_view = fdefault_view
         self.args.citemsperpage = citemsperpage
         self.args.pqueryitemsperpage = pqueryitemsperpage
         self.args.rich_query_editor = rich_query_editor
@@ -143,6 +144,7 @@ class Options(Kontext):
             shuffle=bool(self.args.shuffle),
             wlpagesize=self.args.wlpagesize,
             fmaxitems=self.args.fmaxitems,
+            fdefault_view=self.args.fdefault_view,
             citemsperpage=self.args.citemsperpage,
             pqueryitemsperpage=self.args.pqueryitemsperpage,
             rich_query_editor=self.args.rich_query_editor
@@ -158,6 +160,7 @@ class Options(Kontext):
             shuffle=request.json.get('shuffle'),
             wlpagesize=request.json.get('wlpagesize'),
             fmaxitems=request.json.get('fmaxitems'),
+            fdefault_view=request.json.get('fdefault_view'),
             citemsperpage=request.json.get('citemsperpage'),
             pqueryitemsperpage=request.json.get('pqueryitemsperpage'),
             rich_query_editor=request.json.get('rich_query_editor')
