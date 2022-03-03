@@ -321,4 +321,4 @@ class CategoryTree(object):
             cursor.execute(sql, params)
             row = cursor.fetchone()
 
-        return 0 if row is None else int(row['poscount'])
+        return 0 if row['poscount'] is None else int(row['poscount'])
