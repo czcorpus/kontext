@@ -654,3 +654,20 @@ class Kwic:
                 # the same result as in case of official Bonito app.
                 pass
         return ans
+
+    def get_groups_first_line(self):
+        if not isinstance(self.conc, InitialConc):
+            kl = manatee.KWICLines(
+                self.conc.corp(),
+                r=self.conc.RS(True, 0, int(self.conc.size())),
+                left='0', right='0',
+                kwica='', ctxa='',
+                struca='', refa='',
+            )
+            i = 0
+            while kl.nextline():
+                i = i + 1
+                if kl.get_linegroup():
+                    return i
+
+        return None

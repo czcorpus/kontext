@@ -225,6 +225,7 @@
         "linesel__remove_non_group_lines": "Remove other lines",
         "linesel__line_selection_saved": "Saved",
         "linesel__groups_stats_heading": "Line groups proportions",
+        "linesel__go_to_first_select": "Switch to page of first selected line",
         "linesel__view_sorted_groups": "View sorted according to the groups",
         "linesel__continue_editing_groups": "Continue editing groups",
         "linesel__send_the_link_to_mail": "Send selection URL to an e-mail",

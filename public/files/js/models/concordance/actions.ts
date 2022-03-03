@@ -435,6 +435,7 @@ export class Actions {
     }
 
     static GetGroupStatsDone:Action<{
+        firstPage:number|null;
         data:LineGroupChartData;
     }> = {
         name: 'LINE_SELECTION_GET_GROUP_STATS_DONE'

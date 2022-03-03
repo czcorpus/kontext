@@ -45,6 +45,7 @@ interface SendSelToMailResponse extends AjaxConcResponse {
 }
 
 interface LineGroupStats extends Kontext.AjaxResponse {
+    first_page:number|null;
     groups:{[groupId:string]:number};
 }
 
@@ -62,6 +63,8 @@ export interface LineSelectionModelState {
      * it is hashed here again)
      */
     data:LineSelections;
+
+    firstPage:number|null;
 
     groupsChartData:LineGroupChartData;
 
@@ -156,6 +159,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             isLeavingPage: false,
             emailDialogCredentials: null,
             data: {},
+            firstPage: null,
             groupsChartData: null,
             exportFormats,
             queryHash: '',
@@ -595,6 +599,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                             this.layoutModel.showMessage('error', action.error);
 
                         } else {
+                            state.firstPage = action.payload.firstPage;
                             state.groupsChartData = action.payload.data;
                         }
                     }
@@ -862,7 +867,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 );
                 this.dispatchSideEffect(
                     Actions.GetGroupStatsDone,
-                    {data}
+                    {data, firstPage: resp.first_page}
                 );
             },
             error: error => {

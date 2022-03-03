@@ -99,6 +99,7 @@
         "linesel__remove_non_group_lines": "Odstrani druge vrstice",
         "linesel__line_selection_saved": "Shranjeno",
         "linesel__groups_stats_heading": "Obsegi skupin vrstic",
+        "linesel__go_to_first_select": "Switch to page of first selected line UNTRANSLATED",
         "linesel__view_sorted_groups": "Prikaži razvrščeno glede na skupine",
         "linesel__continue_editing_groups": "Nadaljuj urejanje skupin",
         "linesel__send_the_link_to_mail": "Pošlji URL izbora na e-poštni naslov",
