@@ -124,26 +124,30 @@ class MetadataModel:
 
     def _init_ab(self, node: CategoryTreeNode, used_ids: Set[int]) -> None:
         """
-        Initialization method for coefficient matrix (A) and vector of bounds (b)
-        Recursively traverses all nodes of given categoryTree starting from its root.
-        Each node is processed in order to generate one inequality constraint.
+                Initialization method for coefficient matrix (A) and vector of bounds (b)
+                Recursively traverses all nodes of given categoryTree starting from its root.
+                Each node is processed in order to generate one inequality constraint.
 
-        args:
-        node -- currently processed node of the categoryTree
-        used_ids -- a set of ids used in previous nodes
-        """
+                args:
+                node -- currently processed node of the categoryTree
+                used_ids -- a set of ids used in previous nodes
+                """
         if node.metadata_condition is not None:
             sql_items = [
                 f'''
-                SELECT t_map.value_tuple_id
-                FROM corpus_structattr_value AS t_value
-                JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s
-                    AND t_value.value {mc.mysql_op} %s
-                '''
+                        SELECT t_map.value_tuple_id
+                        FROM corpus_structattr_value AS t_value
+                        JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
+                        WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s 
+                            AND t_value.value {mc.mysql_op} %s
+                        '''
                 for subl in node.metadata_condition
                 for mc in subl
             ]
+            # using SQL 'INTERSECT would be better here but it is quite a new feature so let's keep this one for now
+            un_all = ' UNION ALL '.join(sql_items)
+            sql_intersect = f'SELECT tmp.value_tuple_id, COUNT(*) AS num FROM ({un_all}) AS tmp GROUP BY ' \
+                            f'tmp.value_tuple_id HAVING num = {len(sql_items)} '
 
             aligned_join = [
                 f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t_tuple.item_id'
@@ -153,11 +157,7 @@ class MetadataModel:
             sql = f'''
                 SELECT MIN(tuple_ids.value_tuple_id) AS db_id, SUM(t_tuple.poscount) AS poscount
                 FROM (
-                    -- we dont want to use INTERSECT because old MariaDB version does not support it
-                    SELECT count(*) AS num, union_tuple_ids.value_tuple_id
-                    FROM (
-                        {' UNION ALL '.join(sql_items)}
-                    ) union_tuple_ids
+                    {sql_intersect}
                 ) as tuple_ids
                 JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_tuple_id = tuple_ids.value_tuple_id
                 JOIN corpus_structattr_value AS t_value ON t_value.id = t_map.value_id
