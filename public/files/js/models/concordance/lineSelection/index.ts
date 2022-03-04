@@ -90,8 +90,6 @@ export interface LineSelectionModelState {
     renameLabelDialogVisible:boolean;
 
     isLeavingPage:boolean;
-
-    gotoIsBusy:boolean;
 }
 
 export interface LineSelectionModelArgs {
@@ -165,8 +163,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 'view',
                 layoutModel.getConcArgs()
             ),
-            renameLabelDialogVisible: false,
-            gotoIsBusy: false,
+            renameLabelDialogVisible: false
         };
         LineSelectionModel.registerQuery(initState, clStorage, query);
         super(
@@ -609,7 +606,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             Actions.SwitchFirstSelectPage,
             action => {
                 this.changeState(state => {
-                    state.gotoIsBusy = true;
+                    state.isBusy = true;
                 });
                 this.layoutModel.ajax$<{first_page:number}>(
                     HTTP.Method.GET,
@@ -646,7 +643,7 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
             Actions.SwitchFirstSelectPageDone,
             action => {
                 this.changeState(state => {
-                    state.gotoIsBusy = false;
+                    state.isBusy = false;
                 });
             }
         );

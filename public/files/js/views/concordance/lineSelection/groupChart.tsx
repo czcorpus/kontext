@@ -42,9 +42,6 @@ export function init(
 ):React.FC<LineSelectionModelState> {
 
 
-    const globalViews = he.getLayoutViews();
-
-
     // -------------------- <LineGroupChart /> --------------------------------
 
     const LineGroupChart:React.FC<{
@@ -107,26 +104,16 @@ export function init(
             []
         );
 
-        const handleGoToFirstSelect = () => {
-            dispatcher.dispatch(Actions.SwitchFirstSelectPage);
-        };
-
         return (
             <S.LockedLineGroupsChartFieldset>
-                <p>
-                    <a onClick={handleGoToFirstSelect} style={{marginRight: '1em'}}>{he.translate('linesel__go_to_first_select')}</a>
-                    {props.gotoIsBusy ? <globalViews.AjaxLoaderBarImage /> : null}
-                </p>
                 <div>
                     <legend>{he.translate('linesel__groups_stats_heading')}</legend>
-                    {props.isBusy ?
-                        <globalViews.AjaxLoaderImage /> :
-                        props.groupsChartData ?
-                            <>
-                                <LineGroupChart data={props.groupsChartData} />
-                                <ExportLinks data={props.groupsChartData} exportFormats={props.exportFormats} corpusId={props.corpusId} />
-                            </> :
-                            null
+                    {props.groupsChartData ?
+                        <>
+                            <LineGroupChart data={props.groupsChartData} />
+                            <ExportLinks data={props.groupsChartData} exportFormats={props.exportFormats} corpusId={props.corpusId} />
+                        </> :
+                        null
                     }
                 </div>
             </S.LockedLineGroupsChartFieldset>
