@@ -57,10 +57,14 @@ class Dispersion(Querying):
         abs_freq = []
         last_valid_item = None
         for beg in reversed(conc_begs):
+            # if beg is 0, it means there are no concordances in the bin
             if beg > 0:
                 if last_valid_item is None:
                     abs_freq.append(int(conc.size()) - beg)
                 else:
+                    # `last_valid_item - beg` is number of concordances
+                    # between beginnig of last non empty bin and the beginning of current bin
+                    # (for cycle is going backwards)
                     abs_freq.append(last_valid_item - beg)
                 last_valid_item = beg
             else:

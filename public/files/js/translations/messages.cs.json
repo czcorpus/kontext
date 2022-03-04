@@ -225,6 +225,7 @@
         "linesel__remove_non_group_lines": "Odfiltrovat ostatní řádky",
         "linesel__line_selection_saved": "Uloženo",
         "linesel__groups_stats_heading": "Podíly skupin řádků",
+        "linesel__go_to_first_select": "Přejít na stránku prvního vybraného řádku",
         "linesel__view_sorted_groups": "Zobrazit setříděné podle skupin",
         "linesel__continue_editing_groups": "Pokračovat v editaci skupin",
         "linesel__send_the_link_to_mail": "Odeslat URL výběru na e-mail",

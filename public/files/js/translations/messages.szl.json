@@ -225,6 +225,7 @@
         "linesel__remove_non_group_lines": "Skasuj insze linije",
         "linesel__line_selection_saved": "Zapisane",
         "linesel__groups_stats_heading": "Proporcyje grup liniji",
+        "linesel__go_to_first_select": "Switch to page of first selected line UNTRANSLATED",
         "linesel__view_sorted_groups": "Pokŏż uporzōndkowane podle grup",
         "linesel__continue_editing_groups": "Kōntynuuj edycyjõ grup",
         "linesel__send_the_link_to_mail": "Wyślij link tego wyboru na email",

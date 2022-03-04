@@ -165,7 +165,7 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
 
 def find_cached_conc_base(
         corp: AbstractKCorpus, subchash: Optional[str], q: Tuple[str, ...],
-        minsize: int) -> Tuple[Optional[int], manatee.Concordance]:
+        minsize: int) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
     """
     Load a concordance from cache starting from a complete operation q[:],
     then trying q[:-1], q[:-2], q:[:-i] etc. A possible found concordance can be

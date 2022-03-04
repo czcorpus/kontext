@@ -22,7 +22,7 @@ import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
 import { Cell, LabelList, Legend, Pie, PieChart } from 'recharts';
 import { List } from 'cnc-tskit';
-import { Bound, IActionDispatcher } from 'kombo';
+import { IActionDispatcher } from 'kombo';
 import { Actions } from '../../../models/concordance/actions';
 import * as S from './style';
 import { LineSelectionModelState } from '../../../models/concordance/lineSelection';
@@ -102,15 +102,21 @@ export function init(
 
         React.useEffect(
             () => {
-                dispatcher.dispatch<typeof Actions.GetGroupStats>({
-                    name: Actions.GetGroupStats.name
-                })
+                dispatcher.dispatch(Actions.GetGroupStats)
             },
             []
         );
 
+        const handleGoToFirstSelect = () => {
+            dispatcher.dispatch(Actions.SwitchFirstSelectPage);
+        };
+
         return (
             <S.LockedLineGroupsChartFieldset>
+                <p>
+                    <a onClick={handleGoToFirstSelect} style={{marginRight: '1em'}}>{he.translate('linesel__go_to_first_select')}</a>
+                    {props.gotoIsBusy ? <globalViews.AjaxLoaderBarImage /> : null}
+                </p>
                 <div>
                     <legend>{he.translate('linesel__groups_stats_heading')}</legend>
                     {props.isBusy ?

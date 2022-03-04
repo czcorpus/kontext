@@ -404,6 +404,16 @@ export class Actions {
         name: 'LINE_SELECTION_SAVE'
     };
 
+    static SwitchFirstSelectPage:Action<{
+    }> = {
+        name: 'LINE_SELECTION_SWITCH_FIRST_SELECT_PAGE'
+    };
+
+    static SwitchFirstSelectPageDone:Action<{
+    }> = {
+        name: 'LINE_SELECTION_SWITCH_FIRST_SELECT_PAGE_DONE'
+    };
+
     static ApplyStoredLineSelections:Action<{}> = {
         name: 'CONCORDANCE_APPLY_STORED_LINE_SELECTIONS'
     };
@@ -435,6 +445,7 @@ export class Actions {
     }
 
     static GetGroupStatsDone:Action<{
+        firstPage:number|null;
         data:LineGroupChartData;
     }> = {
         name: 'LINE_SELECTION_GET_GROUP_STATS_DONE'

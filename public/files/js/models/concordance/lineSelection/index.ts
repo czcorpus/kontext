@@ -90,6 +90,8 @@ export interface LineSelectionModelState {
     renameLabelDialogVisible:boolean;
 
     isLeavingPage:boolean;
+
+    gotoIsBusy:boolean;
 }
 
 export interface LineSelectionModelArgs {
@@ -163,7 +165,8 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                 'view',
                 layoutModel.getConcArgs()
             ),
-            renameLabelDialogVisible: false
+            renameLabelDialogVisible: false,
+            gotoIsBusy: false,
         };
         LineSelectionModel.registerQuery(initState, clStorage, query);
         super(
@@ -600,7 +603,53 @@ export class LineSelectionModel extends StatefulModel<LineSelectionModelState>
                     }
                 );
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.SwitchFirstSelectPage,
+            action => {
+                this.changeState(state => {
+                    state.gotoIsBusy = true;
+                });
+                this.layoutModel.ajax$<{first_page:number}>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl(
+                        'ajax_get_first_line_select_page',
+                        this.layoutModel.getConcArgs(),
+                    ),
+                    {},
+
+                ).subscribe({
+                    next: resp => {
+                        this.dispatchSideEffect(
+                            Actions.SwitchFirstSelectPageDone
+                        );
+                        this.dispatchSideEffect(
+                            Actions.ChangePage,
+                            {
+                                action: 'customPage',
+                                pageNum: resp.first_page,
+                            }
+                        );
+                    },
+                    error: error => {
+                        this.dispatchSideEffect(
+                            Actions.SwitchFirstSelectPageDone,
+                            error
+                        );
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.SwitchFirstSelectPageDone,
+            action => {
+                this.changeState(state => {
+                    state.gotoIsBusy = false;
+                });
+            }
+        );
     }
 
     getRegistrationId():string {
