@@ -49,6 +49,7 @@ export function init(
 ):LineSelectionViews {
 
     const ChartView = chartViewInit(he, dispatcher);
+    const layoutViews = he.getLayoutViews();
 
     // ----------------------------- <SimpleSelectionModeSwitch /> --------------------------
 
@@ -130,10 +131,7 @@ export function init(
             <div id="selection-actions">
                 {he.translate('global__actions')}:{'\u00A0'}
                 {switchComponent}
-                {props.isBusy ?
-                    <img className="ajax-loader-bar" src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                            title={he.translate('global__loading')} />
-                    : null}
+                {props.isBusy ? <layoutViews.AjaxLoaderImage /> : null}
                 {props.mode === 'groups' ?
                     <p style={{marginTop: '1em'}}>({he.translate('linesel__no_ops_after_groups_save_info')}.)</p> : null}
             </div>
@@ -254,6 +252,7 @@ export function init(
                     <option value="sort-groups">{he.translate('linesel__view_sorted_groups')}</option>
                     <option value="rename-group-label">{he.translate('linesel__rename_label')}...</option>
                     <option value="remove-other-lines">{he.translate('linesel__remove_non_group_lines')}</option>
+                    <option value="go-to-first-selection">{he.translate('linesel__go_to_first_select')}</option>
                     <option value="clear-groups">{he.translate('linesel__clear_line_groups')}</option>
                 </select>
                 {props.waiting ?
@@ -342,6 +341,9 @@ export function init(
                     dispatcher.dispatch<typeof Actions.ToggleLineGroupRenameForm>({
                         name: Actions.ToggleLineGroupRenameForm.name
                     });
+                    break;
+                case 'go-to-first-selection':
+                    dispatcher.dispatch(Actions.SwitchFirstSelectPage);
                     break;
             }
         }

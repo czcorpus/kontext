@@ -467,7 +467,7 @@ export class ConcordanceModel extends StatefulModel<ConcordanceModelState> {
         );
 
         this.addActionHandler(
-            Actions.LineSelectionResetOnServerDone,
+            [Actions.LineSelectionResetOnServerDone, Actions.SwitchFirstSelectPage],
             action => {
                 this.changeState(state => {
                     state.lineSelOptionsVisible = false;
