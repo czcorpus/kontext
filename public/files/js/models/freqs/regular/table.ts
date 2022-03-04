@@ -385,7 +385,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSetCurrentPage,
             (state, action) => {
                 state.currentPage[action.payload.sourceId] = action.payload.value;
-                if (validateNumber(action.payload.value, 1)) {
+                if (action.payload.value !== '' && validateNumber(action.payload.value, 1)) {
                     state.isBusy[action.payload.sourceId] = true;
 
                 } else {
@@ -396,7 +396,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 }
             },
             (state, action, dispatch) => {
-                if (action.payload.debouncedFor) {
+                if (action.payload.debouncedFor && action.payload.value !== '') {
                     if (validateNumber(action.payload.value, 1)) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(
