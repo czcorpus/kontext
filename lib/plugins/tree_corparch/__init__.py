@@ -112,7 +112,7 @@ class CorptreeParser(object):
             speech_overlap_attr=elm.attrib.get('speech_overlap_attr', None),
             speech_overlap_val=elm.attrib.get('speech_overlap_val', None),
             bib_struct=elm.attrib.get('bib_struct', None),
-            collator_locale=elm.attrib.get('collator_locale', 'en_US'),
+            _collator_locale=elm.attrib.get('collator_locale', 'en_US'),
             sample_size=elm.attrib.get('sample_size', -1))
 
     def parse_node(self, elm, parent: TreeNode) -> TreeNode:
