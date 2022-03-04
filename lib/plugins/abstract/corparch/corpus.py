@@ -22,6 +22,7 @@ from dataclasses_json.api import LetterCase
 from corplib.abstract import AbstractKCorpus
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
+from plugins.abstract.corparch.error import CorpusInfoError
 
 
 @dataclass_json
@@ -170,7 +171,7 @@ class CorpusInfo:
     bib_struct: Optional[str] = None
     sample_size: int = -1
     featured: bool = False
-    collator_locale: str = 'en_US'  # this does not apply for Manatee functions
+    _collator_locale: str = 'en_US'  # this does not apply for Manatee functions
     use_safe_font: bool = False
     citation_info: CitationInfo = field(default_factory=lambda: CitationInfo())
     metadata: CorpusMetadata = field(default_factory=lambda: CorpusMetadata())
@@ -186,6 +187,17 @@ class CorpusInfo:
             return self._description_cs
         else:
             return self._description_en
+
+    @property
+    def collator_locale(self) -> str:
+        if self._collator_locale is None:
+            raise CorpusInfoError('Corpus is missing collator locale config')
+        else:
+            return self._collator_locale
+    
+    @collator_locale.setter
+    def collator_locale(self, value):
+        self._collator_locale = value
 
 
 @dataclass_json

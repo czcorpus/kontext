@@ -19,3 +19,7 @@
 
 class CorparchError(Exception):
     pass
+
+
+class CorpusInfoError(Exception):
+    pass
