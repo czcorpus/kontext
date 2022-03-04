@@ -33,7 +33,7 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
-import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
+import { AttrItem, BasicFreqModuleType, FormValue, newFormValue, updateFormValue } from '../../../types/kontext';
 
 
 export interface FreqDataRowsModelArgs {
@@ -187,7 +187,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     Dict.fromEntries()
                 ),
                 ftt_include_empty: formProps.ftt_include_empty,
-                flimit: formProps.flimit || '0',
+                flimit: newFormValue(formProps.flimit || '0', true),
                 isBusy: pipe(
                     allCrit,
                     List.map(
@@ -248,14 +248,18 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.flimit = updateFormValue(state.flimit, {isInvalid: false});
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
                         if (!state.isActive) {
                             state.data = Dict.map(block => clearResultBlock(block), state.data);
                         }
+
+                    } else {
+                        state.flimit = updateFormValue(state.flimit, {isInvalid: true});
                     }
 
                 } else {
-                    state.flimit = action.payload.value;
+                    state.flimit = updateFormValue(state.flimit, {value: action.payload.value});
                     this.debouncedAction$.next(action);
                 }
 
@@ -277,7 +281,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             );
                         }
 
-                    } else {
+                    } else if (state.isActive) {
                         this.pageModel.showMessage(
                             'error', this.pageModel.translate('freq__limit_invalid_val'));
                     }
@@ -347,7 +351,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.PopHistory,
             (state, action) => {
                 state.currentPage = action.payload.currentPage;
-                state.flimit = action.payload.flimit;
+                state.flimit = updateFormValue(state.flimit, {value: action.payload.flimit});
                 state.sortColumn = action.payload.sortColumn;
             },
             (state, action, dispatch) => {
@@ -508,7 +512,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     name: Actions.PopHistory.name,
                     payload: {
                         currentPage: {...state.currentPage},
-                        flimit: state.flimit,
+                        flimit: {...state.flimit},
                         sortColumn: {...state.sortColumn}
                     }
                 }
@@ -521,7 +525,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit,
-            flimit: parseInt(state.flimit),
+            flimit: parseInt(state.flimit.value),
             freq_sort: state.sortColumn[fcrit],
             fpage: parseInt(state.currentPage[fcrit]),
             ftt_include_empty: state.ftt_include_empty,
@@ -534,7 +538,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit: Dict.keys(state.data),
-            flimit: parseInt(state.flimit),
+            flimit: parseInt(state.flimit.value),
             freq_sort: 'freq',
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,

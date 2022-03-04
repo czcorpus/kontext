@@ -143,7 +143,7 @@ export function init(
     // ----------------------- <MinFreqInput /> -------------------------
 
     const MinFreqInput:React.FC<{
-        minFreqVal:string;
+        minFreqVal:Kontext.FormValue<string>;
 
     }> = ({minFreqVal}) => {
 
@@ -157,13 +157,15 @@ export function init(
         };
 
         return (
-            <label>
+            <S.MinFreqInputLabel>
                 {he.translate('freq__limit_input_label')}:
                 {'\u00a0'}
-                <input type="text" name="flimit" value={minFreqVal}
+                <input type="text" name="flimit"
+                        className={minFreqVal.isInvalid ? 'invalid' : null}
+                        value={minFreqVal.value}
                         style={{width: '3em'}}
                         onChange={handleInputChange} />
-            </label>
+            </S.MinFreqInputLabel>
         );
     };
 
@@ -199,7 +201,7 @@ export function init(
     // ----------------------- <FilterForm /> -------------------------
 
     interface FilterFormProps {
-        minFreqVal:string;
+        minFreqVal:Kontext.FormValue<string>;
         alphaLevel:Maths.AlphaLevel;
     }
 
