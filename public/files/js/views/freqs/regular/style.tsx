@@ -105,6 +105,16 @@ export const FreqBlock = styled.div`
 
 `;
 
+// ---------------- <MinFreqInputLabel /> --------------------------------------
+
+export const MinFreqInputLabel = styled.label`
+
+    input.invalid {
+        background-color: ${theme.colorLightPink};
+    }
+
+`;
+
 // ---------------- <FrequencyForm /> --------------------------------------
 
 export const FrequencyForm = styled.div`
