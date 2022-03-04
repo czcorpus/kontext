@@ -32,7 +32,10 @@ import {
 } from './common';
 import { importData } from './table';
 import { FreqFormInputs } from './freqForms';
-import { StructuralAttribute, FormValue, newFormValue, AttrItem, ChartExportFormat, BasicFreqModuleType } from '../../../types/kontext';
+import {
+    StructuralAttribute, FormValue, newFormValue, updateFormValue, AttrItem, ChartExportFormat,
+    BasicFreqModuleType
+} from '../../../types/kontext';
 import { validateGzNumber } from '../../base';
 
 
@@ -135,7 +138,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     Dict.fromEntries()
                 ),
                 ftt_include_empty: formProps.ftt_include_empty,
-                flimit: formProps.flimit || '0',
+                flimit: newFormValue(formProps.flimit || '0', true),
                 type: pipe(
                     allCrits,
                     List.map(
@@ -320,13 +323,17 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.flimit = updateFormValue(state.flimit, {isInvalid: false});
                         if (!state.isActive) {
                             state.data = Dict.map(v => clearResultBlock(v), state.data);
                         }
+
+                    } else {
+                        state.flimit = updateFormValue(state.flimit, {isInvalid: true});
                     }
 
                 } else {
-                    state.flimit = action.payload.value;
+                    state.flimit = updateFormValue(state.flimit, {value: action.payload.value});
                     this.debouncedAction$.next(action);
                 }
 
@@ -347,7 +354,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                             );
                         }
 
-                    } else {
+                    } else if (state.isActive) {
                         this.pageModel.showMessage(
                             'error', this.pageModel.translate('freq__limit_invalid_val'));
                     }
@@ -446,7 +453,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit,
-            flimit: parseInt(state.flimit),
+            flimit: parseInt(state.flimit.value),
             freq_sort: state.type[fcrit] === 'timeline' || state.type[fcrit] === 'timescatter' ?
                 '0' :
                 state.sortColumn[fcrit],

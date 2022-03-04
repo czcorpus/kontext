@@ -25,6 +25,7 @@ import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
 import { FreqChartsAvailableOrder, FreqResultResponse } from '../common';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
+import * as Kontext from '../../../types/kontext';
 
 
 export const PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
@@ -89,7 +90,7 @@ export interface BaseFreqModelState {
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
     ftt_include_empty:boolean;
-    flimit:string;
+    flimit:Kontext.FormValue<string>;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
     alphaLevel:Maths.AlphaLevel;
@@ -126,10 +127,7 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
 }
 
 export function validateNumber(v:string, minNum:number):boolean {
-    if (v === '') {
-        return true;
-
-    } else if (/^(0|[1-9][0-9]*)$/.exec(v) !== null) {
+    if (/^(0|[1-9][0-9]*)$/.exec(v) !== null) {
         return parseInt(v) >= minNum;
     }
     return false;
