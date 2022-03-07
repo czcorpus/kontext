@@ -327,11 +327,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultDataLoaded,
             (state, action) => {
-                state.isBusy[action.payload.block.fcrit] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
 
-                } else {
+                } else if (action.payload.block) {
+                    state.isBusy[action.payload.block.fcrit] = false;
                     state.data = {
                         ...state.data,
                         [action.payload.block.fcrit]: action.payload.block

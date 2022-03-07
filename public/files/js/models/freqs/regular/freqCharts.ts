@@ -218,11 +218,11 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler(
             Actions.FreqChartsDataLoaded,
             (state, action) => {
-                state.isBusy[action.payload.data.fcrit] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
 
-                } else {
+                } else if (action.payload.data) {
+                    state.isBusy[action.payload.data.fcrit] = false;
                     state.data[action.payload.data.fcrit] = action.payload.data;
                 }
             }
