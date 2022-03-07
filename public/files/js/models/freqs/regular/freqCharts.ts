@@ -218,11 +218,11 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler(
             Actions.FreqChartsDataLoaded,
             (state, action) => {
+                state.isBusy[action.payload.sourceId] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
 
-                } else if (action.payload.data) {
-                    state.isBusy[action.payload.data.fcrit] = false;
+                } else {
                     state.data[action.payload.data.fcrit] = action.payload.data;
                 }
             }
@@ -239,6 +239,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -261,6 +262,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -294,6 +296,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                             ),
                             state,
                             dispatch,
+                            action.payload.sourceId,
                         );
                     }
 
@@ -313,6 +316,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -347,7 +351,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                     this.dispatchLoad(
                                         this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                                         state,
-                                        dispatch
+                                        dispatch,
+                                        fcrit,
                                     );
                                 },
                                 state.data
@@ -375,6 +380,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -418,33 +424,36 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
     private dispatchLoad(
         load:Observable<FreqResultResponse>,
         state:FreqChartsModelState,
-        dispatch:SEDispatcher
+        dispatch:SEDispatcher,
+        sourceId:string,
     ):void {
         load.subscribe({
             next: data => {
                 List.forEach(
                     (block, idx) => {
-                        dispatch<typeof Actions.FreqChartsDataLoaded>({
-                            name: Actions.FreqChartsDataLoaded.name,
-                            payload: {
+                        dispatch(
+                            Actions.FreqChartsDataLoaded,
+                            {
                                 data: importData(
                                     this.pageModel,
                                     block,
                                     1,
                                     data.fmaxitems,
                                     state.alphaLevel
-                                )
+                                ),
+                                sourceId,
                             },
-                        });
+                        );
                     },
                     data.Blocks
                 )
             },
             error: error => {
-                dispatch<typeof Actions.FreqChartsDataLoaded>({
-                    name: Actions.FreqChartsDataLoaded.name,
-                    error
-                });
+                dispatch(
+                    Actions.FreqChartsDataLoaded,
+                    {data: undefined, sourceId},
+                    error,
+                );
             }
         });
     }

@@ -274,7 +274,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                         this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                                         state,
                                         dispatch,
-                                        true
+                                        true,
+                                        fcrit,
                                     );
                                 },
                                 state.data
@@ -299,7 +300,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
-                    false
+                    false,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -316,7 +318,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                             state,
                             dispatch,
-                            true
+                            true,
+                            fcrit,
                         );
                     },
                     state.data
@@ -327,14 +330,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultDataLoaded,
             (state, action) => {
+                state.isBusy[action.payload.sourceId] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
 
-                } else if (action.payload.block) {
-                    state.isBusy[action.payload.block.fcrit] = false;
+                } else {
                     state.data = {
                         ...state.data,
-                        [action.payload.block.fcrit]: action.payload.block
+                        [action.payload.data.fcrit]: action.payload.data
                     }
                 }
             }
@@ -361,7 +364,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                             state,
                             dispatch,
-                            false
+                            false,
+                            fcrit,
                         );
                     },
                     state.currentPage
@@ -380,7 +384,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
-                    true
+                    true,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -408,7 +413,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             ),
                             state,
                             dispatch,
-                            true
+                            true,
+                            action.payload.sourceId
                         );
 
                     } else {
@@ -461,24 +467,26 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         load:Observable<FreqResultResponse>,
         state:FreqDataRowsModelState,
         dispatch:SEDispatcher,
-        pushHistory:boolean
+        pushHistory:boolean,
+        sourceId:string,
     ):void {
         load.subscribe({
             next: data => {
                 List.forEach(
                     (block, idx) => {
-                        dispatch<typeof Actions.ResultDataLoaded>({
-                            name: Actions.ResultDataLoaded.name,
-                            payload: {
-                                block: importData(
+                        dispatch(
+                            Actions.ResultDataLoaded,
+                            {
+                                data: importData(
                                     this.pageModel,
                                     block,
                                     parseInt(state.currentPage[block.fcrit]),
                                     data.fmaxitems,
                                     state.alphaLevel
-                                )
+                                ),
+                                sourceId,
                             },
-                        });
+                        );
                     },
                     data.Blocks
                 );
@@ -489,10 +497,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 }
             },
             error: error => {
-                dispatch<typeof Actions.ResultDataLoaded>({
-                    name: Actions.ResultDataLoaded.name,
-                    error
-                });
+                dispatch(
+                    Actions.ResultDataLoaded,
+                    {data: undefined, sourceId},
+                    error,
+                );
             }
         });
     }
