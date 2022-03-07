@@ -217,7 +217,7 @@ export function init(
 
     // ----------------------- <FreqResultLoaderView /> --------------------
 
-    const FreqResultLoaderView:React.FC<{sourceId:string; label:string}> = ({sourceId, label}) => {
+    const FreqResultLoaderView:React.FC<{sourceId:string; label:string; error?:Error}> = ({sourceId, label, error}) => {
 
         React.useEffect(
             () => {
@@ -234,7 +234,13 @@ export function init(
         return (
             <S.FreqResultLoaderView>
                 <h3>{label}</h3>
-                <globalComponents.AjaxLoaderImage />
+                {error ?
+                    <div className='error'>
+                        <globalComponents.StatusIcon status='error' />
+                        {error.message}
+                    </div> :
+                    <globalComponents.AjaxLoaderImage />
+                }
             </S.FreqResultLoaderView>
         );
     }
@@ -316,7 +322,7 @@ export function init(
                                 <S.FreqBlock key={`block:${sourceId}`}>
                                     <div className={isEmptyResultBlock(block) ? 'loading' : null}>
                                     {isEmptyResultBlock(block) ?
-                                        <FreqResultLoaderView sourceId={sourceId} label={block.heading} /> :
+                                        <FreqResultLoaderView sourceId={sourceId} label={block.heading} error={props.isError[sourceId]} /> :
                                         <>
                                             <Paginator currentPage={props.currentPage[sourceId]}
                                                     sourceId={sourceId}

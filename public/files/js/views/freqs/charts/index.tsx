@@ -490,10 +490,10 @@ export function init(
             <S.FreqResultLoaderView>
                 <h3>{heading}</h3>
                 {error ?
-                    <p>
-                        <globalComponents.StatusIcon status='error' inline={true} />
+                    <div className='error'>
+                        <globalComponents.StatusIcon status='error' />
                         {error.message}
-                    </p> :
+                    </div> :
                     <globalComponents.AjaxLoaderImage />
                 }
             </S.FreqResultLoaderView>
