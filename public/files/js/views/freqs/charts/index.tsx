@@ -459,7 +459,8 @@ export function init(
         sourceId:string;
         dtFormat:string;
         heading:string;
-    }> = ({sourceId, dtFormat, heading}) => {
+        error?:Error;
+    }> = ({sourceId, dtFormat, heading, error}) => {
 
         React.useEffect(
             () => {
@@ -488,7 +489,13 @@ export function init(
         return (
             <S.FreqResultLoaderView>
                 <h3>{heading}</h3>
-                <globalComponents.AjaxLoaderImage />
+                {error ?
+                    <p>
+                        <globalComponents.StatusIcon status='error' inline={true} />
+                        {error.message}
+                    </p> :
+                    <globalComponents.AjaxLoaderImage />
+                }
             </S.FreqResultLoaderView>
         );
     }
@@ -513,7 +520,7 @@ export function init(
                         ([sourceId, block]) => (
                             isEmptyResultBlock(block) ?
                                 <FreqChartsLoaderView key={sourceId} sourceId={sourceId} dtFormat={props.dtFormat[sourceId]}
-                                        heading={block.heading} /> :
+                                        heading={block.heading} error={props.isError[sourceId]} /> :
                                 <FreqChart key={sourceId} sourceId={sourceId} data={block}
                                         dataKey={props.dataKey[sourceId]}
                                         type={props.type[sourceId]}

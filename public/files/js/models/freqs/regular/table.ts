@@ -255,6 +255,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.isError = Dict.map(v => null, state.isError);
                         state.flimit = updateFormValue(state.flimit, {isInvalid: false});
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
                         if (!state.isActive) {
@@ -301,6 +302,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ReloadData,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
@@ -317,6 +319,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             GeneralOptsActions.GeneralSubmitDone,
             (state, action) => {
                 state.isBusy = Dict.map(v => true, state.isBusy);
+                state.isError = Dict.map(v => null, state.isError);
             },
             (state, action, dispatch) => {
                 Dict.forEach(
@@ -340,6 +343,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.isBusy[action.payload.sourceId] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
+                    state.isError[action.payload.sourceId] = action.error;
 
                 } else {
                     state.data = {
@@ -384,6 +388,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSortByColumn,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
                 state.sortColumn[action.payload.sourceId] = action.payload.value;
             },
             (state, action, dispatch) => {
@@ -403,6 +408,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.currentPage[action.payload.sourceId] = action.payload.value;
                 if (validateNumber(action.payload.value, 1)) {
                     state.isBusy[action.payload.sourceId] = true;
+                    state.isError[action.payload.sourceId] = null;
 
                 } else {
                     state.isBusy[action.payload.sourceId] = false;
