@@ -64,6 +64,13 @@ export const FreqResultLoaderView = styled.div`
     border-radius: ${theme.borderRadiusDefault};
     height: 8em;
     width: 70%;
+
+    .error {
+        display: flex;
+        font-weight: bold;
+        align-items: center;
+        gap: 1em;
+    }
 `;
 
 // ----------------- <Paginator /> -------------------------------------

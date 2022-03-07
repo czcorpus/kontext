@@ -174,6 +174,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isError: pipe(
+                    allCrits,
+                    List.map(
+                        k => tuple(k.n, null)
+                    ),
+                    Dict.fromEntries()
+                ),
                 isActive: false,
                 dtFormat: pipe(
                     allCrits,
@@ -218,9 +225,10 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         this.addActionHandler(
             Actions.FreqChartsDataLoaded,
             (state, action) => {
-                state.isBusy[action.payload.data.fcrit] = false;
+                state.isBusy[action.payload.sourceId] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
+                    state.isError[action.payload.sourceId] = action.error;
 
                 } else {
                     state.data[action.payload.data.fcrit] = action.payload.data;
@@ -233,12 +241,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 state.sortColumn[action.payload.sourceId] = action.payload.value;
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -255,12 +265,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 state.type[action.payload.sourceId] = action.payload.value;
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -270,6 +282,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             (state, action) => {
                 if (action.payload.debouncedFor) {
                     state.isBusy[action.payload.sourceId] = true;
+                    state.isError[action.payload.sourceId] = null;
 
                 } else {
                     state.fmaxitems[action.payload.sourceId].value = action.payload.value;
@@ -294,6 +307,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                             ),
                             state,
                             dispatch,
+                            action.payload.sourceId,
                         );
                     }
 
@@ -307,12 +321,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.FreqChartsReloadData,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -323,6 +339,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.isError = Dict.map(v => null, state.isError);
                         state.flimit = updateFormValue(state.flimit, {isInvalid: false});
                         if (!state.isActive) {
                             state.data = Dict.map(v => clearResultBlock(v), state.data);
@@ -347,7 +364,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                                     this.dispatchLoad(
                                         this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                                         state,
-                                        dispatch
+                                        dispatch,
+                                        fcrit,
                                     );
                                 },
                                 state.data
@@ -369,12 +387,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 state.type[action.payload.sourceId] = action.payload.type;
                 state.dataKey[action.payload.sourceId] = action.payload.dataKey;
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -418,33 +438,36 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
     private dispatchLoad(
         load:Observable<FreqResultResponse>,
         state:FreqChartsModelState,
-        dispatch:SEDispatcher
+        dispatch:SEDispatcher,
+        sourceId:string,
     ):void {
         load.subscribe({
             next: data => {
                 List.forEach(
                     (block, idx) => {
-                        dispatch<typeof Actions.FreqChartsDataLoaded>({
-                            name: Actions.FreqChartsDataLoaded.name,
-                            payload: {
+                        dispatch(
+                            Actions.FreqChartsDataLoaded,
+                            {
                                 data: importData(
                                     this.pageModel,
                                     block,
                                     1,
                                     data.fmaxitems,
                                     state.alphaLevel
-                                )
+                                ),
+                                sourceId,
                             },
-                        });
+                        );
                     },
                     data.Blocks
                 )
             },
             error: error => {
-                dispatch<typeof Actions.FreqChartsDataLoaded>({
-                    name: Actions.FreqChartsDataLoaded.name,
-                    error
-                });
+                dispatch(
+                    Actions.FreqChartsDataLoaded,
+                    {data: undefined, sourceId},
+                    error,
+                );
             }
         });
     }
