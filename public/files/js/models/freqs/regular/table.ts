@@ -195,6 +195,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isError: pipe(
+                    allCrit,
+                    List.map(
+                        k => tuple(k.n, null)
+                    ),
+                    Dict.fromEntries()
+                ),
                 isActive: true,
                 saveFormActive: false,
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,
@@ -248,6 +255,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 if (action.payload.debouncedFor) {
                     if (validateNumber(action.payload.value, 0)) {
                         state.isBusy = Dict.map(v => true, state.isBusy);
+                        state.isError = Dict.map(v => null, state.isError);
                         state.flimit = updateFormValue(state.flimit, {isInvalid: false});
                         state.currentPage = Dict.map(_ => '1', state.currentPage);
                         if (!state.isActive) {
@@ -274,7 +282,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                         this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                                         state,
                                         dispatch,
-                                        true
+                                        true,
+                                        fcrit,
                                     );
                                 },
                                 state.data
@@ -293,13 +302,15 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ReloadData,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
-                    false
+                    false,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -308,6 +319,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             GeneralOptsActions.GeneralSubmitDone,
             (state, action) => {
                 state.isBusy = Dict.map(v => true, state.isBusy);
+                state.isError = Dict.map(v => null, state.isError);
             },
             (state, action, dispatch) => {
                 Dict.forEach(
@@ -316,7 +328,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                             state,
                             dispatch,
-                            true
+                            true,
+                            fcrit,
                         );
                     },
                     state.data
@@ -327,14 +340,15 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultDataLoaded,
             (state, action) => {
-                state.isBusy[action.payload.block.fcrit] = false;
+                state.isBusy[action.payload.sourceId] = false;
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
+                    state.isError[action.payload.sourceId] = action.error;
 
                 } else {
                     state.data = {
                         ...state.data,
-                        [action.payload.block.fcrit]: action.payload.block
+                        [action.payload.data.fcrit]: action.payload.data
                     }
                 }
             }
@@ -361,7 +375,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
                             state,
                             dispatch,
-                            false
+                            false,
+                            fcrit,
                         );
                     },
                     state.currentPage
@@ -373,6 +388,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSortByColumn,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = true;
+                state.isError[action.payload.sourceId] = null;
                 state.sortColumn[action.payload.sourceId] = action.payload.value;
             },
             (state, action, dispatch) => {
@@ -380,7 +396,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
                     state,
                     dispatch,
-                    true
+                    true,
+                    action.payload.sourceId,
                 );
             }
         );
@@ -391,6 +408,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.currentPage[action.payload.sourceId] = action.payload.value;
                 if (validateNumber(action.payload.value, 1)) {
                     state.isBusy[action.payload.sourceId] = true;
+                    state.isError[action.payload.sourceId] = null;
 
                 } else {
                     state.isBusy[action.payload.sourceId] = false;
@@ -408,7 +426,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             ),
                             state,
                             dispatch,
-                            true
+                            true,
+                            action.payload.sourceId
                         );
 
                     } else {
@@ -461,24 +480,26 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         load:Observable<FreqResultResponse>,
         state:FreqDataRowsModelState,
         dispatch:SEDispatcher,
-        pushHistory:boolean
+        pushHistory:boolean,
+        sourceId:string,
     ):void {
         load.subscribe({
             next: data => {
                 List.forEach(
                     (block, idx) => {
-                        dispatch<typeof Actions.ResultDataLoaded>({
-                            name: Actions.ResultDataLoaded.name,
-                            payload: {
-                                block: importData(
+                        dispatch(
+                            Actions.ResultDataLoaded,
+                            {
+                                data: importData(
                                     this.pageModel,
                                     block,
                                     parseInt(state.currentPage[block.fcrit]),
                                     data.fmaxitems,
                                     state.alphaLevel
-                                )
+                                ),
+                                sourceId,
                             },
-                        });
+                        );
                     },
                     data.Blocks
                 );
@@ -489,10 +510,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 }
             },
             error: error => {
-                dispatch<typeof Actions.ResultDataLoaded>({
-                    name: Actions.ResultDataLoaded.name,
-                    error
-                });
+                dispatch(
+                    Actions.ResultDataLoaded,
+                    {data: undefined, sourceId},
+                    error,
+                );
             }
         });
     }

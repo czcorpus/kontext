@@ -53,7 +53,16 @@ export const FreqResultLoaderView = styled.div`
         margin-top: 1.5em;
     }
 
-    h3 { ${ChartH3} }
+    h3 {
+        ${ChartH3}
+    }
+
+    .error {
+        display: flex;
+        font-weight: bold;
+        align-items: center;
+        gap: 1em;
+    }
 `;
 
 // ---------------- <FreqChartsView /> ---------------------------------
