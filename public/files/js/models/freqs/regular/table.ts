@@ -195,6 +195,13 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isError: pipe(
+                    allCrit,
+                    List.map(
+                        k => tuple(k.n, null)
+                    ),
+                    Dict.fromEntries()
+                ),
                 isActive: true,
                 saveFormActive: false,
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,

@@ -174,6 +174,13 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
+                isError: pipe(
+                    allCrits,
+                    List.map(
+                        k => tuple(k.n, null)
+                    ),
+                    Dict.fromEntries()
+                ),
                 isActive: false,
                 dtFormat: pipe(
                     allCrits,

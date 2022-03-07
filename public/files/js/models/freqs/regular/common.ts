@@ -93,6 +93,7 @@ export interface BaseFreqModelState {
     flimit:Kontext.FormValue<string>;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
+    isError:{[sourceId:string]:Error};
     alphaLevel:Maths.AlphaLevel;
     saveFormActive:boolean;
 }
