@@ -61,7 +61,8 @@ export class Actions {
     };
 
     static ResultDataLoaded:Action<{
-        block:ResultBlock;
+        data:ResultBlock;
+        sourceId:string;
     }> = {
         name: 'FREQ_RESULT_DATA_LOADED'
     };
@@ -255,6 +256,7 @@ export class Actions {
 
     static FreqChartsDataLoaded:Action<{
         data:ResultBlock;
+        sourceId:string;
     }> = {
         name: 'FREQ_CHARTS_DATA_LOADED'
     };
