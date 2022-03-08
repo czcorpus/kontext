@@ -128,7 +128,8 @@ class WriteBackend(DatabaseWriteBackend):
         Find an article with exactly same contents.
         """
         cursor = self._db.cursor()
-        cursor.execute('SELECT id FROM kontext_article WHERE entry LIKE %s', (contents.strip(),))
+        cursor.execute('SELECT id FROM kontext_article WHERE entry LIKE %s LIMIT 1',
+                       (contents.strip(),))
         row = cursor.fetchone()
         return row[0] if row else None
 

@@ -89,7 +89,8 @@ class MySQLSubcRestore(AbstractSubcRestore):
             cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
                 'WHERE user_id = %s AND corpname = %s AND subcname = %s '
-                'ORDER BY timestamp',
+                'ORDER BY timestamp '
+                'LIMIT 1',
                 (user_id, corpname, subcname)
             )
             row = cursor.fetchone()
