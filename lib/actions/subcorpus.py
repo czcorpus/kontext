@@ -125,7 +125,7 @@ class Subcorpus(Querying):
                         aligned_corpora=data.aligned_corpora,
                         limit_lists=False)
                     sel_attrs = {}
-                    for k, vals in sel_match.get('attr_values', {}).items():
+                    for k, vals in sel_match.attr_values.items():
                         if k == corpus_info.metadata.label_attr:
                             k = corpus_info.metadata.id_attr
                         if '.' in k:
