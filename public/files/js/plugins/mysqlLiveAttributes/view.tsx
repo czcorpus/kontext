@@ -104,7 +104,7 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
         const renderAlignedLangsSel = (item) => {
             return (
                 <span>
-                {shortenValues(item.languages, ' + ')}
+                {'\u2026\u00a0\u2229'} {shortenValues(item.languages, ' \u2229 ')}
                 <br />
                 </span>
             );
@@ -154,7 +154,10 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                             renderAlignedLangsSel(item) :
                                             renderTextTypesSel(item)
                                         }
-                                        {he.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo})}
+                                        {item.numPosInfo > 0 ?
+                                            he.translate('ucnkLA__num_positions', {num_pos: item.numPosInfo}) :
+                                            null
+                                        }
                                     </td>
                                 </tr>
                             </tbody>
@@ -231,9 +234,9 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
     const LiveAttrsView:React.FC<LiveAttrsModelState> = (props) => {
 
         const handleRefine = () => {
-            dispatcher.dispatch<typeof PluginInterfaces.LiveAttributes.Actions.RefineClicked>({
-                name: PluginInterfaces.LiveAttributes.Actions.RefineClicked.name,
-            });
+            dispatcher.dispatch(
+                PluginInterfaces.LiveAttributes.Actions.RefineClicked,
+            );
         };
 
         const handleReset = () => {
@@ -349,7 +352,9 @@ export function init({dispatcher, he, SubcmixerComponent, textTypesModel, liveAt
                                         <tbody>
                                             {pipe(
                                                 props.alignedCorpora,
-                                                List.filter(v => v.selected),
+                                                props.manualAlignCorporaMode ?
+                                                    v => v :
+                                                    List.filter(v => v.selected),
                                                 List.map(
                                                     (item, i) => (
                                                         <tr key={item.value}>
