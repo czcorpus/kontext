@@ -59,7 +59,7 @@ class SignUpToken(AbstractSignUpToken[MySQLConnection]):
             'SELECT token_value, label, created, ttl, username, firstname, lastname, pwd_hash, email, affiliation '
             'FROM kontext_sign_up_token '
             'WHERE token_value = %s '
-            ' AND TIMESTAMPDIFF(SECOND, created, NOW()) <= %s ', (self.value, self.ttl))
+            'AND TIMESTAMPDIFF(SECOND, created, NOW()) <= %s ', (self.value, self.ttl))
         row = cursor.fetchone()
         if row:
             self.bound = True
