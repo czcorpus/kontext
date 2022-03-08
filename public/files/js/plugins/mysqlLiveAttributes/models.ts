@@ -280,14 +280,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 const item = state.alignedCorpora[action.payload.idx];
                 if (item) {
                     const idx = state.alignedCorpora.indexOf(item);
-                    state.alignedCorpora[idx] = {
-                        value: item.value,
-                        label: item.label,
-                        locked: item.locked,
-                        selected: !item.selected
-                    };
+                    state.alignedCorpora[idx] = {...item, selected: !item.selected};
                 }
                 state.controlsEnabled = state.controlsEnabled || this.hasSelectedLanguages(state);
+            },
+            (state, action, dispatch) => {
+                dispatch<typeof SubcActions.FormSetAlignedCorpora>({
+                    name: SubcActions.FormSetAlignedCorpora.name,
+                    payload: {
+                        alignedCorpora: List.filter(v => v.selected, state.alignedCorpora)
+                    }
+                });
+                this.reloadSizes(state, dispatch);
             }
         );
 
@@ -408,20 +412,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 } else {
                     return this.pluginApi.showMessage('error', this.pluginApi.translate('ucnkLA__item_not_found'));
                 }
-            }
-        );
-
-        this.addActionHandler(
-            PluginInterfaces.LiveAttributes.Actions.AlignedCorpChanged,
-            null,
-            (state, action, dispatch) => {
-                dispatch<typeof SubcActions.FormSetAlignedCorpora>({
-                    name: SubcActions.FormSetAlignedCorpora.name,
-                    payload: {
-                        alignedCorpora: List.filter(v => v.selected, state.alignedCorpora)
-                    }
-                });
-                this.reloadSizes(state, dispatch);
             }
         );
 
