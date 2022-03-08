@@ -55,7 +55,6 @@ class UcnkDispatchHook(AbstractDispatchHook):
         """
         client_ip = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_FOR', plugin_ctx.get_from_environ('REMOTE_ADDR', ''))
         rec = self._db.hash_get(self.bot_clients_key, client_ip)
-        logging.getLogger(__name__).warning('rec: {}'.format(rec))
         if rec:
             report: ActivityReport = ActivityReport.from_dict(rec)
             logging.getLogger(__name__).warning(
