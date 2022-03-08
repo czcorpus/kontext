@@ -419,7 +419,7 @@ class ManateeBackend(SearchBackend):
             a list of dict items representing tree nodes
         """
         def import_raw_val(v):
-            return None if v in empty_val_placeholders or v == '' else v
+            return ' ' if v in empty_val_placeholders or v == '' else v
 
         def expand_multivals(values):
             if multival_separ:
