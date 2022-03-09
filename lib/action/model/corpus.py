@@ -393,23 +393,23 @@ class CorpusActionModel(AuthActionModel):
                 return ts
         return None
 
-    def _clear_prev_conc_params(self):
+    def clear_prev_conc_params(self):
         self._active_q_data = None
 
-    def _get_curr_conc_args(self):
-        args = self._get_mapped_attrs(ConcArgsMapping)
+    def get_curr_conc_args(self):
+        args = self.get_mapped_attrs(ConcArgsMapping)
         if self._q_code:
             args['q'] = f'~{self._q_code}'
         else:
             args['q'] = [q for q in self.args.q]
         return args
 
-    def _redirect_to_conc(self):
+    def redirect_to_conc(self):
         """
         Redirects to the current concordance
         """
         raise NotImplementedError('TODO _redirect_to_conc')
-        args = self._get_curr_conc_args()
+        args = self.get_curr_conc_args()
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
 
@@ -583,7 +583,7 @@ class CorpusActionModel(AuthActionModel):
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.post_dispatch(self._plugin_ctx, action_props.action_name, action_props)
 
-    def _add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
+    def add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
             event_name = 'MAIN_MENU_SHOW_SAVE_FORM'
             self._dynamic_menu_items.append(
@@ -771,7 +771,7 @@ class CorpusActionModel(AuthActionModel):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
-    def _get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> Dict[str, Any]:
         """
         Returns required attributes (= passed attr_names) and their respective values found
         in 'self.args'. Only attributes initiated via class attributes and the Parameter class
@@ -965,7 +965,7 @@ class CorpusActionModel(AuthActionModel):
         else:
             return ''
 
-    def _get_struct_opts(self) -> str:
+    def get_struct_opts(self) -> str:
         """
         Returns structures and structural attributes the current concordance should display.
         Note: current solution is little bit confusing - there are two overlapping parameters
@@ -983,7 +983,7 @@ class CorpusActionModel(AuthActionModel):
             revers = False
         return k, revers
 
-    def _get_tt_bib_mapping(self, tt_data):
+    def get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
                 self._plugin_ctx, [self.args.corpname] + self.args.align):
@@ -996,7 +996,7 @@ class CorpusActionModel(AuthActionModel):
                         self._plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
         return bib_mapping
 
-    def _export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
+    def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
@@ -1058,7 +1058,7 @@ class CorpusActionModel(AuthActionModel):
         self._set_async_tasks(at_list)
         return at_list
 
-    def _store_last_search(self, op_type: str, conc_id: str):
+    def store_last_search(self, op_type: str, conc_id: str):
         """
         Store last search operation ID. This is used when
         a new form of the same search type is opened and
@@ -1070,7 +1070,7 @@ class CorpusActionModel(AuthActionModel):
         curr[op_type] = conc_id
         self._request.ctx.session['last_search'] = curr
 
-    def _mark_timeouted_tasks(self, *tasks):
+    def mark_timeouted_tasks(self, *tasks):
         now = time.time()
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
         for at in tasks:

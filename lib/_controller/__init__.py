@@ -343,12 +343,12 @@ class Controller(ABC):
             action_metadata = {}
 
         if 'format' in self._request.args:
-            if self._is_allowed_explicit_out_format(self._request.args['format']):
-                action_metadata['return_type'] = self._request.args['format']
+            if self._is_allowed_explicit_out_format(self._request.args.get('format')):
+                action_metadata['return_type'] = self._request.args.get('format')
             else:
                 action_metadata['return_type'] = 'text'
                 raise UserActionException(
-                    'Unknown output format: {0}'.format(self._request.args['format']))
+                    'Unknown output format: {0}'.format(self._request.args.get('format')))
         self.add_validator(partial(self._validate_http_method, action_metadata))
         return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 

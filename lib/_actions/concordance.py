@@ -106,33 +106,12 @@ class Actions(Querying):
         else:
             return None
 
-    def _get_speech_segment(self):
-        """
-        Returns:
-            tuple (structname, attr_name)
-        """
-        segment_str = self.get_corpus_info(self.args.corpname).speech_segment
-        if segment_str:
-            return tuple(segment_str.split('.'))
-        return None
-
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
         conc_args = self._get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]
         result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
-
-    def _apply_linegroups(self, conc):
-        """
-        Applies user-defined line groups stored via query_persistence
-        to the provided concordance instance.
-        """
-        if self._lines_groups.is_defined():
-            for lg in self._lines_groups:
-                conc.set_linegroup_at_pos(lg[0], lg[2])
-            if self._lines_groups.sorted:
-                conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
 
     def _get_ipm_base_set_desc(self, contains_within):
         """
@@ -151,33 +130,6 @@ class Actions(Querying):
         else:
             return translate('related to the whole %s') % corpus_name
 
-    @staticmethod
-    def _create_empty_conc_result_dict() -> Dict[str, Any]:
-        """
-        Create a minimal concordance result data required by the client-side app to operate properly.
-        """
-        pagination = dict(lastPage=0, prevPage=None, nextPage=None, firstPage=0)
-        return dict(Lines=[], CorporaColumns=[], KWICCorps=[], pagination=pagination, Sort_idx=[],
-                    concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
-                    result_shuffled=False, finished=True)
-
-    def _apply_viewmode(self, sentence_struct):
-        if self.args.viewmode == 'kwic':
-            self.args.leftctx = self.args.kwicleftctx
-            self.args.rightctx = self.args.kwicrightctx
-        elif self.args.viewmode == 'align' and self.args.align:
-            self.args.leftctx = 'a,%s' % os.path.basename(self.args.corpname)
-            self.args.rightctx = 'a,%s' % os.path.basename(self.args.corpname)
-        else:
-            self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
-            self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
-
-    def _attach_query_overview(self, out):
-        out['query_overview'] = self.concdesc_json().get('Desc', [])
-        if len(out['query_overview']) > 0:
-            out['page_title'] = '{0} / {1}'.format(self._human_readable_corpname(),
-                                                   out['query_overview'][0].get('nicearg'))
-
     def _go_to_restore_conc(self, return_action: str):
         args = []
         for k in self._request.args.keys():
@@ -185,135 +137,6 @@ class Actions(Querying):
                 args.append((k, val))
         args.append(('next', return_action))
         raise ImmediateRedirectException(self.create_url('restore_conc', args))
-
-    @exposed(vars=('orig_query', ), mutates_result=False, action_log_mapper=log_mapping.view)
-    def view(self, request):
-        """
-        KWIC view
-        """
-        corpus_info = self.get_corpus_info(self.args.corpname)
-        if self.args.refs is None:  # user did not set this at all (!= user explicitly set '')
-            self.args.refs = self.corp.get_conf('SHORTREF')
-
-        if self.args.fromp < 1:
-            raise UserActionException(translate('Invalid page number'))
-        if self.args.pagesize < 1:
-            raise UserActionException('Invalid page size')
-
-        self._apply_viewmode(corpus_info.sentence_struct)
-
-        i = 0
-        while i < len(self.args.q):
-            if self.args.q[i].startswith('s*') or self.args.q[i][0] == 'e':
-                del self.args.q[i]
-            i += 1
-        out = self._create_empty_conc_result_dict()
-        out['result_shuffled'] = not conclib.conc_is_sorted(self.args.q)
-        out['items_per_page'] = self.args.pagesize
-
-        conc = InitialConc(self.corp, None)
-        asnc = bool(int(request.args['asnc'])) if 'asnc' in request.args else False
-        try:
-            conc = get_conc(
-                corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=asnc,
-                samplesize=corpus_info.sample_size)
-            if conc:
-                self._apply_linegroups(conc)
-                conc.switch_aligned(os.path.basename(self.args.corpname))
-
-                kwic_args = KwicPageArgs(asdict(self.args), base_attr=Kontext.BASE_ATTR)
-                kwic_args.speech_attr = self._get_speech_segment()
-                kwic_args.labelmap = {}
-                kwic_args.alignlist = [self.cm.get_corpus(c) for c in self.args.align if c]
-                kwic_args.structs = self._get_struct_opts()
-                kwic = Kwic(self.corp, self.args.corpname, conc)
-
-                out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
-                out.update(kwic.kwicpage(kwic_args))
-                out.update(self.get_conc_sizes(conc))
-        except UnknownConcordanceAction as ex:
-            raise UserActionException(str(ex))
-        except TypeError as ex:
-            self.add_system_message('error', str(ex))
-            logging.getLogger(__name__).error(ex)
-        except (ConcordanceException, RuntimeError) as ex:
-            manatee_error = extract_manatee_error(ex)
-            if isinstance(manatee_error, ConcordanceSpecificationError):
-                raise UserActionException(manatee_error, code=422)
-            else:
-                raise ex
-
-        if self.corp.get_conf('ALIGNED'):
-            out['Aligned'] = [{'n': w,
-                               'label': self.cm.get_corpus(w).get_conf(
-                                   'NAME') or w}
-                              for w in self.corp.get_conf('ALIGNED').split(',')]
-        if self.args.align and not self.args.maincorp:
-            self.args.maincorp = self.args.corpname
-        if conc.size() == 0 and conc.finished():
-            msg = translate(
-                'No result. Please make sure the query and selected query type are correct.')
-            self.add_system_message('info', msg)
-
-        self._add_save_menu_item('CSV', save_format='csv',
-                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                     self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item('XLSX', save_format='xlsx',
-                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                     self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item('XML', save_format='xml',
-                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                     self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item('TXT', save_format='text',
-                                 hint=translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                     self.CONC_QUICK_SAVE_MAX_LINES)))
-        self._add_save_menu_item(translate('Custom'))
-
-        # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
-        # to be able to display extended context with all set structural attributes
-        out['widectx_globals'] = self._get_mapped_attrs(
-            WidectxArgsMapping, dict(structs=self._get_struct_opts()))
-        out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
-        out['aligned_corpora'] = self.args.align
-        out['line_numbers'] = self.args.line_numbers if self.args.line_numbers else False
-        out['speech_segment'] = self.get_speech_segment()
-        out['speaker_id_attr'] = corpus_info.speaker_id_attr.split(
-            '.') if corpus_info.speaker_id_attr else None
-        out['speech_overlap_attr'] = corpus_info.speech_overlap_attr.split(
-            '.') if corpus_info.speech_overlap_attr else None
-        out['speech_overlap_val'] = corpus_info.speech_overlap_val
-        out['conc_use_safe_font'] = corpus_info.use_safe_font
-        speaker_struct = corpus_info.speaker_id_attr.split(
-            '.')[0] if corpus_info.speaker_id_attr else None
-        out['speech_attrs'] = [x[1] for x in [x for x in [
-            x.split('.') for x in self.corp.get_structattrs()] if x[0] == speaker_struct]]
-        out['struct_ctx'] = self.corp.get_conf('STRUCTCTX')
-
-        # query form data
-        out['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
-        qf_args = self._fetch_prev_query('conc:filter')
-        if qf_args and qf_args.data.maincorp != self.args.corpname:
-            qf_args = None
-        self._attach_query_params(out, filter=qf_args)
-        out['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
-        out['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
-        out['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, out)
-
-        out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-            self._plugin_ctx, [self.args.corpname] + self.args.align)
-        out['running_calc'] = not out['finished']   # TODO running_calc is redundant
-        out['chart_export_formats'] = []
-        with plugins.runtime.CHART_EXPORT as ce:
-            out['chart_export_formats'].extend(ce.get_supported_types())
-        out['quick_save_row_limit'] = self.CONC_QUICK_SAVE_MAX_LINES
-        if conc is not None and conc.get_conc_file():
-            out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
-        else:
-            out['conc_cache_key'] = None
-        self._attach_query_overview(out)
-        return out
 
     @exposed(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view)
     def create_view(self, request):
@@ -326,17 +149,17 @@ class Actions(Querying):
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
     def archive_concordance(self, request):
         with plugins.runtime.QUERY_PERSISTENCE as cp:
-            revoke = bool(int(request.args['revoke']))
+            revoke = bool(int(request.args.get('revoke')))
             cn, row = cp.archive(self.session_get('user', 'id'),
-                                 request.args['code'], revoke=revoke)
+                                 request.args.get('code'), revoke=revoke)
         return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
     @exposed(access_level=1, return_type='json', skip_corpus_init=True)
     def get_stored_conc_archived_status(self, request):
         with plugins.runtime.QUERY_PERSISTENCE as cp:
             return {
-                'is_archived': cp.is_archived(request.args['code']),
-                'will_be_archived': cp.will_be_archived(self._plugin_ctx, request.args['code'])
+                'is_archived': cp.is_archived(request.args.get('code')),
+                'will_be_archived': cp.will_be_archived(self._plugin_ctx, request.args.get('code'))
             }
 
     @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
@@ -409,30 +232,6 @@ class Actions(Querying):
             cancel_conc_task(cache_map, subchash, q)
             raise ex
 
-    def get_conc_sizes(self, conc):
-        i = 1
-        concsize = conc.size()
-        fullsize = conc.fullsize()
-        sampled_size = 0
-        while i < len(self.args.q) and not self.args.q[i].startswith('r'):
-            i += 1
-        if i < len(self.args.q):
-            sampled_size = concsize
-
-        for j in range(i + 1, len(self.args.q)):
-            if self.args.q[j][0] in ('p', 'n'):
-                return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
-                            finished=conc.finished())
-        if sampled_size:
-            orig_conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
-                                 q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                 asnc=False)
-            concsize = orig_conc.size()
-            fullsize = orig_conc.fullsize()
-
-        return dict(sampled_size=sampled_size, concsize=concsize,
-                    relconcsize=1e6 * fullsize / self.corp.search_size,
-                    fullsize=fullsize, finished=conc.finished())
 
     @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def sortx(self, request):
@@ -486,182 +285,6 @@ class Actions(Querying):
     def _is_err_corpus(self):
         availstruct = self.corp.get_structs()
         return 'err' in availstruct and 'corr' in availstruct
-
-    def _compile_query(self, corpus: str, form: Union[QueryFormArgs, FilterFormArgs]):
-        if isinstance(form, QueryFormArgs):
-            qtype = form.data.curr_query_types[corpus]
-            query = form.data.curr_queries[corpus]
-            icase = '' if form.data.curr_qmcase_values[corpus] else '(?i)'
-            attr = form.data.curr_default_attr_values[corpus]
-            use_regexp = form.data.curr_use_regexp_values[corpus]
-            query_parsed = [x for x, _ in form.data.curr_parsed_queries[corpus]]
-        else:
-            qtype = form.data.query_type
-            query = form.data.query
-            icase = '' if form.data.qmcase else '(?i)'
-            attr = form.data.default_attr
-            use_regexp = form.data.use_regexp
-            query_parsed = [x for x, _ in form.data.parsed_query]
-
-        if query.strip() == '':
-            return None
-
-        def mk_query_val(q):
-            if qtype == 'advanced' or use_regexp:
-                return q.strip()
-            return icase + re_escape(q.strip())
-
-        def stringify_parsed_query(q: List[List[str]]):
-            expr = []
-            for token_args in q:
-                position = []
-                for tok_attr, val in token_args:
-                    if type(tok_attr) is str:
-                        position.append(f'{tok_attr}="{mk_query_val(val)}"')
-                    else:
-                        position.append('({})'.format(' | '.join(
-                            [f'{a2}="{mk_query_val(val)}"' for a2 in tok_attr])))
-                expr.append('[' + ' & '.join(position) + ']')
-            return ' '.join(expr)
-
-        if qtype == 'simple':
-            if query_parsed:
-                return stringify_parsed_query(query_parsed)
-            else:
-                return ' '.join([f'[{attr}="{mk_query_val(part)}"]' for part in query.split(' ')])
-        else:
-            return re.sub(r'[\n\r]+', ' ', query).strip()
-
-    def _set_first_query(self, corpora: List[str], form: QueryFormArgs, corpus_info: CorpusInfo):
-
-        def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(self._plugin_ctx, form)(
-                corpora[0], attrname, items, ctx, fctxtype)
-            self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
-
-        def ctx_to_str(ctx):
-            return ' '.join(str(x) for x in ctx)
-
-        def append_filter(idx: int, attrname: str, items: List[str], ctx, fctxtype) -> int:
-            """
-            return next idx of a new acknowledged auto-operation idx (to be able to continue
-            with appending of other ops). I.e. if the last operation appended
-            here has idx = 7 then the returned value will be 8.
-            """
-            if not items:
-                return idx
-            if fctxtype == 'any':
-                self.args.q.append('P{} [{}]'.format(
-                    ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
-                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
-                return idx + 1
-            elif fctxtype == 'none':
-                self.args.q.append('N{} [{}]'.format(
-                    ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
-                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
-                return idx + 1
-            elif fctxtype == 'all':
-                for i, v in enumerate(items):
-                    self.args.q.append('P{} [{}="{}"]'.format(ctx_to_str(ctx), attrname, v))
-                    append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
-                return idx + len(items)
-
-        if 'lemma' in self.corp.get_posattrs():
-            lemmaattr = 'lemma'
-        else:
-            lemmaattr = 'word'
-
-        wpos_patt_map = {}
-        for tagset in corpus_info.tagsets:
-            if tagset.ident == corpus_info.default_tagset:
-                wpos_patt_map = dict((x.pos, x.pattern) for x in tagset.pos_category)
-                break
-
-        if form.data.curr_default_attr_values[corpora[0]]:
-            qbase = f'a{form.data.curr_default_attr_values[corpora[0]]},'
-        else:
-            qbase = 'q'
-
-        texttypes = TextTypeCollector(self.corp, form.data.selected_text_types).get_query()
-        if texttypes:
-            ttquery = ' '.join([f'within <{attr} {expr} />' for attr, expr in texttypes])
-        else:
-            ttquery = ''
-        par_query = ''
-        nopq = []
-        for al_corpname in corpora[1:]:
-            wnot = '' if form.data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
-            pq = self._compile_query(corpus=al_corpname, form=form)
-            if pq:
-                par_query += f'within{wnot} {al_corpname}:{pq}'
-            if not pq or wnot:
-                nopq.append(al_corpname)
-        self.args.q = [
-            ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
-        ag_op_idx = 1  # an initial index of auto-generated conc. operations
-        ag_op_idx = append_filter(
-            ag_op_idx,
-            lemmaattr,
-            form.data.fc_lemword.split(),
-            (form.data.fc_lemword_wsize[0], form.data.fc_lemword_wsize[1], 1),
-            form.data.fc_lemword_type)
-        append_filter(
-            ag_op_idx,
-            'tag',
-            [wpos_patt_map.get(t, '') for t in form.data.fc_pos],
-            (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
-            form.data.fc_pos_type)
-
-        for al_corpname in corpora[1:]:
-            if al_corpname in nopq and not int(form.data.curr_include_empty_values[al_corpname]):
-                self.args.q.append('X%s' % al_corpname)
-        if len(corpora) > 1:
-            self.args.viewmode = 'align'
-
-    @exposed(mutates_result=True, http_method=('POST',), action_log_mapper=log_mapping.query_submit,
-             return_type='json')
-    def query_submit(self, request):
-
-        def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
-            if history_ts:
-                self._store_last_search('conc', conc_ids[0])
-
-        self._clear_prev_conc_params()
-        ans = {}
-        # 1) store query forms arguments for later reuse on client-side
-        corpora = self._select_current_aligned_corpora(active_only=True)
-        corpus_info = self.get_corpus_info(corpora[0])
-        qinfo = QueryFormArgs(plugin_ctx=self._plugin_ctx, corpora=corpora, persist=True)
-        qinfo.update_by_user_query(
-            request.json, self._get_tt_bib_mapping(request.json['text_types']))
-        self.add_conc_form_args(qinfo)
-        # 2) process the query
-        try:
-            self._set_first_query([q['corpname']
-                                   for q in request.json['queries']], qinfo, corpus_info)
-            if self.args.shuffle == 1 and 'f' not in self.args.q:
-                self.args.shuffle = 0
-                self.args.q.append('f')
-                self.acknowledge_auto_generated_conc_op(
-                    len(self.args.q) - 1, ShuffleFormArgs(persist=True))
-            logging.getLogger(__name__).debug('query: {}'.format(self.args.q))
-            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=qinfo.data.asnc,
-                            samplesize=corpus_info.sample_size)
-            ans['size'] = conc.size()
-            ans['finished'] = conc.finished()
-            self.on_conc_store = store_last_op
-            self._response.set_http_status(201)
-        except (ConcordanceException, ConcCacheStatusException) as ex:
-            ans['size'] = 0
-            ans['finished'] = True
-            if isinstance(ex, ConcordanceSpecificationError):
-                raise UserActionException(ex, code=422)
-            else:
-                raise ex
-        ans['conc_args'] = self._get_mapped_attrs(ConcArgsMapping)
-        self._attach_query_overview(ans)
-        return ans
 
     @exposed(template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def quick_filter(self, request):
@@ -1218,13 +841,13 @@ class Actions(Querying):
     def export_freqct(self, request):
         with plugins.runtime.EXPORT_FREQ2D as plg:
             data = request.json
-            exporter = plg.load_plugin(request.args['saveformat'])
-            if request.args['savemode'] == 'table':
+            exporter = plg.load_plugin(request.args.get('saveformat'))
+            if request.args.get('savemode') == 'table':
                 exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
                                      labels1=data.get('labels1', []), labels2=data.get('labels2', []),
                                      alpha_level=data['alphaLevel'], min_freq=data['minFreq'],
                                      min_freq_type=data['minFreqType'], data=data['data'])
-            elif request.args['savemode'] == 'flat':
+            elif request.args.get('savemode') == 'flat':
                 exporter.set_content_flat(headings=data.get('headings', []), alpha_level=data['alphaLevel'],
                                           min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
                                           data=data['data'])
