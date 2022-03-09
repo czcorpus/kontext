@@ -28,13 +28,14 @@ import plugins
 from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
 from translation import ugettext as _
 from action.decorators import http_action
-from action.model.base import BaseActionModel
+from action.model.authorized import AuthActionModel
 
 
 bp = Blueprint('default_issue_reporting')
 
 
-@http_action(return_type='json', http_method='POST', skip_corpus_init=True, action_model=BaseActionModel)
+@bp.route('/submit_issue', methods=['POST'])
+@http_action(return_type='json', action_model=AuthActionModel)
 def submit_issue(req, amodel):
     with plugins.runtime.ISSUE_REPORTING as p:
         p.submit(amodel.plugin_ctx, req.form)

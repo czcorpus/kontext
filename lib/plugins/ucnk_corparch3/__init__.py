@@ -37,6 +37,7 @@ import time
 import logging
 from collections import defaultdict
 import os
+from sanic import Blueprint
 
 
 import plugins
@@ -46,10 +47,13 @@ from plugin_types.corparch import CorpusInfo
 from plugins.mysql_corparch import MySQLCorparch
 from plugins.mysql_corparch.corplist import parse_query
 from plugins.mysql_corparch.backend import Backend
-from controller import exposed
 from action.errors import ForbiddenException
-import actions.user
+from action.decorators import http_action
+from action.model.authorized import AuthActionModel
 from translation import ugettext as _
+
+bp = Blueprint('ucnk_corparch3')
+
 
 DEFAULT_LANG = 'en'
 
@@ -74,22 +78,24 @@ class UcnkCorpusInfo(CorpusInfo):
         self.requestable = False
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
-def get_favorite_corpora(ctrl, request):
+@bp.route('/get_favorite_corpora')
+@http_action(return_type='json', access_level=1, action_model=AuthActionModel)
+def get_favorite_corpora(amodel, req, resp):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
+        return ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
 
 
-@exposed(access_level=1, return_type='json', skip_corpus_init=True, http_method='POST')
-def ask_corpus_access(ctrl, request):
+@bp.route('/ask_corpus_access', methods=['POST'])
+@http_action(access_level=1, return_type='json', action_model=AuthActionModel)
+def ask_corpus_access(amodel, req, resp):
     ans = {}
-    plugin_ctx = getattr(ctrl, '_plugin_ctx')
     with plugins.runtime.CORPARCH as ca:
-        if plugin_ctx.user_is_anonymous:
+        if amodel.plugin_ctx.user_is_anonymous:
             raise ForbiddenException('Anonymous user cannot send the request')
-        status = ca.send_request_email(corpus_id=request.form['corpusId'],
-                                       plugin_ctx=plugin_ctx,
-                                       custom_message=request.form['customMessage'])
+        status = ca.send_request_email(
+            corpus_id=req.form.get('corpusId'),
+            plugin_ctx=amodel.plugin_ctx,
+            custom_message=req.form.get('customMessage'))
     if status is False:
         ans['error'] = _(
             'Failed to send e-mail. Please try again later or contact system administrator')

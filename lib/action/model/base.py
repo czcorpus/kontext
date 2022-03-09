@@ -150,6 +150,7 @@ class BaseActionModel:
         result['user_id'] = self._request.session_get('user', 'id')
         result['locale'] = self._request.ui_lang
         result['messages'] = []
+        result['uses_corp_instance'] = False
         _apply_theme(result, app, settings.get('global', 'static_files_prefix', '../files'))
         return result
 

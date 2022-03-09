@@ -12,9 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional, Dict, Any, TypeVar, TYPE_CHECKING
+from typing import Optional, Dict, Any, TypeVar
 from corplib.abstract import AbstractKCorpus
-from sanic.request import Request
 from secure_cookie.session import Session
 from action.cookie import KonTextCookie
 from corplib import CorpusManager
@@ -37,10 +36,9 @@ class PluginCtx:
     called during request processing.
     """
 
-    def __init__(self, action_model: 'BaseActionModel', request: KRequest, cookies: KonTextCookie) -> None:
+    def __init__(self, action_model: 'BaseActionModel', request: KRequest) -> None:
         self._action_model: 'BaseActionModel' = action_model
         self._request: KRequest = request
-        self._cookies: KonTextCookie = cookies
         self._shared_data: Dict[str, Any] = {}
 
     def set_shared(self, key: str, value: Any):
