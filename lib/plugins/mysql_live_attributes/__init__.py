@@ -50,8 +50,8 @@ from . import query
 bp = Blueprint('mysql_live_attributes')
 
 
-@bp.route('/filter_attributes')
-@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
+@bp.route('/filter_attributes', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def filter_attributes(req, amodel):
     attrs = json.loads(req.form.get('attrs', '{}'))
     aligned = json.loads(req.form.get('aligned', '[]'))
@@ -60,20 +60,20 @@ def filter_attributes(req, amodel):
                                      aligned_corpora=aligned)
 
 
-@bp.route('/attr_val_autocomplete')
-@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
+@bp.route('/attr_val_autocomplete', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
-    attrs[request.form['patternAttr']] = '%{}%'.format(request.form['pattern'])
+    attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned,
-                                     autocomplete_attr=request.form['patternAttr'])
+                                     autocomplete_attr=request.form.get('patternAttr'))
 
 
-@bp.route('/fill_attrs')
-@http_action(return_type='json', http_method='POST', action_model=CorpusActionModel)
+@bp.route('/fill_attrs', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def fill_attrs(self, request):
     search = request.json['search']
     values = request.json['values']

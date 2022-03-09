@@ -72,25 +72,25 @@ class ProcessResponse(TypedDict):
     structs: List[str]
 
 
-@bp.route('/subcmixer_run_calc')
-@http_action(return_type='json', access_level=1, http_method='POST', action_model=CorpusActionModel)
+@bp.route('/subcmixer_run_calc',  methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
 def subcmixer_run_calc(req, amodel) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(
                 plugin_ctx=amodel.plugin_ctx,
                 corpus=amodel.corp,
-                corpname=req.form['corpname'],
+                corpname=req.form.get('corpname'),
                 aligned_corpora=req.form.getlist('aligned_corpora'),
-                args=json.loads(req.form['expression'])
+                args=json.loads(req.form.get('expression'))
             )
     except ResultNotFoundException as err:
         amodel.add_system_message('error', str(err))
         return {}
 
 
-@bp.route('/subcmixer_create_subcorpus')
-@http_action(return_type='json', access_level=1, http_method='POST', action_model=CorpusActionModel)
+@bp.route('/subcmixer_create_subcorpus', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
 def subcmixer_create_subcorpus(req, amodel) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
@@ -100,15 +100,15 @@ def subcmixer_create_subcorpus(req, amodel) -> Dict[str, Any]:
     write by merging adjacent position intervals
     (Manatee does this).
     """
-    if not req.form['subcname']:
+    if not req.form.get('subcname'):
         amodel.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
         publish = bool(int(req.form.get('publish')))
         subc_path = amodel.prepare_subc_path(
-            req.form['corpname'], req.form['subcname'], publish=False)
-        struct_indices = sorted([int(x) for x in req.form['ids'].split(',')])
-        id_attr = req.form['idAttr'].split('.')
+            req.form.get('corpname'), req.form.get('subcname'), publish=False)
+        struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
+        id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
         with open(subc_path, 'wb') as fw:
             for idx in struct_indices:
@@ -116,10 +116,10 @@ def subcmixer_create_subcorpus(req, amodel) -> Dict[str, Any]:
                 fw.write(struct.pack('<q', attr.end(idx)))
 
         pub_path = amodel.prepare_subc_path(
-            req.form['corpname'], req.form['subcname'], publish=publish) if publish else None
+            req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
         if pub_path:
             corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
-                                     req.form['description'])
+                                     req.form.get('description'))
 
         return dict(status=True)
 

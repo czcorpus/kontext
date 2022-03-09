@@ -12,8 +12,6 @@ class ActionProps:
 
     access_level: int = 0
 
-    skip_corpus_init: bool = False
-
     http_method: Union[Optional[str], Tuple[str, ...]] = 'GET'
 
     page_model: Optional[str] = None

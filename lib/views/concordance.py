@@ -19,7 +19,7 @@ bp = Blueprint('concordance')
 
 @bp.route('/query')
 @http_action(template='query.html', page_model='query', action_model=ConcActionModel)
-async def query(request, action_model: ConcActionModel):
+async def query(action_model, req, resp):
     action_model.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
@@ -42,16 +42,14 @@ async def query(request, action_model: ConcActionModel):
     action_model._attach_query_params(out)
     action_model._attach_aligned_query_params(out)
     action_model._export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
-    import logging
-    logging.getLogger(__name__).warning('fooo>>>>>> {}'.format(out))
-    return out, 200
+    return out
 
 
 @bp.route('/concdesc_json')
-@http_action(return_type='json')
-async def concdesc_json(request, action_model: BaseActionModel) -> Dict[str, List[Dict[str, Any]]]:
+@http_action(return_type='json', action_model=ConcActionModel)
+async def concdesc_json(amodel, req, resp) -> Dict[str, List[Dict[str, Any]]]:
     out_list: List[Dict[str, Any]] = []
-    conc_desc = conclib.get_conc_desc(corpus=action_model.corp, q=getattr(action_model.args, 'q'))
+    conc_desc = conclib.get_conc_desc(corpus=amodel.corp, q=getattr(amodel.args, 'q'))
 
     def nicearg(arg):
         args = arg.split('"')
@@ -71,30 +69,30 @@ async def concdesc_json(request, action_model: BaseActionModel) -> Dict[str, Lis
         return ', '.join(niceargs)
 
     for o, a, u1, u2, s, opid in conc_desc:
-        u2.append(('corpname', getattr(action_model.args, 'corpname')))
-        if getattr(action_model.args, 'usesubcorp'):
-            u2.append(('usesubcorp', getattr(action_model.args, 'usesubcorp')))
+        u2.append(('corpname', getattr(amodel.args, 'corpname')))
+        if getattr(amodel.args, 'usesubcorp'):
+            u2.append(('usesubcorp', getattr(amodel.args, 'usesubcorp')))
         out_list.append(dict(
             op=o,
             opid=opid,
             arg=a,
             nicearg=nicearg(a),
-            tourl=action_model.urlencode(u2),
+            tourl=amodel.urlencode(u2),
             size=s))
     return {'Desc': out_list}
 
 
 @bp.route('/ajax_fetch_conc_form_args')
-@http_action(return_type='json', http_method='GET')
-async def ajax_fetch_conc_form_args(self, request: Request) -> Dict[str, Any]:
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
     try:
         # we must include only regular (i.e. the ones visible in the breadcrumb-like
         # navigation bar) operations - otherwise the indices would not match.
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             stored_ops = qp.load_pipeline_ops(
-                self._plugin_ctx, request.args['last_key'], build_conc_form_args)
+                amodel.plugin_ctx, req.args['last_key'], build_conc_form_args)
         pipeline = [x for x in stored_ops if x.form_type != 'nop']
-        op_data = pipeline[int(request.args['idx'])]
+        op_data = pipeline[int(req.args['idx'])]
         return op_data.to_dict()
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
         raise NotFoundException(ugettext('Query information not stored: {}').format(ex))

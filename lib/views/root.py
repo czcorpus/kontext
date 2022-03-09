@@ -9,24 +9,24 @@ from action.errors import FunctionNotSupported, ImmediateRedirectException
 import settings
 import plugins
 import bgcalc
-from action.model.base import BaseActionModel
+
 
 bp = Blueprint('root')
 
 
 @bp.route('/')
 @http_action()
-async def root_action(request, _):
+async def root_action(amodel, req, resp):
     raise ImmediateRedirectException('/query')
 
 
 @bp.route('/check_tasks_status')
-@http_action(return_type='json', skip_corpus_init=True)
-def check_tasks_status(request: Request, action_model: BaseActionModel) -> Dict[str, Any]:
+@http_action(return_type='json')
+def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
     backend = settings.get('calc_backend', 'type')
     if backend in ('celery', 'rq'):
         worker = bgcalc.calc_backend_client(settings)
-        at_list = action_model.get_async_tasks()
+        at_list = amodel.get_async_tasks()
         upd_list = []
         for at in at_list:
             r = worker.AsyncResult(at.ident)
@@ -41,56 +41,57 @@ def check_tasks_status(request: Request, action_model: BaseActionModel) -> Dict[
                 at.status = 'FAILURE'
                 at.error = 'job not found'
             upd_list.append(at)
-        action_model._mark_timeouted_tasks(*upd_list)
-        action_model._set_async_tasks(upd_list)
+        amodel._mark_timeouted_tasks(*upd_list)
+        amodel._set_async_tasks(upd_list)
         return dict(data=[d.to_dict() for d in upd_list])
     else:
         raise FunctionNotSupported(f'Backend {backend} does not support status checking')
 
 
 @bp.route('/get_task_result')
-@http_action(return_type='json', skip_corpus_init=True)
-def get_task_result(request, action_model: BaseActionModel):
+@http_action(return_type='json')
+def get_task_result(amodel, req, resp):
     worker = bgcalc.calc_backend_client(settings)
-    result = worker.AsyncResult(request.args.get('task_id'))
+    result = worker.AsyncResult(req.args.get('task_id'))
     return dict(result=result.get())
 
 
-@bp.route('/remove_task_info')
-@http_action(return_type='json', skip_corpus_init=True, http_method='DELETE')
-def remove_task_info(request: Request, action_model: BaseActionModel) -> Dict[str, Any]:
-    task_ids = request.form.getlist('tasks')
-    action_model._set_async_tasks([x for x in action_model.get_async_tasks() if x.ident not in task_ids])
-    return action_model.check_tasks_status(request)
+@bp.route('/remove_task_info', methods=['DELETE'])
+@http_action(return_type='json')
+def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
+    task_ids = req.form.getlist('tasks')
+    amodel._set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
+    return amodel.check_tasks_status(req)
 
 
 @bp.route('/message')
-@http_action(accept_kwargs=True, skip_corpus_init=True, page_model='message', template='message.html')
-def message(request, action_model: BaseActionModel, *args, **kwargs):
-    kwargs['last_used_corp'] = dict(corpname=None, human_corpname=None)
-    if action_model.cm:
+@http_action(accept_kwargs=True, page_model='message', template='message.html')
+def message(amodel, req, resp, **kw):
+    kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
+    if amodel.cm:
         with plugins.runtime.QUERY_HISTORY as qh:
-            queries = qh.get_user_queries(action_model.session_get('user', 'id'), action_model.cm, limit=1)
+            queries = qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1)
             if len(queries) > 0:
-                kwargs['last_used_corp'] = dict(corpname=queries[0].get('corpname', None),
-                                                human_corpname=queries[0].get('human_corpname', None))
-    kwargs['popup_server_messages'] = False
-    return kwargs
+                kw['last_used_corp'] = dict(
+                    corpname=queries[0].get('corpname', None),
+                    human_corpname=queries[0].get('human_corpname', None))
+    kw['popup_server_messages'] = False
+    return kw
 
 
 @bp.route('/message_json')
-@http_action(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='json')
-def message_json(request, action_model: BaseActionModel, *args, **kwargs):
-    return message(request, action_model, *args, **kwargs)
+@http_action(accept_kwargs=True, func_arg_mapped=True, return_type='json')
+def message_json(amodel, req, resp):
+    return message(amodel, req, resp)
 
 
 @bp.route('/message_xml')
-@http_action(accept_kwargs=True, func_arg_mapped=True, skip_corpus_init=True, return_type='xml')
-def message_xml(request, action_model: BaseActionModel, *args, **kwargs):
-    return message(request, action_model, *args, **kwargs)
+@http_action(accept_kwargs=True, func_arg_mapped=True, return_type='xml')
+def message_xml(amodel, req, resp):
+    return message(amodel, req, resp)
 
 
 @bp.route('/compatibility')
-@http_action(skip_corpus_init=True, template='compatibility.html')
-def compatibility(request, action_model):
+@http_action(template='compatibility.html')
+def compatibility(amodel, req, resp):
     return {}

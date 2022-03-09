@@ -1,9 +1,10 @@
 from action.model.base import BaseActionModel
 from action.krequest import KRequest
+from action.plugin.ctx import PluginCtx
 from action import ActionProps
 from typing import Any
 from texttypes.cache import TextTypesCache
-from plugin_types.auth import UserInfo
+from plugin_types.auth import UserInfo, AbstractInternalAuth
 import logging
 from translation import ugettext
 from main_menu import MainMenu
@@ -11,6 +12,9 @@ import plugins  # note - plugins are stateful
 
 
 class AuthActionModel(BaseActionModel):
+
+    USER_ACTIONS_DISABLED_ITEMS = (
+        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.VIEW)
 
     # main menu items disabled for public users (this is applied automatically during
     # post_dispatch())
@@ -23,6 +27,11 @@ class AuthActionModel(BaseActionModel):
     def __init__(self, request: KRequest, action_props: ActionProps, tt_cache: TextTypesCache) -> None:
         super().__init__(request, action_props, tt_cache)
         self._uses_valid_sid: bool = True
+        self._plugin_ctx: PluginCtx = PluginCtx(self, self._request)
+
+    @property
+    def plugin_ctx(self):
+        return self._plugin_ctx
 
     def session_get_user(self) -> UserInfo:
         """
@@ -47,6 +56,14 @@ class AuthActionModel(BaseActionModel):
             else:
                 return None
         return curr
+
+    @staticmethod
+    def is_anonymous_id(user_id):
+        return plugins.runtime.AUTH.instance.is_anonymous(user_id)
+
+    @staticmethod
+    def _uses_internal_user_pages():
+        return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
     def init_session(self) -> None:
         """

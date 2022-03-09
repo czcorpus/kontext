@@ -17,27 +17,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-from typing import Union, Dict, List, Tuple, Any, Callable
+from typing import Union, Dict, Any
 import jinja2
 import re
 import json
-from urllib.parse import urlparse
 from xml.sax.saxutils import escape
 from dataclasses_json.api import DataClassJsonMixin
-import werkzeug.http
 
 from translation import ugettext
 import l10n
 import strings
 import settings
-
-
-ResultType = Union[
-    Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
-    Dict[str, Any],
-    str,
-    bytes,
-    DataClassJsonMixin]
 
 
 class CustomJSONEncoder(json.JSONEncoder):
