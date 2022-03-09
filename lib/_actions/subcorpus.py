@@ -378,8 +378,8 @@ class Subcorpus(Querying):
     @exposed(access_level=1, return_type='json', http_method='POST')
     def ajax_wipe_subcorpus(self, request: Request) -> Dict[str, Any]:
         if plugins.runtime.SUBC_RESTORE.exists:
-            corpus_id = request.form['corpname']
-            subcorp_name = request.form['subcname']
+            corpus_id = request.form.get('corpname')
+            subcorp_name = request.form.get('subcname')
             with plugins.runtime.SUBC_RESTORE as sr:
                 sr.delete_query(self.session_get('user', 'id'), corpus_id, subcorp_name)
             self.add_system_message('info',
@@ -391,9 +391,9 @@ class Subcorpus(Querying):
 
     @exposed(access_level=1, return_type='json', http_method='POST')
     def publish_subcorpus(self, request: Request) -> Dict[str, Any]:
-        subcname = request.form['subcname']
-        corpname = request.form['corpname']
-        description = request.form['description']
+        subcname = request.form.get('subcname')
+        corpname = request.form.get('corpname')
+        description = request.form.get('description')
         curr_subc = os.path.join(self.subcpath[0], corpname, subcname + '.subc')
         public_subc = self.prepare_subc_path(corpname, subcname, True)
         if os.path.isfile(curr_subc):
@@ -407,7 +407,7 @@ class Subcorpus(Querying):
     def update_public_desc(self, request: Request) -> Dict[str, Any]:
         if not self.corp.is_published:
             raise UserActionException('Corpus is not published - cannot change description')
-        self.corp.save_subc_description(request.form['description'])
+        self.corp.save_subc_description(request.form.get('description'))
         return {}
 
     @exposed(access_level=0, skip_corpus_init=True, page_model='pubSubcorpList')

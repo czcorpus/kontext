@@ -59,20 +59,20 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@bp.route('/set_favorite_item')
-@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
+@bp.route('/set_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, skip_corpus_init=True)
 def set_favorite_item(ctrl, request):
     """
     """
     corpora = []
     main_size = None
     for i, c_id in enumerate(request.form.getlist('corpora')):
-        corp = ctrl.cm.get_corpus(c_id, subcname=request.form['subcorpus_id'] if i == 0 else None)
+        corp = ctrl.cm.get_corpus(c_id, subcname=request.form.get('subcorpus_id') if i == 0 else None)
         if i == 0:
             main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
-    subcorpus_id = request.form['subcorpus_id']
-    subcorpus_orig_id = request.form['subcorpus_orig_id']
+    subcorpus_id = request.form.get('subcorpus_id')
+    subcorpus_orig_id = request.form.get('subcorpus_orig_id')
     item = FavoriteItem(dict(
         name=' || '.join(c['name'] for c in corpora) +
         (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
@@ -86,12 +86,12 @@ def set_favorite_item(ctrl, request):
         return item.to_dict()
 
 
-@bp.route('/set_favorite_item')
-@http_action(return_type='json', access_level=1, skip_corpus_init=True, http_method='POST')
+@bp.route('/set_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, skip_corpus_init=True)
 def unset_favorite_item(ctrl, request):
     with plugins.runtime.USER_ITEMS as uit:
-        uit.delete_user_item(ctrl._plugin_ctx, request.form['id'])
-        return dict(id=request.form['id'])
+        uit.delete_user_item(ctrl._plugin_ctx, request.form.get('id'))
+        return dict(id=request.form.get('id'))
 
 
 class UserItems(AbstractUserItems):

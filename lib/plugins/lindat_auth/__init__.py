@@ -42,8 +42,8 @@ def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
         self._session['user'] = auth.validate_user(self._plugin_ctx,
-                                                   request.form['username'] if request.form else None,
-                                                   request.form['password'] if request.form else None)
+                                                   request.form.get('username') if request.form else None,
+                                                   request.form.get('password') if request.form else None)
         if not auth.is_anonymous(self._session['user'].get('id', None)):
             if request.args.get('redirectTo', None):
                 self.redirect(request.args.get('redirectTo'))

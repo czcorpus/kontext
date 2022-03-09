@@ -2,11 +2,20 @@ import os
 import jinja2
 import json
 import re
+from typing import Union, Callable, Any, Dict
 from dataclasses_json import DataClassJsonMixin
 from translation import ugettext
 import l10n
 import strings
 from xml.sax.saxutils import escape
+
+
+ResultType = Union[
+    Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
+    Dict[str, Any],
+    str,
+    bytes,
+    DataClassJsonMixin]
 
 
 class CustomJSONEncoder(json.JSONEncoder):
