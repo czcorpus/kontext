@@ -25,12 +25,11 @@ import inspect
 import os.path
 import time
 import babel
-from sanic import Sanic
 
 import corplib
 import plugins
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
-from plugin_types.auth import AbstractInternalAuth, UserInfo
+from plugin_types.auth import AbstractInternalAuth
 from plugin_types import CorpusDependentPlugin
 import settings
 import l10n
@@ -127,7 +126,6 @@ class CorpusActionModel(AuthActionModel):
         self._proc_time: Optional[float] = None
         self.args: Args = Args()
         self._uses_valid_sid: bool = True
-        self._plugin_ctx: Optional[PluginCtx] = None  # must be implemented in a descendant
         # Note: always use _corp() method to access current corpus even from inside the class
         self._curr_corpus: Optional[KCorpus] = None
         self._corpus_variant: str = ''  # a prefix for a registry file
@@ -151,8 +149,6 @@ class CorpusActionModel(AuthActionModel):
 
         # data of the current manual concordance line selection/categorization
         self._lines_groups: LinesGroups = LinesGroups(data=[])
-
-        self._plugin_ctx: PluginCtx = PluginCtx(self, self._request, self._request.cookies)
 
         # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
@@ -450,29 +446,25 @@ class CorpusActionModel(AuthActionModel):
         Returns: a 2-tuple (corpus id, corpus variant)
         """
         with plugins.runtime.AUTH as auth:
-            if not action_props.skip_corpus_init:
-                is_api = action_props.return_type == 'json' or form.getvalue(
-                    'format') == 'json'
-                corpname, redirect = self._determine_curr_corpus(form, is_api)
-                has_access, variant = auth.validate_access(corpname, self.session_get('user'))
-                if has_access and redirect:
-                    url_pref = action_props.action_prefix
-                    if len(url_pref) > 0:
-                        url_pref = url_pref[1:]
-                    raise ImmediateRedirectException(self._request.create_url(
-                        url_pref + action_props.action_name, dict(corpname=corpname)))
-                elif not has_access:
-                    auth.on_forbidden_corpus(self._plugin_ctx, corpname, variant)
-                for al_corp in form.getlist('align'):
-                    al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
-                    # we cannot accept aligned corpora without access right
-                    # or with different variant (from implementation reasons in this case)
-                    # than the main corpus has
-                    if not al_access or al_variant != variant:
-                        raise AlignedCorpusForbiddenException(al_corp, al_variant)
-            else:
-                corpname = None
-                variant = ''
+            is_api = action_props.return_type == 'json' or form.getvalue(
+                'format') == 'json'
+            corpname, redirect = self._determine_curr_corpus(form, is_api)
+            has_access, variant = auth.validate_access(corpname, self.session_get('user'))
+            if has_access and redirect:
+                url_pref = action_props.action_prefix
+                if len(url_pref) > 0:
+                    url_pref = url_pref[1:]
+                raise ImmediateRedirectException(self._request.create_url(
+                    url_pref + action_props.action_name, dict(corpname=corpname)))
+            elif not has_access:
+                auth.on_forbidden_corpus(self._plugin_ctx, corpname, variant)
+            for al_corp in form.getlist('align'):
+                al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
+                # we cannot accept aligned corpora without access right
+                # or with different variant (from implementation reasons in this case)
+                # than the main corpus has
+                if not al_access or al_variant != variant:
+                    raise AlignedCorpusForbiddenException(al_corp, al_variant)
             print('_check_corpus_access ActionProps: {}'.format(action_props))
             print(f'corpname: {corpname}, redirect: {redirect}')
             return corpname, variant
@@ -504,9 +496,8 @@ class CorpusActionModel(AuthActionModel):
                 return NotFoundException(translate('Corpus \"{0}\" not available'.format(info.name)),
                                          internal_message='Failed to fetch configuration for {0}'.format(info.name))
             return None
-        if not self._action_props.skip_corpus_init:
-            self.add_validator(validate_corpus)
 
+        self.add_validator(validate_corpus)
         options = {}
         self._scheduled_actions(options)
 
@@ -858,11 +849,9 @@ class CorpusActionModel(AuthActionModel):
                 thecorp = ErrorCorpus(ex)
         else:
             thecorp = self.corp
-        if not self._action_props.skip_corpus_init:
-            self._add_corpus_related_globals(result, thecorp)
-            result['uses_corp_instance'] = True
-        else:
-            result['uses_corp_instance'] = False
+
+        self._add_corpus_related_globals(result, thecorp)
+        result['uses_corp_instance'] = True
 
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
@@ -1040,10 +1029,6 @@ class CorpusActionModel(AuthActionModel):
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)
-
-    @staticmethod
-    def _uses_internal_user_pages():
-        return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
     def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
         """

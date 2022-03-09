@@ -686,7 +686,7 @@ class Actions(Querying):
 
     @exposed(http_method='POST', template='view.html', page_model='view', mutates_result=True)
     def switch_main_corp(self, request):
-        maincorp = request.form['maincorp']
+        maincorp = request.form.get('maincorp')
         self.args.q.append('x-{0}'.format(maincorp))
         ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
         self.add_conc_form_args(ksargs)

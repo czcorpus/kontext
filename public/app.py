@@ -47,6 +47,7 @@ from sanic_session import Session, AIORedisSessionInterface
 from redis import asyncio as aioredis
 from views.root import bp as root_bp
 from views.concordance import bp as conc_bp
+from views.user import bp as user_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -240,9 +241,12 @@ application = Sanic(
             templating=TplEngine(settings),
             tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance)))
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
+application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
+application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
 session = Session()
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
+application.blueprint(user_bp)
 setup_plugins()
 install_plugin_actions(application)
 
@@ -294,5 +298,4 @@ if __name__ == '__main__':
 
     if args.debugmode and not settings.is_debug_mode():
         settings.activate_debug()
-    print('APP >>>>>>>>>>>> {}'.format(application))
     application.run(host=args.address, port=int(args.port_num), workers=2, debug=settings.is_debug_mode())

@@ -54,8 +54,8 @@ class User(Kontext):
         with plugins.runtime.AUTH as auth:
             ans = {}
             self._session['user'] = auth.validate_user(self._plugin_ctx,
-                                                       request.form['username'],
-                                                       request.form['password'])
+                                                       request.form.get('username'),
+                                                       request.form.get('password'))
             if not auth.is_anonymous(self._session['user'].get('id', None)):
                 if request.args.get('return_url', None):
                     self.redirect(request.args.get('return_url'))
@@ -101,13 +101,13 @@ class User(Kontext):
     def sign_up(self, request):
         with plugins.runtime.AUTH as auth:
             errors = auth.sign_up_user(self._plugin_ctx, dict(
-                username=request.form['username'],
-                firstname=request.form['firstname'],
-                lastname=request.form['lastname'],
-                affiliation=request.form['affiliation'],
-                email=request.form['email'],
-                password=request.form['password'],
-                password2=request.form['password2']
+                username=request.form.get('username'),
+                firstname=request.form.get('firstname'),
+                lastname=request.form.get('lastname'),
+                affiliation=request.form.get('affiliation'),
+                email=request.form.get('email'),
+                password=request.form.get('password'),
+                password2=request.form.get('password2')
             ))
         if len(errors) == 0:
             return dict(ok=True, error_args={})
@@ -138,9 +138,9 @@ class User(Kontext):
     @exposed(access_level=1, http_method='POST', skip_corpus_init=True, return_type='json')
     def set_user_password(self, request):
         with plugins.runtime.AUTH as auth:
-            curr_passwd = request.form['curr_passwd']
-            new_passwd = request.form['new_passwd']
-            new_passwd2 = request.form['new_passwd2']
+            curr_passwd = request.form.get('curr_passwd')
+            new_passwd = request.form.get('new_passwd')
+            new_passwd2 = request.form.get('new_passwd2')
             fields = dict(curr_passwd=True, new_passwd=True, new_passwd2=True)
             ans = dict(fields=fields, messages=[])
 

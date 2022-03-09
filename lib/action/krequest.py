@@ -91,7 +91,9 @@ class KRequest:
 
     @property
     def json(self):
-        return self._request.json
+        if self._request.content_type == 'application/json':
+            return self._request.json
+        return {}
 
     @property
     def method(self):

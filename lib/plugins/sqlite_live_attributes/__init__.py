@@ -59,12 +59,12 @@ def filter_attributes(self, request):
 @exposed(return_type='json', http_method='POST')
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
-    attrs[request.form['patternAttr']] = '%{}%'.format(request.form['pattern'])
+    attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned,
-                                     autocomplete_attr=request.form['patternAttr'])
+                                     autocomplete_attr=request.form.get('patternAttr'))
 
 
 @exposed(return_type='json', http_method='POST')

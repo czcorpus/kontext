@@ -1,33 +1,24 @@
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
-from typing import Optional, Tuple, Union, Callable, Any, Dict, Type
+from typing import Optional, Tuple, Union, Callable, Any, Type
 from functools import wraps
-from .templating import CustomJSONEncoder, TplEngine
+from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
 from action.krequest import KRequest
+from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
 from action.errors import ImmediateRedirectException
 from action.model.base import BaseActionModel
 import json
 
 
-ResultType = Union[
-    Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],
-    Dict[str, Any],
-    str,
-    bytes,
-    DataClassJsonMixin]
-
-
 def _output_result(
         app: Sanic,
         action_model: BaseActionModel,
         action_props: ActionProps,
-        request: Request,
         tpl_engine: TplEngine,
         template: str,
-        page_model: str,
         result: ResultType,
         status: int,
         return_type: str) -> Union[str, bytes]:
@@ -67,10 +58,9 @@ def _output_result(
 
 def http_action(
         access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel] = None,
-        page_model: Optional[str] = None, func_arg_mapped: bool = False, skip_corpus_init: bool = False,
-        mutates_result: bool = False, http_method: Union[Optional[str], Tuple[str, ...]] = 'GET',
-        accept_kwargs: bool = None, apply_semi_persist_args: bool = False, return_type: str = 'template',
-        action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
+        page_model: Optional[str] = None, func_arg_mapped: bool = False,
+        mutates_result: bool = False, accept_kwargs: bool = None, apply_semi_persist_args: bool = False,
+        return_type: str = 'template', action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -84,7 +74,6 @@ def http_action(
     func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
     mutates_result -- store a new set of result parameters under a new key to query_peristence db
-    http_method -- required HTTP method (POST, GET, PUT,...), either a single string or a tuple of strings
     accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- {plain, json, template, xml}
@@ -103,33 +92,36 @@ def http_action(
             action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
             aprops = ActionProps(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
-                skip_corpus_init=skip_corpus_init, http_method=http_method, return_type=return_type,
-                page_model=page_model, installed_langs=application.ctx.installed_langs,
+                return_type=return_type, page_model=page_model, installed_langs=application.ctx.installed_langs,
                 mutates_result=mutates_result)
-
+            req = KRequest(request, aprops)
+            resp = KResponse(
+                root_url=req.get_root_url(),
+                redirect_safe_domains=application.config['redirect_safe_domains'],
+                cookies_same_site=application.config['cookies_same_site']
+            )
             if action_model:
-                amodel = action_model(KRequest(request, aprops), aprops, application.ctx.tt_cache)
+                amodel = action_model(req, aprops, application.ctx.tt_cache)
             else:
-                amodel = BaseActionModel(KRequest(request, aprops), aprops, application.ctx.tt_cache)
+                amodel = BaseActionModel(req, aprops, application.ctx.tt_cache)
 
             try:
                 amodel.init_session()
                 amodel.pre_dispatch(None)
-                ans, status = await func(request, amodel, *args, **kw)
+                ans = await func(amodel, req, resp, **kw)
                 amodel.post_dispatch(aprops, ans, None)  # TODO error desc
                 return HTTPResponse(
                     body=_output_result(
                         app=application,
                         action_model=amodel,
                         action_props=aprops,
-                        request=request,
                         tpl_engine=application.ctx.templating,
                         template=template,
-                        page_model=page_model,
                         result=ans,
-                        status=status,
+                        status=resp.http_status_code,
                         return_type=return_type),
-                    status=status)
+                    status=resp.http_status_code,
+                    headers=resp.output_headers(return_type))
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
 

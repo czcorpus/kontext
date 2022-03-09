@@ -58,15 +58,18 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from typing import Union, List
 import uuid
+from sanic import Blueprint
 
 import plugins
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInfo
 from plugin_types.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
-from controller import exposed
-from actions import corpora
 from action.plugin.ctx import PluginCtx
+from action.model.authorized import AuthActionModel
+from action.decorators import http_action
+
+bp = Blueprint('tree_corparch')
 
 
 @dataclass_json
@@ -141,12 +144,13 @@ class CorptreeParser(object):
             return self.parse_node(srch, None), self._metadata
 
 
-@exposed(return_type='json', skip_corpus_init=True)
-def ajax_get_corptree_data(ctrl, request):
+@bp.route('/ajax_get_corptree_data')
+@http_action(return_type='json', action_model=AuthActionModel)
+def ajax_get_corptree_data(amodel, req, resp):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.runtime.CORPARCH.instance.get_all(ctrl._plugin_ctx)
+    return plugins.runtime.CORPARCH.instance.get_all(amodel.plugin_ctx)
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -200,9 +204,6 @@ class TreeCorparch(AbstractCorporaArchive):
 
     def get_all(self, plugin_ctx):
         return self._data
-
-    def export_actions(self):
-        return {corpora.Corpora: [ajax_get_corptree_data]}
 
     def initial_search_params(self, plugin_ctx, query, filter_dict=None):
         return {}
