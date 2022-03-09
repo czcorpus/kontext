@@ -60,7 +60,7 @@ def http_action(
         access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel] = None,
         page_model: Optional[str] = None, func_arg_mapped: bool = False,
         mutates_result: bool = False, accept_kwargs: bool = None, apply_semi_persist_args: bool = False,
-        return_type: str = 'template', action_log_mapper: Callable[[Request], Any] = False) -> Callable[..., Any]:
+        return_type: str = 'template', action_log_mapper: Callable[[Request], Any] = False):
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -78,7 +78,7 @@ def http_action(
     apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- {plain, json, template, xml}
     """
-    def decorator(func):
+    def decorator(func: Callable[[BaseActionModel, KRequest, KResponse], Optional[ResultType]]):
         @wraps(func)
         async def wrapper(request: Request, *args, **kw):
             application = Sanic.get_app('kontext')
