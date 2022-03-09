@@ -15,7 +15,7 @@
 from typing import Dict, Any, List, Optional
 
 
-class CollFormArgs(object):
+class CollFormArgs:
 
     def __init__(self) -> None:
         self.cattr: Optional[str] = None

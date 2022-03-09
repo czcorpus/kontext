@@ -24,7 +24,7 @@ import settings
 import csv
 from .errors import PqueryResultNotFound, PqueryArgumentError
 from typing import Tuple, Optional
-from argmapping.pquery import PqueryFormArgs
+from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
 
 """

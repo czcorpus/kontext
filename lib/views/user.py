@@ -120,7 +120,7 @@ async def sign_up(amodel, req, resp):
 async def test_username(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
         available, valid = auth.validate_new_username(
-            amodel.plugin_ctx, req.args['username'])
+            amodel.plugin_ctx, req.args.get('username'))
         return dict(available=available if available and valid else False, valid=valid)
 
 
@@ -130,7 +130,7 @@ async def test_username(amodel, req, resp):
 async def sign_up_confirm_email(self, request):
     with plugins.runtime.AUTH as auth:
         try:
-            key = request.args['key']
+            key = request.args.get('key')
             ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
             ans.update(auth.sign_up_confirm(self._plugin_ctx, key))
             return ans

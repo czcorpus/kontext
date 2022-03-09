@@ -21,7 +21,7 @@ from corplib import frq_db
 import csv
 import sys
 import l10n
-from argmapping.wordlist import WordlistFormArgs
+from action.argmapping.wordlist import WordlistFormArgs
 from manatee import Structure   # TODO wrap this out
 from bgcalc.wordlist.errors import WordlistResultNotFound
 from bgcalc.csv_cache import load_cached_full
