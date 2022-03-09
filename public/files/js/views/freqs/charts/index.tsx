@@ -498,7 +498,7 @@ export function init(
                             <globalComponents.StatusIcon status='error' />
                             {error.message}
                         </div>,
-                        <a onClick={() => reloadData(sourceId)}>{he.translate('global__try_again')}</a>,
+                        <a className='util-button' onClick={() => reloadData(sourceId)}>&#x21bb; {he.translate('global__try_again')}</a>,
                     ] :
                     <globalComponents.AjaxLoaderImage />
                 }
