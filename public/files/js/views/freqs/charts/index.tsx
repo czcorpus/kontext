@@ -455,6 +455,15 @@ export function init(
 
     // ----------------------- <FreqChartsLoaderView /> --------------------
 
+    const reloadData = (sourceId:string) => {
+        dispatcher.dispatch<typeof Actions.FreqChartsReloadData>({
+            name: Actions.FreqChartsReloadData.name,
+            payload: {
+                sourceId
+            }
+        })
+    };
+
     const FreqChartsLoaderView:React.FC<{
         sourceId:string;
         dtFormat:string;
@@ -475,12 +484,7 @@ export function init(
                         }
                     })
                 } else {
-                    dispatcher.dispatch<typeof Actions.FreqChartsReloadData>({
-                        name: Actions.FreqChartsReloadData.name,
-                        payload: {
-                            sourceId
-                        }
-                    })
+                    reloadData(sourceId);
                 }
             },
             []
@@ -489,11 +493,13 @@ export function init(
         return (
             <S.FreqResultLoaderView>
                 <h3>{heading}</h3>
-                {error ?
-                    <div className='error'>
-                        <globalComponents.StatusIcon status='error' />
-                        {error.message}
-                    </div> :
+                {error ? [
+                        <div className='error'>
+                            <globalComponents.StatusIcon status='error' />
+                            {error.message}
+                        </div>,
+                        <a onClick={() => reloadData(sourceId)}>{he.translate('global__try_again')}</a>,
+                    ] :
                     <globalComponents.AjaxLoaderImage />
                 }
             </S.FreqResultLoaderView>
