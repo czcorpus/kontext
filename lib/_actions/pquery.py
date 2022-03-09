@@ -253,9 +253,9 @@ class ParadigmaticQuery(Kontext):
 
     @exposed(http_method='GET', return_type='json')
     def get_results(self, request):
-        page_id = int(request.args['page']) - 1
-        sort = request.args['sort']
-        reverse = bool(int(request.args['reverse']))
+        page_id = int(request.args.get('page')) - 1
+        sort = request.args.get('sort')
+        reverse = bool(int(request.args.get('reverse')))
         offset = page_id * self.args.pqueryitemsperpage
         corp_info = self.get_corpus_info(self.args.corpname)
         try:

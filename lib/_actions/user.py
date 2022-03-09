@@ -118,7 +118,7 @@ class User(Kontext):
     def test_username(self, request):
         with plugins.runtime.AUTH as auth:
             available, valid = auth.validate_new_username(
-                self._plugin_ctx, request.args['username'])
+                self._plugin_ctx, request.args.get('username'))
             return dict(available=available if available and valid else False, valid=valid)
 
     @exposed(access_level=0, skip_corpus_init=True, http_method='GET', template='user/token_confirm.html',
@@ -126,7 +126,7 @@ class User(Kontext):
     def sign_up_confirm_email(self, request):
         with plugins.runtime.AUTH as auth:
             try:
-                key = request.args['key']
+                key = request.args.get('key')
                 ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
                 ans.update(auth.sign_up_confirm(self._plugin_ctx, key))
                 return ans

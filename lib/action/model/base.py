@@ -159,12 +159,12 @@ class BaseActionModel:
             args_proxy: Optional[Union[RequestArgsProxy, JSONRequestArgsProxy]]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         if 'format' in self._request.args:
-            if self._is_allowed_explicit_out_format(self._request.args['format']):
-                self._action_props.return_type = self._request.args['format']
+            if self._is_allowed_explicit_out_format(self._request.args.get('format')):
+                self._action_props.return_type = self._request.args.get('format')
             else:
                 self._action_props.return_type = 'text'
                 raise UserActionException(
-                    'Unknown output format: {0}'.format(self._request.args['format']))
+                    'Unknown output format: {0}'.format(self._request.args.get('format')))
         self.add_validator(partial(self._validate_http_method, self._action_props))
         return create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
 

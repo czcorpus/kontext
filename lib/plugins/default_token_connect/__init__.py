@@ -64,8 +64,8 @@ def fetch_token_detail(self, request):
         pos = ''
 
     """
-    token_id = int(request.args['token_id'])
-    num_tokens = int(request.args['num_tokens'])
+    token_id = int(request.args.get('token_id'))
+    num_tokens = int(request.args.get('num_tokens'))
     context = (int(request.args.get('detail_left_ctx', 40)),
                int(request.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:

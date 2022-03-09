@@ -27,7 +27,7 @@ from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 import plugins
 import settings
 from action.argmapping import log_mapping
-from argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
+from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from werkzeug import Request
 from texttypes.model import TextTypesCache
 from action.argmapping import WordlistArgsMapping, ConcArgsMapping

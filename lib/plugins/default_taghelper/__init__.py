@@ -59,8 +59,8 @@ bp = Blueprint('default_taghelper')
 def ajax_get_tag_variants(req, amodel):
     """
     """
-    corpname = req.args['corpname']
-    tagset_name = req.args['tagset']
+    corpname = req.args.get('corpname')
+    tagset_name = req.args.get('tagset')
 
     values_selection = plugins.runtime.TAGHELPER.instance.fetcher(
         amodel.plugin_ctx, corpname, tagset_name).fetch(req)

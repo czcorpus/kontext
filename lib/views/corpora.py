@@ -89,13 +89,13 @@ class Corpora(Kontext):
 
     @exposed(return_type='json', skip_corpus_init=True)
     def ajax_get_corp_details(self, request):
-        corpname = request.args['corpname']
+        corpname = request.args.get('corpname')
         with plugins.runtime.AUTH as auth:
             _, acc, _ = auth.corpus_access(self.session_get('user'), corpname)
             if not acc:
                 raise ForbiddenException('No access to corpus {0}'.format(corpname))
             corp_conf_info = self.get_corpus_info(corpname)
-            corpus = self.cm.get_corpus(request.args['corpname'])
+            corpus = self.cm.get_corpus(request.args.get('corpname'))
             ans = CorpusDetail(
                 corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
                 description=corp_conf_info.description,
