@@ -212,6 +212,7 @@
         "global__result_no_more_avail_for_download_pls_update": "Výsledek již není připraven k okamžitému stažení. Načtěte prosím znovu aktuální stránku.",
         "global__note_heading": "Poznámka",
         "global__corpus_has_no_structattrs": "Korpus nemá žádné strukturní atributy",
+        "global__try_again": "zkusit znovu",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",
