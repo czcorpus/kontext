@@ -57,10 +57,10 @@ class UserActionException(Exception):
         self._internal_message = internal_message
 
     def __repr__(self):
-        return f'UserActionException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
+        return f'UserActionException, code: {self.code}, message: {self.args.get(0) if len(self.args) > 0 else "--"}'
 
     def __str__(self):
-        return self.args[0]
+        return self.args.get(0)
 
     @property
     def internal_message(self):

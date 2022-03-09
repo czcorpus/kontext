@@ -282,7 +282,7 @@ class Actions(Kontext):
                         'recordSchema', 'resultSetTTL', 'x-cmd-context', 'x-fcs-context']
                 )
                 if 'x-cmd-context' in req.args:
-                    req_corpname = req.args['x-cmd-context']
+                    req_corpname = req.args.get('x-cmd-context')
                     user_corpora = plugins.runtime.AUTH.instance.permitted_corpora(
                         self.session_get('user'))
                     if req_corpname in user_corpora:

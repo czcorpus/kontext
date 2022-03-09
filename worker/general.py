@@ -70,7 +70,7 @@ import conclib.calc.base
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
 from bgcalc import (freq_calc, subc_calc, coll_calc, pquery, wordlist)
-from argmapping.wordlist import WordlistFormArgs
+from action.argmapping.wordlist import WordlistFormArgs
 
 stderr_redirector = get_stderr_redirector(settings)
 
