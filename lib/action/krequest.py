@@ -169,7 +169,7 @@ class KRequest:
         """
         host_items = self._request.host.split(':')
         port_str = f':{host_items[1]}' if len(host_items) > 1 else ''
-        return f'{self._request.scheme}://{host_items[0]}{port_str}{self._app_prefix}/{self._action_props.action_prefix}'
+        return f'{self._request.scheme}://{host_items[0]}{port_str}{self._app_prefix}/'
 
     def updated_current_url(self, params: Dict[str, Any]) -> str:
         """
