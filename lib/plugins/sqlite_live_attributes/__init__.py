@@ -118,6 +118,8 @@ class LiveAttributes(CachedLiveAttributes):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
+        if len(corpora) == 0:
+            return False
         return self.db(plugin_ctx, corpora[0]) is not None
 
     def execute_sql(self, db, sql, args=()):

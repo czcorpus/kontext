@@ -134,6 +134,8 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         self._db = integration_db
 
     def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        if len(corpora) == 0:
+            return False
         info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return bool(info.metadata.id_attr)
 

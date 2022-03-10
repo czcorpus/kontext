@@ -68,11 +68,18 @@ def mk_metdata(persistent: Persistence = Persistence.NON_PERSISTENT, to_js: Opti
 
 
 @dataclass
-class Args(object):
-    """
+class MinArgs:
+    corpname: str = field(default='', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    usesubcorp: str = field(default='', metadata=mk_metdata())
+    subcname: str = field(default='', metadata=mk_metdata())
+    align: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    maincorp: str = field(default='', metadata=mk_metdata())
 
-    """
 
+@dataclass
+class Args(MinArgs):
+    """
+    """
     @staticmethod
     def get_field(name: str) -> Field:
         return Args.__dataclass_fields__[name]
@@ -145,10 +152,6 @@ class Args(object):
     line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     # end
 
-    # must be an empty string and not None
-    corpname: str = field(default='', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
-    usesubcorp: str = field(default='', metadata=mk_metdata())
-    subcname: str = field(default='', metadata=mk_metdata())
     subcpath: List[str] = field(default_factory=list, metadata=mk_metdata())
     save: int = field(default=1, metadata=mk_metdata())
     rlines: str = field(default='250', metadata=mk_metdata())
@@ -184,8 +187,6 @@ class Args(object):
     senleftctx_tpl: str = field(default='-1:%s', metadata=mk_metdata())
     senrightctx_tpl: str = field(default='1:%s', metadata=mk_metdata())
     viewmode: str = field(default='kwic', metadata=mk_metdata())
-    align: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
-    maincorp: str = field(default='', metadata=mk_metdata())
     """
     used only in case of parallel corpora - specifies primary corp.
     """

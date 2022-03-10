@@ -24,6 +24,7 @@ from action.response import KResponse
 from action.cookie import KonTextCookie
 from main_menu.model import AbstractMenuItem
 from texttypes.cache import TextTypesCache
+import l10n
 from translation import ugettext as translate
 import settings
 from sanic import Sanic
@@ -87,6 +88,9 @@ class BaseActionModel:
         pass
 
     def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+        result['root_url'] = self._req.get_root_url()
+        result['files_path'] = self._files_path
+        result['debug'] = settings.is_debug_mode()
         result['methodname'] = self._action_props.action_name
         deployment_id = settings.get('global', 'deployment_id', None)
         result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id.encode('utf-8')).hexdigest()[
@@ -96,7 +100,12 @@ class BaseActionModel:
         result['locale'] = self._req.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
+        result['use_conc_toolbar'] = False
+        result['shuffle_min_result_warning'] = 0
+        result['multilevel_freq_dist_max_levels'] = 0
         apply_theme(result, app, settings.get('global', 'static_files_prefix', '../files'))
+        page_model = action_props.page_model if action_props.page_model else l10n.camelize(action_props.action_name)
+        result['page_model'] = page_model
         return result
 
     def pre_dispatch(

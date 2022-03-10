@@ -23,13 +23,10 @@ import logging
 import inspect
 import os.path
 import time
-import babel
 
 import corplib
 import plugins
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
-from plugin_types.auth import AbstractInternalAuth
-from plugin_types import CorpusDependentPlugin
 import settings
 import l10n
 from translation import ugettext as translate
@@ -49,7 +46,6 @@ from action.response import KResponse
 from action.model.base import BaseActionModel
 from action.model.authorized import UserActionModel, UserPluginCtx
 from texttypes.model import TextTypes, TextTypesCache
-from bgcalc.task import AsyncTaskStatus
 
 
 T = TypeVar('T')
@@ -67,11 +63,6 @@ class CorpusActionModel(UserActionModel):
         MainMenu.CORPORA('my-subcorpora', 'create-subcorpus'),
         MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
         MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
-
-    CONCORDANCE_ACTIONS = (
-        MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER, MainMenu.FREQUENCY,
-        MainMenu.COLLOCATIONS, MainMenu.VIEW('kwic-sent-switch'),
-        MainMenu.CORPORA('create-subcorpus'))
 
     GENERAL_OPTIONS = (
         'pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
@@ -700,27 +691,6 @@ class CorpusActionModel(UserActionModel):
                 break
         result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
 
-    def export_optional_plugins_conf(self, result):
-        """
-        Updates result dict with JavaScript module paths required to
-        run client-side parts of some optional plugins. Template document.tmpl
-        (i.e. layout template) configures RequireJS module accordingly.
-        """
-        import plugins
-        ans = {}
-        result['active_plugins'] = []
-        for opt_plugin in plugins.runtime:
-            ans[opt_plugin.name] = None
-            if opt_plugin.exists:
-                js_file = settings.get('plugins', opt_plugin.name, {}).get('js_module')
-                if js_file:
-                    ans[opt_plugin.name] = js_file
-                    if (not (isinstance(opt_plugin.instance, CorpusDependentPlugin)) or
-                            opt_plugin.is_enabled_for(
-                                self.plugin_ctx, [self.args.corpname] + self.args.align)):
-                        result['active_plugins'].append(opt_plugin.name)
-        result['plugin_js'] = ans
-
     def get_mapped_attrs(self, attr_names: Iterable[str], force_values: Optional[Dict] = None) -> Dict[str, Any]:
         """
         Returns required attributes (= passed attr_names) and their respective values found
@@ -749,26 +719,11 @@ class CorpusActionModel(UserActionModel):
                 ans[attr] = [v for v in v_tmp]
         return ans
 
-    def configure_auth_urls(self, out):
-        with plugins.runtime.AUTH as auth:
-            if plugins.runtime.AUTH.exists and isinstance(auth, AbstractInternalAuth):
-                out['login_url'] = auth.get_login_url(self.return_url)
-                out['logout_url'] = auth.get_logout_url(self._req.get_root_url())
-            else:
-                out['login_url'] = None
-                out['logout_url'] = None
+    def export_optional_plugins_conf(self, result):
+        self._export_optional_plugins_conf(result, [self.args.corpname] + self.args.align)
 
     def attach_plugin_exports(self, result, direct):
-        """
-        Method exports plug-ins' specific data for their respective client parts.
-        KonText core does not care about particular formats - it just passes JSON-encoded
-        data to the client.
-        """
-        key = 'pluginData' if direct else 'plugin_data'
-        result[key] = {}
-        for plg in plugins.runtime:
-            if hasattr(plg.instance, 'export'):
-                result[key][plg.name] = plg.instance.export(self.plugin_ctx)
+        self._attach_plugin_exports(result, [self.args.corpname] + self.args.align, direct)
 
     def add_globals(self, app, action_props, result):
         """
@@ -779,13 +734,6 @@ class CorpusActionModel(UserActionModel):
         from self.args are used here in specific ways.
         """
         result = super().add_globals(app, action_props, result)
-        result['corpus_ident'] = {}
-        result['Globals'] = {}
-        result['base_attr'] = BaseActionModel.BASE_ATTR
-        result['root_url'] = self._req.get_root_url()
-        result['files_path'] = self._files_path
-        result['debug'] = settings.is_debug_mode()
-        result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_freq_level'] = self.session_get('last_freq_level')  # TODO enable this
@@ -803,98 +751,17 @@ class CorpusActionModel(UserActionModel):
         self._add_corpus_related_globals(result, thecorp)
         result['uses_corp_instance'] = True
 
-        result['supports_password_change'] = self._uses_internal_user_pages()
         result['undo_q'] = self.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
-        result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
 
-        result['user_info'] = self._req.ctx.session.get('user', {'fullname': None})
-        result['_anonymous'] = self.user_is_anonymous()
-        result['anonymous_user_conc_login_prompt'] = settings.get_bool(
-            'global', 'anonymous_user_conc_login_prompt', False)
-
-        self.configure_auth_urls(result)
-
-        if plugins.runtime.APPLICATION_BAR.exists:
-            application_bar = plugins.runtime.APPLICATION_BAR.instance
-            result['app_bar'] = application_bar.get_contents(plugin_ctx=self.plugin_ctx,
-                                                             return_url=self.return_url)
-            result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self.plugin_ctx)
-            result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self.plugin_ctx)
-        else:
-            result['app_bar'] = None
-            result['app_bar_css'] = []
-            result['app_bar_js'] = []
-
-        result['footer_bar'] = None
-        result['footer_bar_css'] = None
-        with plugins.runtime.FOOTER_BAR as fb:
-            result['footer_bar'] = fb.get_contents(self.plugin_ctx, self.return_url)
-            result['footer_bar_css'] = fb.get_css_url()
-
-        # updates result dict with javascript modules paths required by some of the optional plugins
-        self.export_optional_plugins_conf(result)
-
-        avail_languages = settings.get_full('global', 'translations')
-        ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
-        # available languages; used just by UI language switch
-        result['avail_languages'] = avail_languages
-        result['uiLang'] = ui_lang
-        with plugins.runtime.GETLANG as gl:
-            result['lang_switch_ui'] = gl.allow_default_lang_switch_ui()
-        result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
-                                         for code, meta in avail_languages if code == ui_lang)
-
-        day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
-        result['first_day_of_week'] = day_map[
-            babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day
-        ]
-
-        # util functions
-        result['to_str'] = lambda s: str(s) if s is not None else ''
-        # the output of 'to_json' is actually only json-like (see the function val_to_js)
-
-        with plugins.runtime.ISSUE_REPORTING as irp:
-            result['issue_reporting_action'] = irp.export_report_action(
-                self.plugin_ctx).to_dict() if irp else None
-        page_model = action_props.page_model if action_props.page_model else l10n.camelize(action_props.action_name)
-        result['page_model'] = page_model
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
-        result['can_send_mail'] = bool(settings.get('mailing'))
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
         result['conc_url_ttl_days'] = plugins.runtime.QUERY_PERSISTENCE.instance.get_conc_ttl_days(
             self.session_get('user', 'id'))
 
-        self.attach_plugin_exports(result, direct=False)
-
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
-
-        # main menu
-        menu_items = generate_main_menu(
-            tpl_data=result,
-            args=self.args,
-            disabled_items=self.disabled_menu_items,
-            dynamic_items=self._dynamic_menu_items,
-            corpus_dependent=result['uses_corp_instance'],
-            plugin_ctx=self.plugin_ctx)
-        result['menu_data'] = menu_items
-        # We will also generate a simplified static menu which is rewritten
-        # as soon as JS stuff is initiated. It can be used e.g. by search engines.
-        result['static_menu'] = [dict(label=x[1]['label'], disabled=x[1].get('disabled', False),
-                                      action=x[1].get('fallback_action'))
-                                 for x in menu_items['submenuItems']]
-
-        # asynchronous tasks
-        result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
-        result['help_links'] = settings.get_help_links(self.ui_lang)
-        result['integration_testing_env'] = settings.get_bool(
-            'global', 'integration_testing_env', '0')
-        if 'popup_server_messages' not in result:
-            result['popup_server_messages'] = True
-        result['job_status_service_url'] = os.environ.get(
-            'STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
 
         for k in asdict(self.args):
             if k not in result:
@@ -980,34 +847,6 @@ class CorpusActionModel(UserActionModel):
             out['SubcorpList'] = []
         out['SubcorpList'].extend(subcorp_list)
 
-    def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
-        """
-        Returns a list of tasks user is explicitly informed about.
-
-        Args:
-            category (str): task category filter
-        Returns:
-            (list of AsyncTaskStatus)
-        """
-        if 'async_tasks' in self._req.ctx.session:
-            ans = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
-        else:
-            ans = []
-        if category is not None:
-            return [item for item in ans if item.category == category]
-        else:
-            return ans
-
-    def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
-        self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
-
-    def _store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
-        at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
-        self._mark_timeouted_tasks(*at_list)
-        at_list.append(async_task_status)
-        self._set_async_tasks(at_list)
-        return at_list
-
     def store_last_search(self, op_type: str, conc_id: str):
         """
         Store last search operation ID. This is used when
@@ -1019,15 +858,6 @@ class CorpusActionModel(UserActionModel):
         curr = self._req.ctx.session.get('last_search', {})
         curr[op_type] = conc_id
         self._req.ctx.session['last_search'] = curr
-
-    def mark_timeouted_tasks(self, *tasks):
-        now = time.time()
-        task_limit = settings.get_int('calc_backend', 'task_time_limit')
-        for at in tasks:
-            if (at.status == 'PENDING' or at.status == 'STARTED') and now - at.created > task_limit:
-                at.status = 'FAILURE'
-                if not at.error:
-                    at.error = 'task time limit exceeded'
 
 
 class CorpusPluginCtx(UserPluginCtx):
