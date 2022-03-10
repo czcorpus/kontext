@@ -144,7 +144,7 @@ class UserActionModel(BaseActionModel):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
-    def _configure_auth_urls(self, out):
+    def configure_auth_urls(self, out):
         with plugins.runtime.AUTH as auth:
             if plugins.runtime.AUTH.exists and isinstance(auth, AbstractInternalAuth):
                 out['login_url'] = auth.get_login_url(self.return_url)
@@ -213,7 +213,7 @@ class UserActionModel(BaseActionModel):
         # updates result dict with javascript modules paths required by some of the optional plugins
         result = super().add_globals(app, action_props, result)
         self.export_optional_plugins_conf(result)
-        self._configure_auth_urls(result)
+        self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
         result['explicit_conc_persistence_ui'] = False
         result['corpus_ident'] = {}
