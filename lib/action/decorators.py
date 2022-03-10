@@ -1,7 +1,7 @@
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
-from typing import Optional, Tuple, Union, Callable, Any, Type
+from typing import Optional, Union, Callable, Any, Type
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
