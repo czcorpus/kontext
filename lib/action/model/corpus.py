@@ -75,7 +75,6 @@ class CorpusActionModel(UserActionModel):
 
     def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
         super().__init__(req, resp, action_props, tt_cache)
-        self.ui_lang: str = 'en_US'  # TODO fetch from request
         self._proc_time: Optional[float] = None
         self.args: Args = Args()
 
@@ -97,7 +96,8 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str], Optional[int], Any], None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], Optional[int], Any],
+                                     None] = lambda s, uh, res: None
 
         self._tt_cache = tt_cache
 
