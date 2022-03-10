@@ -255,6 +255,6 @@ async def switch_language(amodel, req, resp):
         path=path_prefix if path_prefix else '/',
         expires=time.strftime('%a, %d %b %Y %T GMT', time.gmtime(time.time() + 180 * 24 * 3600)))
     resp.redirect(
-        req.headers.get('REFERER', req.create_url('query', []))
+        req.headers.get('referer', req.create_url('query', []))
     )
     return None

@@ -37,14 +37,14 @@ def _get_lang(request: Request, installed_langs):
     returns:
     underscore-separated ISO 639 language code and ISO 3166 country code
     """
-    cookies = KonTextCookie(request.cookies.get('HTTP_COOKIE', ''))
+    cookies = KonTextCookie(request.headers.get('cookie', ''))
 
     if plugins.runtime.GETLANG.exists:
         lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
     else:
         lang_cookie = cookies.get('kontext_ui_lang')
         if not lang_cookie:
-            lgs_string = parse_accept_header(request.headers.get('HTTP_ACCEPT_LANGUAGE')).best
+            lgs_string = parse_accept_header(request.headers.get('accept-language')).best
         else:
             lgs_string = lang_cookie.value
         if lgs_string is None:

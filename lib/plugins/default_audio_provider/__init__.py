@@ -91,7 +91,7 @@ class DefaultAudioProvider(AbstractAudioProvider):
                 f.seek(play_from)
 
             plugin_ctx.set_respose_status(206)
-            if req.headers.get('RANGE', None):
+            if req.headers.get('range'):
                 headers['Content-Range'] = 'bytes 0-{}/{}'.format(
                     os.path.getsize(rpath) - 1, os.path.getsize(rpath))
             return headers, f.read() if not play_to else f.read(play_to - play_from)
