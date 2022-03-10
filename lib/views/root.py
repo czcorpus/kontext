@@ -17,7 +17,7 @@ bp = Blueprint('root')
 @bp.route('/')
 @http_action()
 async def root_action(amodel, req, resp):
-    raise ImmediateRedirectException('/query')
+    raise ImmediateRedirectException(req.create_url('query', {}))
 
 
 @bp.route('/check_tasks_status')
@@ -41,8 +41,8 @@ def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
                 at.status = 'FAILURE'
                 at.error = 'job not found'
             upd_list.append(at)
-        amodel._mark_timeouted_tasks(*upd_list)
-        amodel._set_async_tasks(upd_list)
+        amodel.mark_timeouted_tasks(*upd_list)
+        amodel.set_async_tasks(upd_list)
         return dict(data=[d.to_dict() for d in upd_list])
     else:
         raise FunctionNotSupported(f'Backend {backend} does not support status checking')
