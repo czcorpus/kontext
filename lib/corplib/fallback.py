@@ -149,7 +149,7 @@ class ErrorCorpus(EmptyCorpus):
         arguments:
         err -- an error which caused that the original corpus failed to initialize
         """
-        super(ErrorCorpus, self).__init__()
+        super().__init__()
         self._error = err
 
     def get_error(self):

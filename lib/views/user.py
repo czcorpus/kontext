@@ -15,7 +15,7 @@ import logging
 from sanic import Blueprint
 
 from action.errors import UserActionException, ImmediateRedirectException
-from action.model.authorized import AuthActionModel
+from action.model.authorized import UserActionModel
 from action.decorators import http_action
 from translation import ugettext as _
 import plugins
@@ -26,7 +26,7 @@ bp = Blueprint('user')
 
 
 @bp.route('/user/loginx', methods=['GET'])
-@http_action(template='user/login.html', action_model=AuthActionModel)
+@http_action(template='user/login.html', action_model=UserActionModel)
 async def loginx(amodel, req, resp):
     """
     This method is used by some of the installations with Shibboleth-based authentication.
@@ -40,7 +40,7 @@ async def loginx(amodel, req, resp):
 
 
 @bp.route('/user/login', methods=['POST'])
-@http_action(template='user/login.html', action_model=AuthActionModel)
+@http_action(template='user/login.html', action_model=UserActionModel)
 async def login(amodel, req, resp):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
     with plugins.runtime.AUTH as auth:
@@ -61,7 +61,7 @@ async def login(amodel, req, resp):
 
 @bp.route('/user/logoutx', methods=['POST'])
 @http_action(
-    access_level=1, template='user/login.html', page_model='login', action_model=AuthActionModel)
+    access_level=1, template='user/login.html', page_model='login', action_model=UserActionModel)
 async def logoutx(amodel, req, resp):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
     plugins.runtime.AUTH.instance.logout(req.session)
@@ -75,7 +75,7 @@ async def logoutx(amodel, req, resp):
 @bp.route('/user/sign_up_form')
 @http_action(
     access_level=0, template='user/administration.html', page_model='userSignUp',
-    action_model=AuthActionModel)
+    action_model=UserActionModel)
 async def sign_up_form(amodel, req, resp):
     ans = dict(credentials_form={}, username_taken=False, user_registered=False)
     with plugins.runtime.AUTH as auth:
@@ -97,7 +97,7 @@ async def sign_up_form(amodel, req, resp):
 
 @bp.route('/user/sign_up', methods=['POST'])
 @http_action(
-    access_level=0, return_type='json', action_model=AuthActionModel)
+    access_level=0, return_type='json', action_model=UserActionModel)
 async def sign_up(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
         errors = auth.sign_up_user(amodel.plugin_ctx, dict(
@@ -116,7 +116,7 @@ async def sign_up(amodel, req, resp):
 
 
 @bp.route('/user/test_username')
-@http_action(access_level=0, return_type='json', action_model=AuthActionModel)
+@http_action(access_level=0, return_type='json', action_model=UserActionModel)
 async def test_username(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
         available, valid = auth.validate_new_username(
@@ -126,7 +126,7 @@ async def test_username(amodel, req, resp):
 
 @bp.route('/user/sign_up_confirm_email')
 @http_action(
-    access_level=0, template='user/token_confirm.html', page_model='userTokenConfirm', action_model=AuthActionModel)
+    access_level=0, template='user/token_confirm.html', page_model='userTokenConfirm', action_model=UserActionModel)
 async def sign_up_confirm_email(self, request):
     with plugins.runtime.AUTH as auth:
         try:
@@ -142,7 +142,7 @@ async def sign_up_confirm_email(self, request):
 
 @bp.route('/user/set_user_password', methods=['POST'])
 @http_action(
-    access_level=1, return_type='json', action_model=AuthActionModel)
+    access_level=1, return_type='json', action_model=UserActionModel)
 async def set_user_password(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
         curr_passwd = req.form.get('curr_passwd')
@@ -193,7 +193,7 @@ async def _load_query_history(self, offset, limit, from_date, to_date, q_superty
 
 
 @bp.route('/user/ajax_query_history')
-@http_action(access_level=1, return_type='json', action_model=AuthActionModel)
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def ajax_query_history(amodel, req, resp):
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit'))
@@ -213,14 +213,14 @@ async def ajax_query_history(amodel, req, resp):
 
 
 @bp.route('/user/ajax_get_toolbar')
-@http_action(return_type='template', action_model=AuthActionModel)
+@http_action(return_type='template', action_model=UserActionModel)
 async def ajax_get_toolbar(amodel, req, resp):
     with plugins.runtime.APPLICATION_BAR as ab:
         return ab.get_contents(plugin_ctx=amodel.plugin_ctx, return_url=amodel.return_url)
 
 
 @bp.route('/user/ajax_user_info')
-@http_action(return_type='json', action_model=AuthActionModel)
+@http_action(return_type='json', action_model=UserActionModel)
 async def ajax_user_info(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
         user_info = auth.get_user_info(amodel.plugin_ctx)
@@ -233,7 +233,7 @@ async def ajax_user_info(amodel, req, resp):
 @bp.route('/user/profile')
 @http_action(
     return_type='template', template='user/administration.html', page_model='userProfile',
-    access_level=1, action_model=AuthActionModel)
+    access_level=1, action_model=UserActionModel)
 async def profile(amodel, req, resp):
     if not amodel.uses_internal_user_pages():
         raise UserActionException(_('This function is disabled.'))
@@ -246,7 +246,7 @@ async def profile(amodel, req, resp):
 
 
 @bp.route('/user/switch_language', methods=['POST'])
-@http_action(access_level=0, return_type='plain', action_model=AuthActionModel)
+@http_action(access_level=0, return_type='plain', action_model=UserActionModel)
 async def switch_language(amodel, req, resp):
     path_prefix = settings.get_str('global', 'action_path_prefix')
     resp.set_cookie(
