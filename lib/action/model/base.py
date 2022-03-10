@@ -50,13 +50,16 @@ class BaseActionModel:
         self._req: KRequest = req
         self._resp: KResponse = resp
         self._action_props: ActionProps = action_props
-        self.ui_lang: str = 'en_US'  # TODO fetch from request
         self._system_messages: List[Tuple[str, str]] = []
         self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
         self.disabled_menu_items: Tuple[str, ...] = ()
         # menu items - they should not be handled directly
         self._dynamic_menu_items: List[AbstractMenuItem] = []
         self._plugin_ctx: Optional[BasePluginCtx] = None
+
+    @property
+    def ui_lang(self):
+        return self._req.ui_lang
 
     @property
     def dynamic_menu_items(self):
@@ -97,7 +100,7 @@ class BaseActionModel:
                                                      :6]) if deployment_id else ''
         result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
         result['user_id'] = self._req.session_get('user', 'id')
-        result['locale'] = self._req.ui_lang
+        result['locale'] = self.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
         result['use_conc_toolbar'] = False
@@ -145,7 +148,7 @@ class BasePluginCtx:
 
     @property
     def client_ip(self) -> str:
-        return self._request.headers.get('HTTP_X_FORWARDED_FOR', self._request.remote_addr)
+        return self._request.headers.get('x-forwarded-for', self._request.remote_addr)
 
     @property
     def http_headers(self):

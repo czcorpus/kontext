@@ -117,7 +117,7 @@ class TeitokAudioProvider(AbstractAudioProvider):
                 'Content-Length': f'{file_size}',
                 'Accept-Ranges': 'none',
             }
-            if req.headers.get('RANGE', None):
+            if req.headers.get('range'):
                 headers['Content-Range'] = f'bytes 0-{file_size - 1}/{file_size - 1}'
             return headers, f.read()
 
