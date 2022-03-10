@@ -5,6 +5,7 @@ from action.model.base import BaseActionModel, BasePluginCtx
 from action.krequest import KRequest
 from action.response import KResponse
 from action.argmapping import MinArgs
+from action.errors import UserActionException
 from action import ActionProps
 from typing import Any, Optional, Dict, List, Iterable
 from texttypes.cache import TextTypesCache
@@ -12,7 +13,9 @@ from plugin_types.auth import UserInfo, AbstractInternalAuth
 from plugin_types import CorpusDependentPlugin
 from action.plugin.ctx import AbstractUserPluginCtx
 from bgcalc.task import AsyncTaskStatus
+import scheduled
 import logging
+import inspect
 from translation import ugettext
 from main_menu import MainMenu, generate_main_menu
 import settings
@@ -45,6 +48,92 @@ class UserActionModel(BaseActionModel):
         self.return_url: Optional[str] = None
         self._plugin_ctx: Optional[UserPluginCtx] = None
         self.args = MinArgs()
+        self.subcpath: List[str] = []
+        # a CorpusManager instance (created in pre_dispatch() phase)
+        # generates (sub)corpus objects with additional properties
+        self.cm: Optional[corplib.CorpusManager] = None
+
+    def pre_dispatch(self, req_args):
+        req_args = super().pre_dispatch(req_args)
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
+
+        options = {}
+        self._scheduled_actions(options)
+
+        # only general setting can be applied now because
+        # we do not know final corpus name yet
+        self._init_default_settings(options)
+
+        try:
+            options.update(self._load_general_settings())
+            self.args.map_args_to_attrs(options)
+
+            self._setup_user_paths()
+            self.cm = corplib.CorpusManager(self.subcpath)
+        except ValueError as ex:
+            raise UserActionException(ex)
+        return req_args
+
+    @staticmethod
+    def _init_default_settings(options):
+        if 'shuffle' not in options:
+            options['shuffle'] = int(settings.get_bool('global', 'shuffle_conc_by_default', False))
+
+    def _setup_user_paths(self):
+        user_id = self.session_get('user', 'id')
+        self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
+        if not self.user_is_anonymous():
+            self.subcpath.insert(0, os.path.join(settings.get(
+                'corpora', 'users_subcpath'), str(user_id)))
+        self._conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
+
+    # missing return statement type check error
+    def _user_has_persistent_settings(self) -> bool:  # type: ignore
+        with plugins.runtime.SETTINGS_STORAGE as sstorage:
+            return (self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')()
+                    and not self.user_is_anonymous())
+
+    def _load_general_settings(self) -> Dict[str, Any]:
+        """
+        """
+        if self._user_has_persistent_settings():
+            with plugins.runtime.SETTINGS_STORAGE as settings_plg:
+                return settings_plg.load(self.session_get('user', 'id'))
+        else:
+            data = self.session_get('settings')
+            if not data:
+                data = {}
+            return data
+
+    def _scheduled_actions(self, user_settings):
+        actions = []
+        if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
+            value = user_settings[BaseActionModel.SCHEDULED_ACTIONS_KEY]
+            if type(value) is dict:
+                actions.append(value)
+            elif type(value):
+                actions += value
+            for action in actions:
+                func_name = action['action']
+                if hasattr(scheduled, func_name):
+                    fn = getattr(scheduled, func_name)
+                    if inspect.isclass(fn):
+                        fn = fn()
+                    if callable(fn):
+                        try:
+                            ans = fn(*(), **action)
+                            if 'message' in ans:
+                                self.add_system_message('message', ans['message'])
+                            continue
+                        except Exception as e:
+                            logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
+                                action.get('id', '??'), e.__class__.__name__, e))
+                # avoided by 'continue' in case everything is OK
+                logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
+                    action.get('id', '??'), action,))
+            self._save_options()  # this causes scheduled task to be removed from settings
+
 
     @property
     def plugin_ctx(self):
