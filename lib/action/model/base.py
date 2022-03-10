@@ -58,6 +58,10 @@ class BaseActionModel:
         self._plugin_ctx: Optional[BasePluginCtx] = None
 
     @property
+    def ui_lang(self):
+        return self._req.ui_lang
+
+    @property
     def dynamic_menu_items(self):
         return self._dynamic_menu_items
 
@@ -96,7 +100,7 @@ class BaseActionModel:
                                                      :6]) if deployment_id else ''
         result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
         result['user_id'] = self._req.session_get('user', 'id')
-        result['locale'] = self._req.ui_lang
+        result['locale'] = self.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
         result['use_conc_toolbar'] = False
