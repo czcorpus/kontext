@@ -131,10 +131,13 @@ class Taghelper(AbstractTaghelper):
 
     def export(self, plugin_ctx):
         tagsets = {}
-        for corp in ([plugin_ctx.current_corpus.corpname] + plugin_ctx.available_aligned_corpora):
-            info = self._corparch.get_corpus_info(plugin_ctx, corp)
-            for tagset in info.tagsets:
-                tagsets[tagset.ident] = tagset
+        try:
+            for corp in ([plugin_ctx.current_corpus.corpname] + plugin_ctx.available_aligned_corpora):
+                info = self._corparch.get_corpus_info(plugin_ctx, corp)
+                for tagset in info.tagsets:
+                    tagsets[tagset.ident] = tagset
+        except AttributeError:
+            pass  # we ignore if plugin_ctx does not support 'current_corpus' - please see AbstractTaghelper
         return dict(corp_tagsets=[x.to_dict() for x in tagsets.values()])
 
 

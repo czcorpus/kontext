@@ -61,7 +61,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
     def is_enabled_for(self, plugin_ctx: PluginCtx, corpora: List[str]) -> bool:
         """
         Return True if live attributes are enabled for selected corpora
-        else return False
+        else return False. The 'corpora' list can be also empty - in such
+        case is makes sense to return False
         """
 
     @abc.abstractmethod

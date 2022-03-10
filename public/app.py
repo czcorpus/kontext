@@ -48,6 +48,7 @@ from redis import asyncio as aioredis
 from views.root import bp as root_bp
 from views.concordance import bp as conc_bp
 from views.user import bp as user_bp
+from views.corpora import bp as corpora_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -82,64 +83,7 @@ def setup_logger(conf):
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
-class WsgiApp(object):
-
-    def __init__(self):
-        pass
-
-    def __call__(self, environ, start_response):
-        raise NotImplementedError()
-
-    def create_controller(self, path_info, request, ui_lang):
-        """
-        Loads appropriate action controller class according to the provided
-        path info. Classes selection is based on path_info prefix (e.g. / prefix
-        maps to the main action controller actions.py, /fcs maps to a fcs.py
-        controller etc.).
-
-        Please note that currently there is no general automatized loading
-        (i.e. all the path->class mapping is hardcoded in this function).
-
-        arguments:
-        path_info -- a string as found in environment['PATH_INFO']
-
-        returns:
-        a class matching provided path_info
-        """
-
-        if path_info.startswith('/fcs'):
-            from actions.fcs import Actions
-            return Actions(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/user'):
-            from actions.user import User
-            return User(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/subcorpus'):
-            from actions.subcorpus import Subcorpus
-            return Subcorpus(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/options'):
-            from actions.options import Options
-            return Options(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/corpora'):
-            from actions.corpora import Corpora
-            return Corpora(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/pquery'):
-            from actions.pquery import ParadigmaticQuery
-            return ParadigmaticQuery(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/tools'):
-            from actions.tools import Tools
-            return Tools(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/wordlist'):
-            from actions.wordlist import Wordlist
-            return Wordlist(request, ui_lang, self._tt_cache)
-        elif path_info.startswith('/dispersion'):
-            from actions.dispersion import Dispersion
-            return Dispersion(request, ui_lang, self._tt_cache)
-        else:
-            from actions.concordance import Actions
-            return Actions(request, ui_lang, self._tt_cache)
-
-
-class KonTextWsgiApp(WsgiApp):
+class KonTextWsgiApp:
     """
     KonText WSGI application
     """
@@ -247,6 +191,7 @@ session = Session()
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
 application.blueprint(user_bp)
+application.blueprint(corpora_bp)
 setup_plugins()
 install_plugin_actions(application)
 

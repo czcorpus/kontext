@@ -99,6 +99,8 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         return lambda: json.dumps(data, cls=encoder)
 
     def is_enabled_for(self, plugin_ctx, corpora):
+        if len(corpora) == 0:
+            return False
         return any(corpname in self._conf for corpname in corpora)
 
     @staticmethod
