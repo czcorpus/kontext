@@ -26,7 +26,8 @@ import json
 import re
 import importlib
 import sys
-from typing import TypeVar, Generic, Union, Type
+import asyncio
+from typing import TypeVar, Union, Type
 
 T = TypeVar('T')
 
@@ -162,7 +163,15 @@ class RqClient(AbstractBgClient):
     def control(self):
         return self._control
 
-    def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> ResultWrapper[T]:
+    def send_task_sync(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> ResultWrapper[T]:
+        tl = self._resolve_limit(time_limit, soft_time_limit)
+        try:
+            job = self.queue.enqueue(f'{self.prefix}.{name}', job_timeout=tl, args=args)
+            return ResultWrapper(job)
+        except Exception as ex:
+            logging.getLogger(__name__).error(ex)
+
+    async def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None) -> ResultWrapper[T]:
         """
         Send a task to the worker.
 
@@ -170,12 +179,8 @@ class RqClient(AbstractBgClient):
         values are filled in (time_limit, soft_time_limit), the smaller one is
         selected. Otherwise, the non-None is applied.
         """
-        time_limit = self._resolve_limit(time_limit, soft_time_limit)
-        try:
-            job = self.queue.enqueue(f'{self.prefix}.{name}', job_timeout=time_limit, args=args)
-            return ResultWrapper(job)
-        except Exception as ex:
-            logging.getLogger(__name__).error(ex)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self.send_task_sync, name, ans_type, args, time_limit, soft_time_limit)
 
     def get_task_error(self, task_id):
         try:

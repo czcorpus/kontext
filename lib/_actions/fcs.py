@@ -64,7 +64,7 @@ class Actions(Kontext):
             resources.append((corpus_id, corpus_title, resource_info))
         return resources
 
-    def fcs_search(self, corp: KCorpus, corpname, fcs_query, max_rec, start):
+    async def fcs_search(self, corp: KCorpus, corpname, fcs_query, max_rec, start):
         """
             aux function for federated content search: operation=searchRetrieve
         """
@@ -127,7 +127,7 @@ class Actions(Kontext):
         try:
             anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
             q = ['q' + rq]
-            conc = get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
+            conc = await get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
             raise Exception(10, repr(e), 'Query syntax error')
 

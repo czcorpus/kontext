@@ -172,7 +172,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
-        worker.send_task(
+        worker.send_task_sync(
             'conc_calculate', object.__class__,
             args=(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize),
             soft_time_limit=time_limit)

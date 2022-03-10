@@ -100,7 +100,7 @@ class Subcorpus(Querying):
         return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
             item['structure_name'], item['attribute_cql']) for item in [item for item in data if bool(item)]])
 
-    def _create_subcorpus(self, request: Request) -> Dict[str, Any]:
+    async def _create_subcorpus(self, request: Request) -> Dict[str, Any]:
         """
         req. arguments:
         subcname -- name of new subcorpus
@@ -176,7 +176,7 @@ class Subcorpus(Querying):
                     'user', 'fullname'), data.description)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)
-            res = worker.send_task(
+            res = await worker.send_task(
                 'create_subcorpus', object.__class__,
                 (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
                     tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),

@@ -72,7 +72,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
 
         return attr1, attr2
 
-    def find_suggestion(
+    async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         used_corp = self._preset_corp if self._preset_corp is not None else maincorp
@@ -80,7 +80,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
         try:
-            conc = get_conc(
+            conc = await get_conc(
                 used_corp,
                 user_id,
                 (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',))
