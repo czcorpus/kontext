@@ -66,7 +66,7 @@ from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInf
 from plugin_types.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
 from action.plugin.ctx import PluginCtx
-from action.model.authorized import AuthActionModel
+from action.model.authorized import UserActionModel
 from action.decorators import http_action
 
 bp = Blueprint('tree_corparch')
@@ -145,7 +145,7 @@ class CorptreeParser(object):
 
 
 @bp.route('/ajax_get_corptree_data')
-@http_action(return_type='json', action_model=AuthActionModel)
+@http_action(return_type='json', action_model=UserActionModel)
 def ajax_get_corptree_data(amodel, req, resp):
     """
     An exposed HTTP action required by client-side widget.
