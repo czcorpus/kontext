@@ -75,6 +75,13 @@ class MinArgs:
     align: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
     maincorp: str = field(default='', metadata=mk_metdata())
 
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
+        in_args = args if is_req_args_proxy(args) else create_req_arg_proxy(args, {}, {})
+        if len(in_args.corpora) > 0:
+            self.corpname = in_args.corpora[0]
+            self.align = in_args.corpora[1:] if len(in_args.corpora) > 1 else []
+            self.usesubcorp = in_args.getvalue('usesubcorp')
+
 
 @dataclass
 class Args(MinArgs):

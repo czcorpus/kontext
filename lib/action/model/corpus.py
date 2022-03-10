@@ -19,8 +19,6 @@ from functools import partial
 from dataclasses import fields, asdict
 import urllib
 
-import logging
-import inspect
 import os.path
 
 import corplib
@@ -29,13 +27,11 @@ from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
 import settings
 import l10n
 from translation import ugettext as translate
-import scheduled
 from corplib.fallback import ErrorCorpus, EmptyCorpus
 from corplib.corpus import KCorpus
 from action.argmapping import ConcArgsMapping, Args
 from action import ActionProps
 from main_menu.model import MainMenu, EventTriggeringItem
-from main_menu import generate_main_menu
 from action.req_args import RequestArgsProxy
 from action.errors import (
     UserActionException, ImmediateRedirectException, AlignedCorpusForbiddenException, NotFoundException,
@@ -81,12 +77,6 @@ class CorpusActionModel(UserActionModel):
         self._curr_corpus: Optional[KCorpus] = None
         self._corpus_variant: str = ''  # a prefix for a registry file
 
-        # a CorpusManager instance (created in pre_dispatch() phase)
-        # generates (sub)corpus objects with additional properties
-        self.cm: Optional[corplib.CorpusManager] = None
-
-        self.subcpath: List[str] = []
-
         # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
 
@@ -125,25 +115,6 @@ class CorpusActionModel(UserActionModel):
         """
         return urllib.parse.urlencode(key_val_pairs)
 
-    @staticmethod
-    def _init_default_settings(options):
-        if 'shuffle' not in options:
-            options['shuffle'] = int(settings.get_bool('global', 'shuffle_conc_by_default', False))
-
-    def _setup_user_paths(self):
-        user_id = self.session_get('user', 'id')
-        self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
-        if not self.user_is_anonymous():
-            self.subcpath.insert(0, os.path.join(settings.get(
-                'corpora', 'users_subcpath'), str(user_id)))
-        self._conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
-
-    # missing return statement type check error
-    def _user_has_persistent_settings(self) -> bool:  # type: ignore
-        with plugins.runtime.SETTINGS_STORAGE as sstorage:
-            return (self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')()
-                    and not self.user_is_anonymous())
-
     def get_current_aligned_corpora(self) -> List[str]:
         """
         Return currently active corpora
@@ -159,18 +130,6 @@ class CorpusActionModel(UserActionModel):
         here we mean: all the aligned corpora including the primary one
         """
         return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
-
-    def _load_general_settings(self) -> Dict[str, Any]:
-        """
-        """
-        if self._user_has_persistent_settings():
-            with plugins.runtime.SETTINGS_STORAGE as settings_plg:
-                return settings_plg.load(self.session_get('user', 'id'))
-        else:
-            data = self.session_get('settings')
-            if not data:
-                data = {}
-            return data
 
     def _load_corpus_settings(self, corpus_id):
         """
@@ -361,34 +320,6 @@ class CorpusActionModel(UserActionModel):
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
 
-    def _scheduled_actions(self, user_settings):
-        actions = []
-        if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
-            value = user_settings[BaseActionModel.SCHEDULED_ACTIONS_KEY]
-            if type(value) is dict:
-                actions.append(value)
-            elif type(value):
-                actions += value
-            for action in actions:
-                func_name = action['action']
-                if hasattr(scheduled, func_name):
-                    fn = getattr(scheduled, func_name)
-                    if inspect.isclass(fn):
-                        fn = fn()
-                    if callable(fn):
-                        try:
-                            ans = fn(*(), **action)
-                            if 'message' in ans:
-                                self.add_system_message('message', ans['message'])
-                            continue
-                        except Exception as e:
-                            logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
-                                action.get('id', '??'), e.__class__.__name__, e))
-                # avoided by 'continue' in case everything is OK
-                logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
-                    action.get('id', '??'), action,))
-            self._save_options()  # this causes scheduled task to be removed from settings
-
     def _check_corpus_access(self, form, action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
         Returns: a 2-tuple (corpus id, corpus variant)
@@ -426,23 +357,7 @@ class CorpusActionModel(UserActionModel):
         It is also OK to raise UserActionException types if necessary.
         """
         req_args = super().pre_dispatch(req_args)
-        with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
-
-        options = {}
-        self._scheduled_actions(options)
-
-        # only general setting can be applied now because
-        # we do not know final corpus name yet
-        self._init_default_settings(options)
-
         try:
-            options.update(self._load_general_settings())
-            self.args.map_args_to_attrs(options)
-
-            self._setup_user_paths()
-            self.cm = corplib.CorpusManager(self.subcpath)
-
             self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = self._check_corpus_access(req_args, self._action_props)
