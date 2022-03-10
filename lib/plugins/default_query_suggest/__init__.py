@@ -69,6 +69,14 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
             ans.append(frontend.export_data(resp, value, plugin_ctx.user_lang).to_dict())
         return ans
 
+    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        if len(corpora) > 0:
+            corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+            print('xxx: {}'.format(corpus_info.query_suggest.providers))
+            print(self._providers)
+            return True
+        return False
+
     def export(self, plugin_ctx):
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, plugin_ctx.current_corpus.corpname)
         active_providers = []

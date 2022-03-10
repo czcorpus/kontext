@@ -94,6 +94,8 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
         self._corparch = corparch
 
     def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+        if len(corpora) == 0:
+            return False
         info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return bool(info.metadata.id_attr)
 

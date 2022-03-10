@@ -87,44 +87,6 @@ class Corpora(Kontext):
                              offset=request.args.get('offset', None), limit=request.args.get('limit', None),
                              filter_dict=request.args)
 
-    @exposed(return_type='json', skip_corpus_init=True)
-    def ajax_get_corp_details(self, request):
-        corpname = request.args.get('corpname')
-        with plugins.runtime.AUTH as auth:
-            _, acc, _ = auth.corpus_access(self.session_get('user'), corpname)
-            if not acc:
-                raise ForbiddenException('No access to corpus {0}'.format(corpname))
-            corp_conf_info = self.get_corpus_info(corpname)
-            corpus = self.cm.get_corpus(request.args.get('corpname'))
-            ans = CorpusDetail(
-                corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
-                description=corp_conf_info.description,
-                size=corpus.size,
-                attrlist=[],
-                structlist=[],
-                web_url=corp_conf_info.web if corp_conf_info is not None else '',
-                citation_info=corp_conf_info.citation_info,
-                keywords=[])
-
-        with plugins.runtime.CORPARCH as cp:
-            ans.keywords = [
-                KeyWord(name=name, color=cp.get_label_color(ident))
-                for (ident, name) in corp_conf_info.metadata.keywords]
-
-        try:
-            ans.attrlist = [
-                AttrStruct(name=item, size=int(corpus.get_attr(item).id_range()))
-                for item in corpus.get_posattrs()]
-        except RuntimeError as e:
-            logging.getLogger(__name__).warning(f'{e}')
-            ans.attrlist = ErrorInfo(error=translate('Failed to load'))
-
-        ans.structlist = [
-            AttrStruct(name=item, size=int(corpus.get_struct(item).size()))
-            for item in corpus.get_structs()]
-
-        return ans
-
     @exposed(return_type='json')
     def ajax_get_structattrs_details(self, _):
         """
