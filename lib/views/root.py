@@ -4,7 +4,7 @@ from sanic.views import HTTPMethodView
 from sanic.response import text
 from sanic.request import Request
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException
+from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException
 
 import settings
 import plugins
@@ -60,10 +60,11 @@ def get_task_result(amodel, req, resp):
 @http_action(return_type='json')
 def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
     task_ids = req.form.getlist('tasks')
-    amodel._set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
+    amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
     return amodel.check_tasks_status(req)
 
 
+@bp.exception(CorpusForbiddenException, Exception)
 @bp.route('/message')
 @http_action(accept_kwargs=True, page_model='message', template='message.html')
 def message(amodel, req, resp, **kw):

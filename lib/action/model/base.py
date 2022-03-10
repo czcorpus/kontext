@@ -58,6 +58,10 @@ class BaseActionModel:
         self._plugin_ctx: Optional[BasePluginCtx] = None
 
     @property
+    def dynamic_menu_items(self):
+        return self._dynamic_menu_items
+
+    @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
             self._plugin_ctx = BasePluginCtx(self, self._req, self._resp)

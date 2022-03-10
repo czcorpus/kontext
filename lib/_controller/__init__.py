@@ -391,17 +391,7 @@ class Controller(ABC):
             action_metadata.update(self._get_method_metadata('message'))
         return tpl_path, method_ans
 
-    def _create_err_action_args(self, ex: Exception, return_type: str) -> RequestArgsProxy:
-        """
-        arguments:
-        ex -- a risen exception
-        return_type --
-        """
-        ans = create_req_arg_proxy(self._request.form, self._request.args, self._request.json)
-        if return_type == 'json':
-            ans.add_forced_arg('error_code', getattr(ex, 'error_code', None))
-            ans.add_forced_arg('error_args', getattr(ex, 'error_args', {}))
-        return ans
+
 
 
 
