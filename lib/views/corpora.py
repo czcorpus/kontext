@@ -15,9 +15,12 @@ import logging
 from typing import List, Union
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
-from controller import exposed
-from controller.kontext import Kontext
 from action.errors import ForbiddenException
+from action.model.authorized import UserActionModel
+from action.model.corpus import CorpusActionModel
+from action.decorators import http_action
+from sanic import Blueprint
+
 import plugins
 from plugin_types.corparch import AbstractSearchableCorporaArchive
 from plugin_types.corparch.corpus import CitationInfo
@@ -57,54 +60,59 @@ class CorpusDetail:
     keywords: List[KeyWord]
 
 
-class Corpora(Kontext):
+bp = Blueprint('corpora')
 
-    def get_mapping_url_prefix(self):
-        return '/corpora/'
 
-    @exposed(skip_corpus_init=True)
-    def corplist(self, request):
-        self.disabled_menu_items = self.CONCORDANCE_ACTIONS
-        with plugins.runtime.CORPARCH as cp:
-            if isinstance(cp, AbstractSearchableCorporaArchive):
-                params = cp.initial_search_params(self._plugin_ctx, request.args.get('query'),
-                                                  request.args)
-                data = cp.search(plugin_ctx=self._plugin_ctx,
-                                 query=False,
-                                 offset=0,
-                                 limit=request.args.get('limit', None),
-                                 filter_dict=request.args)
-            else:
-                params = {}
-                data = cp.get_all(self._plugin_ctx)
-            data['search_params'] = params
-            return dict(corplist_data=data)
+@bp.route('/corpora/corplist')
+@http_action(action_model=UserActionModel, template='corpora/corplist.html')
+async def corplist(amodel, req, resp):
+    amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
+    with plugins.runtime.CORPARCH as cp:
+        if isinstance(cp, AbstractSearchableCorporaArchive):
+            params = cp.initial_search_params(amodel.plugin_ctx, req.args.get('query'),
+                                              req.args)
+            data = cp.search(
+                plugin_ctx=amodel.plugin_ctx,
+                query=False,
+                offset=0,
+                limit=req.args.get('limit', None),
+                filter_dict=req.args)
+        else:
+            params = {}
+            data = cp.get_all(amodel.plugin_ctx)
+        data['search_params'] = params
+        return dict(corplist_data=data)
 
-    @exposed(return_type='json', skip_corpus_init=True)
-    def ajax_list_corpora(self, request):
-        with plugins.runtime.CORPARCH as cp:
-            return cp.search(plugin_ctx=self._plugin_ctx, query=request.args.get('query', None),
-                             offset=request.args.get('offset', None), limit=request.args.get('limit', None),
-                             filter_dict=request.args)
 
-    @exposed(return_type='json', skip_corpus_init=True)
-    def ajax_get_corp_details(self, request):
-        corpname = request.args.get('corpname')
-        with plugins.runtime.AUTH as auth:
-            _, acc, _ = auth.corpus_access(self.session_get('user'), corpname)
-            if not acc:
-                raise ForbiddenException('No access to corpus {0}'.format(corpname))
-            corp_conf_info = self.get_corpus_info(corpname)
-            corpus = self.cm.get_corpus(request.args.get('corpname'))
-            ans = CorpusDetail(
-                corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
-                description=corp_conf_info.description,
-                size=corpus.size,
-                attrlist=[],
-                structlist=[],
-                web_url=corp_conf_info.web if corp_conf_info is not None else '',
-                citation_info=corp_conf_info.citation_info,
-                keywords=[])
+@bp.route('/corpora/ajax_list_corpora')
+@http_action(action_model=UserActionModel, return_type='json')
+async def ajax_list_corpora(amodel, req, resp):
+    with plugins.runtime.CORPARCH as cp:
+        return cp.search(
+            plugin_ctx=amodel.plugin_ctx, query=req.args.get('query', None),
+            offset=req.args.get('offset', None), limit=req.args.get('limit', None),
+            filter_dict=req.args)
+
+
+@bp.route('/corpora/ajax_get_corp_details')
+@http_action(action_model=CorpusActionModel, return_type='json')
+async def ajax_get_corp_details(amodel, req, resp):
+    corpname = req.args.get('corpname')
+    with plugins.runtime.AUTH as auth, plugins.runtime.CORPARCH as ca:
+        _, acc, _ = auth.corpus_access(req.session_get('user'), corpname)
+        if not acc:
+            raise ForbiddenException('No access to corpus {0}'.format(corpname))
+        corp_conf_info = ca.get_corpus_info(amodel.plugin_ctx, corpname)
+        corpus = amodel.cm.get_corpus(req.args.get('corpname'))
+        ans = CorpusDetail(
+            corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
+            description=corp_conf_info.description,
+            size=corpus.size,
+            attrlist=[],
+            structlist=[],
+            web_url=corp_conf_info.web if corp_conf_info is not None else '',
+            citation_info=corp_conf_info.citation_info,
+            keywords=[])
 
         with plugins.runtime.CORPARCH as cp:
             ans.keywords = [
@@ -125,21 +133,25 @@ class Corpora(Kontext):
 
         return ans
 
-    @exposed(return_type='json')
-    def ajax_get_structattrs_details(self, _):
-        """
-        Provides a map (struct_name=>[list of attributes]). This is used
-        by 'insert within' widget.
-        """
-        speech_segment = self.get_corpus_info(self.args.corpname).speech_segment
-        ans = defaultdict(lambda: [])
-        for item in self.corp.get_structattrs():
-            if item != speech_segment:
-                k, v = item.split('.')
-                ans[k].append(v)
-        return dict(structattrs=dict((k, v) for k, v in list(ans.items()) if len(v) > 0))
 
-    @exposed(return_type='json')
-    def bibliography(self, request):
-        with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-            return dict(bib_data=liveatt.get_bibliography(self._plugin_ctx, self.corp, item_id=request.args.get('id')))
+@bp.route('/corpora/ajax_get_structattrs_details')
+@http_action(action_model=UserActionModel, return_type='json')
+def ajax_get_structattrs_details(amodel, req, resp):
+    """
+    Provides a map (struct_name=>[list of attributes]). This is used
+    by 'insert within' widget.
+    """
+    speech_segment = amodel.get_corpus_info(amodel.args.corpname).speech_segment
+    ans = defaultdict(lambda: [])
+    for item in amodel.corp.get_structattrs():
+        if item != speech_segment:
+            k, v = item.split('.')
+            ans[k].append(v)
+    return dict(structattrs=dict((k, v) for k, v in list(ans.items()) if len(v) > 0))
+
+
+@bp.route('/corpora/bibliography')
+@http_action(action_model=UserActionModel, return_type='json')
+def bibliography(amodel, req, resp):
+    with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
+        return dict(bib_data=liveatt.get_bibliography(amodel.plugin_ctx, amodel.corp, item_id=req.args.get('id')))

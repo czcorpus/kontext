@@ -24,9 +24,10 @@ from typing import List, Dict, Any, Generic, TypeVar
 from dataclasses_json import DataClassJsonMixin
 from corplib.corpus import KCorpus
 from action.plugin.ctx import PluginCtx
+from plugin_types import CorpusDependentPlugin
 
 
-class AbstractQuerySuggest(abc.ABC):
+class AbstractQuerySuggest(CorpusDependentPlugin, abc.ABC):
     """
     AbstractQuerySuggest describes a general query suggestion which can be based on part of actual query ('value'),
     currently written structure/structural attribute or a positional attribute. Also type of the query, involved can be

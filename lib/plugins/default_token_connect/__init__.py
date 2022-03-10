@@ -44,13 +44,12 @@ from action.decorators import http_action
 from action.model.concordance import ConcActionModel
 from plugins.default_token_connect.frontends import ErrorFrontend
 
-
 bp = Blueprint('default_token_connect')
 
 
 @bp.route('/fetch_token_detail')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def fetch_token_detail(self, request):
+async def fetch_token_detail(amodel, req, resp):
     """
     This is a controller action used by client to obtain
     data for a token. Token is identified by its position id
@@ -64,15 +63,15 @@ async def fetch_token_detail(self, request):
         pos = ''
 
     """
-    token_id = int(request.args.get('token_id'))
-    num_tokens = int(request.args.get('num_tokens'))
-    context = (int(request.args.get('detail_left_ctx', 40)),
-               int(request.args.get('detail_right_ctx', 40)))
+    token_id = int(req.args.get('token_id'))
+    num_tokens = int(req.args.get('num_tokens'))
+    context = (int(req.args.get('detail_left_ctx', 40)),
+               int(req.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
-        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
-        token, resp_data = td.fetch_data(corpus_info.token_connect.providers, self.corp,
-                                         [self.corp.corpname] +
-                                         self.args.align, token_id, num_tokens, self.ui_lang,
+        corpus_info = ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
+        token, resp_data = td.fetch_data(corpus_info.token_connect.providers, amodel.corp,
+                                         [amodel.corp.corpname] +
+                                         amodel.args.align, token_id, num_tokens, req.ui_lang,
                                          context)
     return dict(token=token, items=[item for item in resp_data])
 
@@ -169,6 +168,8 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return word, ans
 
     def is_enabled_for(self, plugin_ctx, corpora):
+        if len(corpora) == 0:
+            return False
         corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return len(corpus_info.token_connect.providers) > 0
 
