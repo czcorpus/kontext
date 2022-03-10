@@ -51,22 +51,24 @@ class DefaultActionLog(AbstractActionLog):
             try:
                 log_data['args'] = action_log_mapper(request)
             except Exception as ex:
-                logging.getLogger(__name__).error('Failed to map request info to log: {}'.format(ex))
+                logging.getLogger(__name__).error(
+                    'Failed to map request info to log: {}'.format(ex))
         corpora = log_data['args'].get('corpora', [])
         if len(corpora) == 0:
             log_data['args']['corpora'] = [args_map.corpname] + args_map.align
         if self.is_error(err_desc):
             err_name, err_msg, err_anchor = self.expand_error_desc(err_desc)
             log_data['error'] = dict(name=err_name, message=err_msg, anchor=err_anchor)
-        log_data['date'] = datetime.datetime.today().strftime('%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
+        log_data['date'] = datetime.datetime.today().strftime(
+            '%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
         log_data['action'] = full_action_name
         log_data['user_id'] = request.ctx.session.get('user', {}).get('id')
         if proc_time is not None:
             log_data['proc_time'] = proc_time
         log_data['request'] = {
             'REMOTE_ADDR': request.remote_addr,
-            'HTTP_X_FORWARDED_FOR': request.headers.get('HTTP_X_FORWARDED_FOR'),
-            'HTTP_USER_AGENT': request.headers.get('HTTP_USER_AGENT')
+            'HTTP_X_FORWARDED_FOR': request.headers.get('x-forwarded-for'),
+            'HTTP_USER_AGENT': request.headers.get('user-agent')
         }
         return log_data
 
