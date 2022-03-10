@@ -33,8 +33,8 @@ class CeleryClient(AbstractBgClient):
     def __init__(self, worker: Celery):
         self._worker = worker
 
-    def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None):
-        return self._worker.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
+    async def send_task(self, name, ans_type: Type[T], args=None, time_limit=None, soft_time_limit=None):
+        return await self._worker.send_task(name=name, args=args, time_limit=time_limit, soft_time_limit=soft_time_limit)
 
     def get_task_error(self, task_id):
         return None
