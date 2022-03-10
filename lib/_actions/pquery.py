@@ -197,7 +197,7 @@ class ParadigmaticQuery(Kontext):
         return ans
 
     @exposed(http_method='POST', mutates_result=True, return_type='json')
-    def freq_intersection(self, request):
+    async def freq_intersection(self, request):
         """
         Run a paradigmatic query out of existing concordances.
 
@@ -228,7 +228,7 @@ class ParadigmaticQuery(Kontext):
             self.subcpath,
             self.session_get('user', 'id'),
             corp_info.collator_locale if corp_info.collator_locale else 'en_US')
-        task_status = worker.send_task(
+        task_status = await worker.send_task(
             'calc_merged_freqs', object.__class__, args=calc_args, time_limit=TASK_TIME_LIMIT)
         sq_items = []
         for conc_id in self._curr_pquery_args.conc_ids:

@@ -514,7 +514,7 @@ class ConcActionModel(CorpusActionModel):
             return tuple(segment_str.split('.'))
         return None
 
-    def get_conc_sizes(self, conc):
+    async def get_conc_sizes(self, conc):
         i = 1
         concsize = conc.size()
         fullsize = conc.fullsize()
@@ -529,9 +529,9 @@ class ConcActionModel(CorpusActionModel):
                 return dict(concsize=concsize, sampled_size=0, relconcsize=0, fullsize=fullsize,
                             finished=conc.finished())
         if sampled_size:
-            orig_conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'),
-                                 q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize,
-                                 asnc=False)
+            orig_conc = await get_conc(
+                corp=self.corp, user_id=self.session_get('user', 'id'),
+                q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 

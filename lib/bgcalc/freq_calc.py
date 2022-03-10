@@ -164,7 +164,7 @@ def write_log_header(corp, logfile):
         f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
-def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
+async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
     """
     Provides a higher level wrapper to create_arf_db(). Function creates
     a background process where create_arf_db() is run. In case the
@@ -186,7 +186,7 @@ def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, Lis
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
         write_log_header(corp, logfilename_m)
-        res = worker.send_task(
+        res = await worker.send_task(
             f'compile_{m}', object.__class__,
             (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
             time_limit=TASK_TIME_LIMIT)
@@ -258,7 +258,7 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     return dict(freqs=freqs, conc_size=conc.size())
 
 
-def calculate_freqs(args: FreqCalcArgs):
+async def calculate_freqs(args: FreqCalcArgs):
     """
     Calculates a frequency distribution based on a defined concordance and frequency-related arguments.
     The class is able to cache the data in a background process/task. This prevents KonText to calculate
@@ -277,7 +277,7 @@ def calculate_freqs(args: FreqCalcArgs):
     if calc_result is None:
         args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
-        res = worker.send_task(
+        res = await worker.send_task(
             'calculate_freqs', object.__class__, args=(asdict(args),), time_limit=TASK_TIME_LIMIT)
         # worker task caches the value AFTER the result is returned (see worker.py)
         calc_result = res.get()
@@ -426,12 +426,12 @@ class Freq2DCalculation:
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
 
 
-def calculate_freq2d(args):
+async def calculate_freq2d(args):
     """
     note: this is called directly by webserver
     """
     worker = bgcalc.calc_backend_client(settings)
-    res = worker.send_task('calculate_freq2d', dict.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
+    res = await worker.send_task('calculate_freq2d', dict.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
     calc_result = res.get()
     if isinstance(calc_result, Exception):
         raise calc_result

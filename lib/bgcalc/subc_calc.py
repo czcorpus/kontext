@@ -30,13 +30,13 @@ class CreateSubcorpusTask(object):
         self._author = author
         self._description = description
 
-    def run(self, tt_query, cql, path, publish_path):
+    async def run(self, tt_query, cql, path, publish_path):
         """
         returns:
         True in case of success
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
-        conc = conclib.search.get_conc(self._corp, self._user_id, q=cql, asnc=0)
+        conc = await conclib.search.get_conc(self._corp, self._user_id, q=cql, asnc=0)
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')
         ans = corplib.subcorpus_from_conc(path, conc)

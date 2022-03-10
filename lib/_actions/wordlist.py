@@ -104,13 +104,13 @@ class Wordlist(Kontext):
 
     @exposed(access_level=1, http_method='POST', page_model='wordlist',
              return_type='json', mutates_result=True, action_log_mapper=log_mapping.wordlist)
-    def submit(self, request):
+    async def submit(self, request):
         form_args = WordlistFormArgs()
         form_args.update_by_user_query(request.json)
         worker = calc_backend_client(settings)
         ans = dict(corpname=self.args.corpname, usesubcorp=self.args.usesubcorp,
                    freq_files_avail=True, subtasks=[])
-        async_res = worker.send_task(
+        async_res = await worker.send_task(
             'get_wordlist', object.__class__,
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
         bg_result = async_res.get()

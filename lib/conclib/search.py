@@ -21,6 +21,8 @@
 import logging
 from typing import Tuple, Optional, Union
 import os
+from functools import partial
+import asyncio
 
 import settings
 import plugins
@@ -41,14 +43,14 @@ CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
+async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     status = cache_map.get_calc_status(subchash, q)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
-        ans = worker.send_task(
+        ans = await worker.send_task(
             'conc_register', object.__class__,
             (user_id, corp.corpname, getattr(corp, 'subcname', None),
              subchash, q, samplesize, TASK_TIME_LIMIT),
@@ -61,7 +63,7 @@ def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
-def _get_bg_conc(
+async def _get_bg_conc(
         corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
         calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
     """
@@ -83,7 +85,7 @@ def _get_bg_conc(
                 logging.getLogger(__name__).warning(
                     f'Removed unbound conc. cache file {status.cachefile}')
         worker = bgcalc.calc_backend_client(settings)
-        worker.send_task(
+        await worker.send_task(
             'conc_sync_calculate', object.__class__,
             (user_id, corp.corpname, getattr(corp, 'subcname', None), subchash, q, samplesize),
             time_limit=TASK_TIME_LIMIT)
@@ -144,7 +146,7 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
              or corp.size > CONC_BG_SYNC_SINGLE_CORP_THRESHOLD))
 
 
-def get_conc(
+async def get_conc(
         corp: AbstractKCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
         samplesize=0) -> Union[PyConc, InitialConc]:
     """
@@ -196,13 +198,14 @@ def get_conc(
             calc_from = 1
             # use Manatee asynchronous conc. calculation (= show 1st page once it's avail.)
             if asnc and len(q) == 1:
-                conc = _get_async_conc(corp=corp, user_id=user_id, q=q, subchash=subchash,
-                                       samplesize=samplesize, minsize=minsize)
+                conc = await _get_async_conc(
+                    corp=corp, user_id=user_id, q=q, subchash=subchash,
+                    samplesize=samplesize, minsize=minsize)
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                conc = _get_sync_conc(
-                    worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
+                tf = partial(_get_sync_conc, worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
+                conc = await asyncio.get_event_loop().run_in_executor(None, tf)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]

@@ -83,9 +83,10 @@ async def query_submit(amodel, req, resp):
             amodel.acknowledge_auto_generated_conc_op(
                 len(amodel.args.q) - 1, ShuffleFormArgs(persist=True))
         logging.getLogger(__name__).debug('query: {}'.format(amodel.args.q))
-        conc = get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-                        fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
-                        samplesize=corpus_info.sample_size)
+        conc = await get_conc(
+            corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
+            samplesize=corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
         amodel.on_conc_store = store_last_op
@@ -133,7 +134,7 @@ async def view(amodel, req, resp):
     conc = InitialConc(amodel.corp, None)
     asnc = bool(int(req.args.get('asnc'))) if 'asnc' in req.args else False
     try:
-        conc = get_conc(
+        conc = await get_conc(
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=asnc,
             samplesize=corpus_info.sample_size)
@@ -150,7 +151,7 @@ async def view(amodel, req, resp):
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
             out.update(kwic.kwicpage(kwic_args))
-            out.update(amodel.get_conc_sizes(conc))
+            out.update(await amodel.get_conc_sizes(conc))
     except UnknownConcordanceAction as ex:
         raise UserActionException(str(ex))
     except TypeError as ex:
