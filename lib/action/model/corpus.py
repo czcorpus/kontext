@@ -22,7 +22,6 @@ import urllib
 import logging
 import inspect
 import os.path
-import time
 
 import corplib
 import plugins
