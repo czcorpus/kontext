@@ -49,7 +49,7 @@ from plugins.mysql_corparch.corplist import parse_query
 from plugins.mysql_corparch.backend import Backend
 from action.errors import ForbiddenException
 from action.decorators import http_action
-from action.model.authorized import AuthActionModel
+from action.model.authorized import UserActionModel
 from translation import ugettext as _
 
 bp = Blueprint('ucnk_corparch3')
@@ -79,14 +79,14 @@ class UcnkCorpusInfo(CorpusInfo):
 
 
 @bp.route('/get_favorite_corpora')
-@http_action(return_type='json', access_level=1, action_model=AuthActionModel)
+@http_action(return_type='json', access_level=1, action_model=UserActionModel)
 def get_favorite_corpora(amodel, req, resp):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
         return ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
 
 
 @bp.route('/ask_corpus_access', methods=['POST'])
-@http_action(access_level=1, return_type='json', action_model=AuthActionModel)
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
 def ask_corpus_access(amodel, req, resp):
     ans = {}
     with plugins.runtime.CORPARCH as ca:

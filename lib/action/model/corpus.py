@@ -12,9 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Optional, TypeVar, Dict, List, Iterator, Tuple, Union, Iterable, Callable
+from typing import Any, Optional, TypeVar, Dict, List, Tuple, Union, Iterable, Callable
 from corplib.abstract import AbstractKCorpus
-from main_menu.model import AbstractMenuItem
 from action.argmapping.conc.query import ConcFormArgs
 from functools import partial
 from dataclasses import fields, asdict
@@ -38,62 +37,25 @@ import scheduled
 from corplib.fallback import ErrorCorpus, EmptyCorpus
 from corplib.corpus import KCorpus
 from action.argmapping import ConcArgsMapping, Args
-from action.plugin.ctx import PluginCtx
 from action import ActionProps
 from main_menu.model import MainMenu, EventTriggeringItem
 from main_menu import generate_main_menu
-from action.req_args import RequestArgsProxy, JSONRequestArgsProxy
+from action.req_args import RequestArgsProxy
 from action.errors import (
     UserActionException, ImmediateRedirectException, AlignedCorpusForbiddenException, NotFoundException,
     ForbiddenException)
 from action.krequest import KRequest
+from action.response import KResponse
 from action.model.base import BaseActionModel
-from action.model.authorized import AuthActionModel
+from action.model.authorized import UserActionModel, UserPluginCtx
 from texttypes.model import TextTypes, TextTypesCache
 from bgcalc.task import AsyncTaskStatus
 
 
-JSONVal = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 T = TypeVar('T')
 
 
-class LinesGroups:
-    """
-    Handles concordance lines groups manually defined by a user.
-    It is expected that the controller has always an instance of
-    this class available (i.e. no None value).
-    """
-
-    def __init__(self, data: List[Any]) -> None:
-        if not isinstance(data, list):
-            raise ValueError('LinesGroups data argument must be a list')
-        self.data = data
-        self.sorted = False
-
-    def __len__(self) -> int:
-        return len(self.data) if self.data else 0
-
-    def __iter__(self) -> Iterator:
-        return iter(self.data) if self.data else iter([])
-
-    def serialize(self) -> Dict[str, Any]:
-        return {'data': self.data, 'sorted': self.sorted}
-
-    def as_list(self) -> List[Any]:
-        return self.data if self.data else []
-
-    def is_defined(self) -> bool:
-        return len(self.data) > 0
-
-    @staticmethod
-    def deserialize(data: Union[Dict, List[Any]]) -> 'LinesGroups':
-        data_dict = dict(data) if isinstance(data, list) else data
-        ans = LinesGroups(data_dict.get('data', []))
-        ans.sorted = data_dict.get('sorted', False)
-        return ans
-
-
-class CorpusActionModel(AuthActionModel):
+class CorpusActionModel(UserActionModel):
     """
     A controller.Controller extension implementing
     KonText-specific requirements.
@@ -120,35 +82,21 @@ class CorpusActionModel(AuthActionModel):
 
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code
 
-    def __init__(self, request: KRequest, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(request, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
+        super().__init__(req, resp, action_props, tt_cache)
         self.ui_lang: str = 'en_US'  # TODO fetch from request
         self._proc_time: Optional[float] = None
         self.args: Args = Args()
-        self._uses_valid_sid: bool = True
+
         # Note: always use _corp() method to access current corpus even from inside the class
         self._curr_corpus: Optional[KCorpus] = None
         self._corpus_variant: str = ''  # a prefix for a registry file
-
-        self.return_url: Optional[str] = None
 
         # a CorpusManager instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
-        self.disabled_menu_items: Tuple[str, ...] = ()
-
-        # menu items - they should not be handled directly
-        self._dynamic_menu_items: List[AbstractMenuItem] = []
-
         self.subcpath: List[str] = []
-
-        self._conc_dir: str = ''
-
-        self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
-
-        # data of the current manual concordance line selection/categorization
-        self._lines_groups: LinesGroups = LinesGroups(data=[])
 
         # query_persistence plugin related attributes
         self._q_code: Optional[str] = None  # a key to 'code->query' database
@@ -158,17 +106,24 @@ class CorpusActionModel(AuthActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str], Optional[int], Any],
-                                     None] = lambda s, uh, res: None
+        self.on_conc_store: Callable[[List[str], Optional[int], Any], None] = lambda s, uh, res: None
 
         self._tt_cache = tt_cache
+
         self._tt = None  # this will be instantiated lazily
+
+        self._plugin_ctx: Optional[CorpusPluginCtx] = None
+
+    @property
+    def plugin_ctx(self):
+        if self._plugin_ctx is None:
+            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp)
+        return self._plugin_ctx
 
     # TODO move to a more specific req_context object
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
-            print('plg: {}'.format(plg))  # TODO DEBUG
-            return plg.get_corpus_info(self._plugin_ctx, corp)
+            return plg.get_corpus_info(self.plugin_ctx, corp)
 
     def urlencode(self, key_val_pairs: List[Tuple[str, Union[str, str, bool, int, float]]]) -> str:
         """
@@ -192,7 +147,8 @@ class CorpusActionModel(AuthActionModel):
     # missing return statement type check error
     def _user_has_persistent_settings(self) -> bool:  # type: ignore
         with plugins.runtime.SETTINGS_STORAGE as sstorage:
-            return self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')() and not self.user_is_anonymous()
+            return (self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')()
+                    and not self.user_is_anonymous())
 
     def get_current_aligned_corpora(self) -> List[str]:
         """
@@ -201,14 +157,14 @@ class CorpusActionModel(AuthActionModel):
         note: the name is a bit confusing considering how 'align(ed)' is used elsewhere
         here we mean: all the aligned corpora including the primary one
         """
-        return [getattr(self.args, 'corpname')] + getattr(self.args, 'align')
+        return [self.args.corpname] + self.args.align
 
     def get_available_aligned_corpora(self) -> List[str]:
         """
         note: the name is a bit confusing considering how 'align(ed)' is used elsewhere
         here we mean: all the aligned corpora including the primary one
         """
-        return [getattr(self.args, 'corpname')] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
+        return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
     def _load_general_settings(self) -> Dict[str, Any]:
         """
@@ -279,7 +235,7 @@ class CorpusActionModel(AuthActionModel):
                 if sess_options:
                     options.update(sess_options)
                 merge_incoming_opts_to(options)
-                self._request.ctx.session['settings'] = options
+                self._req.ctx.session['settings'] = options
 
     def _restore_prev_query_params(self, form):
         """
@@ -320,8 +276,6 @@ class CorpusActionModel(AuthActionModel):
                         form.add_forced_arg('viewmode', 'align')
                     if self._active_q_data.get('usesubcorp', None):
                         form.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
-                    self._lines_groups = LinesGroups.deserialize(
-                        self._active_q_data.get('lines_groups', []))
                 else:
                     raise UserActionException(translate('Invalid or expired query'))
 
@@ -454,10 +408,10 @@ class CorpusActionModel(AuthActionModel):
                 url_pref = action_props.action_prefix
                 if len(url_pref) > 0:
                     url_pref = url_pref[1:]
-                raise ImmediateRedirectException(self._request.create_url(
+                raise ImmediateRedirectException(self._req.create_url(
                     url_pref + action_props.action_name, dict(corpname=corpname)))
             elif not has_access:
-                auth.on_forbidden_corpus(self._plugin_ctx, corpname, variant)
+                auth.on_forbidden_corpus(self.plugin_ctx, corpname, variant)
             for al_corp in form.getlist('align'):
                 al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
                 # we cannot accept aligned corpora without access right
@@ -468,11 +422,6 @@ class CorpusActionModel(AuthActionModel):
             print('_check_corpus_access ActionProps: {}'.format(action_props))
             print(f'corpname: {corpname}, redirect: {redirect}')
             return corpname, variant
-
-    # mypy error: missing return statement
-    def user_is_anonymous(self) -> bool:  # type: ignore
-        with plugins.runtime.AUTH as auth:
-            return getattr(auth, 'is_anonymous')(self.session_get('user', 'id'))
 
     def pre_dispatch(self, req_args):
         """
@@ -486,18 +435,8 @@ class CorpusActionModel(AuthActionModel):
         """
         req_args = super().pre_dispatch(req_args)
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self._plugin_ctx, self._action_props, self._request)
+            dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
 
-        def validate_corpus():
-            if isinstance(self.corp, ErrorCorpus):
-                return self.corp.get_error()
-            info = self.get_corpus_info(getattr(self.args, 'corpname'))
-            if isinstance(info, BrokenCorpusInfo):
-                return NotFoundException(translate('Corpus \"{0}\" not available'.format(info.name)),
-                                         internal_message='Failed to fetch configuration for {0}'.format(info.name))
-            return None
-
-        self.add_validator(validate_corpus)
         options = {}
         self._scheduled_actions(options)
 
@@ -548,10 +487,10 @@ class CorpusActionModel(AuthActionModel):
         args = {}
         if getattr(self.args, 'corpname'):
             args['corpname'] = getattr(self.args, 'corpname')
-        if self._request.method == 'GET':
-            self.return_url = self._request.updated_current_url(args)
+        if self._req.method == 'GET':
+            self.return_url = self._req.updated_current_url(args)
         else:
-            self.return_url = '{}query?{}'.format(self._request.get_root_url(),
+            self.return_url = '{}query?{}'.format(self._req.get_root_url(),
                                                   '&'.join([f'{k}={v}' for k, v in list(args.items())]))
         # by default, each action is public
         access_level = self._action_props.access_level
@@ -562,6 +501,15 @@ class CorpusActionModel(AuthActionModel):
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
+
+        if isinstance(self.corp, ErrorCorpus):
+            raise self.corp.get_error()
+        info = self.get_corpus_info(self.args.corpname)
+        if isinstance(info, BrokenCorpusInfo):
+            raise NotFoundException(
+                translate('Corpus \"{0}\" not available'.format(info.name)),
+                internal_message=f'Failed to fetch configuration for {info.name}')
+
         return req_args
 
     def post_dispatch(self, action_props, result, err_desc):
@@ -577,11 +525,11 @@ class CorpusActionModel(AuthActionModel):
 
         with plugins.runtime.ACTION_LOG as alog:
             alog.log_action(
-                self._request.unwrapped, self.args, action_props.action_log_mapper,
+                self._req.unwrapped, self.args, action_props.action_log_mapper,
                 f'{action_props.action_prefix}{action_props.action_name}',
                 err_desc=err_desc, proc_time=self._proc_time)
         with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self._plugin_ctx, action_props.action_name, action_props)
+            dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
 
     def add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
@@ -635,11 +583,11 @@ class CorpusActionModel(AuthActionModel):
 
     def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, ErrorCorpus):
-            self._response.set_http_status(404)
+            self._resp.set_http_status(404)
             self.add_system_message('error', 'Failed to open corpus {0}'.format(
                 getattr(self.args, 'corpname')))
         else:
-            self._response.set_http_status(500)
+            self._resp.set_http_status(500)
 
     @property
     def corp(self) -> AbstractKCorpus:
@@ -673,7 +621,7 @@ class CorpusActionModel(AuthActionModel):
         Provides access to text types of the current corpus
         """
         return self._tt if self._tt is not None else TextTypes(
-            self.corp, self.corp.corpname, self._tt_cache, self._plugin_ctx)
+            self.corp, self.corp.corpname, self._tt_cache, self.plugin_ctx)
 
     def _add_corpus_related_globals(self, result, maincorp):
         """
@@ -767,7 +715,7 @@ class CorpusActionModel(AuthActionModel):
                     ans[opt_plugin.name] = js_file
                     if (not (isinstance(opt_plugin.instance, CorpusDependentPlugin)) or
                             opt_plugin.is_enabled_for(
-                                self._plugin_ctx, [self.args.corpname] + self.args.align)):
+                                self.plugin_ctx, [self.args.corpname] + self.args.align)):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
@@ -803,7 +751,7 @@ class CorpusActionModel(AuthActionModel):
         with plugins.runtime.AUTH as auth:
             if plugins.runtime.AUTH.exists and isinstance(auth, AbstractInternalAuth):
                 out['login_url'] = auth.get_login_url(self.return_url)
-                out['logout_url'] = auth.get_logout_url(self._request.get_root_url())
+                out['logout_url'] = auth.get_logout_url(self._req.get_root_url())
             else:
                 out['login_url'] = None
                 out['logout_url'] = None
@@ -818,7 +766,7 @@ class CorpusActionModel(AuthActionModel):
         result[key] = {}
         for plg in plugins.runtime:
             if hasattr(plg.instance, 'export'):
-                result[key][plg.name] = plg.instance.export(self._plugin_ctx)
+                result[key][plg.name] = plg.instance.export(self.plugin_ctx)
 
     def add_globals(self, app, action_props, result):
         """
@@ -832,7 +780,7 @@ class CorpusActionModel(AuthActionModel):
         result['corpus_ident'] = {}
         result['Globals'] = {}
         result['base_attr'] = BaseActionModel.BASE_ATTR
-        result['root_url'] = self._request.get_root_url()
+        result['root_url'] = self._req.get_root_url()
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
@@ -859,7 +807,7 @@ class CorpusActionModel(AuthActionModel):
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
 
-        result['user_info'] = self._request.ctx.session.get('user', {'fullname': None})
+        result['user_info'] = self._req.ctx.session.get('user', {'fullname': None})
         result['_anonymous'] = self.user_is_anonymous()
         result['anonymous_user_conc_login_prompt'] = settings.get_bool(
             'global', 'anonymous_user_conc_login_prompt', False)
@@ -868,10 +816,10 @@ class CorpusActionModel(AuthActionModel):
 
         if plugins.runtime.APPLICATION_BAR.exists:
             application_bar = plugins.runtime.APPLICATION_BAR.instance
-            result['app_bar'] = application_bar.get_contents(plugin_ctx=self._plugin_ctx,
+            result['app_bar'] = application_bar.get_contents(plugin_ctx=self.plugin_ctx,
                                                              return_url=self.return_url)
-            result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self._plugin_ctx)
-            result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self._plugin_ctx)
+            result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self.plugin_ctx)
+            result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self.plugin_ctx)
         else:
             result['app_bar'] = None
             result['app_bar_css'] = []
@@ -880,7 +828,7 @@ class CorpusActionModel(AuthActionModel):
         result['footer_bar'] = None
         result['footer_bar_css'] = None
         with plugins.runtime.FOOTER_BAR as fb:
-            result['footer_bar'] = fb.get_contents(self._plugin_ctx, self.return_url)
+            result['footer_bar'] = fb.get_contents(self.plugin_ctx, self.return_url)
             result['footer_bar_css'] = fb.get_css_url()
 
         # updates result dict with javascript modules paths required by some of the optional plugins
@@ -907,7 +855,7 @@ class CorpusActionModel(AuthActionModel):
 
         with plugins.runtime.ISSUE_REPORTING as irp:
             result['issue_reporting_action'] = irp.export_report_action(
-                self._plugin_ctx).to_dict() if irp else None
+                self.plugin_ctx).to_dict() if irp else None
         page_model = action_props.page_model if action_props.page_model else l10n.camelize(action_props.action_name)
         result['page_model'] = page_model
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
@@ -928,7 +876,7 @@ class CorpusActionModel(AuthActionModel):
             disabled_items=self.disabled_menu_items,
             dynamic_items=self._dynamic_menu_items,
             corpus_dependent=result['uses_corp_instance'],
-            plugin_ctx=self._plugin_ctx)
+            plugin_ctx=self.plugin_ctx)
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.
@@ -986,14 +934,14 @@ class CorpusActionModel(AuthActionModel):
     def get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
         if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-                self._plugin_ctx, [self.args.corpname] + self.args.align):
+                self.plugin_ctx, [self.args.corpname] + self.args.align):
             corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
-                self._plugin_ctx, self.args.corpname)
+                self.plugin_ctx, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in tt_data:
                 bib_mapping = dict(
                     plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
-                        self._plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
+                        self.plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
         return bib_mapping
 
     def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
@@ -1039,8 +987,8 @@ class CorpusActionModel(AuthActionModel):
         Returns:
             (list of AsyncTaskStatus)
         """
-        if 'async_tasks' in self._request.ctx.session:
-            ans = [AsyncTaskStatus.from_dict(d) for d in self._request.ctx.session['async_tasks']]
+        if 'async_tasks' in self._req.ctx.session:
+            ans = [AsyncTaskStatus.from_dict(d) for d in self._req.ctx.session['async_tasks']]
         else:
             ans = []
         if category is not None:
@@ -1049,7 +997,7 @@ class CorpusActionModel(AuthActionModel):
             return ans
 
     def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
-        self._request.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
+        self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
 
     def _store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
         at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
@@ -1066,9 +1014,9 @@ class CorpusActionModel(AuthActionModel):
 
         possible types: pquery, conc, wlist
         """
-        curr = self._request.ctx.session.get('last_search', {})
+        curr = self._req.ctx.session.get('last_search', {})
         curr[op_type] = conc_id
-        self._request.ctx.session['last_search'] = curr
+        self._req.ctx.session['last_search'] = curr
 
     def mark_timeouted_tasks(self, *tasks):
         now = time.time()
@@ -1079,3 +1027,25 @@ class CorpusActionModel(AuthActionModel):
                 if not at.error:
                     at.error = 'task time limit exceeded'
 
+
+class CorpusPluginCtx(UserPluginCtx):
+
+    def __init__(self, action_model: CorpusActionModel, request: KRequest, response: KResponse):
+        super().__init__(action_model, request, response)
+        self._action_model = action_model
+
+    @property
+    def current_corpus(self) -> AbstractKCorpus:
+        return self._action_model.corp
+
+    @property
+    def aligned_corpora(self):
+        return self._action_model.args.align
+
+    @property
+    def available_aligned_corpora(self):
+        return self._action_model.get_available_aligned_corpora()
+
+    @property
+    def corpus_manager(self) -> corplib.CorpusManager:
+        return self._action_model.cm

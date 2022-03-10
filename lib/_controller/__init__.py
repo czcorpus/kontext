@@ -100,9 +100,6 @@ class Controller(ABC):
         self._uses_valid_sid: bool = True
         self._plugin_ctx: Optional[PluginCtx] = None  # must be implemented in a descendant
 
-    def set_respose_status(self, status: int):
-        self._response.set_http_status(status)
-
 
 
     @property  # for legacy reasons, we have to allow an access to the session via _session property

@@ -101,9 +101,9 @@ def http_action(
                 cookies_same_site=application.config['cookies_same_site']
             )
             if action_model:
-                amodel = action_model(req, aprops, application.ctx.tt_cache)
+                amodel = action_model(req, resp, aprops, application.ctx.tt_cache)
             else:
-                amodel = BaseActionModel(req, aprops, application.ctx.tt_cache)
+                amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
 
             try:
                 amodel.init_session()

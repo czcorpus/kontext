@@ -36,7 +36,7 @@ from action.argmapping.conc.query import QueryFormArgs
 from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
-from argmapping.conc import build_conc_form_args
+from action.argmapping.conc import build_conc_form_args
 from translation import ugettext as translate
 from controller import exposed
 from action.errors import NotFoundException
