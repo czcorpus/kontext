@@ -315,7 +315,7 @@ class ConcActionModel(CorpusActionModel):
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
-    def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
+    def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = [t for t in self.corp.get_structattrs() if t != '']
         with plugins.runtime.CORPARCH as ca:
@@ -330,7 +330,7 @@ class ConcActionModel(CorpusActionModel):
         It is called after an action is processed but before any output starts
         """
         result = super().add_globals(app, action_props, result)
-        result['structs_and_attrs'] = self._get_structs_and_attrs()
+        result['structs_and_attrs'] = self.get_structs_and_attrs()
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]
@@ -578,7 +578,7 @@ class ConcActionModel(CorpusActionModel):
         out['query_overview'] = self.concdesc_json()
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
-                self._human_readable_corpname(), out['query_overview'][0].get('nicearg'))
+                self.human_readable_corpname(), out['query_overview'][0].get('nicearg'))
 
 
 class ConcPluginCtx(CorpusPluginCtx):

@@ -57,7 +57,5 @@ class ManateeWideCtxBackend(AbstractBackend):
             data['expand_left_args'] = None
         if right_ctx >= int(data['maxdetail']):
             data['expand_right_args'] = None
-        # data['widectx_globals'] = self._get_mapped_attrs(WidectxArgsMapping,
-        #                                                 dict(structs=self._get_struct_opts()))
         data['features'] = self._conf['features']
         return data, True
