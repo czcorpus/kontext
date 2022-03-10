@@ -41,8 +41,11 @@ from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from action.argmapping.conc import build_conc_form_args
 from action.krequest import KRequest
-from action.model.corpus import CorpusActionModel
+from action.response import KResponse
+from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.errors import ImmediateRedirectException
+from action.model.concordance.linesel import LinesGroups
+from action.plugin.ctx import PluginCtx
 import settings
 
 
@@ -58,12 +61,29 @@ class ConcActionModel(CorpusActionModel):
     FREQ_QUICK_SAVE_MAX_LINES = 10000
     COLLS_QUICK_SAVE_MAX_LINES = 10000
 
-    def __init__(self, request: KRequest, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(request, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
+        super().__init__(req, resp, action_props, tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
+        # data of the current manual concordance line selection/categorization
+        self._lines_groups: LinesGroups = LinesGroups(data=[])
+        self._conc_dir: str = ''
+        self._plugin_ctx: Optional[PluginCtx] = None
+
+    @property
+    def plugin_ctx(self):
+        if self._plugin_ctx is None:
+            self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp)
+        return self._plugin_ctx
+
+    def _restore_prev_query_params(self, form):
+        super()._restore_prev_query_params(form)
+        url_q = form.getlist('q')[:]
+        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
+            if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
+                self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
 
     def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
-        curr = self._request.ctx.session.get('last_search', {})
+        curr = self._req.ctx.session.get('last_search', {})
         last_op = curr.get(query_type, None)
         if last_op:
             with plugins.runtime.QUERY_PERSISTENCE as qp:
@@ -82,7 +102,7 @@ class ConcActionModel(CorpusActionModel):
                         args += [('usesubcorp', prev_subcorp)]
 
                     if len(args) > 1:
-                        raise ImmediateRedirectException(self._request.create_url('query', args))
+                        raise ImmediateRedirectException(self._req.create_url('query', args))
 
                 if last_op_form:
                     if query_type == 'conc:filter':
@@ -559,3 +579,7 @@ class ConcActionModel(CorpusActionModel):
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
                 self._human_readable_corpname(), out['query_overview'][0].get('nicearg'))
+
+
+class ConcPluginCtx(CorpusPluginCtx):
+    pass

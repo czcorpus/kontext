@@ -41,7 +41,7 @@ import abc
 from typing import Optional, Dict, Any, List, Iterable, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from action.plugin.ctx import PluginCtx
+    from action.plugin.ctx import CorpusPluginCtx
 import l10n
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -78,7 +78,7 @@ class AbstractCorporaArchive(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_corpus_info(self, plugin_ctx: 'PluginCtx', corp_id: str) -> CorpusInfo:
+    def get_corpus_info(self, plugin_ctx: 'CorpusPluginCtx', corp_id: str) -> CorpusInfo:
         """
         Return a full available corpus information.
 
@@ -97,7 +97,7 @@ class AbstractCorporaArchive(abc.ABC):
         """
 
     def get_structattrs_info(
-            self, plugin_ctx: 'PluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
+            self, plugin_ctx: 'CorpusPluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
         """
         Return information for one or more structural attributes. Please note that it should always return
         at least 'name' and 'structure_name'. In case no 'label' is available, None should be used
@@ -114,7 +114,7 @@ class AbstractCorporaArchive(abc.ABC):
             ans.append(StructAttrInfo(structure_name=tmp[0], name=tmp[1]))
         return ans
 
-    def mod_corplist_menu(self, plugin_ctx: 'PluginCtx', menu_item):
+    def mod_corplist_menu(self, plugin_ctx: 'CorpusPluginCtx', menu_item):
         """
         The method allows the plug-in to customize main menu link from "Corpora -> Available corpora".
         """
@@ -133,7 +133,7 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
 
     @abc.abstractmethod
-    def get_all(self, plugin_ctx: 'PluginCtx'):
+    def get_all(self, plugin_ctx: 'CorpusPluginCtx'):
         """
         Return all the available corpora (user credentials can be accessed
         via plugin_ctx).
@@ -147,7 +147,7 @@ class CorplistProvider(abc.ABC):
 
     @abc.abstractmethod
     def search(
-            self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
+            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
             filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         arguments:
@@ -165,7 +165,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     """
 
     def search(
-            self, plugin_ctx: 'PluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
+            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
             filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Returns a subset of corplist matching provided query.
@@ -189,7 +189,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
                               filter_dict=filter_dict)
 
     @abc.abstractmethod
-    def create_corplist_provider(self, plugin_ctx: 'PluginCtx') -> CorplistProvider:
+    def create_corplist_provider(self, plugin_ctx: 'CorpusPluginCtx') -> CorplistProvider:
         """
         A factory function for a configured search service
 
@@ -201,13 +201,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
 
     @abc.abstractmethod
-    def initial_search_params(self, plugin_ctx: 'PluginCtx', query: str, args: Any) -> Dict[str, Any]:
+    def initial_search_params(self, plugin_ctx: 'CorpusPluginCtx', query: str, args: Any) -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
         """
 
-    def custom_filter(self, plugin_ctx: 'PluginCtx', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
+    def custom_filter(self, plugin_ctx: 'CorpusPluginCtx', corpus_list_item: Any, permitted_corpora: Dict[str, str]) -> bool:
         """
         An optional custom filter to exclude specific items from results.
 
@@ -227,7 +227,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         return CorpusInfo()
 
     @abc.abstractmethod
-    def export_favorite(self, plugin_ctx: 'PluginCtx', favitems: List[Any]):
+    def export_favorite(self, plugin_ctx: 'CorpusPluginCtx', favitems: List[Any]):
         """
         """
         pass
