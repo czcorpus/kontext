@@ -29,7 +29,7 @@ bp = Blueprint('default_query_suggest')
 
 @bp.route('/fetch_query_suggestions')
 @http_action(return_type='json', action_model=CorpusActionModel)
-def fetch_query_suggestions(req, amodel):
+async def fetch_query_suggestions(amodel, req, resp):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
