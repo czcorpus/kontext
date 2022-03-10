@@ -982,27 +982,7 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-    @exposed(access_level=0, action_log_mapper=log_mapping.widectx)
-    def widectx(self, request):
-        """
-        display a hit in a wider context
-        """
-        pos = int(request.args.get('pos', '0'))
-        p_attrs = self.args.attrs.split(',')
-        # prefer 'word' but allow other attr if word is off
-        attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
-        left_ctx = int(request.args.get('detail_left_ctx', 40))
-        right_ctx = int(request.args.get('detail_right_ctx', 40))
-        data = conclib.get_detail_context(
-            corp=self.corp, pos=pos, attrs=attrs, structs=self.args.structs, hitlen=self.args.hitlen,
-            detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
-        if left_ctx >= int(data['maxdetail']):
-            data['expand_left_args'] = None
-        if right_ctx >= int(data['maxdetail']):
-            data['expand_right_args'] = None
-        data['widectx_globals'] = self._get_mapped_attrs(WidectxArgsMapping,
-                                                         dict(structs=self._get_struct_opts()))
-        return data
+
 
     @exposed(access_level=0, return_type='json')
     def fullref(self, request):
@@ -1344,118 +1324,7 @@ class Actions(Querying):
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0)
             return dict(total=conc.fullsize() if conc else None)
 
-    @exposed(return_type='json', http_method='POST')
-    def ajax_switch_corpus(self, _):
-        self.disabled_menu_items = (
-            MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
-            MainMenu.VIEW('kwic-sent-switch'))
 
-        attrlist = self.corp.get_posattrs()
-        align_common_posattrs = set(attrlist)
-
-        avail_al_corp = []
-        for al in [x for x in self.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
-            alcorp = self.cm.get_corpus(al)
-            avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
-            if al in self.args.align:
-                align_common_posattrs.intersection_update(alcorp.get_posattrs())
-
-        tmp_out = dict(
-            uses_corp_instance=True,
-            corpname=self.args.corpname,
-            usesubcorp=self.args.usesubcorp,
-            undo_q=[]
-        )
-
-        tmp_out['AttrList'] = [{
-            'label': self.corp.get_conf(f'{n}.LABEL') or n,
-            'n': n,
-            'multisep': self.corp.get_conf(f'{n}.MULTISEP')
-        } for n in attrlist if n]
-
-        tmp_out['StructAttrList'] = [{'label': self.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
-                                     for n in self.corp.get_structattrs()
-                                     if n]
-        tmp_out['StructList'] = self.corp.get_structs()
-        sref = self.corp.get_conf('SHORTREF')
-        tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
-
-        if self.corp.get_conf('FREQTTATTRS'):
-            ttcrit_attrs = self.corp.get_conf('FREQTTATTRS')
-        else:
-            ttcrit_attrs = self.corp.get_conf('SUBCORPATTRS')
-        tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
-
-        self.add_conc_form_args(QueryFormArgs(plugin_ctx=self._plugin_ctx,
-                                              corpora=self._select_current_aligned_corpora(
-                                                  active_only=False),
-                                              persist=False))
-        self._attach_query_params(tmp_out)
-        self._attach_aligned_query_params(tmp_out)
-        self._export_subcorpora_list(self.args.corpname, self.args.usesubcorp, tmp_out)
-        corpus_info = self.get_corpus_info(self.args.corpname)
-        plg_status = {}
-        self._export_optional_plugins_conf(plg_status)
-        conc_args = self._get_mapped_attrs(ConcArgsMapping)
-        conc_args['q'] = []
-
-        poslist = []
-        for tagset in corpus_info.tagsets:
-            if tagset.ident == corpus_info.default_tagset:
-                poslist = tagset.pos_category
-                break
-        ans = dict(
-            corpname=self.args.corpname,
-            subcorpname=self.corp.subcname if self.corp.is_subcorpus else None,
-            baseAttr=Kontext.BASE_ATTR,
-            tagsets=[tagset.to_dict() for tagset in corpus_info.tagsets],
-            humanCorpname=self._human_readable_corpname(),
-            corpusIdent=dict(
-                id=self.args.corpname, name=self._human_readable_corpname(),
-                variant=self._corpus_variant,
-                usesubcorp=self.args.usesubcorp if self.args.usesubcorp else None,
-                origSubcorpName=getattr(self.corp, 'orig_subcname', self.args.usesubcorp),
-                foreignSubcorp=(self.corp.author_id is not None and
-                                self.session_get('user', 'id') != self.corp.author_id),
-                size=self.corp.size,
-                searchSize=self.corp.search_size),
-            currentArgs=conc_args,
-            concPersistenceOpId=None,
-            alignedCorpora=self.args.align,
-            availableAlignedCorpora=avail_al_corp,
-            activePlugins=plg_status['active_plugins'],
-            queryOverview=[],
-            numQueryOps=0,
-            textTypesData=self.tt.export_with_norms(ret_nums=True),
-            Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
-            AttrList=tmp_out['AttrList'],
-            AlignCommonPosAttrs=list(align_common_posattrs),
-            StructAttrList=tmp_out['StructAttrList'],
-            StructList=tmp_out['StructList'],
-            InputLanguages=tmp_out['input_languages'],
-            ConcFormsArgs=tmp_out['conc_forms_args'],
-            CurrentSubcorp=self.args.usesubcorp,
-            SubcorpList=tmp_out['SubcorpList'],
-            TextTypesNotes=corpus_info.metadata.desc,
-            TextDirectionRTL=True if self.corp.get_conf('RIGHTTOLEFT') else False,
-            structsAndAttrs=self._get_structs_and_attrs(),
-            DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
-            SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
-            QSEnabled=self.args.qs_enabled,
-        )
-        self._attach_plugin_exports(ans, direct=True)
-        self._configure_auth_urls(ans)
-
-        def rtrn():
-            ans['menuData'] = generate_main_menu(
-                tpl_data=tmp_out,
-                args=self.args,
-                disabled_items=self.disabled_menu_items,
-                dynamic_items=self._dynamic_menu_items,
-                corpus_dependent=tmp_out['uses_corp_instance'],
-                plugin_ctx=self._plugin_ctx)
-            return ans
-        return rtrn
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, _):

@@ -64,9 +64,10 @@ class KRequest:
     getting correct root URL, obtaining required action name etc.
     """
 
-    def __init__(self, request: Request, action_props: ActionProps):
+    def __init__(self, request: Request, action_props: ActionProps, app_prefix: str):
         self._request = request
         self._action_props = action_props
+        self._app_prefix = app_prefix if app_prefix else ''
         self._ui_lang = _get_lang(request, action_props.installed_langs)
 
     @property
@@ -168,7 +169,7 @@ class KRequest:
         """
         host_items = self._request.host.split(':')
         port_str = f':{host_items[1]}' if len(host_items) > 1 else ''
-        return f'{self._request.scheme}://{host_items[0]}{port_str}/{self._action_props.action_prefix}'
+        return f'{self._request.scheme}://{host_items[0]}{port_str}{self._app_prefix}/{self._action_props.action_prefix}'
 
     def updated_current_url(self, params: Dict[str, Any]) -> str:
         """

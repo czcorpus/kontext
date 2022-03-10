@@ -120,6 +120,10 @@ class CorpusActionModel(UserActionModel):
             self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp)
         return self._plugin_ctx
 
+    @property
+    def corpus_variant(self):
+        return self._corpus_variant
+
     # TODO move to a more specific req_context object
     def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
@@ -419,8 +423,6 @@ class CorpusActionModel(UserActionModel):
                 # than the main corpus has
                 if not al_access or al_variant != variant:
                     raise AlignedCorpusForbiddenException(al_corp, al_variant)
-            print('_check_corpus_access ActionProps: {}'.format(action_props))
-            print(f'corpname: {corpname}, redirect: {redirect}')
             return corpname, variant
 
     def pre_dispatch(self, req_args):
@@ -633,7 +635,7 @@ class CorpusActionModel(UserActionModel):
         """
         result['corpname'] = getattr(self.args, 'corpname')
         result['align'] = getattr(self.args, 'align')
-        result['human_corpname'] = self._human_readable_corpname()
+        result['human_corpname'] = self.human_readable_corpname()
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size
@@ -644,7 +646,7 @@ class CorpusActionModel(UserActionModel):
         result['corpus_ident'] = dict(
             id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
-            name=self._human_readable_corpname(),
+            name=self.human_readable_corpname(),
             usesubcorp=self.args.usesubcorp,
             origSubcorpName=self.corp.orig_subcname,
             foreignSubcorp=self.corp.author_id is not None and self.session_get(
@@ -698,7 +700,7 @@ class CorpusActionModel(UserActionModel):
                 break
         result['Wposlist'] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
 
-    def _export_optional_plugins_conf(self, result):
+    def export_optional_plugins_conf(self, result):
         """
         Updates result dict with JavaScript module paths required to
         run client-side parts of some optional plugins. Template document.tmpl
@@ -747,7 +749,7 @@ class CorpusActionModel(UserActionModel):
                 ans[attr] = [v for v in v_tmp]
         return ans
 
-    def _configure_auth_urls(self, out):
+    def configure_auth_urls(self, out):
         with plugins.runtime.AUTH as auth:
             if plugins.runtime.AUTH.exists and isinstance(auth, AbstractInternalAuth):
                 out['login_url'] = auth.get_login_url(self.return_url)
@@ -756,7 +758,7 @@ class CorpusActionModel(UserActionModel):
                 out['login_url'] = None
                 out['logout_url'] = None
 
-    def _attach_plugin_exports(self, result, direct):
+    def attach_plugin_exports(self, result, direct):
         """
         Method exports plug-ins' specific data for their respective client parts.
         KonText core does not care about particular formats - it just passes JSON-encoded
@@ -812,7 +814,7 @@ class CorpusActionModel(UserActionModel):
         result['anonymous_user_conc_login_prompt'] = settings.get_bool(
             'global', 'anonymous_user_conc_login_prompt', False)
 
-        self._configure_auth_urls(result)
+        self.configure_auth_urls(result)
 
         if plugins.runtime.APPLICATION_BAR.exists:
             application_bar = plugins.runtime.APPLICATION_BAR.instance
@@ -832,7 +834,7 @@ class CorpusActionModel(UserActionModel):
             result['footer_bar_css'] = fb.get_css_url()
 
         # updates result dict with javascript modules paths required by some of the optional plugins
-        self._export_optional_plugins_conf(result)
+        self.export_optional_plugins_conf(result)
 
         avail_languages = settings.get_full('global', 'translations')
         ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
@@ -864,7 +866,7 @@ class CorpusActionModel(UserActionModel):
         result['conc_url_ttl_days'] = plugins.runtime.QUERY_PERSISTENCE.instance.get_conc_ttl_days(
             self.session_get('user', 'id'))
 
-        self._attach_plugin_exports(result, direct=False)
+        self.attach_plugin_exports(result, direct=False)
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
@@ -900,7 +902,7 @@ class CorpusActionModel(UserActionModel):
 
         return result
 
-    def _human_readable_corpname(self):
+    def human_readable_corpname(self):
         """
         Returns an user-readable name of the current corpus (i.e. it cannot be used
         to identify the corpus in KonText's code as it is only intended to be printed

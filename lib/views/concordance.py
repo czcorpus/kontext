@@ -20,7 +20,7 @@ from conclib.errors import (
 from conclib.empty import InitialConc
 from kwiclib import KwicPageArgs, Kwic
 import plugins
-from main_menu import MainMenu
+from main_menu import MainMenu, generate_main_menu
 import settings
 
 
@@ -259,3 +259,144 @@ async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
         return op_data.to_dict()
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
         raise NotFoundException(ugettext('Query information not stored: {}').format(ex))
+
+
+@bp.route('/widectx')
+@http_action(access_level=0, action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
+async def widectx(amodel, req, resp):
+    """
+    display a hit in a wider context
+    """
+    pos = int(req.args.get('pos', '0'))
+    p_attrs = amodel.args.attrs.split(',')
+    # prefer 'word' but allow other attr if word is off
+    attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
+    left_ctx = int(req.args.get('detail_left_ctx', 40))
+    right_ctx = int(req.args.get('detail_right_ctx', 40))
+    data = conclib.get_detail_context(
+        corp=amodel.corp, pos=pos, attrs=attrs, structs=amodel.args.structs, hitlen=amodel.args.hitlen,
+        detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
+    if left_ctx >= int(data['maxdetail']):
+        data['expand_left_args'] = None
+    if right_ctx >= int(data['maxdetail']):
+        data['expand_right_args'] = None
+    data['widectx_globals'] = amodel.get_mapped_attrs(
+        WidectxArgsMapping, dict(structs=amodel.get_struct_opts()))
+    return data
+
+
+@bp.route('/ajax_switch_corpus', methods=['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_switch_corpus(amodel, req, resp):
+    amodel.disabled_menu_items = (
+        MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
+        MainMenu.VIEW('kwic-sent-switch'))
+
+    attrlist = amodel.corp.get_posattrs()
+    align_common_posattrs = set(attrlist)
+
+    avail_al_corp = []
+    for al in [x for x in amodel.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
+        alcorp = amodel.cm.get_corpus(al)
+        avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+        if al in amodel.args.align:
+            align_common_posattrs.intersection_update(alcorp.get_posattrs())
+
+    tmp_out = dict(
+        uses_corp_instance=True,
+        corpname=amodel.args.corpname,
+        usesubcorp=amodel.args.usesubcorp,
+        undo_q=[]
+    )
+
+    tmp_out['AttrList'] = [{
+        'label': amodel.corp.get_conf(f'{n}.LABEL') or n,
+        'n': n,
+        'multisep': amodel.corp.get_conf(f'{n}.MULTISEP')
+    } for n in attrlist if n]
+
+    tmp_out['StructAttrList'] = [{'label': amodel.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
+                                 for n in amodel.corp.get_structattrs()
+                                 if n]
+    tmp_out['StructList'] = amodel.corp.get_structs()
+    sref = amodel.corp.get_conf('SHORTREF')
+    tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
+
+    if amodel.corp.get_conf('FREQTTATTRS'):
+        ttcrit_attrs = amodel.corp.get_conf('FREQTTATTRS')
+    else:
+        ttcrit_attrs = amodel.corp.get_conf('SUBCORPATTRS')
+    tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
+
+    amodel.add_conc_form_args(
+        QueryFormArgs(
+            plugin_ctx=amodel.plugin_ctx,
+            corpora=amodel.select_current_aligned_corpora(
+                active_only=False),
+            persist=False))
+    amodel.attach_query_params(tmp_out)
+    amodel.attach_aligned_query_params(tmp_out)
+    amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
+    corpus_info = amodel.get_corpus_info(amodel.args.corpname)
+    plg_status = {}
+    amodel.export_optional_plugins_conf(plg_status)
+    conc_args = amodel.get_mapped_attrs(ConcArgsMapping)
+    conc_args['q'] = []
+
+    poslist = []
+    for tagset in corpus_info.tagsets:
+        if tagset.ident == corpus_info.default_tagset:
+            poslist = tagset.pos_category
+            break
+    ans = dict(
+        corpname=amodel.args.corpname,
+        subcorpname=amodel.corp.subcname if amodel.corp.is_subcorpus else None,
+        baseAttr=amodel.BASE_ATTR,
+        tagsets=[tagset.to_dict() for tagset in corpus_info.tagsets],
+        humanCorpname=amodel.human_readable_corpname(),
+        corpusIdent=dict(
+            id=amodel.args.corpname, name=amodel.human_readable_corpname(),
+            variant=amodel.corpus_variant,
+            usesubcorp=amodel.args.usesubcorp if amodel.args.usesubcorp else None,
+            origSubcorpName=amodel.corp.orig_subcname,
+            foreignSubcorp=(amodel.corp.author_id is not None and
+                            amodel.session_get('user', 'id') != amodel.corp.author_id),
+            size=amodel.corp.size,
+            searchSize=amodel.corp.search_size),
+        currentArgs=conc_args,
+        concPersistenceOpId=None,
+        alignedCorpora=amodel.args.align,
+        availableAlignedCorpora=avail_al_corp,
+        activePlugins=plg_status['active_plugins'],
+        queryOverview=[],
+        numQueryOps=0,
+        textTypesData=amodel.tt.export_with_norms(ret_nums=True),
+        Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
+        AttrList=tmp_out['AttrList'],
+        AlignCommonPosAttrs=list(align_common_posattrs),
+        StructAttrList=tmp_out['StructAttrList'],
+        StructList=tmp_out['StructList'],
+        InputLanguages=tmp_out['input_languages'],
+        ConcFormsArgs=tmp_out['conc_forms_args'],
+        CurrentSubcorp=amodel.args.usesubcorp,
+        SubcorpList=tmp_out['SubcorpList'],
+        TextTypesNotes=corpus_info.metadata.desc,
+        TextDirectionRTL=True if amodel.corp.get_conf('RIGHTTOLEFT') else False,
+        structsAndAttrs=amodel.get_structs_and_attrs(),
+        DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
+        SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
+        QSEnabled=amodel.args.qs_enabled,
+    )
+    amodel.attach_plugin_exports(ans, direct=True)
+    amodel.configure_auth_urls(ans)
+
+    def rtrn():
+        ans['menuData'] = generate_main_menu(
+            tpl_data=tmp_out,
+            args=amodel.args,
+            disabled_items=amodel.disabled_menu_items,
+            dynamic_items=amodel.dynamic_menu_items,
+            corpus_dependent=tmp_out['uses_corp_instance'],
+            plugin_ctx=amodel.plugin_ctx)
+        return ans
+    return rtrn

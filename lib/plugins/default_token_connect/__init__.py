@@ -50,7 +50,7 @@ bp = Blueprint('default_token_connect')
 
 @bp.route('/fetch_token_detail')
 @http_action(return_type='json', action_model=ConcActionModel)
-def fetch_token_detail(self, request):
+async def fetch_token_detail(self, request):
     """
     This is a controller action used by client to obtain
     data for a token. Token is identified by its position id
