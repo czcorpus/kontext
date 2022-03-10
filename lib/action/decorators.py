@@ -32,6 +32,7 @@ def _output_result(
     'plain' + str
     A callable 'result' can be used for lazy result evaluation or for JSON encoding with a custom encoder
     """
+
     if 300 <= status < 400 or result is None:
         return ''
     if callable(result):
@@ -94,7 +95,7 @@ def http_action(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
                 return_type=return_type, page_model=page_model, installed_langs=application.ctx.installed_langs,
                 mutates_result=mutates_result)
-            req = KRequest(request, aprops)
+            req = KRequest(request, aprops, app_url_prefix)
             resp = KResponse(
                 root_url=req.get_root_url(),
                 redirect_safe_domains=application.config['redirect_safe_domains'],
@@ -119,7 +120,7 @@ def http_action(
                         template=template,
                         result=ans,
                         status=resp.http_status_code,
-                        return_type=return_type),
+                        return_type=aprops.return_type),
                     status=resp.http_status_code,
                     headers=resp.output_headers(return_type))
             except ImmediateRedirectException as ex:
