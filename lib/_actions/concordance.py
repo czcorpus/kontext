@@ -442,7 +442,7 @@ class Actions(Querying):
 
                 out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
                 out.update(kwic.kwicpage(kwic_args))
-                out.update(self.get_conc_sizes(conc))
+                out.update(await self.get_conc_sizes(conc))
                 if request.args.get('next') == 'freqs':
                     out['next_action'] = 'freqs'
                     out['next_action_args'] = {
