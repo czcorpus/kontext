@@ -3,16 +3,16 @@ from typing import Callable
 from .templating import TplEngine
 from texttypes.model import TextTypesCache
 import plugins
-from action.cookie import KonTextCookie
-from sanic.request import Request
 
 
 class ApplicationContext:
 
     def __init__(self, templating: TplEngine, tt_cache: Callable[[], TextTypesCache]):
         self._templating = templating
-        self._installed_langs = dict(
-            [(x.split('_')[0], x) for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))])
+        self._installed_langs = {
+            x.split('_')[0]: x
+            for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))
+        }
         self._tt_cache = None
         self._tt_cache_factory = tt_cache
         self.redis = None  # TODO TYPE

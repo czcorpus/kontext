@@ -20,42 +20,7 @@ from typing import Dict, Any, Tuple, Union, List
 from sanic.request import Request
 from urllib.parse import quote
 from plugin_types.auth import UserInfo
-from action.cookie import KonTextCookie
-import plugins
-from werkzeug.http import parse_accept_header
-
 from action import ActionProps
-
-
-def _get_lang(request: Request, installed_langs):
-    """
-    Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
-
-    arguments:
-    environ -- WSGI environment variable
-
-    returns:
-    underscore-separated ISO 639 language code and ISO 3166 country code
-    """
-    cookies = KonTextCookie(request.headers.get('cookie', ''))
-
-    if plugins.runtime.GETLANG.exists:
-        lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
-    else:
-        lang_cookie = cookies.get('kontext_ui_lang')
-        if not lang_cookie:
-            lgs_string = parse_accept_header(request.headers.get('accept-language')).best
-        else:
-            lgs_string = lang_cookie.value
-        if lgs_string is None:
-            lgs_string = 'en_US'
-        if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
-            lgs_string = installed_langs.get(lgs_string)
-        else:
-            lgs_string = lgs_string.replace('-', '_')
-    if lgs_string is None:
-        lgs_string = 'en_US'
-    return lgs_string
 
 
 class KRequest:
@@ -68,7 +33,6 @@ class KRequest:
         self._request = request
         self._action_props = action_props
         self._app_prefix = app_prefix if app_prefix else ''
-        self._ui_lang = _get_lang(request, action_props.installed_langs)
 
     @property
     def unwrapped(self):
@@ -103,10 +67,6 @@ class KRequest:
     @property
     def headers(self):
         return self._request.headers
-
-    @property
-    def ui_lang(self):
-        return self._ui_lang
 
     @property
     def session(self):

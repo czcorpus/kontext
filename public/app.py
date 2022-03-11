@@ -53,6 +53,7 @@ from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
+from action.cookie import KonTextCookie
 
 
 # we ensure that the application's locale is always the same
@@ -179,11 +180,11 @@ if settings.get('global', 'umask', None):
 
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
-application = Sanic(
-        'kontext',
-        ctx=ApplicationContext(
-            templating=TplEngine(settings),
-            tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance)))
+application = Sanic('kontext')
+application.ctx = ApplicationContext(
+    templating=TplEngine(settings),
+    tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance),
+)
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
@@ -205,11 +206,52 @@ async def server_init(app, loop):
 
 @application.middleware('request')
 async def extract_user(request):
-    request.ctx.user_info = UserInfo(id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
+    request.ctx.user_info = UserInfo(
+        id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
+
+
+babel = Babel(application, configure_jinja=False)
+
+
+@babel.localeselector
+def get_locale(request):
+    """
+    Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
+
+    arguments:
+    environ -- WSGI environment variable
+
+    returns:
+    underscore-separated ISO 639 language code and ISO 3166 country code
+    """
+    cookies = KonTextCookie(request.headers.get('cookie', ''))
+
+    if plugins.runtime.GETLANG.exists:
+        lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
+    else:
+        lang_cookie = cookies.get('kontext_ui_lang')
+        if not lang_cookie:
+            langs = request.headers.get('accept-language')
+            if langs:
+                lgs_string = langs.split(';')[0].split(',')[0].replace('-', '_')
+            else:
+                lgs_string = None
+        else:
+            lgs_string = lang_cookie.value
+        if lgs_string is None:
+            lgs_string = 'en_US'
+        if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
+            lgs_string = request.ctx.installed_langs.get(
+                lgs_string)  # TODO replace by application ctx?
+        else:
+            lgs_string = lgs_string.replace('-', '_')
+    if lgs_string is None:
+        lgs_string = 'en_US'
+    return lgs_string
 
 
 #robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
-#if os.path.isfile(robots_path):
+# if os.path.isfile(robots_path):
 #    from werkzeug.wsgi import SharedDataMiddleware
 #    application = SharedDataMiddleware(application, {
 #        '/robots.txt': robots_path
@@ -243,4 +285,5 @@ if __name__ == '__main__':
 
     if args.debugmode and not settings.is_debug_mode():
         settings.activate_debug()
-    application.run(host=args.address, port=int(args.port_num), workers=2, debug=settings.is_debug_mode())
+    application.run(host=args.address, port=int(args.port_num),
+                    workers=2, debug=settings.is_debug_mode())
