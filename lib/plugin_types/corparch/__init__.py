@@ -78,7 +78,7 @@ class AbstractCorporaArchive(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_corpus_info(self, plugin_ctx: 'CorpusPluginCtx', corp_id: str) -> CorpusInfo:
+    async def get_corpus_info(self, plugin_ctx: 'CorpusPluginCtx', corp_id: str) -> CorpusInfo:
         """
         Return a full available corpus information.
 
@@ -96,7 +96,7 @@ class AbstractCorporaArchive(abc.ABC):
         metadata} where metadata is a dict with keys {database, label_attr, id_attr, desc, keywords}.
         """
 
-    def get_structattrs_info(
+    async def get_structattrs_info(
             self, plugin_ctx: 'CorpusPluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
         """
         Return information for one or more structural attributes. Please note that it should always return
@@ -146,7 +146,7 @@ class CorplistProvider(abc.ABC):
     """
 
     @abc.abstractmethod
-    def search(
+    async def search(
             self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
             filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -201,7 +201,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
 
     @abc.abstractmethod
-    def initial_search_params(self, plugin_ctx: 'CorpusPluginCtx', query: str, args: Any) -> Dict[str, Any]:
+    async def initial_search_params(self, plugin_ctx: 'CorpusPluginCtx', query: str, args: Any) -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
@@ -227,7 +227,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         return CorpusInfo()
 
     @abc.abstractmethod
-    def export_favorite(self, plugin_ctx: 'CorpusPluginCtx', favitems: List[Any]):
+    async def export_favorite(self, plugin_ctx: 'CorpusPluginCtx', favitems: List[Any]):
         """
         """
         pass

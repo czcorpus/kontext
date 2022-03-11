@@ -63,17 +63,17 @@ class TokenAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id: int) -> bool:
         return False
 
-    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
-        corpora = self._get_permitted_corpora(user_dict)
+    async def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
+        corpora = await self._get_permitted_corpora(user_dict)
         if corpus_id not in corpora:
             return CorpusAccess(False, False, '')
         return CorpusAccess(False, True, '')
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    async def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
             return []
         else:
-            return self._get_permitted_corpora(user_dict)
+            return await self._get_permitted_corpora(user_dict)
 
     def get_user_info(self, plugin_ctx: PluginCtx) -> UserInfo:
         return plugin_ctx.session['user']
@@ -87,12 +87,12 @@ class TokenAuth(AbstractRemoteAuth):
             return plugin_ctx.get_from_environ(key)
         return None
 
-    def revalidate(self, plugin_ctx: PluginCtx):
+    async def revalidate(self, plugin_ctx: PluginCtx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_ctx)
         if api_key:
             hash_key = hashlib.sha256(api_key.encode()).hexdigest()
-            user_info = self._find_user(hash_key)
+            user_info = await self._find_user(hash_key)
             if self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
             if user_info is None:
@@ -104,7 +104,7 @@ class TokenAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = self.anonymous_user()
 
-    def _find_user(self, api_key: str) -> Optional[UserInfo]:
+    async def _find_user(self, api_key: str) -> Optional[UserInfo]:
         with self._db.cursor() as cursor:
             cursor.execute('''
                 SELECT t_token.user_id AS id, t_user.username, t_user.email,
@@ -125,7 +125,7 @@ class TokenAuth(AbstractRemoteAuth):
                 email=data['email'],
                 api_key=api_key)
 
-    def _get_permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    async def _get_permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         with self._db.cursor() as cursor:
             cursor.execute('''
                 SELECT GROUP_CONCAT(corpus_name SEPARATOR ',') AS corpora

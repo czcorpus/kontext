@@ -62,6 +62,7 @@ import mailing
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugin_types.conc_cache import ConcCacheStatusException
+from util import as_async
 
 
 class Actions(Querying):
@@ -106,6 +107,7 @@ class Actions(Querying):
         else:
             return None
 
+    @as_async
     def add_globals(self, request, result, methodname, action_metadata):
         super().add_globals(request, result, methodname, action_metadata)
         conc_args = self._get_mapped_attrs(ConcArgsMapping)
@@ -517,7 +519,7 @@ class Actions(Querying):
         except ConcNotFoundException:
             self._go_to_restore_conc('freqs')
 
-    def _freqs(
+    async def _freqs(
             self, fcrit: Tuple[str, ...], fcrit_async: Tuple[str, ...], flimit: int, freq_sort: str,
             force_cache: int):
 
@@ -684,7 +686,7 @@ class Actions(Querying):
         result['coll_form_args'] = CollFormArgs().update(self.args).to_dict()
         result['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
         result['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
-        result['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
+        result['text_types_data'] = await self.tt.export_with_norms(ret_nums=True)
         result['quick_save_row_limit'] = self.FREQ_QUICK_SAVE_MAX_LINES
         self._attach_query_params(result)
         self._attach_query_overview(result)
@@ -806,7 +808,7 @@ class Actions(Querying):
         except ConcNotFoundException:
             self._go_to_restore_conc('freqct')
 
-    def _freqct(self, request):
+    async def _freqct(self, request):
         args = freq_calc.Freq2DCalcArgs(
             corpname=self.corp.corpname,
             subcname=getattr(self.corp, 'subcname', None),
@@ -832,7 +834,7 @@ class Actions(Querying):
             coll_form_args=CollFormArgs().update(self.args).to_dict(),
             ctfreq_form_args=CTFreqFormArgs().update(self.args).to_dict()
         )
-        ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
+        ans['text_types_data'] = await self.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = 0
         self._attach_query_params(ans)
         return ans
@@ -858,7 +860,7 @@ class Actions(Querying):
         return exporter.raw_content()
 
     @exposed(access_level=1, page_model='coll')
-    def collx(self, request):
+    async def collx(self, request):
         """
         list collocations
         """
@@ -886,7 +888,7 @@ class Actions(Querying):
             ans['freq_form_args'] = FreqFormArgs().update(self.args).to_dict()
             ans['ctfreq_form_args'] = CTFreqFormArgs().update(self.args).to_dict()
             ans['save_line_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
-            ans['text_types_data'] = self.tt.export_with_norms(ret_nums=True)
+            ans['text_types_data'] = await self.tt.export_with_norms(ret_nums=True)
             ans['quick_save_row_limit'] = self.COLLS_QUICK_SAVE_MAX_LINES
             self._attach_query_overview(ans)
             return ans

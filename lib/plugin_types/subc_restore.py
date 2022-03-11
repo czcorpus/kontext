@@ -51,7 +51,7 @@ class SubcRestoreRow:
 class AbstractSubcRestore(abc.ABC):
 
     @abc.abstractmethod
-    def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
+    async def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
         """
         Store user's subcorpus query. Please note that the method should
         also:
@@ -68,7 +68,7 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_query(self, user_id: int, corpname: str, subcname: str):
+    async def delete_query(self, user_id: int, corpname: str, subcname: str):
         """
         Remove a query from archive
 
@@ -82,7 +82,7 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def list_queries(self, user_id: int, from_idx: int, to_idx: int) -> List[SubcRestoreRow]:
+    async def list_queries(self, user_id: int, from_idx: int, to_idx: int) -> List[SubcRestoreRow]:
         """
         List all user subcorpus queries from index from_idx to index to_idx
         (including both ends). The method is not expected to support negative
@@ -99,13 +99,13 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
+    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
         """
         Returns an information about the most recent record matching provided arguments
         """
 
     @abc.abstractmethod
-    def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
+    async def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
         """
         Returns a query with ID == query_id
 
@@ -115,5 +115,5 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: int, include_cql: bool=False) -> List[Dict[str, Any]]:
+    async def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: int, include_cql: bool=False) -> List[Dict[str, Any]]:
         pass

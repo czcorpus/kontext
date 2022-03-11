@@ -152,7 +152,7 @@ class WriteBackend(DatabaseWriteBackend):
                 cursor.execute('INSERT INTO corpus_structure (corpus_name, name) VALUES (%s, %s)',
                                (corpus_id, name))
 
-    def save_corpus_config(self, install_json, registry_conf, corp_size):
+    async def save_corpus_config(self, install_json, registry_conf, corp_size):
         t1 = datetime.datetime.now(
             tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
         cursor = self._db.cursor()
@@ -200,7 +200,7 @@ class WriteBackend(DatabaseWriteBackend):
                 self.attach_corpus_article(install_json.ident, article_id, art_type)
 
         # keywords
-        avail_keywords = set(x['id'] for x in self._ro_backend.load_all_keywords())
+        avail_keywords = set(x['id'] for x in await self._ro_backend.load_all_keywords())
         for k in install_json.metadata.keywords:
             if k in avail_keywords:
                 vals4 = (install_json.ident, k)

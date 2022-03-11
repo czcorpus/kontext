@@ -244,7 +244,7 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
-    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
         external_keywords = filter_dict.getlist('keyword')
         external_keywords = self._corparch.map_external_keywords(plugin_ctx, external_keywords)
         if len(external_keywords) != 0:
@@ -303,7 +303,7 @@ class DefaultCorplistProvider(CorplistProvider):
         used_keywords = set()
 
         for corp in self._corparch.get_list(plugin_ctx):
-            full_data = self._corparch.get_corpus_info(plugin_ctx, corp['id'])
+            full_data = await self._corparch.get_corpus_info(plugin_ctx, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k, _ in full_data.metadata.keywords]
                 tests = []
@@ -686,15 +686,14 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
         return ans
 
-    def get_corpus_info(self, plugin_ctx, corp_name):
+    async def get_corpus_info(self, plugin_ctx, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
             if corp_name in self._raw_list(plugin_ctx):
                 if plugin_ctx.user_lang is not None:
-                    ans = self._localize_corpus_info(plugin_ctx,
-                                                     self._raw_list(plugin_ctx)[corp_name],
-                                                     lang_code=plugin_ctx.user_lang)
+                    ans = await self._localize_corpus_info(
+                        plugin_ctx, self._raw_list(plugin_ctx)[corp_name], lang_code=plugin_ctx.user_lang)
                 else:
                     ans = self._raw_list(plugin_ctx)[corp_name]
                 ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
@@ -762,7 +761,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.append(tmp)
         return ans
 
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         initial_keywords = plugin_ctx.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
         external_keywords = plugin_ctx.request.args.getlist('keyword')
         mapped_external_keywords = self.map_external_keywords(plugin_ctx, external_keywords)
@@ -773,15 +772,15 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),
             featured=self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
-                            for k, lab in self.all_keywords(plugin_ctx)],
+                            for k, lab in await self.all_keywords(plugin_ctx)],
             initial_keywords=initial_keywords,
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints
         )
 
-    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
+    async def initial_search_params(self, plugin_ctx, query, filter_dict=None):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        all_keywords = self.all_keywords(plugin_ctx)
+        all_keywords = await self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
         return {

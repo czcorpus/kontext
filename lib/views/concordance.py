@@ -34,22 +34,22 @@ async def query(action_model, req, resp):
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
     out = {'aligned_corpora': action_model.args.align}
-    tt_data = action_model.tt.export_with_norms(ret_nums=True)
+    tt_data = await action_model.tt.export_with_norms(ret_nums=True)
     out['Normslist'] = tt_data['Normslist']
     out['text_types_data'] = tt_data
 
-    corp_info = action_model.get_corpus_info(action_model.args.corpname)
+    corp_info = await action_model.get_corpus_info(action_model.args.corpname)
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-    qf_args = action_model.fetch_prev_query('conc') if action_model._active_q_data is None else None
+    qf_args = await action_model.fetch_prev_query('conc') if action_model._active_q_data is None else None
     if qf_args is None:
-        qf_args = QueryFormArgs(
+        qf_args = await QueryFormArgs.create(
             plugin_ctx=action_model.plugin_ctx,
             corpora=[action_model.args.corpname] + action_model.args.align,
             persist=False)
     action_model.add_conc_form_args(qf_args)
-    action_model.attach_query_params(out)
+    await action_model.attach_query_params(out)
     action_model.attach_aligned_query_params(out)
     action_model.export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
     return out
@@ -68,8 +68,8 @@ async def query_submit(amodel, req, resp):
     ans = {}
     # 1) store query forms arguments for later reuse on client-side
     corpora = amodel.select_current_aligned_corpora(active_only=True)
-    corpus_info = amodel.get_corpus_info(corpora[0])
-    qinfo = QueryFormArgs(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
+    corpus_info = await amodel.get_corpus_info(corpora[0])
+    qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
     qinfo.update_by_user_query(
         req.json, amodel.get_tt_bib_mapping(req.json['text_types']))
     amodel.add_conc_form_args(qinfo)
@@ -111,7 +111,7 @@ async def view(amodel, req, resp):
     """
     KWIC view
     """
-    corpus_info = amodel.get_corpus_info(amodel.args.corpname)
+    corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if amodel.args.refs is None:  # user did not set this at all (!= user explicitly set '')
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
 
@@ -215,17 +215,17 @@ async def view(amodel, req, resp):
     out['struct_ctx'] = amodel.corp.get_conf('STRUCTCTX')
 
     # query form data
-    out['text_types_data'] = amodel.tt.export_with_norms(ret_nums=True)
-    qf_args = amodel.fetch_prev_query('conc:filter')
+    out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
+    qf_args = await amodel.fetch_prev_query('conc:filter')
     if qf_args and qf_args.data.maincorp != amodel.args.corpname:
         qf_args = None
-    amodel.attach_query_params(out, filter=qf_args)
+    await amodel.attach_query_params(out, filter=qf_args)
     out['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
     out['freq_form_args'] = FreqFormArgs().update(amodel.args).to_dict()
     out['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
     amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
 
-    out['fast_adhoc_ipm'] = plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+    out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
     out['running_calc'] = not out['finished']   # TODO running_calc is redundant
     out['chart_export_formats'] = []
@@ -330,15 +330,15 @@ async def ajax_switch_corpus(amodel, req, resp):
     tmp_out['ttcrit'] = [f'{a} 0' for a in ttcrit_attrs.replace('|', ',').split(',') if a]
 
     amodel.add_conc_form_args(
-        QueryFormArgs(
+        await QueryFormArgs.create(
             plugin_ctx=amodel.plugin_ctx,
             corpora=amodel.select_current_aligned_corpora(
                 active_only=False),
             persist=False))
-    amodel.attach_query_params(tmp_out)
+    await amodel.attach_query_params(tmp_out)
     amodel.attach_aligned_query_params(tmp_out)
     amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
-    corpus_info = amodel.get_corpus_info(amodel.args.corpname)
+    corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     plg_status = {}
     amodel.export_optional_plugins_conf(plg_status)
     conc_args = amodel.get_mapped_attrs(ConcArgsMapping)
@@ -371,7 +371,7 @@ async def ajax_switch_corpus(amodel, req, resp):
         activePlugins=plg_status['active_plugins'],
         queryOverview=[],
         numQueryOps=0,
-        textTypesData=amodel.tt.export_with_norms(ret_nums=True),
+        textTypesData=await amodel.tt.export_with_norms(ret_nums=True),
         Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
         AttrList=tmp_out['AttrList'],
         AlignCommonPosAttrs=list(align_common_posattrs),
@@ -383,12 +383,12 @@ async def ajax_switch_corpus(amodel, req, resp):
         SubcorpList=tmp_out['SubcorpList'],
         TextTypesNotes=corpus_info.metadata.desc,
         TextDirectionRTL=True if amodel.corp.get_conf('RIGHTTOLEFT') else False,
-        structsAndAttrs=amodel.get_structs_and_attrs(),
+        structsAndAttrs=await amodel.get_structs_and_attrs(),
         DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
     )
-    amodel.attach_plugin_exports(ans, direct=True)
+    await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)
 
     def rtrn():

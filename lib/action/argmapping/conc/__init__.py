@@ -22,7 +22,7 @@ from .sort import SortFormArgs
 from .other import SampleFormArgs, ShuffleFormArgs, KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs
 
 
-def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
+async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:
     """
     A factory method to create a conc form args
     instance based on deserialized data from
@@ -30,9 +30,9 @@ def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: Dict[s
     """
     tp = data['form_type']
     if tp == 'query':
-        return QueryFormArgs(plugin_ctx=plugin_ctx, corpora=corpora, persist=False).updated(data, op_key)
+        return (await QueryFormArgs.create(plugin_ctx=plugin_ctx, corpora=corpora, persist=False)).updated(data, op_key)
     elif tp == 'filter':
-        return FilterFormArgs(plugin_ctx=plugin_ctx, maincorp=data['maincorp'], persist=False).updated(data, op_key)
+        return (await FilterFormArgs.create(plugin_ctx=plugin_ctx, maincorp=data['maincorp'], persist=False)).updated(data, op_key)
     elif tp == 'sort':
         return SortFormArgs(persist=False).updated(data, op_key)
     elif tp == 'sample':

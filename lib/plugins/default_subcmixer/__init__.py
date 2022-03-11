@@ -93,10 +93,10 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
     def __init__(self, corparch):
         self._corparch = corparch
 
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         if len(corpora) == 0:
             return False
-        info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return bool(info.metadata.id_attr)
 
     @staticmethod
@@ -136,19 +136,19 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
                 ret.append(subitem)
         return ret
 
-    def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
+    async def process(self, plugin_ctx, corpus, corpname, aligned_corpora, args):
         used_structs = set(item['attrName'].split('.')[0] for item in args)
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
+        corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpname)
         db = Database(db_path=corpus_info.metadata.database, table_name='item', corpus_id=corpus_info.id,
                       id_attr=corpus_info.metadata.id_attr, aligned_corpora=aligned_corpora)
 
         conditions = self._import_task_args(args)
         cat_tree = CategoryTree(conditions, db, 'item', SubcMixer.CORPUS_MAX_SIZE)
-        mm = MetadataModel(meta_db=db, category_tree=cat_tree,
-                           id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
+        mm = await MetadataModel.create(
+            meta_db=db, category_tree=cat_tree, id_attr=corpus_info.metadata.id_attr.replace('.', '_'))
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:

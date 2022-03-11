@@ -53,6 +53,7 @@ import actions.user
 from action.plugin.ctx import PluginCtx
 from translation import ugettext as _
 from settings import import_bool
+from util import as_async
 
 DEFAULT_LANG = 'en'
 
@@ -142,7 +143,7 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
-    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
             query = ''
         ans = {'rows': []}
@@ -184,7 +185,7 @@ class DefaultCorplistProvider(CorplistProvider):
 
         normalized_query_substrs = [s.lower() for s in query_substrs]
         for corp in self._corparch.get_list(plugin_ctx, permitted_corpora):
-            full_data = self._corparch.get_corpus_info(plugin_ctx, corp['id'])
+            full_data = await self._corparch.get_corpus_info(plugin_ctx, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 if favourite_only and fav_id(corp['id']) is None:
                     continue
@@ -557,7 +558,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
         return ans
 
-    def get_corpus_info(self, plugin_ctx, corp_name):
+    async def get_corpus_info(self, plugin_ctx, corp_name):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1]
@@ -565,8 +566,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 corp_name = corp_name.lower()
             if corp_name in self._raw_list(plugin_ctx):
                 if plugin_ctx.user_lang is not None:
-                    ans = self._localize_corpus_info(plugin_ctx,
-                                                     self._raw_list(plugin_ctx)[corp_name])
+                    ans = await self._localize_corpus_info(
+                        plugin_ctx, self._raw_list(plugin_ctx)[corp_name])
                 else:
                     ans = self._raw_list(plugin_ctx)[corp_name]
                 ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
@@ -638,6 +639,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.append(tmp)
         return ans
 
+    @as_async
     def export(self, plugin_ctx):
         return dict(
             favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),

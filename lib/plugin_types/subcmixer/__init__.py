@@ -42,7 +42,7 @@ T = TypeVar('T')
 class AbstractSubcMixer(CorpusDependentPlugin, Generic[T]):
 
     @abc.abstractmethod
-    def process(
+    async def process(
             self, plugin_ctx: PluginCtx, corpus: AbstractKCorpus, corpname: str,
             aligned_corpora: List[str], args: List[ExpressionItem]) -> T:
         """

@@ -42,6 +42,7 @@ from plugins import inject
 import plugins
 from corplib.fallback import EmptyCorpus
 from plugin_types.query_persistence import AbstractQueryPersistence
+from util import as_async
 
 
 class CorpusCache:
@@ -304,6 +305,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
         )
         self._db.commit()
 
+    @as_async
     def export(self, plugin_ctx):
         """
         Export plug-in data to dependent HTML pages

@@ -322,7 +322,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             props:QueryFormProperties
     ) {
-
         const corpora = props.corpora;
         const queries = importUserQueries(
             corpora, props, props.simpleQueryDefaultAttrs, props.attrList);

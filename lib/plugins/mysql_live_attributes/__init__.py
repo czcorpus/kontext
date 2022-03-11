@@ -105,14 +105,14 @@ class MysqlLiveAttributes(CachedLiveAttributes):
     def export_actions():
         return bp
 
-    def is_enabled_for(self, plugin_ctx, corpora) -> bool:
+    async def is_enabled_for(self, plugin_ctx, corpora) -> bool:
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         if len(corpora) == 0:
             return False
         # TODO now enabled if database path is defined
-        return bool(self.corparch.get_corpus_info(plugin_ctx, corpora[0]).metadata.database)
+        return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
     def calc_max_attr_val_visible_chars(self, corpus_info: CorpusInfo) -> int:
         if corpus_info.metadata.avg_label_attr_len:
@@ -173,8 +173,8 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 ans[label][1] = '@' + ans[label][2]
         data[bib_label.key()] = set(AttrValue(*v) for v in ans.values())
 
-    def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
+    async def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpname)
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
@@ -221,7 +221,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
             return int(cursor.fetchone()['total'])
 
     @cached
-    def get_attr_values(
+    async def get_attr_values(
             self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, Union[str, List[str], Dict[str, Any]]],
             aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
             limit_lists: bool = True) -> AttrValuesResponse:
@@ -238,7 +238,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
 
         srch_attrs = self._get_subcorp_attrs(corpus)
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -318,8 +318,8 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 exported.attr_values[struct_attr.key()] = {'length': len(attr_values)}
         return exported
 
-    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
+    async def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
 
         with self.integ_db.cursor() as cursor:
@@ -366,8 +366,8 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 ''',
                 (corpus_id, search.struct, search.attr, *values, *list(chain(*[[f.struct, f.attr] for f in fill]))))
 
-    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus_id)
+    async def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus_id)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
         bib_label = self.import_key(corpus_info.metadata.label_attr)
 

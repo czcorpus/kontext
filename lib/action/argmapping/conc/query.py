@@ -63,7 +63,14 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
     query form arguments represented by the _QueryFormArgs data class.
     """
 
-    def __init__(self, plugin_ctx: PluginCtx, corpora: List[str], persist: bool) -> None:
+    @classmethod
+    async def create(cls, plugin_ctx: PluginCtx, corpora: List[str], persist: bool) -> 'QueryFormArgs':
+        self = QueryFormArgs(plugin_ctx, corpora, persist)
+        for corp in corpora:
+            await self._add_corpus_metadata(corp)
+        return self
+
+    def __init__(self, plugin_ctx: PluginCtx, corpora: List[str], persist: bool):
         super().__init__(persist)
         self._plugin_ctx = plugin_ctx
         self.data = _QueryFormArgs(
@@ -79,8 +86,6 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
             curr_use_regexp_values=_corp_mapping(corpora, False),
             tagsets=_corp_mapping(corpora),
             has_lemma=_corp_mapping(corpora))
-        for corp in corpora:
-            self._add_corpus_metadata(corp)
 
     def apply_last_used_opts(
             self, data: Dict[str, Any], prev_corpora: List[str], curr_corpora: List[str], curr_posattrs: List[str]):
@@ -128,9 +133,9 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
         self.data.fc_pos = ctx.get('fc_pos', self.data.fc_pos)
         self.data.selected_text_types = data['text_types']
 
-    def _add_corpus_metadata(self, corpus_id: str):
+    async def _add_corpus_metadata(self, corpus_id: str):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
-            corp_info = ca.get_corpus_info(self._plugin_ctx, corpus_id)
+            corp_info = await ca.get_corpus_info(self._plugin_ctx, corpus_id)
             self.data.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.data.tagsets[corpus_id] = [d.to_dict() for d in corp_info.tagsets]
             for ts in self.data.tagsets[corpus_id]:

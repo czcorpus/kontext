@@ -62,7 +62,7 @@ class DefaultCorplistProvider(CorplistProvider):
         self._corparch = corparch
         self._tag_prefix = tag_prefix
 
-    def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
         if query is False:  # False means 'use default values'
             query = ''
         if filter_dict.get('minSize'):
@@ -110,7 +110,7 @@ class DefaultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
-        rows = list(self._corparch.list_corpora(
+        rows = list(await self._corparch.list_corpora(
             plugin_ctx, substrs=normalized_query_substrs,
             min_size=min_size, max_size=max_size, requestable=requestable,
             offset=offset, limit=limit + 1, keywords=query_keywords,

@@ -68,7 +68,7 @@ async def fetch_token_detail(amodel, req, resp):
     context = (int(req.args.get('detail_left_ctx', 40)),
                int(req.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
-        corpus_info = ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
+        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
         token, resp_data = td.fetch_data(corpus_info.token_connect.providers, amodel.corp,
                                          [amodel.corp.corpname] +
                                          amodel.args.align, token_id, num_tokens, req.ui_lang,
@@ -167,14 +167,14 @@ class DefaultTokenConnect(AbstractTokenConnect):
         word = fetch_posattr(corpus, 'word', token_id, num_tokens)
         return word, ans
 
-    def is_enabled_for(self, plugin_ctx, corpora):
+    async def is_enabled_for(self, plugin_ctx, corpora):
         if len(corpora) == 0:
             return False
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return len(corpus_info.token_connect.providers) > 0
 
-    def export(self, plugin_ctx):
-        corpus_info = self._corparch.get_corpus_info(
+    async def export(self, plugin_ctx):
+        corpus_info = await self._corparch.get_corpus_info(
             plugin_ctx, plugin_ctx.current_corpus.corpname)
         return dict(providers=[dict(ident=k, is_kwic_view=bool(v)) for k, v in corpus_info.token_connect.providers])
 
