@@ -16,7 +16,6 @@ from bgcalc.task import AsyncTaskStatus
 import scheduled
 import logging
 import inspect
-from translation import ugettext
 from main_menu import MainMenu, generate_main_menu
 import settings
 import corplib
@@ -122,7 +121,7 @@ class UserActionModel(BaseActionModel):
                         fn = fn()
                     if callable(fn):
                         try:
-                            ans = fn(*(), **action)
+                            ans = fn(*(), **action, translate=self._req.translate)
                             if 'message' in ans:
                                 self.add_system_message('message', ans['message'])
                             continue
@@ -133,7 +132,6 @@ class UserActionModel(BaseActionModel):
                 logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
                     action.get('id', '??'), action,))
             self._save_options()  # this causes scheduled task to be removed from settings
-
 
     @property
     def plugin_ctx(self):
@@ -202,7 +200,7 @@ class UserActionModel(BaseActionModel):
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
                     self.add_system_message(
                         'error',
-                        ugettext(
+                        self._req.translate(
                             'User authentication error. Please try to reload the page or '
                             'contact system administrator.'))
 
@@ -373,7 +371,9 @@ class UserActionModel(BaseActionModel):
             disabled_items=self.disabled_menu_items,
             dynamic_items=self._dynamic_menu_items,
             corpus_dependent=result['uses_corp_instance'],
-            plugin_ctx=self.plugin_ctx)
+            plugin_ctx=self.plugin_ctx,
+            translate=self._req.translate
+        )
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.

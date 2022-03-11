@@ -16,6 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import Callable
+
 
 class MainMenuItemId:
     """
@@ -195,7 +197,7 @@ class AbstractMenuItem:
         """
         return self._corpus_dependent
 
-    def create(self, out_data):
+    def create(self, out_data, translate: Callable[[str], str]):
         """
         Export menu item.
 
@@ -222,11 +224,11 @@ class MenuItemInternal(AbstractMenuItem):
         super(MenuItemInternal, self).__init__(ident, label, hint)
         self._action = action
 
-    def create(self, out_data):
+    def create(self, out_data, translate: Callable[[str], str]):
         return dict(
             ident=self._ident.get_sub_id(),
-            label=self._label,
-            hint=self._hint,
+            label=translate(self._label),
+            hint=translate(self._hint),
             action=self._action,
             indirect=self._indirect,
             currConc=False,
@@ -250,8 +252,8 @@ class HideOnCustomCondItem(MenuItemInternal):
         self._fn = fn
         return self
 
-    def create(self, out_data):
-        ans = super(HideOnCustomCondItem, self).create(out_data)
+    def create(self, out_data, translate: Callable[[str], str]):
+        ans = super(HideOnCustomCondItem, self).create(out_data, translate)
         if not self._fn(out_data):
             ans['disabled'] = True
         return ans
@@ -267,8 +269,8 @@ class ConcMenuItem(HideOnCustomCondItem):
         super(ConcMenuItem, self).__init__(ident, label, action, hint)
         self._q = []
 
-    def create(self, out_data):
-        ans = super(ConcMenuItem, self).create(out_data)
+    def create(self, out_data, translate: Callable[[str], str]):
+        ans = super(ConcMenuItem, self).create(out_data, translate)
         ans['currConc'] = True
         ans['q'] = self._q
         return ans
@@ -300,11 +302,10 @@ class EventTriggeringItem(HideOnCustomCondItem):
         self._key_code = key_code
         self._key_mod = key_mod
 
-    def create(self, out_data):
-        ans = super(EventTriggeringItem, self).create(out_data)
+    def create(self, out_data, translate: Callable[[str], str]):
+        ans = super(EventTriggeringItem, self).create(out_data, translate)
         ans['message'] = self._message
         ans['keyCode'] = self._key_code
         ans['keyMod'] = self._key_mod
         ans.pop('action')
         return ans
-

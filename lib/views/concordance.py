@@ -12,7 +12,6 @@ from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from action.argmapping.conc import ShuffleFormArgs
 from action.errors import NotFoundException, UserActionException
-from translation import ugettext
 import conclib
 from conclib.search import get_conc
 from conclib.errors import (
@@ -34,7 +33,7 @@ async def query(action_model, req, resp):
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
     out = {'aligned_corpora': action_model.args.align}
-    tt_data = await action_model.tt.export_with_norms(ret_nums=True)
+    tt_data = await action_model.tt.export_with_norms(ret_nums=True, translate=req.translate)
     out['Normslist'] = tt_data['Normslist']
     out['text_types_data'] = tt_data
 
@@ -51,7 +50,8 @@ async def query(action_model, req, resp):
     action_model.add_conc_form_args(qf_args)
     await action_model.attach_query_params(out)
     await action_model.attach_aligned_query_params(out)
-    action_model.export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
+    action_model.export_subcorpora_list(
+        action_model.args.corpname, action_model.args.usesubcorp, out)
     return out
 
 
@@ -116,7 +116,7 @@ async def view(amodel, req, resp):
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
 
     if amodel.args.fromp < 1:
-        raise UserActionException(ugettext('Invalid page number'))
+        raise UserActionException(req.translate('Invalid page number'))
     if amodel.args.pagesize < 1:
         raise UserActionException('Invalid page size')
 
@@ -172,27 +172,27 @@ async def view(amodel, req, resp):
     if amodel.args.align and not amodel.args.maincorp:
         amodel.args.maincorp = amodel.args.corpname
     if conc.size() == 0 and conc.finished():
-        msg = ugettext(
+        msg = req.translate(
             'No result. Please make sure the query and selected query type are correct.')
         amodel.add_system_message('info', msg)
 
     amodel.add_save_menu_item(
         'CSV', save_format='csv',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'XLSX', save_format='xlsx',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'XML', save_format='xml',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'TXT', save_format='text',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item(ugettext('Custom'))
+    amodel.add_save_menu_item(req.translate('Custom'))
 
     # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
     # to be able to display extended context with all set structural attributes
@@ -215,7 +215,7 @@ async def view(amodel, req, resp):
     out['struct_ctx'] = amodel.corp.get_conf('STRUCTCTX')
 
     # query form data
-    out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
+    out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True, translate=req.translate)
     qf_args = await amodel.fetch_prev_query('conc:filter')
     if qf_args and qf_args.data.maincorp != amodel.args.corpname:
         qf_args = None
@@ -259,7 +259,7 @@ async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
         op_data = pipeline[int(req.args.get('idx'))]
         return op_data.to_dict()
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
-        raise NotFoundException(ugettext('Query information not stored: {}').format(ex))
+        raise NotFoundException(req.translate('Query information not stored: {}').format(ex))
 
 
 @bp.route('/widectx')
@@ -371,7 +371,7 @@ async def ajax_switch_corpus(amodel, req, resp):
         activePlugins=plg_status['active_plugins'],
         queryOverview=[],
         numQueryOps=0,
-        textTypesData=await amodel.tt.export_with_norms(ret_nums=True),
+        textTypesData=await amodel.tt.export_with_norms(ret_nums=True, translate=req.translate),
         Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
         AttrList=tmp_out['AttrList'],
         AlignCommonPosAttrs=list(align_common_posattrs),

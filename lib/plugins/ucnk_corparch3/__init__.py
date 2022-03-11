@@ -50,7 +50,6 @@ from plugins.mysql_corparch.backend import Backend
 from action.errors import ForbiddenException
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
-from translation import ugettext as _
 from util import as_async
 
 bp = Blueprint('ucnk_corparch3')
@@ -98,7 +97,7 @@ def ask_corpus_access(amodel, req, resp):
             plugin_ctx=amodel.plugin_ctx,
             custom_message=req.form.get('customMessage'))
     if status is False:
-        ans['error'] = _(
+        ans['error'] = req.translate(
             'Failed to send e-mail. Please try again later or contact system administrator')
     return ans
 

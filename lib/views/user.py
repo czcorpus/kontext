@@ -17,7 +17,6 @@ from sanic import Blueprint
 from action.errors import UserActionException, ImmediateRedirectException
 from action.model.authorized import UserActionModel
 from action.decorators import http_action
-from translation import ugettext as _
 import plugins
 from plugin_types.auth import SignUpNeedsUpdateException
 import settings
@@ -54,7 +53,7 @@ async def login(amodel, req, resp):
                 resp.redirect(req.create_url('query', {}))
         else:
             amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
-            amodel.add_system_message('error', _('Incorrect username or password'))
+            amodel.add_system_message('error', req.translate('Incorrect username or password'))
         amodel.refresh_session_id()
         return ans
 
@@ -112,7 +111,7 @@ async def sign_up(amodel, req, resp):
     if len(errors) == 0:
         return dict(ok=True, error_args={})
     else:
-        raise UserActionException(_('Failed to sign up user'), error_args=errors)
+        raise UserActionException(req.translate('Failed to sign up user'), error_args=errors)
 
 
 @bp.route('/user/test_username')
@@ -152,19 +151,19 @@ async def set_user_password(amodel, req, resp):
         ans = dict(fields=fields, messages=[])
 
         if not amodel.uses_internal_user_pages():
-            raise UserActionException(_('This function is disabled.'))
+            raise UserActionException(req.translate('This function is disabled.'))
         logged_in = auth.validate_user(
             amodel.plugin_ctx, req.session_get('user', 'user'), curr_passwd)
 
         if amodel.is_anonymous_id(logged_in['id']):
             fields['curr_passwd'] = False
-            ans['messages'].append(_('Invalid user or password'))
+            ans['messages'].append(req.translate('Invalid user or password'))
             return ans
 
         if new_passwd != new_passwd2:
             fields['new_passwd'] = False
             fields['new_passwd2'] = False
-            ans['messages'].append(_('New password and its confirmation do not match.'))
+            ans['messages'].append(req.translate('New password and its confirmation do not match.'))
             return ans
 
         if not auth.validate_new_password(new_passwd):
@@ -238,7 +237,7 @@ async def ajax_user_info(amodel, req, resp):
     access_level=1, action_model=UserActionModel)
 async def profile(amodel, req, resp):
     if not amodel.uses_internal_user_pages():
-        raise UserActionException(_('This function is disabled.'))
+        raise UserActionException(req.translate('This function is disabled.'))
     with plugins.runtime.AUTH as auth:
         user_info = auth.get_user_info(amodel.plugin_ctx)
         if not amodel.user_is_anonymous():
