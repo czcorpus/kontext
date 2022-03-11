@@ -579,8 +579,8 @@ class CorpusActionModel(UserActionModel):
                 ans[attr] = [v for v in v_tmp]
         return ans
 
-    def export_optional_plugins_conf(self, result):
-        self._export_optional_plugins_conf(result, [self.args.corpname] + self.args.align)
+    async def export_optional_plugins_conf(self, result):
+        await self._export_optional_plugins_conf(result, [self.args.corpname] + self.args.align)
 
     async def attach_plugin_exports(self, result, direct):
         await self._attach_plugin_exports(result, [self.args.corpname] + self.args.align, direct)

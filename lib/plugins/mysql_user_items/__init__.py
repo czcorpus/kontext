@@ -22,7 +22,7 @@ from plugin_types.user_items import AbstractUserItems, UserItemException, Favori
 from plugins import inject
 import plugins
 from action.decorators import http_action
-from action.model.corpus import CorpusActionModel
+from action.model.authorized import UserActionModel
 
 
 bp = Blueprint('mysql_user_items')
@@ -62,9 +62,9 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@bp.route('/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def set_favorite_item(amodel, req, resp):
+@bp.route('/user/set_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+async def set_favorite_item(amodel, req, resp):
     """
     """
     corpora = []
@@ -86,15 +86,15 @@ def set_favorite_item(amodel, req, resp):
         size=main_size
     ))
     with plugins.runtime.USER_ITEMS as uit:
-        uit.add_user_item(amodel.plugin_ctx, item)
+        await uit.add_user_item(amodel.plugin_ctx, item)
         return item.to_dict()
 
 
-@bp.route('/unset_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def unset_favorite_item(amodel, req, resp):
+@bp.route('/user/unset_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+async def unset_favorite_item(amodel, req, resp):
     with plugins.runtime.USER_ITEMS as uit:
-        uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))
+        await uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))
         return dict(id=req.form.get('id'))
 
 
@@ -122,15 +122,15 @@ class MySQLUserItems(AbstractUserItems):
             # ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
-    def add_user_item(self, plugin_ctx, item):
-        if self._backend.count_favitems(plugin_ctx.user_id)['count'] >= self.max_num_favorites:
+    async def add_user_item(self, plugin_ctx, item):
+        if await self._backend.count_favitems(plugin_ctx.user_id)['count'] >= self.max_num_favorites:
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._backend.insert_favitem(plugin_ctx.user_id, item)
+        await self._backend.insert_favitem(plugin_ctx.user_id, item)
 
-    def delete_user_item(self, plugin_ctx, item_id):
-        self._backend.delete_favitem(item_id)
+    async def delete_user_item(self, plugin_ctx, item_id):
+        await self._backend.delete_favitem(item_id)
 
     @staticmethod
     def export_actions():

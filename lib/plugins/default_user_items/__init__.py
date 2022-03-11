@@ -21,6 +21,7 @@ from plugins import inject
 import plugins
 import l10n
 from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
 
 bp = Blueprint('default_user_items')
 
@@ -59,20 +60,20 @@ def import_record(obj):
         return FavoriteItem(data=obj)
 
 
-@bp.route('/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, skip_corpus_init=True)
-def set_favorite_item(ctrl, request):
+@bp.route('/user/set_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+async def set_favorite_item(amodel, req, resp):
     """
     """
     corpora = []
     main_size = None
-    for i, c_id in enumerate(request.form.getlist('corpora')):
-        corp = ctrl.cm.get_corpus(c_id, subcname=request.form.get('subcorpus_id') if i == 0 else None)
+    for i, c_id in enumerate(req.form.getlist('corpora')):
+        corp = amodel.cm.get_corpus(c_id, subcname=req.form.get('subcorpus_id') if i == 0 else None)
         if i == 0:
             main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
-    subcorpus_id = request.form.get('subcorpus_id')
-    subcorpus_orig_id = request.form.get('subcorpus_orig_id')
+    subcorpus_id = req.form.get('subcorpus_id')
+    subcorpus_orig_id = req.form.get('subcorpus_orig_id')
     item = FavoriteItem(dict(
         name=' || '.join(c['name'] for c in corpora) +
         (' / ' + subcorpus_orig_id if subcorpus_orig_id else ''),
@@ -82,16 +83,16 @@ def set_favorite_item(ctrl, request):
         size=main_size
     ))
     with plugins.runtime.USER_ITEMS as uit:
-        uit.add_user_item(ctrl._plugin_ctx, item)
+        await uit.add_user_item(amodel.plugin_ctx, item)
         return item.to_dict()
 
 
-@bp.route('/set_favorite_item', methods=['POST'])
-@http_action(return_type='json', access_level=1, skip_corpus_init=True)
-def unset_favorite_item(ctrl, request):
+@bp.route('/user/set_favorite_item', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+async def unset_favorite_item(amodel, req, resp):
     with plugins.runtime.USER_ITEMS as uit:
-        uit.delete_user_item(ctrl._plugin_ctx, request.form.get('id'))
-        return dict(id=request.form.get('id'))
+        await uit.delete_user_item(amodel.plugin_ctx, req.form.get('id'))
+        return dict(id=req.form.get('id'))
 
 
 class UserItems(AbstractUserItems):
@@ -132,14 +133,14 @@ class UserItems(AbstractUserItems):
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 
-    def add_user_item(self, plugin_ctx, item):
-        if len(self.get_user_items(plugin_ctx)) >= self.max_num_favorites:
+    async def add_user_item(self, plugin_ctx, item):
+        if len(await self.get_user_items(plugin_ctx)) >= self.max_num_favorites:
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
         self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, item.to_dict())
 
-    def delete_user_item(self, plugin_ctx, item_id):
+    async def delete_user_item(self, plugin_ctx, item_id):
         self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)
 
     @staticmethod
