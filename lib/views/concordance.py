@@ -143,7 +143,7 @@ async def view(amodel, req, resp):
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
 
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
-            kwic_args.speech_attr = amodel.get_speech_segment()
+            kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
             kwic_args.alignlist = [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
@@ -201,7 +201,7 @@ async def view(amodel, req, resp):
     out['conc_line_max_group_num'] = settings.get_int('global', 'conc_line_max_group_num', 99)
     out['aligned_corpora'] = amodel.args.align
     out['line_numbers'] = amodel.args.line_numbers if amodel.args.line_numbers else False
-    out['speech_segment'] = amodel.get_speech_segment()
+    out['speech_segment'] = await amodel.get_speech_segment()
     out['speaker_id_attr'] = corpus_info.speaker_id_attr.split(
         '.') if corpus_info.speaker_id_attr else None
     out['speech_overlap_attr'] = corpus_info.speech_overlap_attr.split(

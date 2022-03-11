@@ -69,9 +69,8 @@ async def corplist(amodel, req, resp):
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
     with plugins.runtime.CORPARCH as cp:
         if isinstance(cp, AbstractSearchableCorporaArchive):
-            params = cp.initial_search_params(amodel.plugin_ctx, req.args.get('query'),
-                                              req.args)
-            data = cp.search(
+            params = await cp.initial_search_params(amodel.plugin_ctx, req.args.get('query'), req.args)
+            data = await cp.search(
                 plugin_ctx=amodel.plugin_ctx,
                 query=False,
                 offset=0,
@@ -79,7 +78,7 @@ async def corplist(amodel, req, resp):
                 filter_dict=req.args)
         else:
             params = {}
-            data = cp.get_all(amodel.plugin_ctx)
+            data = await cp.get_all(amodel.plugin_ctx)
         data['search_params'] = params
         return dict(corplist_data=data)
 
@@ -88,7 +87,7 @@ async def corplist(amodel, req, resp):
 @http_action(action_model=UserActionModel, return_type='json')
 async def ajax_list_corpora(amodel, req, resp):
     with plugins.runtime.CORPARCH as cp:
-        return cp.search(
+        return await cp.search(
             plugin_ctx=amodel.plugin_ctx, query=req.args.get('query', None),
             offset=req.args.get('offset', None), limit=req.args.get('limit', None),
             filter_dict=req.args)
@@ -141,7 +140,7 @@ async def ajax_get_structattrs_details(amodel, req, resp):
     Provides a map (struct_name=>[list of attributes]). This is used
     by 'insert within' widget.
     """
-    speech_segment = await amodel.get_corpus_info(amodel.args.corpname).speech_segment
+    speech_segment = (await amodel.get_corpus_info(amodel.args.corpname)).speech_segment
     ans = defaultdict(lambda: [])
     for item in amodel.corp.get_structattrs():
         if item != speech_segment:

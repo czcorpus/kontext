@@ -68,6 +68,7 @@ from plugins.default_corparch import process_pos_categories
 from action.plugin.ctx import PluginCtx
 from action.model.authorized import UserActionModel
 from action.decorators import http_action
+from util import as_async
 
 bp = Blueprint('tree_corparch')
 
@@ -202,6 +203,7 @@ class TreeCorparch(AbstractCorporaArchive):
         else:
             return await self._localize_corpus_info(plugin_ctx, BrokenCorpusInfo())
 
+    @as_async
     def get_all(self, plugin_ctx):
         return self._data
 

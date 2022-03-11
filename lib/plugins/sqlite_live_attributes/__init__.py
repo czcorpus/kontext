@@ -312,11 +312,11 @@ class LiveAttributes(CachedLiveAttributes):
                 values[self.export_key(k)] = v
         return AttrValuesResponse(attr_values=values, aligned=aligned_corpora, poscount=values['poscount'])
 
-    def get_bibliography(self, plugin_ctx, corpus, item_id):
+    async def get_bibliography(self, plugin_ctx, corpus, item_id):
         db = self.db(plugin_ctx, corpus.corpname)
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         if corpus_info.metadata.sort_attrs:
             # here we accept default collator as attr IDs are ASCII
             col_rows = sorted(col_rows, key=lambda v: v[1])

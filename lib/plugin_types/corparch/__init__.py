@@ -133,7 +133,7 @@ class SimpleCorporaArchive(AbstractCorporaArchive):
     """
 
     @abc.abstractmethod
-    def get_all(self, plugin_ctx: 'CorpusPluginCtx'):
+    async def get_all(self, plugin_ctx: 'CorpusPluginCtx'):
         """
         Return all the available corpora (user credentials can be accessed
         via plugin_ctx).
@@ -164,7 +164,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     An extended version supporting search by user query
     """
 
-    def search(
+    async def search(
             self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
             filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -185,8 +185,8 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         a JSON-serializable dictionary a concrete plug-in implementation understands
         """
         service = self.create_corplist_provider(plugin_ctx)
-        return service.search(plugin_ctx=plugin_ctx, query=query, offset=offset, limit=limit,
-                              filter_dict=filter_dict)
+        return await service.search(
+            plugin_ctx=plugin_ctx, query=query, offset=offset, limit=limit, filter_dict=filter_dict)
 
     @abc.abstractmethod
     def create_corplist_provider(self, plugin_ctx: 'CorpusPluginCtx') -> CorplistProvider:

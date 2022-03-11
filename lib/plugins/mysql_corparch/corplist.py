@@ -92,7 +92,7 @@ class DefaultCorplistProvider(CorplistProvider):
         else:
             limit = int(limit)
 
-        user_items = self._corparch.user_items.get_user_items(plugin_ctx)
+        user_items = await self._corparch.user_items.get_user_items(plugin_ctx)
         favourite_corpora = {
             item.main_corpus_id: item.ident for item in user_items if item.is_single_corpus}
 
@@ -110,15 +110,16 @@ class DefaultCorplistProvider(CorplistProvider):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
-        rows = list(await self._corparch.list_corpora(
-            plugin_ctx, substrs=normalized_query_substrs,
-            min_size=min_size, max_size=max_size, requestable=requestable,
-            offset=offset, limit=limit + 1, keywords=query_keywords,
-            favourites=tuple(favourite_corpora.keys()) if favourites_only else ()).values())
+        rows = list(
+            (await self._corparch.list_corpora(
+                plugin_ctx, substrs=normalized_query_substrs,
+                min_size=min_size, max_size=max_size, requestable=requestable,
+                offset=offset, limit=limit + 1, keywords=query_keywords,
+                favourites=tuple(favourite_corpora.keys()) if favourites_only else ())).values())
         ans = []
         for i, corp in enumerate(rows):
             used_keywords.update(corp.keywords)
-            corp.keywords = self._corparch.get_l10n_keywords(corp.keywords, plugin_ctx.user_lang)
+            corp.keywords = await self._corparch.get_l10n_keywords(corp.keywords, plugin_ctx.user_lang)
             corp.fav_id = favourite_corpora.get(corp.id, None)
             corp.found_in = get_found_in(corp, normalized_query_substrs)
             ans.append(corp.to_dict())
