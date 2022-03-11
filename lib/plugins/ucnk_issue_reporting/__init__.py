@@ -22,7 +22,6 @@ import urllib.error
 
 from plugins import inject
 from plugin_types.issue_reporting import AbstractIssueReporting, StaticReportingAction
-from translation import ugettext as _
 
 
 class UcnkErrorReporting(AbstractIssueReporting):
@@ -32,7 +31,7 @@ class UcnkErrorReporting(AbstractIssueReporting):
         return StaticReportingAction(
             url='https://podpora.korpus.cz/projects/kontext/issues/new',
             args=args,
-            label=_('Report an error'),
+            label=plugin_ctx.translate('Report an error'),
             blank_window=True)
 
 
