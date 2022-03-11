@@ -65,10 +65,10 @@ def _load_conc_queries(plugin_ctx: PluginCtx, conc_ids: List[str], corpus_id: st
             if qs.stored_form_type(data) != form_type:
                 raise UserActionException('Invalid source query used: {}'.format(conc_id))
             if form_type == 'query':
-                args = QueryFormArgs(
+                args = QueryFormArgs.create(
                     plugin_ctx=plugin_ctx, corpora=[corpus_id], persist=True).updated(data['lastop_form'], conc_id)
             elif form_type == 'filter':
-                args = FilterFormArgs(
+                args = FilterFormArgs.create(
                     plugin_ctx=plugin_ctx, maincorp=corpus_id, persist=True).updated(data['lastop_form'], conc_id)
             forms[args.op_key] = args.to_dict()
             raw_queries[args.op_key] = data['q']

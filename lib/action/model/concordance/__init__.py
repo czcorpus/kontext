@@ -106,7 +106,7 @@ class ConcActionModel(CorpusActionModel):
 
                 if last_op_form:
                     if query_type == 'conc:filter':
-                        qf_args = FilterFormArgs(
+                        qf_args = await FilterFormArgs.create(
                             plugin_ctx=self._plugin_ctx,
                             maincorp=self.args.corpname,
                             persist=False)
@@ -334,9 +334,9 @@ class ConcActionModel(CorpusActionModel):
         tpl_out['conc_forms_initial_args'] = dict(
             query=query.to_dict() if query is not None else (await QueryFormArgs.create(
                 plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False)).to_dict(),
-            filter=filter.to_dict() if filter is not None else FilterFormArgs(
+            filter=filter.to_dict() if filter is not None else (await FilterFormArgs.create(
                 plugin_ctx=self._plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
-                    self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False).to_dict(),
+                    self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False)).to_dict(),
             sort=sort.to_dict() if sort is not None else SortFormArgs(persist=False).to_dict(),
             sample=sample.to_dict() if sample is not None else SampleFormArgs(persist=False).to_dict(),
             shuffle=shuffle.to_dict() if shuffle is not None else ShuffleFormArgs(persist=False).to_dict(),
@@ -447,19 +447,17 @@ class ConcActionModel(CorpusActionModel):
         else:
             return re.sub(r'[\n\r]+', ' ', query).strip()
 
+    async def set_first_query(self, corpora: List[str], form: QueryFormArgs, corpus_info: CorpusInfo):
 
-
-    def set_first_query(self, corpora: List[str], form: QueryFormArgs, corpus_info: CorpusInfo):
-
-        def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
-            filter_args = ContextFilterArgsConv(self._plugin_ctx, form)(
+        async def append_form_filter_op(opIdx, attrname, items, ctx, fctxtype):
+            filter_args = await ContextFilterArgsConv(self._plugin_ctx, form)(
                 corpora[0], attrname, items, ctx, fctxtype)
             self.acknowledge_auto_generated_conc_op(opIdx, filter_args)
 
         def ctx_to_str(ctx):
             return ' '.join(str(x) for x in ctx)
 
-        def append_filter(idx: int, attrname, items, ctx, fctxtype) -> int:
+        async def append_filter(idx: int, attrname, items, ctx, fctxtype) -> int:
             """
             return next idx of a new acknowledged auto-operation idx (to be able to continue
             with appending of other ops). I.e. if the last operation appended
@@ -470,17 +468,17 @@ class ConcActionModel(CorpusActionModel):
             if fctxtype == 'any':
                 self.args.q.append('P{} [{}]'.format(
                     ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
-                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
+                await append_form_filter_op(idx, attrname, items, ctx, fctxtype)
                 return idx + 1
             elif fctxtype == 'none':
                 self.args.q.append('N{} [{}]'.format(
                     ctx_to_str(ctx), '|'.join([f'{attrname}="{i}"' for i in items])))
-                append_form_filter_op(idx, attrname, items, ctx, fctxtype)
+                await append_form_filter_op(idx, attrname, items, ctx, fctxtype)
                 return idx + 1
             elif fctxtype == 'all':
                 for i, v in enumerate(items):
                     self.args.q.append('P{} [{}="{}"]'.format(ctx_to_str(ctx), attrname, v))
-                    append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
+                    await append_form_filter_op(idx + i, attrname, [v], ctx, fctxtype)
                 return idx + len(items)
 
         if 'lemma' in self.corp.get_posattrs():
@@ -517,13 +515,13 @@ class ConcActionModel(CorpusActionModel):
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
-        ag_op_idx = append_filter(
+        ag_op_idx = await append_filter(
             ag_op_idx,
             lemmaattr,
             form.data.fc_lemword.split(),
             (form.data.fc_lemword_wsize[0], form.data.fc_lemword_wsize[1], 1),
             form.data.fc_lemword_type)
-        append_filter(
+        await append_filter(
             ag_op_idx,
             'tag',
             [wposlist.get(t, '') for t in form.data.fc_pos],
