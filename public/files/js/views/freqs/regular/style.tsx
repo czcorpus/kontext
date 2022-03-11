@@ -62,8 +62,8 @@ export const FreqResultLoaderView = styled.div`
     justify-content: center;
     border: 1px solid ${theme.colorLightFrame};
     border-radius: ${theme.borderRadiusDefault};
-    height: 8em;
     width: 70%;
+    padding-bottom: 1em;
 
     .error {
         display: flex;
@@ -71,6 +71,12 @@ export const FreqResultLoaderView = styled.div`
         align-items: center;
         gap: 1em;
     }
+
+    .util-button {
+        margin-top: 0.5em;
+    }
+    
+    
 `;
 
 // ----------------- <Paginator /> -------------------------------------

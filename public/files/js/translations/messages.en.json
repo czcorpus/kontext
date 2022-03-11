@@ -212,6 +212,7 @@
         "global__result_no_more_avail_for_download_pls_update": "The result is no more available for immediate download. Please reload the page first.",
         "global__note_heading": "Note",
         "global__corpus_has_no_structattrs": "The corpus has no structural attributes",
+        "global__try_again": "try again",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",
