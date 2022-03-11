@@ -1,4 +1,4 @@
-    # Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+# Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx
 
 import abc
-from translation import ugettext as _
 from action.errors import CorpusForbiddenException, ImmediateRedirectException
 
 
@@ -103,7 +102,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         """
         self._anonymous_id = anonymous_id
 
-    def anonymous_user(self) -> UserInfo:
+    def anonymous_user(self, plugin_ctx) -> UserInfo:
         """
         Returns a dictionary containing (key, value) pairs
         specifying anonymous user. By default it is ID = 0,
@@ -112,7 +111,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         return UserInfo(
             id=self._anonymous_id,
             user='anonymous',
-            fullname=_('anonymous'),
+            fullname=plugin_ctx.translate('anonymous'),
             email=None,
             api_key=None)
 
@@ -232,7 +231,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def update_user_password(self, user_id: int, password: str):
+    def update_user_password(self, plugin_ctx: 'PluginCtx', user_id: int, password: str):
         """
         Changes a password of provided user.
         """
@@ -244,7 +243,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def get_required_password_properties(self) -> str:
+    def get_required_password_properties(self, plugin_ctx: 'PluginCtx') -> str:
         """
         Returns a text description of required password
         properties (e.g.: "at least 5 characters long, at least one digit)

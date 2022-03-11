@@ -64,7 +64,7 @@ class StaticAuth(AbstractRemoteAuth):
                 api_key=zone['api_key'],
                 corpora=norm_corpora)
 
-    def anonymous_user(self) -> UserInfo:
+    def anonymous_user(self, plugin_ctx) -> UserInfo:
         return UserInfo(
             id=self._anonymous_id,
             user='unauthorized',
@@ -126,7 +126,7 @@ class StaticAuth(AbstractRemoteAuth):
         else:
             if not self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
-            plugin_ctx.session['user'] = self.anonymous_user()
+            plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
 
 def create_instance(conf):

@@ -16,7 +16,6 @@ from controller import exposed
 from action.errors import ImmediateRedirectException
 from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
 from plugins.errors import PluginException
-from translation import ugettext as _
 from util import as_async
 
 _logger = logging.getLogger(__name__)
@@ -43,7 +42,8 @@ def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
         self._session['user'] = auth.validate_user(self._plugin_ctx,
-                                                   request.form.get('username') if request.form else None,
+                                                   request.form.get(
+                                                       'username') if request.form else None,
                                                    request.form.get('password') if request.form else None)
         if not auth.is_anonymous(self._session['user'].get('id', None)):
             if request.args.get('redirectTo', None):
@@ -52,7 +52,7 @@ def lindat_login(self, request):
                 self.redirect(self.create_url('query', {}))
         else:
             self.disabled_menu_items = user.USER_ACTIONS_DISABLED_ITEMS
-            self.add_system_message('error', _('Incorrect username or password'))
+            self.add_system_message('error', request.translate('Incorrect username or password'))
         self.refresh_session_id()
         return ans
 
@@ -100,7 +100,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         if username is not None and 0 < len(username):
             if username == FederatedAuthWithFailover.RESERVED_USER:
                 _logger.warning(f'Reserved username used [{username}]!')
-                return self.anonymous_user()
+                return self.anonymous_user(plugin_ctx)
             user_d = self._failover_auth.auth(self._db, username, password)
         else:
             user_d = self._auth(plugin_ctx)
@@ -111,7 +111,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             user_d['fullname'] = user_d.get("fullname", "Mr. No Name")
             return user_d
         else:
-            return self.anonymous_user()
+            return self.anonymous_user(plugin_ctx)
 
     def get_logout_url(self, return_url=None):
         return self._logout_url
@@ -199,7 +199,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         else:
             if idp != db_user_d["idp"]:
                 _logger.warning("User's [%s] idp has changed [%s]->[%s]",
-                             username, idp, db_user_d["idp"])
+                                username, idp, db_user_d["idp"])
                 return None
             user_d = db_user_d
 

@@ -12,7 +12,6 @@
 # GNU General Public License for more details.
 import os
 from plugin_types.appbar import AbstractApplicationBar
-from translation import ugettext as _
 from plugins import inject
 import plugins
 
@@ -49,14 +48,14 @@ class LindatTopBar(AbstractApplicationBar):
                 user_d = plugin_ctx.session["user"]
                 msgs = dict(fullname=user_d.get("fullname", "?"),
                             logout_url=self._logout_url or "",
-                            logout_msg=_('logout'))
+                            logout_msg=plugin_ctx.translate('logout'))
                 login_html = ('<i class="fa fa-user fa-lg">&nbsp;</i>%(fullname)s' +
                               '<span style="margin-left: 5px; margin-right: 5px;"> | </span>' +
                               '<form style="display: inline-block;" action="%(logout_url)s" method="POST"><i class="fa fa-sign-out fa-lg">&nbsp;</i><input type="submit" style="border:none;cursor:pointer;background-color:#428bca;color:#fff;font-weight:700;font-size:16px" value="%(logout_msg)s"/></form>'
                               ) % msgs
             else:
                 msgs = dict(login_url='',
-                            login_msg=_('Login'))
+                            login_msg=plugin_ctx.translate('Login'))
                 login_html = ('<a href="%(login_url)s" class ="signon" onclick="return false;">' +
                               '<i class="fa fa-sign-in fa-lg">&nbsp;</i>'
                               '%(login_msg)s</a>') % msgs
