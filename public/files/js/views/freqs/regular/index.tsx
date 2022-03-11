@@ -217,16 +217,20 @@ export function init(
 
     // ----------------------- <FreqResultLoaderView /> --------------------
 
+    const reloadData = (sourceId:string) => {
+        dispatcher.dispatch<typeof Actions.ReloadData>({
+            name: Actions.ReloadData.name,
+            payload: {
+                sourceId
+            }
+        })
+    };
+
     const FreqResultLoaderView:React.FC<{sourceId:string; label:string; error?:Error}> = ({sourceId, label, error}) => {
 
         React.useEffect(
             () => {
-                dispatcher.dispatch<typeof Actions.ReloadData>({
-                    name: Actions.ReloadData.name,
-                    payload: {
-                        sourceId
-                    }
-                })
+                reloadData(sourceId);
             },
             []
         );
@@ -234,11 +238,13 @@ export function init(
         return (
             <S.FreqResultLoaderView>
                 <h3>{label}</h3>
-                {error ?
-                    <div className='error'>
-                        <globalComponents.StatusIcon status='error' />
-                        {error.message}
-                    </div> :
+                {error ? [
+                        <div className='error'>
+                            <globalComponents.StatusIcon status='error' />
+                            {error.message}
+                        </div>,
+                        <a className='util-button' onClick={() => reloadData(sourceId)}>&#x21bb; {he.translate('global__try_again')}</a>,
+                    ] :
                     <globalComponents.AjaxLoaderImage />
                 }
             </S.FreqResultLoaderView>

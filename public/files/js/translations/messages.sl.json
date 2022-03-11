@@ -322,6 +322,7 @@
         "global__human_readable_502": "Strežnik ni uspel procesirati zahtevane operacije. Razlog je lahko prevelik konkordančni niz ali prezapletena poizvedba. Poskusite uporabiti ustrezno podskupino podatkov (podkorpus, naključni vzorec).",
         "global__note_heading": "Note UNTRANSLATED",
         "global__corpus_has_no_structattrs": "The corpus has no structural attributes UNTRANSLATED",
+        "global__try_again": "try again UNTRANSLATED",
         "linesel__no_ops_after_groups_save_info": "Ko shranite skupine vrstic, konkordanc ni več mogoče filtrirati/razvrščati/vzorčiti.",
         "linesel__current_sel_not_saved_confirm": "Trenutni izbor vrstic še ni shranjen. Ko zapustite to stran, boste izbor izgubili.",
         "query__qt_simple": "Enostavno iskanje",
