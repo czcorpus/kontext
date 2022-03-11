@@ -64,7 +64,6 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
         self.data = _FilterFormArgs(
             maincorp=maincorp
         )
-        self._add_corpus_metadata()
 
     def update_by_user_query(self, data):
         self.data.query_type = data['qtype']
@@ -146,7 +145,7 @@ class FirstHitsFilterFormArgs(ConcFormArgs[_FirstHitsFilterFormArgs]):
         self.data = _FirstHitsFilterFormArgs(doc_struct=doc_struct)
 
 
-class ContextFilterArgsConv(object):
+class ContextFilterArgsConv:
     """
     Converts context filter (i.e. the filter which is part of the main query form)
     form arguments into the regular filter ones.
@@ -170,8 +169,8 @@ class ContextFilterArgsConv(object):
             return ' | '.join('[{0}="{1}"]'.format(attrname, v) for v in items)
         raise ValueError(f'Unknown type fctxtype = {fctxtype}')
 
-    def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
-        ff_args = FilterFormArgs(plugin_ctx=self.plugin_ctx, maincorp=corpname, persist=True)
+    async def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
+        ff_args = await FilterFormArgs.create(plugin_ctx=self.plugin_ctx, maincorp=corpname, persist=True)
         ff_args.maincorp = corpname
         ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
         ff_args.filfpos = ctx[0]

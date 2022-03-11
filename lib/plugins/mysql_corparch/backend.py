@@ -100,9 +100,10 @@ class Backend(DatabaseBackend):
         cursor = self._db.cursor()
         placeholders = ', '.join(['%s'] * len(corp_ids))
         col = 'description_{0}'.format(user_lang[:2])
-        cursor.execute(f'SELECT name AS corpname, {col} AS contents '
-                       f'FROM {self._corp_table} '
-                       f'WHERE name IN ({placeholders})', corp_ids)
+        await cursor.execute(
+            f'SELECT name AS corpname, {col} AS contents '
+            f'FROM {self._corp_table} '
+            f'WHERE name IN ({placeholders})', corp_ids)
         return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
 
     async def load_corpus(self, corp_id: str) -> Dict[str, Any]:

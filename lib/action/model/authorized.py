@@ -213,7 +213,7 @@ class UserActionModel(BaseActionModel):
         """
         self._uses_valid_sid = False
 
-    def _export_optional_plugins_conf(self, result, active_corpora: List[str]):
+    async def _export_optional_plugins_conf(self, result, active_corpora: List[str]):
         """
         Updates result dict with JavaScript module paths required to
         run client-side parts of some optional plugins. Template document.tmpl
@@ -228,8 +228,7 @@ class UserActionModel(BaseActionModel):
                 if js_file:
                     ans[opt_plugin.name] = js_file
                     if (not (isinstance(opt_plugin.instance, CorpusDependentPlugin)) or
-                            opt_plugin.is_enabled_for(
-                                self.plugin_ctx, active_corpora)):
+                            await opt_plugin.is_enabled_for(self.plugin_ctx, active_corpora)):
                         result['active_plugins'].append(opt_plugin.name)
         result['plugin_js'] = ans
 
@@ -258,8 +257,8 @@ class UserActionModel(BaseActionModel):
     async def attach_plugin_exports(self, result, direct):
         await self._attach_plugin_exports(result, [], direct)
 
-    def export_optional_plugins_conf(self, result):
-        self._export_optional_plugins_conf(result, [])
+    async def export_optional_plugins_conf(self, result):
+        await self._export_optional_plugins_conf(result, [])
 
     def get_async_tasks(self, category: Optional[str] = None) -> List[AsyncTaskStatus]:
         """
@@ -301,7 +300,7 @@ class UserActionModel(BaseActionModel):
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         # updates result dict with javascript modules paths required by some of the optional plugins
         result = await super().add_globals(app, action_props, result)
-        self.export_optional_plugins_conf(result)
+        await self.export_optional_plugins_conf(result)
         self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
         result['explicit_conc_persistence_ui'] = False

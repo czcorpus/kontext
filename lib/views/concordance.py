@@ -50,7 +50,7 @@ async def query(action_model, req, resp):
             persist=False)
     action_model.add_conc_form_args(qf_args)
     await action_model.attach_query_params(out)
-    action_model.attach_aligned_query_params(out)
+    await action_model.attach_aligned_query_params(out)
     action_model.export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
     return out
 
@@ -75,7 +75,7 @@ async def query_submit(amodel, req, resp):
     amodel.add_conc_form_args(qinfo)
     # 2) process the query
     try:
-        amodel.set_first_query(
+        await amodel.set_first_query(
             [q['corpname'] for q in req.json['queries']], qinfo, corpus_info)
         if amodel.args.shuffle == 1 and 'f' not in amodel.args.q:
             amodel.args.shuffle = 0
@@ -336,11 +336,11 @@ async def ajax_switch_corpus(amodel, req, resp):
                 active_only=False),
             persist=False))
     await amodel.attach_query_params(tmp_out)
-    amodel.attach_aligned_query_params(tmp_out)
+    await amodel.attach_aligned_query_params(tmp_out)
     amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     plg_status = {}
-    amodel.export_optional_plugins_conf(plg_status)
+    await amodel.export_optional_plugins_conf(plg_status)
     conc_args = amodel.get_mapped_attrs(ConcArgsMapping)
     conc_args['q'] = []
 

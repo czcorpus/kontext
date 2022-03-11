@@ -110,7 +110,7 @@ class AbstractUserItems(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_user_item(self, plugin_ctx, item):
+    async def add_user_item(self, plugin_ctx, item):
         """
         Adds (persistently) an item to user's list.
 
@@ -120,7 +120,7 @@ class AbstractUserItems(abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_user_item(self, plugin_ctx, item_id):
+    async def delete_user_item(self, plugin_ctx, item_id):
         """
         Removes (in a persistent way) an item from user's list.
 
