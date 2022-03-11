@@ -129,7 +129,6 @@ import l10n
 from controller import exposed
 from action.plugin.ctx import PluginCtx
 import actions.user
-from translation import ugettext as _
 from settings import import_bool
 
 DEFAULT_LANG = 'en'
@@ -730,7 +729,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if self._registry_lang[:2] == plugin_ctx.user_lang[:2]:
             return text
         else:
-            return '{0} [{1}]'.format(text, _('translation not available'))
+            return '{0} [{1}]'.format(text, plugin_ctx.translate('translation not available'))
 
     def _export_featured(self, plugin_ctx: PluginCtx):
         permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
@@ -809,6 +808,7 @@ def create_instance(conf, auth, user_items):
         root_xpath=conf.get('plugins', 'corparch')['root_elm_path'],
         tag_prefix=conf.get('plugins', 'corparch')['tag_prefix'],
         max_num_hints=conf.get('plugins', 'corparch')['max_num_hints'],
-        max_page_size=conf.get('plugins', 'corparch').get('default_page_list_size', DEFAULT_PAGE_LIST_SIZE),
+        max_page_size=conf.get('plugins', 'corparch').get(
+            'default_page_list_size', DEFAULT_PAGE_LIST_SIZE),
         default_label=conf.get('plugins', 'corparch')['default_label'],
         registry_lang=conf.get('corpora', 'manatee_registry_locale', 'en_US'))

@@ -127,7 +127,7 @@ class UserItems(AbstractUserItems):
 
     async def get_user_items(self, plugin_ctx):
         ans = []
-        if self._auth.anonymous_user()['id'] != plugin_ctx.user_id:
+        if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
             for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_ctx.user_id)).items()):
                 ans.append(import_record(item))
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)

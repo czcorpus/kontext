@@ -26,7 +26,6 @@ from sanic.blueprints import Blueprint
 from plugins import inject
 import plugins
 from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
-from translation import ugettext as _
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
 
@@ -65,12 +64,12 @@ class DefaultErrorReporting(AbstractIssueReporting):
         user_email = user_info['email']
         username = user_info['username']
 
-        text = _('KonText feedback from user {0}').format(username) + ':'
+        text = plugin_ctx.translate('KonText feedback from user {0}').format(username) + ':'
         text += '\n\n'
         text += body
         text += '\n'
         text += '\n{0}\n'.format(40 * '-')
-        text += _('browser info') + ':\n'
+        text += plugin_ctx.translate('browser info') + ':\n'
         text += self._dump_browser_info(browser_info)
         text += '\n{0}\n'.format(40 * '-')
         text += '\n'
@@ -78,7 +77,7 @@ class DefaultErrorReporting(AbstractIssueReporting):
         s = smtplib.SMTP(self._smtp_server)
 
         msg = MIMEText(text, 'plain', 'utf-8')
-        msg['Subject'] = _('KonText feedback from user {0} for {1}').format(
+        msg['Subject'] = plugin_ctx.translate('KonText feedback from user {0} for {1}').format(
             username, datetime.now().isoformat().rsplit('.')[0])
         msg['From'] = self._mail_sender
         msg['To'] = ', '.join(self._mail_recipients)
