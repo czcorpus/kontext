@@ -79,6 +79,10 @@ class KRequest:
     def ui_lang(self):
         return str(self._locale)
 
+    @property
+    def locale(self):
+        return self._locale
+
     def session_get_user(self) -> UserInfo:
         """
         This is a convenience method for obtaining typed user info from HTTP session
