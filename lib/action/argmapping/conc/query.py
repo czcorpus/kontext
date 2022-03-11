@@ -139,7 +139,7 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
             self.data.has_lemma[corpus_id] = corp_info.manatee.has_lemma
             self.data.tagsets[corpus_id] = [d.to_dict() for d in corp_info.tagsets]
             for ts in self.data.tagsets[corpus_id]:
-                ts['widgetEnabled'] = ts['widgetEnabled'] and th.tags_available_for(
+                ts['widgetEnabled'] = ts['widgetEnabled'] and await th.tags_available_for(
                     self._plugin_ctx, corpus_id, ts['ident'])
 
     def serialize(self) -> Dict[str, Any]:

@@ -88,7 +88,7 @@ class Taghelper(AbstractTaghelper):
 
     async def loader(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._loaders:
-            for tagset in await self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
+            for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
                 if tagset.type == 'positional':
                     self._loaders[(corpus_name, tagset.ident)] = PositionalTagVariantLoader(
                         corpus_name=corpus_name, tagset_name=tagset.ident,
@@ -122,7 +122,7 @@ class Taghelper(AbstractTaghelper):
     async def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
         for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
             if tagset.ident == tagset_id:
-                loader = self.loader(plugin_ctx, corpus_name, tagset.ident)
+                loader = await self.loader(plugin_ctx, corpus_name, tagset.ident)
                 return loader.is_available()
         return False
 
@@ -130,12 +130,11 @@ class Taghelper(AbstractTaghelper):
     def export_actions():
         return bp
 
-    @as_async
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         tagsets = {}
         try:
             for corp in ([plugin_ctx.current_corpus.corpname] + plugin_ctx.available_aligned_corpora):
-                info = self._corparch.get_corpus_info(plugin_ctx, corp)
+                info = await self._corparch.get_corpus_info(plugin_ctx, corp)
                 for tagset in info.tagsets:
                     tagsets[tagset.ident] = tagset
         except AttributeError:
