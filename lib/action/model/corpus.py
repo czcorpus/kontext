@@ -237,60 +237,6 @@ class CorpusActionModel(UserActionModel):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def export_query_data(self) -> Tuple[bool, Dict[str, Any]]:
-        """
-        Export query data for query_persistence
-
-        Return a 2-tuple with the following elements
-            1) a flag specifying whether the query should be stored to user query history
-               (please note that query history != stored/persistent query; query history is just a personal
-               list of recent queries)
-            2) values to be stored as a representation of user's query (here we mean all the data needed
-               to reach the current result page including data needed to restore involved query forms).
-        """
-        if len(self._auto_generated_conc_ops) > 0:
-            q_limit = self._auto_generated_conc_ops[0][0]
-        else:
-            q_limit = len(self.args.q)
-        return (
-            False,
-            dict(
-                # we don't want to store all the items from self.args.q in case auto generated
-                # operations are present (we will store them individually later).
-                user_id=self.session_get('user', 'id'),
-                q=self.args.q[:q_limit],
-                corpora=self.get_current_aligned_corpora(),
-                usesubcorp=getattr(self.args, 'usesubcorp'),
-                lines_groups=self._lines_groups.serialize()
-            )
-        )
-
-    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
-        """
-        In some cases, KonText automatically (either
-        based on user's settings or for an internal reason)
-        appends user-editable (which is a different situation
-        compared e.g. with aligned corpora where there are
-        also auto-added "q" elements but this is hidden from
-        user) operations right after the current operation
-        in self.args.q.
-
-        E.g. user adds OP1, but we have to add also OP2, OP3
-        where all the operations are user-editable (e.g. filters).
-        In such case we must add OP1 but also "acknowledge"
-        OP2 and OP3.
-
-        Please note that it is expected that these operations
-        come right after the query (no matter what q_idx says - it is
-        used just to split original encoded query when storing
-        the multi-operation as separate entities in query storage).
-
-        Arguments:
-        q_idx -- defines where the added operation resides within the q list
-        query_form_args -- ConcFormArgs instance
-        """
-        self._auto_generated_conc_ops.append((q_idx, query_form_args))
-
     def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
