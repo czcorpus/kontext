@@ -19,7 +19,6 @@
 from dataclasses import dataclass, field
 from typing import Callable, Optional, List
 
-from translation import ugettext as te
 from .model import (
     AbstractMenuItem, ConcMenuItem, MainMenu, EventTriggeringItem, MenuItemInternal, HideOnCustomCondItem, OutData
 )
@@ -28,7 +27,7 @@ from .model import (
 def _create_archive_conc_item(args):
     if args['explicit_conc_persistence_ui']:
         return EventTriggeringItem(MainMenu.CONCORDANCE('archive-conc'),
-                                   te('Permanent link'), 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'
+                                   'Permanent link', 'MAIN_MENU_MAKE_CONC_LINK_PERSISTENT'
                                    ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
     else:
         return None
@@ -39,28 +38,29 @@ class ConcordanceDefault:
 
     curr_conc: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.CONCORDANCE('current-concordance'), te('Current concordance'), 'view'))
+            MainMenu.CONCORDANCE('current-concordance'), 'Current concordance', 'view'))
 
     sorting: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('sorting'), te('Sorting'), 'MAIN_MENU_SHOW_SORT', key_code=83).mark_indirect())
+            MainMenu.CONCORDANCE('sorting'), 'Sorting', 'MAIN_MENU_SHOW_SORT', key_code=83).mark_indirect())
 
     shuffle: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('shuffle'), te('Shuffle'), 'MAIN_MENU_APPLY_SHUFFLE'))
+            MainMenu.CONCORDANCE('shuffle'), 'Shuffle', 'MAIN_MENU_APPLY_SHUFFLE'))
 
     sample: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('sample'), te('Sample'), 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect())
+            MainMenu.CONCORDANCE('sample'), 'Sample', 'MAIN_MENU_SHOW_SAMPLE', key_code=77).mark_indirect())
 
     query_overview: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('query-overview'), te('Query overview'), 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO'))
+            MainMenu.CONCORDANCE('query-overview'), 'Query overview', 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO'))
 
     query_save_as: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('query-save-as'), te('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
-                ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
+            MainMenu.CONCORDANCE(
+                'query-save-as'), 'Archive query', 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
+        ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
     )
 
     # we need lazy evaluation for archive_conc (all the result args must be ready)
@@ -69,8 +69,8 @@ class ConcordanceDefault:
 
     query_undo: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('undo'), te('Undo'), 'MAIN_MENU_UNDO_LAST_QUERY_OP'
-                ).enable_if(lambda d: len(d.get('undo_q', [])) > 0))
+            MainMenu.CONCORDANCE('undo'), 'Undo', 'MAIN_MENU_UNDO_LAST_QUERY_OP'
+        ).enable_if(lambda d: len(d.get('undo_q', [])) > 0))
 
 
 @dataclass
@@ -84,7 +84,7 @@ class NewQuery:
 
     new_query: Callable[[OutData], MenuItemInternal] = field(
         default_factory=lambda: lambda args: MenuItemInternal(
-            MainMenu.NEW_QUERY('new-query'), te('Concordance'), 'query').add_args(
+            MainMenu.NEW_QUERY('new-query'), 'Concordance', 'query').add_args(
                 ('corpname', args['corpname']),
                 ('usesubcorp', args['usesubcorp']),
                 *[('align', v) for v in args['align']]
@@ -93,7 +93,7 @@ class NewQuery:
 
     pquery: MenuItemInternal = field(
         default_factory=lambda: lambda args: MenuItemInternal(
-            MainMenu.NEW_QUERY('paradigmatic-query'), te('Paradigmatic query'), 'pquery/index'
+            MainMenu.NEW_QUERY('paradigmatic-query'), 'Paradigmatic query', 'pquery/index'
         ).add_args(
             ('corpname', args['corpname']),
             ('usesubcorp', args['usesubcorp'])
@@ -102,7 +102,7 @@ class NewQuery:
 
     word_list: HideOnCustomCondItem = field(
         default_factory=lambda: lambda args: HideOnCustomCondItem(
-            MainMenu.NEW_QUERY('wordlist'), te('Word List'), 'wordlist/form'
+            MainMenu.NEW_QUERY('wordlist'), 'Word List', 'wordlist/form'
         ).add_args(
             ('corpname', args['corpname']),
             ('include_nonwords', 1)
@@ -111,7 +111,7 @@ class NewQuery:
 
     recent_queries: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.NEW_QUERY('history'), te('Recent queries'),
+            MainMenu.NEW_QUERY('history'), 'Recent queries',
             'MAIN_MENU_SHOW_QUERY_HISTORY', key_code=72, key_mod='shift'  # key = 'h'
         ).mark_indirect()
     )
@@ -122,24 +122,24 @@ class Corpora:
 
     avail_corpora: MenuItemInternal = field(
         default_factory=lambda: MenuItemInternal(
-            MainMenu.CORPORA('avail-corpora'), te('Available corpora'), 'corpora/corplist'
+            MainMenu.CORPORA('avail-corpora'), 'Available corpora', 'corpora/corplist'
         ).mark_indirect()
     )
 
     my_subcorpora: MenuItemInternal = field(
         default_factory=lambda: MenuItemInternal(
-            MainMenu.CORPORA('my-subcorpora'), te('My subcorpora'), 'subcorpus/list'
+            MainMenu.CORPORA('my-subcorpora'), 'My subcorpora', 'subcorpus/list'
         ).mark_indirect()
     )
 
     public_subcorpora: MenuItemInternal = field(
         default_factory=lambda: MenuItemInternal(
-            MainMenu.CORPORA('public-subcorpora'), te('Public subcorpora'), 'subcorpus/list_published')
+            MainMenu.CORPORA('public-subcorpora'), 'Public subcorpora', 'subcorpus/list_published')
     )
 
     create_subcorpus: Callable[[OutData], MenuItemInternal] = field(
         default_factory=lambda: lambda args: MenuItemInternal(
-            MainMenu.CORPORA('create-subcorpus'), te('Create new subcorpus'), 'subcorpus/new'
+            MainMenu.CORPORA('create-subcorpus'), 'Create new subcorpus', 'subcorpus/new'
         ).add_args(
             ('corpname', args['corpname'])
         ).mark_indirect()
@@ -157,26 +157,28 @@ class Filter:
 
     filter_pos: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('positive'), te('Positive'), 'MAIN_MENU_SHOW_FILTER', key_code=70  # key = 'f'
+            # key = 'f'
+            MainMenu.FILTER('positive'), 'Positive', 'MAIN_MENU_SHOW_FILTER', key_code=70
         ).add_args(('pnfilter', 'p'))
         .mark_indirect()
     )
 
     filter_neg: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('negative'), te('Negative'), 'MAIN_MENU_SHOW_FILTER'
+            MainMenu.FILTER('negative'), 'Negative', 'MAIN_MENU_SHOW_FILTER'
         ).add_args(('pnfilter', 'n'))
         .mark_indirect()
     )
 
     filter_subhits: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('subhits'), te('Remove nested matches'), 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
+            MainMenu.FILTER('subhits'), 'Remove nested matches', 'MAIN_MENU_FILTER_APPLY_SUBHITS_REMOVE')
     )
 
     filter_each_first: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('each-first'), te('First hits in documents'), 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
+            MainMenu.FILTER(
+                'each-first'), 'First hits in documents', 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
         ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0)
     )
 
@@ -186,7 +188,7 @@ class Frequency:
 
     freq_lemmas: Callable[[OutData], ConcMenuItem] = field(
         default_factory=lambda: lambda args: ConcMenuItem(
-            MainMenu.FREQUENCY('lemmas'), te('Lemmas'), 'freqs'
+            MainMenu.FREQUENCY('lemmas'), 'Lemmas', 'freqs'
         ).add_args(
             ('fcrit', 'lemma/e 0~0>0'),
             ('freq_type', 'tokens')
@@ -195,7 +197,7 @@ class Frequency:
 
     freq_node_forms_i: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.FREQUENCY('node-forms'), te('Node forms') + ' [A=a]', 'freqs', hint=te('case insensitive')
+            MainMenu.FREQUENCY('node-forms'), 'Node forms' + ' [A=a]', 'freqs', hint='case insensitive'
         ).add_args(
             ('fcrit', 'word/ie 0~0>0'),
             ('freq_type', 'tokens'))
@@ -203,7 +205,7 @@ class Frequency:
 
     freq_doc_ids: Callable[[OutData], ConcMenuItem] = field(
         default_factory=lambda: lambda args: ConcMenuItem(
-            MainMenu.FREQUENCY('doc-ids'), te('Doc IDs'), 'freqs'
+            MainMenu.FREQUENCY('doc-ids'), 'Doc IDs', 'freqs'
         ).add_args(
             ('fcrit', args['fcrit_shortref']),
             ('freq_type', 'tokens')
@@ -220,7 +222,7 @@ class Frequency:
             fcrit_args = []
             fcrit_async_args = []
         return ConcMenuItem(
-            MainMenu.FREQUENCY('text-types'), te('Text Types'), 'freqs'
+            MainMenu.FREQUENCY('text-types'), 'Text Types', 'freqs'
         ).add_args(
             *fcrit_args
         ).add_args(
@@ -234,7 +236,7 @@ class Frequency:
 
     freq_custom: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FREQUENCY('custom'), te('Custom'), 'MAIN_MENU_SHOW_FREQ_FORM',
+            MainMenu.FREQUENCY('custom'), 'Custom', 'MAIN_MENU_SHOW_FREQ_FORM',
             key_code=70, key_mod='shift'  # key = 'f'
         ).mark_indirect()
     )
@@ -244,7 +246,7 @@ class Frequency:
 class Collocations:
     colloc_custom: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.COLLOCATIONS('custom'), te('Custom'),
+            MainMenu.COLLOCATIONS('custom'), 'Custom',
             'MAIN_MENU_SHOW_COLL_FORM', key_code=67, key_mod='shift'  # key = 'c'
         ).mark_indirect()
     )
@@ -254,13 +256,13 @@ class Collocations:
 class View:
     view_mode_switch: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.VIEW('kwic-sent-switch'), te('KWIC/Sentence'),
+            MainMenu.VIEW('kwic-sent-switch'), 'KWIC/Sentence',
             'CONCORDANCE_SWITCH_KWIC_SENT_MODE', key_code=86)  # key = 'v'
     )
 
     view_structs_attrs: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.VIEW('structs-attrs'), te('Corpus-specific settings'),
+            MainMenu.VIEW('structs-attrs'), 'Corpus-specific settings',
             'MAIN_MENU_SHOW_ATTRS_VIEW_OPTIONS', key_code=79  # key = 'o'
         ).mark_corpus_dependent()
         .mark_indirect()
@@ -268,7 +270,7 @@ class View:
 
     view_global: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.VIEW('global-options'), te('General view options'),
+            MainMenu.VIEW('global-options'), 'General view options',
             'MAIN_MENU_SHOW_GENERAL_VIEW_OPTIONS', key_code=79, key_mod='shift'  # key = 'o'
         ).mark_indirect()
     )
