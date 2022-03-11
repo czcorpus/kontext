@@ -197,4 +197,4 @@ class KRequest:
             return f'{root}{action}'
 
     def translate(self, string: str) -> str:
-        return gettext(string, self)
+        return gettext(string, self._request)

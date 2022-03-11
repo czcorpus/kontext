@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # appl
 
 CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath(
     '%s/../conf/config.xml' % os.path.dirname(__file__)))
+LOCALE_PATH = os.path.realpath('%s/../locale' % os.path.dirname(__file__))
 
 import plugins
 import plugins.export
@@ -40,7 +41,7 @@ import settings
 import translation
 from action.plugin.initializer import setup_plugins, install_plugin_actions
 from texttypes.cache import TextTypesCache
-from sanic import Sanic
+from sanic import Sanic, Request
 from sanic_babel import Babel
 from sanic_session import Session, AIORedisSessionInterface
 from redis import asyncio as aioredis
@@ -53,7 +54,6 @@ from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 from action.cookie import KonTextCookie
-from action.krequest import KRequest
 
 
 # we ensure that the application's locale is always the same
@@ -181,15 +181,14 @@ if settings.get('global', 'umask', None):
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
 application = Sanic('kontext')
-babel = Babel(application, configure_jinja=False)
 application.ctx = ApplicationContext(
     templating=TplEngine(settings),
     tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance),
-    babel_instance=babel,
 )
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
+application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
 session = Session()
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
@@ -207,21 +206,18 @@ async def server_init(app, loop):
 
 
 @application.middleware('request')
-async def extract_user(request):
+async def extract_user(request: Request):
     request.ctx.user_info = UserInfo(
         id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
 
 
+babel = Babel(application, configure_jinja=False)
+
+
 @babel.localeselector
-def get_locale(request: KRequest):
+def get_locale(request: Request) -> str:
     """
-    Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
-
-    arguments:
-    environ -- WSGI environment variable
-
-    returns:
-    underscore-separated ISO 639 language code and ISO 3166 country code
+    Gets user locale based on request data
     """
     cookies = KonTextCookie(request.headers.get('cookie', ''))
 

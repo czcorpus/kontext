@@ -12,9 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
-from typing import Union, Callable, Optional, List, Dict, Any, Tuple
-from functools import partial
+from typing import Union, Optional, List, Dict, Any, Tuple
 import hashlib
 from action import ActionProps
 from action.errors import UserActionException
@@ -107,7 +105,8 @@ class BaseActionModel:
         result['use_conc_toolbar'] = False
         result['shuffle_min_result_warning'] = 0
         result['multilevel_freq_dist_max_levels'] = 0
-        apply_theme(result, app, settings.get('global', 'static_files_prefix', '../files'))
+        apply_theme(result, app, settings.get(
+            'global', 'static_files_prefix', '../files'), self._req.translate)
         page_model = action_props.page_model if action_props.page_model else l10n.camelize(
             action_props.action_name)
         result['page_model'] = page_model
