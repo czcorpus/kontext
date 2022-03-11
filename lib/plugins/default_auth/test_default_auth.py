@@ -157,7 +157,7 @@ class AuthTest(unittest.TestCase):
         self.assertEqual('mary', self.auth_handler.validate_user(
             None, 'mary', 'maryspassword').get('user'), msg)
 
-        self.auth_handler.update_user_password(2, 'marysnewpassword')
+        self.auth_handler.update_user_password(None, 2, 'marysnewpassword')
         split_new = split_pwd_hash(self.auth_handler._find_user('mary').get('pwd_hash'))
         msg = "the password update method failed"
         self.assertTrue(len(split_new['salt']) > 0)

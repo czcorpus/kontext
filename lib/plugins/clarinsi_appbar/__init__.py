@@ -13,7 +13,6 @@
 
 import os
 from plugin_types.appbar import AbstractApplicationBar
-from translation import ugettext as _
 from plugins import inject
 import plugins
 
@@ -68,7 +67,7 @@ class ClarinSiTopBar(AbstractApplicationBar):
                     '</form>').format(
                         fullname=user_d.get("fullname", "?"),
                         logout_url=self._logout_url or "",
-                        logout_msg=_('logout'),
+                        logout_msg=plugin_ctx.translate('logout'),
                         input_style=';'.join(input_style))
             else:
                 login_html = (
@@ -76,7 +75,7 @@ class ClarinSiTopBar(AbstractApplicationBar):
                     '<i class="fa fa-sign-in fa-lg">&nbsp;</i>'
                     '{login_msg}</a>').format(
                         login_url='',
-                        login_msg=_('Login'))
+                        login_msg=plugin_ctx.translate('Login'))
                 user_classes.append('loggedout')
         contents = html + (
             '<ul id="localization-bar" class="navbar-left pull-left list-unstyled" '

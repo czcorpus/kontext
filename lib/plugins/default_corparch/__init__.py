@@ -51,7 +51,6 @@ import l10n
 from controller import exposed
 import actions.user
 from action.plugin.ctx import PluginCtx
-from translation import ugettext as _
 from settings import import_bool
 from util import as_async
 
@@ -248,7 +247,8 @@ def process_pos_categories(tagset_node: etree.Element) -> List[PosCategoryItem]:
         tmp = dict(pos=None, position=None, tag_search_pattern=None)
         for elm in item:
             tmp[elm.tag] = elm.text
-        ulist.append((int(tmp['position']), PosCategoryItem(pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
+        ulist.append((int(tmp['position']), PosCategoryItem(
+            pattern=tmp['tag_search_pattern'], pos=tmp['pos'])))
     return [v[1] for v in sorted(ulist, key=lambda x: x[0])]
 
 
@@ -608,7 +608,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if self._registry_lang[:2] == plugin_ctx.user_lang[:2]:
             return text
         else:
-            return '{0} [{1}]'.format(text, _('translation not available'))
+            return '{0} [{1}]'.format(text, plugin_ctx.translate('translation not available'))
 
     def _export_featured(self, plugin_ctx):
         permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)

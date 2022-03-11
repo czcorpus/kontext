@@ -50,7 +50,7 @@ class TokenAuth(AbstractRemoteAuth):
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
 
-    def anonymous_user(self) -> UserInfo:
+    def anonymous_user(self, plugin_ctx) -> UserInfo:
         return UserInfo(
             id=self._anonymous_id,
             user='unauthorized',
@@ -96,13 +96,13 @@ class TokenAuth(AbstractRemoteAuth):
             if self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
             if user_info is None:
-                plugin_ctx.session['user'] = self.anonymous_user()
+                plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
             else:
                 plugin_ctx.session['user'] = user_info
         else:
             if not self.is_anonymous(curr_user_id):
                 plugin_ctx.session.clear()
-            plugin_ctx.session['user'] = self.anonymous_user()
+            plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
     async def _find_user(self, api_key: str) -> Optional[UserInfo]:
         with self._db.cursor() as cursor:

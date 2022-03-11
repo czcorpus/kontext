@@ -196,3 +196,6 @@ class BasePluginCtx:
     @property
     def user_lang(self) -> str:
         return self._request.ui_lang
+
+    def translate(self, string: str) -> str:
+        return self._request.translate(string)
