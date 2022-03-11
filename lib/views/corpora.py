@@ -24,7 +24,6 @@ from sanic import Blueprint
 import plugins
 from plugin_types.corparch import AbstractSearchableCorporaArchive
 from plugin_types.corparch.corpus import CitationInfo
-from translation import ugettext as translate
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -124,7 +123,7 @@ async def ajax_get_corp_details(amodel, req, resp):
                 for item in corpus.get_posattrs()]
         except RuntimeError as e:
             logging.getLogger(__name__).warning(f'{e}')
-            ans.attrlist = ErrorInfo(error=translate('Failed to load'))
+            ans.attrlist = ErrorInfo(error=req.translate('Failed to load'))
 
         ans.structlist = [
             AttrStruct(name=item, size=int(corpus.get_struct(item).size()))

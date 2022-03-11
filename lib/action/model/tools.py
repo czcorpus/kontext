@@ -1,10 +1,10 @@
+from typing import Callable
 import os
 from sanic import Sanic
 import settings
-from translation import ugettext
 
 
-def apply_theme(data, app: Sanic, public_files_path: str):
+def apply_theme(data, app: Sanic, public_files_path: str, translate: Callable[[str], str]):
     theme_name = settings.get('theme', 'name')
     logo_img = settings.get('theme', 'logo')
     if settings.contains('theme', 'logo_mouseover'):
@@ -18,7 +18,7 @@ def apply_theme(data, app: Sanic, public_files_path: str):
         logo_href = app.url_for('root.root_action')
 
     if theme_name == 'default':
-        logo_title = ugettext('Click to enter a new query')
+        logo_title = translate('Click to enter a new query')
     else:
         logo_title = str(logo_href)
 

@@ -26,7 +26,6 @@ import plugins
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
 import settings
 import l10n
-from translation import ugettext as translate
 from corplib.fallback import ErrorCorpus, EmptyCorpus
 from corplib.corpus import KCorpus
 from action.argmapping import ConcArgsMapping, Args
@@ -221,7 +220,7 @@ class CorpusActionModel(UserActionModel):
                     if len(corpora) > 0:
                         orig_corpora = form.add_forced_arg('corpname', corpora[0])
                         if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
-                            raise UserActionException(translate(
+                            raise UserActionException(self._req.translate(
                                 f'URL argument corpname={orig_corpora[0]} collides with corpus '
                                 f'{corpora[0]} stored as part of original concordance'))
                     if len(corpora) > 1:
@@ -230,7 +229,7 @@ class CorpusActionModel(UserActionModel):
                     if self._active_q_data.get('usesubcorp', None):
                         form.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                 else:
-                    raise UserActionException(translate('Invalid or expired query'))
+                    raise UserActionException(self._req.translate('Invalid or expired query'))
 
     def user_subc_names(self, corpname):
         if self.user_is_anonymous():
@@ -348,7 +347,7 @@ class CorpusActionModel(UserActionModel):
         # by default, each action is public
         access_level = self._action_props.access_level
         if access_level and self.user_is_anonymous():
-            raise ForbiddenException(translate('Access forbidden - please log-in.'))
+            raise ForbiddenException(self._req.translate('Access forbidden - please log-in.'))
 
         # plugins setup
         for p in plugins.runtime:
@@ -360,7 +359,7 @@ class CorpusActionModel(UserActionModel):
         info = await self.get_corpus_info(self.args.corpname)
         if isinstance(info, BrokenCorpusInfo):
             raise NotFoundException(
-                translate('Corpus \"{0}\" not available'.format(info.name)),
+                self._req.translate('Corpus \"{0}\" not available'.format(info.name)),
                 internal_message=f'Failed to fetch configuration for {info.name}')
 
         return req_args
@@ -701,7 +700,7 @@ class CorpusActionModel(UserActionModel):
                                             pub=self.corp.subcname, foreign=True))
         if len(subcorp_list) > 0:
             subcorp_list = [
-                {'n': '--{}--'.format(translate('whole corpus')), 'v': ''}] + subcorp_list
+                {'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] + subcorp_list
 
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []

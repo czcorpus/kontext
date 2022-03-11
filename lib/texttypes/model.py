@@ -34,7 +34,6 @@ from werkzeug.wrappers import Request
 from corplib.corpus import AbstractKCorpus
 import settings
 import plugins
-from translation import ugettext as _
 from action.plugin.ctx import PluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
@@ -116,7 +115,7 @@ class TextTypes:
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
-    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
+    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens', translate=lambda x: x):
         """
         Returns a text types table containing also an information about
         total occurrences of respective attribute values.
@@ -130,7 +129,7 @@ class TextTypes:
                 subcorpattrs = self._corp.get_conf('FULLREF')
         if not subcorpattrs or subcorpattrs == '#':
             raise TextTypesException(
-                _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
+                translate('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
         corpus_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
             self._plugin_ctx, self._corpname)
@@ -188,23 +187,23 @@ class TextTypes:
                 logging.getLogger(__name__).warning(
                     'Removed invalid tt cache entry for corpus {0}'.format(self._corpname))
             ans['Blocks'] = tt
-            ans['Normslist'] = self._get_normslist(list(struct_calc.keys())[0])
+            ans['Normslist'] = self._get_normslist(list(struct_calc.keys())[0], translate)
         else:
             ans['Blocks'] = tt
             ans['Normslist'] = []
         return ans
 
-    def _get_normslist(self, structname):
+    def _get_normslist(self, structname, translate):
         normsliststr = self._corp.get_conf('DOCNORMS')
-        normslist = [{'n': 'freq', 'label': _('Document counts')},
-                     {'n': 'tokens', 'label': _('Tokens')}]
+        normslist = [{'n': 'freq', 'label': translate('Document counts')},
+                     {'n': 'tokens', 'label': translate('Tokens')}]
         if normsliststr:
             normslist += [{'n': n, 'label': self._corp.get_conf(f'{structname}.{n}.LABEL') or n}
                           for n in normsliststr.split(',')]
         else:
             try:
                 self._corp.get_attr(structname + '.wordcount')
-                normslist.append({'n': 'wordcount', 'label': _('Word counts')})
+                normslist.append({'n': 'wordcount', 'label': translate('Word counts')})
             except:
                 pass
         return normslist

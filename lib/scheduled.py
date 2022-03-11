@@ -23,8 +23,6 @@ import shutil
 import os
 import re
 
-from translation import ugettext as _
-
 
 class add_subcorpus(object):
     """
@@ -95,7 +93,8 @@ class add_subcorpus(object):
             shutil.copy(src_path, dst_path)
 
         if not 'message' in kwargs:
-            ans['message'] = _('new subcorpora in your library: %s') % ', '.join(subcorpora)
+            ans['message'] = kwargs['translate'](
+                'new subcorpora in your library: %s') % ', '.join(subcorpora)
         else:
             ans['message'] = kwargs['message']
         return ans
