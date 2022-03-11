@@ -254,7 +254,8 @@ def _parse_config(path, plg_conf_aliases: TypeAliasTable):
                     plg_conf, _meta['plugins'][item.tag] = parse_config_section(item)
                     _conf['plugins'][item.tag] = plg_conf
                     if 'conf_path' in plg_conf:
-                        plg_subconf = _update_path_with_alias(plg_conf_aliases, plg_conf['conf_path'])
+                        plg_subconf = _update_path_with_alias(
+                            plg_conf_aliases, plg_conf['conf_path'])
                         if plg_subconf:
                             with open(plg_subconf) as fr:
                                 _conf['plugins'][item.tag]['__conf__'] = json.load(fr)
@@ -302,10 +303,11 @@ async def get_default_corpus(test_access_fn):
     name of a corpus to be used as a default
     """
     default_corp_list = get('corpora', 'default_corpora')
-    try:
-        return next(item for item in default_corp_list if await test_access_fn(item))
-    except StopIteration:
-        return ''   # '' is 'empty corpus' (None cannot be used here)
+    for item in default_corp_list:
+        if await test_access_fn(item):
+            return item
+
+    return ''   # '' is 'empty corpus' (None cannot be used here)
 
 
 DEBUG_OFF = 0
