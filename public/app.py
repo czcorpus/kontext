@@ -188,7 +188,6 @@ application.ctx = ApplicationContext(
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
-application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
 session = Session()
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
@@ -211,6 +210,7 @@ async def extract_user(request: Request):
         id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
 
 
+application.config['BABEL_TRANSLATION_DIRECTORIES'] = LOCALE_PATH
 babel = Babel(application, configure_jinja=False)
 
 

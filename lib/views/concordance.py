@@ -33,7 +33,7 @@ async def query(action_model, req, resp):
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
     out = {'aligned_corpora': action_model.args.align}
-    tt_data = await action_model.tt.export_with_norms(ret_nums=True)
+    tt_data = await action_model.tt.export_with_norms(ret_nums=True, translate=req.translate)
     out['Normslist'] = tt_data['Normslist']
     out['text_types_data'] = tt_data
 
@@ -50,7 +50,8 @@ async def query(action_model, req, resp):
     action_model.add_conc_form_args(qf_args)
     await action_model.attach_query_params(out)
     await action_model.attach_aligned_query_params(out)
-    action_model.export_subcorpora_list(action_model.args.corpname, action_model.args.usesubcorp, out)
+    action_model.export_subcorpora_list(
+        action_model.args.corpname, action_model.args.usesubcorp, out)
     return out
 
 
@@ -214,7 +215,7 @@ async def view(amodel, req, resp):
     out['struct_ctx'] = amodel.corp.get_conf('STRUCTCTX')
 
     # query form data
-    out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
+    out['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True, translate=req.translate)
     qf_args = await amodel.fetch_prev_query('conc:filter')
     if qf_args and qf_args.data.maincorp != amodel.args.corpname:
         qf_args = None
@@ -370,7 +371,7 @@ async def ajax_switch_corpus(amodel, req, resp):
         activePlugins=plg_status['active_plugins'],
         queryOverview=[],
         numQueryOps=0,
-        textTypesData=await amodel.tt.export_with_norms(ret_nums=True),
+        textTypesData=await amodel.tt.export_with_norms(ret_nums=True, translate=req.translate),
         Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
         AttrList=tmp_out['AttrList'],
         AlignCommonPosAttrs=list(align_common_posattrs),
