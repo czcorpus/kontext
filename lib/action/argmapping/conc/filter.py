@@ -97,7 +97,7 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
             self.has_lemma = corp_info.manatee.has_lemma
             self.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.tagsets:
-                tagset['widgetEnabled'] = tagset['widgetEnabled'] and th.tags_available_for(
+                tagset['widgetEnabled'] = tagset['widgetEnabled'] and await th.tags_available_for(
                     self._plugin_ctx, self.data.maincorp, tagset['ident'])
 
     def validate(self):

@@ -252,7 +252,7 @@ class UserActionModel(BaseActionModel):
         result[key] = {}
         for plg in plugins.runtime:
             if (hasattr(plg.instance, 'export') and (not isinstance(plg.instance, CorpusDependentPlugin) or
-                                                     plg.is_enabled_for(self.plugin_ctx, active_corpora))):
+                                                     await plg.is_enabled_for(self.plugin_ctx, active_corpora))):
                 result[key][plg.name] = await plg.instance.export(self.plugin_ctx)
 
     async def attach_plugin_exports(self, result, direct):

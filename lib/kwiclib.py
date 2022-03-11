@@ -28,7 +28,6 @@ from structures import FixedDict
 from conclib.empty import InitialConc
 from kwiclib_common import tokens2strclass
 from corplib.corpus import AbstractKCorpus
-from util import as_async
 
 SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -70,13 +69,12 @@ class EmptyKWiclines:
         return False
 
 
-class Pagination(object):
+class Pagination:
     first_page = 1
     prev_page = None
     next_page = None
     last_page = None
 
-    @as_async
     def export(self):
         return dict(firstPage=self.first_page, prevPage=self.prev_page,
                     nextPage=self.next_page, lastPage=self.last_page)
