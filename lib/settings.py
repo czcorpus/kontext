@@ -290,7 +290,7 @@ def conf_path():
     return _state.conf_path
 
 
-def get_default_corpus(test_access_fn):
+async def get_default_corpus(test_access_fn):
     """
     Returns name of the default corpus to be offered to a user. Select first
     corpus from the list which is conform with user's access rights
@@ -303,7 +303,7 @@ def get_default_corpus(test_access_fn):
     """
     default_corp_list = get('corpora', 'default_corpora')
     try:
-        return next(item for item in default_corp_list if test_access_fn(item))
+        return next(item for item in default_corp_list if await test_access_fn(item))
     except StopIteration:
         return ''   # '' is 'empty corpus' (None cannot be used here)
 

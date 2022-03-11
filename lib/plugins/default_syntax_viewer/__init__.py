@@ -58,6 +58,7 @@ from .manatee_backend import ManateeBackend
 from translation import ugettext as _
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
+from util import as_async
 
 
 bp = Blueprint('default_syntax_viewer')
@@ -98,7 +99,7 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
-    def is_enabled_for(self, plugin_ctx, corpora):
+    async def is_enabled_for(self, plugin_ctx, corpora):
         if len(corpora) == 0:
             return False
         return any(corpname in self._conf for corpname in corpora)
@@ -107,6 +108,7 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
     def export_actions():
         return bp
 
+    @as_async
     def export(self, plugin_ctx: PluginCtx):
         return dict(
             detail_attr_orders=self._backend.get_detail_attr_orders(
@@ -134,7 +136,7 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
             logging.getLogger(__name__).warning(f'Failed to load syntax viewer conf for {corp}: {ex}')
             return None
 
-    cursor = db.cursor()
+    cursor = db.cursor_sync()
     cursor.execute(
         'SELECT name, syntax_viewer_conf_json '
         f'FROM {corp_table} '
@@ -143,12 +145,12 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, auth, integ_db: IntegrationDatabase):
+async def create_instance(conf, auth, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(
             f'default_syntax_viewer uses integration_db[{integ_db.info}]')
-        corpora_conf = load_plugin_conf_from_db(integ_db)
+        corpora_conf = await load_plugin_conf_from_db(integ_db)
     else:
         logging.getLogger(__name__).info(f'default_syntax_viewer uses config_path configuration')
         corpora_conf = load_plugin_conf_from_file(plugin_conf)

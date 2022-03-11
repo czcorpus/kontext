@@ -127,7 +127,7 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def tags_available_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
+    async def tags_available_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.
@@ -137,13 +137,13 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def loader(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
+    async def loader(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
         """
         Return a loader for the corpus_name
         """
 
     @abc.abstractmethod
-    def fetcher(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
+    async def fetcher(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
         """
         Return a fetcher for the corpus_name
         """

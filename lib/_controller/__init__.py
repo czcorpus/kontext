@@ -55,6 +55,7 @@ from .response import KResponse, ResultType
 from action.cookie import KonTextCookie
 import werkzeug.wrappers
 import http.cookies
+from util import as_async
 
 T = TypeVar('T')
 
@@ -161,6 +162,7 @@ class Controller(ABC):
         """
         self._system_messages.append((msg_type, text))
 
+    @as_async
     def add_globals(self, request: werkzeug.Request, result: Dict[str, Any], methodname: str,
                     action_metadata: Dict[str, Any]) -> None:
         """

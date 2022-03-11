@@ -23,6 +23,11 @@ N = TypeVar('N')
 R = TypeVar('R')
 
 
+class AsyncCursor(Generic[R]):
+
+    pass
+
+
 class IntegrationDatabase(abc.ABC, Generic[N, R]):
     """
     Integration DB plugin allows sharing a single database connection pool across multiple plugins
@@ -95,21 +100,25 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         pass
 
     @abc.abstractmethod
-    def cursor(self, dictionary=True, buffered=False) -> R:
+    def cursor(self, dictionary=True, buffered=False) -> AsyncCursor[R]:
+        """
+        Create a new database cursor with asynchronous 'execute' 'executemany'
+        """
+        pass
+
+    @abc.abstractmethod
+    def cursor_sync(self, dictionary=True, buffered=False) -> R:
         """
         Create a new database cursor
         """
         pass
 
     @abc.abstractmethod
-    def execute(self, sql, args):
-        """
-        Execute a query.
-        """
+    async def execute(self, sql, args):
         pass
 
     @abc.abstractmethod
-    def executemany(self, sql, args_rows):
+    async def executemany(self, sql, args_rows):
         """
         Execute a single query multiple times with different argument sets.
         """

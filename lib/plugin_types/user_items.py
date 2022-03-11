@@ -98,7 +98,7 @@ class AbstractUserItems(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_items(self, plugin_ctx):
+    async def get_user_items(self, plugin_ctx):
         """
         Returns a list of user items (GeneralItem implementations)
 

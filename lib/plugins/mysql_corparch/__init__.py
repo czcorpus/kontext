@@ -164,10 +164,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         """
         return text
 
-    def export_favorite(self, plugin_ctx, favitems):
+    async def export_favorite(self, plugin_ctx, favitems):
         ans = []
         favitems_corpids = [x.corpora[0]['id'] for x in favitems]
-        descriptions = self.backend.load_corpora_descriptions(
+        descriptions = await self.backend.load_corpora_descriptions(
             favitems_corpids, plugin_ctx.user_lang)
         for item in favitems:
             tmp = item.to_dict()
@@ -187,18 +187,19 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                               path=None,
                               keywords=keywords)
 
-    def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
+    async def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
                      offset=0, limit=-1, favourites=()):
         user_id = plugin_ctx.user_dict['id']
         ans = OrderedDict()
-        for row in self._backend.list_corpora(user_id, substrs=substrs, keywords=keywords, min_size=min_size,
-                                              max_size=max_size, requestable=requestable, offset=offset,
-                                              limit=limit, favourites=favourites):
+        for row in await self._backend.list_corpora(
+            user_id, substrs=substrs, keywords=keywords, min_size=min_size,
+            max_size=max_size, requestable=requestable, offset=offset,
+            limit=limit, favourites=favourites):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_ctx, row)
         return ans
 
-    def get_l10n_keywords(self, id_list, lang_code) -> List[Tuple[str, str]]:
-        all_keywords = self.all_keywords(lang_code)
+    async def get_l10n_keywords(self, id_list, lang_code) -> List[Tuple[str, str]]:
+        all_keywords = await self.all_keywords(lang_code)
         ans = []
         for keyword_id in id_list:
             if keyword_id in all_keywords:
@@ -207,7 +208,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                 ans.append((keyword_id, keyword_id))
         return ans
 
-    def _localize_corpus_info(self, data: CorpusInfo, lang_code) -> CorpusInfo:
+    async def _localize_corpus_info(self, data: CorpusInfo, lang_code) -> CorpusInfo:
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -219,7 +220,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.metadata.desc = self._tt_desc_i18n[lang_code][ans.metadata.desc]
         else:
             ans.metadata.desc = ''
-        ans.metadata.keywords = self.get_l10n_keywords(ans.metadata.keywords, lang_code)
+        ans.metadata.keywords = await self.get_l10n_keywords(ans.metadata.keywords, lang_code)
         ans.description = ans.localized_desc(lang_code)
         return ans
 
@@ -230,10 +231,10 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         """
         return lang.split('_')[0]
 
-    def all_keywords(self, lang):
+    async def all_keywords(self, lang):
         if self._keywords is None:
             self._keywords = defaultdict(lambda: OrderedDict())
-            for row in self._backend.load_all_keywords():
+            for row in await self._backend.load_all_keywords():
                 #  id, label_cs, label_en, color
                 self._keywords['cs'][row['id']] = row['label_cs']
                 self._keywords['en'][row['id']] = row['label_en']
@@ -241,12 +242,12 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key]
 
-    def _get_tckcqs_providers(self, corpus_id):
+    async def _get_tckcqs_providers(self, corpus_id):
         if corpus_id not in self._tc_providers and corpus_id not in self._kc_providers:
             self._tc_providers[corpus_id] = TokenConnect()
             self._kc_providers[corpus_id] = KwicConnect()
             self._qs_providers[corpus_id] = QuerySuggest()
-            data = self._backend.load_tckc_providers(corpus_id)
+            data = await self._backend.load_tckc_providers(corpus_id)
             for row in data:
                 if row['type'] == 'tc':
                     self._tc_providers[corpus_id].providers.append(
@@ -257,14 +258,14 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     self._qs_providers[corpus_id].providers.append(row['provider'])
         return self._tc_providers[corpus_id], self._kc_providers[corpus_id], self._qs_providers[corpus_id]
 
-    def _fetch_corpus_info(self, corpus_id: str, user_lang: str) -> CorpusInfo:
+    async def _fetch_corpus_info(self, corpus_id: str, user_lang: str) -> CorpusInfo:
         if corpus_id not in self._corpus_info_cache:
-            row = self._backend.load_corpus(corpus_id)
+            row = await self._backend.load_corpus(corpus_id)
             corp = self._corp_info_from_row(row, user_lang)
             if corp:
-                corp.tagsets = self._backend.load_corpus_tagsets(corpus_id)
+                corp.tagsets = await self._backend.load_corpus_tagsets(corpus_id)
                 self._corpus_info_cache[corpus_id] = corp
-                for art in self._backend.load_corpus_articles(corpus_id):
+                for art in await self._backend.load_corpus_articles(corpus_id):
                     if art['role'] == 'default':
                         corp.citation_info.default_ref = markdown(art['entry'])
                     elif art['role'] == 'standard':
@@ -272,14 +273,14 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     elif art['role'] == 'other':
                         corp.citation_info.other_bibliography = markdown(art['entry'])
                 if row['ttdesc_id'] not in self._tt_desc_i18n:
-                    for drow in self._backend.load_ttdesc(row['ttdesc_id']):
+                    for drow in await self._backend.load_ttdesc(row['ttdesc_id']):
                         self._tt_desc_i18n['cs'][row['ttdesc_id']] = drow['text_cs']
                         self._tt_desc_i18n['en'][row['ttdesc_id']] = drow['text_en']
-                corp.simple_query_default_attrs = self._backend.load_simple_query_default_attrs(
+                corp.simple_query_default_attrs = await self._backend.load_simple_query_default_attrs(
                     corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
-    def get_corpus_info(self, plugin_ctx, corp_name):
+    async def get_corpus_info(self, plugin_ctx, corp_name):
         """
         Obtain full corpus info
         """
@@ -287,16 +288,16 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             try:
                 # get rid of path-like corpus ID prefix
                 corp_name = corp_name.lower()
-                corp_info = self._fetch_corpus_info(corp_name, plugin_ctx.user_lang)
+                corp_info = await self._fetch_corpus_info(corp_name, plugin_ctx.user_lang)
                 if corp_info is not None:
                     if plugin_ctx.user_lang is not None:
-                        ans = self._localize_corpus_info(corp_info, lang_code=plugin_ctx.user_lang)
+                        ans = await self._localize_corpus_info(corp_info, lang_code=plugin_ctx.user_lang)
                     else:
                         ans = corp_info
                     ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
-                    ans.token_connect, ans.kwic_connect, ans.query_suggest = self._get_tckcqs_providers(
+                    ans.token_connect, ans.kwic_connect, ans.query_suggest = await self._get_tckcqs_providers(
                         corp_name)
-                    ans.metadata.interval_attrs = self._backend.load_interval_attrs(corp_name)
+                    ans.metadata.interval_attrs = await self._backend.load_interval_attrs(corp_name)
 
                     return ans
                 return BrokenCorpusInfo(name=corp_name)
@@ -307,11 +308,11 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         else:
             return BrokenCorpusInfo()
 
-    def get_structattrs_info(
+    async def get_structattrs_info(
             self, plugin_ctx: 'PluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
-        items = super().get_structattrs_info(plugin_ctx, corp_name, full_names)
+        items = await super().get_structattrs_info(plugin_ctx, corp_name, full_names)
         items_index = dict((f'{x.structure_name}{x.name}', x) for x in items)
-        data = self.backend.load_corpus_structattrs(corp_name)
+        data = await self.backend.load_corpus_structattrs(corp_name)
         for row in data:
             item = items_index.get(f'{row["structure_name"]}{row["name"]}')
             if item is None:
@@ -329,11 +330,11 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def create_corplist_provider(self, plugin_ctx):
         return DefaultCorplistProvider(plugin_ctx, self, self._tag_prefix)
 
-    def _export_favorite(self, plugin_ctx):
+    async def _export_favorite(self, plugin_ctx):
         ans = []
-        for item in plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
+        for item in await plugins.runtime.USER_ITEMS.instance.get_user_items(plugin_ctx):
             tmp = item.to_dict()
-            corp_info = self._fetch_corpus_info(item.main_corpus_id, plugin_ctx.user_lang)
+            corp_info = await self._fetch_corpus_info(item.main_corpus_id, plugin_ctx.user_lang)
             if corp_info:
                 tmp['description'] = self._export_untranslated_label(
                     plugin_ctx, corp_info.description)
@@ -342,9 +343,9 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.append(tmp)
         return ans
 
-    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
+    async def initial_search_params(self, plugin_ctx, query, filter_dict=None):
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        all_keywords = self.all_keywords(plugin_ctx.user_lang)
+        all_keywords = await self.all_keywords(plugin_ctx.user_lang)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in list(all_keywords.items())]
         return {
@@ -360,15 +361,15 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def export_actions():
         return bp
 
-    def _export_featured(self, plugin_ctx):
-        return [dict(r) for r in self.backend.load_featured_corpora(plugin_ctx.user_lang)]
+    async def _export_featured(self, plugin_ctx):
+        return [dict(r) for r in await self.backend.load_featured_corpora(plugin_ctx.user_lang)]
 
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         return dict(
-            favorite=self._export_favorite(plugin_ctx),
-            featured=self._export_featured(plugin_ctx),
+            favorite=await self._export_favorite(plugin_ctx),
+            featured=await self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
-                            for k, lab in list(self.all_keywords(plugin_ctx.user_lang).items())],
+                            for k, lab in list((await self.all_keywords(plugin_ctx.user_lang)).items())],
             tag_prefix=self._tag_prefix,
             max_num_hints=self._max_num_hints,
             max_page_size=self.max_page_size

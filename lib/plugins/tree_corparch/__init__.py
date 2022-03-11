@@ -195,12 +195,12 @@ class TreeCorparch(AbstractCorporaArchive):
     def setup(self, controller_obj):
         pass
 
-    def get_corpus_info(self, plugin_ctx, corp_id):
+    async def get_corpus_info(self, plugin_ctx, corp_id):
         info = self._srch_item(self._data, corp_id)
         if info:
-            return self._localize_corpus_info(plugin_ctx, info)
+            return await self._localize_corpus_info(plugin_ctx, info)
         else:
-            return self._localize_corpus_info(plugin_ctx, BrokenCorpusInfo())
+            return await self._localize_corpus_info(plugin_ctx, BrokenCorpusInfo())
 
     def get_all(self, plugin_ctx):
         return self._data

@@ -102,7 +102,7 @@ async def ajax_get_corp_details(amodel, req, resp):
         _, acc, _ = auth.corpus_access(req.session_get('user'), corpname)
         if not acc:
             raise ForbiddenException('No access to corpus {0}'.format(corpname))
-        corp_conf_info = ca.get_corpus_info(amodel.plugin_ctx, corpname)
+        corp_conf_info = await ca.get_corpus_info(amodel.plugin_ctx, corpname)
         corpus = amodel.cm.get_corpus(req.args.get('corpname'))
         ans = CorpusDetail(
             corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
@@ -136,12 +136,12 @@ async def ajax_get_corp_details(amodel, req, resp):
 
 @bp.route('/corpora/ajax_get_structattrs_details')
 @http_action(action_model=UserActionModel, return_type='json')
-def ajax_get_structattrs_details(amodel, req, resp):
+async def ajax_get_structattrs_details(amodel, req, resp):
     """
     Provides a map (struct_name=>[list of attributes]). This is used
     by 'insert within' widget.
     """
-    speech_segment = amodel.get_corpus_info(amodel.args.corpname).speech_segment
+    speech_segment = await amodel.get_corpus_info(amodel.args.corpname).speech_segment
     ans = defaultdict(lambda: [])
     for item in amodel.corp.get_structattrs():
         if item != speech_segment:

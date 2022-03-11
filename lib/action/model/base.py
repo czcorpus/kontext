@@ -29,6 +29,7 @@ from translation import ugettext as translate
 import settings
 from sanic import Sanic
 from action.model.tools import apply_theme
+from util import as_async
 
 
 class BaseActionModel:
@@ -90,6 +91,7 @@ class BaseActionModel:
     def init_session(self) -> None:
         pass
 
+    @as_async
     def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         result['root_url'] = self._req.get_root_url()
         result['files_path'] = self._files_path
@@ -111,7 +113,7 @@ class BaseActionModel:
         result['page_model'] = page_model
         return result
 
-    def pre_dispatch(
+    async def pre_dispatch(
             self,
             args_proxy: Optional[Union[RequestArgsProxy, JSONRequestArgsProxy]]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:

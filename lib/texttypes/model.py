@@ -38,6 +38,7 @@ from translation import ugettext as _
 from action.plugin.ctx import PluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
+from util import as_async
 
 
 class TextTypeCollector:
@@ -111,10 +112,11 @@ class TextTypes:
         self._plugin_ctx = plugin_ctx
         self._tt_cache = tt_cache
 
+    @as_async
     def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
-    def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
+    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
         """
         Returns a text types table containing also an information about
         total occurrences of respective attribute values.
@@ -130,7 +132,7 @@ class TextTypes:
             raise TextTypesException(
                 _('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
-        corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+        corpus_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
             self._plugin_ctx, self._corpname)
         maxlistsize = settings.get_int('global', 'max_attr_list_size')
         # if 'live_attributes' are installed then always shrink bibliographical
@@ -163,7 +165,7 @@ class TextTypes:
             list_none = ()
         tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
                                        shrink_list=list_none, collator_locale=corpus_info.collator_locale)
-        self._add_tt_custom_metadata(tt)
+        await self._add_tt_custom_metadata(tt)
 
         if ret_nums:
             struct_calc = collections.OrderedDict()
@@ -207,9 +209,9 @@ class TextTypes:
                 pass
         return normslist
 
-    def _add_tt_custom_metadata(self, tt):
-        metadata = plugins.runtime.CORPARCH.instance.get_corpus_info(
-            self._plugin_ctx, self._corpname).metadata
+    async def _add_tt_custom_metadata(self, tt):
+        metadata = (await plugins.runtime.CORPARCH.instance.get_corpus_info(
+            self._plugin_ctx, self._corpname)).metadata
         for line in tt:
             for item in line.get('Line', ()):
                 label, widget = next((x for x in metadata.interval_attrs

@@ -49,6 +49,7 @@ from plugins.default_taghelper.fetchers.positional import PositionalSelectionFet
 from plugins.default_taghelper.fetchers import NullSelectionFetcher
 from action.decorators import http_action
 from action.model.corpus import CorpusActionModel
+from util import as_async
 
 
 bp = Blueprint('default_taghelper')
@@ -85,9 +86,9 @@ class Taghelper(AbstractTaghelper):
         self._loaders = {}
         self._fetchers = {}
 
-    def loader(self, plugin_ctx, corpus_name, tagset_name):
+    async def loader(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._loaders:
-            for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
+            for tagset in await self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
                 if tagset.type == 'positional':
                     self._loaders[(corpus_name, tagset.ident)] = PositionalTagVariantLoader(
                         corpus_name=corpus_name, tagset_name=tagset.ident,
@@ -107,9 +108,9 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._loaders[(corpus_name, tagset_name)]
 
-    def fetcher(self, plugin_ctx, corpus_name, tagset_name):
+    async def fetcher(self, plugin_ctx, corpus_name, tagset_name):
         if (corpus_name, tagset_name) not in self._fetchers:
-            for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
+            for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
                 if tagset.type == 'positional':
                     self._fetchers[(corpus_name, tagset.ident)] = PositionalSelectionFetcher()
                 elif tagset.type == 'keyval':
@@ -118,8 +119,8 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
-    def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
-        for tagset in self._corparch.get_corpus_info(plugin_ctx, corpus_name).tagsets:
+    async def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
+        for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
             if tagset.ident == tagset_id:
                 loader = self.loader(plugin_ctx, corpus_name, tagset.ident)
                 return loader.is_available()
@@ -129,6 +130,7 @@ class Taghelper(AbstractTaghelper):
     def export_actions():
         return bp
 
+    @as_async
     def export(self, plugin_ctx):
         tagsets = {}
         try:

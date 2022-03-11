@@ -246,12 +246,11 @@ class Querying(BaseActionModel):
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
-
-    def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
+    async def _get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = [t for t in self.corp.get_structattrs() if t != '']
         with plugins.runtime.CORPARCH as ca:
-            for attr in ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
+            for attr in await ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
                 structs_and_attrs[attr.structure_name].append(attr)
         return dict(structs_and_attrs)
 
