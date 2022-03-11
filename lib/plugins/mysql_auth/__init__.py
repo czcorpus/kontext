@@ -37,7 +37,6 @@ from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess,
 from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from plugin_types.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
-from translation import ugettext as _
 import plugins
 from plugins import inject
 from plugins.common.mysql import MySQLOps, MySQLConf
@@ -106,7 +105,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
                     user=user_data['username'],
                     fullname='{0} {1}'.format(user_data['firstname'], user_data['lastname']),
                     email=user_data.get('email', None))
-        return self.anonymous_user()
+        return self.anonymous_user(plugin_ctx)
 
     def logout(self, session):
         """
@@ -116,7 +115,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         self.sessions.delete(session)
         session.clear()
 
-    def update_user_password(self, user_id, password):
+    def update_user_password(self, plugin_ctx, user_id, password):
         """
         Updates user's password.
         There is no need to hash/encrypt the password - function does it automatically.
@@ -135,7 +134,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
                            (mk_pwd_hash_default(password), user_id))
             self.db.commit()
         else:
-            raise AuthException(_('User %s not found.') % user_id)
+            raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
 
     @staticmethod
     def _variant_prefix(corpname):
@@ -215,10 +214,10 @@ class MysqlAuthHandler(AbstractInternalAuth):
         """
         return len(password) >= self.MIN_PASSWORD_LENGTH
 
-    def get_required_password_properties(self):
+    def get_required_password_properties(self, plugin_ctx):
         """
         """
-        return _('The string must be at least %s characters long.') % self.MIN_PASSWORD_LENGTH
+        return plugin_ctx.translate('The string must be at least %s characters long.') % self.MIN_PASSWORD_LENGTH
 
     def get_login_url(self, return_url=None):
         if return_url is not None:
@@ -250,7 +249,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         return cursor.fetchone()
 
     def get_required_username_properties(self, plugin_ctx):
-        return (_(
+        return (plugin_ctx.translate(
             'The value must be at least %s characters long and must contain only a..z, A..Z, 0..9, _, - characters')
             % self.MIN_USERNAME_LENGTH)
 
@@ -261,27 +260,28 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     def sign_up_user(self, plugin_ctx, credentials):
         token = SignUpToken(user_data=credentials,
-                            label=_('KonText sign up confirmation'),
+                            label=plugin_ctx.translate('KonText sign up confirmation'),
                             ttl=self._confirmation_token_ttl)
         errors = defaultdict(lambda: [])
         avail_un, valid_un = self.validate_new_username(plugin_ctx, credentials['username'])
         if not avail_un:
-            errors['username'].append(_('Username not available'))
+            errors['username'].append(plugin_ctx.translate('Username not available'))
         if not valid_un:
-            errors['username'].append(_('Username not valid') + '. ' + self.get_required_username_properties(
+            errors['username'].append(plugin_ctx.translate('Username not valid') + '. ' + self.get_required_username_properties(
                 plugin_ctx))
         if credentials['password'] != credentials['password2']:
-            errors['password'].append(_('New password and its confirmation do not match.'))
+            errors['password'].append(plugin_ctx.translate(
+                'New password and its confirmation do not match.'))
             errors['password2'].append('')
         if not self.validate_new_password(credentials['password']):
-            errors['password'].append(_('Password not valid') + '. ' +
-                                      self.get_required_password_properties())
+            errors['password'].append(plugin_ctx.translate('Password not valid') + '. ' +
+                                      self.get_required_password_properties(plugin_ctx))
         if not credentials['firstname']:
-            errors['first_name'].append(_('First name not valid'))
+            errors['first_name'].append(plugin_ctx.translate('First name not valid'))
         if not credentials['lastname']:
-            errors['last_name'].append(_('Last name not valid'))
+            errors['last_name'].append(plugin_ctx.translate('Last name not valid'))
         if re.match(r'^[^@]+@[^@]+\.[^@]+$', credentials['email']) is None:  # just a basic e-mail syntax validation
-            errors['email'].append(_('E-mail not valid'))
+            errors['email'].append(plugin_ctx.translate('E-mail not valid'))
 
         token.pwd_hash = mk_pwd_hash_default(credentials['password'])
         del credentials['password2']
@@ -291,8 +291,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
                 raise Exception(
-                    _('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try '
-                      'again. Alternatively you can report a problem.'))
+                    plugin_ctx.translate('Failed to send a confirmation e-mail. Please check that you entered a valid e-mail and try '
+                                         'again. Alternatively you can report a problem.'))
 
         return dict((k, ' '.join(v)) for k, v in errors.items())
 
@@ -302,26 +302,28 @@ class MysqlAuthHandler(AbstractInternalAuth):
             datetime.timedelta(seconds=self._confirmation_token_ttl)
         )
         text = ''
-        text += _('Hello')
+        text += plugin_ctx.translate('Hello')
         text += ',\n\n'
-        text += _('thank you for using KonText at {url}.').format(url=plugin_ctx.root_url)
+        text += plugin_ctx.translate(
+            'thank you for using KonText at {url}.').format(url=plugin_ctx.root_url)
         text += '\n'
-        tmp = _(
+        tmp = plugin_ctx.translate(
             'To verify your new account {username} (full name: {firstname} {lastname}) please click the link below')
         text += tmp.format(username=username, firstname=firstname, lastname=lastname)
         text += ':\n\n'
         text += plugin_ctx.create_url('user/sign_up_confirm_email', dict(key=token.value))
         text += '\n\n'
-        text += time.strftime(_('The confirmation link will expire on %m/%d/%Y at %H:%M'),
+        text += time.strftime(plugin_ctx.translate('The confirmation link will expire on %m/%d/%Y at %H:%M'),
                               expir_date.timetuple())
         text += ' ({0:%Z}, {0:%z})'.format(expir_date)
         text += '\n\n\n-----------------------------------------------\n'
-        text += _('This e-mail has been generated automatically - please do not reply to it.')
+        text += plugin_ctx.translate(
+            'This e-mail has been generated automatically - please do not reply to it.')
         text += '\n'
 
         server = mailing.smtp_factory()
         msg = mailing.message_factory(
-            recipients=[user_email], subject=_('KonText sign up confirmation'),
+            recipients=[user_email], subject=plugin_ctx.translate('KonText sign up confirmation'),
             text=text, reply_to=None)
         return mailing.send_mail(server, msg, [user_email])
 

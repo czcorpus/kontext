@@ -167,12 +167,12 @@ async def set_user_password(amodel, req, resp):
             return ans
 
         if not auth.validate_new_password(new_passwd):
-            ans['messages'].append(auth.get_required_password_properties())
+            ans['messages'].append(auth.get_required_password_properties(amodel.plugin_ctx))
             fields['new_passwd'] = False
             fields['new_passwd2'] = False
             return ans
 
-        auth.update_user_password(req.session_get('user', 'id'), new_passwd)
+        auth.update_user_password(amodel.plugin_ctx, req.session_get('user', 'id'), new_passwd)
         return ans
 
 

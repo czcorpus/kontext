@@ -21,7 +21,6 @@ from typing import Tuple
 
 import manatee
 import settings
-from translation import ugettext as _
 from kwiclib_common import tokens2strclass
 import plugins
 from corplib.corpus import KCorpus, AbstractKCorpus
@@ -37,7 +36,7 @@ def conc_is_sorted(q: Tuple[str, ...]) -> bool:
     return ans
 
 
-def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True):
+def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):
     """
     arguments:
     corpus -- a KCorpus instance
@@ -67,15 +66,15 @@ def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internal
     if q is None:
         q = []
 
-    def _t(s): return _(s) if translate else lambda s: s
+    def _t(s): return translator(s) if translate else lambda s: s
 
     desctext = {'q': _t('Query'),
                 'a': _t('Query'),
                 'r': _t('Random sample'),
                 's': _t('Sort'),
                 'f': _t('Shuffle'),
-                'D': _('Remove nested matches'),
-                'F': _('First hits in documents'),
+                'D': translator('Remove nested matches'),
+                'F': translator('First hits in documents'),
                 'n': _t('Negative filter'),
                 'N': _t('Negative filter (excluding KWIC)'),
                 'p': _t('Positive filter'),
@@ -118,7 +117,7 @@ def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internal
             url1.append(('skey', {'-1': 'lc', '0<': 'kw', '1>': 'rc'}.get(sortattrs[1][:2], '')))
         elif opid == 'f':
             size = ''
-            args = _('enabled')
+            args = translator('enabled')
         elif opid == 'X':  # aligned corpora changes (<= orig_size) total size
             desc[-1] = desc[-1][:4] + (size,) + desc[-1][5:]
         if op:
@@ -127,12 +126,12 @@ def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internal
     return desc
 
 
-def get_full_ref(corp, pos):
+def get_full_ref(corp, pos, translator=lambda x: x):
     data = {}
     refs = [(n == '#' and ('#', str(pos)) or
              (n, corp.get_attr(n).pos2str(pos)))
             for n in corp.get_conf('FULLREF').split(',') if n != settings.get('corpora', 'speech_segment_struct_attr')]
-    data['Refs'] = [{'name': n == '#' and _('Token number') or corp.get_conf(f'{n}.LABEL') or n,
+    data['Refs'] = [{'name': n == '#' and translator('Token number') or corp.get_conf(f'{n}.LABEL') or n,
                      'val': v} for n, v in refs]
     for n, v in refs:
         data[n.replace('.', '_')] = v

@@ -186,7 +186,7 @@ class CentralAuth(AbstractRemoteAuth):
                 # reload available corpora from remote server
             else:  # logout => clear current user's session data and set new credentials
                 plugin_ctx.session.clear()
-                plugin_ctx.session['user'] = self.anonymous_user()
+                plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
     def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:

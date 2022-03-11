@@ -190,13 +190,13 @@ class UserActionModel(BaseActionModel):
                 raise RuntimeError('Auth plugin was not initialized')
 
             if 'user' not in self._req.ctx.session:
-                self._req.ctx.session['user'] = auth.anonymous_user()
+                self._req.ctx.session['user'] = auth.anonymous_user(self.plugin_ctx)
 
             if hasattr(auth, 'revalidate'):
                 try:
-                    auth.revalidate(self._plugin_ctx)  # type: ignore
+                    auth.revalidate(self.plugin_ctx)  # type: ignore
                 except Exception as ex:
-                    self._req.ctx.session['user'] = auth.anonymous_user()
+                    self._req.ctx.session['user'] = auth.anonymous_user(self.plugin_ctx)
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
                     self.add_system_message(
                         'error',
@@ -372,7 +372,6 @@ class UserActionModel(BaseActionModel):
             dynamic_items=self._dynamic_menu_items,
             corpus_dependent=result['uses_corp_instance'],
             plugin_ctx=self.plugin_ctx,
-            translate=self._req.translate
         )
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten

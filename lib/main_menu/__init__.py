@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from dataclasses import fields, Field
-import logging
 from typing import Tuple, Dict, Any, Optional, Callable, List, Union
 
 from action.argmapping import Args
@@ -35,7 +34,6 @@ def generate_main_menu(
     dynamic_items: List[AbstractMenuItem],
     corpus_dependent: bool,
     plugin_ctx: PluginCtx,
-    translate: Callable[[str], str],
 ):
     """
     Generate main menu data based
@@ -99,54 +97,54 @@ def generate_main_menu(
                 if not value:
                     continue
                 ans.append(value.filter_empty_args().set_disabled(
-                    is_disabled(value)).create(merged_args, translate))
+                    is_disabled(value)).create(merged_args, plugin_ctx.translate))
         return tuple(ans + custom_menu_items(section))
 
     items = [
         (MainMenu.NEW_QUERY.name, dict(
-            label=translate('Query'),
+            label=plugin_ctx.translate('Query'),
             fallback_action='query',
             items=exp(MainMenu.NEW_QUERY, NewQuery),
             disabled=is_disabled(MainMenu.NEW_QUERY)
         )),
         (MainMenu.CORPORA.name, dict(
-            label=translate('Corpora'),
+            label=plugin_ctx.translate('Corpora'),
             fallback_action='corpora/corplist',
             items=exp(MainMenu.CORPORA, Corpora, modify_corpora),
             disabled=is_disabled(MainMenu.CORPORA)
         )),
         (MainMenu.SAVE.name, dict(
-            label=translate('Save'),
+            label=plugin_ctx.translate('Save'),
             items=exp(MainMenu.SAVE, Save, modify_save_items),
             disabled=is_disabled(MainMenu.SAVE)
         )),
         (MainMenu.CONCORDANCE.name, dict(
-            label=translate('Concordance'),
+            label=plugin_ctx.translate('Concordance'),
             items=exp(MainMenu.CONCORDANCE, ConcordanceDefault, modify_concordance),
             disabled=is_disabled(MainMenu.CONCORDANCE)
         )),
         (MainMenu.FILTER.name, dict(
-            label=translate('Filter'),
+            label=plugin_ctx.translate('Filter'),
             items=exp(MainMenu.FILTER, Filter),
             disabled=is_disabled(MainMenu.FILTER)
         )),
         (MainMenu.FREQUENCY.name, dict(
-            label=translate('Frequency'),
+            label=plugin_ctx.translate('Frequency'),
             items=exp(MainMenu.FREQUENCY, Frequency),
             disabled=is_disabled(MainMenu.FREQUENCY)
         )),
         (MainMenu.COLLOCATIONS.name, dict(
-            label=translate('Collocations'),
+            label=plugin_ctx.translate('Collocations'),
             items=exp(MainMenu.COLLOCATIONS, Collocations),
             disabled=is_disabled(MainMenu.COLLOCATIONS)
         )),
         (MainMenu.VIEW.name, dict(
-            label=translate('View'),
+            label=plugin_ctx.translate('View'),
             items=exp(MainMenu.VIEW, View),
             disabled=is_disabled(MainMenu.VIEW)
         )),
         (MainMenu.HELP.name, dict(
-            label=translate('Help'),
+            label=plugin_ctx.translate('Help'),
             items=exp(MainMenu.HELP, Help),
             disabled=is_disabled(MainMenu.HELP)
         ))
