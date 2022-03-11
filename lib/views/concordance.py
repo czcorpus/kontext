@@ -12,7 +12,6 @@ from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from action.argmapping.conc import ShuffleFormArgs
 from action.errors import NotFoundException, UserActionException
-from translation import ugettext
 import conclib
 from conclib.search import get_conc
 from conclib.errors import (
@@ -116,7 +115,7 @@ async def view(amodel, req, resp):
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
 
     if amodel.args.fromp < 1:
-        raise UserActionException(ugettext('Invalid page number'))
+        raise UserActionException(req.translate('Invalid page number'))
     if amodel.args.pagesize < 1:
         raise UserActionException('Invalid page size')
 
@@ -172,27 +171,27 @@ async def view(amodel, req, resp):
     if amodel.args.align and not amodel.args.maincorp:
         amodel.args.maincorp = amodel.args.corpname
     if conc.size() == 0 and conc.finished():
-        msg = ugettext(
+        msg = req.translate(
             'No result. Please make sure the query and selected query type are correct.')
         amodel.add_system_message('info', msg)
 
     amodel.add_save_menu_item(
         'CSV', save_format='csv',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'XLSX', save_format='xlsx',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'XML', save_format='xml',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
         'TXT', save_format='text',
-        hint=ugettext('Saves at most {0} items. Use "Custom" for more options.'.format(
+        hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item(ugettext('Custom'))
+    amodel.add_save_menu_item(req.translate('Custom'))
 
     # unlike 'globals' 'widectx_globals' stores full structs+structattrs information
     # to be able to display extended context with all set structural attributes
@@ -259,7 +258,7 @@ async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
         op_data = pipeline[int(req.args.get('idx'))]
         return op_data.to_dict()
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
-        raise NotFoundException(ugettext('Query information not stored: {}').format(ex))
+        raise NotFoundException(req.translate('Query information not stored: {}').format(ex))
 
 
 @bp.route('/widectx')

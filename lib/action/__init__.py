@@ -19,8 +19,6 @@ class ActionProps:
 
     return_type: str = 'template'
 
-    installed_langs: Dict[str, str] = field(default_factory=lambda: dict(en='en_US'))
-
     mutates_result: bool = False
 
     action_log_mapper: Callable[[Request], Any] = False

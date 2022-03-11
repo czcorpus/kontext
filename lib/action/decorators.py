@@ -54,7 +54,8 @@ async def _output_result(
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
         return tpl_engine.render(template, result)
-    raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
+    raise RuntimeError(
+        f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
 
 def http_action(
@@ -93,7 +94,7 @@ def http_action(
             action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
             aprops = ActionProps(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
-                return_type=return_type, page_model=page_model, installed_langs=application.ctx.installed_langs,
+                return_type=return_type, page_model=page_model,
                 mutates_result=mutates_result)
             req = KRequest(request, aprops, app_url_prefix)
             resp = KResponse(
@@ -128,4 +129,3 @@ def http_action(
 
         return wrapper
     return decorator
-

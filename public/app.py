@@ -29,7 +29,6 @@ import logging
 import locale
 import signal
 
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
 CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath(
@@ -54,6 +53,7 @@ from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 from action.cookie import KonTextCookie
+from action.krequest import KRequest
 
 
 # we ensure that the application's locale is always the same
@@ -181,9 +181,11 @@ if settings.get('global', 'umask', None):
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
 application = Sanic('kontext')
+babel = Babel(application, configure_jinja=False)
 application.ctx = ApplicationContext(
     templating=TplEngine(settings),
     tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance),
+    babel_instance=babel,
 )
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
@@ -210,11 +212,8 @@ async def extract_user(request):
         id=0, user='anonymous', api_key=None, email=None, fullname='Anonymous User')  # TODO
 
 
-babel = Babel(application, configure_jinja=False)
-
-
 @babel.localeselector
-def get_locale(request):
+def get_locale(request: KRequest):
     """
     Detects user's preferred language (either via the 'getlang' plugin or from HTTP_ACCEPT_LANGUAGE env value)
 

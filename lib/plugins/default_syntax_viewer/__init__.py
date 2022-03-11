@@ -55,7 +55,6 @@ from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContex
 from action.errors import UserActionException
 from action.plugin.ctx import PluginCtx
 from .manatee_backend import ManateeBackend
-from translation import ugettext as _
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
 from util import as_async
@@ -80,7 +79,7 @@ def get_syntax_data(ctrl, request):
                                          int(request.args.get('kwic_len')))
     except MaximumContextExceeded:
         raise UserActionException(
-            _('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
+            request.translate('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
 
 
 class SyntaxDataProviderError(Exception):
@@ -133,7 +132,8 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
         try:
             return json.loads(src)
         except Exception as ex:
-            logging.getLogger(__name__).warning(f'Failed to load syntax viewer conf for {corp}: {ex}')
+            logging.getLogger(__name__).warning(
+                f'Failed to load syntax viewer conf for {corp}: {ex}')
             return None
 
     cursor = db.cursor_sync()

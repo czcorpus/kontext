@@ -36,7 +36,6 @@ element taghelper {
   }
 }
 """
-from translation import ugettext as _
 from action.errors import UserActionException
 from sanic.blueprints import Blueprint
 import plugins
@@ -70,7 +69,7 @@ def ajax_get_tag_variants(req, amodel):
             amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
         raise UserActionException(
-            _('Corpus %s is not supported by this widget.') % corpname)
+            req.translate('Corpus %s is not supported by this widget.') % corpname)
     if plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name).is_empty(values_selection):
         ans = tag_loader.get_initial_values(req.ui_lang)
     else:

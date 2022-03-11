@@ -21,6 +21,8 @@ from sanic.request import Request
 from urllib.parse import quote
 from plugin_types.auth import UserInfo
 from action import ActionProps
+from babel import Locale
+from sanic_babel import gettext, get_locale
 
 
 class KRequest:
@@ -33,6 +35,7 @@ class KRequest:
         self._request = request
         self._action_props = action_props
         self._app_prefix = app_prefix if app_prefix else ''
+        self._locale: Locale = get_locale(request)
 
     @property
     def unwrapped(self):
@@ -71,6 +74,10 @@ class KRequest:
     @property
     def session(self):
         return self._request.ctx.session
+
+    @property
+    def ui_lang(self):
+        return str(self._locale)
 
     def session_get_user(self) -> UserInfo:
         """
@@ -188,3 +195,6 @@ class KRequest:
             return f'{root}{action}?{params_str}'
         else:
             return f'{root}{action}'
+
+    def translate(self, string: str) -> str:
+        return gettext(string, self)
