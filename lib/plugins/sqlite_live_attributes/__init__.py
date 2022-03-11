@@ -23,10 +23,11 @@ It is recommended to install Unidecode package (pip install Unidecode)
 import re
 import json
 from functools import partial
-from collections import defaultdict, OrderedDict, Iterable
+from collections import defaultdict, OrderedDict
+from sanic import Blueprint
 import sqlite3
 import logging
-from typing import Dict, List
+from typing import Dict, List, Iterable
 try:
     from unidecode import unidecode
 except ImportError:
@@ -41,13 +42,16 @@ import plugins
 from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 import strings
-from controller import exposed
 from action.plugin.ctx import PluginCtx
-from actions import concordance
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
 from . import query
 
+bp = Blueprint('sqlite_live_attributes')
 
-@exposed(return_type='json', http_method='POST')
+
+@bp.route('/filter_attributes', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def filter_attributes(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     aligned = json.loads(request.form.get('aligned', '[]'))
@@ -56,7 +60,8 @@ def filter_attributes(self, request):
                                      aligned_corpora=aligned)
 
 
-@exposed(return_type='json', http_method='POST')
+@bp.route('/attr_val_autocomplete', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
@@ -67,7 +72,8 @@ def attr_val_autocomplete(self, request):
                                      autocomplete_attr=request.form.get('patternAttr'))
 
 
-@exposed(return_type='json', http_method='POST')
+@bp.route('/fill_attrs', methods=['POST'])
+@http_action(return_type='json', action_model=CorpusActionModel)
 def fill_attrs(self, request):
     search = request.json['search']
     values = request.json['values']
@@ -90,11 +96,11 @@ class LiveAttributes(CachedLiveAttributes):
         self.shorten_value = partial(strings.shorten, nice=True)
         self._max_attr_visible_chars = max_attr_visible_chars
 
-    def export_actions(self):
-        return {
-            concordance.Actions: [filter_attributes, attr_val_autocomplete, fill_attrs]}
+    @staticmethod
+    def export_actions():
+        return bp
 
-    def db(self, plugin_ctx: PluginCtx, corpname):
+    async def db(self, plugin_ctx: PluginCtx, corpname):
         """
         Returns thread-local database connection to a sqlite3 database
 
@@ -104,7 +110,7 @@ class LiveAttributes(CachedLiveAttributes):
         """
 
         if corpname not in self.databases:
-            db_path = self.corparch.get_corpus_info(plugin_ctx, corpname).metadata.database
+            db_path = (await self.corparch.get_corpus_info(plugin_ctx, corpname)).metadata.database
             if db_path:
                 self.databases[corpname] = sqlite3.connect(db_path)
                 self.databases[corpname].row_factory = sqlite3.Row
@@ -185,8 +191,8 @@ class LiveAttributes(CachedLiveAttributes):
                 ans[label][1] = '@' + ans[label][2]
         data[bib_label] = list(ans.values())
 
-    def get_supported_structures(self, plugin_ctx, corpname):
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
+    async def get_supported_structures(self, plugin_ctx, corpname):
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpname)
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
@@ -213,8 +219,8 @@ class LiveAttributes(CachedLiveAttributes):
         return cur.fetchone()[0]
 
     @cached
-    def get_attr_values(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
-                        limit_lists=True):
+    async def get_attr_values(
+            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
         """
         Finds all the available values of remaining attributes according to the
         provided attr_map and aligned_corpora
@@ -228,7 +234,7 @@ class LiveAttributes(CachedLiveAttributes):
         returns:
         a dictionary containing matching attributes and values
         """
-        corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
 
         srch_attrs = set(self._get_subcorp_attrs(corpus))
         expand_attrs = set()  # attributes we want to be full lists even if their size exceeds configured max. value
@@ -323,9 +329,9 @@ class LiveAttributes(CachedLiveAttributes):
                 db, 'SELECT * FROM bibliography WHERE id = ? LIMIT 1', (item_id,)).fetchone()
         return [StructAttrValuePair(k, ans[i]) for k, i in list(col_map.items()) if k != 'id']
 
-    def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
+    async def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         with plugins.runtime.CORPARCH as ca:
-            corpus_info = ca.get_corpus_info(plugin_ctx.user_lang, corpus_id)
+            corpus_info = await ca.get_corpus_info(plugin_ctx.user_lang, corpus_id)
         label_attr = self.import_key(corpus_info.metadata.label_attr)
         db = self.db(plugin_ctx, corpus_id)
         pch = ', '.join(['?'] * len(id_list))

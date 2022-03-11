@@ -82,7 +82,7 @@ class ConcActionModel(CorpusActionModel):
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
 
-    def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
+    async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
         curr = self._req.ctx.session.get('last_search', {})
         last_op = curr.get(query_type, None)
         if last_op:
@@ -112,7 +112,7 @@ class ConcActionModel(CorpusActionModel):
                             persist=False)
                         qf_args.apply_last_used_opts(last_op_form.get('lastop_form', {}))
                     else:
-                        qf_args = QueryFormArgs(
+                        qf_args = await QueryFormArgs.create(
                             plugin_ctx=self._plugin_ctx,
                             corpora=self.select_current_aligned_corpora(active_only=False),
                             persist=False)
@@ -244,7 +244,7 @@ class ConcActionModel(CorpusActionModel):
     def select_current_aligned_corpora(self, active_only: bool) -> List[str]:
         return self.get_current_aligned_corpora() if active_only else self.get_available_aligned_corpora()
 
-    def attach_query_params(
+    async def attach_query_params(
             self, tpl_out: Dict[str, Any], query: Optional[QueryFormArgs] = None,
             filter: Optional[FilterFormArgs] = None, sort: Optional[SortFormArgs] = None,
             sample: Optional[SampleFormArgs] = None, shuffle: Optional[ShuffleFormArgs] = None,
@@ -255,7 +255,7 @@ class ConcActionModel(CorpusActionModel):
         sorting, samples,...). If any of query, filter,..., firsthits is provided than
         it is used instead of the default variant of the form.
         """
-        corpus_info = self.get_corpus_info(self.args.corpname)
+        corpus_info = await self.get_corpus_info(self.args.corpname)
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
@@ -278,8 +278,8 @@ class ConcActionModel(CorpusActionModel):
 
         corpora = self.select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
-            query=query.to_dict() if query is not None else QueryFormArgs(
-                plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False).to_dict(),
+            query=query.to_dict() if query is not None else (await QueryFormArgs.create(
+                plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False)).to_dict(),
             filter=filter.to_dict() if filter is not None else FilterFormArgs(
                 plugin_ctx=self._plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
                     self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False).to_dict(),
@@ -289,7 +289,7 @@ class ConcActionModel(CorpusActionModel):
             firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
-    def attach_aligned_query_params(self, tpl_out: Dict[str, Any]) -> None:
+    async def attach_aligned_query_params(self, tpl_out: Dict[str, Any]) -> None:
         """
         Adds template data required to generate components for adding/overviewing
         aligned corpora. This is called by individual actions.
@@ -303,7 +303,7 @@ class ConcActionModel(CorpusActionModel):
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
                 alcorp = self.cm.get_corpus(al)
-                corp_info = self.get_corpus_info(al)
+                corp_info = await self.get_corpus_info(al)
 
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
 
@@ -315,22 +315,22 @@ class ConcActionModel(CorpusActionModel):
                 tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
-    def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
+    async def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = [t for t in self.corp.get_structattrs() if t != '']
         with plugins.runtime.CORPARCH as ca:
-            for attr in ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
+            for attr in await ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
                 structs_and_attrs[attr.structure_name].append(attr)
         return dict(structs_and_attrs)
 
-    def add_globals(self, app, action_props, result):
+    async def add_globals(self, app, action_props, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
         It is called after an action is processed but before any output starts
         """
-        result = super().add_globals(app, action_props, result)
-        result['structs_and_attrs'] = self.get_structs_and_attrs()
+        result = await super().add_globals(app, action_props, result)
+        result['structs_and_attrs'] = await self.get_structs_and_attrs()
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]
@@ -504,12 +504,12 @@ class ConcActionModel(CorpusActionModel):
             if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
 
-    def get_speech_segment(self):
+    async def get_speech_segment(self):
         """
         Returns:
             tuple (structname, attr_name)
         """
-        segment_str = self.get_corpus_info(self.args.corpname).speech_segment
+        segment_str = (await self.get_corpus_info(self.args.corpname)).speech_segment
         if segment_str:
             return tuple(segment_str.split('.'))
         return None

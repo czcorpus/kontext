@@ -59,9 +59,9 @@ class Backend:
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
 
-    def get_favitems(self, user_id: int):
+    async def get_favitems(self, user_id: int):
         with self._db.cursor() as cursor:
-            cursor.execute(
+            await cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
                 " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
                 " GROUP_CONCAT(c.size SEPARATOR ',') as sizes "
@@ -80,7 +80,7 @@ class Backend:
 
         return ans
 
-    def count_favitems(self, user_id: int) -> int:
+    async def count_favitems(self, user_id: int) -> int:
         with self._db.cursor() as cursor:
             cursor.execute(
                 'SELECT COUNT(*) AS count '
@@ -88,7 +88,7 @@ class Backend:
                 'WHERE user_id = %s ', (user_id,))
             return cursor.fetchone()
 
-    def insert_favitem(self, user_id: int, item: FavoriteItem):
+    async def insert_favitem(self, user_id: int, item: FavoriteItem):
         with self._db.cursor() as cursor:
             cursor.execute(
                 'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
@@ -102,7 +102,7 @@ class Backend:
         self._db.commit()
         item.ident = str(favitem_id)  # need to update new id
 
-    def delete_favitem(self, item_id: int):
+    async def delete_favitem(self, item_id: int):
         with self._db.cursor() as cursor:
             cursor.execute(
                 'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))

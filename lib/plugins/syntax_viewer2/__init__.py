@@ -23,6 +23,7 @@ An improved default_syntax viewer with rewritten tree rendering
 
 import logging
 import plugins
+import asyncio
 import plugins.default_syntax_viewer as dsv
 from .backend.manatee import ManateeBackend2
 

@@ -133,10 +133,10 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         self._corparch = corparch
         self._db = integration_db
 
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         if len(corpora) == 0:
             return False
-        info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         return bool(info.metadata.id_attr)
 
     @staticmethod
@@ -175,7 +175,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
             ans.append(tmp)
         return [subitem for item in ans for subitem in item]
 
-    def process(
+    async def process(
             self, plugin_ctx: PluginCtx, corpus: KCorpus, corpname: str, aligned_corpora: List[str],
             args: List[ExpressionItem]) -> ProcessResponse:
 
@@ -183,12 +183,12 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
         if len(used_structs) > 1:
             raise SubcMixerException(
                 'Subcorpora based on more than a single structure are not supported at the moment.')
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpname)
+        corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpname)
         conditions = self._import_task_args(args)
 
         cat_tree = CategoryTree(conditions, self._db, corpus_info.id,
                                 aligned_corpora, SubcMixer.CORPUS_MAX_SIZE)
-        mm = MetadataModel(self._db, cat_tree, corpus_info.metadata.id_attr)
+        mm = await MetadataModel.create(self._db, cat_tree, corpus_info.metadata.id_attr)
         corpus_items = mm.solve()
 
         if corpus_items.size_assembled > 0:

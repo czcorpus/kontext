@@ -230,5 +230,5 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         return []
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         pass

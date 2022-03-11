@@ -13,7 +13,7 @@ from action.model.base import BaseActionModel
 import json
 
 
-def _output_result(
+async def _output_result(
         app: Sanic,
         action_model: BaseActionModel,
         action_props: ActionProps,
@@ -52,7 +52,7 @@ def _output_result(
     elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
     elif isinstance(result, dict):
-        result = action_model.add_globals(app, action_props, result)
+        result = await action_model.add_globals(app, action_props, result)
         return tpl_engine.render(template, result)
     raise RuntimeError(f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
@@ -108,11 +108,11 @@ def http_action(
 
             try:
                 amodel.init_session()
-                amodel.pre_dispatch(None)
+                await amodel.pre_dispatch(None)
                 ans = await func(amodel, req, resp, **kw)
                 amodel.post_dispatch(aprops, ans, None)  # TODO error desc
                 return HTTPResponse(
-                    body=_output_result(
+                    body=await _output_result(
                         app=application,
                         action_model=amodel,
                         action_props=aprops,

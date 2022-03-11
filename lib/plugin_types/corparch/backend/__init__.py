@@ -31,38 +31,38 @@ class DatabaseBackend:
     """
 
     @abc.abstractmethod
-    def contains_corpus(self, corpus_id: str) -> bool:
+    async def contains_corpus(self, corpus_id: str) -> bool:
         pass
 
     @abc.abstractmethod
-    def load_corpus_articles(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_articles(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
-    def load_all_keywords(self) -> Iterable[Dict[str, str]]:
+    async def load_all_keywords(self) -> Iterable[Dict[str, str]]:
         """
         expected db cols: id, label_cs, label_en, color
         """
         pass
 
     @abc.abstractmethod
-    def load_ttdesc(self, desc_id: int) -> Iterable[Dict[str, str]]:
+    async def load_ttdesc(self, desc_id: int) -> Iterable[Dict[str, str]]:
         """
         """
         pass
 
     @abc.abstractmethod
-    def load_corpora_descriptions(self, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
+    async def load_corpora_descriptions(self, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
         """
         """
         pass
 
     @abc.abstractmethod
-    def load_corpus(self, corp_id: str) -> Dict[str, Any]:
+    async def load_corpus(self, corp_id: str) -> Dict[str, Any]:
         pass
 
     @abc.abstractmethod
-    def list_corpora(
+    async def list_corpora(
             self, user_id: int, substrs: Optional[List[str]] = None, keywords: Optional[List[str]] = None,
             min_size: int = 0, max_size: Optional[int] = None, requestable: bool = False,
             offset: int = 0, limit: int = -1, favourites: Tuple[str, ...] = ()) -> Iterable[Dict[str, Any]]:
@@ -72,31 +72,31 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
+    async def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
         pass
 
     @abc.abstractmethod
-    def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
+    async def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
         pass
 
     @abc.abstractmethod
-    def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
-    def load_corpus_posattr_references(self, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
+    async def load_corpus_posattr_references(self, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
         pass
 
     @abc.abstractmethod
-    def load_corpus_alignments(self, corpus_id: str) -> List[str]:
+    async def load_corpus_alignments(self, corpus_id: str) -> List[str]:
         pass
 
     @abc.abstractmethod
-    def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
-    def load_corpus_structattrs(self, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
+    async def load_corpus_structattrs(self, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
         """
         Load rows matching provided corpus and (if provided) structure_id. The order of items can be
         arbitrary so there is no guarantee that items are grouped or ordered in any way.
@@ -104,30 +104,30 @@ class DatabaseBackend:
         pass
 
     @abc.abstractmethod
-    def load_subcorpattrs(self, corpus_id: str) -> List[str]:
+    async def load_subcorpattrs(self, corpus_id: str) -> List[str]:
         pass
 
     @abc.abstractmethod
-    def load_freqttattrs(self, corpus_id: str) -> List[str]:
+    async def load_freqttattrs(self, corpus_id: str) -> List[str]:
         pass
 
     @abc.abstractmethod
-    def load_tckc_providers(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
+    async def load_tckc_providers(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod
-    def get_permitted_corpora(self, user_id: str) -> List[str]:
+    async def get_permitted_corpora(self, user_id: str) -> List[str]:
         pass
 
     @abc.abstractmethod
-    def corpus_access(self, user_id: int, corpus_id: str) -> CorpusAccess:
+    async def corpus_access(self, user_id: int, corpus_id: str) -> CorpusAccess:
         pass
 
     @abc.abstractmethod
-    def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
+    async def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
         pass
 
-    def load_interval_attrs(self, corpus_id: str) -> List[Tuple[str, int]]:
+    async def load_interval_attrs(self, corpus_id: str) -> List[Tuple[str, int]]:
         """
         Load structural attributes selectable via
         numeric range (typically - publication date).
@@ -136,7 +136,7 @@ class DatabaseBackend:
         """
         return []
 
-    def load_simple_query_default_attrs(self, corpus_id: str) -> List[str]:
+    async def load_simple_query_default_attrs(self, corpus_id: str) -> List[str]:
         raise NotImplementedError()
 
 
@@ -151,11 +151,11 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
+    async def save_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
         pass
 
     @abc.abstractmethod
-    def update_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
+    async def update_corpus_config(self, install_json: InstallJson, registry_conf: RegistryConf, corp_size: int):
         """
         Update corpus configuration but do not rewrite existing non-empty values in database.
         When dealing with attributes and structures, make sure new values are inserted and

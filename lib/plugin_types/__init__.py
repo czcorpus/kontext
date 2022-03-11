@@ -20,7 +20,7 @@ class CorpusDependentPlugin(abc.ABC):
     """
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         """
         arguments:
         corpora -- primary and aligned corpora (if applicable),

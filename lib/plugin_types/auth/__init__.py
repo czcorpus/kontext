@@ -130,7 +130,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         return False
 
     @abc.abstractmethod
-    def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
+    async def corpus_access(self, user_dict: UserInfo, corpus_name: str) -> CorpusAccess:
         """
         Return a 3-tuple (is owner, has read access, corpus variant)
         """
@@ -146,7 +146,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
                      of AbstractRemoteAuth implementations).
         """
 
-    def validate_access(self, corpus_name: str, user_dict: UserInfo) -> Tuple[bool, str]:
+    async def validate_access(self, corpus_name: str, user_dict: UserInfo) -> Tuple[bool, str]:
         """
         returns a 2-tuple ( "has access?", accessible variant )
         """
@@ -154,7 +154,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             return False, ''
         if self.ignores_corpora_names_case():
             corpus_name = corpus_name.lower()
-        _, access, variant = self.corpus_access(user_dict, corpus_name)
+        _, access, variant = await self.corpus_access(user_dict, corpus_name)
         return access, variant
 
     def on_forbidden_corpus(self, plugin_ctx: 'PluginCtx', corpname: str, corp_variant: str):
@@ -294,7 +294,7 @@ class AbstractRemoteAuth(AbstractAuth):
     """
 
     @abc.abstractmethod
-    def revalidate(self, plugin_ctx: 'PluginCtx'):
+    async def revalidate(self, plugin_ctx: 'PluginCtx'):
         """
         Re-validates user authentication against external database with central
         authentication ticket (stored as a cookie) and session data.

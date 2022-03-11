@@ -52,6 +52,11 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
     FilterFormArgs provides methods to handle concordance filter
     form arguments represented by the _FilterFormArgs data class.
     """
+    @classmethod
+    async def create(cls, plugin_ctx: PluginCtx, maincorp: str, persist: bool) -> 'FilterFormArgs':
+        self = FilterFormArgs(plugin_ctx, maincorp, persist)
+        await self._add_corpus_metadata()
+        return self
 
     def __init__(self, plugin_ctx: PluginCtx, maincorp: str, persist: bool) -> None:
         super().__init__(persist)
@@ -86,9 +91,9 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
         self.data.default_attr = data['default_attr']
         self.data.use_regexp = data['use_regexp']
 
-    def _add_corpus_metadata(self):
+    async def _add_corpus_metadata(self):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
-            corp_info = ca.get_corpus_info(self._plugin_ctx, self.data.maincorp)
+            corp_info = await ca.get_corpus_info(self._plugin_ctx, self.data.maincorp)
             self.has_lemma = corp_info.manatee.has_lemma
             self.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.tagsets:

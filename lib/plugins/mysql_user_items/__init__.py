@@ -115,10 +115,10 @@ class MySQLUserItems(AbstractUserItems):
         """
         return json.dumps(obj.to_dict())
 
-    def get_user_items(self, plugin_ctx):
+    async def get_user_items(self, plugin_ctx):
         ans = []
         if self._auth.anonymous_user()['id'] != plugin_ctx.user_id:
-            ans = self._backend.get_favitems(plugin_ctx.user_id)
+            ans = await self._backend.get_favitems(plugin_ctx.user_id)
             # ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
 

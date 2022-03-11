@@ -51,6 +51,7 @@ from action.errors import ForbiddenException
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
 from translation import ugettext as _
+from util import as_async
 
 bp = Blueprint('ucnk_corparch3')
 
@@ -134,6 +135,7 @@ class UcnkCorpArch3(MySQLCorparch):
                                                        offset=offset, limit=limit if limit > -1 else 1000000000,
                                                        favourites=favourites)
 
+    @as_async
     def export(self, plugin_ctx):
         ans = super(UcnkCorpArch3, self).export(plugin_ctx)
         ans['initial_keywords'] = plugin_ctx.session.get(

@@ -124,7 +124,7 @@ class UserItems(AbstractUserItems):
         """
         return json.dumps(obj.to_dict())
 
-    def get_user_items(self, plugin_ctx):
+    async def get_user_items(self, plugin_ctx):
         ans = []
         if self._auth.anonymous_user()['id'] != plugin_ctx.user_id:
             for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_ctx.user_id)).items()):

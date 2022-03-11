@@ -235,12 +235,12 @@ class CategoryTree(object):
                 if d > 0:
                     self.compute_sizes(child)
 
-    def initialize_bounds(self) -> None:
+    async def initialize_bounds(self) -> None:
         # we dont care about root node
         for i in range(1, len(self.category_list)):
             node = self._get_node_by_id(self.root_node, i)
             if node is not None and node.metadata_condition is not None:
-                node.size = self._get_category_size(node.metadata_condition)
+                node.size = await self._get_category_size(node.metadata_condition)
 
         aligned_join = [
             f'INNER JOIN corpus_structattr_value_tuple AS a{i} ON a{i}.corpus_name = %s AND a{i}.item_id = t_tuple.item_id'
@@ -269,7 +269,7 @@ class CategoryTree(object):
         self.root_node.size = min(self.corpus_max_size, int(row['poscount']))
         self.compute_sizes(self.root_node)
 
-    def _get_category_size(self, mc: List[Union[CategoryExpression, ExpressionJoin]]) -> int:
+    async def _get_category_size(self, mc: List[Union[CategoryExpression, ExpressionJoin]]) -> int:
         """
         This method only computes the maximal available size of category described by provided
         list of metadata conditions

@@ -105,9 +105,9 @@ class CorpusActionModel(UserActionModel):
         return self._corpus_variant
 
     # TODO move to a more specific req_context object
-    def get_corpus_info(self, corp: str) -> CorpusInfo:
+    async def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
-            return plg.get_corpus_info(self.plugin_ctx, corp)
+            return await plg.get_corpus_info(self.plugin_ctx, corp)
 
     def urlencode(self, key_val_pairs: List[Tuple[str, Union[str, str, bool, int, float]]]) -> str:
         """
@@ -320,15 +320,15 @@ class CorpusActionModel(UserActionModel):
         href = werkzeug.urls.Href(self.get_root_url() + 'view')
         self.redirect(href(MultiDict(args)))
 
-    def _check_corpus_access(self, form, action_props: ActionProps) -> Tuple[Union[str, None], str]:
+    async def _check_corpus_access(self, form, action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
         Returns: a 2-tuple (corpus id, corpus variant)
         """
         with plugins.runtime.AUTH as auth:
             is_api = action_props.return_type == 'json' or form.getvalue(
                 'format') == 'json'
-            corpname, redirect = self._determine_curr_corpus(form, is_api)
-            has_access, variant = auth.validate_access(corpname, self.session_get('user'))
+            corpname, redirect = await self._determine_curr_corpus(form, is_api)
+            has_access, variant = await auth.validate_access(corpname, self.session_get('user'))
             if has_access and redirect:
                 url_pref = action_props.action_prefix
                 if len(url_pref) > 0:
@@ -338,7 +338,7 @@ class CorpusActionModel(UserActionModel):
             elif not has_access:
                 auth.on_forbidden_corpus(self.plugin_ctx, corpname, variant)
             for al_corp in form.getlist('align'):
-                al_access, al_variant = auth.validate_access(al_corp, self.session_get('user'))
+                al_access, al_variant = await auth.validate_access(al_corp, self.session_get('user'))
                 # we cannot accept aligned corpora without access right
                 # or with different variant (from implementation reasons in this case)
                 # than the main corpus has
@@ -346,7 +346,7 @@ class CorpusActionModel(UserActionModel):
                     raise AlignedCorpusForbiddenException(al_corp, al_variant)
             return corpname, variant
 
-    def pre_dispatch(self, req_args):
+    async def pre_dispatch(self, req_args):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
@@ -356,11 +356,11 @@ class CorpusActionModel(UserActionModel):
         should be always called before performing custom actions.
         It is also OK to raise UserActionException types if necessary.
         """
-        req_args = super().pre_dispatch(req_args)
+        req_args = await super().pre_dispatch(req_args)
         try:
             self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
-            corpname, self._corpus_variant = self._check_corpus_access(req_args, self._action_props)
+            corpname, self._corpus_variant = await self._check_corpus_access(req_args, self._action_props)
 
             # now we can apply also corpus-dependent settings
             # because the corpus name is already known
@@ -369,7 +369,7 @@ class CorpusActionModel(UserActionModel):
                 req_args.set_forced_arg('corpname', '')
             else:
                 corpus_options = {}
-                corpus_options.update(self.get_corpus_info(corpname).default_view_opts)
+                corpus_options.update((await self.get_corpus_info(corpname)).default_view_opts)
                 corpus_options.update(self._load_corpus_settings(corpname))
                 self.args.map_args_to_attrs(corpus_options)
                 req_args.set_forced_arg('corpname', corpname)
@@ -411,7 +411,7 @@ class CorpusActionModel(UserActionModel):
 
         if isinstance(self.corp, ErrorCorpus):
             raise self.corp.get_error()
-        info = self.get_corpus_info(self.args.corpname)
+        info = await self.get_corpus_info(self.args.corpname)
         if isinstance(info, BrokenCorpusInfo):
             raise NotFoundException(
                 translate('Corpus \"{0}\" not available'.format(info.name)),
@@ -450,7 +450,7 @@ class CorpusActionModel(UserActionModel):
             self._dynamic_menu_items.append(EventTriggeringItem(
                 MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
 
-    def _determine_curr_corpus(self, form: RequestArgsProxy, is_api: bool):
+    async def _determine_curr_corpus(self, form: RequestArgsProxy, is_api: bool):
         """
         This method tries to determine which corpus is currently in use.
         If no answer is found or in case there is a conflict between selected
@@ -479,12 +479,12 @@ class CorpusActionModel(UserActionModel):
 
         # fallback option: if no current corpus is set then we try previous user's corpus
         # and if no such exists then we try default one as configured in settings.xml
-        def test_fn(auth_plg, cname):
-            return auth_plg.validate_access(cname, self.session_get('user'))
+        async def test_fn(auth_plg, cname):
+            return await auth_plg.validate_access(cname, self.session_get('user'))
 
         if not cn:
             with plugins.runtime.AUTH as auth:
-                cn = settings.get_default_corpus(partial(test_fn, auth))
+                cn = await settings.get_default_corpus(partial(test_fn, auth))
                 redirect = True
         return cn, redirect
 
@@ -530,7 +530,7 @@ class CorpusActionModel(UserActionModel):
         return self._tt if self._tt is not None else TextTypes(
             self.corp, self.corp.corpname, self._tt_cache, self.plugin_ctx)
 
-    def _add_corpus_related_globals(self, result, maincorp):
+    async def _add_corpus_related_globals(self, result, maincorp):
         """
         arguments:
         result -- template data dict
@@ -594,7 +594,7 @@ class CorpusActionModel(UserActionModel):
             settings.get('corpora', 'right_interval_char', None),
         )
         result['righttoleft'] = True if self.corp.get_conf('RIGHTTOLEFT') else False
-        corp_info = self.get_corpus_info(getattr(self.args, 'corpname'))
+        corp_info = await self.get_corpus_info(getattr(self.args, 'corpname'))
         result['bib_conf'] = corp_info.metadata
         result['simple_query_default_attrs'] = corp_info.simple_query_default_attrs
 
@@ -636,10 +636,10 @@ class CorpusActionModel(UserActionModel):
     def export_optional_plugins_conf(self, result):
         self._export_optional_plugins_conf(result, [self.args.corpname] + self.args.align)
 
-    def attach_plugin_exports(self, result, direct):
-        self._attach_plugin_exports(result, [self.args.corpname] + self.args.align, direct)
+    async def attach_plugin_exports(self, result, direct):
+        await self._attach_plugin_exports(result, [self.args.corpname] + self.args.align, direct)
 
-    def add_globals(self, app, action_props, result):
+    async def add_globals(self, app, action_props, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
         HTML templates properly.
@@ -647,7 +647,7 @@ class CorpusActionModel(UserActionModel):
         Please note that self.args mapping is not exported here even though some of the values
         from self.args are used here in specific ways.
         """
-        result = super().add_globals(app, action_props, result)
+        result = await super().add_globals(app, action_props, result)
         result['multilevel_freq_dist_max_levels'] = settings.get(
             'corpora', 'multilevel_freq_dist_max_levels', 3)
         result['last_freq_level'] = self.session_get('last_freq_level')  # TODO enable this
@@ -662,7 +662,7 @@ class CorpusActionModel(UserActionModel):
         else:
             thecorp = self.corp
 
-        self._add_corpus_related_globals(result, thecorp)
+        await self._add_corpus_related_globals(result, thecorp)
         result['uses_corp_instance'] = True
 
         result['undo_q'] = self.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
@@ -714,16 +714,16 @@ class CorpusActionModel(UserActionModel):
             revers = False
         return k, revers
 
-    def get_tt_bib_mapping(self, tt_data):
+    async def get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+        if await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
                 self.plugin_ctx, [self.args.corpname] + self.args.align):
-            corpus_info = plugins.runtime.CORPARCH.instance.get_corpus_info(
+            corpus_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
                 self.plugin_ctx, self.args.corpname)
             id_attr = corpus_info.metadata.id_attr
             if id_attr in tt_data:
                 bib_mapping = dict(
-                    plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
+                    await plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
                         self.plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
         return bib_mapping
 

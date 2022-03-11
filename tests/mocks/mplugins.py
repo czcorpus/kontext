@@ -31,7 +31,7 @@ class MockUserItems(AbstractUserItems):
     def serialize(self, obj):
         raise NotImplementedError()
 
-    def get_user_items(self, plugin_ctx):
+    async def get_user_items(self, plugin_ctx):
         raise NotImplementedError()
 
     def add_user_item(self, plugin_ctx, item):

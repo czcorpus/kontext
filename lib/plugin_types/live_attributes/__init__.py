@@ -58,7 +58,7 @@ class AttrValuesResponse:
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    def is_enabled_for(self, plugin_ctx: PluginCtx, corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: PluginCtx, corpora: List[str]) -> bool:
         """
         Return True if live attributes are enabled for selected corpora
         else return False. The 'corpora' list can be also empty - in such
@@ -66,7 +66,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_attr_values(
+    async def get_attr_values(
             self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str],
             aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
             limit_lists: bool = True) -> AttrValuesResponse:
@@ -88,7 +88,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, str]) -> int:
+    async def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, str]) -> int:
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
@@ -98,7 +98,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
+    async def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
         """
         Return a list of structure names the plug-in
         and its data support for the 'corpname' corpus.
@@ -112,13 +112,13 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
+    async def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
 
     @abc.abstractmethod
-    def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
+    async def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         """
         For a list of bibliography item IDs (= typically unique document IDs)
         find respective titles.
@@ -128,7 +128,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+    async def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         """
         For a structattr and its values find values structattrs specified in fill list
 

@@ -242,7 +242,7 @@ class UserActionModel(BaseActionModel):
                 out['login_url'] = None
                 out['logout_url'] = None
 
-    def _attach_plugin_exports(self, result, active_corpora: List[str], direct):
+    async def _attach_plugin_exports(self, result, active_corpora: List[str], direct):
         """
         Method exports plug-ins' specific data for their respective client parts.
         KonText core does not care about particular formats - it just passes JSON-encoded
@@ -253,10 +253,10 @@ class UserActionModel(BaseActionModel):
         for plg in plugins.runtime:
             if (hasattr(plg.instance, 'export') and (not isinstance(plg.instance, CorpusDependentPlugin) or
                                                      plg.is_enabled_for(self.plugin_ctx, active_corpora))):
-                result[key][plg.name] = plg.instance.export(self.plugin_ctx)
+                result[key][plg.name] = await plg.instance.export(self.plugin_ctx)
 
-    def attach_plugin_exports(self, result, direct):
-        self._attach_plugin_exports(result, [], direct)
+    async def attach_plugin_exports(self, result, direct):
+        await self._attach_plugin_exports(result, [], direct)
 
     def export_optional_plugins_conf(self, result):
         self._export_optional_plugins_conf(result, [])
@@ -298,9 +298,9 @@ class UserActionModel(BaseActionModel):
         self._set_async_tasks(at_list)
         return at_list
 
-    def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         # updates result dict with javascript modules paths required by some of the optional plugins
-        result = super().add_globals(app, action_props, result)
+        result = await super().add_globals(app, action_props, result)
         self.export_optional_plugins_conf(result)
         self.configure_auth_urls(result)
         result['conc_url_ttl_days'] = None
@@ -365,7 +365,7 @@ class UserActionModel(BaseActionModel):
             result['issue_reporting_action'] = irp.export_report_action(
                 self.plugin_ctx).to_dict() if irp else None
         result['can_send_mail'] = bool(settings.get('mailing'))
-        self.attach_plugin_exports(result, direct=False)
+        await self.attach_plugin_exports(result, direct=False)
 
         # main menu
         menu_items = generate_main_menu(

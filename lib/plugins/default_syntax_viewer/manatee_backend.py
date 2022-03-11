@@ -171,7 +171,7 @@ class TreeConf(object):
         return str(self._data)
 
 
-class ManateeBackendConf(object):
+class ManateeBackendConf:
     """
     Handles configuration for all the trees defined for a corpus
     """
@@ -264,7 +264,7 @@ class TreeNode(object):
         return f'Node[{self.idx}] (word: {self.word}, parent: {self.parent}, children: {[c.idx for c in self.children]})'
 
 
-class TreexTemplate(object):
+class TreexTemplate:
 
     def __init__(self, id_list, tree_list, conf):
         self._id_list = id_list

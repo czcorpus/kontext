@@ -17,6 +17,7 @@ from action.errors import ImmediateRedirectException
 from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
 from plugins.errors import PluginException
 from translation import ugettext as _
+from util import as_async
 
 _logger = logging.getLogger(__name__)
 
@@ -213,6 +214,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
 
         return user_d
 
+    @as_async
     def export(self, plugin_ctx):
         return {
             'metadataFeed': self._conf['metadataFeed'],

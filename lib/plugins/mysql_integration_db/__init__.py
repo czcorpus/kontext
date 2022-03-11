@@ -23,7 +23,71 @@ from mysql.connector.errors import OperationalError
 from mysql.connector import connect
 import logging
 import time
+from util import as_async
 from typing import Dict, Optional
+
+
+class MySQLAsyncCursor:
+
+    def __init__(self, cur: MySQLCursor):
+        self._cur = cur
+
+    def next(self):
+        return self._cur.next()
+
+    def __next__(self):
+        return self._cur.__next__()
+
+    def __iter__(self):
+        return self._cur.__iter__()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._cur.close()
+
+    def close(self):
+        return self._cur.close()
+
+    @as_async
+    def execute(self, operation, params=None, multi=False):
+        return self._cur.execute(operation, params, multi)
+
+    @as_async
+    def executemany(self, operation, seq_params):
+        return self._cur.executemany(operation, seq_params)
+
+    def stored_results(self):
+        return self._cur.stored_results()
+
+    @as_async
+    def callproc(self, procname, args=()):
+        return self._cur.callproc(procname, args)
+
+    def getlastrowid(self):
+        return self._cur.getlastrowid()
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchmany(self, size=None):
+        return self._cur.fetchmany(size)
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    @property
+    def column_names(self):
+        return self._cur.column_names
+
+    @property
+    def statement(self):
+        return self._cur.statement
+
+    @property
+    def with_rows(self):
+        return self._cur.with_rows
 
 
 class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
@@ -66,6 +130,17 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
     def cursor(self, dictionary=True, buffered=False):
         try:
+            # TODO buffered overwritten hiere
+            return MySQLAsyncCursor(self.cursor_sync(dictionary, buffered=True))
+        except OperationalError as ex:
+            if 'MySQL Connection not available' in ex.msg:
+                logging.getLogger(__name__).warning(
+                    'Lost connection to MySQL server - reconnecting')
+                self.connection.reconnect(delay=self._retry_delay, attempts=self._retry_attempts)
+                return self.connection.cursor(dictionary=dictionary, buffered=buffered)
+
+    def cursor_sync(self, dictionary=True, buffered=False):
+        try:
             return self.connection.cursor(dictionary=dictionary, buffered=buffered)
         except OperationalError as ex:
             if 'MySQL Connection not available' in ex.msg:
@@ -104,11 +179,14 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
             'Unable to confirm integration environment within defined interval {}s.'.format(self._environment_wait_sec),
             'Please check table kontext_integration_env')
 
+    @as_async
     def execute(self, sql, args):
-        cursor = self.cursor()
+        cursor = self.cursor(buffered=True)
         cursor.execute(sql, args)
+        print('##### CURSOR: {}'.format(cursor))
         return cursor
 
+    @as_async
     def executemany(self, sql, args_rows):
         cursor = self.cursor()
         cursor.executemany(sql, args_rows)
