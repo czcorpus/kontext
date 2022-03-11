@@ -57,25 +57,29 @@ class MetadataModel:
     id_attr -- an unique identifier of a 'bibliography' item (defined in corpora.xml).
     """
 
-    def __init__(
-            self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
-        self._db = db
-        self.category_tree = category_tree
-        self._id_struct, self._id_attr = id_attr.split('.')
-
-        self.text_sizes, self._id_map = self._get_text_sizes()
+    @classmethod
+    async def create(cls, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+        self = await MetadataModel.create(db, category_tree, id_attr)
+        self.text_sizes, self._id_map = await self._get_text_sizes()
         # text_sizes and _id_map both contain all the documents from the corpus
         # no matter whether they have matching aligned counterparts
         self.num_texts = len(self.text_sizes)
         self.b = np.zeros(self.category_tree.num_categories - 1)  # required sizes, bounds
         self.A = np.zeros((self.category_tree.num_categories, self.num_texts))
         used_ids: Set[int] = set()
-        self._init_ab(self.category_tree.root_node, used_ids)
+        await self._init_ab(self.category_tree.root_node, used_ids)
         # for items without aligned counterparts we create
         # conditions fulfillable only for x[i] = 0
         self._init_ab_nonalign(used_ids)
+        return self
 
-    def _get_text_sizes(self) -> Tuple[List[int], Dict[int, int]]:
+    def __init__(
+            self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+        self._db = db
+        self.category_tree = category_tree
+        self._id_struct, self._id_attr = id_attr.split('.')
+
+    async def _get_text_sizes(self) -> Tuple[List[int], Dict[int, int]]:
         """
         List all the texts matching main corpus. This will be the
         base for the 'A' matrix in the optimization problem.
@@ -122,7 +126,7 @@ class MetadataModel:
                 for i in range(1, len(self.b)):
                     self.A[i][v] = self.b[i] * 2 if self.b[i] > 0 else 10000
 
-    def _init_ab(self, node: CategoryTreeNode, used_ids: Set[int]) -> None:
+    async def _init_ab(self, node: CategoryTreeNode, used_ids: Set[int]) -> None:
         """
                 Initialization method for coefficient matrix (A) and vector of bounds (b)
                 Recursively traverses all nodes of given categoryTree starting from its root.
@@ -186,7 +190,7 @@ class MetadataModel:
 
         if len(node.children) > 0:
             for child in node.children:
-                self._init_ab(child, used_ids)
+                await self._init_ab(child, used_ids)
 
     def solve(self) -> CorpusComposition:
         """

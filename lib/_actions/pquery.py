@@ -107,8 +107,8 @@ class ParadigmaticQuery(Kontext):
             result['pquery_form'] = None
             result['conc_forms'] = {}
 
-    def _get_tagsets(self):
-        corp_info = self.get_corpus_info(self.args.corpname)
+    async def _get_tagsets(self):
+        corp_info = await self.get_corpus_info(self.args.corpname)
         return [tagset.to_dict() for tagset in corp_info.tagsets]
 
     def _get_default_attr(self):

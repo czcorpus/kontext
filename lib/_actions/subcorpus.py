@@ -215,7 +215,7 @@ class Subcorpus(Querying):
             raise UserActionException(str(e)) from e
 
     @exposed(access_level=1, apply_semi_persist_args=True, page_model='subcorpForm')
-    def new(self, request: Request) -> Dict[str, Any]:
+    async def new(self, request: Request) -> Dict[str, Any]:
         """
         Displays a form to create a new subcorpus
         """
@@ -225,7 +225,7 @@ class Subcorpus(Querying):
         subcnorm = request.args.get('subcnorm', 'tokens')
 
         try:
-            tt_sel = self.tt.export_with_norms(subcnorm=subcnorm)
+            tt_sel = await self.tt.export_with_norms(subcnorm=subcnorm)
         except UserActionException as e:
             tt_sel = {'Normslist': [], 'Blocks': []}
             self.add_system_message('warning', e)

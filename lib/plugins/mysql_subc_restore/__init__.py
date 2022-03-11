@@ -48,7 +48,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
         self._corparch = corparch
         self._db = db
 
-    def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
+    async def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'INSERT INTO {self.TABLE_NAME} '
@@ -58,7 +58,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             )
         self._db.commit()
 
-    def delete_query(self, user_id: int, corpname: str, subcname: str):
+    async def delete_query(self, user_id: int, corpname: str, subcname: str):
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'DELETE FROM {self.TABLE_NAME} '
@@ -67,7 +67,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             )
         self._db.commit()
 
-    def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[SubcRestoreRow]:
+    async def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[SubcRestoreRow]:
         sql = [
             'SELECT * FROM kontext_subc_archive',
             'WHERE user_id = %s ORDER BY id',
@@ -84,7 +84,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             cursor.execute(' '.join(sql), args)
             return [SubcRestoreRow(**row) for row in cursor]
 
-    def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
+    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
@@ -96,7 +96,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             row = cursor.fetchone()
             return None if row is None else SubcRestoreRow(**row)
 
-    def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
+    async def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
         with self._db.cursor() as cursor:
             cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
@@ -105,7 +105,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             row = cursor.fetchone()
             return None if row is None else SubcRestoreRow(**row)
 
-    def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
+    async def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
@@ -151,7 +151,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
                 subc_query = subc_queries_map[dk]
                 corpus_name = subc_query.corpname
                 if corpname_matches(corpus_name):
-                    corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpus_name)
+                    corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpus_name)
                     deleted_items.append({
                         'name': '{0} / {1}'.format(corpus_info.id, subc_query.subcname),
                         'size': None,

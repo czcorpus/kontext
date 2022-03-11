@@ -29,6 +29,7 @@ from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
+from util import as_async
 
 
 bp = Blueprint('default_kwic_connect')
@@ -53,10 +54,10 @@ def handle_word_req(args):
 
 @bp.route('/fetch_external_kwic_info')
 @http_action(return_type='json', action_model=ConcActionModel)
-def fetch_external_kwic_info(self, request):
+async def fetch_external_kwic_info(self, request):
     words = request.args.getlist('w')
     with plugins.runtime.CORPARCH as ca:
-        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
+        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
         args = [(w, [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
                 for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
@@ -75,9 +76,9 @@ def fetch_external_kwic_info(self, request):
 
 @bp.route('/get_corpus_kc_providers')
 @http_action(return_type='json', action_model=ConcActionModel)
-def get_corpus_kc_providers(self, _):
+async def get_corpus_kc_providers(self, _):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
-        corpus_info = ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
+        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
         mp = kc.map_providers(corpus_info.kwic_connect.providers)
         return dict(corpname=self.corp.corpname,
                     providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
@@ -95,14 +96,15 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def map_providers(self, provider_ids):
         return [self._providers[ident] for ident in provider_ids]
 
-    def is_enabled_for(self, plugin_ctx, corpora):
+    async def is_enabled_for(self, plugin_ctx, corpora):
         if len(corpora) == 0:
             return False
-        corpus_info = self._corparch.get_corpus_info(plugin_ctx, corpora[0])
+        corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
         tst = [p.enabled_for_corpora([corpora[0]] + plugin_ctx.aligned_corpora)
                for p, _ in self.map_providers(corpus_info.kwic_connect.providers)]
         return len(tst) > 0 and True in tst
 
+    @as_async
     def export(self, plugin_ctx):
         return dict(max_kwic_words=self._max_kwic_words, load_chunk_size=self._load_chunk_size)
 
