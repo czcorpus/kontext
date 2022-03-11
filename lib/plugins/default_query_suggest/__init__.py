@@ -33,7 +33,7 @@ async def fetch_query_suggestions(amodel, req, resp):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
-        ans = plg.find_suggestions(
+        ans = await plg.find_suggestions(
             plugin_ctx=amodel.plugin_ctx,
             corpora=req.args.getlist('corpora'),
             subcorpus=req.args.get('subcorpus'),
@@ -72,9 +72,9 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
     async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
         if len(corpora) > 0:
             corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpora[0])
-            print('xxx: {}'.format(corpus_info.query_suggest.providers))
-            print(self._providers)
-            return True
+            for prov in self._providers:
+                if prov in corpus_info.query_suggest.providers:
+                    return True
         return False
 
     async def export(self, plugin_ctx):

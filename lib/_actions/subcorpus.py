@@ -231,7 +231,7 @@ class Subcorpus(Querying):
             self.add_system_message('warning', e)
 
         out = dict(SubcorpList=())
-        self._attach_aligned_query_params(out)
+        await self._attach_aligned_query_params(out)
         corpus_info = self.get_corpus_info(self.args.corpname)
 
         out.update(dict(
