@@ -201,14 +201,6 @@ class Actions(Querying):
             op_idx += 1
         return self.view(request)
 
-    @exposed(http_method='POST', template='view.html', page_model='view', mutates_result=True)
-    def switch_main_corp(self, request):
-        maincorp = request.form.get('maincorp')
-        self.args.q.append('x-{0}'.format(maincorp))
-        ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
-        self.add_conc_form_args(ksargs)
-        return self.view(request)
-
     @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True,
              http_method='POST')
     def reduce(self, request):
@@ -222,15 +214,6 @@ class Actions(Querying):
         qinfo.rlines = self.args.rlines
         self.add_conc_form_args(qinfo)
         self.args.q.append('r' + self.args.rlines)
-        return self.view(request)
-
-    @exposed(access_level=0, template='view.html', page_model='view', mutates_result=True)
-    def filter_subhits(self, request):
-        if len(self._lines_groups) > 0:
-            raise UserActionException(
-                'Cannot apply the function once a group of lines has been saved')
-        self.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
-        self.args.q.append('D')
         return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
