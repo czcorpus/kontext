@@ -195,19 +195,6 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view(request)
 
-    @exposed(access_level=0, template='view.html', page_model='view', func_arg_mapped=False,
-             mutates_result=True, http_method='POST')
-    def filter_firsthits(self, request):
-        if len(self._lines_groups) > 0:
-            raise UserActionException(
-                'Cannot apply the function once a group of lines has been saved')
-        elif len(self.args.align) > 0:
-            raise UserActionException('The function is not supported for aligned corpora')
-        self.add_conc_form_args(FirstHitsFilterFormArgs(
-            persist=True, doc_struct=self.corp.get_conf('DOCSTRUCTURE')))
-        self.args.q.append('F{0}'.format(request.args.get('fh_struct')))
-        return self.view(request)
-
     @exposed(access_level=0, func_arg_mapped=True, page_model='freq')
     def freqs(self, fcrit=(), fcrit_async=(), flimit=0, freq_sort='', force_cache=0, freq_type='', format=''):
         """
