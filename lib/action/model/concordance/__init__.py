@@ -555,6 +555,10 @@ class ConcActionModel(CorpusActionModel):
                 conc.set_linegroup_at_pos(lg[0], lg[2])
             if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
+    
+    @property
+    def lines_groups(self):
+        return self._lines_groups
 
     async def get_speech_segment(self):
         """

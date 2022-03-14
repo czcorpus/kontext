@@ -317,63 +317,6 @@ class Actions(Querying):
         self.add_conc_form_args(ksargs)
         return self.view(request)
 
-    @exposed(access_level=1, mutates_result=True, http_method='POST', return_type='json')
-    def filter(self, request):
-        """
-        Positive/Negative filter
-        """
-        def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
-            if history_ts:
-                self._store_last_search('conc:filter', conc_ids[0])
-
-        if len(self._lines_groups) > 0:
-            raise UserActionException('Cannot apply a filter once a group of lines has been saved')
-
-        ff_args = FilterFormArgs(
-            plugin_ctx=self._plugin_ctx,
-            maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
-            persist=True)
-        ff_args.update_by_user_query(request.json)
-        err = ff_args.validate()
-        if err is not None:
-            raise UserActionException(err)
-        self.add_conc_form_args(ff_args)
-        rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
-        texttypes = TextTypeCollector(self.corp, {}).get_query()
-        maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
-        try:
-            query = self._compile_query(form=ff_args, corpus=maincorp)
-            if query is None:
-                raise ConcordanceQueryParamsError(translate('No query entered.'))
-        except ConcordanceQueryParamsError:
-            if texttypes:
-                query = '[]'
-                ff_args.filfpos = '0'
-                ff_args.filtpos = '0'
-            else:
-                raise ConcordanceQueryParamsError(translate('No query entered.'))
-        query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
-        if ff_args.data.within:
-            wquery = f' within {maincorp}:({query})'
-            self.args.q[0] += wquery
-            self.args.q.append(f'x-{maincorp}')
-        else:
-            wquery = ''
-            self.args.q.append(
-                f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
-
-        self.on_conc_store = store_last_op
-        self._response.set_http_status(201)
-        try:
-            return self.view(request)
-        except Exception as ex:
-            logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
-            if ff_args.data.within:
-                self.args.q[0] = self.args.q[0][:-len(wquery)]
-            else:
-                del self.args.q[-1]
-            raise
-
     @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True,
              http_method='POST')
     def reduce(self, request):
