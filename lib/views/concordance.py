@@ -431,7 +431,8 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
     texttypes = TextTypeCollector(amodel.corp, {}).get_query()
     try:
-        query = amodel._compile_query(form=ff_args, corpus=maincorp) # TODO get rid of private method
+        # TODO get rid of private method
+        query = amodel._compile_query(form=ff_args, corpus=maincorp)
         if query is None:
             raise ConcordanceQueryParamsError(req.translate('No query entered.'))
     except ConcordanceQueryParamsError:
@@ -441,7 +442,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             ff_args.filtpos = '0'
         else:
             raise ConcordanceQueryParamsError(req.translate('No query entered.'))
-    query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
+    query += ' '.join([f'within <{nq[0]} {nq[1]} />' for nq in texttypes])
     if ff_args.data.within:
         wquery = f' within {maincorp}:({query})'
         amodel.args.q[0] += wquery
@@ -456,7 +457,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     try:
         return await view(amodel, req, resp)
     except Exception as ex:
-        logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
+        logging.getLogger(__name__).error(f'Failed to apply filter: {ex}')
         if ff_args.data.within:
             amodel.args.q[0] = amodel.args.q[0][:-len(wquery)]
         else:
