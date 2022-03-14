@@ -281,6 +281,88 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
         }
 
 
+@bp.route('/restore_conc')
+@http_action(mutates_result=True, action_model=ConcActionModel)
+async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    out = amodel.create_empty_conc_result_dict()
+    out['result_shuffled'] = not conclib.conc_is_sorted(amodel.args.q)
+    out['items_per_page'] = amodel.args.pagesize
+    try:
+        corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
+        conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+                              fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
+                              samplesize=corpus_info.sample_size)
+        if conc:
+            amodel.apply_linegroups(conc)
+            conc.switch_aligned(os.path.basename(amodel.args.corpname))
+
+            kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
+            kwic_args.speech_attr = await amodel.get_speech_segment()
+            kwic_args.labelmap = {}
+            kwic_args.alignlist = [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+            kwic_args.structs = amodel.get_struct_opts()
+
+            kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+
+            out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
+            out.update(kwic.kwicpage(kwic_args))
+            out.update(await amodel.get_conc_sizes(conc))
+            if req.args.get('next') == 'freqs':
+                out['next_action'] = 'freqs'
+                out['next_action_args'] = {
+                    'fcrit': req.args.get('fcrit'),
+                    'fcrit_async': req.args.getlist('fcrit_async'),
+                    'flimit': req.args.get('flimit'),
+                    # client does not always fills this
+                    'freq_sort': req.args.get('freq_sort', 'freq'),
+                    'freq_type': req.args.get('freq_type'),
+                    'force_cache': req.args.get('force_cache', '0')}
+            elif req.args.get('next') == 'freqml':
+                out['next_action'] = 'freqml'
+                out['next_action_args'] = {
+                    'flimit': req.args.get('flimit'),
+                    'freqlevel': req.args.get('freqlevel'),
+                    'ml1attr': req.args.get('ml1attr'),
+                    'ml2attr': req.args.get('ml2attr'),
+                    'ml3attr': req.args.get('ml3attr')
+                }
+            elif req.args.get('next') == 'freqct':
+                out['next_action'] = 'freqct'
+                out['next_action_args'] = {
+                    'ctminfreq': req.args.get('ctminfreq', '1'),
+                    'ctminfreq_type': req.args.get('ctminfreq_type'),
+                    'ctattr1': amodel.args.ctattr1,
+                    'ctfcrit1': amodel.args.ctfcrit1,
+                    'ctattr2': amodel.args.ctattr2,
+                    'ctfcrit2': amodel.args.ctfcrit2}
+            elif req.args.get('next') == 'collx':
+                out['next_action'] = 'collx'
+                out['next_action_args'] = {
+                    'cattr': req.args.get('cattr'),
+                    'csortfn': req.args.get('csortfn'),
+                    'cbgrfns':  ''.join(req.args.get('cbgrfns')),
+                    'cfromw': req.args.get('cfromw'),
+                    'ctow': req.args.get('ctow'),
+                    'cminbgr': req.args.get('cminbgr'),
+                    'cminfreq': req.args.get('cminfreq'),
+                    'citemsperpage': req.args.get('citemsperpage'),
+                    'collpage': req.args.get('collpage'),
+                    'num_lines': req.args.get('num_lines')}
+            elif req.args.get('next') == 'dispersion':
+                out['next_action'] = 'dispersion'
+                out['next_action_args'] = {}
+    except TypeError as ex:
+        amodel.add_system_message('error', str(ex))
+        logging.getLogger(__name__).error(ex)
+    except ConcCacheStatusException as ex:
+        if 'syntax error' in f'{ex}'.lower():
+            amodel.add_system_message(
+                'error', req.translate('Syntax error. Please check the query and its type.'))
+        else:
+            raise ex
+    return out
+
+
 @bp.route('/save_query', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
