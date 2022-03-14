@@ -11,7 +11,7 @@ from action.model.authorized import UserActionModel
 from action.model.concordance import ConcActionModel
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
-from action.argmapping.conc.filter import FilterFormArgs, SubHitsFilterFormArgs
+from action.argmapping.conc.filter import FilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import KwicSwitchArgs
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
@@ -558,6 +558,29 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         else:
             del amodel.args.q[-1]
         raise
+
+
+@bp.route('/quick_filter', methods=['POST'])
+@http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def quick_filter(amodel, req, resp):
+    """
+    A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls/pquery pages).
+    """
+    new_q = req.args.getlist('q2')
+    q_conv = QuickFilterArgsConv(amodel.plugin_ctx, amodel.args)
+
+    op_idx = len(amodel.args.q)
+    if len(new_q) > 0:
+        ff_args = q_conv(new_q[0])
+        amodel.add_conc_form_args(ff_args)
+        amodel.args.q.append(new_q[0])
+        op_idx += 1
+    for q in new_q[1:]:
+        ff_args = q_conv(q)
+        amodel.acknowledge_auto_generated_conc_op(op_idx, ff_args)
+        amodel.args.q.append(q)
+        op_idx += 1
+    return await _view(amodel, req, resp)
 
 
 @bp.route('/filter_subhits')

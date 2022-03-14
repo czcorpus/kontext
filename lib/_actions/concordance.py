@@ -180,27 +180,6 @@ class Actions(Querying):
         availstruct = self.corp.get_structs()
         return 'err' in availstruct and 'corr' in availstruct
 
-    @exposed(template='view.html', page_model='view', mutates_result=True, http_method='POST')
-    def quick_filter(self, request):
-        """
-        A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls/pquery pages).
-        """
-        new_q = request.args.getlist('q2')
-        q_conv = QuickFilterArgsConv(self._plugin_ctx, self.args)
-
-        op_idx = len(self.args.q)
-        if len(new_q) > 0:
-            ff_args = q_conv(new_q[0])
-            self.add_conc_form_args(ff_args)
-            self.args.q.append(new_q[0])
-            op_idx += 1
-        for q in new_q[1:]:
-            ff_args = q_conv(q)
-            self.acknowledge_auto_generated_conc_op(op_idx, ff_args)
-            self.args.q.append(q)
-            op_idx += 1
-        return self.view(request)
-
     @exposed(access_level=0, template='view.html', vars=('concsize',), page_model='view', mutates_result=True,
              http_method='POST')
     def reduce(self, request):
