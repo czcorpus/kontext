@@ -140,11 +140,6 @@ class Actions(Querying):
         args.append(('next', return_action))
         raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-    @exposed()
-    def first_form(self, request):
-        self.redirect(self.create_url('query', request.args), code=301)
-        return {}
-
     @exposed(return_type='json')
     def get_conc_cache_status(self, _):
         self._response.set_header('Content-Type', 'text/plain')

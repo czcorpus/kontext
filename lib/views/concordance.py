@@ -7,6 +7,7 @@ from action.decorators import http_action
 from action.krequest import KRequest
 from action.response import KResponse
 from action.errors import NotFoundException, UserActionException
+from action.model.base import BaseActionModel
 from action.model.authorized import UserActionModel
 from action.model.concordance import ConcActionModel
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
@@ -31,6 +32,12 @@ import settings
 
 
 bp = Blueprint('concordance')
+
+
+@bp.route('/first_form')
+@http_action(action_model=BaseActionModel)
+async def first_form(amodel: BaseActionModel, req: KRequest, resp: KResponse):
+    resp.redirect(req.create_url('query', req.args), code=301)
 
 
 @bp.route('/query')
