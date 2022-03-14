@@ -4,20 +4,21 @@ from sanic import Blueprint
 import logging
 from dataclasses import asdict
 from action.decorators import http_action
-from action.model.concordance import ConcActionModel
-from action.argmapping.conc import build_conc_form_args, QueryFormArgs
-from action.argmapping.conc.filter import FilterFormArgs
 from action.krequest import KRequest
 from action.response import KResponse
+from action.errors import NotFoundException, UserActionException
 from action.model.authorized import UserActionModel
+from action.model.concordance import ConcActionModel
+from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
+from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
+from action.argmapping.conc.filter import FilterFormArgs
+from action.argmapping.conc.sort import SortFormArgs
+from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.conc_cache import ConcCacheStatusException
-from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
-from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
-from action.argmapping.conc import ShuffleFormArgs
-from action.errors import NotFoundException, UserActionException
 import conclib
+from conclib.freq import one_level_crit
 from conclib.search import get_conc
 from conclib.errors import (
     ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
@@ -542,3 +543,56 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         else:
             del amodel.args.q[-1]
         raise
+
+
+@bp.route('/sortx', ['POST'])
+@http_action(access_level=1, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    simple sort concordance
+    """
+    amodel.disabled_menu_items = ()
+
+    if len(amodel.lines_groups) > 0:
+        raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
+
+    qinfo = SortFormArgs(persist=True)
+    qinfo.update_by_user_query(req.json)
+    amodel.add_conc_form_args(qinfo)
+
+    if qinfo.data.skey == 'lc':
+        ctx = f'-1<0~-{qinfo.data.spos}<0'
+    elif qinfo.data.skey == 'kw':
+        ctx = '0<0~0>0'
+    elif qinfo.data.skey == 'rc':
+        ctx = f'1>0~{qinfo.data.spos}>0'
+    else:
+        ctx = ''
+    if '.' in qinfo.data.sattr:
+        ctx = ctx.split('~')[0]
+
+    amodel.args.q.append(f's{qinfo.data.sattr}/{qinfo.data.sicase}{qinfo.data.sbward} {ctx}')
+    return await view(amodel, req, resp)
+
+
+@bp.route('/mlsortx', ['POST'])
+@http_action(access_level=1, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    multiple level sort concordance
+    """
+    qinfo = SortFormArgs(persist=True)
+    qinfo.update_by_user_query(req.json)
+    amodel.add_conc_form_args(qinfo)
+
+    mlxfcode = 'rc'
+    crit = one_level_crit('s', qinfo.data.ml1attr, qinfo.data.ml1ctx, qinfo.data.ml1pos, mlxfcode,
+                          qinfo.data.ml1icase, qinfo.data.ml1bward)
+    if qinfo.data.sortlevel > 1:
+        crit += one_level_crit(' ', qinfo.data.ml2attr, qinfo.data.ml2ctx, qinfo.data.ml2pos, mlxfcode,
+                               qinfo.data.ml2icase, qinfo.data.ml2bward)
+        if qinfo.data.sortlevel > 2:
+            crit += one_level_crit(' ', qinfo.data.ml3attr, qinfo.data.ml3ctx, qinfo.data.ml3pos, mlxfcode,
+                                   qinfo.data.ml3icase, qinfo.data.ml3bward)
+    amodel.args.q.append(crit)
+    return await view(amodel, req, resp)

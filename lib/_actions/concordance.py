@@ -176,55 +176,6 @@ class Actions(Querying):
             cancel_conc_task(cache_map, subchash, q)
             raise ex
 
-    @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
-    def sortx(self, request):
-        """
-        simple sort concordance
-        """
-        self.disabled_menu_items = ()
-
-        if len(self._lines_groups) > 0:
-            raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
-
-        qinfo = SortFormArgs(persist=True)
-        qinfo.update_by_user_query(request.json)
-        self.add_conc_form_args(qinfo)
-
-        if qinfo.data.skey == 'lc':
-            ctx = f'-1<0~-{qinfo.data.spos}<0'
-        elif qinfo.data.skey == 'kw':
-            ctx = '0<0~0>0'
-        elif qinfo.data.skey == 'rc':
-            ctx = f'1>0~{qinfo.data.spos}>0'
-        else:
-            ctx = ''
-        if '.' in qinfo.data.sattr:
-            ctx = ctx.split('~')[0]
-
-        self.args.q.append(f's{qinfo.data.sattr}/{qinfo.data.sicase}{qinfo.data.sbward} {ctx}')
-        return self.view(request)
-
-    @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
-    def mlsortx(self, request):
-        """
-        multiple level sort concordance
-        """
-        qinfo = SortFormArgs(persist=True)
-        qinfo.update_by_user_query(request.json)
-        self.add_conc_form_args(qinfo)
-
-        mlxfcode = 'rc'
-        crit = one_level_crit('s', qinfo.data.ml1attr, qinfo.data.ml1ctx, qinfo.data.ml1pos, mlxfcode,
-                              qinfo.data.ml1icase, qinfo.data.ml1bward)
-        if qinfo.data.sortlevel > 1:
-            crit += one_level_crit(' ', qinfo.data.ml2attr, qinfo.data.ml2ctx, qinfo.data.ml2pos, mlxfcode,
-                                   qinfo.data.ml2icase, qinfo.data.ml2bward)
-            if qinfo.data.sortlevel > 2:
-                crit += one_level_crit(' ', qinfo.data.ml3attr, qinfo.data.ml3ctx, qinfo.data.ml3pos, mlxfcode,
-                                       qinfo.data.ml3icase, qinfo.data.ml3bward)
-        self.args.q.append(crit)
-        return self.view(request)
-
     def _is_err_corpus(self):
         availstruct = self.corp.get_structs()
         return 'err' in availstruct and 'corr' in availstruct
