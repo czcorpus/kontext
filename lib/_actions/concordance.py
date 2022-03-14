@@ -225,14 +225,6 @@ class Actions(Querying):
         return self.view(request)
 
     @exposed(access_level=0, template='view.html', page_model='view', mutates_result=True)
-    def shuffle(self, request):
-        if len(self._lines_groups) > 0:
-            raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
-        self.add_conc_form_args(ShuffleFormArgs(persist=True))
-        self.args.q.append('f')
-        return self.view(request)
-
-    @exposed(access_level=0, template='view.html', page_model='view', mutates_result=True)
     def filter_subhits(self, request):
         if len(self._lines_groups) > 0:
             raise UserActionException(
@@ -278,7 +270,7 @@ class Actions(Querying):
 
                 out['Sort_idx'] = kwic.get_sort_idx(q=self.args.q, pagesize=self.args.pagesize)
                 out.update(kwic.kwicpage(kwic_args))
-                out.update(await self.get_conc_sizes(conc))
+                out.update(self.get_conc_sizes(conc))
                 if request.args.get('next') == 'freqs':
                     out['next_action'] = 'freqs'
                     out['next_action_args'] = {

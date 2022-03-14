@@ -109,14 +109,7 @@ async def query_submit(amodel, req, resp):
     return ans
 
 
-# TODO vars=('orig_query', ) ??
-@bp.route('/view')
-@http_action(
-    mutates_result=False, action_log_mapper=log_mapping.view, template='view.html', action_model=ConcActionModel)
-async def view(amodel, req, resp):
-    """
-    KWIC view
-    """
+async def _view(amodel, req, resp):
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if amodel.args.refs is None:  # user did not set this at all (!= user explicitly set '')
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
@@ -246,6 +239,17 @@ async def view(amodel, req, resp):
     return out
 
 
+# TODO vars=('orig_query', ) ??
+@bp.route('/view')
+@http_action(
+    mutates_result=False, action_log_mapper=log_mapping.view, template='view.html', action_model=ConcActionModel)
+async def view(amodel, req, resp):
+    """
+    KWIC view
+    """
+    return await _view(amodel, req, resp)
+
+
 @bp.route('/create_view')
 @http_action(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view, action_model=ConcActionModel)
 async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -253,7 +257,7 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
     to the result by providing raw CQL query
     """
-    return await view(amodel, req, resp)
+    return await _view(amodel, req, resp)
 
 
 @bp.route('/archive_concordance', ['POST'])
@@ -535,7 +539,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.on_conc_store = store_last_op
     resp.set_http_status(201)
     try:
-        return await view(amodel, req, resp)
+        return await _view(amodel, req, resp)
     except Exception as ex:
         logging.getLogger(__name__).error(f'Failed to apply filter: {ex}')
         if ff_args.data.within:
@@ -572,7 +576,7 @@ async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ctx = ctx.split('~')[0]
 
     amodel.args.q.append(f's{qinfo.data.sattr}/{qinfo.data.sicase}{qinfo.data.sbward} {ctx}')
-    return await view(amodel, req, resp)
+    return await _view(amodel, req, resp)
 
 
 @bp.route('/mlsortx', ['POST'])
@@ -595,4 +599,14 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             crit += one_level_crit(' ', qinfo.data.ml3attr, qinfo.data.ml3ctx, qinfo.data.ml3pos, mlxfcode,
                                    qinfo.data.ml3icase, qinfo.data.ml3bward)
     amodel.args.q.append(crit)
-    return await view(amodel, req, resp)
+    return await _view(amodel, req, resp)
+
+
+@bp.route('/shuffle')
+@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def shuffle(amodel, req, resp):
+    if len(amodel.lines_groups) > 0:
+        raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
+    amodel.add_conc_form_args(ShuffleFormArgs(persist=True))
+    amodel.args.q.append('f')
+    return await _view(amodel, req, resp)
