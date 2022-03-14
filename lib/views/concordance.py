@@ -9,6 +9,7 @@ from action.argmapping.conc import build_conc_form_args, QueryFormArgs
 from action.argmapping.conc.filter import FilterFormArgs
 from action.krequest import KRequest
 from action.response import KResponse
+from action.model.authorized import UserActionModel
 from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.conc_cache import ConcCacheStatusException
@@ -242,6 +243,84 @@ async def view(amodel, req, resp):
         out['conc_cache_key'] = None
     amodel.attach_query_overview(out)
     return out
+
+
+@bp.route('/create_view')
+@http_action(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view, action_model=ConcActionModel)
+async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
+    to the result by providing raw CQL query
+    """
+    return await view(amodel, req, resp)
+
+
+@bp.route('/archive_concordance', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as cp:
+        revoke = bool(int(req.args.get('revoke')))
+        cn, row = cp.archive(amodel.session_get('user', 'id'),
+                             req.args.get('code'), revoke=revoke)
+    return dict(revoked=revoke, num_changes=cn, archived_conc=row)
+
+
+@bp.route('/get_stored_conc_archived_status')
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as cp:
+        return {
+            'is_archived': cp.is_archived(req.args.get('code')),
+            'will_be_archived': cp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
+        }
+
+
+@bp.route('/save_query', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
+        _, data = qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
+        if qp.stored_form_type(data) == 'pquery':
+            for conc_id in data.get('form', {}).get('conc_ids', []):
+                cn, _ = qp.archive(amodel.session_get('user', 'id'), conc_id)
+
+        hsave = qh.make_persistent(
+            amodel.session_get('user', 'id'),
+            req.json['query_id'],
+            qp.stored_query_supertype(data),
+            req.json.get('created'),
+            req.json['name'],
+        )
+    return dict(saved=hsave)
+
+
+@bp.route('/unsave_query', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    # as opposed to the 'save_query' method which also performs archiving of conc params,
+    # this method keeps the conc params as they are because we assume that user just does
+    # not want to keep the query in their history
+    with plugins.runtime.QUERY_HISTORY as qh:
+        ans = qh.make_transient(
+            amodel.session_get('user', 'id'),
+            req.json['query_id'],
+            req.json['created'],
+            req.json['name'],
+        )
+    return dict(deleted=ans)
+
+
+@bp.route('/delete_query', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    # remove query from history (respective results are kept)
+    with plugins.runtime.QUERY_HISTORY as qh:
+        ans = qh.delete(
+            amodel.session_get('user', 'id'),
+            req.json['query_id'],
+            int(req.json['created'])
+        )
+    return dict(num_deleted=ans)
 
 
 @bp.route('/concdesc_json')
