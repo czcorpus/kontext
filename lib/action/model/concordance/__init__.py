@@ -65,6 +65,7 @@ class ConcActionModel(CorpusActionModel):
         super().__init__(req, resp, action_props, tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
         # data of the current manual concordance line selection/categorization
+        # TODO fix lines groups selecting
         self._lines_groups: LinesGroups = LinesGroups(data=[])
         self._conc_dir: str = ''
         self._plugin_ctx: Optional[PluginCtx] = None
@@ -80,7 +81,8 @@ class ConcActionModel(CorpusActionModel):
         url_q = form.getlist('q')[:]
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
-                self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
+                self._lines_groups = LinesGroups.deserialize(
+                    self._active_q_data.get('lines_groups', []))
 
     async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
         curr = self._req.ctx.session.get('last_search', {})
@@ -555,10 +557,14 @@ class ConcActionModel(CorpusActionModel):
                 conc.set_linegroup_at_pos(lg[0], lg[2])
             if self._lines_groups.sorted:
                 conclib.sort_line_groups(conc, [x[2] for x in self._lines_groups])
-    
+
     @property
     def lines_groups(self):
         return self._lines_groups
+
+    @lines_groups.setter
+    def lines_groups(self, lg: LinesGroups):
+        self._lines_groups = lg
 
     async def get_speech_segment(self):
         """
@@ -635,6 +641,16 @@ class ConcActionModel(CorpusActionModel):
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
                 self.human_readable_corpname(), out['query_overview'][0].get('nicearg'))
+
+    @staticmethod
+    def filter_lines(data, pnfilter):
+        def expand(x, n):
+            return list(range(x, x + n))
+
+        sel_lines = []
+        for item in data:
+            sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
+        return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
 
 class ConcPluginCtx(CorpusPluginCtx):
