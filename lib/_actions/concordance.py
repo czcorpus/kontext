@@ -140,68 +140,10 @@ class Actions(Querying):
         args.append(('next', return_action))
         raise ImmediateRedirectException(self.create_url('restore_conc', args))
 
-    @exposed(mutates_result=True, template='view.html', page_model='view', action_log_mapper=log_mapping.view)
-    def create_view(self, request):
-        """
-        This is intended for direct conc. access via external pages (i.e. no query_submit + view and just directly
-        to the result by providing raw CQL query
-        """
-        return self.view(request)
-
-    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
-    def archive_concordance(self, request):
-        with plugins.runtime.QUERY_PERSISTENCE as cp:
-            revoke = bool(int(request.args.get('revoke')))
-            cn, row = cp.archive(self.session_get('user', 'id'),
-                                 request.args.get('code'), revoke=revoke)
-        return dict(revoked=revoke, num_changes=cn, archived_conc=row)
-
-    @exposed(access_level=1, return_type='json', skip_corpus_init=True)
-    def get_stored_conc_archived_status(self, request):
-        with plugins.runtime.QUERY_PERSISTENCE as cp:
-            return {
-                'is_archived': cp.is_archived(request.args.get('code')),
-                'will_be_archived': cp.will_be_archived(self._plugin_ctx, request.args.get('code'))
-            }
-
-    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
-    def save_query(self, request):
-        with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-            _, data = qp.archive(self.session_get('user', 'id'), request.json['query_id'])
-            if qp.stored_form_type(data) == 'pquery':
-                for conc_id in data.get('form', {}).get('conc_ids', []):
-                    cn, _ = qp.archive(self.session_get('user', 'id'), conc_id)
-
-            hsave = qh.make_persistent(
-                self.session_get(
-                    'user', 'id'), request.json['query_id'], qp.stored_query_supertype(data),
-                request.json.get('created'), request.json['name'])
-        return dict(saved=hsave)
-
-    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
-    def unsave_query(self, request):
-        # as opposed to the 'save_query' method which also performs archiving of conc params,
-        # this method keeps the conc params as they are because we assume that user just does
-        # not want to keep the query in their history
-        with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.make_transient(
-                self.session_get('user', 'id'), request.json['query_id'], request.json['created'],
-                request.json['name'])
-        return dict(deleted=ans)
-
-    @exposed(access_level=1, return_type='json', http_method='POST', skip_corpus_init=True)
-    def delete_query(self, request):
-        # remove query from history (respective results are kept)
-        with plugins.runtime.QUERY_HISTORY as qh:
-            ans = qh.delete(self.session_get('user', 'id'),
-                            request.json['query_id'], int(request.json['created']))
-        return dict(num_deleted=ans)
-
     @exposed()
     def first_form(self, request):
         self.redirect(self.create_url('query', request.args), code=301)
         return {}
-
 
     @exposed(return_type='json')
     def get_conc_cache_status(self, _):
@@ -233,7 +175,6 @@ class Actions(Querying):
         except Exception as ex:
             cancel_conc_task(cache_map, subchash, q)
             raise ex
-
 
     @exposed(access_level=1, template='view.html', page_model='view', mutates_result=True, http_method='POST')
     def sortx(self, request):
@@ -926,8 +867,6 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-
-
     @exposed(access_level=0, return_type='json')
     def fullref(self, request):
         """
@@ -1267,8 +1206,6 @@ class Actions(Querying):
             conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
                             fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0)
             return dict(total=conc.fullsize() if conc else None)
-
-
 
     @exposed(http_method='GET', return_type='json')
     def load_query_pipeline(self, _):
