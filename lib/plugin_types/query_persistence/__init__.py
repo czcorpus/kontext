@@ -18,7 +18,7 @@
 
 import abc
 import logging
-from typing import Dict, Optional, Tuple, Any, Union, List, Callable
+from typing import Dict, Optional, Tuple, Any, Union, List, Callable, Coroutine
 import settings
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
@@ -29,7 +29,10 @@ from action.plugin.ctx import PluginCtx
 from action.argmapping.conc.base import ConcFormArgs
 
 
-ConcFormArgsFactory = Callable[[PluginCtx, List[str], Dict[str, Any], str], ConcFormArgs]
+ConcFormArgsFactory = Callable[
+    [PluginCtx, List[str], Dict[str, Any], str],
+    Coroutine[Any, Any, ConcFormArgs]
+]
 
 
 class AbstractQueryPersistence(abc.ABC):
@@ -163,7 +166,7 @@ class AbstractQueryPersistence(abc.ABC):
             raise ValueError(f'Cannot determine query supertype from type {form_type}')
         raise ValueError(f'Cannot determine query supertype from data {data}')
 
-    def load_pipeline_ops(
+    async def load_pipeline_ops(
             self, plugin_ctx: PluginCtx, last_id: str,
             conc_form_args_factory: ConcFormArgsFactory) -> List[ConcFormArgs]:
         """
@@ -180,7 +183,7 @@ class AbstractQueryPersistence(abc.ABC):
         data = self.open(last_id)  # type: ignore
         if data is not None:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-            ans.append(conc_form_args_factory(
+            ans.append(await conc_form_args_factory(
                 plugin_ctx, data.get('corpora', []), form_data, data['id']))
         limit = 100
         while data is not None and data.get('prev_id') and limit > 0:
@@ -190,7 +193,7 @@ class AbstractQueryPersistence(abc.ABC):
                 raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
             else:
                 form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
-                ans.insert(0, conc_form_args_factory(
+                ans.insert(0, await conc_form_args_factory(
                     plugin_ctx, data.get('corpora', []), form_data, data['id']))
             limit -= 1
             if limit == 0:
