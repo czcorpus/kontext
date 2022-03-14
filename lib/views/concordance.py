@@ -11,8 +11,9 @@ from action.model.authorized import UserActionModel
 from action.model.concordance import ConcActionModel
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
-from action.argmapping.conc.filter import FilterFormArgs
+from action.argmapping.conc.filter import FilterFormArgs, SubHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
+from action.argmapping.conc.other import KwicSwitchArgs
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
@@ -34,37 +35,37 @@ bp = Blueprint('concordance')
 
 @bp.route('/query')
 @http_action(template='query.html', page_model='query', action_model=ConcActionModel)
-async def query(action_model, req, resp):
-    action_model.disabled_menu_items = (
+async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
-    out = {'aligned_corpora': action_model.args.align}
-    tt_data = await action_model.tt.export_with_norms(ret_nums=True)
+    out = {'aligned_corpora': amodel.args.align}
+    tt_data = await amodel.tt.export_with_norms(ret_nums=True)
     out['Normslist'] = tt_data['Normslist']
     out['text_types_data'] = tt_data
 
-    corp_info = await action_model.get_corpus_info(action_model.args.corpname)
+    corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-    qf_args = await action_model.fetch_prev_query('conc') if action_model._active_q_data is None else None
+    qf_args = await amodel.fetch_prev_query('conc') if amodel._active_q_data is None else None
     if qf_args is None:
         qf_args = await QueryFormArgs.create(
-            plugin_ctx=action_model.plugin_ctx,
-            corpora=[action_model.args.corpname] + action_model.args.align,
+            plugin_ctx=amodel.plugin_ctx,
+            corpora=[amodel.args.corpname] + amodel.args.align,
             persist=False)
-    action_model.add_conc_form_args(qf_args)
-    await action_model.attach_query_params(out)
-    await action_model.attach_aligned_query_params(out)
-    action_model.export_subcorpora_list(
-        action_model.args.corpname, action_model.args.usesubcorp, out)
+    amodel.add_conc_form_args(qf_args)
+    await amodel.attach_query_params(out)
+    await amodel.attach_aligned_query_params(out)
+    amodel.export_subcorpora_list(
+        amodel.args.corpname, amodel.args.usesubcorp, out)
     return out
 
 
 @bp.route('/query_submit', methods=['POST'])
 @http_action(
     mutates_result=True, action_log_mapper=log_mapping.query_submit, return_type='json', action_model=ConcActionModel)
-async def query_submit(amodel, req, resp):
+async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
         if history_ts:
@@ -109,7 +110,7 @@ async def query_submit(amodel, req, resp):
     return ans
 
 
-async def _view(amodel, req, resp):
+async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     if amodel.args.refs is None:  # user did not set this at all (!= user explicitly set '')
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
@@ -243,7 +244,7 @@ async def _view(amodel, req, resp):
 @bp.route('/view')
 @http_action(
     mutates_result=False, action_log_mapper=log_mapping.view, template='view.html', action_model=ConcActionModel)
-async def view(amodel, req, resp):
+async def view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     KWIC view
     """
@@ -330,13 +331,13 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def concdesc_json(amodel, req, resp) -> Dict[str, List[Dict[str, Any]]]:
+async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, List[Dict[str, Any]]]:
     return {'Desc': amodel.concdesc_json()}
 
 
 @bp.route('/ajax_fetch_conc_form_args')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
+async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     try:
         # we must include only regular (i.e. the ones visible in the breadcrumb-like
         # navigation bar) operations - otherwise the indices would not match.
@@ -352,7 +353,7 @@ async def ajax_fetch_conc_form_args(amodel, req, resp) -> Dict[str, Any]:
 
 @bp.route('/widectx')
 @http_action(access_level=0, action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
-async def widectx(amodel, req, resp):
+async def widectx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     display a hit in a wider context
     """
@@ -376,7 +377,7 @@ async def widectx(amodel, req, resp):
 
 @bp.route('/ajax_switch_corpus', methods=['POST'])
 @http_action(return_type='json', action_model=ConcActionModel)
-async def ajax_switch_corpus(amodel, req, resp):
+async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
@@ -491,6 +492,16 @@ async def ajax_switch_corpus(amodel, req, resp):
     return rtrn
 
 
+@bp.route('/switch_main_corp', methods=['POST'])
+@http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def switch_main_corp(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    maincorp = req.form.get('maincorp')
+    amodel.args.q.append('x-{0}'.format(maincorp))
+    ksargs = KwicSwitchArgs(maincorp=maincorp, persist=True)
+    amodel.add_conc_form_args(ksargs)
+    return await _view(amodel, req, resp)
+
+
 @bp.route('/filter', methods=['POST'])
 @http_action(access_level=1, mutates_result=True, return_type='json', action_model=ConcActionModel)
 async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -549,6 +560,17 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         raise
 
 
+@bp.route('/filter_subhits')
+@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    if len(amodel.lines_groups) > 0:
+        raise UserActionException(
+            'Cannot apply the function once a group of lines has been saved')
+    amodel.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
+    amodel.args.q.append('D')
+    return await _view(amodel, req, resp)
+
+
 @bp.route('/sortx', ['POST'])
 @http_action(access_level=1, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -604,7 +626,7 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/shuffle')
 @http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
-async def shuffle(amodel, req, resp):
+async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
         raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
     amodel.add_conc_form_args(ShuffleFormArgs(persist=True))
