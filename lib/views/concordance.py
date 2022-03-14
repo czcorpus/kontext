@@ -1,4 +1,8 @@
+import collections
 import os
+import json
+import time
+import mailing
 from typing import Optional, Dict, List, Any
 from sanic import Blueprint
 import logging
@@ -10,11 +14,12 @@ from action.errors import NotFoundException, UserActionException
 from action.model.base import BaseActionModel
 from action.model.authorized import UserActionModel
 from action.model.concordance import ConcActionModel
+from action.model.concordance.linesel import LinesGroups
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
 from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
-from action.argmapping.conc.other import KwicSwitchArgs
+from action.argmapping.conc.other import KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
@@ -431,7 +436,7 @@ async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp
         # we must include only regular (i.e. the ones visible in the breadcrumb-like
         # navigation bar) operations - otherwise the indices would not match.
         with plugins.runtime.QUERY_PERSISTENCE as qp:
-            stored_ops = qp.load_pipeline_ops(
+            stored_ops = await qp.load_pipeline_ops(
                 amodel.plugin_ctx, req.args.get('last_key'), build_conc_form_args)
         pipeline = [x for x in stored_ops if x.form_type != 'nop']
         op_data = pipeline[int(req.args.get('idx'))]
@@ -673,7 +678,7 @@ async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/filter_subhits')
-@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+@http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
         raise UserActionException(
@@ -684,7 +689,7 @@ async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse
 
 
 @bp.route('/filter_firsthits', ['POST'])
-@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+@http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
         raise UserActionException(
@@ -751,10 +756,152 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/shuffle')
-@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+@http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
         raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
     amodel.add_conc_form_args(ShuffleFormArgs(persist=True))
     amodel.args.q.append('f')
     return await _view(amodel, req, resp)
+
+
+@bp.route('/ajax_apply_lines_groups', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_apply_lines_groups(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    rows = req.form.get('rows')
+    amodel.lines_groups = LinesGroups(data=json.loads(rows))
+    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    return {}
+
+
+@bp.route('/ajax_unset_lines_groups', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_unset_lines_groups(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel._q_code, build_conc_form_args)
+    i = len(pipeline) - 1
+    # we have to go back before the current block
+    # of lines-groups operations and find an
+    # operation to start a new query pipeline
+    while i >= 0 and pipeline[i].form_type == 'lgroup':
+        i -= 1
+    if i < 0:
+        raise Exception('Broken operation chain')
+    amodel._clear_prev_conc_params()  # we do not want to chain next state with the current one
+    amodel._lines_groups = LinesGroups(data=[])
+    pipeline[i].make_saveable()  # drop old opKey, set as persistent
+    amodel.add_conc_form_args(pipeline[i])
+    return {}
+
+
+@bp.route('/ajax_remove_non_group_lines', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_remove_non_group_lines(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    amodel.args.q.append(amodel.filter_lines([(x[0], x[1]) for x in amodel.lines_groups], 'p'))
+    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    return {}
+
+
+@bp.route('/ajax_sort_group_lines', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_sort_group_lines(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    amodel.lines_groups.sorted = True
+    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    return {}
+
+
+@bp.route('/ajax_remove_selected_lines', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_remove_selected_lines(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    pnfilter = req.args.get('pnfilter', 'p')
+    rows = req.form.get('rows', '')
+    data = json.loads(rows)
+    amodel.args.q.append(amodel.filter_lines(data, pnfilter))
+    amodel.add_conc_form_args(LockedOpFormsArgs(persist=True))
+    return {}
+
+
+@bp.route('/ajax_send_group_selection_link_to_mail', ['POST'])
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH as auth:
+        user_info = auth.get_user_info(amodel.plugin_ctx)
+        user_email = user_info['email']
+        username = user_info['username']
+        smtp_server = mailing.smtp_factory()
+        url = req.args.get('url')
+        recip_email = req.args.get('email')
+
+        text = req.translate('KonText user %s has sent a concordance link to you') % (
+            username,) + ':'
+        text += '\n\n'
+        text += url + '\n\n'
+        text += '\n---------------------\n'
+        text += time.strftime('%d.%m. %Y %H:%M')
+        text += '\n'
+
+        msg = mailing.message_factory(
+            recipients=[recip_email],
+            subject=req.translate('KonText concordance link'),
+            text=text,
+            reply_to=user_email)
+        return dict(ok=mailing.send_mail(smtp_server, msg, [recip_email]))
+
+
+@bp.route('/ajax_reedit_line_selection', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_reedit_line_selection(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    ans = amodel.lines_groups.as_list()
+    amodel.lines_groups = LinesGroups(data=[])
+    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    return dict(selection=ans)
+
+
+@bp.route('/ajax_get_line_groups_stats')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_get_line_groups_stats(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    ans = collections.defaultdict(lambda: 0)
+    for item in amodel.lines_groups:
+        ans[item[2]] += 1
+
+    return dict(groups=ans)
+
+
+@bp.route('/ajax_get_first_line_select_page')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
+    conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
+                          q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
+                          asnc=False, samplesize=corpus_info.sample_size)
+    amodel.apply_linegroups(conc)
+    kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+    return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
+
+
+@bp.route('/ajax_rename_line_group', ['POST'])
+@http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
+async def ajax_rename_line_group(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    from_num = int(req.form.get('from_num', '0'))
+    to_num = int(req.form.get('to_num', '-1'))
+    new_groups = [v for v in amodel.lines_groups if v[2] != from_num or to_num != -1]
+    if to_num > 0:
+        new_groups = [v if v[2] != from_num else (v[0], v[1], to_num) for v in new_groups]
+    amodel.lines_groups = LinesGroups(data=new_groups)
+    amodel.add_conc_form_args(LgroupOpArgs(persist=True))
+    return {}
+
+
+@bp.route('/export_line_groups_chart', ['POST'])
+@http_action(access_level=1, return_type='plain', mutates_result=True, action_model=ConcActionModel)
+async def export_line_groups_chart(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.CHART_EXPORT as ce:
+        format = req.json.get('cformat')
+        filename = 'line-groups-{0}.{1}'.format(amodel.args.corpname, ce.get_suffix(format))
+        resp.set_header('Content-Type', ce.get_content_type(format))
+        resp.set_header('Content-Disposition', f'attachment; filename="{filename}.{format}"')
+        data = sorted(req.json.get('data', {}), key=lambda x: int(x['groupId']))
+        total = sum(x['count'] for x in data)
+        data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
+                for x in data]
+        return ce.export_pie_chart(data=data, title=req.form.get('title', '??'), format=format)
