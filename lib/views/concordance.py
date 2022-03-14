@@ -6,6 +6,10 @@ from dataclasses import asdict
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs
+from action.argmapping.conc.filter import FilterFormArgs
+from action.krequest import KRequest
+from action.response import KResponse
+from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.conc_cache import ConcCacheStatusException
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
@@ -15,7 +19,7 @@ from action.errors import NotFoundException, UserActionException
 import conclib
 from conclib.search import get_conc
 from conclib.errors import (
-    ConcordanceException, ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
+    ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
 from conclib.empty import InitialConc
 from kwiclib import KwicPageArgs, Kwic
 import plugins
@@ -401,3 +405,60 @@ async def ajax_switch_corpus(amodel, req, resp):
             plugin_ctx=amodel.plugin_ctx)
         return ans
     return rtrn
+
+
+@bp.route('/filter', methods=['POST'])
+@http_action(access_level=1, mutates_result=True, return_type='json', action_model=ConcActionModel)
+async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    Positive/Negative filter
+    """
+    def store_last_op(conc_ids: List[str], history_ts: Optional[int], _):
+        if history_ts:
+            amodel.store_last_search('conc:filter', conc_ids[0])
+
+    if len(amodel.lines_groups) > 0:
+        raise UserActionException('Cannot apply a filter once a group of lines has been saved')
+
+    maincorp = amodel.args.maincorp if amodel.args.maincorp else amodel.args.corpname
+    ff_args = await FilterFormArgs.create(amodel.plugin_ctx, maincorp, True)
+    ff_args.update_by_user_query(req.json)
+    err = ff_args.validate()
+    if err is not None:
+        raise UserActionException(err)
+
+    amodel.add_conc_form_args(ff_args)
+    rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
+    texttypes = TextTypeCollector(amodel.corp, {}).get_query()
+    try:
+        query = amodel._compile_query(form=ff_args, corpus=maincorp) # TODO get rid of private method
+        if query is None:
+            raise ConcordanceQueryParamsError(req.translate('No query entered.'))
+    except ConcordanceQueryParamsError:
+        if texttypes:
+            query = '[]'
+            ff_args.filfpos = '0'
+            ff_args.filtpos = '0'
+        else:
+            raise ConcordanceQueryParamsError(req.translate('No query entered.'))
+    query += ' '.join(['within <%s %s />' % nq for nq in texttypes])
+    if ff_args.data.within:
+        wquery = f' within {maincorp}:({query})'
+        amodel.args.q[0] += wquery
+        amodel.args.q.append(f'x-{maincorp}')
+    else:
+        wquery = ''
+        amodel.args.q.append(
+            f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
+
+    amodel.on_conc_store = store_last_op
+    resp.set_http_status(201)
+    try:
+        return await view(amodel, req, resp)
+    except Exception as ex:
+        logging.getLogger(__name__).error('Failed to apply filter: {}'.format(ex))
+        if ff_args.data.within:
+            amodel.args.q[0] = amodel.args.q[0][:-len(wquery)]
+        else:
+            del amodel.args.q[-1]
+        raise
