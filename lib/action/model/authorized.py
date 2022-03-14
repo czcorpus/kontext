@@ -20,7 +20,6 @@ from main_menu import MainMenu, generate_main_menu
 import settings
 import corplib
 import plugins  # note - plugins are stateful
-import babel
 
 
 class UserActionModel(BaseActionModel):
@@ -340,9 +339,7 @@ class UserActionModel(BaseActionModel):
                                          for code, meta in avail_languages if code == ui_lang)
 
         day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
-        result['first_day_of_week'] = day_map[
-            babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day
-        ]
+        result['first_day_of_week'] = day_map[self._req.locale.first_week_day]
 
         # util functions
         result['to_str'] = lambda s: str(s) if s is not None else ''
