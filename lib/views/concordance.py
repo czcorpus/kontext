@@ -11,7 +11,7 @@ from action.model.authorized import UserActionModel
 from action.model.concordance import ConcActionModel
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
-from action.argmapping.conc.filter import FilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs
+from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs
 from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import KwicSwitchArgs
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
@@ -644,7 +644,7 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/quick_filter', methods=['POST'])
 @http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
-async def quick_filter(amodel, req, resp):
+async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls/pquery pages).
     """
@@ -673,6 +673,20 @@ async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse
             'Cannot apply the function once a group of lines has been saved')
     amodel.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
     amodel.args.q.append('D')
+    return await _view(amodel, req, resp)
+
+
+@bp.route('/filter_firsthits', ['POST'])
+@http_action(access_level=0, template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
+async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    if len(amodel.lines_groups) > 0:
+        raise UserActionException(
+            'Cannot apply the function once a group of lines has been saved')
+    elif len(amodel.args.align) > 0:
+        raise UserActionException('The function is not supported for aligned corpora')
+    amodel.add_conc_form_args(FirstHitsFilterFormArgs(
+        persist=True, doc_struct=amodel.corp.get_conf('DOCSTRUCTURE')))
+    amodel.args.q.append('F{0}'.format(req.args.get('fh_struct')))
     return await _view(amodel, req, resp)
 
 
