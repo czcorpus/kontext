@@ -823,24 +823,6 @@ class Actions(Querying):
                 self._response.remove_header('Content-Disposition')
             raise e
 
-    @exposed(access_level=0, return_type='plain')
-    def audio(self, request):
-        """
-        Provides access to audio-files containing speech segments.
-        Access rights are per-corpus (i.e. if a user has a permission to
-        access corpus 'X' then all related audio files are accessible).
-        """
-        with plugins.runtime.AUDIO_PROVIDER as audiop:
-            headers, ans = audiop.get_audio(self._plugin_ctx, request)
-            for h, v in headers.items():
-                self._response.set_header(h, v)
-            return ans
-
-    @exposed(return_type='json', access_level=0)
-    def audio_waveform(self, request):
-        with plugins.runtime.AUDIO_PROVIDER as audiop:
-            return audiop.get_waveform(self._plugin_ctx, request)
-
     def _collect_conc_next_url_params(self, query_id):
         params = {
             'corpname': self.args.corpname,
