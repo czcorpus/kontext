@@ -13,6 +13,7 @@ from action.response import KResponse
 from action.errors import NotFoundException, UserActionException
 from action.model.base import BaseActionModel
 from action.model.authorized import UserActionModel
+from action.model.corpus import CorpusActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
@@ -909,8 +910,31 @@ async def export_line_groups_chart(amodel: ConcActionModel, req: KRequest, resp:
 
 @bp.route('/fullref')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def fullref(amodel, req, resp):
+async def fullref(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     display a full reference
     """
     return conclib.get_full_ref(corp=amodel.corp, pos=int(req.args.get('pos', '0')))
+
+
+# TODO is corpus model enough?
+@bp.route('/audio')
+@http_action(return_type='plain', action_model=CorpusActionModel)
+async def audio(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    """
+    Provides access to audio-files containing speech segments.
+    Access rights are per-corpus (i.e. if a user has a permission to
+    access corpus 'X' then all related audio files are accessible).
+    """
+    with plugins.runtime.AUDIO_PROVIDER as audiop:
+        headers, ans = audiop.get_audio(amodel.plugin_ctx, req)
+        for h, v in headers.items():
+            resp.set_header(h, v)
+        return ans
+
+
+@bp.route('/audio_waveform')
+@http_action(return_type='json', action_model=CorpusActionModel)
+async def audio_waveform(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUDIO_PROVIDER as audiop:
+        return audiop.get_waveform(amodel.plugin_ctx, req)
