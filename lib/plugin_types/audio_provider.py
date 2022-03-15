@@ -17,15 +17,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Tuple, Callable, Dict, Optional, List
+from typing import Tuple, Dict, Optional, List
 from action.plugin.ctx import PluginCtx
-from werkzeug import Request
+
+from action.krequest import KRequest
 
 
 class AbstractAudioProvider(abc.ABC):
 
     @abc.abstractmethod
-    def get_audio(self, plugin_ctx: PluginCtx, req: Request) -> Tuple[Dict[str, str], bytes]:
+    def get_audio(self, plugin_ctx: PluginCtx, req: KRequest) -> Tuple[Dict[str, str], bytes]:
         """
         returns:
         a 2-tuple (
@@ -36,7 +37,7 @@ class AbstractAudioProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_waveform(self, plugin_ctx: PluginCtx, req: Request) -> Optional[List[float]]:
+    def get_waveform(self, plugin_ctx: PluginCtx, req: KRequest) -> Optional[List[float]]:
         """
         returns:
         either waveform data (JSON-encoded) or None; if None then the waveform function
