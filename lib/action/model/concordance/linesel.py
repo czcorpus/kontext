@@ -1,4 +1,4 @@
-from typing import List, Any, Iterator, Dict, Union
+from typing import List, Any, Iterator, Dict, Union, Tuple
 
 
 class LinesGroups:
@@ -30,7 +30,7 @@ class LinesGroups:
         return len(self.data) > 0
 
     @staticmethod
-    def deserialize(data: Union[Dict, List[Any]]) -> 'LinesGroups':
+    def deserialize(data: Union[Dict[str, Any], List[Tuple[str, Any]]]) -> 'LinesGroups':
         data_dict = dict(data) if isinstance(data, list) else data
         ans = LinesGroups(data_dict.get('data', []))
         ans.sorted = data_dict.get('sorted', False)

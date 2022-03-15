@@ -313,18 +313,16 @@ class ConcActionModel(CorpusActionModel):
         tpl_out['metadata_desc'] = corpus_info.metadata.desc
         tpl_out['input_languages'] = {}
         tpl_out['input_languages'][getattr(self.args, 'corpname')] = corpus_info.collator_locale
+
+        conc_forms_args: Dict[str, Dict[str, Any]] = {}
         if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
             op_key = self._active_q_data['id']
-            conc_forms_args = {
-                op_key: (await build_conc_form_args(
-                    self._plugin_ctx,
-                    self._active_q_data.get('corpora', []),
-                    self._active_q_data['lastop_form'],
-                    op_key
-                )).to_dict()
-            }
-        else:
-            conc_forms_args = {}
+            conc_forms_args[op_key] = (await build_conc_form_args(
+                self._plugin_ctx,
+                self._active_q_data.get('corpora', []),
+                self._active_q_data['lastop_form'],
+                op_key
+            )).to_dict()
         # Attach new form args added by the current action.
         if len(self._auto_generated_conc_ops) > 0:
             conc_forms_args['__latest__'] = self._auto_generated_conc_ops[-1][1].to_dict()
