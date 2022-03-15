@@ -674,13 +674,6 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-    @exposed(access_level=0, return_type='json')
-    def fullref(self, request):
-        """
-        display a full reference
-        """
-        return conclib.get_full_ref(corp=self.corp, pos=int(request.args.get('pos', '0')))
-
     @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.html',
              return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0):
@@ -830,24 +823,6 @@ class Actions(Querying):
                 self._response.remove_header('Content-Disposition')
             raise e
 
-    @exposed(access_level=0, return_type='plain')
-    def audio(self, request):
-        """
-        Provides access to audio-files containing speech segments.
-        Access rights are per-corpus (i.e. if a user has a permission to
-        access corpus 'X' then all related audio files are accessible).
-        """
-        with plugins.runtime.AUDIO_PROVIDER as audiop:
-            headers, ans = audiop.get_audio(self._plugin_ctx, request)
-            for h, v in headers.items():
-                self._response.set_header(h, v)
-            return ans
-
-    @exposed(return_type='json', access_level=0)
-    def audio_waveform(self, request):
-        with plugins.runtime.AUDIO_PROVIDER as audiop:
-            return audiop.get_waveform(self._plugin_ctx, request)
-
     def _collect_conc_next_url_params(self, query_id):
         params = {
             'corpname': self.args.corpname,
@@ -874,46 +849,3 @@ class Actions(Querying):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
-    @exposed(return_type='json', http_method='POST')
-    def get_adhoc_subcorp_size(self, request):
-        if plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-                self._plugin_ctx, [self.args.corpname] + self.args.align):
-            # a faster solution based on liveattrs
-            with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-                attr_map = TextTypeCollector(self.corp, request.json['text_types']).get_attrmap()
-                involved_corpora = [self.args.corpname] + self.args.align[:]
-                size = liveatt.get_subc_size(self._plugin_ctx, involved_corpora, attr_map)
-                return dict(total=size)
-        else:
-            tt_query = TextTypeCollector(self.corp, request.json['text_types']).get_query()
-            query = 'aword,[] within {}'.format(
-                ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
-            self.args.q = [query]
-            conc = get_conc(corp=self.corp, user_id=self.session_get('user', 'id'), q=self.args.q,
-                            fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=0)
-            return dict(total=conc.fullsize() if conc else None)
-
-    @exposed(http_method='GET', return_type='json')
-    def load_query_pipeline(self, _):
-        with plugins.runtime.QUERY_PERSISTENCE as qp:
-            pipeline = qp.load_pipeline_ops(self._plugin_ctx, self._q_code, build_conc_form_args)
-        ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
-        self._attach_query_overview(ans)
-        return ans
-
-    @exposed(http_method='GET', return_type='json')
-    def matching_structattr(self, request):
-        def is_invalid(v):
-            return re.search(r'[<>\]\[]', v) is not None
-
-        if (is_invalid(request.args.get('struct')) or is_invalid(request.args.get('attr')) or
-                is_invalid(request.args.get('attr_val')) or is_invalid(request.args.get('search_attr'))):
-            raise UserActionException('Invalid character in attribute/structure name/value')
-
-        ans, found, used = corplib.matching_structattr(
-            self.corp, request.args.get('struct'), request.args.get(
-                'attr'), request.args.get('attr_val'),
-            request.args.get('search_attr'))
-        if len(ans) == 0:
-            self._response.set_http_status(404)
-        return dict(result=ans, conc_size=found, lines_used=used)
