@@ -193,7 +193,7 @@ class CorpusActionModel(UserActionModel):
                 merge_incoming_opts_to(options)
                 self._req.ctx.session['settings'] = options
 
-    def _restore_prev_query_params(self, form):
+    def _restore_prev_query_params(self, form) -> bool:
         """
         Restores previously stored concordance/pquery/wordlist query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
@@ -208,8 +208,8 @@ class CorpusActionModel(UserActionModel):
         In case the query_persistence is installed and invalid ID is encountered
         UserActionException will be raised.
 
-        arguments:
-            form -- RequestArgsProxy
+        Returns:
+            True if query params have been loaded else False (which is still not an error)
         """
         url_q = form.getlist('q')[:]
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
@@ -232,8 +232,10 @@ class CorpusActionModel(UserActionModel):
                         form.add_forced_arg('viewmode', 'align')
                     if self._active_q_data.get('usesubcorp', None):
                         form.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
+                    return True
                 else:
                     raise UserActionException(self._req.translate('Invalid or expired query'))
+        return False
 
     def user_subc_names(self, corpname):
         if self.user_is_anonymous():
