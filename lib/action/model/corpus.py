@@ -103,6 +103,10 @@ class CorpusActionModel(UserActionModel):
     def corpus_variant(self):
         return self._corpus_variant
 
+    @property
+    def q_code(self):
+        return self._q_code
+
     # TODO move to a more specific req_context object
     async def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
