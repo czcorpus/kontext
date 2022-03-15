@@ -13,7 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Union, List
+from typing import Dict, Union
 
 
 def one_level_crit(prefix: str, attr: str, ctx: str, pos: int, fcode: str, icase: str, bward: str = '',
@@ -31,11 +31,14 @@ def multi_level_crit(freqlevel: int, **kwargs: Dict[str, Union[str, int]]) -> st
     """
     kwargs are: ml{i}attr, ml{i}ctx, ml{i}pos, ml{i}fcode, ml{i}icase
     """
-    return ' '.join(one_level_crit('',
-                    kwargs.get(f'ml{i}attr', 'word'),
-                    kwargs.get(f'ml{i}ctx', '0'),
-                    kwargs.get(f'ml{i}pos', 1),
-                    kwargs.get(f'ml{i}fcode', 'rc'),
-                    kwargs.get(f'ml{i}icase', ''),
-                    'e')
-                    for i in range(1, freqlevel + 1))
+    return ' '.join(
+        one_level_crit(
+            '',
+            kwargs.get(f'ml{i}attr', 'word'),
+            kwargs.get(f'ml{i}ctx', '0'),
+            kwargs.get(f'ml{i}pos', 1),
+            kwargs.get(f'ml{i}fcode', 'rc'),
+            kwargs.get(f'ml{i}icase', ''),
+            'e'
+        ) for i in range(1, freqlevel + 1)
+    )

@@ -19,7 +19,7 @@
 # 02110-1301, USA.
 
 import logging
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional
 import os
 from functools import partial
 import asyncio
@@ -32,6 +32,7 @@ from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
 from conclib.errors import ConcCalculationStatusException
+from conclib.common import KConc
 from corplib.corpus import AbstractKCorpus
 import bgcalc
 
@@ -43,7 +44,7 @@ CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
+async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize) -> KConc:
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -65,7 +66,7 @@ async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize):
 
 async def _get_bg_conc(
         corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
-        calc_from: int, minsize: int) -> Union[PyConc, InitialConc]:
+        calc_from: int, minsize: int) -> KConc:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results
@@ -148,7 +149,7 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 async def get_conc(
         corp: AbstractKCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
-        samplesize=0) -> Union[PyConc, InitialConc]:
+        samplesize=0) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -204,7 +205,8 @@ async def get_conc(
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                tf = partial(_get_sync_conc, worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
+                tf = partial(_get_sync_conc, worker=worker, corp=corp,
+                             q=q, subchash=subchash, samplesize=samplesize)
                 conc = await asyncio.get_event_loop().run_in_executor(None, tf)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):

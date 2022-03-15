@@ -774,11 +774,21 @@ async def ajax_apply_lines_groups(amodel: ConcActionModel, req: KRequest, resp: 
     return {}
 
 
+@bp.route('/ajax_get_line_groups_stats')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def ajax_get_line_groups_stats(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    ans = collections.defaultdict(lambda: 0)
+    for item in amodel.lines_groups:
+        ans[item[2]] += 1
+
+    return dict(groups=ans)
+
+
 @bp.route('/ajax_unset_lines_groups', ['POST'])
 @http_action(return_type='json', mutates_result=True, action_model=ConcActionModel)
 async def ajax_unset_lines_groups(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_PERSISTENCE as qp:
-        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel._q_code, build_conc_form_args)
+        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
     i = len(pipeline) - 1
     # we have to go back before the current block
     # of lines-groups operations and find an
@@ -855,16 +865,6 @@ async def ajax_reedit_line_selection(amodel: ConcActionModel, req: KRequest, res
     amodel.lines_groups = LinesGroups(data=[])
     amodel.add_conc_form_args(LgroupOpArgs(persist=True))
     return dict(selection=ans)
-
-
-@bp.route('/ajax_get_line_groups_stats')
-@http_action(return_type='json', action_model=ConcActionModel)
-async def ajax_get_line_groups_stats(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    ans = collections.defaultdict(lambda: 0)
-    for item in amodel.lines_groups:
-        ans[item[2]] += 1
-
-    return dict(groups=ans)
 
 
 @bp.route('/ajax_get_first_line_select_page')
