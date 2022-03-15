@@ -1,6 +1,7 @@
 import collections
 import os
 import json
+import re
 import time
 import mailing
 from typing import Optional, Dict, List, Any
@@ -25,6 +26,7 @@ from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormAr
 from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.conc_cache import ConcCacheStatusException
+import corplib
 import conclib
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
@@ -938,3 +940,53 @@ async def audio(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 async def audio_waveform(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUDIO_PROVIDER as audiop:
         return audiop.get_waveform(amodel.plugin_ctx, req)
+
+
+@bp.route('/get_adhoc_subcorp_size')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    if (await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
+            amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)):
+        # a faster solution based on liveattrs
+        with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
+            attr_map = TextTypeCollector(amodel.corp, req.json['text_types']).get_attrmap()
+            involved_corpora = [amodel.args.corpname] + amodel.args.align[:]
+            size = await liveatt.get_subc_size(amodel.plugin_ctx, involved_corpora, attr_map)
+            return dict(total=size)
+    else:
+        tt_query = TextTypeCollector(amodel.corp, req.json['text_types']).get_query()
+        query = 'aword,[] within {}'.format(
+            ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
+        amodel.args.q = [query]
+        conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+                        fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
+        return dict(total=conc.fullsize() if conc else None)
+
+
+@bp.route('/load_query_pipeline')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def load_query_pipeline(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
+    ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
+    amodel.attach_query_overview(ans)
+    return ans
+
+
+@bp.route('/matching_structattr')
+@http_action(return_type='json', action_model=CorpusActionModel)
+async def matching_structattr(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    def is_invalid(v):
+        return re.search(r'[<>\]\[]', v) is not None
+
+    if (is_invalid(req.args.get('struct')) or is_invalid(req.args.get('attr')) or
+            is_invalid(req.args.get('attr_val')) or is_invalid(req.args.get('search_attr'))):
+        raise UserActionException('Invalid character in attribute/structure name/value')
+
+    ans, found, used = corplib.matching_structattr(
+        amodel.corp, req.args.get('struct'), req.args.get(
+            'attr'), req.args.get('attr_val'),
+        req.args.get('search_attr'))
+    if len(ans) == 0:
+        resp.set_http_status(404)
+    return dict(result=ans, conc_size=found, lines_used=used)
