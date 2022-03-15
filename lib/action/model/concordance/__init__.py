@@ -77,12 +77,9 @@ class ConcActionModel(CorpusActionModel):
         return self._plugin_ctx
 
     def _restore_prev_query_params(self, form):
-        super()._restore_prev_query_params(form)
-        url_q = form.getlist('q')[:]
-        with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
-            if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
-                self._lines_groups = LinesGroups.deserialize(
-                    self._active_q_data.get('lines_groups', []))
+        loaded = super()._restore_prev_query_params(form)
+        if loaded:
+            self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
 
     async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
         curr = self._req.ctx.session.get('last_search', {})
@@ -318,7 +315,7 @@ class ConcActionModel(CorpusActionModel):
         if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
             op_key = self._active_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(
+                op_key: await build_conc_form_args(
                     self._plugin_ctx, self._active_q_data.get('corpora', []),
                     self._active_q_data['lastop_form'], op_key).to_dict()
             }
