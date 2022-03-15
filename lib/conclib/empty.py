@@ -61,6 +61,12 @@ class InitialConc:
     def get_aligned(self, corps_with_colls):
         pass
 
+    def set_linegroup_at_pos(self, *args, **kw):
+        pass
+
+    def linegroup_sort(self, *args, **kw):
+        pass
+
     def compute_ARF(self):
         return 0
 
