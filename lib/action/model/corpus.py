@@ -19,8 +19,6 @@ from functools import partial
 from dataclasses import fields, asdict
 import urllib
 
-import os.path
-
 import corplib
 import plugins
 from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
