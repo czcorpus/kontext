@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, Union, TypeVar, Generic
+from typing import Dict, Any, Optional, TypeVar, Generic
 
 T = TypeVar('T')
 
@@ -81,7 +81,7 @@ class ConcFormArgs(Generic[T]):
         self._op_key = '__new__'
         self._persistent = True
 
-    def validate(self) -> Union[Exception, None]:
+    def validate(self) -> Optional[Exception]:
         return None
 
     @property
