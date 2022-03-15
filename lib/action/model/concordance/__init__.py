@@ -319,9 +319,12 @@ class ConcActionModel(CorpusActionModel):
         if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
             op_key = self._active_q_data['id']
             conc_forms_args = {
-                op_key: build_conc_form_args(
-                    self._plugin_ctx, self._active_q_data.get('corpora', []),
-                    self._active_q_data['lastop_form'], op_key).to_dict()
+                op_key: (await build_conc_form_args(
+                    self._plugin_ctx,
+                    self._active_q_data.get('corpora', []),
+                    self._active_q_data['lastop_form'],
+                    op_key
+                )).to_dict()
             }
         else:
             conc_forms_args = {}
