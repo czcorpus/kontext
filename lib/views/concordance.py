@@ -905,3 +905,12 @@ async def export_line_groups_chart(amodel: ConcActionModel, req: KRequest, resp:
         data = [('#{0} ({1}%)'.format(x['groupId'], round(x['count'] / float(total) * 100, 1)), x['count'])
                 for x in data]
         return ce.export_pie_chart(data=data, title=req.form.get('title', '??'), format=format)
+
+
+@bp.route('/fullref')
+@http_action(return_type='json', action_model=ConcActionModel)
+async def fullref(amodel, req, resp):
+    """
+    display a full reference
+    """
+    return conclib.get_full_ref(corp=amodel.corp, pos=int(req.args.get('pos', '0')))

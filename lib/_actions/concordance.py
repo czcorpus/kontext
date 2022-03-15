@@ -674,13 +674,6 @@ class Actions(Querying):
         result = self.widectx(pos)
         return result
 
-    @exposed(access_level=0, return_type='json')
-    def fullref(self, request):
-        """
-        display a full reference
-        """
-        return conclib.get_full_ref(corp=self.corp, pos=int(request.args.get('pos', '0')))
-
     @exposed(access_level=1, vars=('concsize',), func_arg_mapped=True, template='txtexport/saveconc.html',
              return_type='plain')
     def saveconc(self, saveformat='text', from_line=0, to_line='', heading=0, numbering=0):
