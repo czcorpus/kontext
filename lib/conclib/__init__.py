@@ -17,13 +17,15 @@
 # 02110-1301, USA.
 
 import sys
-from typing import Tuple
+from typing import Tuple, List
 
 import manatee
 import settings
 from kwiclib_common import tokens2strclass
 import plugins
 from corplib.corpus import KCorpus, AbstractKCorpus
+
+from .common import KConc
 
 
 def conc_is_sorted(q: Tuple[str, ...]) -> bool:
@@ -244,7 +246,7 @@ def fcs_scan(corpname, scan_query, max_ter, start):
     return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
 
-def sort_line_groups(conc, group_ids):
+def sort_line_groups(conc: KConc, group_ids: List[int]):
     ids = manatee.IntVector()
     strs = manatee.StrVector()
     for g in group_ids:

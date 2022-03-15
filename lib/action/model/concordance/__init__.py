@@ -31,6 +31,7 @@ from main_menu.model import MainMenu
 from texttypes.model import TextTypesCache, TextTypeCollector
 import plugins
 import conclib
+from conclib.common import KConc
 from conclib.search import get_conc
 from strings import re_escape
 from plugin_types.corparch.corpus import StructAttrInfo, CorpusInfo
@@ -547,7 +548,7 @@ class ConcActionModel(CorpusActionModel):
             concsize=0, fullsize=0, sampled_size=0, result_relative_freq=0, result_arf=0,
             result_shuffled=False, finished=True)
 
-    def apply_linegroups(self, conc):
+    def apply_linegroups(self, conc: KConc):
         """
         Applies user-defined line groups stored via query_persistence
         to the provided concordance instance.
@@ -576,7 +577,7 @@ class ConcActionModel(CorpusActionModel):
             return tuple(segment_str.split('.'))
         return None
 
-    async def get_conc_sizes(self, conc):
+    async def get_conc_sizes(self, conc: KConc):
         i = 1
         concsize = conc.size()
         fullsize = conc.fullsize()
