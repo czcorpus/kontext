@@ -66,7 +66,6 @@ class ConcActionModel(CorpusActionModel):
         super().__init__(req, resp, action_props, tt_cache)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
         # data of the current manual concordance line selection/categorization
-        # TODO fix lines groups selecting
         self._lines_groups: LinesGroups = LinesGroups(data=[])
         self._conc_dir: str = ''
         self._plugin_ctx: Optional[PluginCtx] = None
