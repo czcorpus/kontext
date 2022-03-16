@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 from typing import Dict, Any, List, Optional
+from action.argmapping import Args
 
 
 class CollFormArgs:
@@ -26,7 +27,7 @@ class CollFormArgs:
         self.cbgrfns: List[str] = ['t', 'm', 'd']
         self.csortfn: str = 'd'
 
-    def update(self, args: 'CollFormArgs') -> 'CollFormArgs':
+    def update(self, args: Args) -> 'CollFormArgs':
         self.cattr = args.cattr
         self.cfromw = args.cfromw
         self.ctow = args.ctow
@@ -40,7 +41,7 @@ class CollFormArgs:
         return dict(self.__dict__)
 
 
-class FreqFormArgs(object):
+class FreqFormArgs:
 
     def __init__(self) -> None:
         self.fttattr: List[str] = []
@@ -48,8 +49,8 @@ class FreqFormArgs(object):
         self.freq_sort: str = 'freq'
         self.ftt_include_empty: bool = False
 
-    def update(self, args: 'FreqFormArgs') -> 'FreqFormArgs':
-        self.fttattr = args.fttattr + getattr(args, 'fttattr_async', [])
+    def update(self, args: Args) -> 'FreqFormArgs':
+        self.fttattr = args.fttattr + args.fttattr_async
         self.flimit = args.flimit
         self.freq_sort = args.freq_sort
         self.ftt_include_empty = args.ftt_include_empty
@@ -69,7 +70,7 @@ class CTFreqFormArgs(object):
         self.ctattr2: str = default_attr
         self.ctfcrit2: str = '0<0'
 
-    def update(self, args: 'CTFreqFormArgs') -> 'CTFreqFormArgs':
+    def update(self, args: Args) -> 'CTFreqFormArgs':
         self.ctminfreq = args.ctminfreq
         self.ctminfreq_type = args.ctminfreq_type
         self.ctattr1 = args.ctattr1
