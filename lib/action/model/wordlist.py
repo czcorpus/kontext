@@ -35,6 +35,12 @@ from action.errors import ImmediateRedirectException, UserActionException
 import settings
 
 
+
+class WordlistError(UserActionException):
+    pass
+
+
+
 class WordlistActionModel(CorpusActionModel):
     
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
@@ -74,7 +80,7 @@ class WordlistActionModel(CorpusActionModel):
                     query_id=query_id, q_supertype='wlist')
                 self.on_conc_store([query_id], ts, result)
 
-    def _export_form_args(self, result: Dict[str, Any]):
+    def export_form_args(self, result: Dict[str, Any]):
         if self._curr_wlform_args:
             result['wordlist_form'] = self._curr_wlform_args.to_dict()
         else:
