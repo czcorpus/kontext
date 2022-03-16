@@ -298,7 +298,7 @@ async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest
 
 
 @bp.route('/restore_conc')
-@http_action(mutates_result=True, action_model=ConcActionModel)
+@http_action(mutates_result=True, action_model=ConcActionModel, template='restore_conc.html')
 async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out = amodel.create_empty_conc_result_dict()
     out['result_shuffled'] = not conclib.conc_is_sorted(amodel.args.q)
