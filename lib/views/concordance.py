@@ -94,7 +94,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     corpus_info = await amodel.get_corpus_info(corpora[0])
     qinfo = await QueryFormArgs.create(plugin_ctx=amodel.plugin_ctx, corpora=corpora, persist=True)
     qinfo.update_by_user_query(
-        req.json, amodel.get_tt_bib_mapping(req.json['text_types']))
+        req.json, await amodel.get_tt_bib_mapping(req.json['text_types']))
     amodel.add_conc_form_args(qinfo)
     # 2) process the query
     try:
