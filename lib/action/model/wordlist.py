@@ -78,7 +78,8 @@ class WordlistActionModel(CorpusActionModel):
                 ts = qh.store(
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='wlist')
-                self.on_conc_store([query_id], ts, result)
+                for fn in self._on_query_store:
+                    fn([query_id], ts, result)
 
     def export_form_args(self, result: Dict[str, Any]):
         if self._curr_wlform_args:
@@ -86,14 +87,15 @@ class WordlistActionModel(CorpusActionModel):
         else:
             result['wordlist_form'] = None
 
-    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
-        await super().add_globals(app, action_props, result)
+    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]) -> Dict[str, Any]:
+        result = await super().add_globals(app, action_props, result)
         conc_args = self.get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping)
         q = self._req.args.get('q')
         if q:
             conc_args['q'] = [q]
         result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
+        return result
 
 
 class WordlistPluginCtx(CorpusPluginCtx):
