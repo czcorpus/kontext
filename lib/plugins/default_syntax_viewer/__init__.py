@@ -65,7 +65,7 @@ bp = Blueprint('default_syntax_viewer')
 
 @bp.route('/get_syntax_data')
 @http_action(return_type='json', action_model=ConcActionModel)
-def get_syntax_data(ctrl, request):
+async def get_syntax_data(amodel, req, resp):
     """
     This is the actual controller method exported by the plug-in.
     To be able to export a JSON with custom encoder this method
@@ -74,12 +74,11 @@ def get_syntax_data(ctrl, request):
     """
     try:
         with plugins.runtime.SYNTAX_VIEWER as sv:
-            return sv.search_by_token_id(ctrl.corp, ctrl.corp.corpname,
-                                         int(request.args.get('kwic_id')),
-                                         int(request.args.get('kwic_len')))
+            return await sv.search_by_token_id(
+                amodel.corp, amodel.corp.corpname, int(req.args.get('kwic_id')), int(req.args.get('kwic_len')))
     except MaximumContextExceeded:
         raise UserActionException(
-            request.translate('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
+            req.translate('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
 
 
 class SyntaxDataProviderError(Exception):
@@ -93,8 +92,8 @@ class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
         self._backend = backend
         self._auth = auth
 
-    def search_by_token_id(self, corp, corpname, token_id, kwic_len):
-        data, encoder = self._backend.get_data(corp, corpname, token_id, kwic_len)
+    async def search_by_token_id(self, corp, corpname, token_id, kwic_len):
+        data, encoder = await self._backend.get_data(corp, corpname, token_id, kwic_len)
         # we must return a callable to force our custom JSON encoding
         return lambda: json.dumps(data, cls=encoder)
 
@@ -145,12 +144,12 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-async def create_instance(conf, auth, integ_db: IntegrationDatabase):
+def create_instance(conf, auth, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(
             f'default_syntax_viewer uses integration_db[{integ_db.info}]')
-        corpora_conf = await load_plugin_conf_from_db(integ_db)
+        corpora_conf = load_plugin_conf_from_db(integ_db)
     else:
         logging.getLogger(__name__).info(f'default_syntax_viewer uses config_path configuration')
         corpora_conf = load_plugin_conf_from_file(plugin_conf)

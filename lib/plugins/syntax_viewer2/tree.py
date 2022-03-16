@@ -27,8 +27,7 @@ class UcnkTreeTemplate(TreexTemplate):
         super(UcnkTreeTemplate, self).__init__([tree_id], [tree_data], conf)
         self._kwic_pos = list(range(kwic_pos[0], kwic_pos[0] + kwic_pos[1]))
 
-    @as_async
-    def export(self):
-        ans = super(UcnkTreeTemplate, self).export()
+    async def export(self):
+        ans = await super(UcnkTreeTemplate, self).export()
         ans[0]['kwicPosition'] = self._kwic_pos
         return ans

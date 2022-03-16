@@ -12,49 +12,54 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import logging
-from typing import Optional, Callable, List, Dict, Any, Union
+from typing import Dict, Any, Optional, List, Tuple, Union
 
-from corplib.errors import MissingSubCorpFreqFile
-from controller import exposed
-from controller.kontext import Kontext
+from sanic import Sanic
+
 from main_menu.model import MainMenu
-from translation import ugettext as translate
-from action.errors import UserActionException
-from bgcalc import freq_calc, calc_backend_client
-from bgcalc.errors import BgCalcError
-from bgcalc.wordlist import make_wl_query, require_existing_wordlist
+from texttypes.model import TextTypesCache, TextTypeCollector
 import plugins
+import conclib
+from conclib.common import KConc
+from conclib.search import get_conc
+from strings import re_escape
+from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
+from action import ActionProps
+from action.krequest import KRequest
+from action.response import KResponse
+from action.argmapping import ConcArgsMapping, WordlistArgsMapping
+from action.argmapping.conc import build_conc_form_args
+from action.argmapping.wordlist import WordlistFormArgs
+from action.model.corpus import CorpusActionModel, CorpusPluginCtx
+from action.errors import ImmediateRedirectException, UserActionException
 import settings
-from action.argmapping import log_mapping
-from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
-from werkzeug import Request
-from texttypes.model import TextTypesCache
-from action.argmapping import WordlistArgsMapping, ConcArgsMapping
-from action.req_args import RequestArgsProxy, JSONRequestArgsProxy
+
 
 
 class WordlistError(UserActionException):
     pass
 
 
-class Wordlist(Kontext):
 
+class WordlistActionModel(CorpusActionModel):
+    
     FREQ_FIGURES = {'docf': 'Document counts', 'frq': 'Word counts', 'arf': 'ARF'}
 
     WORDLIST_QUICK_SAVE_MAX_LINES = 10000
 
-    def __init__(self, request: Request, ui_lang: str, tt_cache: TextTypesCache) -> None:
-        super().__init__(request=request, ui_lang=ui_lang, tt_cache=tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
+        super().__init__(req, resp, action_props, tt_cache)
         self._curr_wlform_args: Optional[WordlistFormArgs] = None
-        self.on_conc_store: Callable[[List[str], Optional[int],
-                                      Dict[str, Any]], None] = lambda s, uh, res: None
+        self._plugin_ctx: Optional[WordlistPluginCtx] = None
 
-    def get_mapping_url_prefix(self):
-        return '/wordlist/'
+    @property
+    def plugin_ctx(self):
+        if self._plugin_ctx is None:
+            self._plugin_ctx = WordlistPluginCtx(self, self._req, self._resp)
+        return self._plugin_ctx
 
-    def pre_dispatch(self, action_name, action_metadata=None) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
-        ans = super().pre_dispatch(action_name, action_metadata)
+    async def pre_dispatch(self, req_args) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+        ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'wlist':
                 raise UserActionException('Invalid search session for a word-list')
@@ -62,9 +67,9 @@ class Wordlist(Kontext):
                 self._active_q_data['form'], id=self._active_q_data['id'])
         return ans
 
-    def post_dispatch(self, methodname, action_metadata, tmpl, result, err_desc):
-        super().post_dispatch(methodname, action_metadata, tmpl, result, err_desc)
-        if action_metadata['mutates_result']:
+    def post_dispatch(self, action_props: ActionProps, result: Dict[str, Any], err_desc):
+        super().post_dispatch(action_props, result, err_desc)
+        if action_props.mutates_result:
             with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
                 query_id = qp.store(user_id=self.session_get('user', 'id'),
                                     curr_data=dict(form=self._curr_wlform_args.to_qp(),
@@ -73,19 +78,25 @@ class Wordlist(Kontext):
                 ts = qh.store(
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='wlist')
-                self.on_conc_store([query_id], ts, result)
+                for fn in self._on_query_store:
+                    fn([query_id], ts, result)
 
-    def export_form_args(self, result):
+    def export_form_args(self, result: Dict[str, Any]):
         if self._curr_wlform_args:
             result['wordlist_form'] = self._curr_wlform_args.to_dict()
         else:
             result['wordlist_form'] = None
 
-    def add_globals(self, request, result, methodname, action_metadata):
-        super().add_globals(request, result, methodname, action_metadata)
-        conc_args = self._get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping)
-        q = request.args.get('q')
+    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]) -> Dict[str, Any]:
+        result = await super().add_globals(app, action_props, result)
+        conc_args = self.get_mapped_attrs(WordlistArgsMapping + ConcArgsMapping)
+        q = self._req.args.get('q')
         if q:
             conc_args['q'] = [q]
         result['Globals'] = conc_args
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
+        return result
+
+
+class WordlistPluginCtx(CorpusPluginCtx):
+    pass
