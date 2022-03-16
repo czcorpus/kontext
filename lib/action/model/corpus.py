@@ -82,8 +82,7 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self.on_conc_store: Callable[[List[str], Optional[int], Any],
-                                     None] = lambda s, uh, res: None
+        self._on_query_store: List[Callable[[List[str], Optional[int], Any], None]] = [lambda s, uh, res: None]
 
         self._tt_cache = tt_cache
 
@@ -104,6 +103,20 @@ class CorpusActionModel(UserActionModel):
     @property
     def q_code(self):
         return self._q_code
+
+    @property
+    def active_q_data(self):
+        return self._active_q_data
+
+    def on_query_store(self, fn: Callable[[List[str], Optional[int], Any], None]):
+        """
+        Register a function called after a query (conc, pquery, wordlist) has been stored.
+        The function arguments are:
+        1) list of query IDs involved in the operation
+        2) timestamp of the save operation
+        3) result Dict passed to a respective output page
+        """
+        self._on_query_store.append(fn)
 
     # TODO move to a more specific req_context object
     async def get_corpus_info(self, corp: str) -> CorpusInfo:
