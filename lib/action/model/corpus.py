@@ -82,7 +82,7 @@ class CorpusActionModel(UserActionModel):
 
         self._auto_generated_conc_ops: List[Tuple[int, ConcFormArgs]] = []
 
-        self._on_query_store: List[Callable[[List[str], Optional[int], Any], None]] = [lambda s, uh, res: None]
+        self._on_query_store: List[Callable[[List[str], Optional[int], Dict[str, Any]], None]] = [lambda s, uh, res: None]
 
         self._tt_cache = tt_cache
 
