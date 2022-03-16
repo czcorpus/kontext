@@ -161,7 +161,6 @@ class ParadigmaticQueryPage {
             );
 
             this.layoutModel.getHistory().setOnPopState((event) => {
-                console.log('event state ', event.state);
                 if (event.state['onPopStateAction']) {
                     this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
                 }
