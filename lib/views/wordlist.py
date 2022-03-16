@@ -64,12 +64,12 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     # TODO get rid of private variable
     amodel._curr_wlform_args = form_args
 
-    def on_conc_store(query_ids, history_ts, result):
+    def on_query_store(query_ids, history_ts, result):
         result['wl_query_id'] = query_ids[0]
         if history_ts:
             amodel.store_last_search('wlist', query_ids[0])
 
-    amodel.on_conc_store(on_conc_store)
+    amodel.on_query_store(on_query_store)
     return ans
 
 
@@ -223,7 +223,6 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 @http_action(return_type='json', action_model=WordlistActionModel)
 async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     worker_tasks: List[str] = req.args.get('worker_tasks')
-    attrname: str = req.args.get('attrname', '')
     backend = settings.get('calc_backend', 'type')
     if worker_tasks and backend in ('celery', 'rq'):
         import bgcalc
@@ -232,4 +231,4 @@ async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
             tr = worker.AsyncResult(t)
             if tr.status == 'FAILURE':
                 raise BgCalcError(f'Task {t} failed')
-    return {'status': freq_calc.build_arf_db_status(amodel.corp, attrname)}
+    return {'status': freq_calc.build_arf_db_status(amodel.corp, req.args.get('attrname', ''))}
