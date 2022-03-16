@@ -22,9 +22,10 @@ import logging
 import time
 import os
 from typing import Tuple, Optional,  Dict, Any
+from dataclasses import dataclass
 
 from corplib import CorpusManager
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from plugins.abstract.conc_cache import ConcCacheStatus
 import plugins
 from conclib.errors import ConcCalculationStatusException
@@ -36,7 +37,19 @@ import settings
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-class GeneralWorker(object):
+@dataclass
+class CachedConcSizes:
+    finished: bool = False
+    concsize: int = 0
+    fullsize: int = 0
+    relconcsize: float = 0
+    "concordance size recalculated to a million corpus (aka i.p.m.)"
+    arf: Optional[float] = None
+    "ARF of the result (this is calculated only for the finished result, i.e. no intermediate values)"
+    error: Optional[Exception] = None
+
+
+class GeneralWorker:
 
     def __init__(self, task_id=None, cache_factory=None):
         self._cache_factory = cache_factory if cache_factory is not None else plugins.runtime.CONC_CACHE.instance
@@ -45,35 +58,23 @@ class GeneralWorker(object):
     def create_new_calc_status(self) -> ConcCacheStatus:
         return ConcCacheStatus(task_id=self._task_id)
 
-    def get_cached_conc_sizes(self, corp: KCorpus, q: Tuple[str, ...] = None) -> Dict[str, Any]:
+    def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
         """
-        arguments:
-        corp --
-        q -- a list containing preprocessed query
-        using CACHE_ROOT_DIR and corpus name, corpus name and the query
-
-        returns:
-        a dictionary {
-            finished : 0/1,
-            concsize : int,
-            fullsize : int,
-            relconcsize : float (concordance size recalculated to a million corpus),
-            arf : ARF of the result (this is calculated only for the finished result, i.e. no intermediate values)
-        }
+        Extract concordance size, ipm etc. from a concordance file (specified by provided corpus and query).
         """
         import struct
 
         if q is None:
             q = ()
-        ans = dict(finished=False, concsize=0, fullsize=0, relconcsize=0, error=None)
+        ans = CachedConcSizes()
         cache_map = self._cache_factory.get_mapping(corp)
         status = cache_map.get_calc_status(corp.subchash, q)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
         status.check_for_errors(TASK_TIME_LIMIT)
         if status.error:
-            ans['finished'] = True
-            ans['error'] = status.error
+            ans.finished = True
+            ans.error = status.error
         elif status.cachefile and os.path.isfile(status.cachefile):
             cache = open(status.cachefile, 'rb')
             cache.seek(15)
@@ -93,14 +94,14 @@ class GeneralWorker(object):
             else:
                 result_arf = None
 
-            ans['finished'] = finished
-            ans['concsize'] = concsize
-            ans['fullsize'] = fullsize
-            ans['relconcsize'] = relconcsize
-            ans['arf'] = result_arf
+            ans.finished = finished
+            ans.concsize = concsize
+            ans.fullsize = fullsize
+            ans.relconcsize = relconcsize
+            ans.arf = result_arf
         return ans
 
-    def compute_conc(self, corp: KCorpus, q: Tuple[str, ...], samplesize: int) -> PyConc:
+    def compute_conc(self, corp: AbstractKCorpus, q: Tuple[str, ...], samplesize: int) -> PyConc:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':

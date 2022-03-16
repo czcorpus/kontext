@@ -113,14 +113,17 @@ def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: 
         conc = worker.compute_conc(corp, q, samplesize)
         conc.sync()  # wait for the computation to finish
         status.finished = True
+        status.readable = True
         status.concsize = conc.size()
+        status.fullsize = conc.fullsize()
+        status.recalc_relconcsize(corp)
+        status.arf = round(conc.compute_ARF(), 2) if not corp.is_subcorpus else None
         status = cache_map.add_to_map(subchash, q[:1], status)
         _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
         _normalize_permissions(status.cachefile)
-        cache_map.update_calc_status(subchash, q[:1], readable=True)
+        cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
         # update size in map file
-        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
         return conc
     except Exception as e:
         # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
@@ -198,8 +201,8 @@ def get_conc(
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                conc = _get_sync_conc(worker=worker, corp=corp, q=q,
-                                      subchash=subchash, samplesize=samplesize)
+                conc = _get_sync_conc(
+                    worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]

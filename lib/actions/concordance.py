@@ -457,7 +457,7 @@ class Actions(Querying):
             if cache_status is None:  # conc is not cached nor calculated
                 raise NotFoundException('Concordance calculation is lost')
             elif not cache_status.finished and cache_status.task_id:
-                # we must also test directly a respective task as might have been killed
+                # we must also test directly a respective task as it might have been killed
                 # and thus failed to store info to cache metadata
                 worker = calc_backend_client(settings)
                 err = worker.get_task_error(cache_status.task_id)
