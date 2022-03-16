@@ -1,7 +1,7 @@
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
-from typing import Optional, Union, Callable, Any, Type
+from typing import Optional, Union, Callable, Any, Type, Coroutine
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
@@ -80,7 +80,7 @@ def http_action(
     apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- {plain, json, template, xml}
     """
-    def decorator(func: Callable[[BaseActionModel, KRequest, KResponse], Optional[ResultType]]):
+    def decorator(func: Callable[[BaseActionModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
         @wraps(func)
         async def wrapper(request: Request, *args, **kw):
             application = Sanic.get_app('kontext')
