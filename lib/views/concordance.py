@@ -19,7 +19,8 @@ from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
-from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs
+from action.argmapping.conc.filter import (
+    FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.argmapping.conc.other import KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
@@ -31,7 +32,8 @@ import conclib
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
 from conclib.errors import (
-    ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
+    ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction,
+    extract_manatee_error)
 from conclib.empty import InitialConc
 from kwiclib import KwicPageArgs, Kwic
 import plugins
@@ -44,13 +46,13 @@ bp = Blueprint('concordance')
 
 @bp.route('/first_form')
 @http_action(action_model=BaseActionModel)
-async def first_form(amodel: BaseActionModel, req: KRequest, resp: KResponse):
+async def first_form(_, req: KRequest, resp: KResponse):
     resp.redirect(req.create_url('query', req.args), code=301)
 
 
 @bp.route('/query')
 @http_action(template='query.html', page_model='query', action_model=ConcActionModel)
-async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+async def query(amodel: ConcActionModel, req, resp):
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
@@ -63,7 +65,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
 
-    qf_args = await amodel.fetch_prev_query('conc') if amodel._active_q_data is None else None
+    qf_args = await amodel.fetch_prev_query('conc') if amodel.active_q_data is None else None
     if qf_args is None:
         qf_args = await QueryFormArgs.create(
             plugin_ctx=amodel.plugin_ctx,
@@ -72,8 +74,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.add_conc_form_args(qf_args)
     await amodel.attach_query_params(out)
     await amodel.attach_aligned_query_params(out)
-    amodel.export_subcorpora_list(
-        amodel.args.corpname, amodel.args.usesubcorp, out)
+    amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
     return out
 
 
@@ -111,7 +112,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             samplesize=corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
-        amodel.on_conc_store = store_last_op
+        amodel.on_query_store(store_last_op)
         resp.set_http_status(201)
     except (ConcordanceException, ConcCacheStatusException) as ex:
         ans['size'] = 0
@@ -624,34 +625,34 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     texttypes = TextTypeCollector(amodel.corp, {}).get_query()
     try:
         # TODO get rid of private method
-        query = amodel._compile_query(form=ff_args, corpus=maincorp)
-        if query is None:
+        cql_query = amodel.compile_query(form=ff_args, corpus=maincorp)
+        if cql_query is None:
             raise ConcordanceQueryParamsError(req.translate('No query entered.'))
     except ConcordanceQueryParamsError:
         if texttypes:
-            query = '[]'
+            cql_query = '[]'
             ff_args.filfpos = '0'
             ff_args.filtpos = '0'
         else:
             raise ConcordanceQueryParamsError(req.translate('No query entered.'))
-    query += ' '.join([f'within <{nq[0]} {nq[1]} />' for nq in texttypes])
+    cql_query += ' '.join([f'within <{nq[0]} {nq[1]} />' for nq in texttypes])
     if ff_args.data.within:
-        wquery = f' within {maincorp}:({query})'
-        amodel.args.q[0] += wquery
+        within_query = f' within {maincorp}:({cql_query})'
+        amodel.args.q[0] += within_query
         amodel.args.q.append(f'x-{maincorp}')
     else:
-        wquery = ''
+        within_query = ''
         amodel.args.q.append(
-            f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {query}')
+            f'{ff_args.data.pnfilter}{ff_args.data.filfpos} {ff_args.data.filtpos} {rank} {cql_query}')
 
-    amodel.on_conc_store = store_last_op
+    amodel.on_query_store(store_last_op)
     resp.set_http_status(201)
     try:
         return await _view(amodel, req, resp)
     except Exception as ex:
         logging.getLogger(__name__).error(f'Failed to apply filter: {ex}')
         if ff_args.data.within:
-            amodel.args.q[0] = amodel.args.q[0][:-len(wquery)]
+            amodel.args.q[0] = amodel.args.q[0][:-len(within_query)]
         else:
             del amodel.args.q[-1]
         raise
@@ -800,7 +801,7 @@ async def ajax_unset_lines_groups(amodel: ConcActionModel, req: KRequest, resp: 
         i -= 1
     if i < 0:
         raise Exception('Broken operation chain')
-    amodel._clear_prev_conc_params()  # we do not want to chain next state with the current one
+    amodel.clear_prev_conc_params()  # we do not want to chain next state with the current one
     amodel._lines_groups = LinesGroups(data=[])
     pipeline[i].make_saveable()  # drop old opKey, set as persistent
     amodel.add_conc_form_args(pipeline[i])
@@ -840,7 +841,7 @@ async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: K
     with plugins.runtime.AUTH as auth:
         user_info = auth.get_user_info(amodel.plugin_ctx)
         user_email = user_info['email']
-        username = user_info['username']
+        username = user_info['user']
         smtp_server = mailing.smtp_factory()
         url = req.args.get('url')
         recip_email = req.args.get('email')
