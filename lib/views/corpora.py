@@ -97,7 +97,7 @@ async def ajax_list_corpora(amodel, req, resp):
 async def ajax_get_corp_details(amodel, req, resp):
     corpname = req.args.get('corpname')
     with plugins.runtime.AUTH as auth, plugins.runtime.CORPARCH as ca:
-        _, acc, _ = auth.corpus_access(req.session_get('user'), corpname)
+        _, acc, _ = await auth.corpus_access(req.session_get('user'), corpname)
         if not acc:
             raise ForbiddenException('No access to corpus {0}'.format(corpname))
         corp_conf_info = await ca.get_corpus_info(amodel.plugin_ctx, corpname)
