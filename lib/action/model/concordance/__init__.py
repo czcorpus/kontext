@@ -46,7 +46,6 @@ from action.response import KResponse
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.errors import ImmediateRedirectException
 from action.model.concordance.linesel import LinesGroups
-from action.plugin.ctx import PluginCtx
 import settings
 
 
@@ -68,7 +67,7 @@ class ConcActionModel(CorpusActionModel):
         # data of the current manual concordance line selection/categorization
         self._lines_groups: LinesGroups = LinesGroups(data=[])
         self._conc_dir: str = ''
-        self._plugin_ctx: Optional[PluginCtx] = None
+        self._plugin_ctx: Optional[ConcPluginCtx] = None
 
     @property
     def plugin_ctx(self):
