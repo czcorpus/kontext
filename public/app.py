@@ -49,6 +49,7 @@ from views.root import bp as root_bp
 from views.concordance import bp as conc_bp
 from views.user import bp as user_bp
 from views.corpora import bp as corpora_bp
+from views.wordlist import bp as wordlist_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -193,6 +194,7 @@ application.blueprint(root_bp)
 application.blueprint(conc_bp)
 application.blueprint(user_bp)
 application.blueprint(corpora_bp)
+application.blueprint(wordlist_bp)
 setup_plugins()
 install_plugin_actions(application)
 
