@@ -30,7 +30,7 @@ from conclib.empty import InitialConc
 from conclib.calc.base import GeneralWorker
 from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
 from conclib.errors import ConcCalculationStatusException
-from corplib.corpus import KCorpus, AbstractKCorpus
+from corplib.corpus import AbstractKCorpus
 import bgcalc
 import manatee
 
@@ -113,14 +113,17 @@ def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: 
         conc = worker.compute_conc(corp, q, samplesize)
         conc.sync()  # wait for the computation to finish
         status.finished = True
+        status.readable = True
         status.concsize = conc.size()
+        status.fullsize = conc.fullsize()
+        status.recalc_relconcsize(corp)
+        status.arf = round(conc.compute_ARF(), 2) if not corp.is_subcorpus else None
         status = cache_map.add_to_map(subchash, q[:1], status)
         _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
         _normalize_permissions(status.cachefile)
-        cache_map.update_calc_status(subchash, q[:1], readable=True)
+        cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
         # update size in map file
-        cache_map.update_calc_status(subchash, q[:1], concsize=conc.size())
         return conc
     except Exception as e:
         # Please note that there is no need to clean any mess (unfinished cached concordance etc.)

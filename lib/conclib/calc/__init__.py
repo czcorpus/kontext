@@ -116,7 +116,7 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     Check for result status while validating calculation
     status. In case of an error an Exception can be thrown.
     It is perfectly fine to not find an entry for some
-    subchash+q combination (in such case, False, False is returned).
+    subchash+q combination (in such case, False is returned).
 
     return:
     2-tuple ["has min. acceptable result", "is finished"]
@@ -276,9 +276,9 @@ class ConcCalculation(GeneralWorker):
                     conc.save(cachefile + '.tmp', False, True)
                     os.rename(cachefile + '.tmp', cachefile)
                     sizes = self.get_cached_conc_sizes(corpus_obj, query)
-                    cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
-                                                 concsize=sizes['concsize'], fullsize=sizes['fullsize'],
-                                                 relconcsize=sizes['relconcsize'], arf=None, task_id=self._task_id)
+                    cache_map.update_calc_status(subchash, query, finished=sizes.finished,
+                                                 concsize=sizes.concsize, fullsize=sizes.fullsize,
+                                                 relconcsize=sizes.relconcsize, arf=None, task_id=self._task_id)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
 
@@ -286,9 +286,9 @@ class ConcCalculation(GeneralWorker):
                 os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
                 sizes = self.get_cached_conc_sizes(corpus_obj, query)
-                cache_map.update_calc_status(subchash, query, finished=sizes['finished'],
-                                             concsize=conc.size(), fullsize=sizes['fullsize'],
-                                             relconcsize=sizes['relconcsize'],
+                cache_map.update_calc_status(subchash, query, finished=sizes.finished,
+                                             concsize=conc.size(), fullsize=sizes.fullsize,
+                                             relconcsize=sizes.relconcsize,
                                              arf=round(conc.compute_ARF(), 2) if not corpus_obj.is_subcorpus
                                              else None,
                                              task_id=self._task_id)
@@ -334,8 +334,13 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.sync()
                 conc.save(calc_status.cachefile)
                 os.chmod(calc_status.cachefile, 0o664)
-                self.cache_map.update_calc_status(
-                    subchash, query[:1], readable=True, finished=True, concsize=conc.size())
+                calc_status.readable = True
+                calc_status.finished = True
+                calc_status.concsize = conc.size()
+                calc_status.fullsize = conc.fullsize()
+                calc_status.recalc_relconcsize(self.corpus_obj)
+                calc_status.arf = round(conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
+                self.cache_map.add_to_map(subchash, query[:1], calc_status, overwrite=True)
                 calc_from = 1
             else:
                 for i in range(calc_from, len(query)):
@@ -357,8 +362,13 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_status = self.cache_map.get_calc_status(subchash, query[:act + 1])
                 conc.save(calc_status.cachefile)
                 os.chmod(calc_status.cachefile, 0o664)
-                self.cache_map.update_calc_status(
-                    subchash, query[:act + 1], readable=True, finished=True, concsize=conc.size())
+                calc_status.readable = True
+                calc_status.finished = True
+                calc_status.concsize = conc.size()
+                calc_status.fullsize = conc.fullsize()
+                calc_status.recalc_relconcsize(self.corpus_obj)
+                calc_status.arf = round(conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
+                self.cache_map.add_to_map(subchash, query[:act + 1], calc_status, overwrite=True)
             except Exception as ex:
                 self._mark_calc_states_err(subchash, query, act, ex)
                 logging.getLogger(__name__).error(ex)
