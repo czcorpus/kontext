@@ -46,11 +46,11 @@ class UnrecognizedSerializedException(ConcCacheStatusException):
 
 
 @dataclass
-class ConcCacheStatus(object):
+class ConcCacheStatus:
 
     task_id: Optional[str] = field(default=None)
     concsize: int = field(default=0)
-    fullsize: int = field(default=-0)
+    fullsize: int = field(default=0)
     relconcsize: float = field(default=0)
     arf: float = field(default=0)
     error: Union[Exception, str, None] = field(default=None)
@@ -61,6 +61,16 @@ class ConcCacheStatus(object):
     pid: int = field(default_factory=lambda: os.getpid())
     created: int = field(default_factory=lambda: int(time.time()))
     last_upd: int = field(default_factory=lambda: int(time.time()))
+
+    def recalc_relconcsize(self, corp: AbstractKCorpus):
+        """
+        Update relative frequency based on current fullsize/concsize and provided corpus (and its size).
+        Please note that ARF is not updated here as it requires a respective (finished) concordance instance.
+        """
+        if self.fullsize > 0:
+            self.relconcsize = 1000000.0 * self.fullsize / corp.search_size
+        else:
+            self.relconcsize = 1000000.0 * self.concsize / corp.search_size
 
     @staticmethod
     def from_storage(
