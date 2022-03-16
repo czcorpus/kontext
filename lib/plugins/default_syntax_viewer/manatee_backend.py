@@ -59,6 +59,7 @@ import manatee
 from typing import Dict, Any, List, Optional
 
 from plugin_types.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
+from util import as_async
 
 
 class TreeConf(object):
@@ -277,6 +278,7 @@ class TreexTemplate:
             ans.append([item.word, item.id])
         return ans
 
+    @as_async
     def export(self):
         sentence = ' '.join(n.word for n in self._tree_list[0])
         graph_list = []
@@ -571,7 +573,7 @@ class ManateeBackend(SearchBackend):
             ans[tree_id] = conf.detail_attrs
         return ans
 
-    def get_data(self, corpus, corpus_id, token_id, kwic_len):
+    async def get_data(self, corpus, corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(corpus_id, corpus)
         tree_list = []
         tree_id_list = self._conf.get_tree_display_list(corpus_id)
