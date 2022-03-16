@@ -260,15 +260,6 @@ class CorpusActionModel(UserActionModel):
             args['q'] = [q for q in self.args.q]
         return args
 
-    def redirect_to_conc(self):
-        """
-        Redirects to the current concordance
-        """
-        raise NotImplementedError('TODO _redirect_to_conc')
-        args = self.get_curr_conc_args()
-        href = werkzeug.urls.Href(self.get_root_url() + 'view')
-        self.redirect(href(MultiDict(args)))
-
     async def _check_corpus_access(self, form, action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
         Returns: a 2-tuple (corpus id, corpus variant)
