@@ -20,7 +20,7 @@ from corplib.corpus import KCorpus
 class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    def search_by_token_id(self, corp, corpname, token_id, kwic_len):
+    async def search_by_token_id(self, corp, corpname, token_id, kwic_len):
         pass
 
     @abc.abstractmethod
@@ -86,7 +86,7 @@ class SearchBackend(abc.ABC):
             return []
 
     @abc.abstractmethod
-    def get_data(self, corpus: KCorpus, corpus_id: str, token_id: str, kwic_len: int):
+    async def get_data(self, corpus: KCorpus, corpus_id: str, token_id: str, kwic_len: int):
         """
         Return syntax tree data for a specified token and a proper
         JSON encoder to be able to serialize the data.

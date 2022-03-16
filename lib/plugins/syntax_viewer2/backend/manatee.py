@@ -36,7 +36,7 @@ class ManateeBackend2(mbk.ManateeBackend):
         raw_data = self._load_raw_sent(corpus, corpus_id, token_id, kwic_len, attrs)
         return self._parse_raw_sent(raw_data['data'], attrs, self._conf.get_empty_value_placeholders(corpus_id))
 
-    def get_data(self, corpus, corpus_id, token_id, kwic_len):
+    async def get_data(self, corpus, corpus_id, token_id, kwic_len):
         tree_configs = self._conf.get_trees(corpus_id)
         tree_id = self._conf.get_tree_display_list(corpus_id)[0]
         conf = tree_configs[tree_id]
@@ -67,4 +67,4 @@ class ManateeBackend2(mbk.ManateeBackend):
         tb = mbk.TreeBuilder()
         tree_data = tb.process(conf, parsed_data)
         template = UcnkTreeTemplate(tree_id, tree_data, raw_data['kwic_pos'], tree_configs)
-        return template.export(), mbk.TreeNodeEncoder
+        return await template.export(), mbk.TreeNodeEncoder
