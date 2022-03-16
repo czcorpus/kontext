@@ -57,8 +57,6 @@ export class DispersionResultModel extends StatelessModel<DispersionResultModelS
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
-        console.log(initialState);
-
         this.addActionHandler(
             Actions.ChangeResolution,
             (state, action) => {
