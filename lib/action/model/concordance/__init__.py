@@ -152,7 +152,29 @@ class ConcActionModel(CorpusActionModel):
         self._curr_conc_form_args = item
 
     def export_query_data(self):
-        _, data = super().export_query_data()
+        """
+        Export query data for query_persistence
+
+        Return a 2-tuple with the following elements
+            1) a flag specifying whether the query should be stored to user query history
+               (please note that query history != stored/persistent query; query history is just a personal
+               list of recent queries)
+            2) values to be stored as a representation of user's query (here we mean all the data needed
+               to reach the current result page including data needed to restore involved query forms).
+        """
+        if len(self._auto_generated_conc_ops) > 0:
+            q_limit = self._auto_generated_conc_ops[0][0]
+        else:
+            q_limit = len(self.args.q)
+        data = dict(
+            # we don't want to store all the items from self.args.q in case auto generated
+            # operations are present (we will store them individually later).
+            user_id=self.session_get('user', 'id'),
+            q=self.args.q[:q_limit],
+            corpora=self.get_current_aligned_corpora(),
+            usesubcorp=getattr(self.args, 'usesubcorp'),
+            lines_groups=self._lines_groups.serialize()
+        )
         use_history = True
         if self._curr_conc_form_args is not None and self._curr_conc_form_args.is_persistent:
             data.update(lastop_form=self._curr_conc_form_args.serialize())
@@ -198,34 +220,6 @@ class ConcActionModel(CorpusActionModel):
             self.disabled_menu_items += (MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
                                          MainMenu.CONCORDANCE('shuffle'), MainMenu.CONCORDANCE('sample'))
 
-    def export_query_data(self) -> Tuple[bool, Dict[str, Any]]:
-        """
-        Export query data for query_persistence
-
-        Return a 2-tuple with the following elements
-            1) a flag specifying whether the query should be stored to user query history
-               (please note that query history != stored/persistent query; query history is just a personal
-               list of recent queries)
-            2) values to be stored as a representation of user's query (here we mean all the data needed
-               to reach the current result page including data needed to restore involved query forms).
-        """
-        if len(self._auto_generated_conc_ops) > 0:
-            q_limit = self._auto_generated_conc_ops[0][0]
-        else:
-            q_limit = len(self.args.q)
-        return (
-            False,
-            dict(
-                # we don't want to store all the items from self.args.q in case auto generated
-                # operations are present (we will store them individually later).
-                user_id=self.session_get('user', 'id'),
-                q=self.args.q[:q_limit],
-                corpora=self.get_current_aligned_corpora(),
-                usesubcorp=getattr(self.args, 'usesubcorp'),
-                lines_groups=self._lines_groups.serialize()
-            )
-        )
-
     def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
         """
         In some cases, KonText automatically (either
@@ -262,7 +256,8 @@ class ConcActionModel(CorpusActionModel):
                 next_query_keys = [self._active_q_data.get(
                     'id', None)] if self._active_q_data else []
                 history_ts = None
-            self.on_conc_store(next_query_keys, history_ts, result)
+            for fn in self._on_query_store:
+                fn(next_query_keys, history_ts, result)
             self._update_output_with_conc_params(
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
@@ -402,7 +397,8 @@ class ConcActionModel(CorpusActionModel):
             self.args.leftctx = self.args.senleftctx_tpl % sentence_struct
             self.args.rightctx = self.args.senrightctx_tpl % sentence_struct
 
-    def _compile_query(self, corpus: str, form: Union[QueryFormArgs, FilterFormArgs]):
+    @staticmethod
+    def compile_query(corpus: str, form: Union[QueryFormArgs, FilterFormArgs]) -> Optional[str]:
         if isinstance(form, QueryFormArgs):
             qtype = form.data.curr_query_types[corpus]
             query = form.data.curr_queries[corpus]
@@ -506,14 +502,14 @@ class ConcActionModel(CorpusActionModel):
         nopq = []
         for al_corpname in corpora[1:]:
             wnot = '' if form.data.curr_pcq_pos_neg_values[al_corpname] == 'pos' else '!'
-            pq = self._compile_query(corpus=al_corpname, form=form)
+            pq = self.compile_query(corpus=al_corpname, form=form)
             if pq:
                 par_query += f'within{wnot} {al_corpname}:{pq}'
             if not pq or wnot:
                 nopq.append(al_corpname)
 
         self.args.q = [
-            ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
+            ' '.join(x for x in [qbase + self.compile_query(corpora[0], form), ttquery, par_query] if x)]
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
         ag_op_idx = await append_filter(
             ag_op_idx,
