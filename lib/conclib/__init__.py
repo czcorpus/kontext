@@ -17,7 +17,7 @@
 # 02110-1301, USA.
 
 import sys
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import manatee
 import settings
@@ -28,7 +28,7 @@ from corplib.corpus import KCorpus, AbstractKCorpus
 from .common import KConc
 
 
-def conc_is_sorted(q: Tuple[str, ...]) -> bool:
+def conc_is_sorted(q: Union[List[str], Tuple[str, ...]]) -> bool:
     ans = True
     for item in q:
         if item[0] in ('r', 'f'):
@@ -140,8 +140,9 @@ def get_full_ref(corp, pos, translator=lambda x: x):
     return data
 
 
-def get_detail_context(corp: KCorpus, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40,
-                       attrs=None, structs='', detail_ctx_incr=60):
+def get_detail_context(
+        corp: AbstractKCorpus, pos, hitlen=1, detail_left_ctx=40, detail_right_ctx=40, attrs=None, structs='',
+        detail_ctx_incr=60):
     data = {}
     wrapdetail = corp.get_conf('WRAPDETAIL')
     if wrapdetail:
