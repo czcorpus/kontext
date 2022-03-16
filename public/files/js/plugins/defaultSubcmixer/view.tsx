@@ -145,7 +145,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         ratioLimit:number;
 
     }> = (props) => {
-        console.log('xxx: ', props.currentResult)
         return (
             <table className="data subcmixer-ratios">
                 <tbody>

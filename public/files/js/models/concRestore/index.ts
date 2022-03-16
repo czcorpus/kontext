@@ -88,7 +88,6 @@ export class ConcRestoreModel extends StatelessModel<ConcRestoreModelState> {
     }
 
     private generateNextLink(state:ConcRestoreModelState):void {
-        console.log('JSON: ', JSON.stringify(state.nextActionArgs))
         state.nextActionLink = this.layoutModel.createActionUrl(
             state.nextAction,
             {
