@@ -425,8 +425,8 @@ def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: in
     return frq
 
 
-def matching_structattr(corp: KCorpus, struct: str, attr: str, val: str, search_attr: str
-                        ) -> Tuple[List[str], int, int]:
+def matching_structattr(
+        corp: AbstractKCorpus, struct: str, attr: str, val: str, search_attr: str) -> Tuple[List[str], int, int]:
     """
     Return a value of search_attr matching provided structural attribute
     [struct].[attr] = [val]

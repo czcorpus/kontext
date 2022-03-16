@@ -19,7 +19,7 @@
 # 02110-1301, USA.
 
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union, List
 import os
 from functools import partial
 import asyncio
@@ -145,7 +145,7 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 
 async def get_conc(
-        corp: AbstractKCorpus, user_id, q: Tuple[str, ...] = None, fromp=0, pagesize=0, asnc=0,
+        corp: AbstractKCorpus, user_id, q: Union[List[str], Tuple[str, ...]] = None, fromp=0, pagesize=0, asnc=0,
         samplesize=0) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
