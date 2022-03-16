@@ -98,7 +98,6 @@ export class QueryContextModel extends StatefulModel<QueryContextModelState>
             Actions.QueryContextSetPos.name,
             action => {
                 this.changeState(state => {
-                    console.log('action.payload.checked: ', action.payload.checked)
                     if (action.payload.checked) {
                         state.formData.fc_pos = List.addUnique(action.payload.value, state.formData.fc_pos);
 
