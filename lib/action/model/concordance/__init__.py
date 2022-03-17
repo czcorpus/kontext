@@ -105,13 +105,13 @@ class ConcActionModel(CorpusActionModel):
                 if last_op_form:
                     if query_type == 'conc:filter':
                         qf_args = await FilterFormArgs.create(
-                            plugin_ctx=self._plugin_ctx,
+                            plugin_ctx=self.plugin_ctx,
                             maincorp=self.args.corpname,
                             persist=False)
                         qf_args.apply_last_used_opts(last_op_form.get('lastop_form', {}))
                     else:
                         qf_args = await QueryFormArgs.create(
-                            plugin_ctx=self._plugin_ctx,
+                            plugin_ctx=self.plugin_ctx,
                             corpora=self.select_current_aligned_corpora(active_only=False),
                             persist=False)
                         qf_args.apply_last_used_opts(
@@ -311,7 +311,7 @@ class ConcActionModel(CorpusActionModel):
         if self._active_q_data is not None and 'lastop_form' in self._active_q_data:
             op_key = self._active_q_data['id']
             conc_forms_args[op_key] = (await build_conc_form_args(
-                self._plugin_ctx,
+                self.plugin_ctx,
                 self._active_q_data.get('corpora', []),
                 self._active_q_data['lastop_form'],
                 op_key
@@ -327,9 +327,9 @@ class ConcActionModel(CorpusActionModel):
         corpora = self.select_current_aligned_corpora(active_only=True)
         tpl_out['conc_forms_initial_args'] = dict(
             query=query.to_dict() if query is not None else (await QueryFormArgs.create(
-                plugin_ctx=self._plugin_ctx, corpora=corpora, persist=False)).to_dict(),
+                plugin_ctx=self.plugin_ctx, corpora=corpora, persist=False)).to_dict(),
             filter=filter.to_dict() if filter is not None else (await FilterFormArgs.create(
-                plugin_ctx=self._plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
+                plugin_ctx=self.plugin_ctx, maincorp=getattr(self.args, 'maincorp') if getattr(
                     self.args, 'maincorp') else getattr(self.args, 'corpname'), persist=False)).to_dict(),
             sort=sort.to_dict() if sort is not None else SortFormArgs(persist=False).to_dict(),
             sample=sample.to_dict() if sample is not None else SampleFormArgs(persist=False).to_dict(),
@@ -644,6 +644,14 @@ class ConcActionModel(CorpusActionModel):
         for item in data:
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
+
+    def go_to_restore_conc(self, return_action: str):
+        args = []
+        for k in self._req.args.keys():
+            for val in self._req.args.getlist(k):
+                args.append((k, val))
+        args.append(('next', return_action))
+        raise ImmediateRedirectException(self._req.create_url('restore_conc', args))
 
 
 class ConcPluginCtx(CorpusPluginCtx):
