@@ -29,8 +29,7 @@ import datetime
 import mailing
 import logging
 from collections import defaultdict
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+import aiomysql
 from typing import List, Union
 
 from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
@@ -57,7 +56,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            db: Union[IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor], MySQLOps],
             sessions,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
@@ -80,8 +79,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
         self._on_register_get_corpora = on_register_get_corpora
         self._case_sensitive_corpora_names = case_sensitive_corpora_names
 
-    def validate_user(self, plugin_ctx, username, password):
-        user_data = self._find_user(username)
+    async def validate_user(self, plugin_ctx, username, password):
+        user_data = await self._find_user(username)
         valid_pwd = False
         if user_data:
             split = split_pwd_hash(user_data['pwd_hash'])
@@ -115,7 +114,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         self.sessions.delete(session)
         session.clear()
 
-    def update_user_password(self, plugin_ctx, user_id, password):
+    async def update_user_password(self, plugin_ctx, user_id, password):
         """
         Updates user's password.
         There is no need to hash/encrypt the password - function does it automatically.
@@ -126,15 +125,15 @@ class MysqlAuthHandler(AbstractInternalAuth):
         user_id -- a database ID of a user
         password -- new password
         """
-        cursor = self.db.cursor()
-        cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
-        row = cursor.fetchone()
-        if row is not None:
-            cursor.execute('UPDATE kontext_user SET pwd_hash = %s WHERE id = %s',
-                           (mk_pwd_hash_default(password), user_id))
-            self.db.commit()
-        else:
-            raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
+        async with self.db.cursor() as cursor:
+            await cursor.execute('SELECT username FROM kontext_user WHERE id = %s', (user_id,))
+            row = await cursor.fetchone()
+            if row is not None:
+                await cursor.execute('UPDATE kontext_user SET pwd_hash = %s WHERE id = %s',
+                                     (mk_pwd_hash_default(password), user_id))
+                await self.db.commit()
+            else:
+                raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
 
     @staticmethod
     def _variant_prefix(corpname):
@@ -143,59 +142,59 @@ class MysqlAuthHandler(AbstractInternalAuth):
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
-        cursor = self.db.cursor()
-        await cursor.execute(
-            'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-            'FROM '
-            '  (SELECT c.name, gr.limited '
-            '   FROM kontext_corpus AS c '
-            '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
-            '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-            '   WHERE ku.id = %s AND c.name = %s '
-            '   UNION '
-            '   SELECT c.name, ucr.limited '
-            '   FROM kontext_corpus AS c '
-            '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-            '   WHERE ucr.user_id = %s AND c.name = %s) AS guaccess '
-            'GROUP BY guaccess.name',
-            (user_dict['id'], corpus_name, user_dict['id'], corpus_name))
-        row = cursor.fetchone()
+        async with self.db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
+                'FROM '
+                '  (SELECT c.name, gr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
+                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+                '   WHERE ku.id = %s AND c.name = %s '
+                '   UNION '
+                '   SELECT c.name, ucr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
+                '   WHERE ucr.user_id = %s AND c.name = %s) AS guaccess '
+                'GROUP BY guaccess.name',
+                (user_dict['id'], corpus_name, user_dict['id'], corpus_name))
+            row = await cursor.fetchone()
         if row is not None:
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
-    def permitted_corpora(self, user_dict) -> List[str]:
-        cursor = self.db.cursor()
-        cursor.execute(
-            'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-            'FROM '
-            '  (SELECT c.name, gr.limited '
-            '   FROM kontext_corpus AS c '
-            '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
-            '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
-            '   WHERE ku.id = %s '
-            '   UNION '
-            '   SELECT c.name, ucr.limited '
-            '   FROM kontext_corpus AS c '
-            '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-            '   WHERE ucr.user_id = %s) AS guaccess '
-            'GROUP BY guaccess.name',
-            (user_dict['id'], user_dict['id']))
-        corpora = [row['name'] for row in cursor.fetchall()]
-        if IMPLICIT_CORPUS not in corpora:
-            corpora.append(IMPLICIT_CORPUS)
-        return corpora
+    async def permitted_corpora(self, user_dict) -> List[str]:
+        async with self.db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
+                'FROM '
+                '  (SELECT c.name, gr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
+                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+                '   WHERE ku.id = %s '
+                '   UNION '
+                '   SELECT c.name, ucr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
+                '   WHERE ucr.user_id = %s) AS guaccess '
+                'GROUP BY guaccess.name',
+                (user_dict['id'], user_dict['id']))
+            corpora = [row['name'] async for row in cursor]
+            if IMPLICIT_CORPUS not in corpora:
+                corpora.append(IMPLICIT_CORPUS)
+            return corpora
 
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
 
-    def get_user_info(self, plugin_ctx):
-        cursor = self.db.cursor()
-        cursor.execute(
-            'SELECT id, username, firstname, lastname, email '
-            'FROM kontext_user '
-            'WHERE id = %s', (plugin_ctx.user_id, ))
-        return cursor.fetchone()
+    async def get_user_info(self, plugin_ctx):
+        async with self.db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT id, username, firstname, lastname, email '
+                'FROM kontext_user '
+                'WHERE id = %s', (plugin_ctx.user_id, ))
+            return await cursor.fetchone()
 
     def is_administrator(self, user_id):
         """
@@ -231,7 +230,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         else:
             return self._logout_url
 
-    def _find_user(self, username):
+    async def _find_user(self, username):
         """
         Searches for user's data by his username. We assume that username is unique.
 
@@ -241,29 +240,29 @@ class MysqlAuthHandler(AbstractInternalAuth):
         returns:
         a dictionary containing user data or None if nothing is found
         """
-        cursor = self.db.cursor()
-        cursor.execute(
-            'SELECT id, username, firstname, lastname, email, pwd_hash, affiliation '
-            'FROM kontext_user '
-            'WHERE username = %s', (username,))
-        return cursor.fetchone()
+        async with self.db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT id, username, firstname, lastname, email, pwd_hash, affiliation '
+                'FROM kontext_user '
+                'WHERE username = %s', (username,))
+            return await cursor.fetchone()
 
     def get_required_username_properties(self, plugin_ctx):
         return (plugin_ctx.translate(
             'The value must be at least %s characters long and must contain only a..z, A..Z, 0..9, _, - characters')
             % self.MIN_USERNAME_LENGTH)
 
-    def validate_new_username(self, plugin_ctx, username):
-        avail = self._find_user(username) is None and 'admin' not in username
+    async def validate_new_username(self, plugin_ctx, username):
+        avail = await self._find_user(username) is None and 'admin' not in username
         valid = re.match(r'^[a-zA-Z0-9_-]{3,}$', username) is not None
         return avail, valid
 
-    def sign_up_user(self, plugin_ctx, credentials):
+    async def sign_up_user(self, plugin_ctx, credentials):
         token = SignUpToken(user_data=credentials,
                             label=plugin_ctx.translate('KonText sign up confirmation'),
                             ttl=self._confirmation_token_ttl)
         errors = defaultdict(lambda: [])
-        avail_un, valid_un = self.validate_new_username(plugin_ctx, credentials['username'])
+        avail_un, valid_un = await self.validate_new_username(plugin_ctx, credentials['username'])
         if not avail_un:
             errors['username'].append(plugin_ctx.translate('Username not available'))
         if not valid_un:
@@ -286,7 +285,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
         token.pwd_hash = mk_pwd_hash_default(credentials['password'])
         del credentials['password2']
         if len(errors) == 0:
-            token.save(self.db)
+            await token.save(self.db)
             ok = self.send_confirmation_mail(plugin_ctx, credentials['email'], credentials['username'],
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
@@ -327,47 +326,47 @@ class MysqlAuthHandler(AbstractInternalAuth):
             text=text, reply_to=None)
         return mailing.send_mail(server, msg, [user_email])
 
-    def sign_up_confirm(self, plugin_ctx, key):
-        self.db.start_transaction()
+    async def sign_up_confirm(self, plugin_ctx, key):
+        await self.db.start_transaction()
         try:
             token = SignUpToken(value=key)
-            token.load(self.db)
+            await token.load(self.db)
             if token.is_stored():
-                curr = self._find_user(token.username)
+                curr = await self._find_user(token.username)
                 if curr:
                     raise SignUpNeedsUpdateException()
 
-                cursor = self.db.cursor()
-                cursor.execute(
-                    'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
-                    'VALUES (%s, %s, %s, %s, %s, %s)',
-                    (token.username, token.firstname, token.lastname,
-                     token.pwd_hash, token.email, token.affiliation))
-                for corp in self._on_register_get_corpora:
-                    cursor.execute(
-                        'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
-                        'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
-                token.delete(self.db)
-                self.db.commit()
+                async with self.db.cursor() as cursor:
+                    await cursor.execute(
+                        'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
+                        'VALUES (%s, %s, %s, %s, %s, %s)',
+                        (token.username, token.firstname, token.lastname,
+                         token.pwd_hash, token.email, token.affiliation))
+                    for corp in self._on_register_get_corpora:
+                        await cursor.execute(
+                            'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
+                            'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
+                await token.delete(self.db)
+                await self.db.commit()
                 return dict(ok=True, label=token.label)
             else:
-                self.db.rollback()
+                await self.db.rollback()
                 return dict(ok=False)
         except Exception as ex:
-            self.db.rollback()
+            await self.db.rollback()
             logging.getLogger(__name__).error(f'Failed to apply sign_up token {key}: {ex}')
             raise ex
 
-    def get_form_props_from_token(self, key):
+    async def get_form_props_from_token(self, key):
         token = SignUpToken(value=key)
-        token.load(self.db)
+        await token.load(self.db)
         if token.is_stored():
             return token.user
         return None
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor], sessions):
+def create_instance(conf, integ_db: IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor], sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.
@@ -377,6 +376,7 @@ def create_instance(conf, integ_db: IntegrationDatabase[MySQLConnection, MySQLCu
         dbx = integ_db
         logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
     else:
+        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
         dbx = MySQLOps(MySQLConf(plugin_conf))
         logging.getLogger(__name__).info(
             'mysql_auth uses custom database configuration {}@{}'.format(

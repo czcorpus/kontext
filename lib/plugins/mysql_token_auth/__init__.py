@@ -75,7 +75,7 @@ class TokenAuth(AbstractRemoteAuth):
         else:
             return await self._get_permitted_corpora(user_dict)
 
-    def get_user_info(self, plugin_ctx: PluginCtx) -> UserInfo:
+    async def get_user_info(self, plugin_ctx: PluginCtx) -> UserInfo:
         return plugin_ctx.session['user']
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:

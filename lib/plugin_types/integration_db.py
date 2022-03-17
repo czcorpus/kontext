@@ -91,41 +91,33 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         """
         pass
 
-    @property
     @abc.abstractmethod
-    def connection(self) -> N:
+    async def connection(self) -> N:
         """
         Return a connection to the integration database
         """
         pass
 
     @abc.abstractmethod
-    def cursor(self, dictionary=True, buffered=False) -> AsyncCursor[R]:
-        """
-        Create a new database cursor with asynchronous 'execute' 'executemany'
-        """
-        pass
-
-    @abc.abstractmethod
-    def cursor_sync(self, dictionary=True, buffered=False) -> R:
+    async def cursor(self, dictionary=True, buffered=False) -> R:
         """
         Create a new database cursor
         """
         pass
 
     @abc.abstractmethod
-    async def execute(self, sql, args):
+    async def execute(self, sql, args) -> R:
         pass
 
     @abc.abstractmethod
-    async def executemany(self, sql, args_rows):
+    async def executemany(self, sql, args_rows) -> R:
         """
         Execute a single query multiple times with different argument sets.
         """
         pass
 
     @abc.abstractmethod
-    def start_transaction(self, isolation_level=None):
+    async def start_transaction(self, isolation_level=None):
         """
         Start a new transaction with optional custom isolation level
         (typical values are: 'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE')
@@ -133,14 +125,14 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         pass
 
     @abc.abstractmethod
-    def commit(self):
+    async def commit(self):
         """
         Commit the current transaction
         """
         pass
 
     @abc.abstractmethod
-    def rollback(self):
+    async def rollback(self):
         """
         Rollback the current transaction
         """

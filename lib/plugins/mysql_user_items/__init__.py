@@ -148,6 +148,7 @@ def create_instance(settings, integ_db, auth):
         logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
+        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
         from plugins.common.mysql import MySQLOps, MySQLConf
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(

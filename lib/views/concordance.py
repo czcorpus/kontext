@@ -839,7 +839,7 @@ async def ajax_remove_selected_lines(amodel: ConcActionModel, req: KRequest, res
 @http_action(return_type='json', action_model=ConcActionModel)
 async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth:
-        user_info = auth.get_user_info(amodel.plugin_ctx)
+        user_info = await auth.get_user_info(amodel.plugin_ctx)
         user_email = user_info['email']
         username = user_info['user']
         smtp_server = mailing.smtp_factory()
@@ -960,7 +960,7 @@ async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: K
             ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
         amodel.args.q = [query]
         conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-                        fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
+                              fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
         return dict(total=conc.fullsize() if conc else None)
 
 

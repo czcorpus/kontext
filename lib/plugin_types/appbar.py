@@ -57,7 +57,7 @@ class AbstractApplicationBar(abc.ABC):
         return None
 
     @abc.abstractmethod
-    def get_contents(self, plugin_ctx: 'PluginCtx', return_url: str) -> str:
+    async def get_contents(self, plugin_ctx: 'PluginCtx', return_url: str) -> str:
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 

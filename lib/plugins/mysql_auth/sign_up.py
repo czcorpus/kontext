@@ -40,27 +40,27 @@ class SignUpToken(AbstractSignUpToken[MySQLConnection]):
         self.ttl = ttl
         self.bound = False
 
-    def save(self, db):
-        cursor = db.cursor()
-        cursor.execute(
-            'INSERT INTO kontext_sign_up_token '
-            '(token_value, label, created, ttl, username, firstname, lastname, pwd_hash, email, affiliation) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (self.value, self.label, self.created, self.ttl, self.username, self.firstname, self.lastname,
-             self.pwd_hash, self.email, self.affiliation))
-        self.bound = True
+    async def save(self, db):
+        async with db.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO kontext_sign_up_token '
+                '(token_value, label, created, ttl, username, firstname, lastname, pwd_hash, email, affiliation) '
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                (self.value, self.label, self.created, self.ttl, self.username, self.firstname, self.lastname,
+                 self.pwd_hash, self.email, self.affiliation))
+            self.bound = True
 
-    def load(self, db):
-        cursor = db.cursor()
-        cursor.execute(
-            'DELETE FROM kontext_sign_up_token '
-            'WHERE  TIMESTAMPDIFF(SECOND, created, NOW()) > %s ', (self.ttl, ))
-        cursor.execute(
-            'SELECT token_value, label, created, ttl, username, firstname, lastname, pwd_hash, email, affiliation '
-            'FROM kontext_sign_up_token '
-            'WHERE token_value = %s '
-            'AND TIMESTAMPDIFF(SECOND, created, NOW()) <= %s ', (self.value, self.ttl))
-        row = cursor.fetchone()
+    async def load(self, db):
+        async with db.cursor() as cursor:
+            await cursor.execute(
+                'DELETE FROM kontext_sign_up_token '
+                'WHERE  TIMESTAMPDIFF(SECOND, created, NOW()) > %s ', (self.ttl, ))
+            await cursor.execute(
+                'SELECT token_value, label, created, ttl, username, firstname, lastname, pwd_hash, email, affiliation '
+                'FROM kontext_sign_up_token '
+                'WHERE token_value = %s '
+                'AND TIMESTAMPDIFF(SECOND, created, NOW()) <= %s ', (self.value, self.ttl))
+            row = await cursor.fetchone()
         if row:
             self.bound = True
             self.created = row['created']
@@ -73,17 +73,17 @@ class SignUpToken(AbstractSignUpToken[MySQLConnection]):
             self.email = row.get('email')
             self.affiliation = row.get('affiliation')
 
-    def delete(self, db):
-        cursor = db.cursor()
-        cursor.execute('DELETE FROM kontext_sign_up_token WHERE token_value = %s', (self.value,))
+    async def delete(self, db):
+        async with db.cursor() as cursor:
+            await cursor.execute('DELETE FROM kontext_sign_up_token WHERE token_value = %s', (self.value,))
         self.bound = False
 
-    def is_valid(self, db):
-        cursor = db.cursor()
-        cursor.execute(
-            'SELECT value '
-            'FROM kontext_sign_up_token '
-            'WHERE  TIMESTAMPDIFF(SECOND, created, NOW()) > %s AND token_value = %s ', (self.ttl, self.value))
+    async def is_valid(self, db):
+        async with db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT value '
+                'FROM kontext_sign_up_token '
+                'WHERE  TIMESTAMPDIFF(SECOND, created, NOW()) > %s AND token_value = %s ', (self.ttl, self.value))
 
     def is_stored(self):
         return self.bound

@@ -48,11 +48,10 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
                                             'incorrectly that a concrete instance is enabled.')
         return 'DefaultIntegrationDb provides no true database integration'
 
-    @property
-    def connection(self) -> N:
+    async def connection(self) -> N:
         raise PluginCompatibilityException(self._err_msg())
 
-    def cursor(self, dictionary=True, buffered=False) -> R:
+    async def cursor(self, dictionary=True, buffered=False) -> R:
         raise PluginCompatibilityException(self._err_msg())
 
     @property
@@ -66,19 +65,19 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     def wait_for_environment(self):
         return None
 
-    def execute(self, sql, args):
+    async def execute(self, sql, args) -> R:
         raise PluginCompatibilityException(self._err_msg())
 
-    def executemany(self, sql, args_rows):
+    async def executemany(self, sql, args_rows) -> R:
         raise PluginCompatibilityException(self._err_msg())
 
-    def start_transaction(self, isolation_level=None):
+    async def start_transaction(self, isolation_level=None):
         raise PluginCompatibilityException(self._err_msg())
 
-    def commit(self):
+    async def commit(self):
         raise PluginCompatibilityException(self._err_msg())
 
-    def rollback(self):
+    async def rollback(self):
         raise PluginCompatibilityException(self._err_msg())
 
 

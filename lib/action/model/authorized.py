@@ -313,8 +313,8 @@ class UserActionModel(BaseActionModel):
 
         if plugins.runtime.APPLICATION_BAR.exists:
             application_bar = plugins.runtime.APPLICATION_BAR.instance
-            result['app_bar'] = application_bar.get_contents(plugin_ctx=self.plugin_ctx,
-                                                             return_url=self.return_url)
+            result['app_bar'] = await application_bar.get_contents(plugin_ctx=self.plugin_ctx,
+                                                                   return_url=self.return_url)
             result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self.plugin_ctx)
             result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self.plugin_ctx)
         else:

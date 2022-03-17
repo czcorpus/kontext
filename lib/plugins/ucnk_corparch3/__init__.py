@@ -92,7 +92,7 @@ def ask_corpus_access(amodel, req, resp):
     with plugins.runtime.CORPARCH as ca:
         if amodel.plugin_ctx.user_is_anonymous:
             raise ForbiddenException('Anonymous user cannot send the request')
-        status = ca.send_request_email(
+        status = await ca.send_request_email(
             corpus_id=req.form.get('corpusId'),
             plugin_ctx=amodel.plugin_ctx,
             custom_message=req.form.get('customMessage'))
@@ -156,14 +156,14 @@ class UcnkCorpArch3(MySQLCorparch):
                                                           (self._tag_prefix, s) for s in query_keywords))
         return await super(UcnkCorpArch3, self).search(plugin_ctx, query, offset, limit, filter_dict)
 
-    def send_request_email(self, corpus_id, plugin_ctx, custom_message):
+    async def send_request_email(self, corpus_id, plugin_ctx, custom_message):
         """
         returns:
         True if at least one recipient has been reached else False
         """
         errors = []
 
-        user_info = self._auth.get_user_info(plugin_ctx)
+        user_info = await self._auth.get_user_info(plugin_ctx)
         user_email = user_info['email']
         username = user_info['username']
 
