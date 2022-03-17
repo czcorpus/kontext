@@ -1,14 +1,14 @@
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
-from typing import Optional, Union, Callable, Any, Type, Coroutine
+from typing import Optional, Union, Callable, Any, Type, Coroutine, List
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
-from action.errors import ImmediateRedirectException
+from action.errors import ImmediateRedirectException, UserActionException
 from action.model.base import BaseActionModel
 import json
 
@@ -58,11 +58,63 @@ async def _output_result(
         f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
 
+def create_mapped_args(tp: Type, req: Request):
+    # TODO handle Optional vs. default_factory etc.
+    props = tp.__annotations__
+    data = {}
+    for mk, mtype in props.items():
+        v = req.args.getlist(mk, [])
+        if len(v) == 0:
+            v = req.form.get(mk, [])
+        if mtype == str:
+            if len(v) == 0:
+                raise UserActionException(f'Missing request argument {mk}')
+            elif len(v) > 1:
+                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+            data[mk] = v[0]
+        elif mtype == Union[str, None]:
+            if len(v) > 1:
+                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+            elif len(v) == 1:
+                data[mk] = v[0]
+        elif mtype == List[str]:
+            if len(v) == 0:
+                raise UserActionException(f'Missing request argument {mk}')
+            data[mk] = v
+        elif mtype == Union[List[str], None]:
+            if len(v) > 0:
+                data[mk] = v
+        elif mtype == int:
+            if len(v) == 0:
+                raise UserActionException(f'Missing request argument {mk}')
+            elif len(v) > 1:
+                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+            data[mk] = int(v[0])
+        elif mtype == Union[int, None]:
+            if len(v) > 1:
+                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+            elif len(v) == 1:
+                data[mk] = int(v[0])
+        elif mtype == List[int]:
+            if len(v) == 0:
+                raise UserActionException(f'Missing request argument {mk}')
+            data[mk] = [int(x) for x in v]
+        elif mtype == Union[List[int], None]:
+            if len(v) > 0:
+                data[mk] = [int(x) for x in v]
+    return tp(**data)
+
+
 def http_action(
-        access_level: int = 0, template: Optional[str] = None, action_model: Type[BaseActionModel] = None,
-        page_model: Optional[str] = None, func_arg_mapped: bool = False,
-        mutates_result: bool = False, accept_kwargs: bool = None, apply_semi_persist_args: bool = False,
-        return_type: str = 'template', action_log_mapper: Callable[[Request], Any] = False):
+        access_level: int = 0,
+        template: Optional[str] = None,
+        action_model: Optional[Type[BaseActionModel]] = None,
+        page_model: Optional[str] = None,
+        mapped_args: Optional[Type] = None,
+        mutates_result: bool = False,
+        apply_semi_persist_args: bool = False,
+        return_type: str = 'template',
+        action_log_mapper: Callable[[Request], Any] = False):
     """
     This decorator allows more convenient way how to
     set methods' attributes. Please note that there is
@@ -73,10 +125,10 @@ def http_action(
     template -- a Jinja2 template source path
     vars -- deprecated; do not use
     page_model -- a JavaScript page module
-    func_arg_mapped -- True/False (False - provide only self.args and request, True: maps URL args to action func args)
+    mapped_args -- any class (typically, a dataclass) request arguments will be mapped to; the class must
+                   provide
     skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
     mutates_result -- store a new set of result parameters under a new key to query_peristence db
-    accept_kwargs -- True/False
     apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- {plain, json, template, xml}
     """
@@ -96,7 +148,11 @@ def http_action(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
                 return_type=return_type, page_model=page_model,
                 mutates_result=mutates_result)
-            req = KRequest(request, aprops, app_url_prefix)
+            if mapped_args:
+                marg = create_mapped_args(mapped_args, request)
+            else:
+                marg = None
+            req = KRequest(request, aprops, app_url_prefix, marg)
             resp = KResponse(
                 root_url=req.get_root_url(),
                 redirect_safe_domains=application.config['redirect_safe_domains'],
@@ -110,7 +166,8 @@ def http_action(
             try:
                 amodel.init_session()
                 await amodel.pre_dispatch(None)
-                ans = await func(amodel, req, resp, **kw)
+
+                ans = await func(amodel, req, resp)
                 amodel.post_dispatch(aprops, ans, None)  # TODO error desc
                 return HTTPResponse(
                     body=await _output_result(

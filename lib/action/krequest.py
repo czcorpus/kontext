@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Tuple, Union, List
+from typing import Dict, Any, Tuple, Union, List, Generic, TypeVar, Optional
 from sanic.request import Request
 from urllib.parse import quote
 from plugin_types.auth import UserInfo
@@ -24,18 +24,25 @@ from action import ActionProps
 from babel import Locale
 from sanic_babel import gettext, get_locale
 
+M_args = TypeVar('M_args')
 
-class KRequest:
+
+class KRequest(Generic[M_args]):
     """
     Routing provides some basic routing functionality like generating action URLs,
     getting correct root URL, obtaining required action name etc.
     """
 
-    def __init__(self, request: Request, action_props: ActionProps, app_prefix: str):
+    def __init__(self, request: Request, action_props: ActionProps, app_prefix: str, mapped_args: Optional[M_args]):
         self._request = request
         self._action_props = action_props
         self._app_prefix = app_prefix if app_prefix else ''
         self._locale: Locale = get_locale(request)
+        self._mapped_args = mapped_args
+
+    @property
+    def mapped_args(self) -> M_args:
+        return self._mapped_args
 
     @property
     def unwrapped(self):
