@@ -94,8 +94,8 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
             corp_info = await ca.get_corpus_info(self._plugin_ctx, self.data.maincorp)
             self.has_lemma = corp_info.manatee.has_lemma
-            self.tagsets = [d.to_dict() for d in corp_info.tagsets]
-            for tagset in self.tagsets:
+            self.data.tagsets = [d.to_dict() for d in corp_info.tagsets]
+            for tagset in self.data.tagsets:
                 tagset['widgetEnabled'] = tagset['widgetEnabled'] and await th.tags_available_for(
                     self._plugin_ctx, self.data.maincorp, tagset['ident'])
 
