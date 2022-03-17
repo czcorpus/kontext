@@ -194,9 +194,9 @@ export class ViewPage {
                     return {
                         ...MainMenuActions.ShowFilter,
                         payload: {
-                            within: fetchRequired('within'),
-                            maincorp: fetchRequired('maincorp'),
-                            pnfilter: args['pnfilter']
+                            within: args['within'],
+                            maincorp: args['maincorp'],
+                            pnfilter: fetchRequired('pnfilter')
                         }
                     };
                 }
