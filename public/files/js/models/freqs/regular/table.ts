@@ -227,6 +227,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSetActiveTab,
             (state, action) => {
                 state.isActive = action.payload.value === 'tables';
+            },
+            (state, action, dispatch) => {
+                this.pushStateToHistory(state);
             }
         );
 
@@ -524,6 +527,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         const args = {
             ...this.getSubmitArgs(state, firstCrit.n),
             fcrit_async: List.map(v => v.n, state.freqCritAsync),
+            fdefault_view: state.isActive ? 'tables' : 'charts',
+            freq_type: state.freqType,
             format: undefined
         };
         this.pageModel.getHistory().pushState(
