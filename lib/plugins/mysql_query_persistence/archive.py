@@ -25,7 +25,7 @@ import logging
 
 import json
 import redis
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Cursor
 from plugins.common.mysql import MySQLOps
 from plugin_types.general_storage import KeyValueStorage
 
@@ -41,12 +41,12 @@ def get_iso_datetime():
     return datetime.datetime.now().isoformat()
 
 
-def is_archived(cursor: MySQLCursor, conc_id):
-    cursor.execute(
+async def is_archived(cursor: Cursor, conc_id):
+    await cursor.execute(
         'SELECT id FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
         (conc_id,)
     )
-    return cursor.fetchone() is not None
+    return (await cursor.fetchone()) is not None
 
 
 class Archiver(object):

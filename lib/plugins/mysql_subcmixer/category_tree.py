@@ -22,8 +22,7 @@ from typing import Iterator, List, NamedTuple, Optional, Union
 import copy
 
 import numpy as np
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 
 from plugin_types.integration_db import IntegrationDatabase
 
@@ -129,7 +128,7 @@ class CategoryTree(object):
 
     """
 
-    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[MySQLConnection, MySQLCursor], corpus_id: str, aligned_corpora: List[str], corpus_max_size: int):
+    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[Connection, Cursor], corpus_id: str, aligned_corpora: List[str], corpus_max_size: int):
         self.category_list = category_list
         self.num_categories = len(category_list)
         self.corpus_max_size = corpus_max_size
@@ -259,9 +258,9 @@ class CategoryTree(object):
             {' '.join(aligned_join)}
         '''
 
-        with self._db.cursor() as cursor:
-            cursor.execute(sql, (self.corpus_id, *self.aligned_corpora))
-            row = cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, (self.corpus_id, *self.aligned_corpora))
+            row = await cursor.fetchone()
 
         if row is None or not row['poscount']:
             raise CategoryTreeException('Failed to initialize bounds')
@@ -317,8 +316,8 @@ class CategoryTree(object):
         )
         params += tuple(self.aligned_corpora)
 
-        with self._db.cursor() as cursor:
-            cursor.execute(sql, params)
-            row = cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, params)
+            row = await cursor.fetchone()
 
         return 0 if row['poscount'] is None else int(row['poscount'])

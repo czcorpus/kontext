@@ -34,7 +34,7 @@ from typing import Optional
 class AbstractQueryHistory(abc.ABC):
 
     @abc.abstractmethod
-    def store(self, user_id: int, query_id: str, q_supertype: str) -> int:
+    async def store(self, user_id: int, query_id: str, q_supertype: str) -> int:
         """
         Store data as a new saved query
 
@@ -51,7 +51,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def make_persistent(self, user_id: int, query_id: str, q_supertype: str, created: Optional[int], name: str):
+    async def make_persistent(self, user_id: int, query_id: str, q_supertype: str, created: Optional[int], name: str):
         """
         Finds (if implemented) a specific query history
         record based on its respective concordance record.
@@ -66,14 +66,14 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def make_transient(self, user_id: int, query_id: str, created: int, name: str):
+    async def make_transient(self, user_id: int, query_id: str, created: int, name: str):
         """
         Remove name from the history item and let it be
         removed once it gets too old
         """
 
     @abc.abstractmethod
-    def delete(self, user_id, query_id, created):
+    async def delete(self, user_id, query_id, created):
         """
         Delete a named query from history.
 
@@ -90,7 +90,7 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
+    async def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.

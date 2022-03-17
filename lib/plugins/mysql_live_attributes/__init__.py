@@ -27,8 +27,7 @@ from dataclasses import astuple
 import logging
 from typing import Any, Dict, List, Optional, Set, Union
 from corplib.corpus import KCorpus
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 import l10n
@@ -52,35 +51,35 @@ bp = Blueprint('mysql_live_attributes')
 
 @bp.route('/filter_attributes', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def filter_attributes(req, amodel):
+async def filter_attributes(req, amodel):
     attrs = json.loads(req.form.get('attrs', '{}'))
     aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
+        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
                                      aligned_corpora=aligned)
 
 
 @bp.route('/attr_val_autocomplete', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def attr_val_autocomplete(self, request):
+async def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
+        return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned,
                                      autocomplete_attr=request.form.get('patternAttr'))
 
 
 @bp.route('/fill_attrs', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def fill_attrs(self, request):
+async def fill_attrs(self, request):
     search = request.json['search']
     values = request.json['values']
     fill = request.json['fill']
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+        return await lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
 
 
 class MysqlLiveAttributes(CachedLiveAttributes):
@@ -88,7 +87,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
     def __init__(
         self, corparch: AbstractCorporaArchive,
         db: KeyValueStorage,
-        integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+        integ_db: IntegrationDatabase[Connection, Cursor],
         max_attr_list_size: int,
         empty_val_placeholder: str,
         max_attr_visible_chars: int
@@ -178,7 +177,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, List[str]]) -> int:
+    async def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, List[str]]) -> int:
         args = []
         tmp = []
         for key, values in attr_map.items():
@@ -216,9 +215,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         '''
         args.extend(corpora[1:])
 
-        with self.integ_db.cursor() as cursor:
-            cursor.execute(sql, args)
-            return int(cursor.fetchone()['total'])
+        async with self.integ_db.cursor() as cursor:
+            await cursor.execute(sql, args)
+            return int((await cursor.fetchone())['total'])
 
     @cached
     async def get_attr_values(
@@ -278,9 +277,9 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                                            empty_val_placeholder=self.empty_val_placeholder)
         query_components = query_builder.create_sql()
 
-        with self.integ_db.cursor() as cursor:
-            cursor.execute(query_components.sql_template, query_components.where_values)
-            for row in cursor:
+        async with self.integ_db.cursor() as cursor:
+            await cursor.execute(query_components.sql_template, query_components.where_values)
+            async for row in cursor:
                 data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
                 for col_key in query_components.selected_attrs:
                     data_key = col_key if isinstance(col_key, str) else col_key.key()
@@ -322,8 +321,8 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
         bib_id = self.import_key(corpus_info.metadata.id_attr)
 
-        with self.integ_db.cursor() as cursor:
-            cursor.execute(
+        async with self.integ_db.cursor() as cursor:
+            await cursor.execute(
                 '''
                 SELECT GROUP_CONCAT(CONCAT(t_value.structure_name, '.', t_value.structattr_name, '=', t_value.value) SEPARATOR '\n') as data
                 FROM (
@@ -338,15 +337,15 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                 GROUP BY t.id
                 ''',
                 (corpus.corpname, bib_id.struct, bib_id.attr, item_id))
-            return [StructAttrValuePair(*pair.split('=', 1)) for pair in cursor.fetchone()['data'].split('\n')]
+            return [StructAttrValuePair(*pair.split('=', 1)) for pair in (await cursor.fetchone())['data'].split('\n')]
 
-    def _find_attrs(
-            self, cursor: MySQLCursor, corpus_id: str, search: StructAttr, values:
+    async def _find_attrs(
+            self, cursor: Cursor, corpus_id: str, search: StructAttr, values:
             List[str], fill: List[StructAttr]):
         if len(values) == 0:
-            cursor.execute('SELECT 1 FROM dual WHERE false')
+            await cursor.execute('SELECT 1 FROM dual WHERE false')
         else:
-            cursor.execute(
+            await cursor.execute(
                 f'''
                 SELECT
                     t.id,
@@ -372,24 +371,24 @@ class MysqlLiveAttributes(CachedLiveAttributes):
         bib_label = self.import_key(corpus_info.metadata.label_attr)
 
         ans = []
-        with self.integ_db.cursor() as cursor:
-            self._find_attrs(cursor, corpus_id, bib_id, id_list, [bib_id, bib_label])
-            for row in cursor:
+        async with self.integ_db.cursor() as cursor:
+            await self._find_attrs(cursor, corpus_id, bib_id, id_list, [bib_id, bib_label])
+            async for row in cursor:
                 data = dict(tuple(pair.split('=', 1)) for pair in row['data'].split('\n'))
                 ans.append(BibTitle(data[bib_id.key()], data[bib_label.key()]))
 
         return ans
 
-    def fill_attrs(self, corpus_id, search, values, fill):
+    async def fill_attrs(self, corpus_id, search, values, fill):
         search_structattr = self.import_key(search)
         fill_structattrs = [self.import_key(f) for f in fill]
         ans = {}
 
-        with self.integ_db.cursor() as cursor:
-            self._find_attrs(
+        async with self.integ_db.cursor() as cursor:
+            await self._find_attrs(
                 cursor=cursor, corpus_id=corpus_id, search=search_structattr, values=values,
                 fill=[search_structattr, *fill_structattrs])
-            for row in cursor:
+            async for row in cursor:
                 data: Dict[str, str] = dict(tuple(pair.split('=', 1))
                                             for pair in row['data'].split('\n'))
                 ans[data[search]] = {k: v for k, v in data.items() if not (k == search)}

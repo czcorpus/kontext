@@ -12,14 +12,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugin_types.auth.sign_up import AbstractSignUpToken
-from mysql.connector.connection import MySQLConnection
 import hashlib
 import uuid
 import datetime
 
+from aiomysql import Connection, Cursor
 
-class SignUpToken(AbstractSignUpToken[MySQLConnection]):
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.auth.sign_up import AbstractSignUpToken
+
+
+class SignUpToken(AbstractSignUpToken[IntegrationDatabase[Connection, Cursor]]):
     """
     Note: the class methods do not handle transactions - it's up to the calling method
     """

@@ -20,8 +20,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import logging
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 
 import werkzeug.urls
 import plugins
@@ -43,29 +42,29 @@ class MySQLSubcRestore(AbstractSubcRestore):
             self,
             plugin_conf: Dict[str, Any],
             corparch: AbstractCorporaArchive,
-            db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+            db: IntegrationDatabase[Connection, Cursor]):
         self._conf = plugin_conf
         self._corparch = corparch
         self._db = db
 
     async def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 f'INSERT INTO {self.TABLE_NAME} '
                 '(user_id, corpname, subcname, cql, timestamp) '
                 'VALUES (%s, %s, %s, %s, %s)',
                 (user_id, corpname, subcname, cql, datetime.now())
             )
-        self._db.commit()
+        await self._db.commit()
 
     async def delete_query(self, user_id: int, corpname: str, subcname: str):
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 f'DELETE FROM {self.TABLE_NAME} '
                 'WHERE user_id = %s AND corpname = %s AND subcname = %s',
                 (user_id, corpname, subcname)
             )
-        self._db.commit()
+        await self._db.commit()
 
     async def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[SubcRestoreRow]:
         sql = [
@@ -80,29 +79,29 @@ class MySQLSubcRestore(AbstractSubcRestore):
             sql.append('OFFSET %s ROWS')
             args += (from_idx,)
 
-        with self._db.cursor() as cursor:
-            cursor.execute(' '.join(sql), args)
-            return [SubcRestoreRow(**row) for row in cursor]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(' '.join(sql), args)
+            return [SubcRestoreRow(**row) async for row in cursor]
 
     async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
                 'WHERE user_id = %s AND corpname = %s AND subcname = %s '
                 'ORDER BY timestamp '
                 'LIMIT 1',
                 (user_id, corpname, subcname)
             )
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             return None if row is None else SubcRestoreRow(**row)
 
     async def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
                 'WHERE id = %s', (query_id, )
             )
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             return None if row is None else SubcRestoreRow(**row)
 
     async def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
@@ -127,7 +126,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
         def get_user_subcname(rec: Dict[str, Any]) -> str:
             return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
 
-        subc_queries = self.list_queries(plugin_ctx.user_id, from_idx, to_idx)
+        subc_queries = await self.list_queries(plugin_ctx.user_id, from_idx, to_idx)
         subc_queries_map: Dict[Tuple[str, str], SubcRestoreRow] = {}
         for x in subc_queries:
             subc_queries_map[(x.corpname, x.subcname)] = x
@@ -180,7 +179,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, corparch, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+def create_instance(conf, corparch, integ_db: IntegrationDatabase[Connection, Cursor]):
     plugin_conf = conf.get('plugins', 'subc_restore')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_restore uses integration_db[{integ_db.info}]')

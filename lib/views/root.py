@@ -22,7 +22,7 @@ async def root_action(amodel, req, resp):
 
 @bp.route('/check_tasks_status')
 @http_action(return_type='json')
-def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
+async def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
     backend = settings.get('calc_backend', 'type')
     if backend in ('celery', 'rq'):
         worker = bgcalc.calc_backend_client(settings)
@@ -50,7 +50,7 @@ def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
 
 @bp.route('/get_task_result')
 @http_action(return_type='json')
-def get_task_result(amodel, req, resp):
+async def get_task_result(amodel, req, resp):
     worker = bgcalc.calc_backend_client(settings)
     result = worker.AsyncResult(req.args.get('task_id'))
     return dict(result=result.get())
@@ -58,7 +58,7 @@ def get_task_result(amodel, req, resp):
 
 @bp.route('/remove_task_info', methods=['DELETE'])
 @http_action(return_type='json')
-def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
+async def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
     task_ids = req.form.getlist('tasks')
     amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
     return amodel.check_tasks_status(req)
@@ -67,11 +67,11 @@ def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
 @bp.exception(CorpusForbiddenException, Exception)
 @bp.route('/message')
 @http_action(accept_kwargs=True, page_model='message', template='message.html')
-def message(amodel, req, resp, **kw):
+async def message(amodel, req, resp, **kw):
     kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
     if amodel.cm:
         with plugins.runtime.QUERY_HISTORY as qh:
-            queries = qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1)
+            queries = await qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1)
             if len(queries) > 0:
                 kw['last_used_corp'] = dict(
                     corpname=queries[0].get('corpname', None),
@@ -82,17 +82,17 @@ def message(amodel, req, resp, **kw):
 
 @bp.route('/message_json')
 @http_action(accept_kwargs=True, func_arg_mapped=True, return_type='json')
-def message_json(amodel, req, resp):
+async def message_json(amodel, req, resp):
     return message(amodel, req, resp)
 
 
 @bp.route('/message_xml')
 @http_action(accept_kwargs=True, func_arg_mapped=True, return_type='xml')
-def message_xml(amodel, req, resp):
+async def message_xml(amodel, req, resp):
     return message(amodel, req, resp)
 
 
 @bp.route('/compatibility')
 @http_action(template='compatibility.html')
-def compatibility(amodel, req, resp):
+async def compatibility(amodel, req, resp):
     return {}

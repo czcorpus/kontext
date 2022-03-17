@@ -280,9 +280,9 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @bp.route('/archive_concordance', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as cp:
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
         revoke = bool(int(req.args.get('revoke')))
-        cn, row = cp.archive(amodel.session_get('user', 'id'),
+        cn, row = await qp.archive(amodel.session_get('user', 'id'),
                              req.args.get('code'), revoke=revoke)
     return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
@@ -290,10 +290,10 @@ async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KRes
 @bp.route('/get_stored_conc_archived_status')
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as cp:
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
         return {
-            'is_archived': cp.is_archived(req.args.get('code')),
-            'will_be_archived': cp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
+            'is_archived': await qp.is_archived(req.args.get('code')),
+            'will_be_archived': await qp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
         }
 
 
@@ -383,12 +383,12 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-        _, data = qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
+        _, data = await qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
         if qp.stored_form_type(data) == 'pquery':
             for conc_id in data.get('form', {}).get('conc_ids', []):
-                cn, _ = qp.archive(amodel.session_get('user', 'id'), conc_id)
+                cn, _ = await qp.archive(amodel.session_get('user', 'id'), conc_id)
 
-        hsave = qh.make_persistent(
+        hsave = await qh.make_persistent(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             qp.stored_query_supertype(data),
@@ -405,7 +405,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # this method keeps the conc params as they are because we assume that user just does
     # not want to keep the query in their history
     with plugins.runtime.QUERY_HISTORY as qh:
-        ans = qh.make_transient(
+        ans = await qh.make_transient(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             req.json['created'],
@@ -419,7 +419,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # remove query from history (respective results are kept)
     with plugins.runtime.QUERY_HISTORY as qh:
-        ans = qh.delete(
+        ans = await qh.delete(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             int(req.json['created'])

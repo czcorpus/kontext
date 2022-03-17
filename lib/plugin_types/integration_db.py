@@ -99,7 +99,7 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         pass
 
     @abc.abstractmethod
-    async def cursor(self, dictionary=True, buffered=False) -> R:
+    async def cursor(self, dictionary=True, buffered=False):
         """
         Create a new database cursor
         """

@@ -16,9 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from plugin_types.integration_db import IntegrationDatabase
-from typing import Dict, Optional
+from typing import Optional
+from contextlib import asynccontextmanager
 import aiomysql
 
 
@@ -29,6 +30,7 @@ class ConnectionArgs:
     user: str
     password: str
     autocommit: bool
+    port: int = field(default=3306)
 
 
 class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor]):
@@ -64,14 +66,20 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
 
     async def connection(self) -> aiomysql.Connection:
         if self._conn is None:
-            self._conn = aiomysql.connect(**asdict(self._conn_args))
+            self._conn = await aiomysql.connect(**asdict(self._conn_args))
         return self._conn
 
-    async def cursor(self, dictionary=True, buffered=False) -> aiomysql.Cursor:
+    @asynccontextmanager
+    async def cursor(self, dictionary=True, buffered=False):
+        if self._conn is None:
+            self._conn = await aiomysql.connect(**asdict(self._conn_args))
+
         if dictionary:
-            return await self._conn.cursor(aiomysql.DictCursor)
+            async with self._conn.cursor(aiomysql.DictCursor) as cursor:
+                yield cursor
         else:
-            return await self._conn.cursor()
+            async with self._conn.cursor() as cursor:
+                yield cursor
 
     @property
     def is_active(self):
@@ -83,7 +91,7 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
 
     @property
     def info(self):
-        return f'{self._conn_args.server_host}/{self._conn_args.db}'
+        return f'{self._conn_args.host}:{self._conn_args.port}/{self._conn_args.db}'
 
     def wait_for_environment(self):
         None

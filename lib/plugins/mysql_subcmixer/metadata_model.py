@@ -21,8 +21,7 @@ from typing import Optional, Set, Tuple, List, Dict
 
 import numpy as np
 import pulp
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 
 from plugin_types.integration_db import IntegrationDatabase
 from .category_tree import CategoryTree, CategoryTreeNode
@@ -58,7 +57,7 @@ class MetadataModel:
     """
 
     @classmethod
-    async def create(cls, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+    async def create(cls, db: IntegrationDatabase[Connection, Cursor], category_tree: CategoryTree, id_attr: str):
         self = await MetadataModel.create(db, category_tree, id_attr)
         self.text_sizes, self._id_map = await self._get_text_sizes()
         # text_sizes and _id_map both contain all the documents from the corpus
@@ -74,7 +73,7 @@ class MetadataModel:
         return self
 
     def __init__(
-            self, db: IntegrationDatabase[MySQLConnection, MySQLCursor], category_tree: CategoryTree, id_attr: str):
+            self, db: IntegrationDatabase[Connection, Cursor], category_tree: CategoryTree, id_attr: str):
         self._db = db
         self.category_tree = category_tree
         self._id_struct, self._id_attr = id_attr.split('.')
@@ -109,11 +108,13 @@ class MetadataModel:
         sizes = []
         id_map = {}
 
-        with self._db.cursor() as cursor:
-            cursor.execute(sql, (self.category_tree.corpus_id, self._id_struct, self._id_attr))
-            for i, row in enumerate(cursor):
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, (self.category_tree.corpus_id, self._id_struct, self._id_attr))
+            i = 0
+            async for row in cursor:
                 sizes.append(int(row['poscount']))
                 id_map[row['db_id']] = i
+                i += 1
 
         return sizes, id_map
 
@@ -181,9 +182,9 @@ class MetadataModel:
             params += tuple(self.category_tree.aligned_corpora)
             params += (self.category_tree.corpus_id, self._id_struct, self._id_attr)
 
-            with self._db.cursor() as cursor:
-                cursor.execute(sql, params)
-                for row in cursor:
+            async with self._db.cursor() as cursor:
+                await cursor.execute(sql, params)
+                async for row in cursor:
                     self.A[node.node_id - 1][self._id_map[row['db_id']]] = int(row['poscount'])
                     used_ids.add(row['db_id'])
             self.b[node.node_id - 1] = node.size

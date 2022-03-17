@@ -22,6 +22,7 @@ It can be run in two modes:
  2) within a WSGI-enabled web server (Gunicorn, uwsgi, Apache + mod_wsgi)
 """
 
+import asyncio
 import sys
 import os
 import wsgiref.util

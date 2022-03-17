@@ -75,8 +75,8 @@ class ConcActionModel(CorpusActionModel):
             self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp)
         return self._plugin_ctx
 
-    def _restore_prev_query_params(self, form):
-        loaded = super()._restore_prev_query_params(form)
+    async def _restore_prev_query_params(self, form):
+        loaded = await super()._restore_prev_query_params(form)
         if loaded:
             self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
 
@@ -85,7 +85,7 @@ class ConcActionModel(CorpusActionModel):
         last_op = curr.get(query_type, None)
         if last_op:
             with plugins.runtime.QUERY_PERSISTENCE as qp:
-                last_op_form = qp.open(last_op)
+                last_op_form = await qp.open(last_op)
                 if last_op_form is None:  # probably a lost/deleted concordance record
                     return None
                 prev_corpora = last_op_form.get('corpora', [])
@@ -245,12 +245,12 @@ class ConcActionModel(CorpusActionModel):
         """
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
-    def post_dispatch(self, action_props, result, err_desc):
-        super().post_dispatch(action_props, result, err_desc)
+    async def post_dispatch(self, action_props, result, err_desc):
+        await super().post_dispatch(action_props, result, err_desc)
         # create and store concordance query key
         if type(result) is dict:
             if action_props.mutates_result:
-                next_query_keys, history_ts = self._store_conc_params()
+                next_query_keys, history_ts = await self._store_conc_params()
             else:
                 next_query_keys = [self._active_q_data.get(
                     'id', None)] if self._active_q_data else []
@@ -260,7 +260,7 @@ class ConcActionModel(CorpusActionModel):
             self._update_output_with_conc_params(
                 next_query_keys[-1] if len(next_query_keys) else None, result)
 
-    def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
+    async def _store_conc_params(self) -> Tuple[List[str], Optional[int]]:
         """
         Stores concordance operation if the query_persistence plugin is installed
         (otherwise nothing is done).
@@ -270,12 +270,12 @@ class ConcActionModel(CorpusActionModel):
             ID of the stored operation (or the current ID of nothing was stored),
             UNIX timestamp of stored history item (or None)
         """
-        with plugins.runtime.QUERY_PERSISTENCE as cp:
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
-            ans = [cp.store(self.session_get('user', 'id'),
+            ans = [await qp.store(self.session_get('user', 'id'),
                             curr_data=curr_data, prev_data=self._active_q_data)]
-            history_ts = self._save_query_to_history(ans[0], curr_data) if use_history else None
+            history_ts = await self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
                 prev = dict(id=ans[-1], lines_groups=lines_groups, q=getattr(self.args, 'q')[:q_idx],
@@ -285,7 +285,7 @@ class ConcActionModel(CorpusActionModel):
                             q=getattr(self.args, 'q')[:q_idx + 1],
                             corpora=self.get_current_aligned_corpora(), usesubcorp=getattr(self.args, 'usesubcorp'),
                             lastop_form=op.to_dict(), user_id=self.session_get('user', 'id'))
-                ans.append(cp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
+                ans.append(await qp.store(self.session_get('user', 'id'), curr_data=curr, prev_data=prev))
             return ans, history_ts
 
     def select_current_aligned_corpora(self, active_only: bool) -> List[str]:

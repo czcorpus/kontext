@@ -51,7 +51,7 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     async def connection(self) -> N:
         raise PluginCompatibilityException(self._err_msg())
 
-    async def cursor(self, dictionary=True, buffered=False) -> R:
+    def cursor(self, dictionary=True, buffered=False):
         raise PluginCompatibilityException(self._err_msg())
 
     @property

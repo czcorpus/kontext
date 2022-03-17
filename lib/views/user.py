@@ -176,11 +176,11 @@ async def set_user_password(amodel, req, resp):
         return ans
 
 
-def _load_query_history(
+async def _load_query_history(
         amodel: UserActionModel, user_id, offset, limit, from_date, to_date, q_supertype, corpname, archived_only):
     if plugins.runtime.QUERY_HISTORY.exists:
         with plugins.runtime.QUERY_HISTORY as qh:
-            rows = qh.get_user_queries(
+            rows = await qh.get_user_queries(
                 user_id,
                 amodel.cm,
                 offset=offset, limit=limit,
@@ -200,7 +200,7 @@ async def ajax_query_history(amodel, req, resp):
     query_supertype = req.args.get('query_supertype')
     corpname = req.args.get('corpname', None)
     archived_only = bool(int(req.args.get('archived_only', '0')))
-    rows = _load_query_history(
+    rows = await _load_query_history(
         amodel=amodel, q_supertype=query_supertype, corpname=corpname, from_date=None,
         user_id=req.session_get('user', 'id'), to_date=None, archived_only=archived_only, offset=offset,
         limit=limit)

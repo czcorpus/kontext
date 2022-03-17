@@ -52,35 +52,35 @@ bp = Blueprint('sqlite_live_attributes')
 
 @bp.route('/filter_attributes', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def filter_attributes(self, request):
+async def filter_attributes(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
+        return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned)
 
 
 @bp.route('/attr_val_autocomplete', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def attr_val_autocomplete(self, request):
+async def attr_val_autocomplete(self, request):
     attrs = json.loads(request.form.get('attrs', '{}'))
     attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
+        return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
                                      aligned_corpora=aligned,
                                      autocomplete_attr=request.form.get('patternAttr'))
 
 
 @bp.route('/fill_attrs', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-def fill_attrs(self, request):
+async def fill_attrs(self, request):
     search = request.json['search']
     values = request.json['values']
     fill = request.json['fill']
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+        return await lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
 
 
 class LiveAttributes(CachedLiveAttributes):
@@ -196,7 +196,7 @@ class LiveAttributes(CachedLiveAttributes):
         id_attr = corpus_info.metadata.id_attr
         return [id_attr.split('.')[0]] if id_attr else []
 
-    def get_subc_size(self, plugin_ctx, corpora, attr_map):
+    async def get_subc_size(self, plugin_ctx, corpora, attr_map):
         db = self.db(plugin_ctx, corpora[0])
         join_sql = []
         where_sql = ['t1.corpus_id = ?']

@@ -25,9 +25,7 @@ from collections import defaultdict
 import json
 import struct
 
-from werkzeug.wrappers import Request
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 import plugins
@@ -74,10 +72,10 @@ class ProcessResponse(TypedDict):
 
 @bp.route('/subcmixer_run_calc',  methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_run_calc(req, amodel) -> Union[ProcessResponse, EmptyResponse]:
+async def subcmixer_run_calc(amodel, req, resp) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
-            return sm.process(
+            return await sm.process(
                 plugin_ctx=amodel.plugin_ctx,
                 corpus=amodel.corp,
                 corpname=req.form.get('corpname'),
@@ -91,7 +89,7 @@ def subcmixer_run_calc(req, amodel) -> Union[ProcessResponse, EmptyResponse]:
 
 @bp.route('/subcmixer_create_subcorpus', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_create_subcorpus(req, amodel) -> Dict[str, Any]:
+async def subcmixer_create_subcorpus(amodel, req, resp) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -129,7 +127,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
     CORPUS_MAX_SIZE = 500000000  # TODO
 
     def __init__(
-            self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+            self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[Connection, Cursor]):
         self._corparch = corparch
         self._db = integration_db
 
@@ -212,5 +210,5 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
 def create_instance(
-        settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+        settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[Connection, Cursor]):
     return SubcMixer(corparch, integration_db)

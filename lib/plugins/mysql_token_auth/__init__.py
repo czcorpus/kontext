@@ -26,8 +26,7 @@ from datetime import datetime
 import hashlib
 from typing import List, Optional
 
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from aiomysql import Connection, Cursor
 from action.plugin.ctx import PluginCtx
 
 import plugins
@@ -39,7 +38,7 @@ class TokenAuth(AbstractRemoteAuth):
 
     def __init__(
         self,
-        db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+        db: IntegrationDatabase[Connection, Cursor],
         anonymous_id: int,
         api_key_cookie_name: Optional[str],
         api_key_http_header: Optional[str],
@@ -105,8 +104,8 @@ class TokenAuth(AbstractRemoteAuth):
             plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
     async def _find_user(self, api_key: str) -> Optional[UserInfo]:
-        with self._db.cursor() as cursor:
-            cursor.execute('''
+        async with self._db.cursor() as cursor:
+            await cursor.execute('''
                 SELECT t_token.user_id AS id, t_user.username, t_user.email,
                    CONCAT_WS(" ", t_user.firstname, t_user.lastname) AS fullname
                 FROM kontext_api_token AS t_token
@@ -115,29 +114,29 @@ class TokenAuth(AbstractRemoteAuth):
                       active = 1 AND
                       valid_until >= %s
             ''', (api_key, datetime.now()))
-            data = cursor.fetchone()
-            if data is None:
-                return None
-            return UserInfo(
-                id=data['id'],
-                user=data['username'],
-                fullname=data['fullname'],
-                email=data['email'],
-                api_key=api_key)
+            data = await cursor.fetchone()
+        if data is None:
+            return None
+        return UserInfo(
+            id=data['id'],
+            user=data['username'],
+            fullname=data['fullname'],
+            email=data['email'],
+            api_key=api_key)
 
     async def _get_permitted_corpora(self, user_dict: UserInfo) -> List[str]:
-        with self._db.cursor() as cursor:
-            cursor.execute('''
+        async with self._db.cursor() as cursor:
+            await cursor.execute('''
                 SELECT GROUP_CONCAT(corpus_name SEPARATOR ',') AS corpora
                 FROM kontext_api_token_corpus_access
                 WHERE token_value = %s AND user_id = %s
             ''', (user_dict['api_key'], user_dict['id']))
-            data = cursor.fetchone()
-            return [] if data['corpora'] is None else list(data['corpora'].split(','))
+            data = await cursor.fetchone()
+        return [] if data['corpora'] is None else list(data['corpora'].split(','))
 
 
 @plugins.inject(plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, integration_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+def create_instance(conf, integration_db: IntegrationDatabase[Connection, Cursor]):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

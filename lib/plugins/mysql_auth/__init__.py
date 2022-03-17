@@ -29,7 +29,7 @@ import datetime
 import mailing
 import logging
 from collections import defaultdict
-import aiomysql
+from aiomysql import Connection, Cursor
 from typing import List, Union
 
 from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
@@ -56,7 +56,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor], MySQLOps],
+            db: Union[IntegrationDatabase[Connection, Cursor], MySQLOps],
             sessions,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
@@ -366,7 +366,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, integ_db: IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor], sessions):
+def create_instance(conf, integ_db: IntegrationDatabase[Connection, Cursor], sessions):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

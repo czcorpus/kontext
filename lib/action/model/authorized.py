@@ -51,8 +51,8 @@ class UserActionModel(BaseActionModel):
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
-    def pre_dispatch(self, req_args):
-        req_args = super().pre_dispatch(req_args)
+    async def pre_dispatch(self, req_args):
+        req_args = await super().pre_dispatch(req_args)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
 

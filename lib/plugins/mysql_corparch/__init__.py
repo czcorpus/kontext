@@ -22,8 +22,8 @@ from collections import OrderedDict, defaultdict
 import logging
 from typing import Dict, List, Tuple, Iterable
 import json
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+
+from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
@@ -377,12 +377,13 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, integ_db: IntegrationDatabase[MySQLConnection, MySQLCursor]):
+def create_instance(conf, user_items, integ_db: IntegrationDatabase[Connection, Cursor]):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
+        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
         from plugins.common.mysql import MySQLOps, MySQLConf
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
