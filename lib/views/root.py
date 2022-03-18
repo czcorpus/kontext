@@ -66,8 +66,9 @@ async def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
 
 @bp.exception(CorpusForbiddenException, Exception)
 @bp.route('/message')
-@http_action(accept_kwargs=True, page_model='message', template='message.html')
-async def message(amodel, req, resp, **kw):
+@http_action(page_model='message', template='message.html')
+async def message(amodel, req, resp):
+    # TODO kwargs... replace with mapped args
     kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
     if amodel.cm:
         with plugins.runtime.QUERY_HISTORY as qh:
@@ -81,15 +82,15 @@ async def message(amodel, req, resp, **kw):
 
 
 @bp.route('/message_json')
-@http_action(accept_kwargs=True, func_arg_mapped=True, return_type='json')
+@http_action(return_type='json')
 async def message_json(amodel, req, resp):
-    return message(amodel, req, resp)
+    return await message(amodel, req, resp)
 
 
 @bp.route('/message_xml')
-@http_action(accept_kwargs=True, func_arg_mapped=True, return_type='xml')
+@http_action(return_type='xml')
 async def message_xml(amodel, req, resp):
-    return message(amodel, req, resp)
+    return await message(amodel, req, resp)
 
 
 @bp.route('/compatibility')
