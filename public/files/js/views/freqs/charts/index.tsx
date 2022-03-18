@@ -93,7 +93,10 @@ export function init(
                         `${item.freq} [${item.freqConfidence[0]}, ${item.freqConfidence[1]}]` :
                         `${item.rel} [${item.relConfidence[0]}, ${item.relConfidence[1]}]`
                 }
-            ]
+            ],
+            payload: {
+                pfilter: item.pfilter
+            }
         }
     };
 
@@ -363,6 +366,20 @@ export function init(
             });
         }
 
+        const _dispatchFilter = (url) => {
+            dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
+                name: Actions.ResultApplyQuickFilter.name,
+                payload: {
+                    url: url,
+                    blankWindow: false,
+                }
+            });
+        }
+        const handleBarChartFilter = (data) => _dispatchFilter(data['activePayload'][0]['payload']['pfilter']);
+        const handleTimelineChartFilter = handleBarChartFilter;
+        const handleScatterChartFilter = (data) => _dispatchFilter(data['pfilter']);
+        const handleWordCloudChartFilter = (data) => _dispatchFilter(data['payload']['pfilter']);
+
         const xUnits = props.dataKey === 'freq' ?
             he.translate('freq__unit_abs') : he.translate('freq__unit_rel');
 
@@ -378,7 +395,7 @@ export function init(
             switch (props.type)  {
                 case 'bar':
                     return <ResponsiveContainer width="95%" height={List.size(props.data.Items)*17+60}>
-                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref} barGap="7">
+                        <BarChart data={transformDataForErrorBars(props.data)} layout='vertical' ref={ref} barGap="7" onClick={handleBarChartFilter}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50}>
                                 <Label value={xUnits} position="insideBottom" />
@@ -396,14 +413,14 @@ export function init(
                     return (
                         <div className="cloud-wrapper">
                             <globalComponents.ResponsiveWrapper render={(width, height) =>
-                                <WordCloud width={width} height={height} data={props.data.Items}
+                                <WordCloud width={width} height={height} data={props.data.Items} onClick={handleWordCloudChartFilter}
                                         dataTransform={dataTransform(props.dataKey)} font={theme.monospaceFontFamily} ref={ref} />}
                                 />
                         </div>
                     );
                 case 'timeline': {
                     return <ResponsiveContainer width="95%" height={300}>
-                        <ComposedChart data={props.data.Items} ref={ref}>
+                        <ComposedChart data={props.data.Items} ref={ref} onClick={handleTimelineChartFilter}>
                             <CartesianGrid strokeDasharray='3 3'/>
                             <XAxis type='number' height={50} dataKey={v => v.Word.join(' | ')} allowDecimals={false} domain={['dataMin', 'dataMax']}>
                                 <Label value={he.translate(`freq__chart_date_${props.dtFormat}`)} position="insideBottom" />
@@ -412,8 +429,8 @@ export function init(
                                 <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}} />
                             </YAxis>
                             <Tooltip />
-                            <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue} />
-                            <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink} />
+                            <Line dataKey={props.dataKey} strokeWidth={3} stroke={theme.colorLogoBlue}/>
+                            <Area dataKey={confidenceKey} strokeWidth={3} stroke={theme.colorLightPink} fill={theme.colorLightPink}/>
                         </ComposedChart>
                     </ResponsiveContainer>;
                 }
@@ -428,7 +445,7 @@ export function init(
                                 <Label value={xUnits} angle={-90} position="insideLeft" style={{textAnchor: 'middle'}}  />
                             </YAxis>
                             <Tooltip formatter={tooltipFormatter}/>
-                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)}
+                            <Scatter dataKey={props.dataKey} data={transformDataForErrorBars(props.data)} onClick={handleScatterChartFilter}
                                     fill={theme.colorLogoBlue} isAnimationActive={false} legendType="wye">
                                 <ErrorBar dataKey={confidenceKey} width={0} strokeWidth={2} stroke={theme.colorLogoPink} opacity={0.8} direction="y" />
                             </Scatter>

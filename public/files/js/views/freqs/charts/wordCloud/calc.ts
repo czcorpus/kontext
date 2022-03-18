@@ -23,6 +23,7 @@ export interface WordCloudItemCalc {
     tooltip:TooltipData;
     size?:number;
     color?:string;
+    payload?:any;
 }
 
 
