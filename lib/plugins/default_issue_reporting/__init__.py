@@ -37,7 +37,7 @@ bp = Blueprint('default_issue_reporting')
 @http_action(return_type='json', action_model=UserActionModel)
 def submit_issue(req, amodel):
     with plugins.runtime.ISSUE_REPORTING as p:
-        p.submit(amodel.plugin_ctx, req.form)
+        await p.submit(amodel.plugin_ctx, req.form)
     return {}
 
 
@@ -52,15 +52,15 @@ class DefaultErrorReporting(AbstractIssueReporting):
     def export_report_action(self, plugin_ctx):
         return DynamicReportingAction()
 
-    def submit(self, plugin_ctx, args):
-        self._send_mail(plugin_ctx, args['body'], json.loads(args['args']))
+    async def submit(self, plugin_ctx, args):
+        await self._send_mail(plugin_ctx, args['body'], json.loads(args['args']))
 
     @staticmethod
     def _dump_browser_info(info):
         return '\n'.join(('  {0}: {1}'.format(k, v)) for k, v in list(info.items()))
 
-    def _send_mail(self, plugin_ctx, body, browser_info):
-        user_info = self._auth.get_user_info(plugin_ctx)
+    async def _send_mail(self, plugin_ctx, body, browser_info):
+        user_info = await self._auth.get_user_info(plugin_ctx)
         user_email = user_info['email']
         username = user_info['username']
 

@@ -92,14 +92,14 @@ class StaticAuth(AbstractRemoteAuth):
             return False, False, ''
         return False, True, zone.corpora[corpus_id]
 
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    async def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
             return []
         else:
             zone = self._find_user(user_dict['id'])
             return list(zone.corpora.keys())
 
-    def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx):
         return plugin_ctx.session['user']
 
     def _hash_key(self, k):

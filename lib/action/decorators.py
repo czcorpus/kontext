@@ -166,9 +166,8 @@ def http_action(
             try:
                 amodel.init_session()
                 await amodel.pre_dispatch(None)
-
                 ans = await func(amodel, req, resp)
-                amodel.post_dispatch(aprops, ans, None)  # TODO error desc
+                await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
                 return HTTPResponse(
                     body=await _output_result(
                         app=application,

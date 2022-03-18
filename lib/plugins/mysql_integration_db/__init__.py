@@ -16,81 +16,32 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from dataclasses import dataclass, asdict, field
 from plugin_types.integration_db import IntegrationDatabase
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
-from mysql.connector.errors import OperationalError
-from mysql.connector import connect
-import logging
-import time
-from util import as_async
-from typing import Dict, Optional
+from typing import Generator, Optional
+from contextlib import asynccontextmanager, contextmanager
+import aiomysql
+import pymysql
+import pymysql.cursors
 
 
-class MySQLAsyncCursor:
-
-    def __init__(self, cur: MySQLCursor):
-        self._cur = cur
-
-    def next(self):
-        return self._cur.next()
-
-    def __next__(self):
-        return self._cur.__next__()
-
-    def __iter__(self):
-        return self._cur.__iter__()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._cur.close()
-
-    def close(self):
-        return self._cur.close()
-
-    @as_async
-    def execute(self, operation, params=None, multi=False):
-        return self._cur.execute(operation, params, multi)
-
-    @as_async
-    def executemany(self, operation, seq_params):
-        return self._cur.executemany(operation, seq_params)
-
-    def stored_results(self):
-        return self._cur.stored_results()
-
-    @as_async
-    def callproc(self, procname, args=()):
-        return self._cur.callproc(procname, args)
-
-    def getlastrowid(self):
-        return self._cur.getlastrowid()
-
-    def fetchone(self):
-        return self._cur.fetchone()
-
-    def fetchmany(self, size=None):
-        return self._cur.fetchmany(size)
-
-    def fetchall(self):
-        return self._cur.fetchall()
-
-    @property
-    def column_names(self):
-        return self._cur.column_names
-
-    @property
-    def statement(self):
-        return self._cur.statement
-
-    @property
-    def with_rows(self):
-        return self._cur.with_rows
+@dataclass
+class ConnectionArgs:
+    host: str
+    db: str
+    user: str
+    password: str
+    autocommit: bool
+    port: int = field(default=3306)
 
 
-class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
+@dataclass
+class PoolArgs:
+    minsize: int = field(default=1)
+    maxsize: int = field(default=10)
+
+
+class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor, pymysql.Connection, pymysql.cursors.Cursor]):
     """
     MySqlIntegrationDb is a variant of integration_db plug-in providing access
     to MySQL/MariaDB instances. It is recommended for:
@@ -104,9 +55,11 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
     is done automatically.
     """
 
-    _conn: Optional[MySQLConnection]
+    _pool: Optional[aiomysql.Pool]
 
-    _conn_args: Dict[str, str]
+    _conn_args: ConnectionArgs
+
+    _pool_args: PoolArgs
 
     _retry_delay: int
 
@@ -114,40 +67,49 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
     def __init__(self, host, database, user, password, pool_size, pool_name, autocommit, retry_delay, retry_attempts,
                  environment_wait_sec: int):
-        self._conn_args = dict(
-            host=host, database=database, user=user, password=password, pool_size=pool_size,
-            pool_name=pool_name, autocommit=autocommit)
+        self._conn_args = ConnectionArgs(
+            host=host, db=database, user=user, password=password, autocommit=autocommit)
+        self._pool_args = PoolArgs(maxsize=pool_size)
         self._retry_delay = retry_delay
         self._retry_attempts = retry_attempts
         self._environment_wait_sec = environment_wait_sec
-        self._conn = None
+        self._pool = None
 
-    @property
-    def connection(self):
-        if self._conn is None:
-            self._conn = connect(**self._conn_args)
-        return self._conn
+    async def _init_pool(self):
+        if self._pool is None:
+            self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
 
-    def cursor(self, dictionary=True, buffered=False):
-        try:
-            # TODO buffered overwritten hiere
-            return MySQLAsyncCursor(self.cursor_sync(dictionary, buffered=True))
-        except OperationalError as ex:
-            if 'MySQL Connection not available' in ex.msg:
-                logging.getLogger(__name__).warning(
-                    'Lost connection to MySQL server - reconnecting')
-                self.connection.reconnect(delay=self._retry_delay, attempts=self._retry_attempts)
-                return self.connection.cursor(dictionary=dictionary, buffered=buffered)
+    @asynccontextmanager
+    async def connection(self) -> Generator[aiomysql.Connection, None, None]:
+        await self._init_pool()
+        async with self._pool.acquire() as connection:
+            yield connection
 
-    def cursor_sync(self, dictionary=True, buffered=False):
-        try:
-            return self.connection.cursor(dictionary=dictionary, buffered=buffered)
-        except OperationalError as ex:
-            if 'MySQL Connection not available' in ex.msg:
-                logging.getLogger(__name__).warning(
-                    'Lost connection to MySQL server - reconnecting')
-                self.connection.reconnect(delay=self._retry_delay, attempts=self._retry_attempts)
-                return self.connection.cursor(dictionary=dictionary, buffered=buffered)
+    @asynccontextmanager
+    async def cursor(self, dictionary=True) -> Generator[aiomysql.Cursor, None, None]:
+        async with self.connection() as connection:
+            if dictionary:
+                async with connection.cursor(aiomysql.DictCursor) as cursor:
+                    yield cursor
+            else:
+                async with connection.cursor() as cursor:
+                    yield cursor
+
+    @contextmanager
+    def connection_sync(self) -> Generator[pymysql.Connection, None, None]:
+        connection = pymysql.connect(**asdict(self._conn_args))
+        yield connection
+        connection.close()
+
+    @contextmanager
+    def cursor_sync(self, dictionary=True) -> Generator[pymysql.cursors.Cursor, None, None]:
+        with self.connection_sync() as connection:
+            if dictionary:
+                cursor = connection.cursor(pymysql.cursors.DictCursor)
+            else:
+                cursor = connection.cursor()
+            yield cursor
+            cursor.close()
 
     @property
     def is_active(self):
@@ -159,47 +121,10 @@ class MySqlIntegrationDb(IntegrationDatabase[MySQLConnection, MySQLCursor]):
 
     @property
     def info(self):
-        return f'{self.connection.server_host}/{self.connection.database}'
+        return f'{self._conn_args.host}:{self._conn_args.port}/{self._conn_args.db}'
 
     def wait_for_environment(self):
-        t0 = time.time()
-        logging.getLogger(__name__).info(
-            'Going to wait {}s for integration environment'.format(self._environment_wait_sec))
-        while (time.time() - t0) < self._environment_wait_sec:
-            try:
-                cursor = self.connection.cursor(dictionary=False, buffered=False)
-                cursor.execute('SELECT COUNT(*) FROM kontext_integration_env LIMIT 1')
-                row = cursor.fetchone()
-                if row and row[0] == 1:
-                    return None
-            except Exception as ex:
-                logging.getLogger(__name__).warning(f'Integration environment still not available. Reason: {ex}')
-            time.sleep(0.5)
-        return Exception(
-            'Unable to confirm integration environment within defined interval {}s.'.format(self._environment_wait_sec),
-            'Please check table kontext_integration_env')
-
-    @as_async
-    def execute(self, sql, args):
-        cursor = self.cursor(buffered=True)
-        cursor.execute(sql, args)
-        print('##### CURSOR: {}'.format(cursor))
-        return cursor
-
-    @as_async
-    def executemany(self, sql, args_rows):
-        cursor = self.cursor()
-        cursor.executemany(sql, args_rows)
-        return cursor
-
-    def start_transaction(self, isolation_level=None):
-        return self.connection.start_transaction()
-
-    def commit(self):
-        self.connection.commit()
-
-    def rollback(self):
-        self.connection.rollback()
+        None
 
 
 def create_instance(conf):

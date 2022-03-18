@@ -31,18 +31,15 @@ configuration.
 
 from datetime import datetime
 import logging
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from plugin_types.auth import AbstractAuth
-from plugin_types.integration_db import IntegrationDatabase
 from corplib.abstract import AbstractKCorpus
 from plugin_types.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from corplib.fallback import EmptyCorpus
 from plugin_types.query_persistence import AbstractQueryPersistence
-from util import as_async
 
 
 class CorpusCache:
@@ -68,7 +65,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
     def __init__(
             self,
             conf,
-            db: IntegrationDatabase[MySQLConnection, MySQLCursor],
+            db: MySqlIntegrationDb,
             query_persistence: AbstractQueryPersistence,
             auth: AbstractAuth):
         """
@@ -89,55 +86,55 @@ class MySqlQueryHistory(AbstractQueryHistory):
         self._auth = auth
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
-    def store(self, user_id, query_id, q_supertype):
+    async def store(self, user_id, query_id, q_supertype):
         created = int(datetime.utcnow().timestamp())
-        corpora = self._query_persistence.open(query_id)['corpora']
-        cursor = self._db.cursor()
-        cursor.executemany(
-            f'INSERT IGNORE INTO {self.TABLE_NAME} '
-            '(corpus_name, query_id, user_id, q_supertype, created) VALUES (%s, %s, %s, %s, %s)',
-            [(corpus, query_id, user_id, q_supertype, created) for corpus in corpora]
-        )
+        corpora = (await self._query_persistence.open(query_id))['corpora']
+        async with self._db.cursor() as cursor:
+            await cursor.executemany(
+                f'INSERT IGNORE INTO {self.TABLE_NAME} '
+                '(corpus_name, query_id, user_id, q_supertype, created) VALUES (%s, %s, %s, %s, %s)',
+                [(corpus, query_id, user_id, q_supertype, created) for corpus in corpora]
+            )
         return created
 
-    def _update_name(self, user_id, query_id, created, new_name) -> bool:
-        cursor = self._db.cursor()
-        cursor.execute(
-            f'UPDATE {self.TABLE_NAME} '
-            'SET name = %s '
-            'WHERE user_id = %s AND query_id = %s AND created = %s',
-            (new_name, user_id, query_id, created)
-        )
-        self._db.commit()
-        return cursor.rowcount > 0
+    async def _update_name(self, user_id, query_id, created, new_name) -> bool:
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'UPDATE {self.TABLE_NAME} '
+                'SET name = %s '
+                'WHERE user_id = %s AND query_id = %s AND created = %s',
+                (new_name, user_id, query_id, created)
+            )
+            self._db.commit()
+            return cursor.rowcount > 0
 
-    def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
-        if self._update_name(user_id, query_id, created, name):
-            self._query_persistence.archive(user_id, query_id)
+    async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
+        if await self._update_name(user_id, query_id, created, name):
+            await self._query_persistence.archive(user_id, query_id)
         else:
-            c = self.store(user_id, query_id, q_supertype)
-            self._update_name(user_id, query_id, c, name)
+            c = await self.store(user_id, query_id, q_supertype)
+            await self._update_name(user_id, query_id, c, name)
         return True
 
-    def make_transient(self, user_id, query_id, created, name) -> bool:
-        return self._update_name(user_id, query_id, created, None)
+    async def make_transient(self, user_id, query_id, created, name) -> bool:
+        return await self._update_name(user_id, query_id, created, None)
 
-    def delete(self, user_id, query_id, created):
-        cursor = self._db.cursor()
-        cursor.execute(
-            f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
-            (user_id, query_id, created)
-        )
-        self._db.commit()
-        return cursor.rowcount
+    async def delete(self, user_id, query_id, created):
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'DELETE FROM {self.TABLE_NAME} WHERE user_id = %s AND query_id = %s AND created = %s',
+                (user_id, query_id, created)
+            )
+            await self._db.commit()
+            return cursor.rowcount
 
-    def _is_paired_with_conc(self, data) -> bool:
+    async def _is_paired_with_conc(self, data) -> bool:
         q_id = data['query_id']
-        return self._query_persistence.open(q_id) is not None
+        return await self._query_persistence.open(q_id) is not None
 
-    def _merge_conc_data(self, data):
+    async def _merge_conc_data(self, data):
         q_id = data['query_id']
-        edata = self._query_persistence.open(q_id)
+        edata = await self._query_persistence.open(q_id)
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
@@ -178,7 +175,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
         else:
             return None   # persistent result not available
 
-    def get_user_queries(
+    async def get_user_queries(
             self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None):
         """
@@ -204,93 +201,93 @@ class MySqlQueryHistory(AbstractQueryHistory):
         if offset:
             values.append(offset)
 
-        cursor = self._db.cursor()
-        cursor.execute(f'''
-            SELECT DISTINCT query_id, created, name, q_supertype FROM {self.TABLE_NAME} WHERE
-            {' AND '.join(where_sql)}
-            ORDER BY created DESC
-            {'LIMIT %s' if limit is not None else ''}
-            {'OFFSET %s' if offset else ''}
-        ''', values)
+        async with self._db.cursor() as cursor:
+            await cursor.execute(f'''
+                SELECT DISTINCT query_id, created, name, q_supertype FROM {self.TABLE_NAME} WHERE
+                {' AND '.join(where_sql)}
+                ORDER BY created DESC
+                {'LIMIT %s' if limit is not None else ''}
+                {'OFFSET %s' if offset else ''}
+            ''', values)
 
-        full_data = []
-        corpora = CorpusCache(corpus_manager)
-        for item in cursor.fetchall():
-            q_supertype = item['q_supertype']
-            if q_supertype == 'conc':
-                tmp = self._merge_conc_data(item)
-                if not tmp:
-                    continue
-                tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
-                for ac in tmp['aligned']:
-                    ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
-                full_data.append(tmp)
-            elif q_supertype == 'pquery':
-                stored = self._query_persistence.open(item['query_id'])
-                if not stored:
-                    continue
-                tmp = {'corpname': stored['corpora'][0], 'aligned': []}
-                tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
-                q_join = []
+            full_data = []
+            corpora = CorpusCache(corpus_manager)
+            async for item in cursor:
+                q_supertype = item['q_supertype']
+                if q_supertype == 'conc':
+                    tmp = self._merge_conc_data(item)
+                    if not tmp:
+                        continue
+                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    for ac in tmp['aligned']:
+                        ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+                    full_data.append(tmp)
+                elif q_supertype == 'pquery':
+                    stored = await self._query_persistence.open(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = {'corpname': stored['corpora'][0], 'aligned': []}
+                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    q_join = []
 
-                for q in stored.get('form', {}).get('conc_ids', []):
-                    stored_q = self._query_persistence.open(q)
-                    if stored_q is None:
-                        logging.getLogger(__name__).warning(
-                            'Missing conc for pquery: {}'.format(q))
-                    else:
-                        for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
-                            q_join.append(f'{{ {qs} }}')
-                q_subset = stored.get('form', {}).get('conc_subset_complements', None)
-                if q_subset is not None:
-                    for q in q_subset.get('conc_ids', []):
-                        max_ratio = q_subset.get('max_non_matching_ratio', 0)
-                        stored_q = self._query_persistence.open(q)
+                    for q in stored.get('form', {}).get('conc_ids', []):
+                        stored_q = await self._query_persistence.open(q)
+                        if stored_q is None:
+                            logging.getLogger(__name__).warning(
+                                'Missing conc for pquery: {}'.format(q))
+                        else:
+                            for qs in stored_q.get('lastop_form', {}).get('curr_queries', {}).values():
+                                q_join.append(f'{{ {qs} }}')
+                    q_subset = stored.get('form', {}).get('conc_subset_complements', None)
+                    if q_subset is not None:
+                        for q in q_subset.get('conc_ids', []):
+                            max_ratio = q_subset.get('max_non_matching_ratio', 0)
+                            stored_q = await self._query_persistence.open(q)
+                            if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
+                                logging.getLogger(__name__).warning(
+                                    'Missing conc for pquery subset: {}'.format(q))
+                            else:
+                                query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
+                                q_join.append(f'!{max_ratio if max_ratio else ""}{{ {query} }}')
+
+                    q_superset = stored.get('form', {}).get('conc_superset', None)
+                    if q_superset is not None:
+                        max_ratio = q_superset.get('max_non_matching_ratio', 0)
+                        stored_q = await self._query_persistence.open(q_superset['conc_id'])
                         if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
                             logging.getLogger(__name__).warning(
-                                'Missing conc for pquery subset: {}'.format(q))
+                                'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
                         else:
                             query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
-                            q_join.append(f'!{max_ratio if max_ratio else ""}{{ {query} }}')
+                            q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
 
-                q_superset = stored.get('form', {}).get('conc_superset', None)
-                if q_superset is not None:
-                    max_ratio = q_superset.get('max_non_matching_ratio', 0)
-                    stored_q = self._query_persistence.open(q_superset['conc_id'])
-                    if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
-                        logging.getLogger(__name__).warning(
-                            'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
-                    else:
-                        query = stored_q['lastop_form']['curr_queries'][tmp['corpname']]
-                        q_join.append(f'?{max_ratio if max_ratio else ""}{{ {query} }}')
-
-                tmp['query'] = ' && '.join(q_join)
-                tmp.update(item)
-                tmp.update(stored)
-                full_data.append(tmp)
-            elif q_supertype == 'wlist':
-                stored = self._query_persistence.open(item['query_id'])
-                if not stored:
-                    continue
-                tmp = dict(
-                    corpname=stored['corpora'][0],
-                    aligned=[],
-                    human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
-                    query=stored.get('form', {}).get('wlpat'),
-                    pfilter_words=stored['form']['pfilter_words'],
-                    nfilter_words=stored['form']['nfilter_words'])
-                tmp.update(item)
-                tmp.update(stored)
-                full_data.append(tmp)
-            else:
-                raise ValueError('Unknown query supertype: ', q_supertype)
+                    tmp['query'] = ' && '.join(q_join)
+                    tmp.update(item)
+                    tmp.update(stored)
+                    full_data.append(tmp)
+                elif q_supertype == 'wlist':
+                    stored = await self._query_persistence.open(item['query_id'])
+                    if not stored:
+                        continue
+                    tmp = dict(
+                        corpname=stored['corpora'][0],
+                        aligned=[],
+                        human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
+                        query=stored.get('form', {}).get('wlpat'),
+                        pfilter_words=stored['form']['pfilter_words'],
+                        nfilter_words=stored['form']['nfilter_words'])
+                    tmp.update(item)
+                    tmp.update(stored)
+                    full_data.append(tmp)
+                else:
+                    raise ValueError('Unknown query supertype: ', q_supertype)
 
         for i, item in enumerate(full_data):
             item['idx'] = offset + i
 
         return full_data
 
-    def delete_old_records(self):
+    async def delete_old_records(self):
         """
         Deletes records older than ttl_days. Named records are
         kept intact.
@@ -298,15 +295,14 @@ class MySqlQueryHistory(AbstractQueryHistory):
         now - ttl  > created
         """
         # TODO remove also named but unpaired history entries
-        cursor = self._db.cursor()
-        cursor.execute(
-            f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
-            (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
-        )
-        self._db.commit()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'DELETE FROM {self.TABLE_NAME} WHERE created < %s AND name IS NULL',
+                (int(datetime.utcnow().timestamp()) - self.ttl_days * 3600 * 24,)
+            )
+            await self._db.commit()
 
-    @as_async
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         """
         Export plug-in data to dependent HTML pages
         """
@@ -320,7 +316,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db: IntegrationDatabase[MySQLConnection, MySQLCursor], query_persistence, auth):
+def create_instance(settings, db: MySqlIntegrationDb, query_persistence, auth):
     """
     arguments:
     settings -- the settings.py module

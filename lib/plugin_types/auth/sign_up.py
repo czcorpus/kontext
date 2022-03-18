@@ -21,19 +21,19 @@ T = TypeVar('T')
 class AbstractSignUpToken(Generic[T]):
 
     @abc.abstractmethod
-    def save(self, db: T):
+    async def save(self, db: T):
         pass
 
     @abc.abstractmethod
-    def load(self, db: T):
+    async def load(self, db: T):
         pass
 
     @abc.abstractmethod
-    def delete(self, db: T):
+    async def delete(self, db: T):
         pass
 
     @abc.abstractmethod
-    def is_valid(self, db: T):
+    async def is_valid(self, db: T):
         pass
 
     @abc.abstractmethod

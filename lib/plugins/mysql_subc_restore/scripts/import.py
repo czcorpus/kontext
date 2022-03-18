@@ -36,24 +36,27 @@ def import_sqlite_db(db_path, chunk_size):
 
     cursor = ucnk_db.cursor()
     with plugins.runtime.INTEGRATION_DB as mysql_db:
-        cursor.execute('SELECT user_id, corpname, subcname, cql, timestamp FROM subc_archive')
-        while True:
-            data = cursor.fetchmany(chunk_size)
-            if len(data):
-                mysql_db.executemany(
-                    'INSERT IGNORE INTO kontext_subc_archive (user_id, corpname, subcname, cql, timestamp) '
-                    'VALUES (%s, %s, %s, %s, %s)',
-                    [(
-                        d[0],
-                        d[1],
-                        d[2],
-                        d[3],
-                        datetime.datetime.fromtimestamp(d[4])
-                    ) for d in data]
-                )
-                mysql_db.commit()
-            else:
-                break
+        with mysql_db.connection_sync() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    'SELECT user_id, corpname, subcname, cql, timestamp FROM subc_archive')
+                while True:
+                    data = cursor.fetchmany(chunk_size)
+                    if len(data):
+                        cursor.executemany(
+                            'INSERT IGNORE INTO kontext_subc_archive (user_id, corpname, subcname, cql, timestamp) '
+                            'VALUES (%s, %s, %s, %s, %s)',
+                            [(
+                                d[0],
+                                d[1],
+                                d[2],
+                                d[3],
+                                datetime.datetime.fromtimestamp(d[4])
+                            ) for d in data]
+                        )
+                        conn.commit()
+                    else:
+                        break
 
     cursor.close()
     ucnk_db.close()

@@ -65,14 +65,12 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import re
 import json
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
 from typing import Union
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import generate_idempotent_id
-from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from action.errors import ForbiddenException, NotFoundException
 import logging
@@ -113,7 +111,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             self,
             settings,
             db,
-            sql_backend: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            sql_backend: Union[MySqlIntegrationDb, MySQLOps],
             auth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
@@ -159,25 +157,25 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             return self.anonymous_user_ttl
         return self._ttl_days
 
-    def _find_used_corpora(self, query_id):
+    async def _find_used_corpora(self, query_id):
         """
         Because the operations are chained via 'prev_id' and the corpname
         information is not stored for all the steps, for any n-th step > 1
         we have to go backwards and find an actual corpname stored in the
         1st operation.
         """
-        data = self._load_query(query_id, save_access=False)
+        data = await self._load_query(query_id, save_access=False)
         while data is not None and 'corpname' not in data:
-            data = self._load_query(data.get('prev_id', ''), save_access=False)
+            data = await self._load_query(data.get('prev_id', ''), save_access=False)
         return data.get('corpora', []) if data is not None else []
 
-    def open(self, data_id):
-        ans = self._load_query(data_id, save_access=True)
+    async def open(self, data_id):
+        ans = await self._load_query(data_id, save_access=True)
         if ans is not None and 'corpora' not in ans:
-            ans['corpora'] = self._find_used_corpora(ans.get('prev_id'))
+            ans['corpora'] = await self._find_used_corpora(ans.get('prev_id'))
         return ans
 
-    def _load_query(self, data_id: str, save_access: bool):
+    async def _load_query(self, data_id: str, save_access: bool):
         """
         Loads operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -191,26 +189,27 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         try:
             data = self.db.get(mk_key(data_id))
             if data is None:
-                cursor = self._archive.cursor()
-                cursor.execute(
-                    'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
-                tmp = cursor.fetchone()
-                if tmp:
-                    data = json.loads(tmp['data'])
-                    if save_access:
-                        cursor.execute(
-                            'UPDATE kontext_conc_persistence '
-                            'SET last_access = %s, num_access = num_access + 1 '
-                            'WHERE id = %s AND created = %s',
-                            (get_iso_datetime(), data_id, tmp['created'].isoformat())
-                        )
-                        self._archive.commit()
+                async with self._archive.cursor() as cursor:
+                    await cursor.execute(
+                        'SELECT data, created, num_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1', (data_id,))
+                    tmp = await cursor.fetchone()
+                    if tmp:
+                        data = json.loads(tmp['data'])
+                        if save_access:
+                            await cursor.execute(
+                                'UPDATE kontext_conc_persistence '
+                                'SET last_access = %s, num_access = num_access + 1 '
+                                'WHERE id = %s AND created = %s',
+                                (get_iso_datetime(), data_id, tmp['created'].isoformat())
+                            )
+                            await self._archive.commit()
             return data
         except Exception as ex:
-            logging.getLogger(__name__).error(f'Failed to restore archived concordance {data_id}: {ex}')
+            logging.getLogger(__name__).error(
+                f'Failed to restore archived concordance {data_id}: {ex}')
             raise ex
 
-    def store(self, user_id, curr_data, prev_data=None):
+    async def store(self, user_id, curr_data, prev_data=None):
         """
         Stores current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
@@ -246,49 +245,49 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
         return latest_id
 
-    def archive(self, user_id, conc_id, revoke=False):
-        cursor = self._archive.cursor()
-        cursor.execute(
-            'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
-            (conc_id,)
-        )
-        row = cursor.fetchone()
-        archived_rec = json.loads(row['data']) if row is not None else None
+    async def archive(self, user_id, conc_id, revoke=False):
+        async with self._archive.cursor() as cursor:
+            await cursor.execute(
+                'SELECT id, data, created, num_access, last_access FROM kontext_conc_persistence WHERE id = %s LIMIT 1',
+                (conc_id,)
+            )
+            row = await cursor.fetchone()
+            archived_rec = json.loads(row['data']) if row is not None else None
 
-        if revoke:
-            if archived_rec:
-                cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
-                ans = 1
+            if revoke:
+                if archived_rec:
+                    await cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
+                    ans = 1
+                else:
+                    raise NotFoundException(
+                        'Archive revoke error - concordance {0} not archived'.format(conc_id))
             else:
-                raise NotFoundException(
-                    'Archive revoke error - concordance {0} not archived'.format(conc_id))
-        else:
-            cursor = self._archive.cursor()
-            data = self.db.get(mk_key(conc_id))
-            if data is None and archived_rec is None:
-                raise NotFoundException(
-                    'Archive store error - concordance {0} not found'.format(conc_id))
-            elif archived_rec:
-                ans = 0
-            else:
-                stored_user_id = data.get('user_id', None)
-                if user_id != stored_user_id:
-                    raise ForbiddenException(
-                        'Cannot change status of a concordance belonging to another user')
-                cursor.execute(
-                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                    'VALUES (%s, %s, %s, %s)',
-                    (conc_id, json.dumps(data), get_iso_datetime(), 0))
-                archived_rec = data
-                ans = 1
-        self._archive.commit()
+                data = self.db.get(mk_key(conc_id))
+                if data is None and archived_rec is None:
+                    raise NotFoundException(
+                        'Archive store error - concordance {0} not found'.format(conc_id))
+                elif archived_rec:
+                    ans = 0
+                else:
+                    stored_user_id = data.get('user_id', None)
+                    if user_id != stored_user_id:
+                        raise ForbiddenException(
+                            'Cannot change status of a concordance belonging to another user')
+                    await cursor.execute(
+                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                        'VALUES (%s, %s, %s, %s)',
+                        (conc_id, json.dumps(data), get_iso_datetime(), 0))
+                    archived_rec = data
+                    ans = 1
+        await self._archive.commit()
         return ans, archived_rec
 
-    def is_archived(self, conc_id):
-        return is_archived(self._archive.cursor(), conc_id)
+    async def is_archived(self, conc_id):
+        async with self._archive.cursor() as cursor:
+            return await is_archived(cursor, conc_id)
 
-    def will_be_archived(self, plugin_ctx, conc_id: str):
-        return not self.is_archived(conc_id)\
+    async def will_be_archived(self, plugin_ctx, conc_id: str):
+        return not (await self.is_archived(conc_id))\
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)
 
@@ -304,15 +303,17 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, db: IntegrationDatabase[MySQLConnection, MySQLCursor], integration_db, auth):
+def create_instance(settings, db, integration_db: MySqlIntegrationDb, auth):
     """
     Creates a plugin instance.
     """
     plugin_conf = settings.get('plugins', 'query_persistence')
     if integration_db.is_active and 'mysql_host' not in plugin_conf:
-        logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
+        logging.getLogger(__name__).info(
+            f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         return MySqlQueryPersistence(settings, db, integration_db, auth)
     else:
+        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
         logging.getLogger(__name__).info(
             'mysql_query_persistence uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
