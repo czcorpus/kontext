@@ -23,16 +23,15 @@ import logging
 from typing import Dict, List, Tuple, Iterable
 import json
 
-from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
+from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
 from plugins import inject
 from plugin_types.corparch import AbstractSearchableCorporaArchive, CorpusListItem
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.corparch.corpus import (
     BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo, StructAttrInfo)
 from plugins.mysql_corparch.backend import Backend
@@ -377,7 +376,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, integ_db: IntegrationDatabase):
+def create_instance(conf, user_items, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')

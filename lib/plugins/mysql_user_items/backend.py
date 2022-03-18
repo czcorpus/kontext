@@ -22,10 +22,9 @@ A corparch database backend for MySQL/MariaDB.
 """
 from typing import Union
 
-from aiomysql import Connection, Cursor
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from plugin_types.user_items import FavoriteItem
-from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 
 
@@ -42,7 +41,7 @@ class Backend:
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[Connection, Cursor], MySQLOps],
+            db: Union[MySqlIntegrationDb, MySQLOps],
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,

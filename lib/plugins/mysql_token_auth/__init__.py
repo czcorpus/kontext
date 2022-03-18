@@ -26,19 +26,18 @@ from datetime import datetime
 import hashlib
 from typing import List, Optional
 
-from aiomysql import Connection, Cursor
 from action.plugin.ctx import PluginCtx
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
 from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
-from plugin_types.integration_db import IntegrationDatabase
 
 
 class TokenAuth(AbstractRemoteAuth):
 
     def __init__(
         self,
-        db: IntegrationDatabase[Connection, Cursor],
+        db: MySqlIntegrationDb,
         anonymous_id: int,
         api_key_cookie_name: Optional[str],
         api_key_http_header: Optional[str],
@@ -136,7 +135,7 @@ class TokenAuth(AbstractRemoteAuth):
 
 
 @plugins.inject(plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, integration_db: IntegrationDatabase[Connection, Cursor]):
+def create_instance(conf, integration_db: MySqlIntegrationDb):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

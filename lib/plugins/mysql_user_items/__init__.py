@@ -16,6 +16,8 @@ import json
 import logging
 from sanic.blueprints import Blueprint
 
+from plugins.mysql_integration_db import MySqlIntegrationDb
+
 from .backend import Backend
 
 from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
@@ -142,7 +144,7 @@ class MySQLUserItems(AbstractUserItems):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, integ_db, auth):
+def create_instance(settings, integ_db: MySqlIntegrationDb, auth):
     plugin_conf = settings.get('plugins', 'user_items')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')

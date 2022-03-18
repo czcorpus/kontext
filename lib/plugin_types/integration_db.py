@@ -30,12 +30,12 @@ T = TypeVar('T')
 
 class AsyncDbContextManager(AbstractAsyncContextManager, Generic[T]):
     async def __aenter__(self) -> T:
-        return await super().__aenter__()
+        pass
 
 
 class DbContextManager(AbstractContextManager, Generic[T]):
     def __enter__(self) -> T:
-        return super().__enter__()
+        pass
 
 
 class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):

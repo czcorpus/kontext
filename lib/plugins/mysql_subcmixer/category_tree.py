@@ -22,9 +22,7 @@ from typing import Iterator, List, NamedTuple, Optional, Union
 import copy
 
 import numpy as np
-from aiomysql import Connection, Cursor
-
-from plugin_types.integration_db import IntegrationDatabase
+from lib.plugins.mysql_integration_db import MySqlIntegrationDb
 
 
 class CategoryExpression(object):
@@ -128,7 +126,7 @@ class CategoryTree(object):
 
     """
 
-    def __init__(self, category_list: List[TaskArgs], db: IntegrationDatabase[Connection, Cursor], corpus_id: str, aligned_corpora: List[str], corpus_max_size: int):
+    def __init__(self, category_list: List[TaskArgs], db: MySqlIntegrationDb, corpus_id: str, aligned_corpora: List[str], corpus_max_size: int):
         self.category_list = category_list
         self.num_categories = len(category_list)
         self.corpus_max_size = corpus_max_size

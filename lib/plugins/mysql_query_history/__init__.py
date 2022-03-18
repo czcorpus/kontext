@@ -31,17 +31,15 @@ configuration.
 
 from datetime import datetime
 import logging
-from aiomysql import Connection, Cursor
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 from plugin_types.auth import AbstractAuth
-from plugin_types.integration_db import IntegrationDatabase
 from corplib.abstract import AbstractKCorpus
 from plugin_types.query_history import AbstractQueryHistory
 from plugins import inject
 import plugins
 from corplib.fallback import EmptyCorpus
 from plugin_types.query_persistence import AbstractQueryPersistence
-from util import as_async
 
 
 class CorpusCache:
@@ -67,7 +65,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
     def __init__(
             self,
             conf,
-            db: IntegrationDatabase[Connection, Cursor],
+            db: MySqlIntegrationDb,
             query_persistence: AbstractQueryPersistence,
             auth: AbstractAuth):
         """
@@ -318,7 +316,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db: IntegrationDatabase[Connection, Cursor], query_persistence, auth):
+def create_instance(settings, db: MySqlIntegrationDb, query_persistence, auth):
     """
     arguments:
     settings -- the settings.py module

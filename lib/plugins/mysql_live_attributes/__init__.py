@@ -17,6 +17,8 @@ Interactive (ad hoc) subcorpus selection.
 Required XML configuration: please see config.rng
 """
 
+from aiomysql import Cursor
+from plugins.mysql_integration_db import MySqlIntegrationDb
 from .common import AttrValueKey, StructAttr
 import re
 import json
@@ -27,7 +29,6 @@ from dataclasses import astuple
 import logging
 from typing import Any, Dict, List, Optional, Set, Union
 from corplib.corpus import KCorpus
-from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 import l10n
@@ -36,7 +37,6 @@ import plugins
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.corparch.corpus import CorpusInfo
 from plugin_types.general_storage import KeyValueStorage
-from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 from plugins.errors import PluginCompatibilityException
@@ -56,7 +56,7 @@ async def filter_attributes(req, amodel):
     aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-                                     aligned_corpora=aligned)
+                                           aligned_corpora=aligned)
 
 
 @bp.route('/attr_val_autocomplete', methods=['POST'])
@@ -67,8 +67,8 @@ async def attr_val_autocomplete(self, request):
     aligned = json.loads(request.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
-                                     aligned_corpora=aligned,
-                                     autocomplete_attr=request.form.get('patternAttr'))
+                                           aligned_corpora=aligned,
+                                           autocomplete_attr=request.form.get('patternAttr'))
 
 
 @bp.route('/fill_attrs', methods=['POST'])
@@ -87,7 +87,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
     def __init__(
         self, corparch: AbstractCorporaArchive,
         db: KeyValueStorage,
-        integ_db: IntegrationDatabase[Connection, Cursor],
+        integ_db: MySqlIntegrationDb,
         max_attr_list_size: int,
         empty_val_placeholder: str,
         max_attr_visible_chars: int
@@ -400,7 +400,7 @@ def create_instance(
         settings,
         corparch: AbstractCorporaArchive,
         db: KeyValueStorage,
-        integ_db: IntegrationDatabase) -> MysqlLiveAttributes:
+        integ_db: MySqlIntegrationDb) -> MysqlLiveAttributes:
     """
     creates an instance of the plugin
 

@@ -20,13 +20,12 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import logging
-from aiomysql import Connection, Cursor
 
 import werkzeug.urls
+from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcRestore, SubcRestoreRow
-from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
 from plugins import inject
 
@@ -42,7 +41,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             self,
             plugin_conf: Dict[str, Any],
             corparch: AbstractCorporaArchive,
-            db: IntegrationDatabase[Connection, Cursor]):
+            db: MySqlIntegrationDb):
         self._conf = plugin_conf
         self._corparch = corparch
         self._db = db
@@ -179,10 +178,11 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, corparch, integ_db: IntegrationDatabase[Connection, Cursor]):
+def create_instance(conf, corparch, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'subc_restore')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_restore uses integration_db[{integ_db.info}]')
         return MySQLSubcRestore(plugin_conf, corparch, integ_db)
     else:
-        raise PluginCompatibilityException('mysql_subc_restore works only with integration_db enabled')
+        raise PluginCompatibilityException(
+            'mysql_subc_restore works only with integration_db enabled')

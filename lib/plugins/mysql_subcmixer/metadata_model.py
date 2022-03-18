@@ -21,9 +21,8 @@ from typing import Optional, Set, Tuple, List, Dict
 
 import numpy as np
 import pulp
-from aiomysql import Connection, Cursor
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
-from plugin_types.integration_db import IntegrationDatabase
 from .category_tree import CategoryTree, CategoryTreeNode
 
 
@@ -57,7 +56,7 @@ class MetadataModel:
     """
 
     @classmethod
-    async def create(cls, db: IntegrationDatabase[Connection, Cursor], category_tree: CategoryTree, id_attr: str):
+    async def create(cls, db: MySqlIntegrationDb, category_tree: CategoryTree, id_attr: str):
         self = await MetadataModel.create(db, category_tree, id_attr)
         self.text_sizes, self._id_map = await self._get_text_sizes()
         # text_sizes and _id_map both contain all the documents from the corpus
@@ -73,7 +72,7 @@ class MetadataModel:
         return self
 
     def __init__(
-            self, db: IntegrationDatabase[Connection, Cursor], category_tree: CategoryTree, id_attr: str):
+            self, db: MySqlIntegrationDb, category_tree: CategoryTree, id_attr: str):
         self._db = db
         self.category_tree = category_tree
         self._id_struct, self._id_attr = id_attr.split('.')
@@ -143,7 +142,7 @@ class MetadataModel:
                         SELECT t_map.value_tuple_id
                         FROM corpus_structattr_value AS t_value
                         JOIN corpus_structattr_value_mapping AS t_map ON t_map.value_id = t_value.id
-                        WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s 
+                        WHERE t_value.corpus_name = %s AND t_value.structure_name = %s AND t_value.structattr_name = %s
                             AND t_value.value {mc.mysql_op} %s
                         '''
                 for subl in node.metadata_condition

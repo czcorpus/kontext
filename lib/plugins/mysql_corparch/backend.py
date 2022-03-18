@@ -20,10 +20,9 @@
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
+from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugin_types.auth import CorpusAccess
-from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
-from aiomysql import Connection, Cursor
 
 from plugin_types.corparch.corpus import TagsetInfo, PosCategoryItem
 from plugin_types.corparch.backend import DatabaseBackend
@@ -49,7 +48,7 @@ class Backend(DatabaseBackend):
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[Connection, Cursor], MySQLOps],
+            db: Union[MySqlIntegrationDb, MySQLOps],
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             corp_id_attr: str = DFLT_CORP_ID_ATTR,

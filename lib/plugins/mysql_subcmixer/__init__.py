@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Any, Dict, List, Tuple, Union
+
+from plugins.mysql_integration_db import MySqlIntegrationDb
 try:
     from typing import TypedDict
 except ImportError:
@@ -25,13 +27,11 @@ from collections import defaultdict
 import json
 import struct
 
-from aiomysql import Connection, Cursor
 from sanic.blueprints import Blueprint
 
 import plugins
 from plugins import inject
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.subcmixer import AbstractSubcMixer, ExpressionItem
 from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
 from action.plugin.ctx import PluginCtx
@@ -48,7 +48,7 @@ To be able to use the plug-in, the following requirements must be met:
 
 - enabled mysql_integration_db (i.e. the mysql_subcmixer does not provide its individual db connection)
 - enabled mysql_live_attributes
-- also, a corpus we want to used the plug-in with must have bib_id_struct, bib_id_attr configured 
+- also, a corpus we want to used the plug-in with must have bib_id_struct, bib_id_attr configured
 """
 
 bp = Blueprint('mysql_subcmixer')
@@ -127,7 +127,7 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
     CORPUS_MAX_SIZE = 500000000  # TODO
 
     def __init__(
-            self, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[Connection, Cursor]):
+            self, corparch: AbstractCorporaArchive, integration_db: MySqlIntegrationDb):
         self._corparch = corparch
         self._db = integration_db
 
@@ -210,5 +210,5 @@ class SubcMixer(AbstractSubcMixer[ProcessResponse]):
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
 def create_instance(
-        settings, corparch: AbstractCorporaArchive, integration_db: IntegrationDatabase[Connection, Cursor]):
+        settings, corparch: AbstractCorporaArchive, integration_db: MySqlIntegrationDb):
     return SubcMixer(corparch, integration_db)

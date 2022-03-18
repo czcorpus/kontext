@@ -65,13 +65,12 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import re
 import json
-from aiomysql import Connection, Cursor
 from typing import Union
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import generate_idempotent_id
-from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from action.errors import ForbiddenException, NotFoundException
 import logging
@@ -112,7 +111,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             self,
             settings,
             db,
-            sql_backend: Union[IntegrationDatabase[Connection, Cursor], MySQLOps],
+            sql_backend: Union[MySqlIntegrationDb, MySQLOps],
             auth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
@@ -206,7 +205,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                             await self._archive.commit()
             return data
         except Exception as ex:
-            logging.getLogger(__name__).error(f'Failed to restore archived concordance {data_id}: {ex}')
+            logging.getLogger(__name__).error(
+                f'Failed to restore archived concordance {data_id}: {ex}')
             raise ex
 
     async def store(self, user_id, curr_data, prev_data=None):
@@ -303,13 +303,14 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, db, integration_db: IntegrationDatabase[Connection, Cursor], auth):
+def create_instance(settings, db, integration_db: MySqlIntegrationDb, auth):
     """
     Creates a plugin instance.
     """
     plugin_conf = settings.get('plugins', 'query_persistence')
     if integration_db.is_active and 'mysql_host' not in plugin_conf:
-        logging.getLogger(__name__).info(f'mysql_query_persistence uses integration_db[{integration_db.info}]')
+        logging.getLogger(__name__).info(
+            f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         return MySqlQueryPersistence(settings, db, integration_db, auth)
     else:
         raise NotImplementedError('Asynchronous MySQLOps not implemented yet')

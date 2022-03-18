@@ -33,6 +33,7 @@ import http.client
 import json
 import ssl
 import logging
+from plugin_types.integration_db import IntegrationDatabase
 
 import plugins
 from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
@@ -227,7 +228,7 @@ class CentralAuth(AbstractRemoteAuth):
 
 
 @inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions, cnc_db):
+def create_instance(conf, sessions, cnc_db: IntegrationDatabase):
     logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
