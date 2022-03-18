@@ -57,8 +57,8 @@ class MockAuth(AbstractAuth):
     def is_administrator(self, user_id):
         return False
 
-    def permitted_corpora(self, user_dict):
+    async def permitted_corpora(self, user_dict):
         raise NotImplementedError()
 
-    def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx):
         raise NotImplementedError()

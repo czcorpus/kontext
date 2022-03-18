@@ -125,7 +125,7 @@ class BaseActionModel:
                     'Unknown output format: {0}'.format(self._req.args.get('format')))
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
-    def post_dispatch(self, action_props: ActionProps, result, err_desc):
+    async def post_dispatch(self, action_props: ActionProps, result, err_desc):
         pass
 
 

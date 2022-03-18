@@ -216,7 +216,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
             return self._anonymous_user_ttl_days
         return self._ttl_days
 
-    def open(self, data_id):
+    async def open(self, data_id):
         """
         Loads operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -233,7 +233,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
             ans = self._archive_backend.load(key)
         return ans
 
-    def store(self, user_id, curr_data, prev_data=None):
+    async def store(self, user_id, curr_data, prev_data=None):
         """
         Stores current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
@@ -267,9 +267,9 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
             latest_id = prev_data['id']
         return latest_id
 
-    def archive(self, user_id, conc_id, revoke=False):
+    async def archive(self, user_id, conc_id, revoke=False):
         key = self._mk_key(conc_id)
-        data = self.open(conc_id)
+        data = await self.open(conc_id)
         if data is None:
             raise UserActionException('Concordance key \'%s\' not found.' % (conc_id,))
         stored_user_id = data.get('user_id', None)
@@ -285,10 +285,10 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
 
         return 1, data
 
-    def is_archived(self, conc_id):
+    async def is_archived(self, conc_id):
         return self._archive_backend.is_archived(self._mk_key(conc_id))
 
-    def will_be_archived(self, plugin_ctx, conc_id: str):
+    async def will_be_archived(self, plugin_ctx, conc_id: str):
         return not self.is_archived(conc_id)\
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)

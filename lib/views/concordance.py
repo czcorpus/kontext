@@ -280,9 +280,9 @@ async def create_view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @bp.route('/archive_concordance', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as cp:
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
         revoke = bool(int(req.args.get('revoke')))
-        cn, row = cp.archive(amodel.session_get('user', 'id'),
+        cn, row = await qp.archive(amodel.session_get('user', 'id'),
                              req.args.get('code'), revoke=revoke)
     return dict(revoked=revoke, num_changes=cn, archived_conc=row)
 
@@ -290,10 +290,10 @@ async def archive_concordance(amodel: UserActionModel, req: KRequest, resp: KRes
 @bp.route('/get_stored_conc_archived_status')
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def get_stored_conc_archived_status(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.QUERY_PERSISTENCE as cp:
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
         return {
-            'is_archived': cp.is_archived(req.args.get('code')),
-            'will_be_archived': cp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
+            'is_archived': await qp.is_archived(req.args.get('code')),
+            'will_be_archived': await qp.will_be_archived(amodel.plugin_ctx, req.args.get('code'))
         }
 
 
@@ -383,12 +383,12 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def save_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-        _, data = qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
+        _, data = await qp.archive(amodel.session_get('user', 'id'), req.json['query_id'])
         if qp.stored_form_type(data) == 'pquery':
             for conc_id in data.get('form', {}).get('conc_ids', []):
-                cn, _ = qp.archive(amodel.session_get('user', 'id'), conc_id)
+                cn, _ = await qp.archive(amodel.session_get('user', 'id'), conc_id)
 
-        hsave = qh.make_persistent(
+        hsave = await qh.make_persistent(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             qp.stored_query_supertype(data),
@@ -405,7 +405,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # this method keeps the conc params as they are because we assume that user just does
     # not want to keep the query in their history
     with plugins.runtime.QUERY_HISTORY as qh:
-        ans = qh.make_transient(
+        ans = await qh.make_transient(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             req.json['created'],
@@ -419,7 +419,7 @@ async def unsave_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # remove query from history (respective results are kept)
     with plugins.runtime.QUERY_HISTORY as qh:
-        ans = qh.delete(
+        ans = await qh.delete(
             amodel.session_get('user', 'id'),
             req.json['query_id'],
             int(req.json['created'])
@@ -839,7 +839,7 @@ async def ajax_remove_selected_lines(amodel: ConcActionModel, req: KRequest, res
 @http_action(return_type='json', action_model=ConcActionModel)
 async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth:
-        user_info = auth.get_user_info(amodel.plugin_ctx)
+        user_info = await auth.get_user_info(amodel.plugin_ctx)
         user_email = user_info['email']
         username = user_info['user']
         smtp_server = mailing.smtp_factory()
@@ -960,7 +960,7 @@ async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: K
             ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
         amodel.args.q = [query]
         conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-                        fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
+                              fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
         return dict(total=conc.fullsize() if conc else None)
 
 

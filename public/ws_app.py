@@ -167,7 +167,7 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     # check until finished
     while not ws.closed:
         try:
-            response = get_conc_cache_status(corp, params['conc_id'])
+            response = await get_conc_cache_status(corp, params['conc_id'])
         except Exception as e:
             response = {'error': str(e), 'finished': True}
         await ws.send_json(response)
@@ -181,12 +181,12 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     return ws
 
 
-def get_conc_cache_status(corp: KCorpus, conc_id: str):
+async def get_conc_cache_status(corp: KCorpus, conc_id: str):
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     q = []
     try:
         with plugins.runtime.QUERY_PERSISTENCE as qp:
-            data = qp.open(conc_id)
+            data = await qp.open(conc_id)
             q = data.get('q', [])
         cache_status = cache_map.get_calc_status(corp.subchash, data.get('q', []))
         if cache_status is None:  # conc is not cached nor calculated

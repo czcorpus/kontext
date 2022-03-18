@@ -135,7 +135,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
         """
 
     @abc.abstractmethod
-    def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
+    async def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         """
         Return a list of corpora accessible by a user
 
@@ -171,7 +171,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             raise ImmediateRedirectException(plugin_ctx.create_url('corpora/corplist', {}))
 
     @abc.abstractmethod
-    def get_user_info(self, plugin_ctx: 'PluginCtx') -> UserInfo:
+    async def get_user_info(self, plugin_ctx: 'PluginCtx') -> UserInfo:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
@@ -191,7 +191,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
 class AbstractSemiInternalAuth(AbstractAuth):
 
     @abc.abstractmethod
-    def validate_user(self, plugin_ctx: 'PluginCtx', username: str, password: str) -> UserInfo:
+    async def validate_user(self, plugin_ctx: 'PluginCtx', username: str, password: str) -> UserInfo:
         """
         Tries to find a user with matching 'username' and 'password'.
         If a match is found then proper credentials of the user are
@@ -231,7 +231,7 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         """
 
     @abc.abstractmethod
-    def update_user_password(self, plugin_ctx: 'PluginCtx', user_id: int, password: str):
+    async def update_user_password(self, plugin_ctx: 'PluginCtx', user_id: int, password: str):
         """
         Changes a password of provided user.
         """
@@ -263,14 +263,14 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         pass
 
     @abc.abstractmethod
-    def validate_new_username(self, plugin_ctx: 'PluginCtx', username: str) -> Tuple[bool, bool]:
+    async def validate_new_username(self, plugin_ctx: 'PluginCtx', username: str) -> Tuple[bool, bool]:
         """
         returns:
             a 2-tuple (availability, validity) (both bool)
         """
 
     @abc.abstractmethod
-    def sign_up_user(self, plugin_ctx: 'PluginCtx', credentials: Dict[str, Any]) -> Dict[str, str]:
+    async def sign_up_user(self, plugin_ctx: 'PluginCtx', credentials: Dict[str, Any]) -> Dict[str, str]:
         """
         returns:
             a dict where keys are form item identifiers where error occurred
@@ -279,11 +279,11 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
         pass
 
     @abc.abstractmethod
-    def sign_up_confirm(self, plugin_ctx: 'PluginCtx', key: str) -> bool:
+    async def sign_up_confirm(self, plugin_ctx: 'PluginCtx', key: str) -> bool:
         pass
 
     @abc.abstractmethod
-    def get_form_props_from_token(self, key: str) -> Dict[str, Any]:
+    async def get_form_props_from_token(self, key: str) -> Dict[str, Any]:
         pass
 
 

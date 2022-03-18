@@ -20,11 +20,9 @@
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
 from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
+from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugin_types.auth import CorpusAccess
-from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
 
 from plugin_types.corparch.corpus import TagsetInfo, PosCategoryItem
 from plugin_types.corparch.backend import DatabaseBackend
@@ -50,7 +48,7 @@ class Backend(DatabaseBackend):
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            db: Union[MySqlIntegrationDb, MySQLOps],
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             corp_id_attr: str = DFLT_CORP_ID_ATTR,
@@ -70,72 +68,72 @@ class Backend(DatabaseBackend):
         self._group_acc_group_attr = group_acc_group_attr
 
     async def contains_corpus(self, corpus_id: str) -> bool:
-        cursor = self._db.cursor()
-        await cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))
-        return cursor.fetchone() is not None
+        async with self._db.cursor() as cursor:
+            await cursor.execute(f'SELECT name FROM {self._corp_table} WHERE name = %s', (corpus_id,))
+            return (await cursor.fetchone()) is not None
 
     async def load_corpus_articles(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT ca.role, a.entry '
-            'FROM kontext_article AS a '
-            'JOIN kontext_corpus_article AS ca ON ca.article_id = a.id '
-            'WHERE ca.corpus_name = %s', (corpus_id,))
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT ca.role, a.entry '
+                'FROM kontext_article AS a '
+                'JOIN kontext_corpus_article AS ca ON ca.article_id = a.id '
+                'WHERE ca.corpus_name = %s', (corpus_id,))
+            return await cursor.fetchall()
 
     async def load_all_keywords(self) -> Iterable[Dict[str, str]]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY display_order')
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT id, label_cs, label_en, color FROM kontext_keyword ORDER BY display_order')
+            return await cursor.fetchall()
 
     async def load_ttdesc(self, desc_id) -> Iterable[Dict[str, str]]:
-        cursor = self._db.cursor()
-        await cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute('SELECT text_cs, text_en FROM kontext_ttdesc WHERE id = %s', (desc_id,))
+            return await cursor.fetchall()
 
     async def load_corpora_descriptions(self, corp_ids: List[str], user_lang: str) -> Dict[str, str]:
         if len(corp_ids) == 0:
             return {}
-        cursor = self._db.cursor()
         placeholders = ', '.join(['%s'] * len(corp_ids))
         col = 'description_{0}'.format(user_lang[:2])
-        await cursor.execute(
-            f'SELECT name AS corpname, {col} AS contents '
-            f'FROM {self._corp_table} '
-            f'WHERE name IN ({placeholders})', corp_ids)
-        return dict((r['corpname'], r['contents']) for r in cursor.fetchall())
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'SELECT name AS corpname, {col} AS contents '
+                f'FROM {self._corp_table} '
+                f'WHERE name IN ({placeholders})', corp_ids)
+            return {r['corpname']: r['contents'] async for r in cursor}
 
     async def load_corpus(self, corp_id: str) -> Dict[str, Any]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
-            'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
-            '  AS speaker_id_attr, '
-            'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '
-            '    CONCAT(c.speech_overlap_struct, \'.\', c.speech_overlap_attr), '
-            '    c.speech_overlap_struct) AS speech_overlap_attr, '
-            'c.speech_overlap_val, c.use_safe_font, '
-            'c.requestable, c.featured, c.text_types_db AS `database`, '
-            'c.description_cs, c.description_en, '
-            'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
-            '  AS label_attr, '
-            'IF (c.bib_id_attr IS NOT NULL, CONCAT(c.bib_id_struct, \'.\', c.bib_id_attr), NULL) AS id_attr, '
-            'IF (c.speech_segment_attr IS NOT NULL, CONCAT(c.speech_segment_struct, \'.\', c.speech_segment_attr), '
-            '  NULL) AS speech_segment, '
-            'c.bib_group_duplicates, c.description_cs, c.description_en, '
-            'c.ttdesc_id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
-            'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
-            'c.default_virt_keyboard as default_virt_keyboard, '
-            'c.default_view_opts, c.default_tagset '
-            f'FROM {self._corp_table} AS c '
-            'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
-            'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'LEFT JOIN corpus_structure AS cs ON cs.corpus_name = kc.corpus_name '
-            '  AND c.sentence_struct = cs.name '
-            'WHERE c.active = 1 AND c.name = %s '
-            'GROUP BY c.name ', (corp_id,))
-        return cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
+                'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
+                '  AS speaker_id_attr, '
+                'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '
+                '    CONCAT(c.speech_overlap_struct, \'.\', c.speech_overlap_attr), '
+                '    c.speech_overlap_struct) AS speech_overlap_attr, '
+                'c.speech_overlap_val, c.use_safe_font, '
+                'c.requestable, c.featured, c.text_types_db AS `database`, '
+                'c.description_cs, c.description_en, '
+                'IF (c.bib_label_attr IS NOT NULL, CONCAT(c.bib_label_struct, \'.\', c.bib_label_attr), NULL) '
+                '  AS label_attr, '
+                'IF (c.bib_id_attr IS NOT NULL, CONCAT(c.bib_id_struct, \'.\', c.bib_id_attr), NULL) AS id_attr, '
+                'IF (c.speech_segment_attr IS NOT NULL, CONCAT(c.speech_segment_struct, \'.\', c.speech_segment_attr), '
+                '  NULL) AS speech_segment, '
+                'c.bib_group_duplicates, c.description_cs, c.description_en, '
+                'c.ttdesc_id AS ttdesc_id, GROUP_CONCAT(kc.keyword_id, \',\') AS keywords, '
+                'c.size, rc.name, rc.rencoding AS encoding, rc.language, '
+                'c.default_virt_keyboard as default_virt_keyboard, '
+                'c.default_view_opts, c.default_tagset '
+                f'FROM {self._corp_table} AS c '
+                'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
+                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+                'LEFT JOIN corpus_structure AS cs ON cs.corpus_name = kc.corpus_name '
+                '  AND c.sentence_struct = cs.name '
+                'WHERE c.active = 1 AND c.name = %s '
+                'GROUP BY c.name ', (corp_id,))
+            return await cursor.fetchone()
 
     async def list_corpora(
             self, user_id, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
@@ -185,7 +183,6 @@ class Backend(DatabaseBackend):
         values_cond1.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
         values_cond2.append(len(keywords) if keywords else 0)  # for num_match_keys >= x
 
-        c = self._db.cursor()
         # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
         # mysql performance significantly (more than 10x faster).
         sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, collator_locale, '
@@ -249,19 +246,20 @@ class Backend(DatabaseBackend):
             'ORDER BY g_name, version DESC, id '
             'LIMIT %s '
             'OFFSET %s')
-        await c.execute(sql, where + [limit, offset])
-        return c.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, where + [limit, offset])
+            return await cursor.fetchall()
 
     async def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
-        cursor = self._db.cursor()
         desc_col = 'c.description_{0}'.format(user_lang[:2])
-        await cursor.execute(
-            'SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
-            f'{desc_col} AS description, c.size '
-            f'FROM {self._corp_table} AS c '
-            'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name')
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
+                f'{desc_col} AS description, c.size '
+                f'FROM {self._corp_table} AS c '
+                'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
+                'WHERE c.active = 1 AND c.featured = 1 ORDER BY c.name')
+            return await cursor.fetchall()
 
     async def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
         cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(REG_COLS_MAP.items())] +
@@ -278,167 +276,167 @@ class Backend(DatabaseBackend):
                 'JOIN registry_variable AS rv ON rv.corpus_name = rc.corpus_name AND rv.variant IS NULL '
                 'WHERE rc.corpus_name = %s').format(', '.join(cols))
             vals = (corpus_id, )
-        cursor = self._db.cursor()
-        await cursor.execute(sql, vals)
-        return cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, vals)
+            return await cursor.fetchone()
 
     async def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
             ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(POS_COLS_MAP.items())]))
-        cursor = self._db.cursor()
-        await cursor.execute(sql, (corpus_id,))
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, (corpus_id,))
+            return await cursor.fetchall()
 
     async def load_corpus_posattr_references(self, corpus_id: str, posattr_id: str) -> Tuple[str, str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT r2.name AS n1, r3.name AS n2 '
-            'FROM corpus_posattr AS r1 '
-            'LEFT JOIN corpus_posattr AS r2 ON r1.fromattr = r2.name '
-            'LEFT JOIN corpus_posattr AS r3 ON r1.mapto = r3.name '
-            'WHERE r1.corpus_name = %s AND r1.name = %s', (corpus_id, posattr_id))
-        ans = cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT r2.name AS n1, r3.name AS n2 '
+                'FROM corpus_posattr AS r1 '
+                'LEFT JOIN corpus_posattr AS r2 ON r1.fromattr = r2.name '
+                'LEFT JOIN corpus_posattr AS r3 ON r1.mapto = r3.name '
+                'WHERE r1.corpus_name = %s AND r1.name = %s', (corpus_id, posattr_id))
+            ans = await cursor.fetchone()
         return (ans['n1'], ans['n2']) if ans is not None else (None, None)
 
     async def load_corpus_alignments(self, corpus_id: str) -> List[str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT ca.corpus_name_2 AS id '
-            'FROM corpus_alignment AS ca '
-            'WHERE ca.corpus_name_1 = %s', (corpus_id,))
-        return [row['id'] for row in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT ca.corpus_name_2 AS id '
+                'FROM corpus_alignment AS ca '
+                'WHERE ca.corpus_name_1 = %s', (corpus_id,))
+            return [row['id'] async for row in cursor]
 
     async def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
                            for k, v in list(STRUCT_COLS_MAP.items())]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
-        cursor = self._db.cursor()
-        await cursor.execute(sql, (corpus_id,))
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(sql, (corpus_id,))
+            return await cursor.fetchall()
 
     async def load_corpus_structattrs(self, corpus_id: str, structure_id: Optional[str] = None) -> Iterable[Dict[str, Any]]:
-        cursor = self._db.cursor()
-        if structure_id:
-            sql = (
-                'SELECT {0}, dt_format, structure_name, name '
-                'FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s').format(
+        async with self._db.cursor() as cursor:
+            if structure_id:
+                sql = (
+                    'SELECT {0}, dt_format, structure_name, name '
+                    'FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s').format(
+                        ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+                await cursor.execute(sql, (corpus_id, structure_id))
+            else:
+                sql = 'SELECT {0}, dt_format, structure_name, name FROM corpus_structattr WHERE corpus_name = %s'.format(
                     ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
-            await cursor.execute(sql, (corpus_id, structure_id))
-        else:
-            sql = 'SELECT {0}, dt_format, structure_name, name FROM corpus_structattr WHERE corpus_name = %s'.format(
-                ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
-            await cursor.execute(sql, (corpus_id,))
-        return cursor.fetchall()
+                await cursor.execute(sql, (corpus_id,))
+            return await cursor.fetchall()
 
     async def load_subcorpattrs(self, corpus_id: str) -> List[str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT cs.structure_name AS struct, cs.name AS structattr '
-            'FROM corpus_structattr AS cs '
-            'WHERE cs.subcorpattrs_idx > -1 AND cs.corpus_name = %s '
-            'ORDER BY cs.subcorpattrs_idx', (corpus_id,))
-        return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT cs.structure_name AS struct, cs.name AS structattr '
+                'FROM corpus_structattr AS cs '
+                'WHERE cs.subcorpattrs_idx > -1 AND cs.corpus_name = %s '
+                'ORDER BY cs.subcorpattrs_idx', (corpus_id,))
+            return ['{0}.{1}'.format(x['struct'], x['structattr']) async for x in cursor]
 
     async def load_freqttattrs(self, corpus_id: str) -> List[str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT cs.structure_name AS struct, cs.name AS structattr '
-            'FROM corpus_structattr AS cs '
-            'WHERE cs.freqttattrs_idx > -1 AND cs.corpus_name = %s '
-            'ORDER BY cs.freqttattrs_idx', (corpus_id,))
-        return ['{0}.{1}'.format(x['struct'], x['structattr']) for x in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT cs.structure_name AS struct, cs.name AS structattr '
+                'FROM corpus_structattr AS cs '
+                'WHERE cs.freqttattrs_idx > -1 AND cs.corpus_name = %s '
+                'ORDER BY cs.freqttattrs_idx', (corpus_id,))
+            return ['{0}.{1}'.format(x['struct'], x['structattr']) async for x in cursor]
 
     async def load_tckc_providers(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
-            (corpus_id,))
-        return cursor.fetchall()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT provider, type, is_kwic_view FROM kontext_tckc_corpus WHERE corpus_name = %s ORDER BY display_order',
+                (corpus_id,))
+            return await cursor.fetchall()
 
     async def corpus_access(self, user_id: str, corpus_id: str) -> CorpusAccess:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
-            'FROM ( '
-            f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
-            f'    {self._user_acc_table}.limited AS limited '
-            f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
-            '  UNION '
-            f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
-            f'    {self._group_acc_table}.limited AS limited '
-            f'  FROM {self._group_acc_table} '
-            f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-            f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
-            f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
-            ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
-            'ORDER BY ucp.limited LIMIT 1',
-            (user_id, user_id, user_id, corpus_id))
-        row = cursor.fetchone()
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+                'FROM ( '
+                f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
+                f'    {self._user_acc_table}.limited AS limited '
+                f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
+                '  UNION '
+                f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
+                f'    {self._group_acc_table}.limited AS limited '
+                f'  FROM {self._group_acc_table} '
+                f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
+                f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
+                f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
+                ') as ucp '
+                f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
+                'ORDER BY ucp.limited LIMIT 1',
+                (user_id, user_id, user_id, corpus_id))
+            row = await cursor.fetchone()
         if not row:
             return CorpusAccess(False, False, '')
         return CorpusAccess(False, True, row['variant'] if row['variant'] else '')
 
     async def get_permitted_corpora(self, user_id: str) -> List[str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
-            'FROM ( '
-            f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
-            f'    {self._user_acc_table}.limited AS limited '
-            f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
-            '  UNION '
-            f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
-            f'     {self._group_acc_table}.limited AS limited '
-            f'  FROM {self._group_acc_table} '
-            f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-            f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
-            f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
-            ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
-        return [r['corpus_id'] for r in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+                'FROM ( '
+                f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
+                f'    {self._user_acc_table}.limited AS limited '
+                f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
+                '  UNION '
+                f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
+                f'     {self._group_acc_table}.limited AS limited '
+                f'  FROM {self._group_acc_table} '
+                f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
+                f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
+                f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
+                ') as ucp '
+                f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
+            return [r['corpus_id'] async for r in cursor]
 
     async def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, '
-            'ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, '
-            'GROUP_CONCAT(CONCAT_WS(\',\',tpc.tag_search_pattern,tpc.pos) SEPARATOR \',\') AS patterns_pos '
-            'FROM tagset AS t '
-            'JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
-            'LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name '
-            'WHERE ct.corpus_name = %s '
-            'GROUP BY tagset_name', (corpus_id, ))
-        return [
-            TagsetInfo(
-                ident=row['tagset_name'],
-                type=row['tagset_type'],
-                corpus_name=row['corpus_name'],
-                pos_attr=row['pos_attr'],
-                feat_attr=row['feat_attr'],
-                widget_enabled=bool(row['kontext_widget_enabled']),
-                doc_url_local=row['doc_url_local'],
-                doc_url_en=row['doc_url_en'],
-                pos_category=[
-                    PosCategoryItem(*pattern_pos)
-                    for pattern_pos in list(zip(row['patterns_pos'].split(',')[::2], row['patterns_pos'].split(',')[1::2]))
-                    if pattern_pos
-                ]
-            )
-            for row in cursor
-        ]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT ct.corpus_name, ct.pos_attr, ct.feat_attr, t.tagset_type, ct.tagset_name, '
+                'ct.kontext_widget_enabled, t.doc_url_local, t.doc_url_en, '
+                'GROUP_CONCAT(CONCAT_WS(\',\',tpc.tag_search_pattern,tpc.pos) SEPARATOR \',\') AS patterns_pos '
+                'FROM tagset AS t '
+                'JOIN corpus_tagset AS ct ON ct.tagset_name = t.name '
+                'LEFT JOIN tagset_pos_category AS tpc ON ct.tagset_name = tpc.tagset_name '
+                'WHERE ct.corpus_name = %s '
+                'GROUP BY tagset_name', (corpus_id, ))
+            return [
+                TagsetInfo(
+                    ident=row['tagset_name'],
+                    type=row['tagset_type'],
+                    corpus_name=row['corpus_name'],
+                    pos_attr=row['pos_attr'],
+                    feat_attr=row['feat_attr'],
+                    widget_enabled=bool(row['kontext_widget_enabled']),
+                    doc_url_local=row['doc_url_local'],
+                    doc_url_en=row['doc_url_en'],
+                    pos_category=[
+                        PosCategoryItem(*pattern_pos)
+                        for pattern_pos in list(zip(row['patterns_pos'].split(',')[::2], row['patterns_pos'].split(',')[1::2]))
+                        if pattern_pos
+                    ]
+                )
+                async for row in cursor
+            ]
 
     async def load_interval_attrs(self, corpus_id):
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT interval_struct, interval_attr, widget '
-            'FROM kontext_interval_attr '
-            'WHERE corpus_name = %s', (corpus_id,))
-        return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) for r in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT interval_struct, interval_attr, widget '
+                'FROM kontext_interval_attr '
+                'WHERE corpus_name = %s', (corpus_id,))
+            return [('{0}.{1}'.format(r['interval_struct'], r['interval_attr']), r['widget']) async for r in cursor]
 
     async def load_simple_query_default_attrs(self, corpus_id: str) -> List[str]:
-        cursor = self._db.cursor()
-        await cursor.execute(
-            'SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = %s',
-            (corpus_id,))
-        return [r['pos_attr'] for r in cursor.fetchall()]
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                'SELECT pos_attr FROM kontext_simple_query_default_attrs WHERE corpus_name = %s',
+                (corpus_id,))
+            return [r['pos_attr'] async for r in cursor]

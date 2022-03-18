@@ -69,7 +69,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def open(self, data_id: str) -> Dict:
+    async def open(self, data_id: str) -> Dict:
         """
         Load operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -82,7 +82,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def store(self, user_id: int, curr_data: Dict, prev_data: Optional[Dict] = None) -> str:
+    async def store(self, user_id: int, curr_data: Dict, prev_data: Optional[Dict] = None) -> str:
         """
         Store a current operation (defined in curr_data) into the database. If also prev_date argument is
         provided then a comparison is performed and based on the result, new record is created and new
@@ -99,7 +99,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
+    async def archive(self, user_id: int, conc_id: str, revoke: bool = False) -> Tuple[int, Dict[str, Any]]:
         """
         Make the concordance record persistent. For implementations which
         archive concordances automatically this can be just an empty
@@ -120,7 +120,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def is_archived(self, conc_id: str) -> bool:
+    async def is_archived(self, conc_id: str) -> bool:
         """
         arguments:
             conc_id -- a concordance hash
@@ -130,7 +130,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> bool:
+    async def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> bool:
         """
         returns:
             True if the concordance will be archived else False
@@ -180,7 +180,7 @@ class AbstractQueryPersistence(abc.ABC):
         """
         ans = []
         attr_list = plugin_ctx.current_corpus.get_posattrs()
-        data = self.open(last_id)  # type: ignore
+        data = await self.open(last_id)
         if data is not None:
             form_data = upgrade_stored_record(data.get('lastop_form', {}), attr_list)
             ans.append(await conc_form_args_factory(
@@ -188,7 +188,7 @@ class AbstractQueryPersistence(abc.ABC):
         limit = 100
         while data is not None and data.get('prev_id') and limit > 0:
             prev_id = data['prev_id']
-            data = self.open(prev_id)  # type: ignore
+            data = await self.open(prev_id)
             if data is None:
                 raise QueryPersistenceRecNotFound(f'no data found for query "{prev_id}"')
             else:

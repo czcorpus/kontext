@@ -20,76 +20,70 @@ from typing import Union, Tuple
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../..')))
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../scripts')))
-import autoconf
 from action.plugin import initializer
 import plugins
 initializer.init_plugin('integration_db')
 initializer.init_plugin('auth')
 
 
-def add_corpora(user_id, corpora):
-    with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        for corp in corpora:
-            try:
-                cursor.execute(
-                    'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
-                    'VALUES (%s, %s, 0)', (user_id, corp))
-            except Exception as ex:
-                print(ex)
+def add_corpora(cursor, user_id, corpora):
+    for corp in corpora:
+        try:
+            cursor.execute(
+                'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
+                'VALUES (%s, %s, 0)', (user_id, corp))
+        except Exception as ex:
+            print(ex)
 
 
-def remove_corpora(user_id, corpora):
-    with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        for corp in corpora:
-            try:
-                cursor.execute(
-                    'DELETE FROM kontext_user_access '
-                    'WHERE user_id = %s AND corpus_name %s', (user_id, corp))
-            except Exception as ex:
-                print(ex)
-
-
-def remove_all_corpora(user_id):
-    with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
+def remove_corpora(cursor, user_id, corpora):
+    for corp in corpora:
         try:
             cursor.execute(
                 'DELETE FROM kontext_user_access '
-                'WHERE user_id = %s', (user_id,))
+                'WHERE user_id = %s AND corpus_name %s', (user_id, corp))
         except Exception as ex:
             print(ex)
 
 
-def list_corpora(user_id, username):
+def remove_all_corpora(cursor, user_id):
+    try:
+        cursor.execute(
+            'DELETE FROM kontext_user_access '
+            'WHERE user_id = %s', (user_id,))
+    except Exception as ex:
+        print(ex)
+
+
+def list_corpora(cursor, user_id, username):
     print()
     print(f'User {username} (ID={user_id}):')
-    with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        try:
-            cursor.execute(
-                'SELECT corpus_name FROM kontext_user_access WHERE user_id = %s', (user_id,))
-            print('  individual access to:\n    {}'.format(', '.join(row['corpus_name'] for row in cursor.fetchall())))
+    try:
+        cursor.execute(
+            'SELECT corpus_name FROM kontext_user_access WHERE user_id = %s', (user_id,))
+        print('  individual access to:\n    {}'.format(
+            ', '.join(row['corpus_name'] for row in cursor.fetchall())))
 
-            cursor.execute(
-                'SELECT corpus_name FROM kontext_group_access kga '
-                'JOIN kontext_user AS ku ON ku.group_access = kga.group_access '
-                'WHERE ku.id = %s', (user_id,)
-            )
-            print('  group access to:\n    {}'.format(', '.join(row['corpus_name'] for row in cursor.fetchall())))
-        except Exception as ex:
-            print(ex)
+        cursor.execute(
+            'SELECT corpus_name FROM kontext_group_access kga '
+            'JOIN kontext_user AS ku ON ku.group_access = kga.group_access '
+            'WHERE ku.id = %s', (user_id,)
+        )
+        print('  group access to:\n    {}'.format(
+            ', '.join(row['corpus_name'] for row in cursor.fetchall())))
+    except Exception as ex:
+        print(ex)
 
 
 def find_user(user_ident: Union[int, str]) -> Tuple[Union[int, None], Union[str, None]]:
     with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        if type(user_ident) is int:
-            cursor.execute('SELECT id, username FROM kontext_user WHERE id = %s', (user_ident,))
-        else:
-            cursor.execute('SELECT id, username FROM kontext_user WHERE username = %s', (user_ident,))
-        row = cursor.fetchone()
+        with auth.db.cursor_sync() as cursor:
+            if type(user_ident) is int:
+                cursor.execute('SELECT id, username FROM kontext_user WHERE id = %s', (user_ident,))
+            else:
+                cursor.execute(
+                    'SELECT id, username FROM kontext_user WHERE username = %s', (user_ident,))
+            row = cursor.fetchone()
         if row:
             return row['id'], row['username']
         return None, None
@@ -114,14 +108,18 @@ if __name__ == '__main__':
         print(('user [{0}] not found'.format(args.user_ident)))
         sys.exit(1)
 
-    if args.action == 'add':
-        add_corpora(user_id, import_corplist(args.corpora))
-    elif args.action == 'remove':
-        remove_corpora(user_id, import_corplist(args.corpora))
-    elif args.action == 'remove_all':
-        remove_all_corpora(user_id)
-    elif args.action == 'list':
-        list_corpora(user_id, username)
-    else:
-        print(('Unknown action {0}'.format(args.action)))
-        sys.exit(1)
+    with plugins.runtime.AUTH as auth:
+        with auth.db.connection() as conn:
+            with conn.cursor() as cursor:
+                if args.action == 'add':
+                    add_corpora(cursor, user_id, import_corplist(args.corpora))
+                elif args.action == 'remove':
+                    remove_corpora(cursor, user_id, import_corplist(args.corpora))
+                elif args.action == 'remove_all':
+                    remove_all_corpora(cursor, user_id)
+                elif args.action == 'list':
+                    list_corpora(cursor, user_id, username)
+                else:
+                    print(('Unknown action {0}'.format(args.action)))
+                    sys.exit(1)
+        conn.commit()

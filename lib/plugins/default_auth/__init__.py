@@ -80,7 +80,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self._on_register_get_corpora = on_register_get_corpora
         self._case_sensitive_corpora_names = case_sensitive_corpora_names
 
-    def validate_user(self, plugin_ctx, username, password):
+    async def validate_user(self, plugin_ctx, username, password):
         user_data = self._find_user(username)
         valid_pwd = False
         if user_data:
@@ -115,7 +115,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self.sessions.delete(session)
         session.clear()
 
-    def update_user_password(self, plugin_ctx, user_id, password):
+    async def update_user_password(self, plugin_ctx, user_id, password):
         """
         Updates user's password.
         There is no need to hash/encrypt the password - function does it automatically.
@@ -144,7 +144,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
-    def permitted_corpora(self, user_dict) -> List[str]:
+    async def permitted_corpora(self, user_dict) -> List[str]:
         corpora = self.db.get(mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
@@ -153,7 +153,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
 
-    def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx):
         user_key = mk_user_key(plugin_ctx.user_id)
         info = self.db.get(user_key)
         info.pop('pwd_hash', None)
@@ -212,17 +212,17 @@ class DefaultAuthHandler(AbstractInternalAuth):
             'The value must be at least %s characters long and must contain only a..z, A..Z, 0..9, _, - characters')
             % self.MIN_USERNAME_LENGTH)
 
-    def validate_new_username(self, plugin_ctx, username):
+    async def validate_new_username(self, plugin_ctx, username):
         avail = self._find_user(username) is None and 'admin' not in username
         valid = re.match(r'^[a-zA-Z0-9_-]{3,}$', username) is not None
         return avail, valid
 
-    def sign_up_user(self, plugin_ctx, credentials):
+    async def sign_up_user(self, plugin_ctx, credentials):
         token = SignUpToken(user_data=credentials,
                             label=plugin_ctx.translate('KonText sign up confirmation'),
                             ttl=self._confirmation_token_ttl)
         errors = defaultdict(lambda: [])
-        avail_un, valid_un = self.validate_new_username(plugin_ctx, credentials['username'])
+        avail_un, valid_un = await self.validate_new_username(plugin_ctx, credentials['username'])
         if not avail_un:
             errors['username'].append(plugin_ctx.translate('Username not available'))
         if not valid_un:
@@ -245,7 +245,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         credentials['password'] = mk_pwd_hash_default(credentials['password'])
         del credentials['password2']
         if len(errors) == 0:
-            token.save(self.db)
+            await token.save(self.db)
             ok = self.send_confirmation_mail(plugin_ctx, credentials['email'], credentials['username'],
                                              credentials['firstname'], credentials['lastname'], token)
             if not ok:
@@ -296,9 +296,9 @@ class DefaultAuthHandler(AbstractInternalAuth):
             avail = (self.db.get(mk_user_key(v)) is None)
         return v
 
-    def sign_up_confirm(self, plugin_ctx, key):
+    async def sign_up_confirm(self, plugin_ctx, key):
         token = SignUpToken(value=key)
-        token.load(self.db)
+        await token.load(self.db)
         if token.is_stored():
             user_test = self.db.hash_get(self.USER_INDEX_KEY, token.user['username'])
             if user_test:
@@ -314,14 +314,14 @@ class DefaultAuthHandler(AbstractInternalAuth):
             self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
             self.db.set(self.LAST_USER_ID_KEY, new_id)
             self.db.set(mk_list_key(new_id), self._on_register_get_corpora)
-            token.delete(self.db)
+            await token.delete(self.db)
             return dict(ok=True, label=token.label)
         else:
             return dict(ok=False)
 
-    def get_form_props_from_token(self, key):
+    async def get_form_props_from_token(self, key):
         token = SignUpToken(value=key)
-        token.load(self.db)
+        await token.load(self.db)
         if token.is_stored():
             return token.user
         return None

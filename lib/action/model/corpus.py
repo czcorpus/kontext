@@ -204,7 +204,7 @@ class CorpusActionModel(UserActionModel):
                 merge_incoming_opts_to(options)
                 self._req.ctx.session['settings'] = options
 
-    def _restore_prev_query_params(self, form) -> bool:
+    async def _restore_prev_query_params(self, form) -> bool:
         """
         Restores previously stored concordance/pquery/wordlist query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
@@ -226,7 +226,7 @@ class CorpusActionModel(UserActionModel):
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
-                self._active_q_data = query_persistence.open(self._q_code)
+                self._active_q_data = await query_persistence.open(self._q_code)
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._active_q_data is not None:
@@ -253,10 +253,10 @@ class CorpusActionModel(UserActionModel):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
+    async def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                ts = qh.store(
+                ts = await qh.store(
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='conc')
                 return ts
@@ -311,7 +311,7 @@ class CorpusActionModel(UserActionModel):
         """
         req_args = await super().pre_dispatch(req_args)
         try:
-            self._restore_prev_query_params(req_args)
+            await self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = await self._check_corpus_access(req_args, self._action_props)
 
@@ -372,7 +372,7 @@ class CorpusActionModel(UserActionModel):
 
         return req_args
 
-    def post_dispatch(self, action_props, result, err_desc):
+    async def post_dispatch(self, action_props, result, err_desc):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """

@@ -67,15 +67,15 @@ class WordlistActionModel(CorpusActionModel):
                 self._active_q_data['form'], id=self._active_q_data['id'])
         return ans
 
-    def post_dispatch(self, action_props: ActionProps, result: Dict[str, Any], err_desc):
-        super().post_dispatch(action_props, result, err_desc)
+    async def post_dispatch(self, action_props: ActionProps, result: Dict[str, Any], err_desc):
+        await super().post_dispatch(action_props, result, err_desc)
         if action_props.mutates_result:
             with plugins.runtime.QUERY_HISTORY as qh, plugins.runtime.QUERY_PERSISTENCE as qp:
-                query_id = qp.store(user_id=self.session_get('user', 'id'),
+                query_id = await qp.store(user_id=self.session_get('user', 'id'),
                                     curr_data=dict(form=self._curr_wlform_args.to_qp(),
                                                    corpora=[self._curr_wlform_args.corpname],
                                                    usesubcorp=self._curr_wlform_args.usesubcorp))
-                ts = qh.store(
+                ts = await qh.store(
                     user_id=self.session_get('user', 'id'),
                     query_id=query_id, q_supertype='wlist')
                 for fn in self._on_query_store:

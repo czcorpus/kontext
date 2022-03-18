@@ -85,7 +85,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
             data = self._load_query(data.get('prev_id', ''), save_access=False)
         return data.get('corpora', []) if data is not None else []
 
-    def open(self, data_id):
+    async def open(self, data_id):
         ans = self._load_query(data_id, save_access=True)
         if ans is not None and 'corpora' not in ans:
             ans['corpora'] = self.find_used_corpora(ans.get('prev_id'))
@@ -126,7 +126,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
                 return arch_db
         return None
 
-    def store(self, user_id, curr_data, prev_data=None):
+    async def store(self, user_id, curr_data, prev_data=None):
         def records_differ(r1, r2):
             return (r1[QUERY_KEY] != r2[QUERY_KEY] or
                     r1.get('lines_groups') != r2.get('lines_groups'))
@@ -150,7 +150,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
     def _latest_archive(self):
         return self._archives[0]
 
-    def archive(self, user_id, conc_id, revoke=False):
+    async def archive(self, user_id, conc_id, revoke=False):
         archive_db = self.find_key_db(conc_id)
         if archive_db:
             cursor = archive_db.cursor()
@@ -190,10 +190,10 @@ class StableQueryPersistence(AbstractQueryPersistence):
         self._latest_archive.commit()
         return ans, archived_rec
 
-    def is_archived(self, conc_id):
+    async def is_archived(self, conc_id):
         return self.find_key_db(conc_id) is not None
 
-    def will_be_archived(self, plugin_ctx, conc_id: str):
+    async def will_be_archived(self, plugin_ctx, conc_id: str):
         return not self.is_archived(conc_id)\
             and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
             and not self._auth.is_anonymous(plugin_ctx.user_id)

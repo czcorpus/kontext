@@ -28,37 +28,38 @@ from plugin_types.auth.hash import mk_pwd_hash_default
 
 def import_user(data):
     with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
-        del data['pwd']
-        try:
-            cursor.execute(
-                'INSERT INTO kontext_user (username, firstname, lastname, email, affiliation, pwd_hash) '
-                'VALUES (%s, %s, %s, %s, %s, %s)',
-                (data['username'], data['firstname'], data['lastname'], data['email'], data.get('affiliation'),
-                 data['pwd_hash']))
-            user_id = cursor.lastrowid
-            for corp in data['permitted_corpora']:
-                cursor.execute(
-                    'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
-                    'VALUES (%s, %s, 0)', (user_id, corp))
-            auth.db.commit()
-            print(('Installed user {}'.format(data['username'])))
-            return 1
-        except Exception as ex:
-            print(ex)
-            return 0
+        with auth.db.connection_sync() as conn:
+            with conn.cursor() as cursor:
+                data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
+                del data['pwd']
+                try:
+                    cursor.execute(
+                        'INSERT INTO kontext_user (username, firstname, lastname, email, affiliation, pwd_hash) '
+                        'VALUES (%s, %s, %s, %s, %s, %s)',
+                        (data['username'], data['firstname'], data['lastname'], data['email'], data.get('affiliation'),
+                         data['pwd_hash']))
+                    user_id = cursor.lastrowid
+                    for corp in data['permitted_corpora']:
+                        cursor.execute(
+                            'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
+                            'VALUES (%s, %s, 0)', (user_id, corp))
+                    conn.commit()
+                    print(('Installed user {}'.format(data['username'])))
+                    return 1
+                except Exception as ex:
+                    print(ex)
+                    return 0
 
 
 def find_anonymous_user():
     with plugins.runtime.AUTH as auth:
-        cursor = auth.db.cursor()
-        cursor.execute('SELECT id FROM kontext_user WHERE username = \'anonymous\'')
-        row = cursor.fetchone()
-        if row:
-            print(
-                f'The anonymous user ID is {row["id"]}. '
-                'Please make sure config.xml (plugins/auth/anonymous_user_id) is configured properly.')
+        with auth.db.cursor_sync() as cursor:
+            cursor.execute('SELECT id FROM kontext_user WHERE username = \'anonymous\'')
+            row = cursor.fetchone()
+            if row:
+                print(
+                    f'The anonymous user ID is {row["id"]}. '
+                    'Please make sure config.xml (plugins/auth/anonymous_user_id) is configured properly.')
 
 
 if __name__ == '__main__':

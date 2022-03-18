@@ -91,11 +91,12 @@ if __name__ == '__main__':
         print(f'{unique_entries_count} entries will be inserted. ')
         print(f'{len(full_data) - unique_entries_count} duplicate entries will be ignored.')
 
-        cursor = integration_db.cursor()
-        cursor.executemany(
-            'INSERT IGNORE INTO kontext_query_history (user_id, query_id, q_supertype, created, name, corpus_name)'
-            'VALUES (%s, %s, %s, %s, %s, %s)',
-            full_data)
-        integration_db.commit()
+        with integration_db.connection_sync() as conn:
+            with conn.cursor() as cursor:
+                cursor.executemany(
+                    'INSERT IGNORE INTO kontext_query_history (user_id, query_id, q_supertype, created, name, corpus_name)'
+                    'VALUES (%s, %s, %s, %s, %s, %s)',
+                    full_data)
+            conn.commit()
 
         print(f'\n{max(cursor.rowcount, 0)} entries has been inserted.')
