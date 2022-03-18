@@ -16,13 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
 import logging
 
 
-class DefaultIntegrationDb(IntegrationDatabase[None, None]):
+class DefaultIntegrationDb(IntegrationDatabase[None, None, None, None]):
     """
     The default integration database is designed to make sure no plug-in will try to
     use integration_db without proper status check. It means that a correct plug-in
@@ -51,6 +51,14 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
 
     @asynccontextmanager
     async def cursor(self, dictionary=True):
+        raise PluginCompatibilityException(self._err_msg())
+
+    @contextmanager
+    def connection_sync(self):
+        raise PluginCompatibilityException(self._err_msg())
+
+    @contextmanager
+    def cursor_sync(self, dictionary=True):
         raise PluginCompatibilityException(self._err_msg())
 
     @property

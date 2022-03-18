@@ -188,13 +188,13 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                               keywords=keywords)
 
     async def list_corpora(self, plugin_ctx, substrs=None, keywords=None, min_size=0, max_size=None, requestable=False,
-                     offset=0, limit=-1, favourites=()):
+                           offset=0, limit=-1, favourites=()):
         user_id = plugin_ctx.user_dict['id']
         ans = OrderedDict()
         for row in await self._backend.list_corpora(
-            user_id, substrs=substrs, keywords=keywords, min_size=min_size,
-            max_size=max_size, requestable=requestable, offset=offset,
-            limit=limit, favourites=favourites):
+                user_id, substrs=substrs, keywords=keywords, min_size=min_size,
+                max_size=max_size, requestable=requestable, offset=offset,
+                limit=limit, favourites=favourites):
             ans[row['id']] = self.corpus_list_item_from_row(plugin_ctx, row)
         return ans
 
@@ -377,7 +377,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, integ_db: IntegrationDatabase[Connection, Cursor]):
+def create_instance(conf, user_items, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')

@@ -17,14 +17,28 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from contextlib import AbstractAsyncContextManager
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TypeVar, Generic, Optional
 
 N = TypeVar('N')
 R = TypeVar('R')
+SN = TypeVar('SN')
+SR = TypeVar('SR')
+
+T = TypeVar('T')
 
 
-class IntegrationDatabase(abc.ABC, Generic[N, R]):
+class AsyncDbContextManager(AbstractAsyncContextManager, Generic[T]):
+    async def __aenter__(self) -> T:
+        return await super().__aenter__()
+
+
+class DbContextManager(AbstractContextManager, Generic[T]):
+    def __enter__(self) -> T:
+        return super().__enter__()
+
+
+class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
     """
     Integration DB plugin allows sharing a single database connection pool across multiple plugins
     which can be convenient in case KonText is integrated into an existing information system with
@@ -88,15 +102,23 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         pass
 
     @abc.abstractmethod
-    def connection(self) -> AbstractAsyncContextManager[N]:
+    def connection(self) -> AsyncDbContextManager[N]:
         """
-        Return a connection to the integration database
+        Return an async connection to the integration database from pool
         """
         pass
 
     @abc.abstractmethod
-    def cursor(self, dictionary=True) -> AbstractAsyncContextManager[R]:
+    def cursor(self, dictionary=True) -> AsyncDbContextManager[R]:
         """
-        Create a new database cursor
+        Create a new async database cursor
         """
+        pass
+
+    @abc.abstractmethod
+    def connection_sync(self) -> DbContextManager[SN]:
+        pass
+
+    @abc.abstractmethod
+    def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
         pass

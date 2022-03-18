@@ -33,7 +33,6 @@ def create_instance(conf, auth, integ_db):
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(
             f'syntax_viewer2 uses integration_db[{integ_db.info}]')
-        # TODO asynchronous config load...
         corpora_conf = dsv.load_plugin_conf_from_db(integ_db)
     else:
         logging.getLogger(__name__).info(
