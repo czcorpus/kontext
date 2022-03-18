@@ -51,7 +51,7 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
     async def connection(self) -> N:
         raise PluginCompatibilityException(self._err_msg())
 
-    def cursor(self, dictionary=True, buffered=False):
+    async def cursor(self, dictionary=True):
         raise PluginCompatibilityException(self._err_msg())
 
     @property
@@ -64,21 +64,6 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
 
     def wait_for_environment(self):
         return None
-
-    async def execute(self, sql, args) -> R:
-        raise PluginCompatibilityException(self._err_msg())
-
-    async def executemany(self, sql, args_rows) -> R:
-        raise PluginCompatibilityException(self._err_msg())
-
-    async def start_transaction(self, isolation_level=None):
-        raise PluginCompatibilityException(self._err_msg())
-
-    async def commit(self):
-        raise PluginCompatibilityException(self._err_msg())
-
-    async def rollback(self):
-        raise PluginCompatibilityException(self._err_msg())
 
 
 def create_instance(_):

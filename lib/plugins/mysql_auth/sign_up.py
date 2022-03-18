@@ -16,13 +16,12 @@ import hashlib
 import uuid
 import datetime
 
-from aiomysql import Connection, Cursor
+from aiomysql import Connection
 
-from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.auth.sign_up import AbstractSignUpToken
 
 
-class SignUpToken(AbstractSignUpToken[IntegrationDatabase[Connection, Cursor]]):
+class SignUpToken(AbstractSignUpToken[Connection]):
     """
     Note: the class methods do not handle transactions - it's up to the calling method
     """

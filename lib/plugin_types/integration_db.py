@@ -17,7 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import TypeVar, Generic, Optional
+from contextlib import asynccontextmanager
+from typing import Generator, TypeVar, Generic, Optional
 
 N = TypeVar('N')
 R = TypeVar('R')
@@ -91,49 +92,18 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         """
         pass
 
+    @asynccontextmanager
     @abc.abstractmethod
-    async def connection(self) -> N:
+    async def connection(self) -> Generator[N, None, None]:
         """
         Return a connection to the integration database
         """
         pass
 
+    @asynccontextmanager
     @abc.abstractmethod
-    async def cursor(self, dictionary=True, buffered=False):
+    async def cursor(self, dictionary=True) -> Generator[R, None, None]:
         """
         Create a new database cursor
-        """
-        pass
-
-    @abc.abstractmethod
-    async def execute(self, sql, args) -> R:
-        pass
-
-    @abc.abstractmethod
-    async def executemany(self, sql, args_rows) -> R:
-        """
-        Execute a single query multiple times with different argument sets.
-        """
-        pass
-
-    @abc.abstractmethod
-    async def start_transaction(self, isolation_level=None):
-        """
-        Start a new transaction with optional custom isolation level
-        (typical values are: 'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE')
-        """
-        pass
-
-    @abc.abstractmethod
-    async def commit(self):
-        """
-        Commit the current transaction
-        """
-        pass
-
-    @abc.abstractmethod
-    async def rollback(self):
-        """
-        Rollback the current transaction
         """
         pass

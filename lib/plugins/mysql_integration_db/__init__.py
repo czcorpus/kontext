@@ -18,18 +18,19 @@
 
 from dataclasses import dataclass, asdict, field
 from plugin_types.integration_db import IntegrationDatabase
-from typing import Optional
+from typing import Generator, Optional
 from contextlib import asynccontextmanager
 import aiomysql
 
 
 @dataclass
-class ConnectionArgs:
+class PoolArgs:
     host: str
     db: str
     user: str
     password: str
     autocommit: bool
+    maxsize: int
     port: int = field(default=3306)
 
 
@@ -47,9 +48,9 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
     is done automatically.
     """
 
-    _conn: Optional[aiomysql.Connection]
+    _pool: Optional[aiomysql.Pool]
 
-    _conn_args: ConnectionArgs
+    _conn_args: PoolArgs
 
     _retry_delay: int
 
@@ -57,29 +58,32 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
 
     def __init__(self, host, database, user, password, pool_size, pool_name, autocommit, retry_delay, retry_attempts,
                  environment_wait_sec: int):
-        self._conn_args = ConnectionArgs(
-            host=host, db=database, user=user, password=password, autocommit=autocommit)
+        self._conn_args = PoolArgs(
+            host=host, db=database, user=user, password=password, autocommit=autocommit, maxsize=pool_size)
         self._retry_delay = retry_delay
         self._retry_attempts = retry_attempts
         self._environment_wait_sec = environment_wait_sec
-        self._conn = None
+        self._pool = None
 
-    async def connection(self) -> aiomysql.Connection:
-        if self._conn is None:
-            self._conn = await aiomysql.connect(**asdict(self._conn_args))
-        return self._conn
+    async def _init_pool(self):
+        if self._pool is None:
+            self._pool = await aiomysql.create_pool(**asdict(self._conn_args))
 
     @asynccontextmanager
-    async def cursor(self, dictionary=True, buffered=False):
-        if self._conn is None:
-            self._conn = await aiomysql.connect(**asdict(self._conn_args))
+    async def connection(self) -> Generator[aiomysql.Connection, None, None]:
+        await self._init_pool()
+        async with self._pool.acquire() as connection:
+            yield connection
 
-        if dictionary:
-            async with self._conn.cursor(aiomysql.DictCursor) as cursor:
-                yield cursor
-        else:
-            async with self._conn.cursor() as cursor:
-                yield cursor
+    @asynccontextmanager
+    async def cursor(self, dictionary=True) -> Generator[aiomysql.Cursor, None, None]:
+        async with self.connection() as connection:
+            if dictionary:
+                async with connection.cursor(aiomysql.DictCursor) as cursor:
+                    yield cursor
+            else:
+                async with connection.cursor() as cursor:
+                    yield cursor
 
     @property
     def is_active(self):
@@ -95,26 +99,6 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
 
     def wait_for_environment(self):
         None
-
-    async def execute(self, sql, args) -> aiomysql.Cursor:
-        cursor = await self.cursor(buffered=True)
-        await cursor.execute(sql, args)
-        print('##### CURSOR: {}'.format(cursor))
-        return cursor
-
-    async def executemany(self, sql, args_rows) -> aiomysql.Cursor:
-        cursor = await self.cursor()
-        await cursor.executemany(sql, args_rows)
-        return cursor
-
-    async def start_transaction(self, isolation_level=None):
-        await (await self.connection()).begin()
-
-    async def commit(self):
-        await (await self.connection()).commit()
-
-    async def rollback(self):
-        await (await self.connection()).rollback()
 
 
 def create_instance(conf):

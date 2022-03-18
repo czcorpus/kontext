@@ -327,35 +327,36 @@ class MysqlAuthHandler(AbstractInternalAuth):
         return mailing.send_mail(server, msg, [user_email])
 
     async def sign_up_confirm(self, plugin_ctx, key):
-        await self.db.start_transaction()
-        try:
-            token = SignUpToken(value=key)
-            await token.load(self.db)
-            if token.is_stored():
-                curr = await self._find_user(token.username)
-                if curr:
-                    raise SignUpNeedsUpdateException()
+        async with self.db.connection() as conn:
+            await conn.begin()
+            try:
+                token = SignUpToken(value=key)
+                await token.load(conn)
+                if token.is_stored():
+                    curr = await self._find_user(token.username)
+                    if curr:
+                        raise SignUpNeedsUpdateException()
 
-                async with self.db.cursor() as cursor:
-                    await cursor.execute(
-                        'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
-                        'VALUES (%s, %s, %s, %s, %s, %s)',
-                        (token.username, token.firstname, token.lastname,
-                         token.pwd_hash, token.email, token.affiliation))
-                    for corp in self._on_register_get_corpora:
+                    async with conn.cursor() as cursor:
                         await cursor.execute(
-                            'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
-                            'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
-                await token.delete(self.db)
-                await self.db.commit()
-                return dict(ok=True, label=token.label)
-            else:
-                await self.db.rollback()
-                return dict(ok=False)
-        except Exception as ex:
-            await self.db.rollback()
-            logging.getLogger(__name__).error(f'Failed to apply sign_up token {key}: {ex}')
-            raise ex
+                            'INSERT INTO kontext_user (username, firstname, lastname, pwd_hash, email, affiliation) '
+                            'VALUES (%s, %s, %s, %s, %s, %s)',
+                            (token.username, token.firstname, token.lastname,
+                             token.pwd_hash, token.email, token.affiliation))
+                        for corp in self._on_register_get_corpora:
+                            await cursor.execute(
+                                'INSERT INTO kontext_user_access (user_id, corpus_name, limited) '
+                                'VALUES (%s, %s, 0) ', (cursor.lastrowid, corp))
+                    await token.delete(conn)
+                    await conn.commit()
+                    return dict(ok=True, label=token.label)
+                else:
+                    await conn.rollback()
+                    return dict(ok=False)
+            except Exception as ex:
+                await conn.rollback()
+                logging.getLogger(__name__).error(f'Failed to apply sign_up token {key}: {ex}')
+                raise ex
 
     async def get_form_props_from_token(self, key):
         token = SignUpToken(value=key)
