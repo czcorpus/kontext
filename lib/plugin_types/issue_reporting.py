@@ -50,5 +50,5 @@ class AbstractIssueReporting(abc.ABC):
     def export_report_action(self, plugin_ctx: 'PluginCtx') -> Dict[Any, List[Callable[[Any], Any]]]:
         pass
 
-    def submit(self, plugin_ctx: 'PluginCtx', args: Dict[str, str]):
+    async def submit(self, plugin_ctx: 'PluginCtx', args: Dict[str, str]):
         pass

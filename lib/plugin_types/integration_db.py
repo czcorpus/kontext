@@ -17,18 +17,28 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TypeVar, Generic, Optional
 
 N = TypeVar('N')
 R = TypeVar('R')
+SN = TypeVar('SN')
+SR = TypeVar('SR')
+
+T = TypeVar('T')
 
 
-class AsyncCursor(Generic[R]):
+class AsyncDbContextManager(AbstractAsyncContextManager, Generic[T]):
+    async def __aenter__(self) -> T:
+        pass
 
-    pass
+
+class DbContextManager(AbstractContextManager, Generic[T]):
+    def __enter__(self) -> T:
+        pass
 
 
-class IntegrationDatabase(abc.ABC, Generic[N, R]):
+class IntegrationDatabase(abc.ABC, Generic[N, R, SN, SR]):
     """
     Integration DB plugin allows sharing a single database connection pool across multiple plugins
     which can be convenient in case KonText is integrated into an existing information system with
@@ -91,57 +101,24 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         """
         pass
 
-    @property
     @abc.abstractmethod
-    def connection(self) -> N:
+    def connection(self) -> AsyncDbContextManager[N]:
         """
-        Return a connection to the integration database
+        Return an async connection to the integration database from pool
         """
         pass
 
     @abc.abstractmethod
-    def cursor(self, dictionary=True, buffered=False) -> AsyncCursor[R]:
+    def cursor(self, dictionary=True) -> AsyncDbContextManager[R]:
         """
-        Create a new database cursor with asynchronous 'execute' 'executemany'
-        """
-        pass
-
-    @abc.abstractmethod
-    def cursor_sync(self, dictionary=True, buffered=False) -> R:
-        """
-        Create a new database cursor
+        Create a new async database cursor
         """
         pass
 
     @abc.abstractmethod
-    async def execute(self, sql, args):
+    def connection_sync(self) -> DbContextManager[SN]:
         pass
 
     @abc.abstractmethod
-    async def executemany(self, sql, args_rows):
-        """
-        Execute a single query multiple times with different argument sets.
-        """
-        pass
-
-    @abc.abstractmethod
-    def start_transaction(self, isolation_level=None):
-        """
-        Start a new transaction with optional custom isolation level
-        (typical values are: 'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ', 'SERIALIZABLE')
-        """
-        pass
-
-    @abc.abstractmethod
-    def commit(self):
-        """
-        Commit the current transaction
-        """
-        pass
-
-    @abc.abstractmethod
-    def rollback(self):
-        """
-        Rollback the current transaction
-        """
+    def cursor_sync(self, dictionary=True) -> DbContextManager[SR]:
         pass

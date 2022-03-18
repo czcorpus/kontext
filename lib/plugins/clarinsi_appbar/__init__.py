@@ -40,7 +40,7 @@ class ClarinSiTopBar(AbstractApplicationBar):
     def get_scripts(self, plugin_ctx):
         return self._js_urls
 
-    def get_contents(self, plugin_ctx, return_url):
+    async def get_contents(self, plugin_ctx, return_url):
         tpl_path = self.get_template(plugin_ctx.user_lang)
         if not os.path.exists(tpl_path):
             return f'template [{tpl_path}] does not exist!'

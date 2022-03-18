@@ -41,10 +41,10 @@ def uni(s):
 def lindat_login(self, request):
     with plugins.runtime.AUTH as auth:
         ans = {}
-        self._session['user'] = auth.validate_user(self._plugin_ctx,
-                                                   request.form.get(
-                                                       'username') if request.form else None,
-                                                   request.form.get('password') if request.form else None)
+        self._session['user'] = await auth.validate_user(self._plugin_ctx,
+                                                         request.form.get(
+                                                             'username') if request.form else None,
+                                                         request.form.get('password') if request.form else None)
         if not auth.is_anonymous(self._session['user'].get('id', None)):
             if request.args.get('redirectTo', None):
                 self.redirect(request.args.get('redirectTo'))
@@ -67,7 +67,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     ID_KEYS = ('HTTP_EPPN', 'HTTP_PERSISTENT_ID', 'HTTP_MAIL')
     RESERVED_USER = '__user_count'
 
-    def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx):
         raise NotImplementedError()
 
     def __init__(self, corplist, db, sessions, conf, failover):
@@ -93,7 +93,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         self._entitlement2group = {entitlement: group for entitlement, group
                                    in map(_e2g_splitter, self._conf.get('entitlements_to_groups', []))}
 
-    def validate_user(self, plugin_ctx, username, password):
+    async def validate_user(self, plugin_ctx, username, password):
         """
             Try to find the user using two methods.
         """

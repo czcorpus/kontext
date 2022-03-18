@@ -265,7 +265,7 @@ class DefaultCorplistProvider(CorplistProvider):
                 + ' ' + ' '.join('%s%s' % (self._tag_prefix, s) for s in query_keywords)
 
         ans = {'rows': []}
-        permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
+        permitted_corpora = await self._auth.permitted_corpora(plugin_ctx.user_dict)
 
         if filter_dict.get('minSize'):
             min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
@@ -731,8 +731,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         else:
             return '{0} [{1}]'.format(text, plugin_ctx.translate('translation not available'))
 
-    def _export_featured(self, plugin_ctx: PluginCtx):
-        permitted_corpora = self._auth.permitted_corpora(plugin_ctx.user_dict)
+    async def _export_featured(self, plugin_ctx: PluginCtx):
+        permitted_corpora = await self._auth.permitted_corpora(plugin_ctx.user_dict)
 
         def is_featured(o: CorpusInfo):
             return o.metadata.featured
@@ -769,7 +769,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         return dict(
             favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),
-            featured=self._export_featured(plugin_ctx),
+            featured=await self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in await self.all_keywords(plugin_ctx)],
             initial_keywords=initial_keywords,

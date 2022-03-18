@@ -22,14 +22,14 @@ An improved default_syntax viewer with rewritten tree rendering
 """
 
 import logging
+from plugin_types.integration_db import IntegrationDatabase
 import plugins
-import asyncio
 import plugins.default_syntax_viewer as dsv
 from .backend.manatee import ManateeBackend2
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, auth, integ_db):
+def create_instance(conf, auth, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(

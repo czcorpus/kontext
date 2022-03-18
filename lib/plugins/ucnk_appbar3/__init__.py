@@ -68,7 +68,7 @@ class ApplicationBar3(AbstractApplicationBar):
         toolbar_obj = plugin_ctx.get_shared('toolbar')
         return self._process_scripts(toolbar_obj.get('scripts', {}))
 
-    def get_contents(self, plugin_ctx, return_url):
+    async def get_contents(self, plugin_ctx, return_url):
         toolbar_obj = plugin_ctx.get_shared('toolbar')
         if toolbar_obj:
             return toolbar_obj.get('html')

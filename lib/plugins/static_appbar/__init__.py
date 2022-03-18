@@ -111,8 +111,8 @@ class StaticApplicationBar(AbstractApplicationBar):
     def get_scripts(self, plugin_ctx):
         return tuple(self._js_urls)
 
-    def get_contents(self, plugin_ctx, return_url):
-        user_info = self._auth.get_user_info(plugin_ctx)
+    async def get_contents(self, plugin_ctx, return_url):
+        user_info = await self._auth.get_user_info(plugin_ctx)
         lang = plugin_ctx.user_lang.split('_')[0]
         html = self._html_files.get(lang)
         if not html:

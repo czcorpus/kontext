@@ -22,6 +22,8 @@ from datetime import datetime
 import time
 import random
 import logging
+from plugin_types.auth import AbstractAuth
+from plugin_types.query_persistence import AbstractQueryPersistence
 
 from plugin_types.query_history import AbstractQueryHistory
 from plugins import inject
@@ -52,7 +54,7 @@ class QueryHistory(AbstractQueryHistory):
 
     DEFAULT_TTL_DAYS = 10
 
-    def __init__(self, conf, db, query_persistence, auth):
+    def __init__(self, conf, db, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
@@ -67,8 +69,8 @@ class QueryHistory(AbstractQueryHistory):
                 'QueryHistory - ttl_days not set, using default value {0} day(s) for query history records'.format(
                     self.ttl_days))
         self.db = db
-        self._query_persistence = query_persistence
-        self._auth = auth
+        self._query_persistence: AbstractQueryPersistence = query_persistence
+        self._auth: AbstractAuth = auth
         self._page_num_records = int(conf.get('plugins', 'query_history')['page_num_records'])
 
     def _current_timestamp(self):
@@ -80,7 +82,7 @@ class QueryHistory(AbstractQueryHistory):
     def _mk_tmp_key(self, user_id):
         return f'query_history:user:{user_id}:new'
 
-    def store(self, user_id, query_id, q_supertype):
+    async def store(self, user_id, query_id, q_supertype):
         """
         stores information about a query; from time
         to time also check remove too old records
@@ -92,10 +94,10 @@ class QueryHistory(AbstractQueryHistory):
         item = dict(created=ts, query_id=query_id, name=None, q_supertype=q_supertype)
         self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
-            self._delete_old_records(user_id)
+            await self._delete_old_records(user_id)
         return ts
 
-    def make_persistent(self, user_id, query_id, q_supertype, created, name):
+    async def make_persistent(self, user_id, query_id, q_supertype, created, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         last_match_idx = -1
@@ -107,14 +109,14 @@ class QueryHistory(AbstractQueryHistory):
         if last_match_idx > -1:
             data[last_match_idx]['name'] = name
             self.db.list_set(k, last_match_idx, data[last_match_idx])
-            self._query_persistence.archive(user_id, query_id)
+            await self._query_persistence.archive(user_id, query_id)
         else:
             ts = self._current_timestamp()
             item = dict(created=ts, query_id=query_id, name=name, q_supertype=q_supertype)
             self.db.list_append(self._mk_key(user_id), item)
         return True
 
-    def make_transient(self, user_id, query_id, created, name):
+    async def make_transient(self, user_id, query_id, created, name):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         for i, item in enumerate(data):
@@ -124,7 +126,7 @@ class QueryHistory(AbstractQueryHistory):
                 return True
         return False
 
-    def delete(self, user_id, query_id, created):
+    async def delete(self, user_id, query_id, created):
         k = self._mk_key(user_id)
         data = self.db.list_get(k)
         self.db.remove(k)
@@ -136,13 +138,13 @@ class QueryHistory(AbstractQueryHistory):
                 deleted += 1
         return deleted
 
-    def _is_paired_with_conc(self, data) -> bool:
+    async def _is_paired_with_conc(self, data) -> bool:
         q_id = data['query_id']
-        return self._query_persistence.open(q_id) is not None
+        return await self._query_persistence.open(q_id) is not None
 
-    def _merge_conc_data(self, data):
+    async def _merge_conc_data(self, data):
         q_id = data['query_id']
-        edata = self._query_persistence.open(q_id)
+        edata = await self._query_persistence.open(q_id)
 
         def get_ac_val(data, name, corp): return data[name][corp] if name in data else None
 
@@ -183,7 +185,7 @@ class QueryHistory(AbstractQueryHistory):
         else:
             return None   # persistent result not available
 
-    def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
+    async def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
                          archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
@@ -211,7 +213,7 @@ class QueryHistory(AbstractQueryHistory):
                 item_qs = item.get('q_supertype', item.get('qtype'))
                 item['q_supertype'] = item_qs  # upgrade possible deprecated qtype
                 if item_qs is None or item_qs == 'conc':
-                    tmp = self._merge_conc_data(item)
+                    tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
                     tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
@@ -219,7 +221,7 @@ class QueryHistory(AbstractQueryHistory):
                         ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
                     full_data.append(tmp)
                 elif item_qs == 'pquery':
-                    stored = self._query_persistence.open(item['query_id'])
+                    stored = await self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
@@ -227,7 +229,7 @@ class QueryHistory(AbstractQueryHistory):
                     q_join = []
 
                     for q in stored.get('form', {}).get('conc_ids', []):
-                        stored_q = self._query_persistence.open(q)
+                        stored_q = await self._query_persistence.open(q)
                         if stored_q is None:
                             logging.getLogger(__name__).warning(
                                 'Missing conc for pquery: {}'.format(q))
@@ -238,7 +240,7 @@ class QueryHistory(AbstractQueryHistory):
                     if q_subset is not None:
                         for q in q_subset.get('conc_ids', []):
                             max_ratio = q_subset.get('max_non_matching_ratio', 0)
-                            stored_q = self._query_persistence.open(q)
+                            stored_q = await self._query_persistence.open(q)
                             if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
                                 logging.getLogger(__name__).warning(
                                     'Missing conc for pquery subset: {}'.format(q))
@@ -249,7 +251,7 @@ class QueryHistory(AbstractQueryHistory):
                     q_superset = stored.get('form', {}).get('conc_superset', None)
                     if q_superset is not None:
                         max_ratio = q_superset.get('max_non_matching_ratio', 0)
-                        stored_q = self._query_persistence.open(q_superset['conc_id'])
+                        stored_q = await self._query_persistence.open(q_superset['conc_id'])
                         if stored_q is None or 'query' not in stored_q.get('lastop_form', {}).get('form_type'):
                             logging.getLogger(__name__).warning(
                                 'Missing conc for pquery superset: {}'.format(q_superset['conc_id']))
@@ -262,7 +264,7 @@ class QueryHistory(AbstractQueryHistory):
                     tmp.update(stored)
                     full_data.append(tmp)
                 elif item_qs == 'wlist':
-                    stored = self._query_persistence.open(item['query_id'])
+                    stored = await self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = dict(
@@ -317,7 +319,7 @@ class QueryHistory(AbstractQueryHistory):
 
         return full_data
 
-    def _delete_old_records(self, user_id):
+    async def _delete_old_records(self, user_id):
         """
         Deletes records older than ttl_days. Named records are
         kept intact.
@@ -330,7 +332,7 @@ class QueryHistory(AbstractQueryHistory):
         new_list = []
         for item in curr_data:
             if item.get('name', None) is not None:
-                if self._is_paired_with_conc(item):
+                if await self._is_paired_with_conc(item):
                     new_list.append(item)
                 else:
                     logging.getLogger(__name__).warning(
@@ -342,8 +344,7 @@ class QueryHistory(AbstractQueryHistory):
             self.db.list_append(tmp_key, item)
         self.db.rename(tmp_key, data_key)
 
-    @as_async
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         return {'page_num_records': self._page_num_records}
 
 

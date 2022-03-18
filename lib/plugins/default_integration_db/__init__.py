@@ -16,16 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import TypeVar
+from contextlib import asynccontextmanager, contextmanager
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
 import logging
 
-N = TypeVar('N')
-R = TypeVar('R')
 
-
-class DefaultIntegrationDb(IntegrationDatabase[None, None]):
+class DefaultIntegrationDb(IntegrationDatabase[None, None, None, None]):
     """
     The default integration database is designed to make sure no plug-in will try to
     use integration_db without proper status check. It means that a correct plug-in
@@ -48,11 +45,20 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
                                             'incorrectly that a concrete instance is enabled.')
         return 'DefaultIntegrationDb provides no true database integration'
 
-    @property
-    def connection(self) -> N:
+    @asynccontextmanager
+    async def connection(self):
         raise PluginCompatibilityException(self._err_msg())
 
-    def cursor(self, dictionary=True, buffered=False) -> R:
+    @asynccontextmanager
+    async def cursor(self, dictionary=True):
+        raise PluginCompatibilityException(self._err_msg())
+
+    @contextmanager
+    def connection_sync(self):
+        raise PluginCompatibilityException(self._err_msg())
+
+    @contextmanager
+    def cursor_sync(self, dictionary=True):
         raise PluginCompatibilityException(self._err_msg())
 
     @property
@@ -65,21 +71,6 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
 
     def wait_for_environment(self):
         return None
-
-    def execute(self, sql, args):
-        raise PluginCompatibilityException(self._err_msg())
-
-    def executemany(self, sql, args_rows):
-        raise PluginCompatibilityException(self._err_msg())
-
-    def start_transaction(self, isolation_level=None):
-        raise PluginCompatibilityException(self._err_msg())
-
-    def commit(self):
-        raise PluginCompatibilityException(self._err_msg())
-
-    def rollback(self):
-        raise PluginCompatibilityException(self._err_msg())
 
 
 def create_instance(_):

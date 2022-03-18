@@ -20,12 +20,11 @@
 A corparch database backend for MySQL/MariaDB.
 
 """
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
 from typing import Union
 
+from plugins.mysql_integration_db import MySqlIntegrationDb
+
 from plugin_types.user_items import FavoriteItem
-from plugin_types.integration_db import IntegrationDatabase
 from plugins.common.mysql import MySQLOps
 
 
@@ -42,7 +41,7 @@ class Backend:
 
     def __init__(
             self,
-            db: Union[IntegrationDatabase[MySQLConnection, MySQLCursor], MySQLOps],
+            db: Union[MySqlIntegrationDb, MySQLOps],
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             group_acc_table: str = DFLT_GROUP_ACC_TABLE,
@@ -60,7 +59,7 @@ class Backend:
         self._group_acc_group_attr = group_acc_group_attr
 
     async def get_favitems(self, user_id: int):
-        with self._db.cursor() as cursor:
+        async with self._db.cursor() as cursor:
             await cursor.execute(
                 'SELECT fav.id as id, fav.name, fav.subcorpus_id, fav.subcorpus_orig_id, '
                 " GROUP_CONCAT(t.corpus_name SEPARATOR ',') as corpora, "
@@ -72,7 +71,7 @@ class Backend:
                 'GROUP BY id ', (user_id,))
 
             ans = []
-            for item in cursor:
+            async for item in cursor:
                 item['corpora'] = [{'name': corp, 'id': corp}
                                    for corp in item['corpora'].split(',')]
                 item['size'] = int(item['sizes'].split(',')[0])
@@ -81,30 +80,30 @@ class Backend:
         return ans
 
     async def count_favitems(self, user_id: int) -> int:
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 'SELECT COUNT(*) AS count '
                 'FROM kontext_user_fav_item '
                 'WHERE user_id = %s ', (user_id,))
-            return cursor.fetchone()
+            return await cursor.fetchone()
 
     async def insert_favitem(self, user_id: int, item: FavoriteItem):
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 'INSERT INTO kontext_user_fav_item (name, subcorpus_id, subcorpus_orig_id, user_id) '
                 'VALUES (%s, %s, %s, %s) ', (item.name, item.subcorpus_id, item.subcorpus_orig_id, user_id))
 
             favitem_id: int = cursor.lastrowid
-            cursor.executemany(
+            await cursor.executemany(
                 'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
                 'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
 
-        self._db.commit()
+        await self._db.commit()
         item.ident = str(favitem_id)  # need to update new id
 
     async def delete_favitem(self, item_id: int):
-        with self._db.cursor() as cursor:
-            cursor.execute(
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
                 'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
-            cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
-        self._db.commit()
+            await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
+        await self._db.commit()

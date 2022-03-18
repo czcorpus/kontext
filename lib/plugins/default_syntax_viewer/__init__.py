@@ -135,12 +135,12 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
                 f'Failed to load syntax viewer conf for {corp}: {ex}')
             return None
 
-    cursor = db.cursor_sync()
-    cursor.execute(
-        'SELECT name, syntax_viewer_conf_json '
-        f'FROM {corp_table} '
-        'WHERE syntax_viewer_conf_json IS NOT NULL')
-    return {row['name']: parse_conf(row['name'], row['syntax_viewer_conf_json']) for row in cursor}
+    with db.cursor_sync() as cursor:
+        cursor.execute(
+            'SELECT name, syntax_viewer_conf_json '
+            f'FROM {corp_table} '
+            'WHERE syntax_viewer_conf_json IS NOT NULL')
+        return {row['name']: parse_conf(row['name'], row['syntax_viewer_conf_json']) for row in cursor}
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)

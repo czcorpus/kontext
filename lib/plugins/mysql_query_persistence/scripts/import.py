@@ -43,18 +43,20 @@ def import_sqlite_db(db_path, chunk_size):
         while True:
             data = cursor.fetchmany(chunk_size)
             if len(data):
-                mysql_db.executemany(
-                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access, last_access) '
-                    'VALUES (%s, %s, %s, %s, %s)',
-                    [(
-                        d[0],
-                        d[1],
-                        datetime.datetime.fromtimestamp(d[2]).isoformat(),
-                        d[3],
-                        datetime.datetime.fromtimestamp(d[4]).isoformat() if d[4] else None
-                    ) for d in data]
-                )
-                mysql_db.commit()
+                with mysql_db.connection_sync() as conn:
+                    with conn.cursor() as cursor:
+                        cursor.executemany(
+                            'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access, last_access) '
+                            'VALUES (%s, %s, %s, %s, %s)',
+                            [(
+                                d[0],
+                                d[1],
+                                datetime.datetime.fromtimestamp(d[2]).isoformat(),
+                                d[3],
+                                datetime.datetime.fromtimestamp(d[4]).isoformat() if d[4] else None
+                            ) for d in data]
+                        )
+                    conn.commit()
             else:
                 break
 

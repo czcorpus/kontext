@@ -33,6 +33,7 @@ import http.client
 import json
 import ssl
 import logging
+from plugin_types.integration_db import IntegrationDatabase
 
 import plugins
 from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
@@ -194,19 +195,19 @@ class CentralAuth(AbstractRemoteAuth):
         _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
         return CorpusAccess(False, access, variant)
 
-    def permitted_corpora(self, user_dict):
+    async def permitted_corpora(self, user_dict):
         """
         Fetches list of corpora available to the current user
 
         arguments:
         user_dict -- a user credentials dictionary
         """
-        corpora = self._db.get_permitted_corpora(str(user_dict['id']))
+        corpora = await self._db.get_permitted_corpora(str(user_dict['id']))
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return corpora
 
-    def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx):
         ans = {}
         ans.update(plugin_ctx.user_dict)
         ans['username'] = ans['user']
@@ -227,7 +228,7 @@ class CentralAuth(AbstractRemoteAuth):
 
 
 @inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions, cnc_db):
+def create_instance(conf, sessions, cnc_db: IntegrationDatabase):
     logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
