@@ -17,16 +17,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from contextlib import asynccontextmanager
-from typing import Generator, TypeVar, Generic, Optional
+from contextlib import AbstractAsyncContextManager
+from typing import TypeVar, Generic, Optional
 
 N = TypeVar('N')
 R = TypeVar('R')
-
-
-class AsyncCursor(Generic[R]):
-
-    pass
 
 
 class IntegrationDatabase(abc.ABC, Generic[N, R]):
@@ -92,17 +87,15 @@ class IntegrationDatabase(abc.ABC, Generic[N, R]):
         """
         pass
 
-    @asynccontextmanager
     @abc.abstractmethod
-    async def connection(self) -> Generator[N, None, None]:
+    def connection(self) -> AbstractAsyncContextManager[N]:
         """
         Return a connection to the integration database
         """
         pass
 
-    @asynccontextmanager
     @abc.abstractmethod
-    async def cursor(self, dictionary=True) -> Generator[R, None, None]:
+    def cursor(self, dictionary=True) -> AbstractAsyncContextManager[R]:
         """
         Create a new database cursor
         """

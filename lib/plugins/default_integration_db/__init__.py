@@ -16,13 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import TypeVar
+from contextlib import asynccontextmanager
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
 import logging
-
-N = TypeVar('N')
-R = TypeVar('R')
 
 
 class DefaultIntegrationDb(IntegrationDatabase[None, None]):
@@ -48,9 +45,11 @@ class DefaultIntegrationDb(IntegrationDatabase[None, None]):
                                             'incorrectly that a concrete instance is enabled.')
         return 'DefaultIntegrationDb provides no true database integration'
 
-    async def connection(self) -> N:
+    @asynccontextmanager
+    async def connection(self):
         raise PluginCompatibilityException(self._err_msg())
 
+    @asynccontextmanager
     async def cursor(self, dictionary=True):
         raise PluginCompatibilityException(self._err_msg())
 
