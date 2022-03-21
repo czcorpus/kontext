@@ -141,6 +141,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 dispatcher.dispatch<typeof MainMenuActions.ShowFilter>({
                     name: MainMenuActions.ShowFilter.name,
                     payload: {
+                        pnfilter: 'p',
                         within: true,
                         maincorp: corpusId
                     }
