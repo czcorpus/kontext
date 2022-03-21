@@ -42,6 +42,7 @@ import { WordCloudItemCalc } from './wordCloud/calc';
 import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes
 } from '../../../models/freqs/common';
 import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
+import { CSSProperties } from 'styled-components';
 
 
 
@@ -372,7 +373,14 @@ export function init(
                 if (props.payload[props.dataKey] === undefined) {  // scatter chart heading
                     return value
                 }
-                return [`${props.payload[props.dataKey]} [${(props.payload[props.dataKey]-props.payload[confidenceKey][0]).toFixed(2)}, ${(props.payload[props.dataKey]+props.payload[confidenceKey][1]).toFixed(2)}]`, null];
+                const ttLft = (props.payload[props.dataKey]-props.payload[confidenceKey][0]).toFixed(2);
+                const ttRgt = (props.payload[props.dataKey]+props.payload[confidenceKey][1]).toFixed(2);
+                const msg = he.translate('freq__chart_p_filter_tooltip');
+                const ttStyle:CSSProperties = {
+                    color: theme.colorLightText,
+                    fontSize: '0.8em'
+                };
+                return [<div>{`${props.payload[props.dataKey] + '\u00a0'}[${ttLft}, ${ttRgt}]`}<br /><span style={ttStyle}>({msg})</span></div>, null];
             }
 
             switch (props.type)  {
