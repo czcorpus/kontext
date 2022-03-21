@@ -499,15 +499,8 @@ class ManateeBackend(SearchBackend):
                     return [i]
             return []
         else:
-            """
-             if item[ref_attr]:
-            rel_parents = self.import_parent_values(item[ref_attr])
-            return [curr_idx + rp for rp in rel_parents if rp != 0]
-            else:
-            return []
-            """
             # Provide an absolute nr from a relative one
-            if item[parent_attr]:
+            if item[parent_attr] is not None and item[parent_attr].strip() != '':
                 rel_parents = self.import_parent_values(item[parent_attr])
                 return [curr_idx + rp for rp in rel_parents if rp != 0]
             else:
