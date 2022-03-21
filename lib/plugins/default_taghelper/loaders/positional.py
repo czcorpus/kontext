@@ -71,8 +71,8 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
 
         return self.initial_values[lang]
 
-    def is_available(self):
-        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US')) > 0
+    def is_available(self, translate):
+        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US', translate)) > 0
 
     def _get_initial_values(self, lang, translate):
         """

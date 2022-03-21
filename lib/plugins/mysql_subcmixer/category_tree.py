@@ -22,7 +22,7 @@ from typing import Iterator, List, NamedTuple, Optional, Union
 import copy
 
 import numpy as np
-from lib.plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
 class CategoryExpression(object):
