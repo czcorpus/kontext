@@ -1866,6 +1866,7 @@ class Actions(Querying):
             DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
             SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
             QSEnabled=self.args.qs_enabled,
+            ShuffleConcByDefault=self.args.shuffle,
         )
         self._attach_plugin_exports(ans, direct=True)
         self._configure_auth_urls(ans)
