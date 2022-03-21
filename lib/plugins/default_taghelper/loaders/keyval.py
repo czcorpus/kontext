@@ -39,7 +39,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
                 for i, v in enumerate(item):
                     item[i] = tuple(v)
 
-    def get_variant(self, filter_values, lang):
+    def get_variant(self, filter_values, lang, translate):
         if self.initial_values is None:
             self._initialize_tags()
 
@@ -52,7 +52,7 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
 
         return {'keyval_tags': possible_values}
 
-    def get_initial_values(self, lang):
+    def get_initial_values(self, lang, translate):
         if self.initial_values is None:
             self._initialize_tags()
         return {'keyval_tags': self.get_possible_values()}
