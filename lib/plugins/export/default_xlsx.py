@@ -25,30 +25,29 @@ from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 
 from . import AbstractExport, lang_row_to_list, ExportPluginException
-from translation import ugettext as _
 
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self, subtype):
+    def __init__(self, subtype, translate=lambda x: x):
         self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()
         self._col_types = ()
         if subtype == 'concordance':
-            self._sheet.title = _('concordance')
+            self._sheet.title = translate('concordance')
             self._import_row = lang_row_to_list
         elif subtype == 'freq':
-            self._sheet.title = _('frequency distribution')
+            self._sheet.title = translate('frequency distribution')
             self._import_row = lambda x: x
         elif subtype == 'wordlist':
-            self._sheet.title = _('word list')
+            self._sheet.title = translate('word list')
             self._import_row = lambda x: x
         elif subtype == 'coll':
-            self._sheet.title = _('collocations')
+            self._sheet.title = translate('collocations')
             self._import_row = lambda x: x
         elif subtype == 'pquery':
-            self._sheet.title = _('paradigmatic query')
+            self._sheet.title = translate('paradigmatic query')
             self._import_row = lambda x: x
 
     def content_type(self):

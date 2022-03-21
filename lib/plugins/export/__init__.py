@@ -21,8 +21,7 @@ changed/configured. On the other side, concrete export modules are
 free to be replaced/changed.
 """
 
-from translation import ugettext as _
-from typing import List, Any
+from typing import Callable, List, Any
 import abc
 
 
@@ -75,7 +74,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name, subtype=None):
+    def load_plugin(self, name, subtype: str=None, translate: Callable[[str], str]=lambda x: x):
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
@@ -89,10 +88,10 @@ class Loader(object):
         required module or nothing if module is not found
         """
         if name not in self._module_map:
-            raise ValueError(_('Export module [%s] not configured') % name)
+            raise ValueError(translate(f'Export module [{name}] not configured'))
         module_name = self._module_map[name]
         module = __import__('plugins.export.%s' % module_name, fromlist=[module_name])
-        plugin = module.create_instance(subtype=subtype)
+        plugin = module.create_instance(subtype=subtype, translate=translate)
         return plugin
 
 

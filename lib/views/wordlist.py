@@ -29,7 +29,7 @@ async def form(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     Word List Form
     """
     amodel.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
-                                MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+                                  MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     out = dict(freq_figures=amodel.FREQ_FIGURES)
     amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
     amodel.export_form_args(out)
@@ -43,13 +43,14 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args.update_by_user_query(req.json)
     worker = calc_backend_client(settings)
     ans = dict(corpname=amodel.args.corpname, usesubcorp=amodel.args.usesubcorp,
-                freq_files_avail=True, subtasks=[])
+               freq_files_avail=True, subtasks=[])
     async_res = await worker.send_task(
         'get_wordlist', object.__class__,
         args=(form_args.to_dict(), amodel.corp.size, amodel.session_get('user', 'id')))
     bg_result = async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
-        data_calc = freq_calc.build_arf_db(amodel.session_get('user', 'id'), amodel.corp, form_args.wlattr)
+        data_calc = freq_calc.build_arf_db(amodel.session_get(
+            'user', 'id'), amodel.corp, form_args.wlattr)
         if type(data_calc) is list:
             for subtask in data_calc:
                 # TODO get rid of private method
@@ -77,8 +78,8 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=1, template='wordlist/result.html', page_model='wordlist', action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
-                                MainMenu.FILTER, MainMenu.FREQUENCY,
-                                MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
+                                  MainMenu.FILTER, MainMenu.FREQUENCY,
+                                  MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
 
     wlsort = req.args.get('wlsort', 'f')
     rev = bool(int(req.args.get('reverse', '1')))
@@ -90,11 +91,11 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
         collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
 
     result = dict(data=data, total=total, form=amodel._curr_wlform_args.to_dict(),
-                    query_id=amodel._curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
-                    wlpagesize=amodel.args.wlpagesize)
+                  query_id=amodel._curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
+                  wlpagesize=amodel.args.wlpagesize)
     try:
         result['wlattr_label'] = (amodel.corp.get_conf(amodel._curr_wlform_args.wlattr + '.LABEL') or
-                                    amodel._curr_wlform_args.wlattr)
+                                  amodel._curr_wlform_args.wlattr)
     except Exception as e:
         result['wlattr_label'] = amodel._curr_wlform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
@@ -102,17 +103,17 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     result['freq_figure'] = req.translate(amodel.FREQ_FIGURES.get('frq', '?'))
 
     amodel.add_save_menu_item('CSV', save_format='csv',
-                                hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                    amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item('XLSX', save_format='xlsx',
-                                hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                    amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item('XML', save_format='xml',
-                                hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                    amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item('TXT', save_format='text',
-                                hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                    amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
+                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
     # custom save is solved in templates because of compatibility issues
     result['tasks'] = []
@@ -183,7 +184,8 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     saved_filename = form_args.corpname
     if form_args.saveformat == 'text':
         resp.set_header('Content-Type', 'application/text')
-        resp.set_header('Content-Disposition', f'attachment; filename="{saved_filename}-word-list.txt"')
+        resp.set_header('Content-Disposition',
+                        f'attachment; filename="{saved_filename}-word-list.txt"')
         return dict(Items=data,
                     pattern=amodel._curr_wlform_args.wlpat,
                     from_line=form_args.from_line,
@@ -195,7 +197,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
         def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
         writer: AbstractExport = plugins.runtime.EXPORT.instance.load_plugin(
-            form_args.saveformat, subtype='wordlist')
+            form_args.saveformat, subtype='wordlist', translate=req.translate)
         writer.set_col_types(int, str, float)
 
         resp.set_header('Content-Type', writer.content_type())

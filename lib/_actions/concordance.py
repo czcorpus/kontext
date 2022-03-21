@@ -132,8 +132,6 @@ class Actions(Querying):
         else:
             return translate('related to the whole %s') % corpus_name
 
-
-
     @exposed(return_type='json')
     def get_conc_cache_status(self, _):
         self._response.set_header('Content-Type', 'text/plain')
@@ -184,8 +182,6 @@ class Actions(Querying):
         self.args.q.append('r' + self.args.rlines)
         return self.view(request)
 
-
-
     @exposed(access_level=1, func_arg_mapped=True, template='txtexport/savefreq.html', return_type='plain')
     def savefreq(
             self, fcrit=(), flimit=0, freq_sort='', saveformat='text', from_line=1, to_line='',
@@ -220,7 +216,10 @@ class Actions(Querying):
             output['heading'] = heading
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-freq-distrib.%s' % (self.args.corpname, suffix)
-            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
+
+            from translation import ugettext
+            writer = plugins.runtime.EXPORT.instance.load_plugin(
+                saveformat, subtype='freq', translate=ugettext)
 
             # Here we expect that when saving multi-block items, all the block have
             # the same number of columns which is quite bad. But currently there is
@@ -252,10 +251,6 @@ class Actions(Querying):
                     i += 1
             output = writer.raw_content()
         return output
-
-
-
-
 
     @exposed(access_level=1, template='freqs.html', page_model='freq', func_arg_mapped=True)
     def freqtt(self, flimit=0, fttattr=(), fttattr_async=()):
@@ -418,7 +413,9 @@ class Actions(Querying):
                 def mk_filename(suffix):
                     return f'{self.args.corpname}-collocations.{suffix}'
 
-                writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
+                from translation import ugettext
+                writer = plugins.runtime.EXPORT.instance.load_plugin(
+                    saveformat, subtype='coll', translate=ugettext)
                 writer.set_col_types(int, str, *(8 * (float,)))
 
                 self._response.set_header('Content-Type', writer.content_type())
@@ -536,8 +533,9 @@ class Actions(Querying):
                     contains_within=False)
                 output['Desc'] = self.concdesc_json()['Desc']
             elif saveformat in ('csv', 'xlsx', 'xml'):
+                from translation import ugettext
                 writer = plugins.runtime.EXPORT.instance.load_plugin(
-                    saveformat, subtype='concordance')
+                    saveformat, subtype='concordance', translate=ugettext)
 
                 self._response.set_header('Content-Type', writer.content_type())
                 self._response.set_header(
@@ -626,4 +624,3 @@ class Actions(Querying):
         for item in data:
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
-
