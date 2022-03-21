@@ -215,7 +215,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             name: Actions.CorpusSwitchModelRestore.name,
                             payload: {
                                 data: storedStates,
-                                corpora: List.zip(action.payload.corpora, prevCorpora),
+                                corpora: List.zipAll(action.payload.corpora, prevCorpora),
                                 newPrimaryCorpus: action.payload.newPrimaryCorpus
                             }
                         });
