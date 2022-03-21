@@ -29,7 +29,7 @@ from . import AbstractExport, lang_row_to_list, ExportPluginException
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self, subtype, translate=lambda x: x):
+    def __init__(self, subtype, translate):
         self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()

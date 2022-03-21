@@ -23,7 +23,7 @@ import manatee
 import settings
 from kwiclib_common import tokens2strclass
 import plugins
-from corplib.corpus import KCorpus, AbstractKCorpus
+from corplib.corpus import AbstractKCorpus
 
 from .common import KConc
 
