@@ -17,7 +17,7 @@ import hashlib
 import os
 import time
 from typing import List, Any, Optional
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 import corplib
 from conclib.calc import require_existing_conc
@@ -25,7 +25,6 @@ from corplib.errors import MissingSubCorpFreqFile
 from bgcalc import freq_calc
 import settings
 from bgcalc.errors import UnfinishedConcordanceError
-from translation import ugettext as _
 import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -104,7 +103,7 @@ def calculate_colls_bg(coll_args: CollCalcArgs):
         conc = require_existing_conc(corp=corp, q=coll_args.q)
         if not conc.finished():
             raise UnfinishedConcordanceError(
-                _('Cannot calculate yet - source concordance not finished. Please try again later.'))
+                'Cannot calculate yet - source concordance not finished. Please try again later.')
         collocs = conc.collocs(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
                                cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
                                cminbgr=coll_args.cminbgr, max_lines=conc.size())

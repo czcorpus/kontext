@@ -462,7 +462,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 corp_info = dict(name=corp_id)
                 try:
-                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id)
+                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id, plugin_ctx.translate)
                     cl.append({'id': corp_id,
                                'name': corp_info.name,
                                'desc': corp_info.description,
@@ -570,7 +570,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = plugin_ctx.corpus_manager.get_info(ans.id).name
+        ans.name = plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -611,7 +611,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.sort_attrs = True if meta_elm.find(
                 self.SORT_ATTRS_KEY) is not None else False
             # ans.metadata.desc = self._parse_meta_desc(meta_elm)
-            ans.metadata.desc = plugin_ctx.corpus_manager.get_info(ans.id).description
+            ans.metadata.desc = plugin_ctx.corpus_manager.get_info(
+                ans.id, plugin_ctx.translate).description
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
             ans.metadata.group_duplicates = True if meta_elm.find(
@@ -682,7 +683,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
-        ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
+        ans.description = plugin_ctx.corpus_manager.get_info(
+            ans.id, plugin_ctx.translate).description
         return ans
 
     async def get_corpus_info(self, plugin_ctx, corp_name):
@@ -695,7 +697,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         plugin_ctx, self._raw_list(plugin_ctx)[corp_name], lang_code=plugin_ctx.user_lang)
                 else:
                     ans = self._raw_list(plugin_ctx)[corp_name]
-                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
+                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name, plugin_ctx.translate)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
@@ -745,10 +747,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x.id,
                     'corpus_id': x.id,
-                    'name': cm.get_info(x.id).name,
-                    'size': cm.get_info(x.id).size,
-                    'size_info': l10n.simplify_num(cm.get_info(x.id).size),
-                    'description': self._export_untranslated_label(plugin_ctx, cm.get_info(x.id).description)})
+                    'name': cm.get_info(x.id, plugin_ctx.translate).name,
+                    'size': cm.get_info(x.id, plugin_ctx.translate).size,
+                    'size_info': l10n.simplify_num(cm.get_info(x.id, plugin_ctx.translate).size),
+                    'description': self._export_untranslated_label(plugin_ctx, cm.get_info(x.id, plugin_ctx.translate).description)})
         return featured
 
     def export_favorite(self, plugin_ctx: PluginCtx, favitems):
@@ -756,7 +758,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id).description)
+                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate).description)
             ans.append(tmp)
         return ans
 

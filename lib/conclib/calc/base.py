@@ -21,7 +21,7 @@
 import logging
 import time
 import os
-from typing import Tuple, Optional,  Dict, Any
+from typing import Callable, Tuple, Optional,  Dict, Any
 from dataclasses import dataclass
 
 from corplib import CorpusManager
@@ -51,9 +51,10 @@ class CachedConcSizes:
 
 class GeneralWorker:
 
-    def __init__(self, task_id=None, cache_factory=None):
+    def __init__(self, task_id=None, cache_factory=None, translate: Callable[[str], str] = lambda x: x):
         self._cache_factory = cache_factory if cache_factory is not None else plugins.runtime.CONC_CACHE.instance
         self._task_id = task_id
+        self._translate = translate
 
     def create_new_calc_status(self) -> ConcCacheStatus:
         return ConcCacheStatus(task_id=self._task_id)
@@ -105,7 +106,7 @@ class GeneralWorker:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':
-            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
+            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize, self._translate)
         else:
             raise NotImplementedError('Function "online sample" is not supported')
         logging.getLogger(__name__).debug(f'compute_conc({corp.corpname}, [{", ".join(q)}]) '
@@ -119,9 +120,9 @@ class TaskRegistration(GeneralWorker):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
     def __call__(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
-                 query: Tuple[str, ...], samplesize: int) -> Dict[str, Any]:
+                 query: Tuple[str, ...], samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
         corpus_manager = CorpusManager(subcpath=subcpaths)
-        corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
+        corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = cache_map.get_calc_status(subchash, query)
         if status is None or status.error:

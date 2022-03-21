@@ -78,7 +78,8 @@ class ConcActionModel(CorpusActionModel):
     async def _restore_prev_query_params(self, form):
         loaded = await super()._restore_prev_query_params(form)
         if loaded:
-            self._lines_groups = LinesGroups.deserialize(self._active_q_data.get('lines_groups', []))
+            self._lines_groups = LinesGroups.deserialize(
+                self._active_q_data.get('lines_groups', []))
 
     async def fetch_prev_query(self, query_type: str) -> Optional[QueryFormArgs]:
         curr = self._req.ctx.session.get('last_search', {})
@@ -274,7 +275,7 @@ class ConcActionModel(CorpusActionModel):
             prev_data = self._active_q_data if self._active_q_data is not None else {}
             use_history, curr_data = self.export_query_data()
             ans = [await qp.store(self.session_get('user', 'id'),
-                            curr_data=curr_data, prev_data=self._active_q_data)]
+                                  curr_data=curr_data, prev_data=self._active_q_data)]
             history_ts = await self._save_query_to_history(ans[0], curr_data) if use_history else None
             lines_groups = prev_data.get('lines_groups', self._lines_groups.serialize())
             for q_idx, op in self._auto_generated_conc_ops:
@@ -350,7 +351,7 @@ class ConcActionModel(CorpusActionModel):
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = self.cm.get_corpus(al)
+                alcorp = self.cm.get_corpus(al, translate=self._req.translate)
                 corp_info = await self.get_corpus_info(al)
 
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
@@ -586,7 +587,8 @@ class ConcActionModel(CorpusActionModel):
         if sampled_size:
             orig_conc = await get_conc(
                 corp=self.corp, user_id=self.session_get('user', 'id'),
-                q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False)
+                q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False,
+                translate=self._req.translate)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 

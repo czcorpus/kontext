@@ -68,7 +68,8 @@ async def set_favorite_item(amodel, req, resp):
     corpora = []
     main_size = None
     for i, c_id in enumerate(req.form.getlist('corpora')):
-        corp = amodel.cm.get_corpus(c_id, subcname=req.form.get('subcorpus_id') if i == 0 else None)
+        corp = amodel.cm.get_corpus(c_id, subcname=req.form.get(
+            'subcorpus_id') if i == 0 else None, translate=req.translate)
         if i == 0:
             main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))

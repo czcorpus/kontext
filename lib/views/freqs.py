@@ -55,7 +55,7 @@ async def freqs(amodel, req: KRequest[GeneralFreqArgs], resp):
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        require_existing_conc(amodel.corp, amodel.args.q)
+        require_existing_conc(amodel.corp, amodel.args.q, req.translate)
         ans = await _freqs(
             amodel,
             req,
@@ -211,7 +211,7 @@ async def _freqs(
             cc = await get_conc(
                 corp=amodel.corp, user_id=req.session_get('user', 'id'),
                 q=amodel.args.q + [pfilter[0][1]], fromp=amodel.args.fromp,
-                pagesize=amodel.args.pagesize, asnc=False)
+                pagesize=amodel.args.pagesize, asnc=False, translate=req.translate)
             freq = cc.size()
             err_nfilter, corr_nfilter = {}, {}
             if freq != calc_result['conc_size']:
@@ -285,7 +285,7 @@ async def _freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
     mapped_args=MLFreqRequestArgs)
 async def freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
     try:
-        require_existing_conc(amodel.corp, amodel.args.q)
+        require_existing_conc(amodel.corp, amodel.args.q, req.translate)
         return await _freqml(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqml')

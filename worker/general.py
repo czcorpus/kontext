@@ -39,7 +39,6 @@ APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/../lib')
 import settings
 from action.plugin import initializer
-import translation
 from stderr2f import get_stderr_redirector
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
@@ -61,9 +60,6 @@ initializer.init_plugin('corparch')
 initializer.init_plugin('token_connect', optional=True)
 initializer.init_plugin('live_attributes', optional=True)
 initializer.init_plugin('dispatch_hook', optional=True)
-
-translation.load_translations(settings.get('global', 'translations'))
-translation.activate('en_US')  # background jobs do not need localization
 
 import conclib.calc
 import conclib.calc.base

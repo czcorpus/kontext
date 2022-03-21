@@ -72,7 +72,7 @@ async def message(amodel, req, resp):
     kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
     if amodel.cm:
         with plugins.runtime.QUERY_HISTORY as qh:
-            queries = await qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1)
+            queries = await qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1, translate=req.translate)
             if len(queries) > 0:
                 kw['last_used_corp'] = dict(
                     corpname=queries[0].get('corpname', None),

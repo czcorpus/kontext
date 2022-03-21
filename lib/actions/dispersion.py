@@ -83,7 +83,7 @@ class Dispersion(Querying):
 
     @exposed(return_type='json')
     def ajax_get_freq_dispersion(self, request: werkzeug.Request) -> List[FreqDispersionBin]:
-        conc = require_existing_conc(self.corp, self.args.q)
+        conc = require_existing_conc(self.corp, self.args.q, req.translate)
         resolution = request.args.get('resolution', 100, type=int)
         if 0 < resolution < 1000:
             return self._get_freq_dispersion(conc, resolution)
@@ -92,7 +92,7 @@ class Dispersion(Querying):
     @exposed(page_model='dispersion', template='dispersion.html')
     def index(self, request: werkzeug.Request):
         try:
-            conc = require_existing_conc(self.corp, self.args.q)
+            conc = require_existing_conc(self.corp, self.args.q, req.translate)
         except ConcNotFoundException:
             args = list(self._request.args.items()) + [('next', 'dispersion')]
             raise ImmediateRedirectException(self.create_url('restore_conc', args))

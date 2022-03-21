@@ -327,7 +327,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             corp_id, path, web = item['id'], item['path'], item['sentence_struct']
             if corp_id in user_allowed_corpora:
                 try:
-                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id)
+                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id, plugin_ctx.translate)
                     cl.append({'id': corp_id,
                                'name': corp_info.name,
                                'desc': corp_info.description,
@@ -439,7 +439,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = plugin_ctx.corpus_manager.get_info(ans.id).name
+        ans.name = plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -555,7 +555,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
-        ans.description = plugin_ctx.corpus_manager.get_info(ans.id).description
+        ans.description = plugin_ctx.corpus_manager.get_info(
+            ans.id, plugin_ctx.translate).description
         return ans
 
     async def get_corpus_info(self, plugin_ctx, corp_name):
@@ -570,7 +571,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         plugin_ctx, self._raw_list(plugin_ctx)[corp_name])
                 else:
                     ans = self._raw_list(plugin_ctx)[corp_name]
-                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
+                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name, plugin_ctx.translate)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
@@ -619,7 +620,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         featured = []
         for x in list(self._raw_list(plugin_ctx).values()):
             if x.id in permitted_corpora and is_featured(x):
-                cinfo = plugin_ctx.corpus_manager.get_info(x.id)
+                cinfo = plugin_ctx.corpus_manager.get_info(x.id, plugin_ctx.translate)
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x.id,
@@ -635,7 +636,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id).description)
+                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate).description)
             ans.append(tmp)
         return ans
 

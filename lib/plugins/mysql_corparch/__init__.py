@@ -293,7 +293,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                         ans = await self._localize_corpus_info(corp_info, lang_code=plugin_ctx.user_lang)
                     else:
                         ans = corp_info
-                    ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name)
+                    ans.manatee = plugin_ctx.corpus_manager.get_info(
+                        corp_name, plugin_ctx.translate)
                     ans.token_connect, ans.kwic_connect, ans.query_suggest = await self._get_tckcqs_providers(
                         corp_name)
                     ans.metadata.interval_attrs = await self._backend.load_interval_attrs(corp_name)

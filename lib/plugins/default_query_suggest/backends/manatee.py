@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 from collections import defaultdict
-from typing import Tuple
+from typing import Callable, Tuple
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
 from conclib.search import get_conc
@@ -22,7 +22,6 @@ from conclib.freq import multi_level_crit
 from conclib.pyconc import PyConc
 from bgcalc import freq_calc
 from plugin_types.query_suggest import AbstractBackend
-import manatee
 from strings import re_escape
 import logging
 import l10n
@@ -30,11 +29,12 @@ import l10n
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
 
-    def __init__(self, conf, ident):
+    def __init__(self, conf, ident, translate: Callable[[str], str] = lambda x: x):
         super().__init__(ident)
         self._conf = conf
+        self._translate = translate
         fixed_corp = conf.get('corpus')
-        self._preset_corp = CorpusManager().get_corpus(fixed_corp) if fixed_corp else None
+        self._preset_corp = CorpusManager().get_corpus(fixed_corp, self._translate) if fixed_corp else None
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = freq_calc.FreqCalcArgs(
@@ -83,7 +83,8 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             conc = await get_conc(
                 used_corp,
                 user_id,
-                (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',))
+                (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',),
+                translate=self._translate)
             conc.sync()
             mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
             fcrit = multi_level_crit(2, **mlargs)
