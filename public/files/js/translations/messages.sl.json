@@ -792,6 +792,7 @@
         "freq__hidden_ci_warning": "Confidence interval defines a frequency range that would include the same observation found in a corpus of a similar structure and size. UNTRANSLATED",
         "freq__chart_options": "Options UNTRANSLATED",
         "freq__chart_date_%Y": "Year UNTRANSLATED",
+        "freq__chart_p_filter_tooltip": "Click to see the matching concordance UNTRANSLATED",
         "user__password_change": "Sprememba gesla",
         "user__new_password": "Novo geslo",
         "user__new_password_again": "Potrditev novega gesla",
