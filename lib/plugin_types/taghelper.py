@@ -87,7 +87,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def is_available(self) -> bool:
+    def is_available(self, translate: Callable[[str], str]) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
