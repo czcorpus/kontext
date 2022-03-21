@@ -609,7 +609,7 @@ class Actions(Querying):
         def ctx_to_str(ctx):
             return ' '.join(str(x) for x in ctx)
 
-        def append_filter(idx: int, attrname, items, ctx, fctxtype) -> int:
+        def append_filter(idx: int, attrname: str, items: List[str], ctx, fctxtype) -> int:
             """
             return next idx of a new acknowledged auto-operation idx (to be able to continue
             with appending of other ops). I.e. if the last operation appended
@@ -638,10 +638,10 @@ class Actions(Querying):
         else:
             lemmaattr = 'word'
 
-        wposlist = {}
+        wpos_patt_map = {}
         for tagset in corpus_info.tagsets:
             if tagset.ident == corpus_info.default_tagset:
-                wposlist = [{'n': x.pos, 'v': x.pattern} for x in tagset.pos_category]
+                wpos_patt_map = dict((x.pos, x.pattern) for x in tagset.pos_category)
                 break
 
         if form.data.curr_default_attr_values[corpora[0]]:
@@ -663,7 +663,6 @@ class Actions(Querying):
                 par_query += f'within{wnot} {al_corpname}:{pq}'
             if not pq or wnot:
                 nopq.append(al_corpname)
-
         self.args.q = [
             ' '.join(x for x in [qbase + self._compile_query(corpora[0], form), ttquery, par_query] if x)]
         ag_op_idx = 1  # an initial index of auto-generated conc. operations
@@ -676,7 +675,7 @@ class Actions(Querying):
         append_filter(
             ag_op_idx,
             'tag',
-            [wposlist.get(t, '') for t in form.data.fc_pos],
+            [wpos_patt_map.get(t, '') for t in form.data.fc_pos],
             (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
             form.data.fc_pos_type)
 
