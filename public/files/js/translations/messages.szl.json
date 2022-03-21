@@ -789,6 +789,7 @@
         "freq__chart_options": "Options UNTRANSLATED",
         "freq__chart_date_%Y": "Year UNTRANSLATED",
         "freq__sel_form_type_dp": "Dispersion UNTRANSLATED",
+        "freq__chart_p_filter_tooltip": "Click to see the matching concordance UNTRANSLATED",
         "user__password_change": "Zmiana hasła",
         "user__new_password": "Nowe hasło",
         "user__new_password_again": "Nowe hasło (jeszcze rŏz)",
