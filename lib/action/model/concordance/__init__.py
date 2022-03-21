@@ -452,7 +452,7 @@ class ConcActionModel(CorpusActionModel):
         def ctx_to_str(ctx):
             return ' '.join(str(x) for x in ctx)
 
-        async def append_filter(idx: int, attrname, items, ctx, fctxtype) -> int:
+        async def append_filter(idx: int, attrname, items: List[str], ctx, fctxtype) -> int:
             """
             return next idx of a new acknowledged auto-operation idx (to be able to continue
             with appending of other ops). I.e. if the last operation appended
@@ -481,10 +481,10 @@ class ConcActionModel(CorpusActionModel):
         else:
             lemmaattr = 'word'
 
-        wposlist = {}
+        wpos_patt_map = {}
         for tagset in corpus_info.tagsets:
             if tagset.ident == corpus_info.default_tagset:
-                wposlist = [{'n': x.pos, 'v': x.pattern} for x in tagset.pos_category]
+                wpos_patt_map = dict((x.pos, x.pattern) for x in tagset.pos_category)
                 break
 
         if form.data.curr_default_attr_values[corpora[0]]:
@@ -519,7 +519,7 @@ class ConcActionModel(CorpusActionModel):
         await append_filter(
             ag_op_idx,
             'tag',
-            [wposlist.get(t, '') for t in form.data.fc_pos],
+            [wpos_patt_map.get(t, '') for t in form.data.fc_pos],
             (form.data.fc_pos_wsize[0], form.data.fc_pos_wsize[1], 1),
             form.data.fc_pos_type)
 
