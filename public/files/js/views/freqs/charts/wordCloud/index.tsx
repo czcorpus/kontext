@@ -33,6 +33,7 @@ export interface WordCloudProps<T> {
     font:string;
     data:Array<T>;
     dataTransform:(v:T)=>WordCloudItem;
+    onClick?:(data:WordCloudItem)=>void;
 }
 interface WordCloudState<T> {
     data:Array<T>;
@@ -54,6 +55,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
         onMouseMove:(x:number, y:number, data:WordCloudItem)=>void;
         onMouseOver:(x:number, y:number, data:WordCloudItem)=>void;
         onMouseOut:(data:WordCloudItem)=>void;
+        onClick:(data:WordCloudItem)=>void;
 
     }> = (props) => {
 
@@ -79,7 +81,8 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
             <g pointerEvents="all"
                 onMouseMove={handleMouseMove}
                 onMouseOut={handleMouseOut}
-                onMouseOver={handleMouseOver}>
+                onMouseOver={handleMouseOver}
+                onClick={() => props.onClick ? props.onClick(props.rect.data) : null}>
 
                 <rect x={props.rect.x} y={props.rect.y}
                         width={props.rect.w} height={props.rect.h}
@@ -262,6 +265,7 @@ export function init<T>(he:Kontext.ComponentHelpers):React.ComponentClass<WordCl
                                         onMouseMove={this.handleMouseMove}
                                         onMouseOut={this.handleMouseOut}
                                         onMouseOver={this.handleMouseOver}
+                                        onClick={this.props.onClick}
                                         font={this.props.font} />
                                 )}
                             </g>
