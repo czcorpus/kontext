@@ -191,7 +191,8 @@ class ParadigmaticQuery(Kontext):
         for i, conc_id in enumerate(self._curr_pquery_args.conc_ids):
             self._dynamic_menu_items.append(
                 MenuItemInternal(
-                    MainMenu.CONCORDANCE, translate('Go to the constituent concordance #{}').format(i+1), 'view'
+                    MainMenu.CONCORDANCE, translate(
+                        'Go to the constituent concordance #{}').format(i + 1), 'view'
                 ).add_args(('q', f'~{conc_id}'))
             )
         return ans
@@ -284,11 +285,14 @@ class ParadigmaticQuery(Kontext):
         def mkfilename(suffix):
             return f'{self.args.corpname}-pquery.{suffix}'
 
-        writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='pquery')
+        from translation import ugettext
+        writer = plugins.runtime.EXPORT.instance.load_plugin(
+            saveformat, subtype='pquery', translate=ugettext)
         writer.set_col_types(int, str, float)
 
         self._response.set_header('Content-Type', writer.content_type())
-        self._response.set_header('Content-Disposition', f'attachment; filename="{mkfilename(saveformat)}"')
+        self._response.set_header('Content-Disposition',
+                                  f'attachment; filename="{mkfilename(saveformat)}"')
 
         if colheaders or heading:
             writer.writeheading(['', 'value', 'freq'])

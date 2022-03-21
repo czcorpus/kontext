@@ -41,7 +41,7 @@ class CSVExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self, subtype):
+    def __init__(self, subtype, translate=lambda x: x):
         self.csv_buff = Writeable()
         self.csv_writer = csv.writer(self.csv_buff, delimiter=';',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
