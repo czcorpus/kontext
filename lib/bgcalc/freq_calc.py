@@ -31,7 +31,6 @@ import settings
 import bgcalc
 from bgcalc.errors import UnfinishedConcordanceError, BgCalcError
 from bgcalc.task import AsyncTaskStatus
-from translation import ugettext as _
 from action.errors import UserActionException
 from .errors import CalcArgsAssertionError
 
@@ -251,10 +250,10 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     conc = require_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
-            _('Cannot calculate yet - source concordance not finished. Please try again later.'))
+            'Cannot calculate yet - source concordance not finished. Please try again later.')
     freqs = [conc.xfreq_dist(
-                cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
-             for cr in args.fcrit]
+        cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+        for cr in args.fcrit]
     return dict(freqs=freqs, conc_size=conc.size())
 
 
@@ -265,7 +264,8 @@ async def calculate_freqs(args: FreqCalcArgs):
     (via Manatee) full frequency list again and again (e.g. if user moves from page to page).
     """
     if args.fcrit and len(args.fcrit) > 1 and args.fpage > 1:
-        raise CalcArgsAssertionError('multi-block frequency calculation does not support pagination')
+        raise CalcArgsAssertionError(
+            'multi-block frequency calculation does not support pagination')
     cache = FreqCalcCache(
         corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
         q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)

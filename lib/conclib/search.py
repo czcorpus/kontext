@@ -19,7 +19,7 @@
 # 02110-1301, USA.
 
 import logging
-from typing import Tuple, Optional, Union, List
+from typing import Callable, Tuple, Optional, Union, List
 import os
 from functools import partial
 import asyncio
@@ -44,7 +44,7 @@ CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize) -> KConc:
+async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize, translate) -> KConc:
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -59,14 +59,14 @@ async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize) -> KC
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q))
+        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
 
 
 async def _get_bg_conc(
         corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], subchash: Optional[str], samplesize: int,
-        calc_from: int, minsize: int) -> KConc:
+        calc_from: int, minsize: int, translate: Callable[[str], str]) -> KConc:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results
@@ -94,7 +94,7 @@ async def _get_bg_conc(
     # is ready in a few seconds - let's try this:
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q))
+        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
         return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
@@ -149,7 +149,7 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 async def get_conc(
         corp: AbstractKCorpus, user_id, q: Union[List[str], Tuple[str, ...]] = None, fromp=0, pagesize=0, asnc=0,
-        samplesize=0) -> KConc:
+        samplesize=0, translate: Callable[[str], str] = lambda x: x) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -180,19 +180,19 @@ async def get_conc(
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
     # try to locate concordance in cache
-    calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize)
+    calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize, translate)
     if not conc and q[0][0] == 'R':  # online sample
         q_copy = list(q)
         q_copy[0] = q[0][1:]
         q_copy = tuple(q_copy)
-        find_cached_conc_base(corp, subchash, q_copy, -1)
+        find_cached_conc_base(corp, subchash, q_copy, -1, translate)
         # TODO this branch has no use (unless we want to revive online sample func)
 
     # move mid-sized aligned corpora or large non-aligned corpora to background
     if _should_be_bg_query(corp, q, asnc):
         minsize = fromp * pagesize
         conc = _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
-                            calc_from=calc_from, minsize=minsize)
+                            calc_from=calc_from, minsize=minsize, translate=translate)
     else:
         worker = GeneralWorker()
         if isinstance(conc, InitialConc):
@@ -201,7 +201,7 @@ async def get_conc(
             if asnc and len(q) == 1:
                 conc = await _get_async_conc(
                     corp=corp, user_id=user_id, q=q, subchash=subchash,
-                    samplesize=samplesize, minsize=minsize)
+                    samplesize=samplesize, minsize=minsize, translate=translate)
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:

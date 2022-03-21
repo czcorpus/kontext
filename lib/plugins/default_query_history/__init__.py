@@ -22,6 +22,7 @@ from datetime import datetime
 import time
 import random
 import logging
+from typing import Callable
 from plugin_types.auth import AbstractAuth
 from plugin_types.query_persistence import AbstractQueryPersistence
 
@@ -39,11 +40,11 @@ class CorpusCache:
         self._cm = corpus_manager
         self._corpora = {}
 
-    def corpus(self, cname: str) -> Corpus:
+    def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = self._cm.get_corpus(cname)
+            self._corpora[cname] = self._cm.get_corpus(cname, translate=translate)
         return self._corpora[cname]
 
 
@@ -186,7 +187,7 @@ class QueryHistory(AbstractQueryHistory):
             return None   # persistent result not available
 
     async def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
-                         archived_only=False, offset=0, limit=None):
+                               archived_only=False, offset=0, limit=None, translate=lambda x: x):
         """
         Returns list of queries of a specific user.
 
@@ -216,16 +217,19 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
-                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    tmp['human_corpname'] = corpora.corpus(
+                        tmp['corpname'], translate).get_conf('NAME')
                     for ac in tmp['aligned']:
-                        ac['human_corpname'] = corpora.corpus(ac['corpname']).get_conf('NAME')
+                        ac['human_corpname'] = corpora.corpus(
+                            ac['corpname'], translate).get_conf('NAME')
                     full_data.append(tmp)
                 elif item_qs == 'pquery':
                     stored = await self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
-                    tmp['human_corpname'] = corpora.corpus(tmp['corpname']).get_conf('NAME')
+                    tmp['human_corpname'] = corpora.corpus(
+                        tmp['corpname'], translate).get_conf('NAME')
                     q_join = []
 
                     for q in stored.get('form', {}).get('conc_ids', []):
@@ -270,7 +274,8 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = dict(
                         corpname=stored['corpora'][0],
                         aligned=[],
-                        human_corpname=corpora.corpus(stored['corpora'][0]).get_conf('NAME'),
+                        human_corpname=corpora.corpus(
+                            stored['corpora'][0], translate).get_conf('NAME'),
                         query=stored.get('form', {}).get('wlpat'),
                         pfilter_words=stored['form']['pfilter_words'],
                         nfilter_words=stored['form']['nfilter_words'])
