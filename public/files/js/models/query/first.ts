@@ -777,12 +777,13 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     private deserialize(
         state:FirstQueryFormModelState,
         data:FirstQueryFormModelSwitchPreserve,
-        corpora:Array<[string, string]>
+        corpora:Array<[string|undefined, string|undefined]>
     ):void {
 
         if (data) {
             pipe(
                 corpora,
+                List.filter(([oldCorp, newCorp]) => !!oldCorp && !!newCorp), // add/remove aligned corp
                 List.forEach(([,newCorp], i) => this.transferFormValues(state, data, newCorp, i > 0))
             );
             state.alignedCorporaVisible = data.alignedCorporaVisible;
