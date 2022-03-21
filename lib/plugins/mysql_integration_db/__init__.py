@@ -16,13 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from dataclasses import dataclass, asdict, field
-from plugin_types.integration_db import IntegrationDatabase
 from typing import Generator, Optional
+import logging
+import time
+from dataclasses import dataclass, asdict, field
 from contextlib import asynccontextmanager, contextmanager
+
 import aiomysql
 import pymysql
 import pymysql.cursors
+
+from plugin_types.integration_db import IntegrationDatabase
 
 
 @dataclass
@@ -124,7 +128,24 @@ class MySqlIntegrationDb(IntegrationDatabase[aiomysql.Connection, aiomysql.Curso
         return f'{self._conn_args.host}:{self._conn_args.port}/{self._conn_args.db}'
 
     def wait_for_environment(self):
-        None
+        t0 = time.time()
+        logging.getLogger(__name__).info(
+            f'Going to wait {self._environment_wait_sec}s for integration environment')
+        while (time.time() - t0) < self._environment_wait_sec:
+            with self.cursor_sync() as cursor:
+                try:
+                    cursor.execute(
+                        'SELECT COUNT(*) as env_count FROM kontext_integration_env LIMIT 1')
+                    row = cursor.fetchone()
+                    if row and row['env_count'] == 1:
+                        return None
+                except Exception as ex:
+                    logging.getLogger(__name__).warning(
+                        f'Integration environment still not available. Reason: {ex}')
+            time.sleep(0.5)
+        return Exception(
+            f'Unable to confirm integration environment within defined interval {self._environment_wait_sec}s.',
+            'Please check table kontext_integration_env')
 
 
 def create_instance(conf):
