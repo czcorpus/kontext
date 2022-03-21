@@ -30,7 +30,7 @@ a new version of 'taghelper'.
 """
 
 import abc
-from typing import TypeVar, Generic
+from typing import Callable, TypeVar, Generic
 from werkzeug.wrappers import Request
 from action.plugin.ctx import PluginCtx
 
@@ -94,7 +94,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def get_initial_values(self, lang: str) -> T:
+    def get_initial_values(self, lang: str, translate: Callable[[str], str]) -> T:
         """
         Return all the possible properties of a respective tagset
         (i.e. all the positions/keys/whatever and their respective
@@ -102,7 +102,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def get_variant(self, user_selection: U, lang: str) -> T:
+    def get_variant(self, user_selection: U, lang: str, translate: Callable[[str], str]) -> T:
         """
         Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
         return a filtered values matching the selected ones.
