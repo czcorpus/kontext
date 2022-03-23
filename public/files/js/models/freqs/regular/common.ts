@@ -109,6 +109,7 @@ export interface FreqServerArgs extends ConcServerArgs {
     fmaxitems?:number; // TODO this one vs. 'flimit'?
     freqlevel:number;
     freq_sort:string;
+    freq_type:BasicFreqModuleType;
     ftt_include_empty:boolean;
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
@@ -123,6 +124,7 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
     fmaxitems?:number;
     freqlevel:number;
     freq_sort:string;
+    freq_type:BasicFreqModuleType;
     ftt_include_empty:boolean;
     fcrit:Array<string>;
 }

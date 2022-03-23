@@ -477,6 +477,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ...this.pageModel.getConcArgs(),
             fcrit,
             flimit: parseInt(state.flimit.value),
+            freq_type: state.freqType,
             freq_sort: state.type[fcrit] === 'timeline' || state.type[fcrit] === 'timescatter' ?
                 '0' :
                 state.sortColumn[fcrit],
