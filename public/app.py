@@ -51,6 +51,7 @@ from views.user import bp as user_bp
 from views.corpora import bp as corpora_bp
 from views.wordlist import bp as wordlist_bp
 from views.freqs import bp as freqs_bp
+from views.dispersion import bp as dispersion_bp
 from views.colls import bp as colls_bp
 from action import get_protocol
 from action.templating import TplEngine
@@ -198,6 +199,7 @@ application.blueprint(user_bp)
 application.blueprint(corpora_bp)
 application.blueprint(wordlist_bp)
 application.blueprint(freqs_bp)
+application.blueprint(dispersion_bp)
 application.blueprint(colls_bp)
 setup_plugins()
 install_plugin_actions(application)

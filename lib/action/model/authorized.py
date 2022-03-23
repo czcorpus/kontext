@@ -360,7 +360,10 @@ class UserActionModel(BaseActionModel):
                 self.plugin_ctx).to_dict() if irp else None
         result['can_send_mail'] = bool(settings.get('mailing'))
         await self.attach_plugin_exports(result, direct=False)
+        result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
+        return result
 
+    def init_menu(self, result):
         # main menu
         menu_items = generate_main_menu(
             tpl_data=result,
@@ -373,11 +376,9 @@ class UserActionModel(BaseActionModel):
         result['menu_data'] = menu_items
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.
-        result['static_menu'] = [dict(label=x[1]['label'], disabled=x[1].get('disabled', False),
-                                      action=x[1].get('fallback_action'))
-                                 for x in menu_items['submenuItems']]
-        result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
-        return result
+        result['static_menu'] = [
+            dict(label=x[1]['label'], disabled=x[1].get('disabled', False), action=x[1].get('fallback_action'))
+            for x in menu_items['submenuItems']]
 
 
 class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
