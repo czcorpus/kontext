@@ -34,7 +34,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         self._conf = conf
         self._translate = translate
         fixed_corp = conf.get('corpus')
-        self._preset_corp = CorpusManager().get_corpus(fixed_corp, self._translate) if fixed_corp else None
+        self._preset_corp = CorpusManager().get_corpus(fixed_corp, translate = self._translate) if fixed_corp else None
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = freq_calc.FreqCalcArgs(

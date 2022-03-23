@@ -19,6 +19,7 @@ from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import multi_level_crit, MLFreqArgs
 from conclib.calc import require_existing_conc
 from conclib.search import get_conc
+from action.response import KResponse
 from main_menu import MainMenu
 from bgcalc import freq_calc
 from bgcalc.coll_calc import CalculateCollsResult, CollCalcArgs, calculate_colls
@@ -110,7 +111,7 @@ class SavecollArgs:
 @http_action(
     action_model=ConcActionModel, mapped_args=SavecollArgs, access_level=1, template='txtexport/savecoll.html',
     return_type='plain')
-async def savecoll(amodel, req: KRequest[SavecollArgs], resp):
+async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: KResponse):
     """
     save collocations
     """
@@ -138,9 +139,8 @@ async def savecoll(amodel, req: KRequest[SavecollArgs], resp):
             def mk_filename(suffix):
                 return f'{amodel.args.corpname}-collocations.{suffix}'
 
-            from translation import ugettext
             writer = plugins.runtime.EXPORT.instance.load_plugin(
-                req.mapped_args.saveformat, subtype='coll', translate=ugettext)
+                req.mapped_args.saveformat, subtype='coll', translate=req.translate)
             writer.set_col_types(int, str, *(8 * (float,)))
 
             resp.set_header('Content-Type', writer.content_type())

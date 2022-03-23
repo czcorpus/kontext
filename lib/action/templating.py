@@ -4,7 +4,6 @@ import json
 import re
 from typing import Union, Callable, Any, Dict
 from dataclasses_json import DataClassJsonMixin
-from translation import ugettext
 import l10n
 import strings
 from xml.sax.saxutils import escape
@@ -31,11 +30,6 @@ def val_to_js(obj):
         r'<(/)?(script|iframe|frame|frameset|embed|img|object)>', r'<" + "\g<1>\g<2>>', s, flags=re.IGNORECASE)
 
 
-@jinja2.pass_context
-def translat_filter(_, s):
-    return ugettext(s)
-
-
 class TplEngine:
 
     def __init__(self, settings):
@@ -52,9 +46,9 @@ class TplEngine:
             to_json=val_to_js,
             shorten=strings.shorten,
             camelize=l10n.camelize,
-            _=translat_filter,
             xmle=escape)
 
-    def render(self, template: str, data):
+    def render(self, template: str, data: Dict[str, Any], translate: Callable[[str], str] = lambda x: x):
+        self._template_env.filters.update(_=translate)
         template_object = self._template_env.get_template(template)
         return template_object.render(data)

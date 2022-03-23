@@ -19,6 +19,7 @@ from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import multi_level_crit, MLFreqArgs
 from conclib.calc import require_existing_conc
 from conclib.search import get_conc
+from action.response import KResponse
 from main_menu import MainMenu
 from bgcalc import freq_calc
 from strings import escape_attr_val
@@ -400,7 +401,7 @@ class SavefreqArgs:
 @http_action(
     access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, template='txtexport/savefreq.html',
     return_type='plain')
-async def savefreq(amodel, req: KRequest[SavefreqArgs], resp):
+async def savefreq(amodel:ConcActionModel, req: KRequest[SavefreqArgs], resp: KResponse):
     """
     save a frequency list
     """
@@ -431,9 +432,8 @@ async def savefreq(amodel, req: KRequest[SavefreqArgs], resp):
     elif req.mapped_args.saveformat in ('csv', 'xml', 'xlsx'):
         def mkfilename(suffix): return '%s-freq-distrib.%s' % (amodel.args.corpname, suffix)
 
-        from translation import ugettext
         writer = plugins.runtime.EXPORT.instance.load_plugin(
-            req.mapped_args.saveformat, subtype='freq', translate=ugettext)
+            req.mapped_args.saveformat, subtype='freq', translate=req.translate)
 
         # Here we expect that when saving multi-block items, all the block have
         # the same number of columns which is quite bad. But currently there is
