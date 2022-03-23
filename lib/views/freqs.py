@@ -7,20 +7,22 @@ from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormAr
 from action.decorators import http_action
 from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException, UserActionException
 from action.model.concordance import ConcActionModel
+from action.model.authorized import UserActionModel
 from action.krequest import KRequest
 from collections import defaultdict
 from dataclasses import dataclass, field
 import re
+import sys
 import logging
 
-from conclib.errors import ConcNotFoundException
+from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import multi_level_crit, MLFreqArgs
 from conclib.calc import require_existing_conc
 from conclib.search import get_conc
 from main_menu import MainMenu
 from bgcalc import freq_calc
 from strings import escape_attr_val
-
+import plugins
 
 bp = Blueprint('freqs')
 
@@ -289,3 +291,178 @@ async def freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
         return await _freqml(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqml')
+
+
+@dataclass
+class FreqttActionArgs:
+    flimit: Optional[int] = 0
+    fttattr: Optional[List[str]] = field(default_factory=list)
+    fttattr_async: Optional[List[str]] = field(default_factory=list)
+
+
+@bp.route('/freqtt')
+@http_action(
+    access_level=1, template='freqs.html', action_model=ConcActionModel, page_model='freq',
+    mapped_args=FreqttActionArgs)
+async def freqtt(amodel, req: KRequest[FreqttActionArgs], resp):
+    if not req.mapped_args.fttattr:
+        raise ConcordanceQueryParamsError(req.translate('No text type selected'))
+    ans = await _freqs(
+        amodel, req, resp,
+        fcrit=tuple(f'{a} 0' for a in req.mapped_args.fttattr),
+        fcrit_async=[f'{a} 0' for a in req.mapped_args.fttattr_async],
+        flimit=req.mapped_args.flimit,
+        freq_type='text-types')
+    ans['freq_type'] = 'text-types'
+    return ans
+
+
+async def _freqct(amodel: ConcActionModel, req: KRequest):
+    args = freq_calc.Freq2DCalcArgs(
+        corpname=amodel.corp.corpname,
+        subcname=getattr(amodel.corp, 'subcname', None),
+        subcpath=amodel.subcpath,
+        user_id=req.session_get('user', 'id'),
+        q=amodel.args.q,
+        ctminfreq=int(req.args.get('ctminfreq', '1')),
+        ctminfreq_type=req.args.get('ctminfreq_type'),
+        fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}')
+    try:
+        freq_data = freq_calc.calculate_freq2d(args)
+    except UserActionException as ex:
+        freq_data = dict(data=[], full_size=0)
+        amodel.add_system_message('error', str(ex))
+    amodel.add_save_menu_item('XLSX', save_format='xlsx')
+
+    ans = dict(
+        freq_type='2-attribute',
+        attr1=amodel.args.ctattr1,
+        attr2=amodel.args.ctattr2,
+        data=freq_data,
+        freq_form_args=FreqFormArgs().update(amodel.args).to_dict(),
+        coll_form_args=CollFormArgs().update(amodel.args).to_dict(),
+        ctfreq_form_args=CTFreqFormArgs().update(amodel.args).to_dict()
+    )
+    ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
+    ans['quick_save_row_limit'] = 0
+    await amodel.attach_query_params(ans)
+    return ans
+
+
+@bp.route('/freqct')
+@http_action(action_model=ConcActionModel, access_level=1, page_model='freq', template='freqs.html')
+def freqct(amodel, req: KRequest, resp):
+    """
+    """
+    try:
+        require_existing_conc(amodel.corp, amodel.args.q)
+        return _freqct(amodel, req)
+    except ConcNotFoundException:
+        amodel.go_to_restore_conc('freqct')
+
+
+@bp.route('/export_freqct', methods=['POST'])
+@http_action(action_model=UserActionModel, access_level=1, return_type='plain')
+def export_freqct(self, request):
+    with plugins.runtime.EXPORT_FREQ2D as plg:
+        data = request.json
+        exporter = plg.load_plugin(request.args.get('saveformat'))
+        if request.args.get('savemode') == 'table':
+            exporter.set_content(attr1=data['attr1'], attr2=data['attr2'],
+                                 labels1=data.get('labels1', []), labels2=data.get('labels2', []),
+                                 alpha_level=data['alphaLevel'], min_freq=data['minFreq'],
+                                 min_freq_type=data['minFreqType'], data=data['data'])
+        elif request.args.get('savemode') == 'flat':
+            exporter.set_content_flat(headings=data.get('headings', []), alpha_level=data['alphaLevel'],
+                                      min_freq=data['minFreq'], min_freq_type=data['minFreqType'],
+                                      data=data['data'])
+        self._response.set_header('Content-Type', exporter.content_type())
+        self._response.set_header(
+            'Content-Disposition',
+            f'attachment; filename="{self.args.corpname}-2dfreq-distrib.xlsx"')
+    return exporter.raw_content()
+
+
+@dataclass
+class SavefreqArgs:
+    fcrit: List[str]
+    flimit: Optional[int] = 0
+    freq_sort: Optional[str] = ''
+    saveformat: Optional[str] = 'text'
+    from_line: Optional[int] = 1
+    to_line: Optional[int] = field(default_factory=lambda: sys.maxsize)
+    colheaders: Optional[int] = 0
+    heading: Optional[int] = 0
+    multi_sheet_file: Optional[int] = 0
+
+
+@bp.route('/savefreq')
+@http_action(
+    access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, template='txtexport/savefreq.html',
+    return_type='plain')
+async def savefreq(amodel, req: KRequest[SavefreqArgs], resp):
+    """
+    save a frequency list
+    """
+    amodel.args.fpage = 1
+    amodel.args.fmaxitems = req.mapped_args.to_line - req.mapped_args.from_line + 1
+
+    # following piece of sh.t has hidden parameter dependencies
+    result = await _freqs(
+        amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
+        freq_sort=req.mapped_args.freq_sort, force_cache=False)
+    saved_filename = amodel.args.corpname
+    output = None
+    if req.mapped_args.saveformat == 'text':
+        resp.set_header('Content-Type', 'application/text')
+        resp.set_header(
+            'Content-Disposition',
+            f'attachment; filename="{saved_filename}-frequencies.txt"')
+        output = result
+        output['Desc'] = await amodel.concdesc_json()['Desc']
+        output['fcrit'] = req.mapped_args.fcrit
+        output['flimit'] = req.mapped_args.flimit
+        output['freq_sort'] = req.mapped_args.freq_sort
+        output['saveformat'] = req.mapped_args.saveformat
+        output['from_line'] = req.mapped_args.from_line
+        output['to_line'] = req.mapped_args.to_line
+        output['colheaders'] = req.mapped_args.colheaders
+        output['heading'] = req.mapped_args.heading
+    elif req.mapped_args.saveformat in ('csv', 'xml', 'xlsx'):
+        def mkfilename(suffix): return '%s-freq-distrib.%s' % (amodel.args.corpname, suffix)
+
+        from translation import ugettext
+        writer = plugins.runtime.EXPORT.instance.load_plugin(
+            req.mapped_args.saveformat, subtype='freq', translate=ugettext)
+
+        # Here we expect that when saving multi-block items, all the block have
+        # the same number of columns which is quite bad. But currently there is
+        # no better common 'denominator'.
+        num_word_cols = len(result['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
+        writer.set_col_types(*([int] + num_word_cols * [str] + [float, float]))
+
+        resp.set_header('Content-Type', writer.content_type())
+        resp.set_header(
+            'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
+
+        for block in result['Blocks']:
+            if hasattr(writer, 'new_sheet') and req.mapped_args.multi_sheet_file:
+                writer.new_sheet(block['Head'][0]['n'])
+
+            col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
+            if req.mapped_args.saveformat == 'xml':
+                col_names.insert(0, 'str')
+            if hasattr(writer, 'add_block'):
+                writer.add_block('')  # TODO block name
+
+            if req.mapped_args.colheaders or req.mapped_args.heading:
+                writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                    ['freq', 'freq [%]'])
+            i = 1
+            for item in block['Items']:
+                writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                     str(item.get('rel', ''))])
+                i += 1
+        output = writer.raw_content()
+    return output
+

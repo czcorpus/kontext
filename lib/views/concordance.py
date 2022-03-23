@@ -4,7 +4,8 @@ import json
 import re
 import time
 import mailing
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Callable
+from dataclasses import dataclass
 from sanic import Blueprint
 import logging
 from dataclasses import asdict
@@ -19,6 +20,7 @@ from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
 from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
 from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
+from action.argmapping.conc.other import SampleFormArgs
 from action.argmapping.conc.filter import (
     FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
@@ -28,9 +30,11 @@ from texttypes.model import TextTypeCollector
 from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 from plugin_types.conc_cache import ConcCacheStatusException
 import corplib
+from corplib.corpus import AbstractKCorpus
 import conclib
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
+from conclib.calc import cancel_conc_task
 from conclib.errors import (
     ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction,
     extract_manatee_error)
@@ -38,6 +42,8 @@ from conclib.empty import InitialConc
 from kwiclib import KwicPageArgs, Kwic
 import plugins
 from main_menu import MainMenu, generate_main_menu
+from bgcalc import calc_backend_client, freq_calc
+from bgcalc.errors import CalcTaskNotFoundError
 import settings
 
 
@@ -124,6 +130,39 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
     amodel.attach_query_overview(ans)
     return ans
+
+
+@bp.route('/get_conc_cache_status')
+@http_action(return_type='json', action_model=ConcActionModel)
+def get_conc_cache_status(amodel, req, resp):
+    resp.set_header('Content-Type', 'text/plain')
+    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
+    q = tuple(amodel.args.q)
+    subchash = amodel.corp.subchash
+
+    try:
+        cache_status = cache_map.get_calc_status(subchash, q)
+        if cache_status is None:  # conc is not cached nor calculated
+            raise NotFoundException('Concordance calculation is lost')
+        elif not cache_status.finished and cache_status.task_id:
+            # we must also test directly a respective task as it might have been killed
+            # and thus failed to store info to cache metadata
+            worker = calc_backend_client(settings)
+            err = worker.get_task_error(cache_status.task_id)
+            if err is not None:
+                raise err
+        return dict(
+            finished=cache_status.finished,
+            concsize=cache_status.concsize,
+            fullsize=cache_status.fullsize,
+            relconcsize=cache_status.relconcsize,
+            arf=cache_status.arf)
+    except CalcTaskNotFoundError as ex:
+        cancel_conc_task(cache_map, subchash, q)
+        raise NotFoundException(f'Concordance calculation is lost: {ex}')
+    except Exception as ex:
+        cancel_conc_task(cache_map, subchash, q)
+        raise ex
 
 
 async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
@@ -451,20 +490,12 @@ async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp
         raise NotFoundException(req.translate('Query information not stored: {}').format(ex))
 
 
-@bp.route('/widectx')
-@http_action(access_level=0, action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
-async def widectx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    """
-    display a hit in a wider context
-    """
-    pos = int(req.args.get('pos', '0'))
+def _widectx(amodel: ConcActionModel, position: int, left_ctx: int, right_ctx: int):
     p_attrs = amodel.args.attrs.split(',')
     # prefer 'word' but allow other attr if word is off
     attrs = ['word'] if 'word' in p_attrs else p_attrs[0:1]
-    left_ctx = int(req.args.get('detail_left_ctx', 40))
-    right_ctx = int(req.args.get('detail_right_ctx', 40))
     data = conclib.get_detail_context(
-        corp=amodel.corp, pos=pos, attrs=attrs, structs=amodel.args.structs, hitlen=amodel.args.hitlen,
+        corp=amodel.corp, pos=position, attrs=attrs, structs=amodel.args.structs, hitlen=amodel.args.hitlen,
         detail_left_ctx=left_ctx, detail_right_ctx=right_ctx)
     if left_ctx >= int(data['maxdetail']):
         data['expand_left_args'] = None
@@ -473,6 +504,18 @@ async def widectx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     data['widectx_globals'] = amodel.get_mapped_attrs(
         WidectxArgsMapping, dict(structs=amodel.get_struct_opts()))
     return data
+
+
+@bp.route('/widectx')
+@http_action(access_level=0, action_log_mapper=log_mapping.widectx, action_model=ConcActionModel)
+async def widectx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    """
+    display a hit in a wider context
+    """
+    pos = int(req.args.get('pos', '0'))
+    left_ctx = int(req.args.get('detail_left_ctx', 40))
+    right_ctx = int(req.args.get('detail_right_ctx', 40))
+    return _widectx(amodel, pos, left_ctx, right_ctx)
 
 
 @bp.route('/ajax_switch_corpus', methods=['POST'])
@@ -543,9 +586,9 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         subcorpname=amodel.corp.subcname if amodel.corp.is_subcorpus else None,
         baseAttr=amodel.BASE_ATTR,
         tagsets=[tagset.to_dict() for tagset in corpus_info.tagsets],
-        humanCorpname=amodel.human_readable_corpname(),
+        humanCorpname=amodel.corp.human_readable_corpname,
         corpusIdent=dict(
-            id=amodel.args.corpname, name=amodel.human_readable_corpname(),
+            id=amodel.args.corpname, name=amodel.corp.human_readable_corpname,
             variant=amodel.corpus_variant,
             usesubcorp=amodel.args.usesubcorp if amodel.args.usesubcorp else None,
             origSubcorpName=amodel.corp.orig_subcname,
@@ -993,3 +1036,218 @@ async def matching_structattr(amodel: CorpusActionModel, req: KRequest, resp: KR
     if len(ans) == 0:
         resp.set_http_status(404)
     return dict(result=ans, conc_size=found, lines_used=used)
+
+
+@dataclass
+class SaveConcArgs:
+    saveformat: Optional[str] = 'text'
+    from_line: Optional[int] = 0
+    to_line: Optional[int] = None
+    heading: Optional[int] = 0
+    numbering: Optional[int] = 0
+
+
+def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):
+    """
+    Generates a proper description for i.p.m. depending on the
+    method used to select texts:
+    1 - whole corpus
+    2 - a named subcorpus
+    3 - an ad-hoc subcorpus
+    """
+    corpus_name = corp.get_conf('NAME')
+    if contains_within:
+        return translate('related to the subset defined by the selected text types')
+    elif corp.is_subcorpus:
+        return translate('related to the whole %s').format(corpus_name) + f'/{corp.subcname}'
+    else:
+        return translate('related to the whole %s').format(corpus_name)
+
+
+@bp.route('/saveconc')
+@http_action(
+    access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, template='txtexport/saveconc.html',
+    return_type='plain')
+async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
+
+    def merge_conc_line_parts(items):
+        """
+        converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
+            {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+        """
+        ans = []
+        for item in items:
+            if 'class' in item and item['class'] != 'attr':
+                ans.append(' {}'.format(item['str'].strip()))
+            else:
+                ans.append('{}'.format(item['str'].strip()))
+            for tp in item.get('tail_posattrs', []):
+                ans.append('/{}'.format(tp))
+        return ''.join(ans).strip()
+
+    def process_lang(root, left_key, kwic_key, right_key, add_linegroup):
+        if type(root) is dict:
+            root = (root,)
+
+        ans = []
+        for item in root:
+            ans_item = {}
+            if 'ref' in item:
+                ans_item['ref'] = item['ref']
+            if add_linegroup:
+                ans_item['linegroup'] = item.get('linegroup', '')
+            ans_item['left_context'] = merge_conc_line_parts(item[left_key])
+            ans_item['kwic'] = merge_conc_line_parts(item[kwic_key])
+            ans_item['right_context'] = merge_conc_line_parts(item[right_key])
+            ans.append(ans_item)
+        return ans
+
+    try:
+        corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
+        amodel.apply_viewmode(corpus_info.sentence_struct)
+
+        conc = await get_conc(
+            corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q, fromp=amodel.args.fromp,
+            pagesize=amodel.args.pagesize, asnc=False, samplesize=corpus_info.sample_size)
+        amodel.apply_linegroups(conc)
+        kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
+        conc.switch_aligned(os.path.basename(amodel.args.corpname))
+        from_line = int(req.mapped_args.from_line)
+        to_line = min(req.mapped_args.to_line, conc.size())
+        output = {
+            'from_line': from_line,
+            'to_line': to_line,
+            'heading': req.mapped_args.heading,
+            'numbering': req.mapped_args.numbering
+        }
+
+        kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
+        kwic_args.speech_attr = await amodel.get_speech_segment()
+        kwic_args.fromp = 1
+        kwic_args.pagesize = to_line - (from_line - 1)
+        kwic_args.line_offset = (from_line - 1)
+        kwic_args.labelmap = {}
+        kwic_args.align = ()
+        kwic_args.alignlist = [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+        kwic_args.leftctx = amodel.args.leftctx
+        kwic_args.rightctx = amodel.args.rightctx
+        kwic_args.structs = amodel.get_struct_opts()
+
+        data = kwic.kwicpage(kwic_args)
+
+        def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
+        if req.mapped_args.saveformat == 'text':
+            resp.set_header('Content-Type', 'text/plain')
+            resp.set_header(
+                'Content-Disposition',
+                f"attachment; filename=\"{mkfilename('txt')}\"")
+            output.update(data)
+            for item in data['Lines']:
+                item['ref'] = ', '.join(item['ref'])
+            # we must set contains_within = False as it is impossible (in the current user interface)
+            # to offer a custom i.p.m. calculation before the download starts
+            output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
+                amodel, contains_within=False, translate=req.translate)
+            output['Desc'] = amodel.concdesc_json()['Desc']
+        elif req.mapped_args.saveformat in ('csv', 'xlsx', 'xml'):
+            writer = plugins.runtime.EXPORT.instance.load_plugin(
+                req.mapped_args.saveformat, subtype='concordance')
+
+            resp.set_header('Content-Type', writer.content_type())
+            resp.set_header(
+                'Content-Disposition',
+                f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
+
+            if len(data['Lines']) > 0:
+                aligned_corpora = [amodel.corp] + [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+                writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
+                                      for c in aligned_corpora])
+                if req.mapped_args.heading:
+                    writer.writeheading({
+                        'corpus': amodel.corp.human_readable_corpname,
+                        'subcorpus': amodel.args.usesubcorp,
+                        'concordance_size': data['concsize'],
+                        'arf': data['result_arf'],
+                        'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
+                                  for x in amodel.concdesc_json().get('Desc', [])]
+                    })
+
+                    doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
+                    refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
+                    used_refs = ([('#', req.translate('Token number')), (doc_struct, req.translate('Document number'))] +
+                                 [(x, x) for x in amodel.corp.get_structattrs()])
+                    used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+                    writer.write_ref_headings([''] + used_refs if req.mapped_args.numbering else used_refs)
+
+                if 'Left' in data['Lines'][0]:
+                    left_key = 'Left'
+                    kwic_key = 'Kwic'
+                    right_key = 'Right'
+                elif 'Sen_Left' in data['Lines'][0]:
+                    left_key = 'Sen_Left'
+                    kwic_key = 'Kwic'
+                    right_key = 'Sen_Right'
+                else:
+                    raise ConcordanceQueryParamsError(req.translate('Invalid data'))
+
+                for i in range(len(data['Lines'])):
+                    line = data['Lines'][i]
+                    if req.mapped_args.numbering:
+                        row_num = str(i + from_line)
+                    else:
+                        row_num = None
+
+                    lang_rows = process_lang(
+                        line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+                    if 'Align' in line:
+                        lang_rows += process_lang(
+                            line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+                    writer.writerow(row_num, *lang_rows)
+            output = writer.raw_content()
+        else:
+            raise UserActionException(req.translate('Unknown export data type'))
+        return output
+    except Exception as e:
+        resp.set_header('Content-Type', 'text/html')
+        if resp.contains_header('Content-Disposition'):
+            resp.remove_header('Content-Disposition')
+        raise e
+
+
+@bp.route('/reduce', methods=['POST'])
+@http_action(
+    action_model=ConcActionModel, access_level=0, template='view.html', page_model='view', mutates_result=True)
+def reduce(self, request):
+    """
+    random sample
+    """
+    if len(self._lines_groups) > 0:
+        raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
+    qinfo = SampleFormArgs(persist=True)
+    qinfo.rlines = self.args.rlines
+    self.add_conc_form_args(qinfo)
+    self.args.q.append('r' + self.args.rlines)
+    return self.view(request)
+
+
+@dataclass
+class StructctxArgs:
+    pos: Optional[int] = 0
+    struct: Optional[str] = 'doc'
+    left_ctx: Optional[int] = -5
+    right_ctx: Optional[int] = 5
+
+
+@bp.route('/structctx')
+@http_action(action_model=ConcActionModel, mapped_args=StructctxArgs, access_level=1, return_type='json')
+def structctx(amodel, req: KRequest[StructctxArgs], resp):
+    """
+    display a hit in a context of a structure"
+    """
+    s = amodel.corp.get_struct(req.mapped_args.struct)
+    struct_id = s.num_at_pos(req.mapped_args.pos)
+    beg, end = s.beg(struct_id), s.end(struct_id)
+    amodel.args.detail_left_ctx = req.mapped_args.pos - beg
+    amodel.args.detail_right_ctx = end - req.mapped_args.pos - 1
+    result = _widectx(amodel, req.mapped_args.pos, req.mapped_args.left_ctx, req.mapped_args.right_ctx)
+    return result

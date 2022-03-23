@@ -106,7 +106,7 @@ class GeneralWorker:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':
-            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize, self._translate)
+            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize, translate=self._translate)
         else:
             raise NotImplementedError('Function "online sample" is not supported')
         logging.getLogger(__name__).debug(f'compute_conc({corp.corpname}, [{", ".join(q)}]) '

@@ -635,7 +635,7 @@ class ConcActionModel(CorpusActionModel):
         out['query_overview'] = self.concdesc_json()
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
-                self.human_readable_corpname(), out['query_overview'][0].get('nicearg'))
+                self.corp.human_readable_corpname, out['query_overview'][0].get('nicearg'))
 
     @staticmethod
     def filter_lines(data, pnfilter):
@@ -647,6 +647,7 @@ class ConcActionModel(CorpusActionModel):
             sel_lines.append(''.join(['[#%d]' % x2 for x2 in expand(item[0], item[1])]))
         return '%s%s %s %i %s' % (pnfilter, 0, 0, 0, '|'.join(sel_lines))
 
+    # TODO this should be part of 'views'
     def go_to_restore_conc(self, return_action: str):
         args = []
         for k in self._req.args.keys():

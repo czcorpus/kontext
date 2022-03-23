@@ -31,6 +31,11 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
+    def human_readable_corpname(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def spath(self) -> str:
         pass
 

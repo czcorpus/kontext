@@ -288,12 +288,11 @@ class ConcCalculation(GeneralWorker):
                 os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
                 sizes = self.get_cached_conc_sizes(corpus_obj, query)
-                cache_map.update_calc_status(subchash, query, finished=sizes.finished,
-                                             concsize=conc.size(), fullsize=sizes.fullsize,
-                                             relconcsize=sizes.relconcsize,
-                                             arf=round(conc.compute_ARF(), 2) if not corpus_obj.is_subcorpus
-                                             else None,
-                                             task_id=self._task_id)
+                cache_map.update_calc_status(
+                    subchash, query, finished=sizes.finished, concsize=conc.size(), fullsize=sizes.fullsize,
+                    relconcsize=sizes.relconcsize,
+                    arf=round(conc.compute_ARF(), 2) if not corpus_obj.is_subcorpus else None,
+                    task_id=self._task_id)
         except Exception as e:
             # Please note that there is no need to clean any mess (unfinished cached concordance etc.)
             # here as this is performed by _get_cached_conc()

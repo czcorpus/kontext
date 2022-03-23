@@ -172,6 +172,17 @@ class KCorpus(AbstractKCorpus):
         return self._corpname
 
     @property
+    def human_readable_corpname(self):
+        """
+        Returns an user-readable name of the current corpus (i.e. it cannot be used
+        to identify the corpus in KonText's code as it is only intended to be printed
+        somewhere on a page).
+        """
+        if self.corp.get_conf('NAME'):
+            return self.corp.get_conf('NAME')
+        return self.corp.get_conffile()
+
+    @property
     def spath(self):
         """
         Return a path of subcorpus data file.
