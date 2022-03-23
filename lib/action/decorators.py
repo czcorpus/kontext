@@ -53,6 +53,7 @@ async def _output_result(
         return result
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
+        action_model.init_menu(result)
         return tpl_engine.render(template, result)
     raise RuntimeError(
         f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')

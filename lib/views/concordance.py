@@ -1217,17 +1217,17 @@ async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
 @bp.route('/reduce', methods=['POST'])
 @http_action(
     action_model=ConcActionModel, access_level=0, template='view.html', page_model='view', mutates_result=True)
-def reduce(self, request):
+def reduce(amodel, req, resp):
     """
     random sample
     """
-    if len(self._lines_groups) > 0:
+    if len(amodel.lines_groups) > 0:
         raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
     qinfo = SampleFormArgs(persist=True)
-    qinfo.rlines = self.args.rlines
-    self.add_conc_form_args(qinfo)
-    self.args.q.append('r' + self.args.rlines)
-    return self.view(request)
+    qinfo.rlines = amodel.args.rlines
+    amodel.add_conc_form_args(qinfo)
+    amodel.args.q.append('r' + amodel.args.rlines)
+    return _view(amodel, req, resp)
 
 
 @dataclass

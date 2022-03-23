@@ -202,7 +202,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                                 'WHERE id = %s AND created = %s',
                                 (get_iso_datetime(), data_id, tmp['created'].isoformat())
                             )
-                            await self._archive.commit()
+                            await cursor.connection.commit()
             return data
         except Exception as ex:
             logging.getLogger(__name__).error(
@@ -279,7 +279,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                         (conc_id, json.dumps(data), get_iso_datetime(), 0))
                     archived_rec = data
                     ans = 1
-        await self._archive.commit()
+            await cursor.connection.commit()
         return ans, archived_rec
 
     async def is_archived(self, conc_id):

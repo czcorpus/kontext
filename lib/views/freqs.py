@@ -38,7 +38,7 @@ class MLFreqRequestArgs(MLFreqArgs):
 class GeneralFreqArgs:
     fcrit: List[str]
     fcrit_async: Optional[List[str]] = field(default_factory=list)
-    flimit: int = 0
+    flimit: Optional[int] = 0
     freq_sort: Optional[str] = ''
     force_cache: Optional[int] = 0
     freq_type: Optional[str] = ''

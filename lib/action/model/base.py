@@ -112,6 +112,9 @@ class BaseActionModel:
         result['page_model'] = page_model
         return result
 
+    def init_menu(self, result):
+        pass
+
     async def pre_dispatch(
             self,
             args_proxy: Optional[Union[RequestArgsProxy, JSONRequestArgsProxy]]
