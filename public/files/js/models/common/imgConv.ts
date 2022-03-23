@@ -60,7 +60,7 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
             null,
             (state, action, dispatch) => {
                     if (window.Blob === UnsupportedBlob) {
-                        this.layoutModel.showMessage('error', 'Function not supported, try to update your browser to latest version.')
+                        this.layoutModel.showMessage('error', this.layoutModel.translate('global__func_not_supp_by_the_browser'));
                         return;
                     }
                     if (!state.data[action.payload.sourceId]) {
