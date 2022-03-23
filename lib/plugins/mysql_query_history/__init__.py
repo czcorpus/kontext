@@ -216,7 +216,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             async for item in cursor:
                 q_supertype = item['q_supertype']
                 if q_supertype == 'conc':
-                    tmp = self._merge_conc_data(item)
+                    tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
                     tmp['human_corpname'] = corpora.corpus(

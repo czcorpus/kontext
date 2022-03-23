@@ -30,12 +30,10 @@ from plugins.mysql_integration_db import MySqlIntegrationDb
 import mailing
 import logging
 from collections import defaultdict
-from aiomysql import Connection, Cursor
-from typing import List, Union
+from typing import List
 
 from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
 from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
-from plugin_types.integration_db import IntegrationDatabase
 from .sign_up import SignUpToken
 import plugins
 from plugins import inject
@@ -57,7 +55,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     def __init__(
             self,
-            db: Union[MySqlIntegrationDb, MySQLOps],
+            db: MySQLOps,
             sessions,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
@@ -379,8 +377,7 @@ def create_instance(conf, integ_db: MySqlIntegrationDb, sessions):
         dbx = integ_db
         logging.getLogger(__name__).info(f'mysql_auth uses integration_db[{integ_db.info}]')
     else:
-        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
-        dbx = MySQLOps(MySQLConf(plugin_conf))
+        dbx = MySQLOps(**MySQLConf(plugin_conf).conn_dict)
         logging.getLogger(__name__).info(
             'mysql_auth uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))

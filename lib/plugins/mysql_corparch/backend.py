@@ -19,8 +19,7 @@
 """
 A corparch database backend for MySQL/MariaDB for 'read' operations
 """
-from typing import Any, Dict, Iterable, List, Tuple, Union, Optional
-from plugins.mysql_integration_db import MySqlIntegrationDb
+from typing import Any, Dict, Iterable, List, Tuple, Optional
 from plugin_types.auth import CorpusAccess
 from plugins.common.mysql import MySQLOps
 
@@ -48,7 +47,7 @@ class Backend(DatabaseBackend):
 
     def __init__(
             self,
-            db: Union[MySqlIntegrationDb, MySQLOps],
+            db: MySQLOps,
             user_table: str = DFLT_USER_TABLE,
             corp_table: str = DFLT_CORP_TABLE,
             corp_id_attr: str = DFLT_CORP_ID_ATTR,

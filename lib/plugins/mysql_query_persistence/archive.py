@@ -90,31 +90,32 @@ class Archiver(object):
         inserts = []
         i = 0
         try:
-            cursor = self._to_db.cursor()
-            proc_keys = set()
-            while i < num_proc:
-                qitem = self._from_db.list_pop(self._archive_queue_key)
-                if qitem is None:
-                    break
-                key = qitem['key']
-                if key in proc_keys:  # there are possible duplicates in the queue
-                    continue
-                data = self._from_db.get(key)
-                if not is_archived(cursor, key):
-                    inserts.append((key[len(conc_prefix):], json.dumps(data), curr_time, 0))
-                    i += 1
-                proc_keys.add(key)
-            cursor.close()
-            if not dry_run:
-                self._to_db.executemany(
-                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                    'VALUES (%s, %s, %s, %s)',
-                    inserts
-                )
-                self._to_db.commit()
-            else:
-                for ins in reversed(inserts):
-                    self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
+            with self._to_db.connection_sync() as connection:
+                with connection.cursor() as cursor:
+                    proc_keys = set()
+                    while i < num_proc:
+                        qitem = self._from_db.list_pop(self._archive_queue_key)
+                        if qitem is None:
+                            break
+                        key = qitem['key']
+                        if key in proc_keys:  # there are possible duplicates in the queue
+                            continue
+                        data = self._from_db.get(key)
+                        if not is_archived(cursor, key):
+                            inserts.append((key[len(conc_prefix):], json.dumps(data), curr_time, 0))
+                            i += 1
+                        proc_keys.add(key)
+                    cursor.close()
+                    if not dry_run:
+                        cursor.executemany(
+                            'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                            'VALUES (%s, %s, %s, %s)',
+                            inserts
+                        )
+                        connection.commit()
+                    else:
+                        for ins in reversed(inserts):
+                            self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
             for item in inserts:

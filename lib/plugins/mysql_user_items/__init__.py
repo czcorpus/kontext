@@ -17,6 +17,7 @@ import logging
 from sanic.blueprints import Blueprint
 
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from plugins.common.mysql import MySQLOps, MySQLConf
 
 from .backend import Backend
 
@@ -151,10 +152,8 @@ def create_instance(settings, integ_db: MySqlIntegrationDb, auth):
         logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
-        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
-        from plugins.common.mysql import MySQLOps, MySQLConf
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)).connection)
+        db_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict).connection)
     return MySQLUserItems(settings, db_backend, auth)

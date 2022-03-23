@@ -27,6 +27,7 @@ from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
+from plugins.common.mysql import MySQLOps, MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
 from plugins import inject
@@ -383,12 +384,10 @@ def create_instance(conf, user_items, integ_db: MySqlIntegrationDb):
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
         db_backend = Backend(integ_db)
     else:
-        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
-        from plugins.common.mysql import MySQLOps, MySQLConf
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        db_backend = Backend(MySQLOps(MySQLConf(plugin_conf)))
+        db_backend = Backend(MySQLOps(**MySQLConf(plugin_conf).conn_dict))
 
     return MySQLCorparch(
         db_backend=db_backend,

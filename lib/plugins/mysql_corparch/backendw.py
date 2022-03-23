@@ -23,6 +23,7 @@ import pytz
 import logging
 import re
 import mysql.connector
+from plugins.common.mysql import MySQLOps
 from plugin_types.corparch.backend import DatabaseWriteBackend
 from plugins.mysql_corparch.backend import (
     Backend,
@@ -38,7 +39,7 @@ class WriteBackend(DatabaseWriteBackend):
     to import existing corpora.xml/registry files etc.
     """
 
-    def __init__(self, db, ro_backend: Backend, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
+    def __init__(self, db: MySQLOps, ro_backend: Backend, user_table: str = DFLT_USER_TABLE, corp_table: str = DFLT_CORP_TABLE,
                  group_acc_table: str = DFLT_GROUP_ACC_TABLE, user_acc_table: str = DFLT_USER_ACC_TABLE,
                  user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR, group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
                  group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR):

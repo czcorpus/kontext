@@ -65,7 +65,6 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import re
 import json
-from typing import Union
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
@@ -111,7 +110,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             self,
             settings,
             db,
-            sql_backend: Union[MySqlIntegrationDb, MySQLOps],
+            sql_backend: MySQLOps,
             auth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
@@ -313,8 +312,7 @@ def create_instance(settings, db, integration_db: MySqlIntegrationDb, auth):
             f'mysql_query_persistence uses integration_db[{integration_db.info}]')
         return MySqlQueryPersistence(settings, db, integration_db, auth)
     else:
-        raise NotImplementedError('Asynchronous MySQLOps not implemented yet')
         logging.getLogger(__name__).info(
             'mysql_query_persistence uses custom database configuration {}@{}'.format(
                 plugin_conf['mysql_user'], plugin_conf['mysql_host']))
-        return MySqlQueryPersistence(settings, db, MySQLOps(MySQLConf(plugin_conf)), auth)
+        return MySqlQueryPersistence(settings, db, MySQLOps(**MySQLConf(plugin_conf).conn_dict), auth)
