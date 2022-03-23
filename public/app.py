@@ -38,7 +38,7 @@ LOCALE_PATH = os.path.realpath('%s/../locale' % os.path.dirname(__file__))
 import plugins
 import plugins.export
 import settings
-import translation
+#import translation
 from action.plugin.initializer import setup_plugins, install_plugin_actions
 from texttypes.cache import TextTypesCache
 from sanic import Sanic, Request
@@ -100,7 +100,7 @@ class KonTextWsgiApp:
         self.cleanup_runtime_modules()
         os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
         setup_plugins()
-        translation.load_translations(settings.get('global', 'translations'))
+        #translation.load_translations(settings.get('global', 'translations'))
 
         def signal_handler(signal, frame):
             for p in plugins.runtime:
@@ -121,7 +121,7 @@ class KonTextWsgiApp:
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
-        translation.activate(ui_lang)
+        #translation.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
         app_url_prefix = settings.get_str('global', 'action_path_prefix', '')
         if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):
