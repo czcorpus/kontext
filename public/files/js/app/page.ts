@@ -857,7 +857,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
-            if (!window.hasOwnProperty('Blob') || true) {
+            if (!window.hasOwnProperty('Blob')) {
                 UnsupportedBlob.translate = (msg:string) => this.translate(msg);
                 window['Blob'] = UnsupportedBlob;
             }
