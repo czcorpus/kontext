@@ -83,6 +83,34 @@ export interface SaveLinkHandler {
     (suffix:string, url:string):void;
 }
 
+export class UnsupportedBlob implements Blob {
+    readonly size: number;
+    readonly type: string;
+
+    constructor(blobParts?: BlobPart[], options?: BlobPropertyBag) {}
+
+    arrayBuffer(): Promise<ArrayBuffer> {
+        return new Promise<ArrayBuffer>((resolve, reject) => {
+            throw new Error('Function not supported, try to update your browser to latest version.');
+        });
+    }
+
+    slice(start?: number, end?: number, contentType?: string): Blob {
+        throw new Error('Function not supported, try to update your browser to latest version.');
+    }
+
+    stream(): ReadableStream {
+        throw new Error('Function not supported, try to update your browser to latest version.');
+    }
+
+    text(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            throw new Error('Function not supported, try to update your browser to latest version.');
+        });
+    }
+}
+
+
 /**
  * PageEnvironment represents a core functionality which must be initialized
  * on any KonText page before any of page's own functionalities are
@@ -831,6 +859,9 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
+            if (!window.hasOwnProperty('Blob')) {
+                window['Blob'] = UnsupportedBlob;
+            }
             window.onkeydown = (evt) => {
                 this.globalKeyHandlers.forEach(fn => fn(evt));
             }

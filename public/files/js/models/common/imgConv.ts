@@ -20,7 +20,7 @@
 
 import { Dict } from 'cnc-tskit';
 import { StatelessModel, IActionQueue } from 'kombo';
-import { DownloadType, PageModel } from '../../app/page';
+import { DownloadType, PageModel, UnsupportedBlob } from '../../app/page';
 import { Actions } from '../common/actions';
 import { FreqChartsAvailableTypes } from '../freqs/common';
 
@@ -59,6 +59,10 @@ export class ImageConversionModel extends StatelessModel<ImageConversionModelSta
             Actions.ConvertChartSVG,
             null,
             (state, action, dispatch) => {
+                    if (window.Blob === UnsupportedBlob) {
+                        this.layoutModel.showMessage('error', 'Function not supported, try to update your browser to latest version.')
+                        return;
+                    }
                     if (!state.data[action.payload.sourceId]) {
                         this.layoutModel.showMessage('error', `Chart data ${action.payload.sourceId} not available. Known data: ${Dict.keys(state.data).join(', ')}`)
                         return;
