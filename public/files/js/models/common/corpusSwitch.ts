@@ -73,6 +73,7 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     DefaultVirtKeyboard:string;
     SimpleQueryDefaultAttrs:Array<string>;
     QSEnabled:boolean;
+    ShuffleConcByDefault:number;
 }
 
 
@@ -191,6 +192,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<string>('DefaultVirtKeyboard', data.DefaultVirtKeyboard);
                             this.conf.setConf<Array<string>>('SimpleQueryDefaultAttrs', data.SimpleQueryDefaultAttrs);
                             this.conf.setConf<boolean>('QSEnabled', data.QSEnabled);
+                            this.conf.setConf<number>('ShuffleConcByDefault', data.ShuffleConcByDefault);
                         }
                     )
 
