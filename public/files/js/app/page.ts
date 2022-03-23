@@ -83,6 +83,32 @@ export interface SaveLinkHandler {
     (suffix:string, url:string):void;
 }
 
+export class UnsupportedBlob implements Blob {
+    readonly size: number;
+    readonly type: string;
+
+    constructor(blobParts?: BlobPart[], options?: BlobPropertyBag) {}
+
+    static translate = (s:string):string => s;
+
+    arrayBuffer(): Promise<ArrayBuffer> {
+        return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
+    }
+
+    slice(start?: number, end?: number, contentType?: string): Blob {
+        throw new Error(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
+    }
+
+    stream(): ReadableStream {
+        throw new Error(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
+    }
+
+    text(): Promise<string> {
+        return Promise.reject(UnsupportedBlob.translate('global__func_not_supp_by_the_browser'));
+    }
+}
+
+
 /**
  * PageEnvironment represents a core functionality which must be initialized
  * on any KonText page before any of page's own functionalities are
@@ -831,6 +857,10 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
             this.commonViews = commonViewsFactory(this.getComponentHelpers());
 
+            if (!window.hasOwnProperty('Blob') || true) {
+                UnsupportedBlob.translate = (msg:string) => this.translate(msg);
+                window['Blob'] = UnsupportedBlob;
+            }
             window.onkeydown = (evt) => {
                 this.globalKeyHandlers.forEach(fn => fn(evt));
             }
