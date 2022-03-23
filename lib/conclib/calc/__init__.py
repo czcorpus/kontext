@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import Tuple, Optional, List, Union
+from typing import Callable, Tuple, Optional, List, Union
 import os
 import time
 import logging
@@ -138,7 +138,7 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]]) -> PyConc:
+def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]], translate: Callable[[str], str] = lambda x: x) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
@@ -153,10 +153,10 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
-                mcorp = corpus_manager.get_corpus(qq[2:])
+                mcorp = corpus_manager.get_corpus(qq[2:], translate=translate)
                 break
         try:
-            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
+            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp, translate=translate)
         except manatee.FileAccessError as ex:
             raise ConcNotFoundException(ex)
     raise BrokenConcordanceException(
@@ -165,7 +165,7 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
 
 def find_cached_conc_base(
         corp: AbstractKCorpus, subchash: Optional[str], q: Tuple[str, ...],
-        minsize: int) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
+        minsize: int, translate: Callable[[str], str] = lambda x: x) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
     """
     Load a concordance from cache starting from a complete operation q[:],
     then trying q[:-1], q[:-2], q:[:-i] etc. A possible found concordance can be
@@ -223,9 +223,9 @@ def find_cached_conc_base(
                     mcorp = corp
                     for qq in reversed(q[:i]):  # find the right main corp, if aligned
                         if qq.startswith('x-'):
-                            mcorp = corpus_manager.get_corpus(qq[2:])
+                            mcorp = corpus_manager.get_corpus(qq[2:], translate=translate)
                             break
-                    conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
+                    conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp, translate=translate)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error(
                     f'Failed to use cached concordance for {q[:i]}: {ex}')
@@ -242,10 +242,11 @@ def find_cached_conc_base(
 
 class ConcCalculation(GeneralWorker):
 
-    def __init__(self, task_id, cache_factory=None):
+    def __init__(self, task_id, cache_factory=None,  translate: Callable[[str], str] = lambda x: x):
         """
         """
-        super(ConcCalculation, self).__init__(task_id=task_id, cache_factory=cache_factory)
+        super(ConcCalculation, self).__init__(task_id=task_id,
+                                              cache_factory=cache_factory, translate=translate)
 
     def __call__(self, initial_args, subc_dirs, corpus_name, subc_name, subchash, query, samplesize):
         """
@@ -260,7 +261,8 @@ class ConcCalculation(GeneralWorker):
         cache_map = None
         try:
             corpus_manager = CorpusManager(subcpath=subc_dirs)
-            corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name)
+            corpus_obj = corpus_manager.get_corpus(
+                corpus_name, subcname=subc_name, translate=self._translate)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
@@ -311,10 +313,11 @@ class ConcSyncCalculation(GeneralWorker):
     mapping records.
     """
 
-    def __init__(self, task_id, cache_factory, subc_dirs, corpus_name, subc_name: str, conc_dir: str):
-        super().__init__(task_id, cache_factory)
+    def __init__(self, task_id, cache_factory, subc_dirs, corpus_name, subc_name: str, conc_dir: str, translate: Callable[[str], str] = lambda x: x):
+        super().__init__(task_id, cache_factory, translate)
         self.corpus_manager = CorpusManager(subcpath=subc_dirs)
-        self.corpus_obj = self.corpus_manager.get_corpus(corpus_name, subcname=subc_name)
+        self.corpus_obj = self.corpus_manager.get_corpus(
+            corpus_name, subcname=subc_name, translate=self._translate)
         setattr(self.corpus_obj, '_conc_dir', conc_dir)
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 
@@ -324,7 +327,8 @@ class ConcSyncCalculation(GeneralWorker):
 
     def __call__(self,  subchash, query: Tuple[str, ...], samplesize: int):
         try:
-            calc_from, conc = find_cached_conc_base(self.corpus_obj, subchash, query, minsize=0)
+            calc_from, conc = find_cached_conc_base(
+                self.corpus_obj, subchash, query, minsize=0, translate=self._translate)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
                 for i in range(0, len(query)):
                     self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
@@ -339,7 +343,8 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_status.concsize = conc.size()
                 calc_status.fullsize = conc.fullsize()
                 calc_status.recalc_relconcsize(self.corpus_obj)
-                calc_status.arf = round(conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
+                calc_status.arf = round(
+                    conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
                 self.cache_map.add_to_map(subchash, query[:1], calc_status, overwrite=True)
                 calc_from = 1
             else:
@@ -367,7 +372,8 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_status.concsize = conc.size()
                 calc_status.fullsize = conc.fullsize()
                 calc_status.recalc_relconcsize(self.corpus_obj)
-                calc_status.arf = round(conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
+                calc_status.arf = round(
+                    conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
                 self.cache_map.add_to_map(subchash, query[:act + 1], calc_status, overwrite=True)
             except Exception as ex:
                 self._mark_calc_states_err(subchash, query, act, ex)

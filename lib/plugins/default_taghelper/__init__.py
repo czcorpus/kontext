@@ -38,6 +38,8 @@ element taghelper {
 """
 from action.errors import UserActionException
 from sanic.blueprints import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 import plugins
 from plugin_types.taghelper import AbstractTaghelper
 from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
@@ -56,24 +58,24 @@ bp = Blueprint('default_taghelper')
 
 @bp.route('/ajax_get_tag_variants')
 @http_action(return_type='json', action_model=CorpusActionModel)
-def ajax_get_tag_variants(req, amodel):
+async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     """
     corpname = req.args.get('corpname')
     tagset_name = req.args.get('tagset')
 
-    values_selection = plugins.runtime.TAGHELPER.instance.fetcher(
-        amodel.plugin_ctx, corpname, tagset_name).fetch(req)
+    fetcher = await plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name)
+    values_selection = fetcher.fetch(req)
     try:
-        tag_loader = plugins.runtime.TAGHELPER.instance.loader(
-            amodel.plugin_ctx, corpname, tagset_name)
+        tag_loader = await plugins.runtime.TAGHELPER.instance.loader(amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
         raise UserActionException(
-            req.translate('Corpus %s is not supported by this widget.') % corpname)
-    if plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name).is_empty(values_selection):
-        ans = tag_loader.get_initial_values(req.ui_lang)
+            req.translate('Corpus {corpname} is not supported by this widget.'))
+
+    if fetcher.is_empty(values_selection):
+        ans = tag_loader.get_initial_values(req.ui_lang, req.translate)
     else:
-        ans = tag_loader.get_variant(values_selection, amodel.ui_lang)
+        ans = tag_loader.get_variant(values_selection, amodel.ui_lang, req.translate)
     return ans
 
 
@@ -122,7 +124,7 @@ class Taghelper(AbstractTaghelper):
         for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
             if tagset.ident == tagset_id:
                 loader = await self.loader(plugin_ctx, corpus_name, tagset.ident)
-                return loader.is_available()
+                return loader.is_available(plugin_ctx.translate)
         return False
 
     @staticmethod

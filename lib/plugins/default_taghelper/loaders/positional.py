@@ -16,15 +16,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from typing import DefaultDict, Set, List, Union
+from collections import defaultdict
 import os
 import time
 import json
-from collections import defaultdict
 import re
+
 from lxml import etree
+
 from plugin_types.taghelper import AbstractTagsetInfoLoader
-from translation import ugettext as _
-from typing import DefaultDict, Set, List, Union
 
 
 class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
@@ -56,24 +57,24 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         self.taglist_path = taglist_path
         self.initial_values = {}
 
-    def get_variant(self, user_selection, lang):
+    def get_variant(self, user_selection, lang, translate):
         """
         """
-        return self.calculate_variant(user_selection, lang)
+        return self.calculate_variant(user_selection, lang, translate)
 
-    def get_initial_values(self, lang):
+    def get_initial_values(self, lang, translate):
         if lang not in self.initial_values:
             try:
-                self.initial_values[lang] = self._get_initial_values(lang)
+                self.initial_values[lang] = self._get_initial_values(lang, translate)
             except FileNotFoundError:
                 self.initial_values[lang] = {}
 
         return self.initial_values[lang]
 
-    def is_available(self):
-        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US')) > 0
+    def is_available(self, translate):
+        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US', translate)) > 0
 
-    def _get_initial_values(self, lang):
+    def _get_initial_values(self, lang, translate):
         """
         Loads all values as needed to initialize tag-builder widget for the current corpus.
         It means for any tag position all possible values must be returned. Collected
@@ -92,7 +93,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         """
         path = os.path.join(self.cache_dir, f'initial-values.{lang}.json')
         char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
-        tagset = self._load_tag_descriptions(self.tagset_name, lang)
+        tagset = self._load_tag_descriptions(self.tagset_name, lang, translate)
         if tagset is None:
             return {}
 
@@ -140,7 +141,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 data = json.load(f)
         return data
 
-    def calculate_variant(self, required_pattern, lang):
+    def calculate_variant(self, required_pattern, lang, translate):
         """
         Returns all tag variants in unspecified positions for a provided tag pattern.
         I.e. - if you enter 'A.B..' then all vectors 'v' with v[0] = A and v[2] = B
@@ -153,7 +154,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         a dictionary where keys represent tag-string position and values are lists of
         tuples (ID, description)
         """
-        tagset = self._load_tag_descriptions(self.tagset_name, lang)
+        tagset = self._load_tag_descriptions(self.tagset_name, lang, translate)
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
@@ -197,7 +198,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             tags=[v for _, v in sorted(ans.items(), key=lambda x: x[0])],
             labels=[])
 
-    def _load_tag_descriptions(self, tagset_name, lang):
+    def _load_tag_descriptions(self, tagset_name, lang, translate):
         """
         arguments:
         path -- path to an XML file containing tag descriptions
@@ -236,7 +237,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                     elif 'en' in translations:
                         values[idx].append((v.attrib['ident'], translations['en']))
                     else:
-                        values[idx].append((v.attrib['ident'], '[%s]' % _('no description')))
+                        values[idx].append((v.attrib['ident'], f'[{translate("no description")}]'))
                 elif v.tag == 'label':
                     translations = {}
                     for d in v:

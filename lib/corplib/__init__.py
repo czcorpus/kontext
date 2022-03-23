@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import List, Any, Optional, Tuple, Dict, Union
+from typing import Callable, List, Any, Optional, Tuple, Dict, Union
 from manatee import SubCorpus, Concordance, StrVector
 from array import array
 import logging
@@ -29,7 +29,6 @@ import glob
 
 import l10n
 import manatee
-from translation import ugettext as _
 import plugins
 from plugin_types.corparch.corpus import DefaultManateeCorpusInfo
 from functools import cmp_to_key
@@ -65,7 +64,7 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str) -> SubCorpus:
+def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str, translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -76,7 +75,7 @@ def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str)
     subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
     """
     if os.path.exists(path):
-        raise RuntimeError(_('Subcorpus already exists'))
+        raise RuntimeError(translate('Subcorpus already exists'))
     return manatee.create_subcorpus(path, corpus.unwrap(), structname, subquery)
 
 
@@ -172,7 +171,7 @@ class CorpusManager:
 
     def get_corpus(
             self, corpname: str, corp_variant: str = '', subcname: str = '',
-            decode_desc: bool = True) -> AbstractKCorpus:
+            decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -200,15 +199,15 @@ class CorpusManager:
                     subc = KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
                     self._cache[cache_key] = subc
                     return subc
-            raise RuntimeError(_('Subcorpus "{}" not found').format(subcname))   # TODO error type
+            raise RuntimeError(translate(f'Subcorpus "{subcname}" not found'))   # TODO error type
         else:
             kcorp = KCorpus(corp, corpname)
             self._cache[cache_key] = kcorp
         return kcorp
 
-    def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
+    def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> DefaultManateeCorpusInfo:
         try:
-            corp = self.get_corpus(corpus_id, '', '', True)
+            corp = self.get_corpus(corpus_id, '', '', True, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)
@@ -251,7 +250,7 @@ class CorpusManager:
 
 def texttype_values(
         corp: AbstractKCorpus, subcorpattrs: str, maxlistsize: int, shrink_list: Union[Tuple[str, ...],
-        List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
+                                                                                       List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     arguments:
     corp --

@@ -186,7 +186,8 @@ async def _load_query_history(
                 offset=offset, limit=limit,
                 q_supertype=q_supertype, corpname=corpname,
                 from_date=from_date, to_date=to_date,
-                archived_only=archived_only)
+                archived_only=archived_only,
+                translate=amodel.plugin_ctx.translate)
     else:
         rows = ()
     return rows

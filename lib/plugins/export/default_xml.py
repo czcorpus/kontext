@@ -238,10 +238,10 @@ class XMLExport(AbstractExport):
         'pquery': PqueryDocument
     }
 
-    def __init__(self, subtype):
+    def __init__(self, subtype, translate):
         subtype_class = self.SUBTYPE_MAP.get(subtype, None)
         if subtype_class is None:
-            raise ExportPluginException('Unknown export subtype %s' % subtype)
+            raise ExportPluginException(f'Unknown export subtype {subtype}')
         self._document = subtype_class()
         self._corpnames = []
 

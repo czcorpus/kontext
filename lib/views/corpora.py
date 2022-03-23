@@ -101,7 +101,7 @@ async def ajax_get_corp_details(amodel, req, resp):
         if not acc:
             raise ForbiddenException('No access to corpus {0}'.format(corpname))
         corp_conf_info = await ca.get_corpus_info(amodel.plugin_ctx, corpname)
-        corpus = amodel.cm.get_corpus(req.args.get('corpname'))
+        corpus = amodel.cm.get_corpus(req.args.get('corpname'), translate=req.translate)
         ans = CorpusDetail(
             corpname=corpus.get_conf('NAME') if corpus.get_conf('NAME') else corpus.corpname,
             description=corp_conf_info.description,
