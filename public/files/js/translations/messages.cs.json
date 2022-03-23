@@ -213,6 +213,7 @@
         "global__note_heading": "Poznámka",
         "global__corpus_has_no_structattrs": "Korpus nemá žádné strukturní atributy",
         "global__try_again": "zkusit znovu",
+        "global__func_not_supp_by_the_browser": "Funkce není podporována vaším webovým prohlížečem. Aktualizujte prosím váš prohlížeč nebo zkuste použít jiný.",
         "linesel__remove_selected_lines": "Odstranit vybrané řádky",
         "linesel__remove_all_but_selected_lines": "Ponechat pouze vybrané řádky",
         "linesel__clear_the_selection": "Zrušit označení řádků",

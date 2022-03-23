@@ -213,6 +213,7 @@
         "global__note_heading": "Note",
         "global__corpus_has_no_structattrs": "The corpus has no structural attributes",
         "global__try_again": "try again",
+        "global__func_not_supp_by_the_browser": "The function is not supported by the web browser. Please try to update your browser or use a different one.",
         "linesel__remove_selected_lines": "Remove selected lines",
         "linesel__remove_all_but_selected_lines": "Keep only selected lines",
         "linesel__clear_the_selection": "Clear the selection",
