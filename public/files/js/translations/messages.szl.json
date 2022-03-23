@@ -213,6 +213,7 @@
         "global__note_heading": "Note UNTRANSLATED",
         "global__corpus_has_no_structattrs": "The corpus has no structural attributes UNTRANSLATED",
         "global__try_again": "try again UNTRANSLATED",
+        "global__func_not_supp_by_the_browser": "The function is not supported by the web browser. Please try to update your browser or use a different one. UNTRANSLATED",
         "linesel__remove_selected_lines": "Skasuj ôznaczōne linije",
         "linesel__remove_all_but_selected_lines": "Ôstŏw ino ôznaczōne linije",
         "linesel__clear_the_selection": "Wysnŏż wybōr",
