@@ -208,7 +208,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
             writer.writeheading(('', amodel._curr_wlform_args.wlattr, 'freq'))
         elif form_args.heading:
             writer.writeheading({
-                'corpus': amodel.human_readable_corpname(),
+                'corpus': amodel.corp.human_readable_corpname,
                 'subcorpus': amodel.args.usesubcorp,
                 'pattern': amodel._curr_wlform_args.wlpat
             })

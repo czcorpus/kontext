@@ -495,7 +495,7 @@ class CorpusActionModel(UserActionModel):
         """
         result['corpname'] = getattr(self.args, 'corpname')
         result['align'] = getattr(self.args, 'align')
-        result['human_corpname'] = self.human_readable_corpname()
+        result['human_corpname'] = self.corp.human_readable_corpname
 
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size
@@ -506,7 +506,7 @@ class CorpusActionModel(UserActionModel):
         result['corpus_ident'] = dict(
             id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
-            name=self.human_readable_corpname(),
+            name=self.corp.human_readable_corpname,
             usesubcorp=self.args.usesubcorp,
             origSubcorpName=self.corp.orig_subcname,
             foreignSubcorp=self.corp.author_id is not None and self.session_get(
@@ -637,19 +637,6 @@ class CorpusActionModel(UserActionModel):
                 result[k] = getattr(self.args, k)
 
         return result
-
-    def human_readable_corpname(self):
-        """
-        Returns an user-readable name of the current corpus (i.e. it cannot be used
-        to identify the corpus in KonText's code as it is only intended to be printed
-        somewhere on a page).
-        """
-        if self.corp.get_conf('NAME'):
-            return self.corp.get_conf('NAME')
-        elif self.args.corpname:
-            return self.args.corpname
-        else:
-            return ''
 
     def get_struct_opts(self) -> str:
         """

@@ -22,7 +22,6 @@ It can be run in two modes:
  2) within a WSGI-enabled web server (Gunicorn, uwsgi, Apache + mod_wsgi)
 """
 
-import asyncio
 import sys
 import os
 import wsgiref.util
@@ -52,6 +51,7 @@ from views.user import bp as user_bp
 from views.corpora import bp as corpora_bp
 from views.wordlist import bp as wordlist_bp
 from views.freqs import bp as freqs_bp
+from views.colls import bp as colls_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -198,6 +198,7 @@ application.blueprint(user_bp)
 application.blueprint(corpora_bp)
 application.blueprint(wordlist_bp)
 application.blueprint(freqs_bp)
+application.blueprint(colls_bp)
 setup_plugins()
 install_plugin_actions(application)
 
