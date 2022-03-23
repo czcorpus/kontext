@@ -35,7 +35,7 @@ bp = Blueprint('default_issue_reporting')
 
 @bp.route('/submit_issue', methods=['POST'])
 @http_action(return_type='json', action_model=UserActionModel)
-def submit_issue(req, amodel):
+async def submit_issue(req, amodel):
     with plugins.runtime.ISSUE_REPORTING as p:
         await p.submit(amodel.plugin_ctx, req.form)
     return {}
