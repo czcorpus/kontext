@@ -55,6 +55,7 @@ from views.dispersion import bp as dispersion_bp
 from views.colls import bp as colls_bp
 from views.options import bp as options_bp
 from views.pquery import bp as pquery_bp
+from views.tools import bp as tools_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -203,6 +204,9 @@ application.blueprint(wordlist_bp)
 application.blueprint(freqs_bp)
 application.blueprint(dispersion_bp)
 application.blueprint(colls_bp)
+application.blueprint(options_bp)
+application.blueprint(pquery_bp)
+application.blueprint(tools_bp)
 setup_plugins()
 install_plugin_actions(application)
 
