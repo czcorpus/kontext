@@ -26,7 +26,7 @@ specified by attributes values).
 import collections
 import re
 import logging
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 from functools import reduce
 from action.krequest import KRequest
 
@@ -114,7 +114,7 @@ class TextTypes:
     async def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
-    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
+    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens') -> Dict[str, Any]:
         """
         Returns a text types table containing also an information about
         total occurrences of respective attribute values.
