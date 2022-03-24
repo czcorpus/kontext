@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Any, Dict, List, Tuple, Union
+from action.krequest import KRequest
+from action.response import KResponse
 
 from plugins.mysql_integration_db import MySqlIntegrationDb
 try:
@@ -72,7 +74,7 @@ class ProcessResponse(TypedDict):
 
 @bp.route('/subcmixer_run_calc',  methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-async def subcmixer_run_calc(amodel, req, resp) -> Union[ProcessResponse, EmptyResponse]:
+async def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Union[ProcessResponse, EmptyResponse]:
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return await sm.process(
@@ -89,7 +91,7 @@ async def subcmixer_run_calc(amodel, req, resp) -> Union[ProcessResponse, EmptyR
 
 @bp.route('/subcmixer_create_subcorpus', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-async def subcmixer_create_subcorpus(amodel, req, resp) -> Dict[str, Any]:
+async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers

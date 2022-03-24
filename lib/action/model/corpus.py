@@ -197,11 +197,6 @@ class CorpusActionModel(UserActionModel):
                     raise UserActionException(self._req.translate('Invalid or expired query'))
         return False
 
-    def user_subc_names(self, corpname):
-        if self.user_is_anonymous():
-            return []
-        return self.cm.subcorp_names(corpname)
-
     async def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
         if conc_data.get('lastop_form', {}).get('form_type') in ('query', 'filter') and not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
@@ -595,15 +590,6 @@ class CorpusActionModel(UserActionModel):
         """
         return ','.join(x for x in (self.args.structs, ','.join(self.args.structattrs)) if x)
 
-    @staticmethod
-    def _parse_sorting_param(k):
-        if k[0] == '-':
-            revers = True
-            k = k[1:]
-        else:
-            revers = False
-        return k, revers
-
     async def get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
         if await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
@@ -662,6 +648,32 @@ class CorpusActionModel(UserActionModel):
         curr = self._req.ctx.session.get('last_search', {})
         curr[op_type] = conc_id
         self._req.ctx.session['last_search'] = curr
+
+    async def attach_aligned_query_params(self, tpl_out: Dict[str, Any]) -> None:
+        """
+        Adds template data required to generate components for adding/overviewing
+        aligned corpora. This is called by individual actions.
+
+        arguments:
+        tpl_out -- a dict where exported data is stored
+        """
+        if self.corp.get_conf('ALIGNED'):
+            tpl_out['Aligned'] = []
+            if 'input_languages' not in tpl_out:
+                tpl_out['input_languages'] = {}
+            for al in self.corp.get_conf('ALIGNED').split(','):
+                alcorp = self.cm.get_corpus(al, translate=self._req.translate)
+                corp_info = await self.get_corpus_info(al)
+
+                tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
+
+                poslist = []
+                for tagset in corp_info.tagsets:
+                    if tagset.ident == corp_info.default_tagset:
+                        poslist = tagset.pos_category
+                        break
+                tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
+                tpl_out['input_languages'][al] = corp_info.collator_locale
 
 
 class CorpusPluginCtx(UserPluginCtx):
