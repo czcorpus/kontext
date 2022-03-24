@@ -16,7 +16,7 @@ from typing import Any, Optional, TypeVar, Dict, List, Tuple, Union, Iterable, C
 from corplib.abstract import AbstractKCorpus
 from action.argmapping.conc.query import ConcFormArgs
 from functools import partial
-from dataclasses import fields, asdict
+from dataclasses import asdict
 import urllib
 
 import corplib
@@ -157,53 +157,6 @@ class CorpusActionModel(UserActionModel):
         if not data:
             data = {}
         return data
-
-    @staticmethod
-    def _get_save_excluded_attributes() -> Tuple[str, ...]:
-        return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
-
-    def _save_options(self, optlist: Optional[Iterable] = None, corpus_id: Union[str, None] = None):
-        """
-        Saves user's options to a storage
-
-        Arguments:
-        optlist -- a list of options/arguments to be saved
-        corpus_id --
-        """
-        if optlist is None:
-            optlist = []
-        tosave = [(att.name, getattr(self.args, att.name))
-                  for att in fields(Args) if att.name in optlist]
-
-        def merge_incoming_opts_to(opts):
-            if opts is None:
-                return {}
-            excluded_attrs = self._get_save_excluded_attributes()
-            for attr, val in tosave:
-                if attr not in excluded_attrs:
-                    opts[attr] = val
-            return opts
-
-        # data must be loaded (again) because in-memory settings are
-        # in general a subset of the ones stored in db (and we want
-        # to store (again) even values not used in this particular request)
-        with plugins.runtime.SETTINGS_STORAGE as settings_storage:
-            if self._user_has_persistent_settings():
-                if corpus_id:
-                    options = settings_storage.load(self.session_get('user', 'id'), corpus_id)
-                    options = merge_incoming_opts_to(options)
-                    settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
-                else:
-                    options = settings_storage.load(self.session_get('user', 'id'))
-                    options = merge_incoming_opts_to(options)
-                    settings_storage.save(self.session_get('user', 'id'), None, options)
-            else:
-                options = {}
-                sess_options = self.session_get('settings')
-                if sess_options:
-                    options.update(sess_options)
-                merge_incoming_opts_to(options)
-                self._req.ctx.session['settings'] = options
 
     async def _restore_prev_query_params(self, form) -> bool:
         """

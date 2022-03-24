@@ -53,6 +53,7 @@ from views.wordlist import bp as wordlist_bp
 from views.freqs import bp as freqs_bp
 from views.dispersion import bp as dispersion_bp
 from views.colls import bp as colls_bp
+from views.options import bp as options_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
@@ -122,7 +123,7 @@ class KonTextWsgiApp:
 
     def __call__(self, environ, start_response):
         ui_lang = self.get_lang(environ)
-        #translation.activate(ui_lang)
+        # translation.activate(ui_lang)
         environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
         app_url_prefix = settings.get_str('global', 'action_path_prefix', '')
         if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):
