@@ -49,7 +49,7 @@ class GeneralFreqArgs:
 @bp.route('/freqs')
 @http_action(
     access_level=0, action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=GeneralFreqArgs)
-async def freqs(amodel, req: KRequest[GeneralFreqArgs], resp):
+async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: KResponse):
     """
     Display a frequency list (tokens, text types) based on more low-level arguments. In case the
     function runs in HTML return mode, 'freq_type' must be specified so the client part is able
@@ -64,7 +64,7 @@ async def freqs(amodel, req: KRequest[GeneralFreqArgs], resp):
             req,
             fcrit=req.mapped_args.fcrit, fcrit_async=req.mapped_args.fcrit_async, flimit=req.mapped_args.flimit,
             freq_sort=req.mapped_args.freq_sort, force_cache=req.mapped_args.force_cache)
-        if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and format != 'json':
+        if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
             raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
         return ans
@@ -401,7 +401,7 @@ class SavefreqArgs:
 @http_action(
     access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, template='txtexport/savefreq.html',
     return_type='plain')
-async def savefreq(amodel:ConcActionModel, req: KRequest[SavefreqArgs], resp: KResponse):
+async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: KResponse):
     """
     save a frequency list
     """
@@ -465,4 +465,3 @@ async def savefreq(amodel:ConcActionModel, req: KRequest[SavefreqArgs], resp: KR
                 i += 1
         output = writer.raw_content()
     return output
-
