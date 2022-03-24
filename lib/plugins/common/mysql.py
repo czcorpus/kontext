@@ -16,68 +16,115 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import mysql.connector
-import logging
+from dataclasses import asdict, dataclass, field
+import aiomysql
+from contextlib import asynccontextmanager, contextmanager
+from typing import Generator, Optional, Dict, Any
+
+import pymysql
 
 
-class MySQLConf(object):
+@dataclass
+class ConnectionArgs:
+    db: str
+    user: str
+    password: str
+    autocommit: bool
+    host: str = field(default='localhost')
+    port: int = field(default=3306)
 
-    def __init__(self, conf):
-        self.pool_name = 'kontext_mysql_pool'
-        self.autocommit = True
-        self.host = conf['mysql_host']
-        self.database = conf['mysql_db']
-        self.user = conf['mysql_user']
-        self.password = conf['mysql_passwd']
-        self.pool_size = int(conf['mysql_pool_size'])
-        self.conn_retry_delay = int(conf['mysql_retry_delay'])
-        self.conn_retry_attempts = int(conf['mysql_retry_attempts'])
 
+@dataclass
+class PoolArgs:
+    minsize: int = field(default=1)
+    maxsize: int = field(default=10)
+
+
+@dataclass
+class MySQLConf:
+    database: str
+    user: str
+    password: str
+    pool_size: int
+    conn_retry_delay: int
+    conn_retry_attempts: int
+    
+    host: str = field(default='localhost')
+    port: int = field(default=3306)
+    autocommit: bool = field(default=True)
+
+    @staticmethod
+    def from_conf(conf: Dict[str, Any]) -> 'MySQLConf':
+        return MySQLConf(
+            host=conf['mysql_host'],
+            database=conf['mysql_db'],
+            user=conf['mysql_user'],
+            password=conf['mysql_passwd'],
+            pool_size=conf['mysql_pool_size'],
+            conn_retry_delay=conf['mysql_retry_delay'],
+            conn_retry_attempts=conf['mysql_retry_attempts'],
+        )
+    
     @property
-    def conn_dict(self):
-        return dict(host=self.host, database=self.database, user=self.user,
-                    password=self.password, pool_size=self.pool_size, pool_name=self.pool_name,
-                    autocommit=self.autocommit)
+    def conn_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 class MySQLOps(object):
     """
-    A simple wrapper for mysql.connector with ability
-    to reconnect.
+    A simple wrapper for pymysql/aiomysql
     """
 
-    def __init__(self, mysql_conf):
-        self._conn = mysql.connector.connect(**mysql_conf.conn_dict)
-        self._conn_retry_delay = mysql_conf.conn_retry_delay
-        self._conn_retry_attempts = mysql_conf.conn_retry_attempts
+    _pool: Optional[aiomysql.Pool]
 
-    def cursor(self, dictionary=True, buffered=False):
-        try:
-            return self._conn.cursor(dictionary=dictionary, buffered=buffered)
-        except mysql.connector.errors.OperationalError as ex:
-            if 'MySQL Connection not available' in ex.msg:
-                logging.getLogger(__name__).warning(
-                    'Lost connection to MySQL server - reconnecting')
-                self._conn.reconnect(delay=self._conn_retry_delay,
-                                     attempts=self._conn_retry_attempts)
-                return self._conn.cursor(dictionary=dictionary, buffered=buffered)
+    _conn_args: ConnectionArgs
 
-    @property
-    def connection(self):
-        return self._conn
+    _pool_args: PoolArgs
 
-    def execute(self, sql, args):
-        cursor = self.cursor()
-        cursor.execute(sql, args)
-        return cursor
+    _retry_delay: int
 
-    def executemany(self, sql, args_rows):
-        cursor = self.cursor()
-        cursor.executemany(sql, args_rows)
-        return cursor
+    _retry_attempts: int
 
-    def commit(self):
-        self._conn.commit()
+    def __init__(self, host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts):
+        self._conn_args = ConnectionArgs(
+            host=host, db=database, user=user, password=password, autocommit=autocommit)
+        self._pool_args = PoolArgs(maxsize=pool_size)
+        self._retry_delay = retry_delay  # TODO has no effect now
+        self._retry_attempts = retry_attempts  # TODO has no effect now
+        self._pool = None
 
-    def rollback(self):
-        self._conn.rollback()
+    async def _init_pool(self):
+        if self._pool is None:
+            self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
+
+    @asynccontextmanager
+    async def connection(self) -> Generator[aiomysql.Connection, None, None]:
+        await self._init_pool()
+        async with self._pool.acquire() as connection:
+            yield connection
+
+    @asynccontextmanager
+    async def cursor(self, dictionary=True) -> Generator[aiomysql.Cursor, None, None]:
+        async with self.connection() as connection:
+            if dictionary:
+                async with connection.cursor(aiomysql.DictCursor) as cursor:
+                    yield cursor
+            else:
+                async with connection.cursor() as cursor:
+                    yield cursor
+
+    @contextmanager
+    def connection_sync(self) -> Generator[pymysql.Connection, None, None]:
+        connection = pymysql.connect(**asdict(self._conn_args))
+        yield connection
+        connection.close()
+
+    @contextmanager
+    def cursor_sync(self, dictionary=True) -> Generator[pymysql.cursors.Cursor, None, None]:
+        with self.connection_sync() as connection:
+            if dictionary:
+                cursor = connection.cursor(pymysql.cursors.DictCursor)
+            else:
+                cursor = connection.cursor()
+            yield cursor
+            cursor.close()
