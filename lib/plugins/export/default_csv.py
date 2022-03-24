@@ -71,5 +71,5 @@ class CSVExport(AbstractExport):
         self.csv_writer.writerow(row)
 
 
-def create_instance(subtype):
-    return CSVExport(subtype)
+def create_instance(subtype, translate):
+    return CSVExport(subtype, translate)

@@ -90,7 +90,7 @@ class Loader(object):
         if name not in self._module_map:
             raise ValueError(translate(f'Export module [{name}] not configured'))
         module_name = self._module_map[name]
-        module = __import__('plugins.export.%s' % module_name, fromlist=[module_name])
+        module = __import__(f'plugins.export.{module_name}', fromlist=[module_name])
         plugin = module.create_instance(subtype=subtype, translate=translate)
         return plugin
 

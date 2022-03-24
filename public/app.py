@@ -54,6 +54,7 @@ from views.freqs import bp as freqs_bp
 from views.dispersion import bp as dispersion_bp
 from views.colls import bp as colls_bp
 from views.options import bp as options_bp
+from views.pquery import bp as pquery_bp
 from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
