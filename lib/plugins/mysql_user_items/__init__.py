@@ -127,10 +127,10 @@ class MySQLUserItems(AbstractUserItems):
         return ans
 
     async def add_user_item(self, plugin_ctx, item):
-        if await self._backend.count_favitems(plugin_ctx.user_id)['count'] >= self.max_num_favorites:
-            raise UserItemException('Max. number of fav. items exceeded',
-                                    error_code='defaultCorparch__err001',
-                                    error_args={'maxNum': self.max_num_favorites})
+        if (await self._backend.count_favitems(plugin_ctx.user_id))['count'] >= self.max_num_favorites:
+            raise UserItemException(
+                'Max. number of fav. items exceeded', error_code='defaultCorparch__err001',
+                error_args={'maxNum': self.max_num_favorites})
         await self._backend.insert_favitem(plugin_ctx.user_id, item)
 
     async def delete_user_item(self, plugin_ctx, item_id):
