@@ -1,13 +1,14 @@
+from dataclasses import fields
 import os
 import time
 from sanic import Sanic
 from action.model.base import BaseActionModel, BasePluginCtx
 from action.krequest import KRequest
 from action.response import KResponse
-from action.argmapping import MinArgs
+from action.argmapping import GeneralOptionsArgs, MinArgs
 from action.errors import UserActionException
 from action import ActionProps
-from typing import Any, Optional, Dict, List, Iterable
+from typing import Any, Optional, Dict, List, Iterable, Tuple, Union
 from texttypes.cache import TextTypesCache
 from plugin_types.auth import UserInfo, AbstractInternalAuth
 from plugin_types import CorpusDependentPlugin
@@ -104,6 +105,53 @@ class UserActionModel(BaseActionModel):
                 data = {}
             return data
 
+    @staticmethod
+    def _get_save_excluded_attributes() -> Tuple[str, ...]:
+        return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
+
+    def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Union[str, None] = None):
+        """
+        Saves user's options to a storage
+
+        Arguments:
+        optlist -- a list of options/arguments to be saved
+        corpus_id --
+        """
+        if optlist is None:
+            optlist = []
+        tosave = [(att.name, getattr(self.args, att.name))
+                  for att in fields(self.args) if att.name in optlist]
+
+        def merge_incoming_opts_to(opts):
+            if opts is None:
+                return {}
+            excluded_attrs = self._get_save_excluded_attributes()
+            for attr, val in tosave:
+                if attr not in excluded_attrs:
+                    opts[attr] = val
+            return opts
+
+        # data must be loaded (again) because in-memory settings are
+        # in general a subset of the ones stored in db (and we want
+        # to store (again) even values not used in this particular request)
+        with plugins.runtime.SETTINGS_STORAGE as settings_storage:
+            if self._user_has_persistent_settings():
+                if corpus_id:
+                    options = settings_storage.load(self.session_get('user', 'id'), corpus_id)
+                    options = merge_incoming_opts_to(options)
+                    settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
+                else:
+                    options = settings_storage.load(self.session_get('user', 'id'))
+                    options = merge_incoming_opts_to(options)
+                    settings_storage.save(self.session_get('user', 'id'), None, options)
+            else:
+                options = {}
+                sess_options = self.session_get('settings')
+                if sess_options:
+                    options.update(sess_options)
+                merge_incoming_opts_to(options)
+                self._req.ctx.session['settings'] = options
+
     def _scheduled_actions(self, user_settings):
         actions = []
         if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
@@ -130,7 +178,7 @@ class UserActionModel(BaseActionModel):
                 # avoided by 'continue' in case everything is OK
                 logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
                     action.get('id', '??'), action,))
-            self._save_options()  # this causes scheduled task to be removed from settings
+            self.save_options()  # this causes scheduled task to be removed from settings
 
     @property
     def plugin_ctx(self):
@@ -377,7 +425,8 @@ class UserActionModel(BaseActionModel):
         # We will also generate a simplified static menu which is rewritten
         # as soon as JS stuff is initiated. It can be used e.g. by search engines.
         result['static_menu'] = [
-            dict(label=x[1]['label'], disabled=x[1].get('disabled', False), action=x[1].get('fallback_action'))
+            dict(label=x[1]['label'], disabled=x[1].get(
+                'disabled', False), action=x[1].get('fallback_action'))
             for x in menu_items['submenuItems']]
 
 
@@ -401,3 +450,11 @@ class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
     @property
     def user_dict(self) -> UserInfo:
         return self._request.ctx.session.get('user', {'id': None})
+
+
+class GeneralOptionsActionModel(UserActionModel):
+
+    def __init__(
+            self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
+        super().__init__(req, resp, action_props, tt_cache)
+        self.args = GeneralOptionsArgs()

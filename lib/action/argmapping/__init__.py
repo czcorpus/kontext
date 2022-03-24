@@ -84,7 +84,38 @@ class MinArgs:
 
 
 @dataclass
-class Args(MinArgs):
+class GeneralOptionsArgs:
+    pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
+    kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
+    kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
+    line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
+    shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
+    wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
+    citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
+    pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
+    rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
+    fmaxitems: int = field(default=50, metadata=mk_metdata())
+    fdefault_view: str = field(default='charts', metadata=mk_metdata(Persistence.PERSISTENT))
+
+    def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
+        in_args = args if is_req_args_proxy(args) else create_req_arg_proxy(args, {}, {})
+        for key in in_args.keys():
+            values = in_args.getlist(key)
+            if len(values) > 0:
+                if hasattr(self, key):
+                    try:
+                        if isinstance(getattr(self, key), bool):
+                            setattr(self, key, bool(int(values[-1])))
+                        elif isinstance(getattr(self, key), int):
+                            setattr(self, key, int(values[-1]))
+                        else:
+                            setattr(self, key, values[-1])
+                    except ValueError as ex:
+                        raise ValueError('Request attribute \'{}\': {}'.format(key, ex))
+
+
+@dataclass
+class Args(MinArgs, GeneralOptionsArgs):
     """
     """
     @staticmethod
@@ -140,8 +171,6 @@ class Args(MinArgs):
     usearf: int = field(default=0, metadata=mk_metdata())
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
-    fmaxitems: int = field(default=50, metadata=mk_metdata())
-    fdefault_view: str = field(default='charts', metadata=mk_metdata(Persistence.PERSISTENT))
     ftt_include_empty: int = field(default=0, metadata=mk_metdata())
     subcsize: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
@@ -156,7 +185,6 @@ class Args(MinArgs):
     numbering: int = field(default=0, metadata=mk_metdata())
     align_kwic: int = field(default=0, metadata=mk_metdata())
     stored: str = field(default='', metadata=mk_metdata())
-    line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     # end
 
     subcpath: List[str] = field(default_factory=list, metadata=mk_metdata())
@@ -169,10 +197,6 @@ class Args(MinArgs):
     structs: str = field(default='', metadata=mk_metdata(
         Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
-    pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
-    wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
-    citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
-    pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
     multiple_copy: int = field(default=0, metadata=mk_metdata(
         Persistence.PERSISTENT))  # TODO do we need this?
     wlsendmail: str = field(default='', metadata=mk_metdata())
@@ -180,7 +204,6 @@ class Args(MinArgs):
     structattrs: List[str] = field(
         default_factory=list, metadata=mk_metdata(Persistence.PERSISTENT))
 
-    rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
     qs_enabled: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
 
     flimit: int = field(default=1, metadata=mk_metdata())
@@ -189,8 +212,6 @@ class Args(MinArgs):
     fttattr: List[str] = field(default_factory=list, metadata=mk_metdata())
     fttattr_async: List[str] = field(default_factory=list, metadata=mk_metdata())
 
-    kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
-    kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
     senleftctx_tpl: str = field(default='-1:%s', metadata=mk_metdata())
     senrightctx_tpl: str = field(default='1:%s', metadata=mk_metdata())
     viewmode: str = field(default='kwic', metadata=mk_metdata())
@@ -200,8 +221,6 @@ class Args(MinArgs):
     # None means "not initialized" while '' means "user wants no refs"
     refs: Optional[str] = field(default=None, metadata=mk_metdata(to_js=comma_separated_to_js))
     hitlen: int = field(default=1, metadata=mk_metdata())
-
-    shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
 
     subcnorm: str = field(default='tokens', metadata=mk_metdata())
 
