@@ -54,7 +54,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
                 'VALUES (%s, %s, %s, %s, %s)',
                 (user_id, corpname, subcname, cql, datetime.now())
             )
-        await self._db.commit()
+        await cursor.connection.commit()
 
     async def delete_query(self, user_id: int, corpname: str, subcname: str):
         async with self._db.cursor() as cursor:
@@ -63,7 +63,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
                 'WHERE user_id = %s AND corpname = %s AND subcname = %s',
                 (user_id, corpname, subcname)
             )
-        await self._db.commit()
+        await cursor.connection.commit()
 
     async def list_queries(self, user_id: int, from_idx: int, to_idx: Optional[int] = None) -> List[SubcRestoreRow]:
         sql = [
