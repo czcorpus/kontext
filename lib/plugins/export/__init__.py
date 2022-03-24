@@ -74,7 +74,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name, subtype: str=None, translate: Callable[[str], str]=lambda x: x):
+    def load_plugin(self, name: str, subtype: str=None, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
