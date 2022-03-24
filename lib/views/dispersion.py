@@ -10,7 +10,7 @@ from conclib.pyconc import PyConc
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 
-bp = Blueprint('dispersion')
+bp = Blueprint('dispersion', url_prefix='dispersion')
 
 
 @dataclass_json
@@ -53,7 +53,7 @@ def _get_freq_dispersion(conc: PyConc, resolution: int) -> List[FreqDispersionBi
     return freq_dispersion
 
 
-@bp.route('/dispersion/ajax_get_freq_dispersion')
+@bp.route('/ajax_get_freq_dispersion')
 @http_action(action_model=ConcActionModel, return_type='json')
 async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]:
     conc = require_existing_conc(amodel.corp, amodel.args.q, req.translate)
@@ -63,7 +63,7 @@ async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]
     raise UserActionException('Invalid dispersion resolution. Acceptable values [1, 1000].')
 
 
-@bp.route('/dispersion/index')
+@bp.route('/index')
 @http_action(action_model=ConcActionModel, page_model='dispersion', template='dispersion.html')
 async def index(amodel, req, response):
     try:

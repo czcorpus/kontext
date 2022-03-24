@@ -59,10 +59,10 @@ class CorpusDetail:
     keywords: List[KeyWord]
 
 
-bp = Blueprint('corpora')
+bp = Blueprint('corpora', url_prefix='corpora')
 
 
-@bp.route('/corpora/corplist')
+@bp.route('/corplist')
 @http_action(action_model=UserActionModel, template='corpora/corplist.html')
 async def corplist(amodel, req, resp):
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
@@ -82,7 +82,7 @@ async def corplist(amodel, req, resp):
         return dict(corplist_data=data)
 
 
-@bp.route('/corpora/ajax_list_corpora')
+@bp.route('/ajax_list_corpora')
 @http_action(action_model=UserActionModel, return_type='json')
 async def ajax_list_corpora(amodel, req, resp):
     with plugins.runtime.CORPARCH as cp:
@@ -92,7 +92,7 @@ async def ajax_list_corpora(amodel, req, resp):
             filter_dict=req.args)
 
 
-@bp.route('/corpora/ajax_get_corp_details')
+@bp.route('/ajax_get_corp_details')
 @http_action(action_model=CorpusActionModel, return_type='json')
 async def ajax_get_corp_details(amodel, req, resp):
     corpname = req.args.get('corpname')
@@ -132,7 +132,7 @@ async def ajax_get_corp_details(amodel, req, resp):
         return ans
 
 
-@bp.route('/corpora/ajax_get_structattrs_details')
+@bp.route('/ajax_get_structattrs_details')
 @http_action(action_model=UserActionModel, return_type='json')
 async def ajax_get_structattrs_details(amodel, req, resp):
     """
@@ -148,7 +148,7 @@ async def ajax_get_structattrs_details(amodel, req, resp):
     return dict(structattrs=dict((k, v) for k, v in list(ans.items()) if len(v) > 0))
 
 
-@bp.route('/corpora/bibliography')
+@bp.route('/bibliography')
 @http_action(action_model=UserActionModel, return_type='json')
 def bibliography(amodel, req, resp):
     with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
