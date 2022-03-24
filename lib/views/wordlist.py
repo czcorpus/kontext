@@ -19,10 +19,10 @@ from main_menu import MainMenu
 import settings
 
 
-bp = Blueprint('wordlist')
+bp = Blueprint('wordlist', url_prefix='wordlist')
 
 
-@bp.route('/wordlist/form')
+@bp.route('/form')
 @http_action(access_level=1, template='wordlist/form.html', page_model='wordlistForm', action_model=WordlistActionModel)
 async def form(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     """
@@ -36,7 +36,7 @@ async def form(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     return out
 
 
-@bp.route('/wordlist/submit', ['POST'])
+@bp.route('/submit', ['POST'])
 @http_action(access_level=1, return_type='json', page_model='wordlist', mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args = WordlistFormArgs()
@@ -74,7 +74,7 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     return ans
 
 
-@bp.route('/wordlist/result')
+@bp.route('/result')
 @http_action(access_level=1, template='wordlist/result.html', page_model='wordlist', action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
@@ -124,7 +124,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     return result
 
 
-@bp.route('/wordlist/struct_result', ['POST'])
+@bp.route('/struct_result', ['POST'])
 @http_action(return_type='json', mutates_result=True, action_model=WordlistActionModel)
 async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args = WordlistFormArgs()
@@ -167,7 +167,7 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KRespo
     return dict(location=req.create_url('restore_conc', args))
 
 
-@bp.route('/wordlist/savewl', ['POST'])
+@bp.route('/savewl', ['POST'])
 @http_action(access_level=1, return_type='plain', template='txtexport/savewl.html', action_model=WordlistActionModel)
 async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     """
@@ -221,7 +221,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     return None
 
 
-@bp.route('/wordlist/process')
+@bp.route('/process')
 @http_action(return_type='json', action_model=WordlistActionModel)
 async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     worker_tasks: List[str] = req.args.get('worker_tasks')

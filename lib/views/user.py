@@ -21,10 +21,10 @@ import plugins
 from plugin_types.auth import SignUpNeedsUpdateException
 import settings
 
-bp = Blueprint('user')
+bp = Blueprint('user', url_prefix='user')
 
 
-@bp.route('/user/loginx', methods=['GET'])
+@bp.route('/loginx', methods=['GET'])
 @http_action(template='user/login.html', action_model=UserActionModel)
 async def loginx(amodel, req, resp):
     """
@@ -38,7 +38,7 @@ async def loginx(amodel, req, resp):
     return {}
 
 
-@bp.route('/user/login', methods=['POST'])
+@bp.route('/login', methods=['POST'])
 @http_action(template='user/login.html', action_model=UserActionModel)
 async def login(amodel, req, resp):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
@@ -58,7 +58,7 @@ async def login(amodel, req, resp):
         return ans
 
 
-@bp.route('/user/logoutx', methods=['POST'])
+@bp.route('/logoutx', methods=['POST'])
 @http_action(
     access_level=1, template='user/login.html', page_model='login', action_model=UserActionModel)
 async def logoutx(amodel, req, resp):
@@ -71,7 +71,7 @@ async def logoutx(amodel, req, resp):
     return {}
 
 
-@bp.route('/user/sign_up_form')
+@bp.route('/sign_up_form')
 @http_action(
     access_level=0, template='user/administration.html', page_model='userSignUp',
     action_model=UserActionModel)
@@ -94,7 +94,7 @@ async def sign_up_form(amodel, req, resp):
     return ans
 
 
-@bp.route('/user/sign_up', methods=['POST'])
+@bp.route('/sign_up', methods=['POST'])
 @http_action(
     access_level=0, return_type='json', action_model=UserActionModel)
 async def sign_up(amodel, req, resp):
@@ -114,7 +114,7 @@ async def sign_up(amodel, req, resp):
         raise UserActionException(req.translate('Failed to sign up user'), error_args=errors)
 
 
-@bp.route('/user/test_username')
+@bp.route('/test_username')
 @http_action(access_level=0, return_type='json', action_model=UserActionModel)
 async def test_username(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
@@ -123,7 +123,7 @@ async def test_username(amodel, req, resp):
         return dict(available=available if available and valid else False, valid=valid)
 
 
-@bp.route('/user/sign_up_confirm_email')
+@bp.route('/sign_up_confirm_email')
 @http_action(
     access_level=0, template='user/token_confirm.html', page_model='userTokenConfirm', action_model=UserActionModel)
 async def sign_up_confirm_email(self, request):
@@ -139,7 +139,7 @@ async def sign_up_confirm_email(self, request):
                                                              dict(key=key, username_taken=1)))
 
 
-@bp.route('/user/set_user_password', methods=['POST'])
+@bp.route('/set_user_password', methods=['POST'])
 @http_action(
     access_level=1, return_type='json', action_model=UserActionModel)
 async def set_user_password(amodel, req, resp):
@@ -193,7 +193,7 @@ async def _load_query_history(
     return rows
 
 
-@bp.route('/user/ajax_query_history')
+@bp.route('/ajax_query_history')
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def ajax_query_history(amodel, req, resp):
     offset = int(req.args.get('offset', '0'))
@@ -214,14 +214,14 @@ async def ajax_query_history(amodel, req, resp):
     )
 
 
-@bp.route('/user/ajax_get_toolbar')
+@bp.route('/ajax_get_toolbar')
 @http_action(return_type='template', action_model=UserActionModel)
 async def ajax_get_toolbar(amodel, req, resp):
     with plugins.runtime.APPLICATION_BAR as ab:
         return await ab.get_contents(plugin_ctx=amodel.plugin_ctx, return_url=amodel.return_url)
 
 
-@bp.route('/user/ajax_user_info')
+@bp.route('/ajax_user_info')
 @http_action(return_type='json', action_model=UserActionModel)
 async def ajax_user_info(amodel, req, resp):
     with plugins.runtime.AUTH as auth:
@@ -232,7 +232,7 @@ async def ajax_user_info(amodel, req, resp):
             return {'user': {'username': user_info['username']}}
 
 
-@bp.route('/user/profile')
+@bp.route('/profile')
 @http_action(
     return_type='template', template='user/administration.html', page_model='userProfile',
     access_level=1, action_model=UserActionModel)
@@ -247,7 +247,7 @@ async def profile(amodel, req, resp):
             return dict(credentials_form=dict(username=user_info['username']), user_registered=False)
 
 
-@bp.route('/user/switch_language', methods=['POST'])
+@bp.route('/switch_language', methods=['POST'])
 @http_action(access_level=0, return_type='plain', action_model=UserActionModel)
 async def switch_language(amodel, req, resp):
     path_prefix = settings.get_str('global', 'action_path_prefix')
