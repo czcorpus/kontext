@@ -133,11 +133,12 @@ export class DefaultTokenConnectBackend implements PluginInterfaces.TokenConnect
 
 
 const create:PluginInterfaces.TokenConnect.Factory = (pluginApi, alignedCorpora) => {
+    const plgConf = pluginApi.getNestedConf<ServerExportedConf>('pluginData', 'token_connect');
     return new DefaultTokenConnectBackend(
         pluginApi,
         initView(pluginApi.dispatcher(), pluginApi.getComponentHelpers()),
         alignedCorpora,
-        pluginApi.getNestedConf<ServerExportedConf>('pluginData', 'token_connect')
+        plgConf ? plgConf : {providers: []}
     );
 };
 
