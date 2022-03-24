@@ -56,11 +56,6 @@ class CorpusActionModel(UserActionModel):
         MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.FILTER,
         MainMenu.FREQUENCY, MainMenu.COLLOCATIONS)
 
-    GENERAL_OPTIONS = (
-        'pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit',
-        'shuffle', 'citemsperpage', 'pqueryitemsperpage', 'fmaxitems', 'wlpagesize', 'line_numbers',
-        'rich_query_editor')
-
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code

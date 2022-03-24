@@ -1,10 +1,10 @@
 from typing import Dict, Any
-from sanic import Sanic, response, Blueprint
-from sanic.views import HTTPMethodView
-from sanic.response import text
-from sanic.request import Request
+from sanic import Blueprint
 from action.decorators import http_action
 from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException
+from action.krequest import KRequest
+from action.model.authorized import UserActionModel
+from action.response import KResponse
 
 import settings
 import plugins
@@ -20,9 +20,7 @@ async def root_action(amodel, req, resp):
     raise ImmediateRedirectException(req.create_url('query', {}))
 
 
-@bp.route('/check_tasks_status')
-@http_action(return_type='json')
-async def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
+async def _check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     backend = settings.get('calc_backend', 'type')
     if backend in ('celery', 'rq'):
         worker = bgcalc.calc_backend_client(settings)
@@ -48,6 +46,12 @@ async def check_tasks_status(amodel, req, resp) -> Dict[str, Any]:
         raise FunctionNotSupported(f'Backend {backend} does not support status checking')
 
 
+@bp.route('/check_tasks_status')
+@http_action(return_type='json', action_model=UserActionModel)
+async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    return await _check_tasks_status(amodel, req, resp)
+
+
 @bp.route('/get_task_result')
 @http_action(return_type='json')
 async def get_task_result(amodel, req, resp):
@@ -57,17 +61,17 @@ async def get_task_result(amodel, req, resp):
 
 
 @bp.route('/remove_task_info', methods=['DELETE'])
-@http_action(return_type='json')
-async def remove_task_info(amodel, req, resp) -> Dict[str, Any]:
+@http_action(return_type='json', action_model=UserActionModel)
+async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     task_ids = req.form.getlist('tasks')
     amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
-    return amodel.check_tasks_status(req)
+    return await _check_tasks_status(amodel, req, resp)
 
 
 @bp.exception(CorpusForbiddenException, Exception)
 @bp.route('/message')
-@http_action(page_model='message', template='message.html')
-async def message(amodel, req, resp):
+@http_action(page_model='message', template='message.html', action_model=UserActionModel)
+async def message(amodel: UserActionModel, req: KRequest, resp: KResponse):
     # TODO kwargs... replace with mapped args
     kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
     if amodel.cm:

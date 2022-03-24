@@ -31,10 +31,6 @@ from util import as_async
 
 class BaseActionModel:
 
-    GENERAL_OPTIONS = (
-        'pagesize', 'kwicleftctx', 'kwicrightctx', 'multiple_copy', 'ctxunit', 'shuffle', 'citemsperpage',
-        'pqueryitemsperpage', 'fmaxitems', 'fdefault_view', 'wlpagesize', 'line_numbers', 'rich_query_editor')
-
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code

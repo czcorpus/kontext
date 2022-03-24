@@ -323,10 +323,10 @@ class UserActionModel(BaseActionModel):
         else:
             return ans
 
-    def _set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
+    def set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
 
-    def _mark_timeouted_tasks(self, *tasks):
+    def mark_timeouted_tasks(self, *tasks):
         now = time.time()
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
         for at in tasks:
@@ -335,11 +335,11 @@ class UserActionModel(BaseActionModel):
                 if not at.error:
                     at.error = 'task time limit exceeded'
 
-    def _store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
+    def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
         at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
-        self._mark_timeouted_tasks(*at_list)
+        self.mark_timeouted_tasks(*at_list)
         at_list.append(async_task_status)
-        self._set_async_tasks(at_list)
+        self.set_async_tasks(at_list)
         return at_list
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
@@ -458,3 +458,9 @@ class GeneralOptionsActionModel(UserActionModel):
             self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
         super().__init__(req, resp, action_props, tt_cache)
         self.args = GeneralOptionsArgs()
+
+    def save_options(self):
+        '''
+        Saves general options args fields as defined by GeneralOptionsArgs dataclass
+        '''
+        return super().save_options([field.name for field in fields(GeneralOptionsArgs)])

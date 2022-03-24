@@ -272,5 +272,5 @@ class XMLExport(AbstractExport):
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
 
 
-def create_instance(subtype):
-    return XMLExport(subtype)
+def create_instance(subtype, translate):
+    return XMLExport(subtype, translate)

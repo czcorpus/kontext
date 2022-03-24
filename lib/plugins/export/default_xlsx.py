@@ -115,5 +115,5 @@ class XLSXExport(AbstractExport):
         return cell
 
 
-def create_instance(subtype):
-    return XLSXExport(subtype)
+def create_instance(subtype, translate):
+    return XLSXExport(subtype, translate)

@@ -182,7 +182,7 @@ async def viewoptsx(amodel: GeneralOptionsActionModel, req: KRequest, resp: KRes
         pqueryitemsperpage=req.json.get('pqueryitemsperpage'),
         rich_query_editor=req.json.get('rich_query_editor')
     )
-    amodel.save_options(amodel.GENERAL_OPTIONS)
+    amodel.save_options()
     return {}
 
 
