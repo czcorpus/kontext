@@ -85,17 +85,26 @@ class MinArgs:
 
 @dataclass
 class GeneralOptionsArgs:
+    # concordance
     pagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
     kwicleftctx: str = field(default='-10', metadata=mk_metdata(Persistence.PERSISTENT))
     kwicrightctx: str = field(default='10', metadata=mk_metdata(Persistence.PERSISTENT))
     line_numbers: bool = field(default=False, metadata=mk_metdata(Persistence.PERSISTENT))
     shuffle: int = field(default=0, metadata=mk_metdata(Persistence.PERSISTENT))
-    wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
-    citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
-    pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
     rich_query_editor: bool = field(default=True, metadata=mk_metdata(Persistence.PERSISTENT))
+
+    # wordlist
+    wlpagesize: int = field(default=25, metadata=mk_metdata(Persistence.PERSISTENT))
+
+    # frequency
     fmaxitems: int = field(default=50, metadata=mk_metdata())
     fdefault_view: str = field(default='charts', metadata=mk_metdata(Persistence.PERSISTENT))
+
+    # pquery
+    pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
+
+    # collocations
+    citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
 
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
         in_args = args if is_req_args_proxy(args) else create_req_arg_proxy(args, {}, {})
@@ -197,8 +206,6 @@ class Args(MinArgs, GeneralOptionsArgs):
     structs: str = field(default='', metadata=mk_metdata(
         Persistence.PERSISTENT, comma_separated_to_js))
     q: List[str] = field(default_factory=list, metadata=mk_metdata())
-    multiple_copy: int = field(default=0, metadata=mk_metdata(
-        Persistence.PERSISTENT))  # TODO do we need this?
     wlsendmail: str = field(default='', metadata=mk_metdata())
     cup_hl: str = field(default='q', metadata=mk_metdata(Persistence.PERSISTENT))
     structattrs: List[str] = field(

@@ -458,3 +458,9 @@ class GeneralOptionsActionModel(UserActionModel):
             self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
         super().__init__(req, resp, action_props, tt_cache)
         self.args = GeneralOptionsArgs()
+
+    def save_options(self):
+        '''
+        Saves general options args fields as defined by GeneralOptionsArgs dataclass
+        '''
+        return super().save_options([field.name for field in fields(GeneralOptionsArgs)])
