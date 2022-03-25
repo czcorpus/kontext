@@ -513,6 +513,7 @@ export class ViewPage {
             this.concFormsInitialArgs.filter
         );
 
+
         this.filterFormViews = filterFormInit({
             dispatcher: this.layoutModel.dispatcher,
             he: this.layoutModel.getComponentHelpers(),

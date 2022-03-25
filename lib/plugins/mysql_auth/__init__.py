@@ -129,7 +129,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
             row = await cursor.fetchone()
             if row is not None:
                 await cursor.execute('UPDATE kontext_user SET pwd_hash = %s WHERE id = %s',
-                                        (mk_pwd_hash_default(password), user_id))
+                                     (mk_pwd_hash_default(password), user_id))
                 await cursor.connection.commit()
             else:
                 raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
