@@ -93,8 +93,7 @@ class Backend:
             await cursor.executemany(
                 'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
                 'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
-
-            await cursor.connection.commit()
+        await cursor.connection.commit()
         item.ident = str(favitem_id)  # need to update new id
 
     async def delete_favitem(self, item_id: int):

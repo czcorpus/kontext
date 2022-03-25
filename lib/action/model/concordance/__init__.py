@@ -338,32 +338,6 @@ class ConcActionModel(CorpusActionModel):
             firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
-    async def attach_aligned_query_params(self, tpl_out: Dict[str, Any]) -> None:
-        """
-        Adds template data required to generate components for adding/overviewing
-        aligned corpora. This is called by individual actions.
-
-        arguments:
-        tpl_out -- a dict where exported data is stored
-        """
-        if self.corp.get_conf('ALIGNED'):
-            tpl_out['Aligned'] = []
-            if 'input_languages' not in tpl_out:
-                tpl_out['input_languages'] = {}
-            for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = self.cm.get_corpus(al, translate=self._req.translate)
-                corp_info = await self.get_corpus_info(al)
-
-                tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
-
-                poslist = []
-                for tagset in corp_info.tagsets:
-                    if tagset.ident == corp_info.default_tagset:
-                        poslist = tagset.pos_category
-                        break
-                tpl_out['Wposlist_' + al] = [{'n': x.pos, 'v': x.pattern} for x in poslist]
-                tpl_out['input_languages'][al] = corp_info.collator_locale
-
     async def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
         structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
         attrs = [t for t in self.corp.get_structattrs() if t != '']

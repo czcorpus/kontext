@@ -106,7 +106,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                 'WHERE user_id = %s AND query_id = %s AND created = %s',
                 (new_name, user_id, query_id, created)
             )
-            cursor.connection.commit()
+            await cursor.connection.commit()
             return cursor.rowcount > 0
 
     async def make_persistent(self, user_id, query_id, q_supertype, created, name) -> bool:
