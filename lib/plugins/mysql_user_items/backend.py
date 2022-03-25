@@ -94,7 +94,7 @@ class Backend:
                 'INSERT INTO kontext_corpus_user_fav_item (user_fav_corpus_id, corpus_name) '
                 'VALUES (%s, %s) ', [(favitem_id, corp['id']) for corp in item.corpora])
 
-        await self._db.commit()
+        await cursor.connection.commit()
         item.ident = str(favitem_id)  # need to update new id
 
     async def delete_favitem(self, item_id: int):
@@ -102,4 +102,4 @@ class Backend:
             await cursor.execute(
                 'DELETE FROM kontext_corpus_user_fav_item WHERE user_fav_corpus_id = %s', (item_id,))
             await cursor.execute('DELETE FROM kontext_user_fav_item WHERE id = %s', (item_id,))
-        await self._db.commit()
+        await cursor.connection.commit()
