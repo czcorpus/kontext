@@ -162,7 +162,7 @@ class Parser:
         if token == '$':
             return self.state_7, obj
 
-    def __call__(self):
+    def __call__(self) -> RegistryConf:
         i = 0
         fn = self.state_0
         obj = None

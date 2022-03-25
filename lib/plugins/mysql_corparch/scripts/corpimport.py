@@ -28,13 +28,13 @@ import argparse
 import sys
 import logging
 from collections import defaultdict
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 import io
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import plugins.abstract.corparch.registry.parser
 from plugins.abstract.corparch.registry.tokenizer import Tokenizer
-from plugins.abstract.corparch.registry.parser import Parser
+from plugins.abstract.corparch.registry.parser import Parser, RegistryConf
 from plugins.abstract.corparch.install import InstallJson
 from plugins.mysql_corparch.backendw import WriteBackend, Backend
 
@@ -42,15 +42,60 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y
                     level=logging.INFO)
 
 
-def parse_registry(
-        infile: io.StringIO, collator_locale: str, variant: str, rbackend: Backend,
-        wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
+def parse_registry(infile: io.StringIO, variant: str) -> Tuple[str, RegistryConf]:
     logging.getLogger(__name__).info(f'Parsing file {infile.name}')
     corpus_id = os.path.basename(infile.name)
     tokenize = Tokenizer(infile)
     tokens = tokenize()
     parse = Parser(corpus_id, variant, tokens, wbackend)
-    registry_conf = parse()
+    return corpus_id, parse()
+
+
+def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: Backend):
+    """
+    Perform basic comparison of defined posattrs and structattrs
+    """
+    corpus_id, registry_conf = parse_registry(infile, variant)
+    # posattrs
+    reg_pos = set(x.name for x in registry_conf.posattrs)
+    db_pos = set(x['name'] for x in rbackend.load_corpus_posattrs(corpus_id))
+    if len(reg_pos - db_pos) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t registry has extra pos. attribute(s): {(reg_pos - db_pos)}')
+    elif len(db_pos - reg_pos) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t database has extra pos. attribute(s): {(db_pos - reg_pos)}')
+    # structs
+    reg_struct = set(x.name for x in registry_conf.structs)
+    db_struct = set(x['name'] for x in rbackend.load_corpus_structures(corpus_id))
+    if len(reg_struct - db_struct) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t registry has extra structure(s): {(reg_struct - db_struct)}')
+    elif len(db_struct - reg_struct) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t database has extra structure(s): {(db_struct - reg_struct)}')
+    # structattrs
+    reg_sattr = set(f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
+    db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in rbackend.load_corpus_structattrs(corpus_id, struct))
+    if len(reg_sattr - db_sattr) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t registry has extra structural attribute(s): {(reg_sattr - db_sattr)}')
+    elif len(db_sattr - reg_sattr) > 0:
+        print('Configuration inconsistency detected:')
+        print(f'\t database has extra structural attribute(s):: {(db_sattr - reg_sattr)}')
+
+
+def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Backend):
+    for item in os.listdir(dir_path):
+        fpath = os.path.join(dir_path, item)
+        with open(fpath) as fr:
+            compare_registry_and_db(fr, variant, rbackend)
+
+
+def parse_registry_and_import(
+        infile: io.StringIO, collator_locale: str, variant: str, rbackend: Backend,
+        wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
+    corpus_id, registry_conf = parse_registry(infile, variant)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
 
     try:
@@ -93,7 +138,7 @@ def process_directory(
         if os.path.isfile(fpath):
             try:
                 with open(fpath) as fr:
-                    ans = parse_registry(
+                    ans = parse_registry_and_import(
                         infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
                         corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
                     created_rt[ans['corpus_id']] = ans['created_rt']
@@ -125,6 +170,8 @@ def process_directory(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Import corpora to KonText with mysql_integration_db from Manatee registry file(s)')
+    parser.add_argument(
+        'action', metavar='ACTION', type=str, help='Action to be performed ("import", "compare")')
     parser.add_argument(
         'rpath', metavar='REGISTRY_PATH', type=str)
     parser.add_argument(
@@ -182,21 +229,32 @@ if __name__ == '__main__':
         logging.getLogger(__name__).info('Detected auto-commit feature. Starting explicit transaction')
     db.start_transaction()
     try:
-        if os.path.isdir(args.rpath):
-            process_directory(
-                dir_path=args.rpath, variant=None, rbackend=rbackend, wbackend=wbackend, auto_align=args.auto_align,
-                collator_locale=args.collator_locale, corp_factory=corp_factory, update_if_exists=args.update)
-            if args.variant:
+        if args.action == 'import':
+            if os.path.isdir(args.rpath):
                 process_directory(
-                    dir_path=args.rpath, variant=args.variant, wbackend=wbackend, rbackend=rbackend,
-                    auto_align=args.auto_align, collator_locale=args.collator_locale, corp_factory=corp_factory,
-                    update_if_exists=args.update)
+                    dir_path=args.rpath, variant=None, rbackend=rbackend, wbackend=wbackend, auto_align=args.auto_align,
+                    collator_locale=args.collator_locale, corp_factory=corp_factory, update_if_exists=args.update)
+                if args.variant:
+                    process_directory(
+                        dir_path=args.rpath, variant=args.variant, wbackend=wbackend, rbackend=rbackend,
+                        auto_align=args.auto_align, collator_locale=args.collator_locale, corp_factory=corp_factory,
+                        update_if_exists=args.update)
+            else:
+                with open(args.rpath) as fr:
+                    parse_registry_and_import(
+                        infile=fr, wbackend=wbackend, rbackend=rbackend, variant=args.variant,
+                        corp_factory=corp_factory, collator_locale=args.collator_locale,
+                        update_if_exists=args.update)
+        elif args.action == 'compare':
+            print('About to compare registry with respective database records...')
+            if os.path.isdir(args.rpath):
+                compare_registry_dir_and_db(args.rpath, args.variant, rbackend)
+            else:
+                with open(args.rpath) as fr:
+                    compare_registry_and_db(fr, args.variant, rbackend)
         else:
-            with open(args.rpath) as fr:
-                parse_registry(
-                    infile=fr, wbackend=wbackend, rbackend=rbackend, variant=args.variant,
-                    corp_factory=corp_factory, collator_locale=args.collator_locale,
-                    update_if_exists=args.update)
+            print(f'Invalid action {args.action}')
+            sys.exit(1)
         db.commit()
     except Exception as ex:
         print(ex)
