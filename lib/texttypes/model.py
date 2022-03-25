@@ -26,11 +26,11 @@ specified by attributes values).
 import collections
 import re
 import logging
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 from functools import reduce
+from action.krequest import KRequest
 
 from strings import escape_attr_val
-from werkzeug.wrappers import Request
 from corplib.corpus import AbstractKCorpus
 import settings
 import plugins
@@ -55,7 +55,7 @@ class TextTypeCollector:
         if type(src_obj) is dict:
             self._attr_producer_fn = lambda o: o.keys()
             self._access_fn = lambda o, att: o.get(att)
-        elif isinstance(src_obj, Request):
+        elif isinstance(src_obj, KRequest):
             self._attr_producer_fn = lambda o: list(o.form.keys())
             self._access_fn = lambda o, x: o.form.getlist(*(x,))
         else:
@@ -111,11 +111,10 @@ class TextTypes:
         self._plugin_ctx = plugin_ctx
         self._tt_cache = tt_cache
 
-    @as_async
-    def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
+    async def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
-    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens'):
+    async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens') -> Dict[str, Any]:
         """
         Returns a text types table containing also an information about
         total occurrences of respective attribute values.

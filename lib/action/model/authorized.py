@@ -1,4 +1,5 @@
 from dataclasses import fields
+import hashlib
 import os
 import time
 from sanic import Sanic
@@ -410,6 +411,34 @@ class UserActionModel(BaseActionModel):
         await self.attach_plugin_exports(result, direct=False)
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
         return result
+
+    def user_subc_names(self, corpname):
+        if self.user_is_anonymous():
+            return []
+        return self.cm.subcorp_names(corpname)
+
+    def prepare_subc_path(self, corpname: str, subcname: str, publish: bool) -> str:
+        if publish:
+            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
+                'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
+            path = os.path.join(self.subcpath[1], corpname)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            return os.path.join(path, code) + '.subc'
+        else:
+            path = os.path.join(self.subcpath[0], corpname)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            return os.path.join(path, subcname) + '.subc'
+
+    @staticmethod
+    def parse_sorting_param(k):
+        if k[0] == '-':
+            revers = True
+            k = k[1:]
+        else:
+            revers = False
+        return k, revers
 
     def init_menu(self, result):
         # main menu

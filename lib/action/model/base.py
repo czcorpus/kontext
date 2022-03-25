@@ -26,7 +26,6 @@ import l10n
 import settings
 from sanic import Sanic
 from action.model.tools import apply_theme
-from util import as_async
 
 
 class BaseActionModel:
@@ -84,8 +83,7 @@ class BaseActionModel:
     def init_session(self) -> None:
         pass
 
-    @as_async
-    def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         result['root_url'] = self._req.get_root_url()
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
