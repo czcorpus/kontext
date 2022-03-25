@@ -15,6 +15,8 @@
 import json
 import logging
 from sanic.blueprints import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.common.mysql import MySQLOps, MySQLConf
@@ -67,12 +69,12 @@ def import_record(obj):
 
 @bp.route('/user/set_favorite_item', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=UserActionModel)
-async def set_favorite_item(amodel, req, resp):
+async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     """
     corpora = []
     main_size = None
-    for i, c_id in enumerate(req.form.getlist('corpora')):
+    for i, c_id in enumerate(req.form_getlist('corpora')):
         corp = amodel.cm.get_corpus(c_id, subcname=req.form.get(
             'subcorpus_id') if i == 0 else None, translate=req.translate)
         if i == 0:

@@ -17,7 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Dict, Any, Tuple, Union, List, Generic, TypeVar, Optional
-from sanic.request import Request
+from sanic.request import Request, RequestParameters
+from sanic_session import Session
 from urllib.parse import quote
 from plugin_types.auth import UserInfo
 from action import ActionProps
@@ -57,11 +58,11 @@ class KRequest(Generic[M_args]):
         return self._request.ctx
 
     @property
-    def args(self):
+    def args(self) -> RequestParameters:
         return self._request.args
 
     @property
-    def form(self):
+    def form(self) -> RequestParameters:
         return self._request.form
 
     @property
@@ -79,7 +80,7 @@ class KRequest(Generic[M_args]):
         return self._request.headers
 
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._request.ctx.session
 
     @property
@@ -89,6 +90,18 @@ class KRequest(Generic[M_args]):
     @property
     def locale(self):
         return self._locale
+    
+    def form_getlist(self, item) -> List[Any]:
+        """
+        Wraps request.form.getlist() with empty list as default value
+        """
+        return self.form.getlist(item, [])
+
+    def args_getlist(self, item) -> List[Any]:
+        """
+        Wraps request.args.getlist() with empty list as default value
+        """
+        return self.args.getlist(item, [])
 
     def session_get_user(self) -> UserInfo:
         """

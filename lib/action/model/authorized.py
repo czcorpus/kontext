@@ -10,6 +10,7 @@ from action.argmapping import GeneralOptionsArgs, MinArgs
 from action.errors import UserActionException
 from action import ActionProps
 from typing import Any, Optional, Dict, List, Iterable, Tuple, Union
+from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from texttypes.cache import TextTypesCache
 from plugin_types.auth import UserInfo, AbstractInternalAuth
 from plugin_types import CorpusDependentPlugin
@@ -53,7 +54,7 @@ class UserActionModel(BaseActionModel):
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
-    async def pre_dispatch(self, req_args):
+    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
         req_args = await super().pre_dispatch(req_args)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)

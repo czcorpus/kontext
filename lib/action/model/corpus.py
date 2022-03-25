@@ -29,7 +29,7 @@ from corplib.corpus import KCorpus
 from action.argmapping import ConcArgsMapping, Args
 from action import ActionProps
 from main_menu.model import MainMenu, EventTriggeringItem
-from action.req_args import RequestArgsProxy
+from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.errors import (
     UserActionException, ImmediateRedirectException, AlignedCorpusForbiddenException, NotFoundException,
     ForbiddenException)
@@ -153,7 +153,7 @@ class CorpusActionModel(UserActionModel):
             data = {}
         return data
 
-    async def _restore_prev_query_params(self, form) -> bool:
+    async def _restore_prev_query_params(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]) -> bool:
         """
         Restores previously stored concordance/pquery/wordlist query data using an ID found in request arg 'q'.
         To even begin the search, two conditions must be met:
@@ -171,7 +171,7 @@ class CorpusActionModel(UserActionModel):
         Returns:
             True if query params have been loaded else False (which is still not an error)
         """
-        url_q = form.getlist('q')[:]
+        url_q = req_args.getlist('q')[:]
         with plugins.runtime.QUERY_PERSISTENCE as query_persistence:
             if len(url_q) > 0 and query_persistence.is_valid_id(url_q[0]):
                 self._q_code = url_q[0][1:]
@@ -179,19 +179,19 @@ class CorpusActionModel(UserActionModel):
                 # !!! must create a copy here otherwise _q_data (as prev query)
                 # will be rewritten by self.args.q !!!
                 if self._active_q_data is not None:
-                    form.add_forced_arg('q', *(self._active_q_data.get('q', [])[:] + url_q[1:]))
+                    req_args.add_forced_arg('q', *(self._active_q_data.get('q', [])[:] + url_q[1:]))
                     corpora = self._active_q_data.get('corpora', [])
                     if len(corpora) > 0:
-                        orig_corpora = form.add_forced_arg('corpname', corpora[0])
+                        orig_corpora = req_args.add_forced_arg('corpname', corpora[0])
                         if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
                             raise UserActionException(self._req.translate(
                                 f'URL argument corpname={orig_corpora[0]} collides with corpus '
                                 f'{corpora[0]} stored as part of original concordance'))
                     if len(corpora) > 1:
-                        form.add_forced_arg('align', *corpora[1:])
-                        form.add_forced_arg('viewmode', 'align')
+                        req_args.add_forced_arg('align', *corpora[1:])
+                        req_args.add_forced_arg('viewmode', 'align')
                     if self._active_q_data.get('usesubcorp', None):
-                        form.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
+                        req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
                     raise UserActionException(self._req.translate('Invalid or expired query'))
@@ -217,14 +217,14 @@ class CorpusActionModel(UserActionModel):
             args['q'] = [q for q in self.args.q]
         return args
 
-    async def _check_corpus_access(self, form, action_props: ActionProps) -> Tuple[Union[str, None], str]:
+    async def _check_corpus_access(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy], action_props: ActionProps) -> Tuple[Union[str, None], str]:
         """
         Returns: a 2-tuple (corpus id, corpus variant)
         """
         with plugins.runtime.AUTH as auth:
-            is_api = action_props.return_type == 'json' or form.getvalue(
+            is_api = action_props.return_type == 'json' or req_args.getvalue(
                 'format') == 'json'
-            corpname, redirect = await self._determine_curr_corpus(form, is_api)
+            corpname, redirect = await self._determine_curr_corpus(req_args, is_api)
             has_access, variant = await auth.validate_access(corpname, self.session_get('user'))
             if has_access and redirect:
                 url_pref = action_props.action_prefix
@@ -234,7 +234,7 @@ class CorpusActionModel(UserActionModel):
                     url_pref + action_props.action_name, dict(corpname=corpname)))
             elif not has_access:
                 auth.on_forbidden_corpus(self.plugin_ctx, corpname, variant)
-            for al_corp in form.getlist('align'):
+            for al_corp in req_args.getlist('align'):
                 al_access, al_variant = await auth.validate_access(al_corp, self.session_get('user'))
                 # we cannot accept aligned corpora without access right
                 # or with different variant (from implementation reasons in this case)
@@ -243,7 +243,7 @@ class CorpusActionModel(UserActionModel):
                     raise AlignedCorpusForbiddenException(al_corp, al_variant)
             return corpname, variant
 
-    async def pre_dispatch(self, req_args):
+    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user

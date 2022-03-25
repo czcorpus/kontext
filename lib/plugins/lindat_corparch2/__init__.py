@@ -243,8 +243,8 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
-    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
-        external_keywords = filter_dict.getlist('keyword')
+    async def search(self, plugin_ctx: PluginCtx, query, offset=0, limit=None):
+        external_keywords = plugin_ctx.request.args_getlist('keyword')
         external_keywords = self._corparch.map_external_keywords(plugin_ctx, external_keywords)
         if len(external_keywords) != 0:
             query_substrs = []
@@ -267,16 +267,16 @@ class DefaultCorplistProvider(CorplistProvider):
         ans = {'rows': []}
         permitted_corpora = await self._auth.permitted_corpora(plugin_ctx.user_dict)
 
-        if filter_dict.get('minSize'):
-            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        if plugin_ctx.request.args.get('minSize'):
+            min_size = l10n.desimplify_num(plugin_ctx.request.args.get('minSize'), strict=False)
         else:
             min_size = 0
-        if filter_dict.get('maxSize'):
-            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
+        if plugin_ctx.request.args.get('maxSize'):
+            max_size = l10n.desimplify_num(plugin_ctx.request.args.get('maxSize'), strict=False)
         else:
             max_size = None
 
-        sorting_field = filter_dict.get('sortBySize', 'name')
+        sorting_field = plugin_ctx.request.args.get('sortBySize', 'name')
 
         if offset is None:
             offset = 0
@@ -350,7 +350,7 @@ class DefaultCorplistProvider(CorplistProvider):
         ans['keywords'] = l10n.sort(used_keywords, loc=plugin_ctx.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
-        ans['filters'] = dict(filter_dict)
+        ans['filters'] = dict(plugin_ctx.request.args)
         return ans
 
 
@@ -762,9 +762,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.append(tmp)
         return ans
 
-    async def export(self, plugin_ctx):
+    async def export(self, plugin_ctx: PluginCtx):
         initial_keywords = plugin_ctx.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
-        external_keywords = plugin_ctx.request.args.getlist('keyword')
+        external_keywords = plugin_ctx.request.args_getlist('keyword')
         mapped_external_keywords = self.map_external_keywords(plugin_ctx, external_keywords)
         if len(mapped_external_keywords) != 0:
             initial_keywords.extend(mapped_external_keywords)
@@ -779,16 +779,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             max_num_hints=self._max_num_hints
         )
 
-    async def initial_search_params(self, plugin_ctx, query, filter_dict=None):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+    async def initial_search_params(self, plugin_ctx: PluginCtx):
+        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = await self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
             'filters': {
-                'maxSize': filter_dict.getlist('maxSize'),
-                'minSize': filter_dict.getlist('minSize'),
+                'maxSize': plugin_ctx.request.args_getlist('maxSize'),
+                'minSize': plugin_ctx.request.args_getlist('minSize'),
                 'name': query_substrs,
                 'sortBySize': 'name'
             }

@@ -59,6 +59,7 @@ from dataclasses_json import dataclass_json
 from typing import Union, List
 import uuid
 from sanic import Blueprint
+from action.krequest import KRequest
 
 import plugins
 from plugin_types.corparch import AbstractCorporaArchive
@@ -208,7 +209,7 @@ class TreeCorparch(AbstractCorporaArchive):
     def get_all(self, plugin_ctx):
         return self._data
 
-    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
+    async def initial_search_params(self, plugin_ctx: PluginCtx):
         return {}
 
 

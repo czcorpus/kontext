@@ -81,7 +81,7 @@ async def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KRe
                 plugin_ctx=amodel.plugin_ctx,
                 corpus=amodel.corp,
                 corpname=req.form.get('corpname'),
-                aligned_corpora=req.form.getlist('aligned_corpora'),
+                aligned_corpora=req.form_getlist('aligned_corpora'),
                 args=json.loads(req.form.get('expression'))
             )
     except ResultNotFoundException as err:

@@ -20,6 +20,8 @@ from collections import defaultdict
 import struct
 from typing import Any, Dict, List
 from sanic.blueprints import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 
 from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
@@ -39,12 +41,12 @@ bp = Blueprint('default_subcmixer')
 
 @bp.route('/subcmixer_run_calc', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_run_calc(req, amodel):
+def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     try:
         with plugins.runtime.SUBCMIXER as sm:
             return sm.process(plugin_ctx=amodel.plugin_ctx, corpus=amodel.corp,
                               corpname=req.form.get('corpname'),
-                              aligned_corpora=req.form.getlist('aligned_corpora'),
+                              aligned_corpora=req.form_getlist('aligned_corpora'),
                               args=json.loads(req.form.get('expression')))
     except ResultNotFoundException as err:
         amodel.add_system_message('error', str(err))
@@ -53,7 +55,7 @@ def subcmixer_run_calc(req, amodel):
 
 @bp.route('/subcmixer_create_subcorpus', methods='POST')
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_create_subcorpus(req, amodel):
+def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers

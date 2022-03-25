@@ -21,7 +21,7 @@ from sanic.request import Request
 
 
 def query(request: Request):
-    return dict(corpname=request.args.get('corpname'), align=request.args.getlist('align'))
+    return dict(corpname=request.args.get('corpname'), align=request.args.getlist('align', []))
 
 
 def query_submit(request: Request):

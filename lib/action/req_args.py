@@ -12,10 +12,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import werkzeug
+from sanic.request import RequestParameters
 from collections import defaultdict
 from typing import List, Union, Dict, Any
 
+
+def import_request_parameters(data: Dict[str, Any]):
+    return RequestParameters(
+        (k, v) if isinstance(v, list) else (k, [v])
+        for k, v in data.items()
+    )
 
 class RequestArgsProxy:
     """
@@ -32,12 +38,12 @@ class RequestArgsProxy:
     mapping.
     """
 
-    def __init__(self, form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
-                 args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]]):
+    def __init__(self, form: Union[RequestParameters, Dict[str, Any]],
+                 args: Union[RequestParameters, Dict[str, Any]]):
         self._form = form if isinstance(
-            form, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(form)
+            form, RequestParameters) else import_request_parameters(form)
         self._args = args if isinstance(
-            args, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(args)
+            args, RequestParameters) else import_request_parameters(args)
         self._forced = defaultdict(lambda: [])
 
     def __iter__(self):
@@ -63,10 +69,10 @@ class RequestArgsProxy:
         """
         if k in self._forced:
             return self._forced[k]
-        tmp = self._form.getlist(k)
+        tmp = self._form.getlist(k, [])
         if len(tmp) > 0:
             return tmp
-        tmp = self._args.getlist(k)
+        tmp = self._args.getlist(k, [])
         return tmp
 
     def getvalue(self, k):
@@ -130,9 +136,9 @@ class JSONRequestArgsProxy:
     """
 
     def __init__(self, json_data: Dict[str, Any],
-                 args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]]):
+                 args: Union[RequestParameters, Dict[str, Any]]):
         self._args = args if isinstance(
-            args, werkzeug.datastructures.MultiDict) else werkzeug.datastructures.MultiDict(args)
+            args, RequestParameters) else import_request_parameters(args)
         self._forced = defaultdict(lambda: [])
         self._json = json_data
 
@@ -227,8 +233,8 @@ class JSONRequestArgsProxy:
         return ans
 
 
-def create_req_arg_proxy(form: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
-                         args: Union[werkzeug.datastructures.MultiDict, Dict[str, Any]],
+def create_req_arg_proxy(form: Union[RequestParameters, Dict[str, Any]],
+                         args: Union[RequestParameters, Dict[str, Any]],
                          json_data: Dict[str, Any]):
     """
     Create either a JSONRequestArgsProxy or RequestArgsProxy based on provided data.

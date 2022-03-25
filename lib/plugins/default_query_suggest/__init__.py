@@ -15,6 +15,8 @@
 from typing import Any, List
 import importlib
 from sanic.blueprints import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 
 from plugin_types.query_suggest import AbstractQuerySuggest
 import plugins
@@ -29,13 +31,13 @@ bp = Blueprint('default_query_suggest')
 
 @bp.route('/fetch_query_suggestions')
 @http_action(return_type='json', action_model=CorpusActionModel)
-async def fetch_query_suggestions(amodel, req, resp):
+async def fetch_query_suggestions(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     """
     with plugins.runtime.QUERY_SUGGEST as plg:
         ans = await plg.find_suggestions(
             plugin_ctx=amodel.plugin_ctx,
-            corpora=req.args.getlist('corpora'),
+            corpora=req.args_getlist('corpora'),
             subcorpus=req.args.get('subcorpus'),
             value=req.args.get('value'),
             value_type=req.args.get('value_type'),

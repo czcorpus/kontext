@@ -16,7 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
+from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 
 import plugins
 from action import ActionProps
@@ -107,8 +108,8 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
         attrs = self.corp.get_posattrs()
         return 'lemma' if 'lemma' in attrs else attrs[0]
 
-    async def pre_dispatch(self, action_props: ActionProps):
-        ans = await super().pre_dispatch(action_props)
+    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+        ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'pquery':
                 raise UserActionException('Invalid search session for a paradimatic query')

@@ -75,7 +75,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         subcnorm=subcnorm,
         id_attr=corpus_info.metadata.id_attr,
         subcname=subcname,
-        aligned_corpora=req.form.getlist('aligned_corpora', [])
+        aligned_corpora=req.form_getlist('aligned_corpora')
     ))
     return out
 

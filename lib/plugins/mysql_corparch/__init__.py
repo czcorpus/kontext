@@ -27,6 +27,8 @@ from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
+from action.krequest import KRequest
+from action.plugin.ctx import PluginCtx
 from plugins.common.mysql import MySQLOps, MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
@@ -344,16 +346,16 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.append(tmp)
         return ans
 
-    async def initial_search_params(self, plugin_ctx, query, filter_dict=None):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+    async def initial_search_params(self, plugin_ctx: PluginCtx):
+        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = await self.all_keywords(plugin_ctx.user_lang)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in list(all_keywords.items())]
         return {
             'keywords': exp_keywords,
             'filters': {
-                'maxSize': filter_dict.getlist('maxSize'),
-                'minSize': filter_dict.getlist('minSize'),
+                'maxSize': plugin_ctx.request.args_getlist('maxSize'),
+                'minSize': plugin_ctx.request.args_getlist('minSize'),
                 'name': query_substrs
             }
         }

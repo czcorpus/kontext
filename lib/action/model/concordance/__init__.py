@@ -625,7 +625,7 @@ class ConcActionModel(CorpusActionModel):
     def go_to_restore_conc(self, return_action: str):
         args = []
         for k in self._req.args.keys():
-            for val in self._req.args.getlist(k):
+            for val in self._req.args_getlist(k):
                 args.append((k, val))
         args.append(('next', return_action))
         raise ImmediateRedirectException(self._req.create_url('restore_conc', args))
