@@ -143,11 +143,7 @@ class DatabaseBackend:
 class DatabaseWriteBackend:
 
     @abc.abstractmethod
-    def commit(self):
-        pass
-
-    @abc.abstractmethod
-    def remove_corpus(self, corpus_id: str):
+    async def remove_corpus(self, corpus_id: str):
         pass
 
     @abc.abstractmethod
@@ -164,15 +160,15 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_article(self, text: str) -> int:
+    async def save_corpus_article(self, text: str) -> int:
         pass
 
     @abc.abstractmethod
-    def attach_corpus_article(self, corpus_id: str, article_id: int, role: str):
+    async def attach_corpus_article(self, corpus_id: str, article_id: int, role: str):
         pass
 
     @abc.abstractmethod
-    def save_registry_table(self, corpus_id: str, variant: str, values: List[Tuple[str, str]]) -> bool:
+    async def save_registry_table(self, corpus_id: str, variant: str, values: List[Tuple[str, str]]) -> bool:
         """
         returns:
         True if a record has been actually created
@@ -181,11 +177,11 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_posattr(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]) -> int:
+    async def save_corpus_posattr(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]) -> int:
         pass
 
     @abc.abstractmethod
-    def update_corpus_posattr_references(
+    async def update_corpus_posattr_references(
             self, corpus_id: str, posattr_id: int, fromattr_id: Optional[int], mapto_id: Optional[int]):
         """
         Define FROMATTR and/or MAPTO. If None is passed for any of the two then NULL is inserted
@@ -194,22 +190,22 @@ class DatabaseWriteBackend:
         pass
 
     @abc.abstractmethod
-    def save_corpus_alignments(self, corpus_id: str, aligned_ids: List[str]):
+    async def save_corpus_alignments(self, corpus_id: str, aligned_ids: List[str]):
         pass
 
     @abc.abstractmethod
-    def save_corpus_structure(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]):
+    async def save_corpus_structure(self, corpus_id: str, name: str, position: int, values: List[Tuple[str, str]]):
         pass
 
     @abc.abstractmethod
-    def save_corpus_structattr(
+    async def save_corpus_structattr(
             self, corpus_id: str, struct_id: int, name: str, position: int, values: List[Tuple[str, Any]]):
         pass
 
     @abc.abstractmethod
-    def save_subcorpattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
+    async def save_subcorpattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
         pass
 
     @abc.abstractmethod
-    def save_freqttattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
+    async def save_freqttattr(self, corpus_id: str, struct_name: str, attr_name: str, idx: int):
         pass
