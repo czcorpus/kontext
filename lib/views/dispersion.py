@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from sanic import Blueprint
 from typing import List
-from texttypes.cache import TextTypesCache
 from action.model.concordance import ConcActionModel
 from action.decorators import http_action
 from action.errors import ImmediateRedirectException, UserActionException

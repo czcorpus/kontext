@@ -9,19 +9,15 @@ from sanic import Blueprint
 import l10n
 import conclib
 from action.model.fcs import FCSActionModel, Languages
-from lib.action.decorators import http_action
-from lib.action.krequest import KRequest
-from lib.action.model.base import BaseActionModel
-from lib.action.response import KResponse
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.base import BaseActionModel
+from action.response import KResponse
 import plugins
 import settings
 
-
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
 bp_v1 = bp_common.copy('fcs-v1', version=1)
-
-
-_logger = logging.getLogger(__name__)
 
 
 @bp_common.route('/fcs2html')
@@ -73,7 +69,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     default_corp_list = settings.get('corpora', 'default_corpora', [])
     corpname = None
     if 0 == len(default_corp_list):
-        _logger.critical('FCS cannot work properly without a default_corpora set')
+        logging.getLogger(__name__).critical('FCS cannot work properly without a default_corpora set')
     else:
         corpname = default_corp_list[0]
 
@@ -186,7 +182,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 if req_corpname in user_corpora:
                     corpname = req_corpname
                 else:
-                    _logger.warning(
+                    logging.getLogger(__name__).warning(
                         'Requested unavailable corpus [%s], defaulting to [%s]', req_corpname, corpname)
                 common_data.corpname = corpname
 
