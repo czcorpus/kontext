@@ -17,7 +17,7 @@ import plugins
 import settings
 
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
-bp_v1 = bp_common.copy('fcs-v1', version=1)
+bp_v1 = bp_common.copy('fcs-v1')
 
 
 @bp_common.route('/fcs2html')
@@ -48,10 +48,11 @@ class FCSResponseV1:
     version: float
     server_name: str
     server_port: int
-    databse: str
+    database: str
+
     corppid: Optional[str] = None
     recordPacking: str = 'xml'
-    result: List[Any] = field(default=[])
+    result: List[Any] = field(default_factory=list)
     operation: str = 'explain'
     numberOfRecords: int = 0
     maximumRecords: int = 250
@@ -60,7 +61,7 @@ class FCSResponseV1:
     responsePosition: int = 0
 
 
-@bp_v1.route('', ['GET', 'HEAD'])
+@bp_v1.route('/v1', ['GET', 'HEAD'])
 @http_action(template='fcs/v1_complete.html', action_model=FCSActionModel)
 async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'application/xml')

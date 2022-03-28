@@ -27,23 +27,10 @@ import manatee
 from structures import FixedDict
 from conclib.empty import InitialConc
 from conclib.common import KConc
-from kwiclib_common import tokens2strclass
+from kwiclib_common import tokens2strclass, SortCritType, lngrp_sortcrit
 from corplib.corpus import AbstractKCorpus
 
-SortCritType = List[Tuple[str, Union[str, int]]]
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
-
-
-def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
-    # TODO
-    def num2sort(n: str) -> Tuple[str, Union[str, int]]:
-        if re.compile('[0-9]+$').match(n):
-            return 'n', int(n)
-        else:
-            return 'c', n
-    if not lab:
-        return [('x', 'x')]
-    return list(map(num2sort, lab.split(separator, 3)))
 
 
 def format_labelmap(labelmap: Mapping[str, str], separator: str = '.') -> LabelMapType:

@@ -25,7 +25,7 @@ import logging
 import manatee
 import l10n
 from strings import escape_attr_val
-from kwiclib import lngrp_sortcrit
+from kwiclib_common import lngrp_sortcrit
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
 from corplib.corpus import AbstractKCorpus
 

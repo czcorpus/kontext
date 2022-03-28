@@ -16,7 +16,18 @@ import plugins
 import settings
 
 
-_logger = logging.getLogger(__name__)
+@dataclass
+class FCSResourceInfo:
+    title: str
+    landingPageURI: str
+    language: str
+    description: str
+
+
+class FCSCorpusInfo(NamedTuple):
+    corpus_id: str
+    corpus_title: str
+    resource_info: FCSResourceInfo
 
 
 class FCSSearchRow(NamedTuple):
@@ -48,8 +59,8 @@ class FCSActionModel(UserActionModel):
         if 0 < len(unsupported_args):
             raise Exception(8, list(unsupported_args)[0], 'Unsupported parameter')
 
-    async def corpora_info(self, value: str, max_items: int) -> Dict[Tuple[str, str, Dict[str, Any]]]:
-        resources: Dict[Tuple[str, str, Dict[str, Any]]] = []
+    async def corpora_info(self, value: str, max_items: int) -> List[FCSCorpusInfo]:
+        resources: List[Tuple[str, str, Dict[str, Any]]] = []
         corpora_d = [value]
         if value == 'root':
             corpora_d = await plugins.runtime.AUTH.instance.permitted_corpora(
@@ -62,12 +73,14 @@ class FCSActionModel(UserActionModel):
             resource_info: Dict[str, Any] = {}
             c = self.cm.get_corpus(corpus_id)
             corpus_title: str = c.get_conf('NAME')
-            resource_info['title'] = corpus_title
-            resource_info['landingPageURI'] = c.get_conf('INFOHREF')
-            # TODO(jm) - Languages copied (and slightly fixed) from 0.5 - should be checked
-            resource_info['language'] = Languages.get_iso_code(c.get_conf('LANGUAGE'))
-            resource_info['description'] = c.get_conf('INFO')
-            resources.append((corpus_id, corpus_title, resource_info))
+            resource_info = FCSResourceInfo(
+                corpus_title,
+                c.get_conf('INFOHREF'),
+                # TODO(jm) - Languages copied (and slightly fixed) from 0.5 - should be checked
+                Languages.get_iso_code(c.get_conf('LANGUAGE')),
+                c.get_conf('INFO'),
+            )
+            resources.append(FCSCorpusInfo(corpus_id, corpus_title, resource_info))
         return resources
 
     async def fcs_search(self, corp: KCorpus, corpname: str, fcs_query: str, max_rec: int, start: int) -> FCSSearchResult:
