@@ -20,6 +20,8 @@
 Required XML configuration: please see ./config.rng
 """
 
+from action.krequest import KRequest
+from action.response import KResponse
 from plugin_types.kwic_connect import AbstractKwicConnect
 from plugins.default_token_connect import setup_providers
 import plugins
@@ -54,11 +56,11 @@ def handle_word_req(args):
 
 @bp.route('/fetch_external_kwic_info')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def fetch_external_kwic_info(self, request):
-    words = request.args.getlist('w')
+async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp: KResponse):
+    words = req.args_getlist('w')
     with plugins.runtime.CORPARCH as ca:
-        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
-        args = [(w, [self.corp.corpname] + self.args.align, corpus_info.kwic_connect.providers, self.ui_lang)
+        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
+        args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, amodel.ui_lang)
                 for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
@@ -76,12 +78,12 @@ async def fetch_external_kwic_info(self, request):
 
 @bp.route('/get_corpus_kc_providers')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def get_corpus_kc_providers(self, _):
+async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.KWIC_CONNECT as kc:
-        corpus_info = await ca.get_corpus_info(self._plugin_ctx, self.corp.corpname)
+        corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
         mp = kc.map_providers(corpus_info.kwic_connect.providers)
-        return dict(corpname=self.corp.corpname,
-                    providers=[dict(id=b.provider_id, label=f.get_heading(self.ui_lang)) for b, f in mp])
+        return dict(corpname=amodel.corp.corpname,
+                    providers=[dict(id=b.provider_id, label=f.get_heading(amodel.ui_lang)) for b, f in mp])
 
 
 class DefaultKwicConnect(AbstractKwicConnect):

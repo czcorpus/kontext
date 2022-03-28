@@ -20,6 +20,8 @@ from action.model.authorized import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.decorators import http_action
 from sanic import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 
 import plugins
 from plugin_types.corparch import AbstractSearchableCorporaArchive
@@ -64,17 +66,16 @@ bp = Blueprint('corpora', url_prefix='corpora')
 
 @bp.route('/corplist')
 @http_action(action_model=UserActionModel, template='corpora/corplist.html')
-async def corplist(amodel, req, resp):
+async def corplist(amodel: UserActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
     with plugins.runtime.CORPARCH as cp:
         if isinstance(cp, AbstractSearchableCorporaArchive):
-            params = await cp.initial_search_params(amodel.plugin_ctx, req.args.get('query'), req.args)
+            params = await cp.initial_search_params(amodel.plugin_ctx)
             data = await cp.search(
                 plugin_ctx=amodel.plugin_ctx,
                 query=False,
                 offset=0,
-                limit=req.args.get('limit', None),
-                filter_dict=req.args)
+                limit=req.args.get('limit', None))
         else:
             params = {}
             data = await cp.get_all(amodel.plugin_ctx)
@@ -84,17 +85,16 @@ async def corplist(amodel, req, resp):
 
 @bp.route('/ajax_list_corpora')
 @http_action(action_model=UserActionModel, return_type='json')
-async def ajax_list_corpora(amodel, req, resp):
+async def ajax_list_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as cp:
         return await cp.search(
             plugin_ctx=amodel.plugin_ctx, query=req.args.get('query', None),
-            offset=req.args.get('offset', None), limit=req.args.get('limit', None),
-            filter_dict=req.args)
+            offset=req.args.get('offset', None), limit=req.args.get('limit', None))
 
 
 @bp.route('/ajax_get_corp_details')
 @http_action(action_model=CorpusActionModel, return_type='json')
-async def ajax_get_corp_details(amodel, req, resp):
+async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corpname = req.args.get('corpname')
     with plugins.runtime.AUTH as auth, plugins.runtime.CORPARCH as ca:
         _, acc, _ = await auth.corpus_access(req.session_get('user'), corpname)
@@ -134,7 +134,7 @@ async def ajax_get_corp_details(amodel, req, resp):
 
 @bp.route('/ajax_get_structattrs_details')
 @http_action(action_model=UserActionModel, return_type='json')
-async def ajax_get_structattrs_details(amodel, req, resp):
+async def ajax_get_structattrs_details(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     Provides a map (struct_name=>[list of attributes]). This is used
     by 'insert within' widget.
@@ -150,6 +150,6 @@ async def ajax_get_structattrs_details(amodel, req, resp):
 
 @bp.route('/bibliography')
 @http_action(action_model=UserActionModel, return_type='json')
-def bibliography(amodel, req, resp):
+def bibliography(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
         return dict(bib_data=liveatt.get_bibliography(amodel.plugin_ctx, amodel.corp, item_id=req.args.get('id')))

@@ -63,7 +63,7 @@ async def get_task_result(amodel, req, resp):
 @bp.route('/remove_task_info', methods=['DELETE'])
 @http_action(return_type='json', action_model=UserActionModel)
 async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    task_ids = req.form.getlist('tasks')
+    task_ids = req.form_getlist('tasks')
     amodel.set_async_tasks([x for x in amodel.get_async_tasks() if x.ident not in task_ids])
     return await _check_tasks_status(amodel, req, resp)
 

@@ -62,23 +62,23 @@ class DefaultCorplistProvider(CorplistProvider):
         self._corparch = corparch
         self._tag_prefix = tag_prefix
 
-    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None):
         if query is False:  # False means 'use default values'
             query = ''
-        if filter_dict.get('minSize'):
-            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        if plugin_ctx.request.args.get('minSize'):
+            min_size = l10n.desimplify_num(plugin_ctx.request.args.get('minSize'), strict=False)
         else:
             min_size = 0
-        if filter_dict.get('maxSize'):
-            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
+        if plugin_ctx.request.args.get('maxSize'):
+            max_size = l10n.desimplify_num(plugin_ctx.request.args.get('maxSize'), strict=False)
         else:
             max_size = None
-        if filter_dict.get('requestable'):
-            requestable = bool(int(filter_dict.get('requestable')))
+        if plugin_ctx.request.args.get('requestable'):
+            requestable = bool(int(plugin_ctx.request.args.get('requestable')))
         else:
             requestable = False
-        if filter_dict.get('favOnly'):
-            favourites_only = bool(int(filter_dict.get('favOnly')))
+        if plugin_ctx.request.args.get('favOnly'):
+            favourites_only = bool(int(plugin_ctx.request.args.get('favOnly')))
         else:
             favourites_only = False
 
@@ -130,5 +130,5 @@ class DefaultCorplistProvider(CorplistProvider):
                     keywords=l10n.sort(used_keywords, loc=plugin_ctx.user_lang),
                     query=query,
                     current_keywords=query_keywords,
-                    filters=dict(filter_dict))
+                    filters=dict(plugin_ctx.request.args))
 

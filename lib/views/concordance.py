@@ -368,7 +368,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 out['next_action'] = 'freqs'
                 out['next_action_args'] = {
                     'fcrit': req.args.get('fcrit'),
-                    'fcrit_async': req.args.getlist('fcrit_async'),
+                    'fcrit_async': req.args_getlist('fcrit_async'),
                     'flimit': req.args.get('flimit'),
                     # client does not always fills this
                     'freq_sort': req.args.get('freq_sort', 'freq'),
@@ -709,7 +709,7 @@ async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     A filter generated directly from a link (e.g. "p"/"n" links on freqs/colls/pquery pages).
     """
-    new_q = req.args.getlist('q2')
+    new_q = req.args_getlist('q2')
     q_conv = QuickFilterArgsConv(amodel.plugin_ctx, amodel.args)
 
     op_idx = len(amodel.args.q)

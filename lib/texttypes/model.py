@@ -57,7 +57,7 @@ class TextTypeCollector:
             self._access_fn = lambda o, att: o.get(att)
         elif isinstance(src_obj, KRequest):
             self._attr_producer_fn = lambda o: list(o.form.keys())
-            self._access_fn = lambda o, x: o.form.getlist(*(x,))
+            self._access_fn = lambda o, x: o.form_getlist(*(x,))
         else:
             raise ValueError('Invalid source object (must be either a dict or Request): %s' % (
                              src_obj.__class__.__name__,))

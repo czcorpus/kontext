@@ -141,7 +141,7 @@ class UcnkCorpArch3(MySQLCorparch):
             self.SESSION_KEYWORDS_KEY, [self.default_label])
         return ans
 
-    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None):
         if self.SESSION_KEYWORDS_KEY not in plugin_ctx.session:
             plugin_ctx.session[self.SESSION_KEYWORDS_KEY] = [self.default_label]
         initial_query = query
@@ -154,7 +154,7 @@ class UcnkCorpArch3(MySQLCorparch):
             plugin_ctx.session[self.SESSION_KEYWORDS_KEY] = query_keywords
         query = (' '.join(query_substrs) + ' ' + ' '.join('%s%s' %
                                                           (self._tag_prefix, s) for s in query_keywords))
-        return await super(UcnkCorpArch3, self).search(plugin_ctx, query, offset, limit, filter_dict)
+        return await super(UcnkCorpArch3, self).search(plugin_ctx, query, offset, limit)
 
     async def send_request_email(self, corpus_id, plugin_ctx, custom_message):
         """

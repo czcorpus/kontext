@@ -35,6 +35,7 @@ import re
 from functools import reduce
 import logging
 from typing import List, Optional
+
 try:
     from markdown import markdown
 except ImportError:
@@ -52,7 +53,6 @@ from controller import exposed
 import actions.user
 from action.plugin.ctx import PluginCtx
 from settings import import_bool
-from util import as_async
 
 DEFAULT_LANG = 'en'
 
@@ -142,23 +142,23 @@ class DefaultCorplistProvider(CorplistProvider):
         """
         return True
 
-    async def search(self, plugin_ctx, query, offset=0, limit=None, filter_dict=None):
+    async def search(self, plugin_ctx, query, offset=0, limit=None):
         if query is False:  # False means 'use default values'
             query = ''
         ans = {'rows': []}
         permitted_corpora = await self._auth.permitted_corpora(plugin_ctx.user_dict)
         used_keywords = set()
         all_keywords_map = dict(self._corparch.all_keywords(plugin_ctx))
-        if filter_dict.get('minSize'):
-            min_size = l10n.desimplify_num(filter_dict.get('minSize'), strict=False)
+        if plugin_ctx.request.args.get('minSize'):
+            min_size = l10n.desimplify_num(plugin_ctx.request.args.get('minSize'), strict=False)
         else:
             min_size = 0
-        if filter_dict.get('maxSize'):
-            max_size = l10n.desimplify_num(filter_dict.get('maxSize'), strict=False)
+        if plugin_ctx.request.args.get('maxSize'):
+            max_size = l10n.desimplify_num(plugin_ctx.request.args.get('maxSize'), strict=False)
         else:
             max_size = None
-        if filter_dict.get('favOnly'):
-            favourite_only = bool(int(filter_dict.get('favOnly')))
+        if plugin_ctx.request.args.get('favOnly'):
+            favourite_only = bool(int(plugin_ctx.request.args.get('favOnly')))
         else:
             favourite_only = False
 
@@ -231,7 +231,7 @@ class DefaultCorplistProvider(CorplistProvider):
         ans['keywords'] = l10n.sort(used_keywords, loc=plugin_ctx.user_lang)
         ans['query'] = query
         ans['current_keywords'] = query_keywords
-        ans['filters'] = dict(filter_dict)
+        ans['filters'] = dict(plugin_ctx.request.args)
         return ans
 
 
@@ -650,16 +650,16 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             max_num_hints=self._max_num_hints
         )
 
-    def initial_search_params(self, plugin_ctx, query, filter_dict=None):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, query)
+    async def initial_search_params(self, plugin_ctx: PluginCtx):
+        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
         return {
             'keywords': exp_keywords,
             'filters': {
-                'maxSize': filter_dict.getlist('maxSize'),
-                'minSize': filter_dict.getlist('minSize'),
+                'maxSize': plugin_ctx.request.args_getlist('maxSize'),
+                'minSize': plugin_ctx.request.args_getlist('minSize'),
                 'name': query_substrs
             }
         }

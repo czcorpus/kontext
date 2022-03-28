@@ -111,7 +111,7 @@ class BaseActionModel:
 
     async def pre_dispatch(
             self,
-            args_proxy: Optional[Union[RequestArgsProxy, JSONRequestArgsProxy]]
+            args_proxy: Union[RequestArgsProxy, JSONRequestArgsProxy]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         if 'format' in self._req.args:
             if self._is_valid_return_type(self._req.args.get('format')):

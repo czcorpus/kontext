@@ -58,7 +58,7 @@ class WordlistActionModel(CorpusActionModel):
             self._plugin_ctx = WordlistPluginCtx(self, self._req, self._resp)
         return self._plugin_ctx
 
-    async def pre_dispatch(self, req_args) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'wlist':

@@ -39,12 +39,14 @@ files.
 
 import abc
 from typing import Optional, Dict, Any, List, Iterable, TYPE_CHECKING
+
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import CorpusPluginCtx
 import l10n
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
+
 from .corpus import CorpusInfo, StructAttrInfo
 from .error import CorparchError
 
@@ -147,15 +149,13 @@ class CorplistProvider(abc.ABC):
 
     @abc.abstractmethod
     async def search(
-            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
-            filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         arguments:
         plugin_ctx --
         query -- raw query entered by user (possibly modified by client-side code)
         offset -- zero-based offset specifying returned data
         limit -- number of items to return
-        filter_dict -- a dictionary containing additional search parameters
         """
 
 
@@ -165,8 +165,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
     """
 
     async def search(
-            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None,
-            filter_dict: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+            self, plugin_ctx: 'CorpusPluginCtx', query: str, offset: int = 0, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Returns a subset of corplist matching provided query.
 
@@ -178,15 +177,13 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         offset -- return a list starting from this index (zero-based; default is 0)
         limit -- a maximum number of items to return (default is None; interpretation of None
                  is up to the plug-in, i.e. it can be "no limit" or "default limit" etc.)
-        filter_dict -- a dict or werkzeug.datastructures.MultiDict containing additional
-                       arguments of the search request; KonText just passes Request.args here
 
         returns:
         a JSON-serializable dictionary a concrete plug-in implementation understands
         """
         service = self.create_corplist_provider(plugin_ctx)
         return await service.search(
-            plugin_ctx=plugin_ctx, query=query, offset=offset, limit=limit, filter_dict=filter_dict)
+            plugin_ctx=plugin_ctx, query=query, offset=offset, limit=limit)
 
     @abc.abstractmethod
     def create_corplist_provider(self, plugin_ctx: 'CorpusPluginCtx') -> CorplistProvider:
@@ -201,7 +198,7 @@ class AbstractSearchableCorporaArchive(AbstractCorporaArchive):
         """
 
     @abc.abstractmethod
-    async def initial_search_params(self, plugin_ctx: 'CorpusPluginCtx', query: str, args: Any) -> Dict[str, Any]:
+    async def initial_search_params(self, plugin_ctx: 'CorpusPluginCtx') -> Dict[str, Any]:
         """
         Return a dictionary containing initial corpus search parameters.
         (e.g. you typically don't want to display a full list so you can set a page size).
