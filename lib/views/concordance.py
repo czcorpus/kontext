@@ -42,7 +42,7 @@ from conclib.empty import InitialConc
 from kwiclib import KwicPageArgs, Kwic
 import plugins
 from main_menu import MainMenu, generate_main_menu
-from bgcalc import calc_backend_client, freq_calc
+from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
 import settings
 

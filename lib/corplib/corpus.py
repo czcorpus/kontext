@@ -235,7 +235,7 @@ class KCorpus(AbstractKCorpus):
     def description(self):
         return self._description
 
-    def get_conf(self, key):
+    def get_conf(self, key: str) -> Any:
         """
         Get corpus configuration entry from its configuration registry file
         """
@@ -251,7 +251,7 @@ class KCorpus(AbstractKCorpus):
         return self._corp.set_default_attr(attr)
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Return size of the whole corpus
         (even for a subcorpus). For actual
@@ -260,7 +260,7 @@ class KCorpus(AbstractKCorpus):
         return self._corp.size()
 
     @property
-    def search_size(self):
+    def search_size(self) -> int:
         return self._corp.search_size()
 
     def get_struct(self, struct: str):

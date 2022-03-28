@@ -1,11 +1,8 @@
-from typing import Dict, Any, Optional, List, Tuple
-from sanic import Sanic, response, Blueprint
-from sanic.views import HTTPMethodView
-from sanic.response import text
-from sanic.request import Request
+from typing import Optional, List, Tuple
+from sanic import Blueprint
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException, UserActionException
+from action.errors import UserActionException
 from action.model.concordance import ConcActionModel
 from action.model.authorized import UserActionModel
 from action.krequest import KRequest

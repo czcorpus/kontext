@@ -17,6 +17,13 @@
 # 02110-1301, USA.
 
 
+import re
+from typing import List, Tuple, Union
+
+
+SortCritType = List[Tuple[str, Union[str, int]]]
+
+
 def tokens2strclass(tokens):
     """
     Converts internal data structure produced by KwicLine and CorpRegion containing tokens and
@@ -30,3 +37,15 @@ def tokens2strclass(tokens):
     """
     return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
             for i in range(0, len(tokens), 2)]
+
+
+def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:
+    # TODO
+    def num2sort(n: str) -> Tuple[str, Union[str, int]]:
+        if re.compile('[0-9]+$').match(n):
+            return 'n', int(n)
+        else:
+            return 'c', n
+    if not lab:
+        return [('x', 'x')]
+    return list(map(num2sort, lab.split(separator, 3)))

@@ -1,4 +1,4 @@
-from typing import Tuple, Iterable, Dict, List, Any, Callable, Union
+from typing import Tuple, Iterable, Dict
 from urllib.parse import urlparse
 from sanic.helpers import STATUS_CODES
 from action.errors import ForbiddenException

@@ -18,7 +18,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 from manatee import Corpus
 
 
@@ -85,7 +85,7 @@ class AbstractKCorpus(ABC):
         pass
 
     @abstractmethod
-    def get_conf(self, param):
+    def get_conf(self, key: str) -> Any:
         pass
 
     @abstractmethod

@@ -1,29 +1,17 @@
-from typing import Dict, Any, Optional, List, Tuple
-from sanic import Sanic, response, Blueprint
-from sanic.views import HTTPMethodView
-from sanic.response import text
-from sanic.request import Request
+from typing import Optional
+from sanic import Blueprint
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException, UserActionException
+from action.errors import UserActionException
 from action.model.concordance import ConcActionModel
-from action.model.authorized import UserActionModel
 from action.krequest import KRequest
-from collections import defaultdict
-from dataclasses import dataclass, field, asdict
-import re
-import sys
-import logging
+from dataclasses import dataclass, asdict
 
-from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
-from conclib.freq import multi_level_crit, MLFreqArgs
+from conclib.errors import ConcNotFoundException
 from conclib.calc import require_existing_conc
-from conclib.search import get_conc
 from action.response import KResponse
 from main_menu import MainMenu
-from bgcalc import freq_calc
 from bgcalc.coll_calc import CalculateCollsResult, CollCalcArgs, calculate_colls
-from strings import escape_attr_val
 import plugins
 
 bp = Blueprint('colls')

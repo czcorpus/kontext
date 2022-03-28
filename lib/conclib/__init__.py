@@ -206,7 +206,7 @@ def get_detail_context(
     return data
 
 
-def fcs_scan(corpname, scan_query, max_ter, start):
+def fcs_scan(corpname: str, scan_query: str, max_ter: int, start: int):
     """
     aux function for federated content search: operation=scan
     """

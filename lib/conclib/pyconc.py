@@ -25,7 +25,7 @@ import logging
 import manatee
 import l10n
 from strings import escape_attr_val
-from kwiclib import lngrp_sortcrit
+from kwiclib_common import lngrp_sortcrit
 from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
 from corplib.corpus import AbstractKCorpus
 
@@ -97,6 +97,9 @@ class PyConc(manatee.Concordance):
 
     def get_conc_file(self):
         return self._conc_file
+    
+    def size(self) -> int:
+        return super().size()
 
     def exec_command(self, name, options):
         fn = getattr(self, 'command_{0}'.format(name), None)
