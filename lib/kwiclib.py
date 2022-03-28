@@ -26,6 +26,7 @@ import math
 import manatee
 from structures import FixedDict
 from conclib.empty import InitialConc
+from conclib.common import KConc
 from kwiclib_common import tokens2strclass
 from corplib.corpus import AbstractKCorpus
 
@@ -227,7 +228,7 @@ class Kwic:
     conc -- a manatee.Concordance instance
     """
 
-    def __init__(self, corpus: AbstractKCorpus, corpus_fullname, conc):
+    def __init__(self, corpus: AbstractKCorpus, corpus_fullname: str, conc: KConc):
         self.corpus = corpus
         self.corpus_fullname = corpus_fullname
         self.conc = conc

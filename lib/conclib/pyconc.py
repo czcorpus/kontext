@@ -97,6 +97,9 @@ class PyConc(manatee.Concordance):
 
     def get_conc_file(self):
         return self._conc_file
+    
+    def size(self) -> int:
+        return super().size()
 
     def exec_command(self, name, options):
         fn = getattr(self, 'command_{0}'.format(name), None)

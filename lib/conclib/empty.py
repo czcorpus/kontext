@@ -46,10 +46,10 @@ class InitialConc:
     def get_conc_file(self):
         return self._cache_path
 
-    def size(self):
+    def size(self) -> int:
         return 0
 
-    def fullsize(self):
+    def fullsize(self) -> int:
         return 0
 
     def switch_aligned(self, *args, **kw):

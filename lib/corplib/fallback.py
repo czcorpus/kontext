@@ -10,7 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import List
+from typing import Any, List
 from corplib.abstract import AbstractKCorpus
 from manatee import Corpus
 
@@ -76,8 +76,8 @@ class EmptyCorpus(AbstractKCorpus):
     def description(self):
         return None
 
-    def get_conf(self, param):
-        return self._conf.get(param, '')
+    def get_conf(self, key: str) -> Any:
+        return self._conf.get(key, '')
 
     def get_confpath(self, *args, **kwargs):
         return None
@@ -89,11 +89,11 @@ class EmptyCorpus(AbstractKCorpus):
         pass
 
     @property
-    def size(self):
+    def size(self) -> int:
         return 0
 
     @property
-    def search_size(self):
+    def search_size(self) -> int:
         return 0
 
     def get_struct(self, *args, **kwargs):
