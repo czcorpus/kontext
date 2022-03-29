@@ -26,7 +26,7 @@ from action.krequest import KRequest
 class AbstractAudioProvider(abc.ABC):
 
     @abc.abstractmethod
-    def get_audio(self, plugin_ctx: PluginCtx, req: KRequest) -> Tuple[Dict[str, str], bytes]:
+    async def get_audio(self, plugin_ctx: PluginCtx, req: KRequest) -> Tuple[Dict[str, str], bytes]:
         """
         returns:
         a 2-tuple (
@@ -37,7 +37,7 @@ class AbstractAudioProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_waveform(self, plugin_ctx: PluginCtx, req: KRequest) -> Optional[List[float]]:
+    async def get_waveform(self, plugin_ctx: PluginCtx, req: KRequest) -> Optional[List[float]]:
         """
         returns:
         either waveform data (JSON-encoded) or None; if None then the waveform function

@@ -12,6 +12,9 @@
 # GNU General Public License for more details.
 
 import os
+
+import aiofiles
+
 from plugin_types.appbar import AbstractApplicationBar
 from plugins import inject
 import plugins
@@ -44,8 +47,8 @@ class ClarinSiTopBar(AbstractApplicationBar):
         tpl_path = self.get_template(plugin_ctx.user_lang)
         if not os.path.exists(tpl_path):
             return f'template [{tpl_path}] does not exist!'
-        with open(tpl_path, mode='rb') as fin:
-            html = fin.read().decode('utf-8')
+        async with aiofiles.open(tpl_path, mode='rb') as fin:
+            html = (await fin.read()).decode('utf-8')
             user_classes = ['user']
 
             if not plugin_ctx.user_is_anonymous:
