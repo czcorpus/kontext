@@ -251,12 +251,12 @@ class FreqCalcCache(object):
         filename = '%s.pkl' % hashlib.sha1(v.encode('utf-8')).hexdigest()
         return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
 
-    def get(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
+    async def get(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
         cache_path = self._cache_file_path(
             fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale)
-        if os.path.isfile(cache_path):
-            with open(cache_path, 'rb') as f:
-                data = pickle.load(f)
+        if await aiofiles.os.path.isfile(cache_path):
+            async with aiofiles.open(cache_path, 'rb') as f:
+                data = pickle.loads(await f.read())
         else:
             data = None
         return data, cache_path
@@ -296,7 +296,7 @@ async def calculate_freqs(args: FreqCalcArgs):
     cache = FreqCalcCache(
         corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
         q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
-    calc_result, cache_path = cache.get(
+    calc_result, cache_path = await cache.get(
         fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort,
         ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
         collator_locale=args.collator_locale)

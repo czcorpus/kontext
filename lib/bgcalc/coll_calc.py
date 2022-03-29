@@ -84,7 +84,7 @@ class CollCalcCache(object):
                                            cminbgr=cminbgr, cminfreq=cminfreq)
         if await aiofiles.os.path.isfile(cache_path):
             async with aiofiles.open(cache_path, 'rb') as f:
-                collocs = pickle.load(f)
+                collocs = pickle.loads(await f.read())
         else:
             collocs = None
         return collocs, cache_path
