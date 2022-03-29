@@ -31,7 +31,6 @@ from plugins import inject
 import plugins
 from manatee import Corpus
 from corplib.fallback import EmptyCorpus
-from util import as_async
 
 
 class CorpusCache:

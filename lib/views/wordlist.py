@@ -196,7 +196,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                     heading=form_args.heading)
     elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
         def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
-        writer: AbstractExport = plugins.runtime.EXPORT.instance.load_plugin(
+        writer = plugins.runtime.EXPORT.instance.load_plugin(
             form_args.saveformat, subtype='wordlist', translate=req.translate)
         writer.set_col_types(int, str, float)
 

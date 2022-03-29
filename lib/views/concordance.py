@@ -1068,7 +1068,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 @http_action(
     access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, template='txtexport/saveconc.html',
     return_type='plain')
-async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
+async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
 
     def merge_conc_line_parts(items):
         """
@@ -1219,7 +1219,7 @@ async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
 @bp.route('/reduce', methods=['POST'])
 @http_action(
     action_model=ConcActionModel, access_level=0, template='view.html', page_model='view', mutates_result=True)
-def reduce(amodel, req, resp):
+async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     random sample
     """
@@ -1230,7 +1230,7 @@ def reduce(amodel, req, resp):
     qinfo.rlines = amodel.args.rlines
     amodel.add_conc_form_args(qinfo)
     amodel.args.q.append('r' + amodel.args.rlines)
-    return _view(amodel, req, resp)
+    return await _view(amodel, req, resp)
 
 
 @dataclass

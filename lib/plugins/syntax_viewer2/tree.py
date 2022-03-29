@@ -18,7 +18,6 @@
 # 02110-1301, USA.
 
 from plugins.default_syntax_viewer.manatee_backend import TreexTemplate
-from util import as_async
 
 
 class UcnkTreeTemplate(TreexTemplate):

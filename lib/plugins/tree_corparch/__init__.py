@@ -60,6 +60,7 @@ from typing import Union, List
 import uuid
 from sanic import Blueprint
 from action.krequest import KRequest
+from action.response import KResponse
 
 import plugins
 from plugin_types.corparch import AbstractCorporaArchive
@@ -69,7 +70,6 @@ from plugins.default_corparch import process_pos_categories
 from action.plugin.ctx import PluginCtx
 from action.model.authorized import UserActionModel
 from action.decorators import http_action
-from util import as_async
 
 bp = Blueprint('tree_corparch')
 
@@ -148,11 +148,11 @@ class CorptreeParser(object):
 
 @bp.route('/ajax_get_corptree_data')
 @http_action(return_type='json', action_model=UserActionModel)
-def ajax_get_corptree_data(amodel, req, resp):
+async def ajax_get_corptree_data(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     An exposed HTTP action required by client-side widget.
     """
-    return plugins.runtime.CORPARCH.instance.get_all(amodel.plugin_ctx)
+    return await plugins.runtime.CORPARCH.instance.get_all(amodel.plugin_ctx)
 
 
 class TreeCorparch(AbstractCorporaArchive):
@@ -205,8 +205,7 @@ class TreeCorparch(AbstractCorporaArchive):
         else:
             return await self._localize_corpus_info(plugin_ctx, BrokenCorpusInfo())
 
-    @as_async
-    def get_all(self, plugin_ctx):
+    async def get_all(self, plugin_ctx):
         return self._data
 
     async def initial_search_params(self, plugin_ctx: PluginCtx):
