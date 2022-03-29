@@ -118,7 +118,8 @@ from typing import List, Optional
 from sanic import Blueprint
 
 from action.decorators import http_action
-from action.krequest import KRequest, KResponse
+from action.krequest import KRequest
+from action.response import KResponse
 from action.model.authorized import UserActionModel
 
 try:

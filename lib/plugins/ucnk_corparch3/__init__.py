@@ -34,7 +34,8 @@ import logging
 from collections import defaultdict
 import os
 from sanic import Blueprint
-from action.krequest import KRequest, KResponse
+from action.krequest import KRequest
+from action.response import KResponse
 from plugin_types.integration_db import IntegrationDatabase
 
 

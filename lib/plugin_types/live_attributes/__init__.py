@@ -160,14 +160,14 @@ def cached(f):
     time.
     """
     @wraps(f)
-    def wrapper(self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+    async def wrapper(self: CachedLiveAttributes, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
                                    autocomplete_attr, limit_lists)
             ans = self.from_cache(corpus.corpname, key)
             if ans:
                 return AttrValuesResponse.from_dict(ans)
-        ans = f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
+        ans = await f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size,
                                    aligned_corpora, autocomplete_attr, limit_lists)
@@ -227,8 +227,7 @@ class CachedLiveAttributes(AbstractLiveAttributes):
         Remove all the cached liveattrs
         """
         corpora = list(self._kvdb.hash_get_all(CACHE_REG_CORPORA_KEY).keys())
-        self._kvdb.remove(CACHE_REG_CORPORA_KEY)  # now other workers may set values again and we don't care much
+        # now other workers may set values again and we don't care much
+        self._kvdb.remove(CACHE_REG_CORPORA_KEY)
         for corp in corpora:
             self._kvdb.remove(CACHE_MAIN_KEY.format(corp))
-
-
