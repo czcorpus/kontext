@@ -42,8 +42,7 @@ class AbstractValueSelectionFetcher(abc.ABC, Generic[T]):
     """
     AbstractValueSelectionFetcher provides way how to
     obtain user tag value search query data from the
-    werkzeug.wrappers.Request (see a respective pyi file)
-    and encode them in a way suitable for a respective
+    KRequest and encode them in a way suitable for a respective
     loader.
     """
 
