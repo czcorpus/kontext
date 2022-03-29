@@ -94,7 +94,7 @@ class TeitokAudioProvider(AbstractAudioProvider):
         if start or end:
             name, ext = os.path.splitext(os.path.basename(chunk))
             rpath = await self._mk_subchunk_path(corpname, name, ext, start, end)
-            if not os.path.isfile(rpath):
+            if not await aiofiles.os.path.isfile(rpath):
                 tfm = sox.Transformer()
                 tfm.trim(start, end)
                 tfm.build(input_filepath=orig_path, output_filepath=rpath)

@@ -32,6 +32,8 @@ please see ./config.rng
 import os
 import logging
 
+import aiofiles
+
 try:
     from markdown import markdown
 except ImportError:
@@ -47,7 +49,7 @@ class ImplicitFooterBar(AbstractFootbar):
     use default variant.
     """
 
-    def get_contents(self, plugin_ctx, return_url=None):
+    async def get_contents(self, plugin_ctx, return_url=None):
         return None
 
 
@@ -85,12 +87,12 @@ class CustomContentFooterBar(AbstractFootbar):
     def _get_text_path(self, filename):
         return os.path.join(self._content_dir, filename)
 
-    def get_contents(self, plugin_ctx, return_url=None):
+    async def get_contents(self, plugin_ctx, return_url=None):
         lang = plugin_ctx.user_lang[:2]
         if lang not in self._lang_text_map:
             lang = self._default_lang
-        with open(self._lang_text_map[lang], mode='rb') as fin:
-            return markdown(fin.read().decode())
+        async with aiofiles.open(self._lang_text_map[lang], mode='rb') as fin:
+            return markdown((await fin.read()).decode())
 
 
 def create_instance(conf):

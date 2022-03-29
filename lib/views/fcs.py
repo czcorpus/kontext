@@ -3,6 +3,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, List, Optional
 import urllib.parse
 import logging
+import aiofiles
 
 from sanic import Blueprint
 
@@ -29,8 +30,8 @@ async def fcs2html(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'text/xsl; charset=utf-8')
     custom_hd_inject_path = settings.get('fcs', 'template_header_inject_file', None)
     if custom_hd_inject_path:
-        with open(custom_hd_inject_path) as fr:
-            custom_hdr_inject = fr.read()
+        async with aiofiles.open(custom_hd_inject_path) as fr:
+            custom_hdr_inject = await fr.read()
     else:
         custom_hdr_inject = None
 
@@ -70,7 +71,8 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
     default_corp_list = settings.get('corpora', 'default_corpora', [])
     corpname = None
     if 0 == len(default_corp_list):
-        logging.getLogger(__name__).critical('FCS cannot work properly without a default_corpora set')
+        logging.getLogger(__name__).critical(
+            'FCS cannot work properly without a default_corpora set')
     else:
         corpname = default_corp_list[0]
 
@@ -127,7 +129,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
         # set content-type in HTTP header
         if 'recordPacking' in req.args:
             common_data.recordPacking = req.args.get('recordPacking')
-        
+
         if common_data.recordPacking == 'xml':
             pass
         elif common_data.recordPacking == 'string':
@@ -143,7 +145,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 ['recordPacking', 'x-fcs-endpoint-description']
             )
             corpus = amodel.cm.get_corpus(corpname, translate=req.translate)
-            
+
             common_data.result = corpus.get_posattrs()
             common_data.numberOfRecords = len(common_data.result)
 
@@ -151,7 +153,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 corpus.get_conf('NAME'), l10n.simplify_num(corpus.size))
             additional_data['corpus_lang'] = Languages.get_iso_code(corpus.get_conf('LANGUAGE'))
             additional_data['show_endpoint_desc'] = (True if req.args.get('x-fcs-endpoint-description', 'false') == 'true'
-                                            else False)
+                                                     else False)
 
         # wordlist for a given attribute
         elif common_data.operation == 'scan':
@@ -166,7 +168,8 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             else:
                 common_data.result = conclib.fcs_scan(
                     corpname, scanClause, common_data.maximumTerms, common_data.responsePosition)
-            additional_data['resourceInfoRequest'] = req.args.get('x-cmd-resource-info', '') == 'true'
+            additional_data['resourceInfoRequest'] = req.args.get(
+                'x-cmd-resource-info', '') == 'true'
 
         # simple concordancer
         elif common_data.operation == 'searchRetrieve':

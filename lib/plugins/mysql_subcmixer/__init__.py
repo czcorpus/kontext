@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Any, Dict, List, Tuple, Union
+
+import aiofiles
 from action.krequest import KRequest
 from action.response import KResponse
 
@@ -105,17 +107,17 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         return {}
     else:
         publish = bool(int(req.form.get('publish')))
-        subc_path = amodel.prepare_subc_path(
+        subc_path = await amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=False)
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        with open(subc_path, 'wb') as fw:
+        async with aiofiles.open(subc_path, 'wb') as fw:
             for idx in struct_indices:
-                fw.write(struct.pack('<q', attr.beg(idx)))
-                fw.write(struct.pack('<q', attr.end(idx)))
+                await fw.write(struct.pack('<q', attr.beg(idx)))
+                await fw.write(struct.pack('<q', attr.end(idx)))
 
-        pub_path = amodel.prepare_subc_path(
+        pub_path = await amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
         if pub_path:
             await corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),

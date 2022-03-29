@@ -14,6 +14,7 @@ from typing import Any, Dict
 import os
 import logging
 import time
+import aiofiles.os
 
 from sanic import Blueprint
 
@@ -242,8 +243,8 @@ async def publish_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRespo
     corpname = req.form.get('corpname')
     description = req.form.get('description')
     curr_subc = os.path.join(amodel.subcpath[0], corpname, subcname + '.subc')
-    public_subc = amodel.prepare_subc_path(corpname, subcname, True)
-    if os.path.isfile(curr_subc):
+    public_subc = await amodel.prepare_subc_path(corpname, subcname, True)
+    if await aiofiles.os.path.isfile(curr_subc):
         await corplib.mk_publish_links(curr_subc, public_subc,
                                        amodel.session_get('user', 'fullname'), description)
         return dict(code=os.path.splitext(os.path.basename(public_subc))[0])

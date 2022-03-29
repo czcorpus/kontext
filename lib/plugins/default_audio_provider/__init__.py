@@ -22,6 +22,7 @@ import re
 import logging
 
 import aiofiles
+import aiofiles.os
 try:
     import sox
 except ImportError:
@@ -83,9 +84,10 @@ class DefaultAudioProvider(AbstractAudioProvider):
         if rpath is None:
             plugin_ctx.set_not_found()
             return {}, None
+        file_size = await aiofiles.os.path.getsize(rpath)
         headers = {
             'Content-Type': 'audio/mpeg',
-            'Content-Length': str(os.path.getsize(rpath)),
+            'Content-Length': str(file_size),
             'Accept-Ranges': 'bytes'
         }
         async with aiofiles.open(rpath, 'rb') as f:
@@ -95,8 +97,7 @@ class DefaultAudioProvider(AbstractAudioProvider):
 
             plugin_ctx.set_respose_status(206)
             if req.headers.get('range'):
-                size = os.path.getsize(rpath)
-                headers['Content-Range'] = f'bytes 0-{size-1}/{size}'
+                headers['Content-Range'] = f'bytes 0-{file_size-1}/{file_size}'
             return headers, await f.read() if not play_to else await f.read(play_to - play_from)
 
     async def get_waveform(self, plugin_ctx, req):

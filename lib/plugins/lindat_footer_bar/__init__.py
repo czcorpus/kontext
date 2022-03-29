@@ -22,6 +22,9 @@ Required plug-in configuration: please see config.rng schema
 import logging
 import os
 
+import aiofiles
+import aiofiles.os
+
 from plugin_types.footer_bar import AbstractFootbar
 
 
@@ -36,12 +39,12 @@ class FootBar(AbstractFootbar):
         else:
             return self._templates['en_US']
 
-    def get_contents(self, plugin_ctx, return_url=None):
+    async def get_contents(self, plugin_ctx, return_url=None):
         tpl_path = self.get_template(plugin_ctx.user_lang)
-        if not os.path.exists(tpl_path):
+        if not await aiofiles.os.path.exists(tpl_path):
             return "template [%s] does not exist!" % tpl_path
-        with open(tpl_path, mode='rb') as fin:
-            return fin.read().decode('utf-8')
+        async with aiofiles.open(tpl_path, mode='rb') as fin:
+            return (await fin.read()).decode('utf-8')
 
     def get_fallback_content(self):
         return ''
@@ -59,5 +62,6 @@ def create_instance(settings):
         if code in tpl_langs:
             templates[lang] = tpl_langs[code]
         else:
-            logging.getLogger(__name__).warning(f'no configured footer template for "{lang}" language')
+            logging.getLogger(__name__).warning(
+                f'no configured footer template for "{lang}" language')
     return FootBar(templates=templates)

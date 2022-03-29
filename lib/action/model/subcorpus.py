@@ -137,8 +137,8 @@ class SubcorpusActionModel(CorpusActionModel):
         if data.publish and not data.description:
             raise UserActionException(self._req.translate('No description specified'))
 
-        path = self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
-        publish_path = self.prepare_subc_path(
+        path = await self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
+        publish_path = await self.prepare_subc_path(
             self.args.corpname, data.subcname, publish=True) if data.publish else None
 
         if len(tt_query) == 1 and not data.has_aligned_corpora():

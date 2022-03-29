@@ -29,19 +29,26 @@ To validate your corplist.xml use:
 
 """
 
+from typing import List, Optional
 from collections import OrderedDict
 import copy
 import re
 from functools import reduce
 import logging
-from typing import List, Optional
 
 try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
 from lxml import etree
+import aiofiles
+import aiofiles.os
+from sanic import Blueprint
 
+from action.decorators import http_action
+from action.model.authorized import UserActionModel
+from action.krequest import KRequest
+from action.response import KResponse
 import plugins
 from plugin_types.corparch import AbstractSearchableCorporaArchive
 from plugin_types.corparch.corpus import CorpusInfo, BrokenCorpusInfo, TagsetInfo, PosCategoryItem
@@ -49,12 +56,12 @@ from plugin_types.corparch import CorplistProvider
 from plugin_types.auth import AbstractAuth
 from plugins import inject
 import l10n
-from controller import exposed
-import actions.user
 from action.plugin.ctx import PluginCtx
 from settings import import_bool
 
 DEFAULT_LANG = 'en'
+
+bp = Blueprint('default_corparch')
 
 
 def translate_markup(s):
@@ -235,10 +242,11 @@ class DefaultCorplistProvider(CorplistProvider):
         return ans
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
-def get_favorite_corpora(ctrl, request):
+@bp.route('/get_favorite_corpora')
+@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
+        return ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
 
 
 def process_pos_categories(tagset_node: etree.Element) -> List[PosCategoryItem]:
@@ -651,7 +659,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         )
 
     async def initial_search_params(self, plugin_ctx: PluginCtx):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
+        query_substrs, query_keywords = parse_query(
+            self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
@@ -664,8 +673,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             }
         }
 
+    @staticmethod
     def export_actions(self):
-        return {actions.user.User: [get_favorite_corpora]}
+        return bp
 
 
 @inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)
