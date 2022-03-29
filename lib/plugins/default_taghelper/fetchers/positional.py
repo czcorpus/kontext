@@ -22,8 +22,8 @@ from plugin_types.taghelper import AbstractValueSelectionFetcher
 
 class PositionalSelectionFetcher(AbstractValueSelectionFetcher):
 
-    def fetch(self, request):
+    async def fetch(self, request):
         return request.args.get('pattern', '')
 
-    def is_empty(self, val):
+    async def is_empty(self, val):
         return len(val) == 0

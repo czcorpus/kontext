@@ -21,6 +21,9 @@ import os
 import json
 from collections import defaultdict
 
+import aiofiles
+import aiofiles.os
+
 from plugin_types.taghelper import AbstractTagsetInfoLoader
 
 
@@ -30,37 +33,40 @@ class KeyvalTagVariantLoader(AbstractTagsetInfoLoader):
         self.corpus_name = corpus_name
         self.tagset_name = tagset_name
         self.variants_file_path = os.path.join(tags_src_dir, tagset_name, corpus_name)
-        self.initial_values = None if self.is_available(lambda x: x) else []
+        self.initial_values = None
 
-    def _initialize_tags(self):
-        with open(self.variants_file_path, 'r') as f:
-            self.initial_values = json.load(f)
-            for item in self.initial_values:
-                for i, v in enumerate(item):
-                    item[i] = tuple(v)
+    async def _initialize_tags(self):
+        if await self.is_available(lambda x: x):
+            async with aiofiles.open(self.variants_file_path, 'r') as f:
+                self.initial_values = json.loads(await f.read())
+                for item in self.initial_values:
+                    for i, v in enumerate(item):
+                        item[i] = tuple(v)
+        else:
+            self.initial_values = []
 
-    def get_variant(self, filter_values, lang, translate):
+    async def get_variant(self, filter_values, lang, translate):
         if self.initial_values is None:
-            self._initialize_tags()
+            await self._initialize_tags()
 
         # possible values with all filters applied
-        possible_values = self.get_possible_values(filter_values)
+        possible_values = await self._get_possible_values(filter_values)
         # resolving possible filter values for applied filter features
         for filter_key in filter_values:
             derived_filter = {k: v for k, v in list(filter_values.items()) if k != filter_key}
-            possible_values[filter_key] = self.get_possible_values(derived_filter)[filter_key]
+            possible_values[filter_key] = await self._get_possible_values(derived_filter)[filter_key]
 
         return {'keyval_tags': possible_values}
 
-    def get_initial_values(self, lang, translate):
+    async def get_initial_values(self, lang, translate):
         if self.initial_values is None:
-            self._initialize_tags()
-        return {'keyval_tags': self.get_possible_values()}
+            await self._initialize_tags()
+        return {'keyval_tags': await self._get_possible_values()}
 
-    def is_available(self, translate):
-        return os.path.exists(self.variants_file_path)
+    async def is_available(self, translate):
+        return await aiofiles.os.path.exists(self.variants_file_path)
 
-    def get_possible_values(self, filter_values=None):
+    async def _get_possible_values(self, filter_values=None):
         """
         Filter possible feature values from initial_values according to user selection
         """

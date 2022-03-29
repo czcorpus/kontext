@@ -24,6 +24,8 @@ import json
 import re
 
 from lxml import etree
+import aiofiles
+import aiofiles.os
 
 from plugin_types.taghelper import AbstractTagsetInfoLoader
 
@@ -57,24 +59,24 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         self.taglist_path = taglist_path
         self.initial_values = {}
 
-    def get_variant(self, user_selection, lang, translate):
+    async def get_variant(self, user_selection, lang, translate):
         """
         """
-        return self.calculate_variant(user_selection, lang, translate)
+        return await self._calculate_variant(user_selection, lang, translate)
 
-    def get_initial_values(self, lang, translate):
+    async def get_initial_values(self, lang, translate):
         if lang not in self.initial_values:
             try:
-                self.initial_values[lang] = self._get_initial_values(lang, translate)
+                self.initial_values[lang] = await self._get_initial_values(lang, translate)
             except FileNotFoundError:
                 self.initial_values[lang] = {}
 
         return self.initial_values[lang]
 
-    def is_available(self, translate):
-        return os.path.exists(self.variants_file_path) and len(self.get_initial_values('en_US', translate)) > 0
+    async def is_available(self, translate):
+        return await aiofiles.os.path.exists(self.variants_file_path) and len(await self.get_initial_values('en_US', translate)) > 0
 
-    def _get_initial_values(self, lang, translate):
+    async def _get_initial_values(self, lang, translate):
         """
         Loads all values as needed to initialize tag-builder widget for the current corpus.
         It means for any tag position all possible values must be returned. Collected
@@ -93,17 +95,16 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         """
         path = os.path.join(self.cache_dir, f'initial-values.{lang}.json')
         char_replac_tab = dict(self.SPEC_CHAR_REPLACEMENTS)
-        tagset = self._load_tag_descriptions(self.tagset_name, lang, translate)
+        tagset = await self._load_tag_descriptions(self.tagset_name, lang, translate)
         if tagset is None:
             return {}
 
         translation_table = [dict(tagset['values'][i]) for i in range(tagset['num_pos'])]
 
-        if os.path.exists(path) \
-                and time.time() - os.stat(path).st_ctime > float(self.cache_clear_interval):
+        if (await aiofiles.os.path.exists(path)) and (time.time() - (await aiofiles.os.stat(path)).st_ctime) > float(self.cache_clear_interval):
             os.unlink(path)
 
-        if not os.path.exists(path):
+        if not await aiofiles.os.path.exists(path):
             cache_path_items = os.path.dirname(path).split('/')
             if cache_path_items[0] == '':
                 cache_path_items[0] = '/'
@@ -112,11 +113,11 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             tst_path = ''
             for s in cache_path_items:
                 tst_path += f'{s}/'
-                if not os.path.exists(tst_path):
-                    os.mkdir(tst_path, 0o775)
+                if not await aiofiles.os.path.exists(tst_path):
+                    await aiofiles.os.mkdir(tst_path, 0o775)
             ans = [set() for _ in range(tagset['num_pos'])]
-            with open(self.variants_file_path) as fr:
-                for line in fr:
+            async with aiofiles.open(self.variants_file_path) as fr:
+                async for line in fr:
                     line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                     for i in range(tagset['num_pos']):
                         value = ''.join([char_replac_tab.get(x, x) for x in line[i]])
@@ -134,14 +135,16 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
                 if len(ans_sorted[i]) == 1 and ans_sorted[i][0] == '-':
                     ans_sorted[i] = ()
             data = {'tags': ans_sorted, 'labels': tagset['labels']}
-            with open(path, 'w') as f:
-                json.dump(data, f)
+            async with aiofiles.open(path, 'w') as f:
+                await f.write(json.dumps(data))
+
         else:
-            with open(path, 'r') as f:
-                data = json.load(f)
+            async with aiofiles.open(path, 'r') as f:
+                data = json.loads(await f.read())
+
         return data
 
-    def calculate_variant(self, required_pattern, lang, translate):
+    async def _calculate_variant(self, required_pattern, lang, translate):
         """
         Returns all tag variants in unspecified positions for a provided tag pattern.
         I.e. - if you enter 'A.B..' then all vectors 'v' with v[0] = A and v[2] = B
@@ -154,13 +157,13 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
         a dictionary where keys represent tag-string position and values are lists of
         tuples (ID, description)
         """
-        tagset = self._load_tag_descriptions(self.tagset_name, lang, translate)
+        tagset = await self._load_tag_descriptions(self.tagset_name, lang, translate)
         required_pattern = required_pattern.replace('-', '.')
         char_replac_tab = dict(self.__class__.SPEC_CHAR_REPLACEMENTS)
         patt = re.compile(required_pattern)
         matching_tags = []
-        with open(self.variants_file_path) as fr:
-            for line in fr:
+        async with aiofiles.open(self.variants_file_path) as fr:
+            async for line in fr:
                 line = line.strip() + (tagset['num_pos'] - len(line.strip())) * '-'
                 if patt.match(line):
                     matching_tags.append(line)
@@ -172,7 +175,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             tag_elms = re.findall(r'\[[^\]]+\]|.', required_pattern)
         import logging
         logging.getLogger(__name__).debug(
-            'required_pattern: {}, tag_elms: {}'.format(required_pattern, tag_elms))
+            f'required_pattern: {required_pattern}, tag_elms: {tag_elms}')
         translation_tables = [dict(tagset['values'][i]) for i in range(len(tag_elms))]
 
         for item in matching_tags:
@@ -198,7 +201,7 @@ class PositionalTagVariantLoader(AbstractTagsetInfoLoader):
             tags=[v for _, v in sorted(ans.items(), key=lambda x: x[0])],
             labels=[])
 
-    def _load_tag_descriptions(self, tagset_name, lang, translate):
+    async def _load_tag_descriptions(self, tagset_name, lang, translate):
         """
         arguments:
         path -- path to an XML file containing tag descriptions

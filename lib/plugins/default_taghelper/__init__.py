@@ -36,21 +36,24 @@ element taghelper {
   }
 }
 """
-from action.errors import UserActionException
+from typing import Any, Dict
+
 from sanic.blueprints import Blueprint
+
+from action.errors import UserActionException
 from action.krequest import KRequest
 from action.response import KResponse
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.taghelper import AbstractTaghelper, AbstractTagsetInfoLoader, AbstractValueSelectionFetcher
 import plugins
-from plugin_types.taghelper import AbstractTaghelper
 from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
 from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
 from plugins.default_taghelper.loaders import NullTagVariantLoader
 from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
 from plugins.default_taghelper.fetchers.positional import PositionalSelectionFetcher
 from plugins.default_taghelper.fetchers import NullSelectionFetcher
-from action.decorators import http_action
-from action.model.corpus import CorpusActionModel
-from util import as_async
 
 
 bp = Blueprint('default_taghelper')
@@ -65,29 +68,29 @@ async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: 
     tagset_name = req.args.get('tagset')
 
     fetcher = await plugins.runtime.TAGHELPER.instance.fetcher(amodel.plugin_ctx, corpname, tagset_name)
-    values_selection = fetcher.fetch(req)
+    values_selection = await fetcher.fetch(req)
     try:
         tag_loader = await plugins.runtime.TAGHELPER.instance.loader(amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
         raise UserActionException(
             req.translate('Corpus {corpname} is not supported by this widget.'))
 
-    if fetcher.is_empty(values_selection):
-        ans = tag_loader.get_initial_values(req.ui_lang, req.translate)
+    if await fetcher.is_empty(values_selection):
+        ans = await tag_loader.get_initial_values(req.ui_lang, req.translate)
     else:
-        ans = tag_loader.get_variant(values_selection, amodel.ui_lang, req.translate)
+        ans = await tag_loader.get_variant(values_selection, amodel.ui_lang, req.translate)
     return ans
 
 
 class Taghelper(AbstractTaghelper):
 
-    def __init__(self, conf, corparch):
+    def __init__(self, conf: Dict[str, Any], corparch: AbstractCorporaArchive):
         self._conf = conf
         self._corparch = corparch
         self._loaders = {}
         self._fetchers = {}
 
-    async def loader(self, plugin_ctx, corpus_name, tagset_name):
+    async def loader(self, plugin_ctx, corpus_name, tagset_name) -> AbstractTagsetInfoLoader:
         if (corpus_name, tagset_name) not in self._loaders:
             for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
                 if tagset.type == 'positional':
@@ -109,7 +112,7 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._loaders[(corpus_name, tagset_name)]
 
-    async def fetcher(self, plugin_ctx, corpus_name, tagset_name):
+    async def fetcher(self, plugin_ctx, corpus_name, tagset_name) -> AbstractValueSelectionFetcher:
         if (corpus_name, tagset_name) not in self._fetchers:
             for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
                 if tagset.type == 'positional':
@@ -120,11 +123,11 @@ class Taghelper(AbstractTaghelper):
                     self._fetchers[(corpus_name, tagset.ident)] = NullSelectionFetcher()
         return self._fetchers[(corpus_name, tagset_name)]
 
-    async def tags_available_for(self, plugin_ctx, corpus_name, tagset_id):
+    async def tags_available_for(self, plugin_ctx, corpus_name, tagset_id) -> bool:
         for tagset in (await self._corparch.get_corpus_info(plugin_ctx, corpus_name)).tagsets:
             if tagset.ident == tagset_id:
                 loader = await self.loader(plugin_ctx, corpus_name, tagset.ident)
-                return loader.is_available(plugin_ctx.translate)
+                return await loader.is_available(plugin_ctx.translate)
         return False
 
     @staticmethod
@@ -144,7 +147,7 @@ class Taghelper(AbstractTaghelper):
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(conf, corparch):
+def create_instance(conf, corparch: AbstractCorporaArchive):
     """
     arguments:
     conf -- KonText's settings module or a compatible object
