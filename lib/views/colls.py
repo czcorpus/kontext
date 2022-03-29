@@ -18,7 +18,7 @@ bp = Blueprint('colls')
 
 
 @bp.route('/collx')
-@http_action(action_model=ConcActionModel, access_level=1, page_model='coll')
+@http_action(action_model=ConcActionModel, access_level=1, template='collx.html', page_model='coll')
 async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     list collocations
