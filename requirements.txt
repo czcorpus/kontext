@@ -17,6 +17,7 @@ openpyxl >= 3.0.5
 redis >= 4.2.0rc1
 aiomysql >= 0.0.22
 aiofiles >= 0.8.0
+aiocsv >= 1.2.1
 dataclasses-json >= 0.5.6
 couchdb >= 1.2
 cairosvg >= 2.5.2
