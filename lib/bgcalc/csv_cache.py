@@ -15,7 +15,7 @@
 import csv
 
 
-def load_cached_partial(path, offset, limit):
+async def load_cached_partial(path, offset, limit):
     with open(path, 'r') as fr:
         csv_reader = csv.reader(fr)
         _, total_str = next(csv_reader)
@@ -31,7 +31,7 @@ def load_cached_partial(path, offset, limit):
     return int(total_str), ans
 
 
-def load_cached_full(path):
+async def load_cached_full(path):
     ans = []
     with open(path, 'r') as fr:
         csv_reader = csv.reader(fr)

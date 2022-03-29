@@ -118,8 +118,8 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         pub_path = amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
         if pub_path:
-            corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
-                                     req.form.get('description'))
+            await corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
+                                           req.form.get('description'))
 
         return dict(status=True)
 

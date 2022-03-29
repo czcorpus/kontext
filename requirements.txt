@@ -16,6 +16,7 @@ Markdown >= 3.3.6
 openpyxl >= 3.0.5
 redis >= 4.2.0rc1
 aiomysql >= 0.0.22
+aiofiles >= 0.8.0
 dataclasses-json >= 0.5.6
 couchdb >= 1.2
 cairosvg >= 2.5.2

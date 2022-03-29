@@ -55,7 +55,7 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
 
 @bp.route('/subcmixer_create_subcorpus', methods='POST')
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -82,8 +82,8 @@ def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: K
         pub_path = amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
         if pub_path:
-            corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
-                                     req.form.get('description'))
+            await corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
+                                           req.form.get('description'))
 
         return dict(status=True)
 

@@ -12,6 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import Optional, List, Union, Tuple, Dict, Any
+from dataclasses import dataclass, field, asdict
 import os
 import re
 from datetime import datetime
@@ -20,10 +22,11 @@ import math
 import hashlib
 import logging
 import pickle
-from typing import Optional, List, Union, Tuple, Dict, Any
-from dataclasses import dataclass, field, asdict
 
+import aiofiles
+import aiofiles.os
 import manatee
+
 import corplib
 from corplib.corpus import KCorpus
 from conclib.calc import require_existing_conc
@@ -93,6 +96,7 @@ def corp_freqs_cache_path(corp: KCorpus, attrname):
     return ans
 
 
+# TODO not used anywhere
 def prepare_arf_calc_paths(corp: KCorpus, attrname, logstep=0.02):
     """
     Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
@@ -116,6 +120,7 @@ def create_log_path(base_path, calc_type):
     return f'{base_path}.{calc_type}.build'
 
 
+# TODO async RQ?
 def get_log_last_line(path):
     with open(path, 'r') as f:
         s = f.read()
@@ -124,19 +129,27 @@ def get_log_last_line(path):
         return None
 
 
-def _clear_old_calc_status(base_path):
+async def get_log_last_line_async(path):
+    async with aiofiles.open(path, 'r') as f:
+        s = await f.read()
+        if len(s) > 0:
+            return re.split(r'[\r\n]', s.strip())[-1]
+        return None
+
+
+async def _clear_old_calc_status(base_path):
     for m in ('frq', 'arf', 'docf'):
         log_file = create_log_path(base_path, m)
-        if os.path.isfile(log_file) and os.path.getmtime(log_file) > 3600:
-            os.unlink(log_file)
+        if await aiofiles.os.path.isfile(log_file) and await aiofiles.os.path.getmtime(log_file) > 3600:
+            aiofiles.os.unlink(log_file)
 
 
-def _get_total_calc_status(base_path):
+async def _get_total_calc_status(base_path):
     items = []
     for m in ('frq', 'arf', 'docf'):
         try:
             log_file = create_log_path(base_path, m)
-            last_line = get_log_last_line(log_file)
+            last_line = await get_log_last_line_async(log_file)
             p = int(re.split(r'\s+', last_line)[0])
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
@@ -145,6 +158,7 @@ def _get_total_calc_status(base_path):
     return sum(items) / 3.
 
 
+# TODO async RQ?
 def calc_is_running(base_path, calc_type=None):
     to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
 
@@ -158,9 +172,22 @@ def calc_is_running(base_path, calc_type=None):
     return False
 
 
-def write_log_header(corp, logfile):
-    with open(logfile, 'w') as f:
-        f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
+async def calc_is_running_async(base_path, calc_type=None):
+    to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
+
+    async def is_fresh(fx):
+        return time.mktime(datetime.now().timetuple()) - await aiofiles.os.path.getmtime(fx) <= MAX_LOG_FILE_AGE
+
+    for m in to_check:
+        log_path = create_log_path(base_path, m)
+        if aiofiles.os.path.isfile(log_path) and await is_fresh(log_path):
+            return True
+    return False
+
+
+async def write_log_header(corp, logfile):
+    async with aiofiles.open(logfile, 'w') as f:
+        await f.write('%d\n%s\n0 %%' % (os.getpid(), corp.search_size))
 
 
 async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[float, List[AsyncTaskStatus]]:
@@ -174,9 +201,9 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
           is already running (possibly triggered by someone else).
     """
     base_path = corp_freqs_cache_path(corp, attrname)
-    _clear_old_calc_status(base_path)
-    if calc_is_running(base_path):
-        curr_status = _get_total_calc_status(base_path)
+    await _clear_old_calc_status(base_path)
+    if await calc_is_running_async(base_path):
+        curr_status = await _get_total_calc_status(base_path)
         if curr_status < 100:
             return curr_status
 
@@ -184,7 +211,7 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
     tasks = []
     for m in ('frq', 'arf', 'docf'):
         logfilename_m = create_log_path(base_path, m)
-        write_log_header(corp, logfilename_m)
+        await write_log_header(corp, logfilename_m)
         res = await worker.send_task(
             f'compile_{m}', object.__class__,
             (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
@@ -198,8 +225,8 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
     return tasks
 
 
-def build_arf_db_status(corp, attrname):
-    return _get_total_calc_status(corp_freqs_cache_path(corp, attrname))
+async def build_arf_db_status(corp, attrname):
+    return await _get_total_calc_status(corp_freqs_cache_path(corp, attrname))
 
 
 class FreqCalcCache(object):

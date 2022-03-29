@@ -19,6 +19,9 @@ import time
 from typing import List, Any, Optional
 from dataclasses import dataclass, field
 
+import aiofiles
+import aiofiles.os
+
 import corplib
 from conclib.calc import require_existing_conc
 from corplib.errors import MissingSubCorpFreqFile
@@ -70,7 +73,7 @@ class CollCalcCache(object):
         filename = f'{hashlib.sha1(v.encode("utf-8")).hexdigest()}.pkl'
         return os.path.join(settings.get('corpora', 'colls_cache_dir'), filename)
 
-    def get(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
+    async def get(self, cattr, csortfn, cbgrfns, cfromw, ctow, cminbgr, cminfreq):
         """
         Get value from cache.
 
@@ -79,8 +82,8 @@ class CollCalcCache(object):
         """
         cache_path = self._cache_file_path(cattr=cattr, csortfn=csortfn, cbgrfns=cbgrfns, cfromw=cfromw, ctow=ctow,
                                            cminbgr=cminbgr, cminfreq=cminfreq)
-        if os.path.isfile(cache_path):
-            with open(cache_path, 'rb') as f:
+        if await aiofiles.os.path.isfile(cache_path):
+            async with aiofiles.open(cache_path, 'rb') as f:
                 collocs = pickle.load(f)
         else:
             collocs = None
@@ -146,9 +149,9 @@ async def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     collend = collstart + coll_args.citemsperpage
     cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
                           user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
-    collocs, cache_path = cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
-                                    cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
-                                    cminfreq=coll_args.cminfreq)
+    collocs, cache_path = await cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
+                                          cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
+                                          cminfreq=coll_args.cminfreq)
     if collocs is None:
         coll_args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)

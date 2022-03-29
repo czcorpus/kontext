@@ -49,7 +49,7 @@ async def result(amodel: ParadigmaticQueryActionModel, req: KRequest, resp: KRes
     offset = (page - 1) * pagesize
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     try:
-        total_num_lines, freqs = require_existing_pquery(
+        total_num_lines, freqs = await require_existing_pquery(
             amodel._curr_pquery_args, offset, pagesize, corp_info.collator_locale, 'freq', True)
         data_ready = True
     except PqueryResultNotFound:
@@ -148,7 +148,7 @@ async def get_results(amodel: ParadigmaticQueryActionModel, req: KRequest, resp:
     offset = page_id * amodel.args.pqueryitemsperpage
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     try:
-        total_num_lines, freqs = require_existing_pquery(
+        total_num_lines, freqs = await require_existing_pquery(
             amodel._curr_pquery_args, offset, amodel.args.pqueryitemsperpage, corp_info.collator_locale, sort, reverse)
     except PqueryResultNotFound:
         raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
@@ -176,7 +176,7 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
     to_line = req.mapped_args.to_line if req.mapped_args.to_line else sys.maxsize
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     try:
-        _, freqs = require_existing_pquery(
+        _, freqs = await require_existing_pquery(
             amodel._curr_pquery_args, from_line, to_line - from_line,
             corp_info.collator_locale, req.mapped_args.sort, req.mapped_args.reverse)
     except PqueryResultNotFound:

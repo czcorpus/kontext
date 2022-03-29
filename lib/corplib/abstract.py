@@ -144,7 +144,7 @@ class AbstractKCorpus(ABC):
         pass
 
     @abstractmethod
-    def save_subc_description(self, desc: str):
+    async def save_subc_description(self, desc: str):
         pass
 
     @abstractmethod

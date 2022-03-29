@@ -18,21 +18,22 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from typing import Callable, List, Any, Optional, Tuple, Dict, Union
-from manatee import SubCorpus, Concordance, StrVector
+from functools import cmp_to_key
 from array import array
 import logging
-from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
-from .fallback import EmptyCorpus
-
 import os
 import glob
 
-import l10n
+import aiofiles
+import aiofiles.os
 import manatee
+from manatee import SubCorpus, Concordance, StrVector
+
+import l10n
 import plugins
 from plugin_types.corparch.corpus import DefaultManateeCorpusInfo
-from functools import cmp_to_key
-from .corpus import _PublishedSubcMetadata
+from .corpus import AbstractKCorpus, KCorpus, KSubcorpus, _PublishedSubcMetadata
+from .fallback import EmptyCorpus
 from .errors import MissingSubCorpFreqFile
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
@@ -111,7 +112,7 @@ def conf_bool(v: str) -> bool:
     return v in ('y', 'yes', 'true', 't', '1')
 
 
-def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
+async def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
 
     def rm_silent(p):
         try:
@@ -135,14 +136,14 @@ def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
         symlink_path = os.path.splitext(subcpath)[0] + '.pub'
         os.symlink(os.path.join(*link_elms), symlink_path)
         namefile_path = os.path.splitext(publicpath)[0] + '.name'
-        with open(namefile_path, 'w') as namefile:
+        async with aiofiles.open(namefile_path, 'w') as namefile:
             # TODO what if the path struct changes?
             author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
             meta = _PublishedSubcMetadata(
                 subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
-            namefile.write(meta.to_json())
-            namefile.write('\n\n')
-            namefile.write(desc)
+            await namefile.write(meta.to_json())
+            await namefile.write('\n\n')
+            await namefile.write(desc)
     except Exception as ex:
         rm_silent(symlink_path)
         rm_silent(namefile_path)

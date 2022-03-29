@@ -244,8 +244,8 @@ async def publish_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRespo
     curr_subc = os.path.join(amodel.subcpath[0], corpname, subcname + '.subc')
     public_subc = amodel.prepare_subc_path(corpname, subcname, True)
     if os.path.isfile(curr_subc):
-        corplib.mk_publish_links(curr_subc, public_subc,
-                                 amodel.session_get('user', 'fullname'), description)
+        await corplib.mk_publish_links(curr_subc, public_subc,
+                                       amodel.session_get('user', 'fullname'), description)
         return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
     else:
         raise UserActionException(f'Subcorpus {subcname} not found')
@@ -256,7 +256,7 @@ async def publish_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRespo
 async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     if not amodel.corp.is_published:
         raise UserActionException('Corpus is not published - cannot change description')
-    amodel.corp.save_subc_description(req.form.get('description'))
+    await amodel.corp.save_subc_description(req.form.get('description'))
     return {}
 
 
@@ -271,8 +271,8 @@ async def list_published(amodel: UserActionModel, req: KRequest, resp: KResponse
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit', '20'))
     if len(query) >= min_query_size:
-        subclist = list_public_subcorpora(amodel.subcpath[-1], value_prefix=query,
-                                          offset=offset, limit=limit)
+        subclist = await list_public_subcorpora(amodel.subcpath[-1], value_prefix=query,
+                                                offset=offset, limit=limit)
     else:
         subclist = []
     return dict(data=subclist, min_query_size=min_query_size)

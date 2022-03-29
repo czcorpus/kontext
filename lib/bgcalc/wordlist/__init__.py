@@ -12,19 +12,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from typing import List, Dict, Tuple
 from functools import wraps
 import hashlib
 import os
-from typing import List, Dict, Tuple
-from corplib.corpus import KCorpus
-from corplib import frq_db
 import csv
 import sys
+
+import aiofiles.os
+from manatee import Structure   # TODO wrap this out
+
 import l10n
 from action.argmapping.wordlist import WordlistFormArgs
-from manatee import Structure   # TODO wrap this out
 from bgcalc.wordlist.errors import WordlistResultNotFound
 from bgcalc.csv_cache import load_cached_full
+from corplib import frq_db
+from corplib.corpus import KCorpus
 import settings
 
 
@@ -35,20 +38,20 @@ def _create_cache_path(form: WordlistFormArgs) -> str:
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.csv')
 
 
-def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool, offset: int, limit: int,
-                              collator_locale: str) -> Tuple[int, List[Tuple[str, int]]]:
+async def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool, offset: int, limit: int,
+                                    collator_locale: str) -> Tuple[int, List[Tuple[str, int]]]:
     path = _create_cache_path(form)
-    if not os.path.exists(path):
+    if not await aiofiles.os.path.exists(path):
         raise WordlistResultNotFound('The result does not exist')
     else:
         if wlsort == 'f':
-            total, rows = load_cached_full(path)
+            total, rows = await load_cached_full(path)
             return (
                 total,
                 sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
             )
         else:
-            total, rows = load_cached_full(path)
+            total, rows = await load_cached_full(path)
             rows = l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)
             return total, rows[offset:offset + limit]
 
