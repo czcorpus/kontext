@@ -92,14 +92,12 @@ class Database(object):
         returns:
         a 2-tuple (extended SQL string, extended args list)
         """
-        i = 1
         ans_sql = sql
         ans_args = args[:]
-        for ac in self._aligned_corpora:
+        for i, ac in enumerate(self._aligned_corpora, 1):
             ans_sql += ' JOIN {tn} AS m{t2} ON m{t1}.item_id = m{t2}.item_id AND m{t2}.corpus_id = ?'.format(
                 tn=self._table_name, t1=1, t2=i + 1)
             ans_args.append(ac)
-            i += 1
         return ans_sql, ans_args
 
     def _find_count_col(self):
@@ -107,5 +105,5 @@ class Database(object):
         try:
             return next(d[1] for d in data if 'poscount' in d[1])
         except StopIteration:
-            raise Exception('Failed to find column containing position counts in %s' % self._db_path)
-
+            raise Exception('Failed to find column containing position counts in %s' %
+                            self._db_path)

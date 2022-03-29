@@ -86,11 +86,9 @@ class MetadataModel:
         args.append(self._db.corpus_id)
         sizes = []
         id_map = {}
-        i = 0
-        for row in self._db.execute(sql, args):
+        for i, row in enumerate(self._db.execute(sql, args)):
             sizes.append(row[1])
             id_map[row[0]] = i
-            i += 1
         return sizes, id_map
 
     def _init_ab_nonalign(self, used_ids):

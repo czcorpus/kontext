@@ -455,10 +455,8 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
             if req.mapped_args.colheaders or req.mapped_args.heading:
                 writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
                                     ['freq', 'freq [%]'])
-            i = 1
-            for item in block['Items']:
+            for item in enumerate(block['Items'], 1):
                 writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
                                                                      str(item.get('rel', ''))])
-                i += 1
         output = writer.raw_content()
     return output

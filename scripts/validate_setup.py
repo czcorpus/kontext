@@ -197,8 +197,7 @@ def test(*description):
                 ans = [ans]
 
             messages = []
-            i = 0
-            for subtest in ans:
+            for i, subtest in enumerate(ans):
                 status, err = subtest
                 if status is False:
                     if err:
@@ -216,7 +215,6 @@ def test(*description):
                 desc = description[i] if i < len(description) else '...'
                 messages.append(Bcolors.colorize('#', Bcolors.OKBLUE) +
                                 ' ' + desc + ' ' + status_desc)
-                i += 1
             return messages
         TESTS.append(out_fn)
         return out_fn

@@ -157,8 +157,7 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
             ans = {}
             ans.update(self._calculate_real_sizes(
                 cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
-            doc_indices = [item[0] for item in [item for item in (
-                x for x in enumerate(corpus_items.variables)) if item[1] > 0]]
+            doc_indices = [i for i, variable in enumerate(corpus_items.variables) if variable > 0]
             ans['ids'] = doc_indices,
             ans['structs'] = list(used_structs)
             return ans

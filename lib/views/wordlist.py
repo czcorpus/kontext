@@ -213,10 +213,8 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                 'pattern': amodel._curr_wlform_args.wlpat
             })
 
-        i = 1
-        for item in data:
+        for i, item in enumerate(data, 1):
             writer.writerow(i, (item[0], str(item[1])))
-            i += 1
         return writer.raw_content()
     return None
 

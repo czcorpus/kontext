@@ -137,11 +137,9 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
                 f'attachment; filename="{mk_filename(req.mapped_args.saveformat)}"')
             if req.mapped_args.colheaders or req.mapped_args.heading:
                 writer.writeheading([''] + [item['n'] for item in result.Head])
-            i = 1
-            for item in result.Items:
+            for i, item in enumerate(result.Items, 1):
                 writer.writerow(
                     i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
-                i += 1
             out_data = writer.raw_content()
         else:
             raise UserActionException(f'Unknown format: {req.mapped_args.saveformat}')

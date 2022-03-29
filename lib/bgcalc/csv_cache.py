@@ -15,7 +15,7 @@
 import aiocsv
 import aiofiles
 
-from util import anext
+from util import aenumerate, anext
 
 
 async def load_cached_partial(path, offset, limit):
@@ -25,12 +25,10 @@ async def load_cached_partial(path, offset, limit):
         for i in range(0, offset):
             await anext(csv_reader)
         ans = []
-        i = offset
-        async for row in csv_reader:
+        async for i, row in aenumerate(csv_reader, offset):
             if i == offset + limit:
                 break
             ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
-            i += 1
     return int(total_str), ans
 
 
