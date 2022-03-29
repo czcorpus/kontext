@@ -21,8 +21,9 @@ from typing import Optional, Set, Tuple, List, Dict
 
 import numpy as np
 import pulp
-from plugins.mysql_integration_db import MySqlIntegrationDb
 
+from util import aenumerate
+from plugins.mysql_integration_db import MySqlIntegrationDb
 from .category_tree import CategoryTree, CategoryTreeNode
 
 
@@ -109,11 +110,9 @@ class MetadataModel:
 
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (self.category_tree.corpus_id, self._id_struct, self._id_attr))
-            i = 0
-            async for row in cursor:
+            async for i, row in aenumerate(cursor):
                 sizes.append(int(row['poscount']))
                 id_map[row['db_id']] = i
-                i += 1
 
         return sizes, id_map
 

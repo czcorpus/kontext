@@ -15,9 +15,7 @@
 import aiocsv
 import aiofiles
 
-
-async def anext(ait):
-    return await ait.__anext__()
+from util import anext
 
 
 async def load_cached_partial(path, offset, limit):
