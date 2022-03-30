@@ -71,13 +71,14 @@ e.g.: <p>you're logged in as <strong>{username}</strong></p>
 import os
 import os.path
 import logging
+from plugin_types.auth import AbstractAuth
 from plugin_types.appbar import AbstractApplicationBar
 import plugins
 
 
 class StaticApplicationBar(AbstractApplicationBar):
 
-    def __init__(self, html_dir, css_urls, js_urls, default_lang, avail_langs, auth):
+    def __init__(self, html_dir, css_urls, js_urls, default_lang, avail_langs, auth: AbstractAuth):
         super(StaticApplicationBar, self).__init__()
         self._css_urls = css_urls
         self._js_urls = js_urls

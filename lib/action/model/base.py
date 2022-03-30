@@ -20,11 +20,13 @@ from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_a
 from action.krequest import KRequest
 from action.response import KResponse
 from action.cookie import KonTextCookie
+from action.plugin.ctx import AbstractBasePluginCtx
 from main_menu.model import AbstractMenuItem
 from texttypes.cache import TextTypesCache
 import l10n
 import settings
 from sanic import Sanic
+from sanic_session import Session
 from action.model.tools import apply_theme
 
 
@@ -126,7 +128,7 @@ class BaseActionModel:
         pass
 
 
-class BasePluginCtx:
+class BasePluginCtx(AbstractBasePluginCtx):
 
     """
     BasePluginCtx provides a subset of features from BaseActionModel for plug-ins.
@@ -187,7 +189,7 @@ class BasePluginCtx:
         return self._request.cookies
 
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._request.ctx.session
 
     @property

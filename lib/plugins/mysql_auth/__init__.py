@@ -26,13 +26,14 @@ import urllib.error
 import re
 import time
 import datetime
+from action.plugin.ctx import PluginCtx
 from plugins.mysql_integration_db import MySqlIntegrationDb
 import mailing
 import logging
 from collections import defaultdict
 from typing import List
 
-from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
+from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo, SignUpNeedsUpdateException
 from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from .sign_up import SignUpToken
 import plugins
@@ -187,7 +188,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
 
-    async def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx: PluginCtx) -> GetUserInfo:
         async with self.db.cursor() as cursor:
             await cursor.execute(
                 'SELECT id, username, firstname, lastname, email '

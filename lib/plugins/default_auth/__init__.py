@@ -25,9 +25,10 @@ import urllib.error
 import re
 import time
 import datetime
+from action.plugin.ctx import PluginCtx
 import mailing
 from collections import defaultdict
-from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, SignUpNeedsUpdateException
+from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo, SignUpNeedsUpdateException
 from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
 from .sign_up import SignUpToken
 import plugins
@@ -153,7 +154,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def ignores_corpora_names_case(self):
         return not self._case_sensitive_corpora_names
 
-    async def get_user_info(self, plugin_ctx):
+    async def get_user_info(self, plugin_ctx: PluginCtx) -> GetUserInfo:
         user_key = mk_user_key(plugin_ctx.user_id)
         info = self.db.get(user_key)
         info.pop('pwd_hash', None)

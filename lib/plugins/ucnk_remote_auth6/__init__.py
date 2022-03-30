@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Institute of the Czech National Corpus
+# Copyright (c) 2022 Institute of the Czech National Corpus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 
 """
-This is the 4-generation of UCNK-specific authentication module.
+This is the 6-generation of UCNK-specific authentication module.
 It leaves all the authentication and authorization on an external
 HTTP service. Once the service receives a specific cookie-stored token,
 it returns two values (everything is JSON-encoded):
@@ -19,26 +19,28 @@ it returns two values (everything is JSON-encoded):
 1. user credentials and authentication status
 2. HTML code for the ucnk_appbar3 plugin (top bar toolbar)
 
-The ucnk_remote_auth4 plug-in stores the received HTML code into a special
+The ucnk_remote_auth6 plug-in stores the received HTML code into a special
 'shared' storage for ucnk_appbar3 (which, in consequence, does not have to
 produce another HTTP request).
 
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
-import urllib.request
+from typing import List, Optional, Tuple
 import urllib.parse
-import urllib.error
-import http.client
 import json
 import ssl
 import logging
-from action.plugin.ctx import PluginCtx
-from plugin_types.integration_db import IntegrationDatabase
+import aiohttp
+from attr import dataclass
 
-import plugins
+from secure_cookie.session import Session
+from action.plugin.ctx import PluginCtx
+
 from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
 from plugin_types.corparch.backend import DatabaseBackend
+from plugin_types.integration_db import IntegrationDatabase
+import plugins
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
 
@@ -46,26 +48,33 @@ from plugins.mysql_corparch.backend import Backend
 IMPLICIT_CORPUS = 'susanne'
 
 
-class ToolbarConf(object):
-    def __init__(self, conf):
-        self.server = conf.get('plugins', 'auth')['toolbar_server']
-        self.path = conf.get('plugins', 'auth')['toolbar_path']
-        self.port = int(conf.get('plugins', 'auth')['toolbar_port'])
+@dataclass
+class AuthConf:
+    login_url: str
+    logout_url: str
+    anonymous_user_id: int
+    toolbar_url: str
+    toolbar_server_timeout: int
+    cookie_sid: str
+    cookie_at: str
+    cookie_rmme: str
+    cookie_lang: str
+    unverified_ssl_cert: bool
 
-
-class AuthConf(object):
-    def __init__(self, conf):
-        self.login_url = conf.get('plugins', 'auth')['login_url']
-        self.logout_url = conf.get('plugins', 'auth')['logout_url']
-        self.anonymous_user_id = int(conf.get('plugins', 'auth')['anonymous_user_id'])
-        self.toolbar_server_timeout = int(conf.get('plugins', 'auth')[
-                                          'toolbar_server_timeout'])
-        self.cookie_sid = conf.get('plugins', 'auth')['cookie_sid']
-        self.cookie_at = conf.get('plugins', 'auth')['cookie_at']
-        self.cookie_rmme = conf.get('plugins', 'auth')['cookie_rmme']
-        self.cookie_lang = conf.get('plugins', 'auth')['cookie_lang']
-        self.unverified_ssl_cert = bool(int(conf.get('plugins', 'auth', {}).get(
-            'toolbar_unverified_ssl_cert', '0')))
+    @staticmethod
+    def from_conf(conf) -> 'AuthConf':
+        return AuthConf(
+            conf.get('plugins', 'auth')['login_url'],
+            conf.get('plugins', 'auth')['logout_url'],
+            int(conf.get('plugins', 'auth')['anonymous_user_id']),
+            conf.get('plugins', 'auth')['toolbar_url'],
+            int(conf.get('plugins', 'auth')['toolbar_server_timeout']),
+            conf.get('plugins', 'auth')['cookie_sid'],
+            conf.get('plugins', 'auth')['cookie_at'],
+            conf.get('plugins', 'auth')['cookie_rmme'],
+            conf.get('plugins', 'auth')['cookie_lang'],
+            bool(int(conf.get('plugins', 'auth', {}).get('toolbar_unverified_ssl_cert', '0'))),
+        )
 
 
 class CentralAuth(AbstractRemoteAuth):
@@ -73,20 +82,19 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db: DatabaseBackend, sessions, conf: AuthConf, toolbar_conf: ToolbarConf):
+    def __init__(self, db: DatabaseBackend, sessions: Session, auth_conf: AuthConf):
         """
         arguments:
         db -- a key-value storage plug-in
         sessions -- a sessions plug-in
         conf -- a 'settings' module
         """
-        super(CentralAuth, self).__init__(conf.anonymous_user_id)
+        super().__init__(auth_conf.anonymous_user_id)
         self._db = db
         self._sessions = sessions
-        self._toolbar_conf = toolbar_conf
-        self._conf = conf
+        self._auth_conf = auth_conf
         try:
-            if self._conf.unverified_ssl_cert:
+            if self._auth_conf.unverified_ssl_cert:
                 self._ssl_context = ssl._create_unverified_context() if self._toolbar_uses_ssl else None
             else:
                 self._ssl_context = ssl.create_default_context() if self._toolbar_uses_ssl else None
@@ -96,44 +104,32 @@ class CentralAuth(AbstractRemoteAuth):
             self._ssl_context = None
 
     @staticmethod
-    def _mk_user_key(user_id):
-        return 'user:%d' % user_id
+    def _mk_user_key(user_id: int) -> str:
+        return f'user:{user_id}'
 
-    @property
-    def _toolbar_uses_ssl(self):
-        return self._toolbar_conf.port == 443
+    def _create_session(self) -> aiohttp.ClientSession:
+        if self._ssl_context is not None:
+            return aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
+                timeout=self._auth_conf.toolbar_server_timeout,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            )
+        return aiohttp.ClientSession(
+            timeout=self._auth_conf.toolbar_server_timeout,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+        )
 
-    def _create_connection(self):
-        if self._toolbar_uses_ssl:
-            if self._ssl_context is not None:
-                return http.client.HTTPSConnection(self._toolbar_conf.server,
-                                                   port=self._toolbar_conf.port,
-                                                   timeout=self._conf.toolbar_server_timeout,
-                                                   context=self._ssl_context)
-            else:
-                return http.client.HTTPSConnection(self._toolbar_conf.server,
-                                                   port=self._toolbar_conf.port,
-                                                   timeout=self._conf.toolbar_server_timeout)
-        else:
-            return http.client.HTTPConnection(self._toolbar_conf.server,
-                                              port=self._toolbar_conf.port,
-                                              timeout=self._conf.toolbar_server_timeout)
+    async def _fetch_toolbar_api_response(self, args: List[Tuple[str, str]]) -> str:
+        async with self._create_session() as session:
+            async with session.post(self._auth_conf.toolbar_url, params=args) as response:
+                if response.status == 200:
+                    return (await response.read()).decode('utf-8')
+                else:
+                    raise Exception(
+                        f'Failed to load data from authentication server (UCNK toolbar): status {response.status}'
+                    )
 
-    def _fetch_toolbar_api_response(self, args):
-        connection = self._create_connection()
-        try:
-            connection.request('POST', self._toolbar_conf.path, urllib.parse.urlencode(args),
-                               {'Content-Type': 'application/x-www-form-urlencoded'})
-            response = connection.getresponse()
-            if response and response.status == 200:
-                return response.read().decode('utf-8')
-            else:
-                raise Exception('Failed to load data from authentication server (UCNK toolbar): %s' % (
-                    'status %s' % response.status if response else 'unknown error'))
-        finally:
-            connection.close()
-
-    async def revalidate(self, plugin_ctx):
+    async def revalidate(self, plugin_ctx: PluginCtx):
         """
         User re-validation as required by plug-in specification. The method
         catches no exceptions which means that in case of a problem with response
@@ -144,13 +140,13 @@ class CentralAuth(AbstractRemoteAuth):
         """
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         cookie_sid = plugin_ctx.cookies[
-            self._conf.cookie_sid].value if self._conf.cookie_sid in plugin_ctx.cookies else ''
+            self._auth_conf.cookie_sid].value if self._auth_conf.cookie_sid in plugin_ctx.cookies else ''
         cookie_at = plugin_ctx.cookies[
-            self._conf.cookie_at].value if self._conf.cookie_at in plugin_ctx.cookies else ''
+            self._auth_conf.cookie_at].value if self._auth_conf.cookie_at in plugin_ctx.cookies else ''
         cookie_rmme = plugin_ctx.cookies[
-            self._conf.cookie_rmme].value if self._conf.cookie_rmme in plugin_ctx.cookies else '0'
+            self._auth_conf.cookie_rmme].value if self._auth_conf.cookie_rmme in plugin_ctx.cookies else '0'
         cookie_lang = plugin_ctx.cookies[
-            self._conf.cookie_lang].value if self._conf.cookie_lang in plugin_ctx.cookies else 'en'
+            self._auth_conf.cookie_lang].value if self._auth_conf.cookie_lang in plugin_ctx.cookies else 'en'
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
@@ -159,7 +155,7 @@ class CentralAuth(AbstractRemoteAuth):
             ('current', 'kontext'),
             ('continue', plugin_ctx.current_url)
         ]
-        api_response = self._fetch_toolbar_api_response(api_args)
+        api_response = await self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
         plugin_ctx.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
 
@@ -214,25 +210,24 @@ class CentralAuth(AbstractRemoteAuth):
             for k, v in plugin_ctx.user_dict.items()
         }
 
-    def is_administrator(self, user_id):
+    def is_administrator(self, user_id: int) -> bool:
         """
         Currently not supported (always returns False)
         """
         return False
 
-    def get_login_url(self, return_url=None):
-        return self._conf.login_url % (urllib.parse.quote(return_url) if return_url is not None else '')
+    def get_login_url(self, return_url: Optional[str] = None) -> str:
+        return self._auth_conf.login_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
-    def get_logout_url(self, return_url=None):
-        return self._conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
+    def get_logout_url(self, return_url: Optional[str] = None) -> str:
+        return self._auth_conf.logout_url % (urllib.parse.quote(return_url) if return_url is not None else '')
 
 
 @inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions, cnc_db: IntegrationDatabase):
-    logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
+def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
+    logging.getLogger(__name__).info(f'ucnk_remote_auth6 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
         group_acc_table='relation', group_acc_group_attr='corplist', group_acc_corp_attr='corpora',
         user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id')
-    return CentralAuth(db=backend, sessions=sessions, conf=AuthConf(conf),
-                       toolbar_conf=ToolbarConf(conf))
+    return CentralAuth(db=backend, sessions=sessions, auth_conf=AuthConf.from_conf(conf))

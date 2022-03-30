@@ -13,6 +13,8 @@
 # GNU General Public License for more details.
 
 from typing import Any, Optional, Dict
+
+from sanic_session import Session
 from action.krequest import KRequest
 from action.cookie import KonTextCookie
 from plugin_types.auth import UserInfo
@@ -91,12 +93,16 @@ class AbstractBasePluginCtx(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def session(self):
+    def session(self) -> Session:
         pass
 
     @property
     @abc.abstractmethod
     def user_lang(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def translate(self, string: str) -> str:
         pass
 
 
@@ -147,10 +153,3 @@ class AbstractCorpusPluginCtx(AbstractUserPluginCtx, abc.ABC):
 
 class PluginCtx(AbstractCorpusPluginCtx, abc.ABC):
     pass
-
-
-
-
-
-
-
