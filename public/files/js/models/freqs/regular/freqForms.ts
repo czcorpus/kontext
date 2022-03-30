@@ -206,6 +206,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
     private submit(state:MLFreqFormModelState):void {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
+            freq_type: 'tokens',
             ftt_include_empty: undefined,
             fpage: 1,
             flimit: parseInt(state.flimit.value),
@@ -319,6 +320,7 @@ export class TTFreqFormModel extends StatelessModel<TTFreqFormModelState> {
     private submit(state:TTFreqFormModelState):void {
         const args:FreqServerArgs = {
             ...this.pageModel.getConcArgs(),
+            freq_type: 'text-types',
             fttattr: List.head(state.fttattr),
             fttattr_async: List.tail(state.fttattr),
             ftt_include_empty: state.fttIncludeEmpty,

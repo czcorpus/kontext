@@ -34,9 +34,8 @@ class KRequest(Generic[M_args]):
     getting correct root URL, obtaining required action name etc.
     """
 
-    def __init__(self, request: Request, action_props: ActionProps, app_prefix: str, mapped_args: Optional[M_args]):
+    def __init__(self, request: Request, app_prefix: str, mapped_args: Optional[M_args]):
         self._request = request
-        self._action_props = action_props
         self._app_prefix = app_prefix if app_prefix else ''
         self._locale: Locale = get_locale(request)
         self._mapped_args = mapped_args
@@ -90,7 +89,7 @@ class KRequest(Generic[M_args]):
     @property
     def locale(self):
         return self._locale
-    
+
     def form_getlist(self, item) -> List[Any]:
         """
         Wraps request.form.getlist() with empty list as default value

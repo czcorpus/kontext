@@ -320,13 +320,6 @@ class CorpusActionModel(UserActionModel):
         """
         Runs after main action is processed but before any rendering (incl. HTTP headers)
         """
-        if isinstance(result, dict):
-            result['messages'] = result.get('messages', []) + self._system_messages
-        if self.user_is_anonymous():
-            disabled_set = set(self.disabled_menu_items)
-            self.disabled_menu_items = tuple(disabled_set.union(
-                set(BaseActionModel.ANON_FORBIDDEN_MENU_ITEMS)))
-
         with plugins.runtime.ACTION_LOG as alog:
             alog.log_action(
                 self._req.unwrapped, self.args, action_props.action_log_mapper,

@@ -21,8 +21,122 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% block title %}KonText - {{ 'Compatibility notice'|_ }}{% endblock %}
 
-{% block js_load %}{% endblock %}
-{% block js_init %}{% endblock %}
+{% block js_init %}
+{% endblock %}
+
+{% block tpl_style %}
+<style type="text/css">
+body {
+    background-image: url({{ files_path }}/img/groovepaper2.jpg);
+    color: #010101;
+    font-family: Roboto,Segoe UI,Arial,sans-serif;
+    font-size: 10pt;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #02a;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+#viewport {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 100%;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+#common-bar {
+    background-color: rgba(82,80,78,.199);
+    color: #000;
+    height: 40px;
+    overflow: hidden;
+    width: 100%;
+}
+
+header#topbar {
+    color: #000;
+    padding: 0;
+}
+
+header#topbar .navig-wrapper {
+    display: inline-block;
+    padding: 2em 1em 0 30px;
+}
+
+header#topbar #menu-bar {
+    white-space: nowrap;
+}
+
+#menu-bar {
+    display: inline-block;
+    font-size: 1.2em;
+    height: 3em;
+    margin: 0;
+    white-space: nowrap;
+    width: auto;
+}
+
+header#topbar a#logo-wrapper {
+    background-color: transparent;
+    display: inline;
+}
+
+#main-menu-mount {
+    display: none;
+}
+
+#content {
+    display: block;
+    flex-grow: 2;
+    margin: 0;
+    overflow: auto;
+    padding: 0 2em 2em 30px;
+}
+
+#content>section {
+    background-color: #f3fbed;
+    border-radius: 5px;
+    box-shadow: 0 0 3px #a0a0a0;
+    display: inline-block;
+    margin: 2em 0 0;
+    min-width: 70%;
+    vertical-align: top;
+}
+
+#content>section>:not(.bar) {
+    margin: 1em;
+}
+
+section>.bar {
+    align-content: center;
+    background-color: #d1ecbf;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    margin: 0;
+    padding: .4em .6em;
+}
+
+section>.bar>h2 {
+    color: #4c5854;
+    flex-grow: 1;
+    font-size: 140%;
+    font-weight: 300;
+    margin: 0;
+    padding: 0;
+}
+
+footer {
+    display: none;
+}
+</style>
+{% endblock %}
 
 {% block main %}
 <section>

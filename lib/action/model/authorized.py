@@ -412,6 +412,14 @@ class UserActionModel(BaseActionModel):
         result['can_send_mail'] = bool(settings.get('mailing'))
         await self.attach_plugin_exports(result, direct=False)
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
+
+        if isinstance(result, dict):
+            result['messages'] = result.get('messages', []) + self._system_messages
+        if self.user_is_anonymous():
+            disabled_set = set(self.disabled_menu_items)
+            self.disabled_menu_items = tuple(disabled_set.union(
+                set(BaseActionModel.ANON_FORBIDDEN_MENU_ITEMS)))
+
         return result
 
     def user_subc_names(self, corpname):
@@ -459,6 +467,17 @@ class UserActionModel(BaseActionModel):
             dict(label=x[1]['label'], disabled=x[1].get(
                 'disabled', False), action=x[1].get('fallback_action'))
             for x in menu_items['submenuItems']]
+
+    async def resolve_error_state(self, req, resp, result, err):
+        if self.cm:
+            with plugins.runtime.QUERY_HISTORY as qh:
+                queries = await qh.get_user_queries(
+                    self.session_get('user', 'id'), self.cm, limit=1, translate=req.translate)
+                if len(queries) > 0:
+                    result['last_used_corp'] = dict(
+                        corpname=queries[0].get('corpname', None),
+                        human_corpname=queries[0].get('human_corpname', None))
+        result['popup_server_messages'] = False
 
 
 class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):

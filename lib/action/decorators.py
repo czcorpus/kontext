@@ -8,17 +8,16 @@ from action import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
-from action.errors import ImmediateRedirectException, UserActionException
-from action.model.base import BaseActionModel
+from action.errors import ImmediateRedirectException, UserActionException, NotFoundException
+from action.model.base import PageConstructor, BaseActionModel
 import json
 
 
 async def _output_result(
         app: Sanic,
-        action_model: BaseActionModel,
+        action_model: PageConstructor,
         action_props: ActionProps,
         tpl_engine: TplEngine,
-        template: str,
         result: ResultType,
         status: int,
         return_type: str) -> Union[str, bytes]:
@@ -32,7 +31,6 @@ async def _output_result(
     'plain' + str
     A callable 'result' can be used for lazy result evaluation or for JSON encoding with a custom encoder
     """
-
     if 300 <= status < 400 or result is None:
         return ''
     if callable(result):
@@ -54,7 +52,7 @@ async def _output_result(
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
         action_model.init_menu(result)
-        return tpl_engine.render(template, result)
+        return tpl_engine.render(action_props.template, result)
     raise RuntimeError(
         f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
 
@@ -106,6 +104,25 @@ def create_mapped_args(tp: Type, req: Request):
     return tp(**data)
 
 
+async def resolve_error(
+        amodel: BaseActionModel, action_props: ActionProps, req: KRequest, resp: KResponse, err: Exception):
+
+    ans = {
+        'last_used_corp': dict(corpname=None, human_corpname=None),
+        'Q': []
+    }
+    await amodel.resolve_error_state(req, resp, ans, err)
+    if isinstance(err, UserActionException):
+        resp.set_http_status(err.code)
+
+    if action_props.return_type == 'template':
+        return ans
+    elif action_props.return_type == 'plain':
+        return str(err)
+    elif action_props.return_type == 'json':
+        return json.dumps(ans)
+
+
 def http_action(
         access_level: int = 0,
         template: Optional[str] = None,
@@ -147,13 +164,13 @@ def http_action(
             action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
             aprops = ActionProps(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
-                return_type=return_type, page_model=page_model,
+                return_type=return_type, page_model=page_model, template=template,
                 mutates_result=mutates_result)
             if mapped_args:
                 marg = create_mapped_args(mapped_args, request)
             else:
                 marg = None
-            req = KRequest(request, aprops, app_url_prefix, marg)
+            req = KRequest(request, app_url_prefix, marg)
             resp = KResponse(
                 root_url=req.get_root_url(),
                 redirect_safe_domains=application.config['redirect_safe_domains'],
@@ -169,20 +186,27 @@ def http_action(
                 await amodel.pre_dispatch(None)
                 ans = await func(amodel, req, resp)
                 await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
-                return HTTPResponse(
-                    body=await _output_result(
-                        app=application,
-                        action_model=amodel,
-                        action_props=aprops,
-                        tpl_engine=application.ctx.templating,
-                        template=template,
-                        result=ans,
-                        status=resp.http_status_code,
-                        return_type=aprops.return_type),
-                    status=resp.http_status_code,
-                    headers=resp.output_headers(return_type))
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
+            except Exception as ex:
+                if aprops.page_model:
+                    aprops.page_model = 'message'
+                if aprops.template:
+                    aprops.template = 'message.html'
+                ans = await resolve_error(amodel, aprops, req, resp, ex)
+                amodel.add_system_message('error', str(ex))
+
+            return HTTPResponse(
+                body=await _output_result(
+                    app=application,
+                    action_model=amodel,
+                    action_props=aprops,
+                    tpl_engine=application.ctx.templating,
+                    result=ans,
+                    status=resp.http_status_code,
+                    return_type=aprops.return_type),
+                status=resp.http_status_code,
+                headers=resp.output_headers(return_type))
 
         return wrapper
     return decorator

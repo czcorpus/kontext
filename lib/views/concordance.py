@@ -134,7 +134,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/get_conc_cache_status')
 @http_action(return_type='json', action_model=ConcActionModel)
-def get_conc_cache_status(amodel, req, resp):
+async def get_conc_cache_status(amodel, req, resp):
     resp.set_header('Content-Type', 'text/plain')
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)

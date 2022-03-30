@@ -30,7 +30,16 @@ from sanic_session import Session
 from action.model.tools import apply_theme
 
 
-class BaseActionModel:
+class PageConstructor:
+
+    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+        pass
+
+    def init_menu(self, result):
+        pass
+
+
+class BaseActionModel(PageConstructor):
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
@@ -125,6 +134,14 @@ class BaseActionModel:
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
     async def post_dispatch(self, action_props: ActionProps, result, err_desc):
+        pass
+
+    async def resolve_error_state(self, req: KRequest, resp: KResponse, result, err: Exception):
+        """
+        In case an HTTP action throws an error, the involved model has a chance to react
+        using this method. It can e.g. provide some "last valid state" information to provide
+        some reasonable "escape hatch" for user (e.g. "go to the last used corpus").
+        """
         pass
 
 

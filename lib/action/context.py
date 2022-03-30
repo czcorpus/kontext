@@ -7,14 +7,13 @@ import plugins
 
 class ApplicationContext:
 
-    def __init__(self, templating: TplEngine, tt_cache: Callable[[], TextTypesCache]):
+    def __init__(self, templating: TplEngine, tt_cache: TextTypesCache):
         self._templating = templating
         self._installed_langs = {
             x.split('_')[0]: x
             for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))
         }
-        self._tt_cache = None
-        self._tt_cache_factory = tt_cache
+        self._tt_cache = tt_cache
         self.redis = None  # TODO TYPE
         # required by sanic_babel
         self.babel_instance = None
@@ -26,7 +25,7 @@ class ApplicationContext:
 
     @property
     def tt_cache(self):
-        return self._tt_cache if self._tt_cache is not None else self._tt_cache_factory()
+        return self._tt_cache
 
     @staticmethod
     def cleanup_runtime_modules():

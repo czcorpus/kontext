@@ -435,6 +435,7 @@ export class KwicConnectModel extends StatefulModel<KwicConnectState> {
     private fetchUniqValues(fDistType:FreqDistType, flimit:number):Observable<Array<string>> {
         const args:FreqServerArgs = {
             ...this.pluginApi.getConcArgs(),
+            freq_type: 'text-types',
             fcrit: `${fDistType}/ie 0~0>0`,
             flimit,
             fpage: 1,

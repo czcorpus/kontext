@@ -43,6 +43,7 @@ from plugin_types.live_attributes import (
     CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 from plugins.errors import PluginCompatibilityException
 import strings
+from action.krequest import KRequest
 from action.plugin.ctx import PluginCtx
 from action.decorators import http_action
 from action.model.corpus import CorpusActionModel
@@ -68,9 +69,9 @@ async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: 
     attrs[req.form.get('patternAttr')] = '%{}%'.format(req.form.get('pattern'))
     aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-                                           aligned_corpora=aligned,
-                                           autocomplete_attr=req.form.get('patternAttr'))
+        return await lattr.get_attr_values(
+            amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
+            aligned_corpora=aligned, autocomplete_attr=req.form.get('patternAttr'))
 
 
 @bp.route('/fill_attrs', methods=['POST'])
@@ -308,7 +309,14 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                                         collator_locale=corpus_info.collator_locale,
                                         max_attr_list_size=self.max_attr_list_size if limit_lists else None)
 
-    def _export_attr_values(self, data: Dict[StructAttr, Set[AttrValue]], total_poscount: int, aligned_corpora: List[str], expand_attrs: List[StructAttr], collator_locale: str, max_attr_list_size: Optional[int]) -> AttrValuesResponse:
+    def _export_attr_values(
+            self,
+            data: Dict[StructAttr, Set[AttrValue]],
+            total_poscount: int,
+            aligned_corpora: List[str],
+            expand_attrs: List[StructAttr],
+            collator_locale: str,
+            max_attr_list_size: Optional[int]) -> AttrValuesResponse:
         exported = AttrValuesResponse(
             attr_values={}, aligned=aligned_corpora, poscount=total_poscount)
         for struct_attr, attr_values in data.items():

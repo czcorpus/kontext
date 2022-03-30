@@ -17,6 +17,8 @@ class ActionProps:
     page_model: Optional[str] = None
     """A module name for TypeScript page model"""
 
+    template: Optional[str] = None
+
     return_type: str = 'template'
 
     mutates_result: bool = False
