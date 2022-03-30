@@ -104,7 +104,9 @@ def create_mapped_args(tp: Type, req: Request):
     return tp(**data)
 
 
-async def resolve_error(amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception):
+async def resolve_error(
+        amodel: BaseActionModel, action_props: ActionProps, req: KRequest, resp: KResponse, err: Exception):
+
     ans = {
         'last_used_corp': dict(corpname=None, human_corpname=None),
         'Q': []
@@ -112,7 +114,13 @@ async def resolve_error(amodel: BaseActionModel, req: KRequest, resp: KResponse,
     await amodel.resolve_error_state(req, resp, ans, err)
     if isinstance(err, UserActionException):
         resp.set_http_status(err.code)
-    return ans
+
+    if action_props.return_type == 'template':
+        return ans
+    elif action_props.return_type == 'plain':
+        return str(err)
+    elif action_props.return_type == 'json':
+        return json.dumps(ans)
 
 
 def http_action(
@@ -181,9 +189,11 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
-                ans = await resolve_error(amodel, req, resp, ex)
-                aprops.page_model = 'message'
-                aprops.template = 'message.html'
+                if aprops.page_model:
+                    aprops.page_model = 'message'
+                if aprops.template:
+                    aprops.template = 'message.html'
+                ans = await resolve_error(amodel, aprops, req, resp, ex)
                 amodel.add_system_message('error', str(ex))
 
             return HTTPResponse(

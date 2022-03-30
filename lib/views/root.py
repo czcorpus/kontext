@@ -1,7 +1,9 @@
 from typing import Dict, Any
 from sanic import Blueprint
+import os
+import aiofiles
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException
+from action.errors import FunctionNotSupported, ImmediateRedirectException, NotFoundException
 from action.krequest import KRequest
 from action.model.authorized import UserActionModel
 from action.response import KResponse
@@ -71,3 +73,13 @@ async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KRespon
 @http_action(action_model=UserActionModel, template='compatibility.html')
 async def compatibility(amodel, req, resp):
     return {'_version': (None, None)}
+
+
+@bp.route('/robots.txt')
+@http_action(action_model=UserActionModel, return_type='plain')
+async def robots(amodel, req, resp):
+    rpath = os.path.join(os.path.dirname(__file__), '..', '..', 'public', 'files', 'robots.txt')
+    if os.path.isfile(rpath):
+        async with aiofiles.open(rpath) as fr:
+            return await fr.read()
+    raise NotFoundException('File robots.txt is not defined')

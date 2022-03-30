@@ -24,10 +24,8 @@ It can be run in two modes:
 
 import sys
 import os
-import wsgiref.util
 import logging
 import locale
-import signal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
@@ -38,7 +36,6 @@ LOCALE_PATH = os.path.realpath('%s/../locale' % os.path.dirname(__file__))
 import plugins
 import plugins.export
 import settings
-#import translation
 from action.plugin.initializer import setup_plugins, install_plugin_actions
 from texttypes.cache import TextTypesCache
 from sanic import Sanic, Request
@@ -58,7 +55,6 @@ from views.pquery import bp as pquery_bp
 from views.tools import bp as tools_bp
 from views.subcorpus import bp as subcorpus_bp
 from views.fcs import bp_common as fcs_common_bp, bp_v1 as fcs_v1_bp
-from action import get_protocol
 from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
@@ -93,91 +89,6 @@ def setup_logger(conf):
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
 
 
-class KonTextWsgiApp:
-    """
-    KonText WSGI application
-    """
-
-    def __init__(self):
-        """
-        Initializes the application and persistent objects/modules (settings, plugins,...)
-        """
-        super(KonTextWsgiApp, self).__init__()
-        self.cleanup_runtime_modules()
-        os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
-        setup_plugins()
-        #translation.load_translations(settings.get('global', 'translations'))
-
-        def signal_handler(signal, frame):
-            for p in plugins.runtime:
-                fn = getattr(p.instance, 'on_soft_reset', None)
-                if callable(fn):
-                    fn()
-            self._tt_cache.clear_all()
-
-        signal.signal(signal.SIGUSR1, signal_handler)
-        self._tt_cache = TextTypesCache(plugins.runtime.DB.instance)
-
-    @staticmethod
-    def _root_url(environ):
-        protocol = get_protocol(environ)
-        host = settings.get_str('global', 'http_host', environ.get('HTTP_HOST'))
-        app_url_prefix = settings.get_str('global', 'action_path_prefix', '/')
-        return f'{protocol}://{host}{app_url_prefix}/'
-
-    def __call__(self, environ, start_response):
-        ui_lang = self.get_lang(environ)
-        # translation.activate(ui_lang)
-        environ['REQUEST_URI'] = wsgiref.util.request_uri(environ)  # TODO remove?
-        app_url_prefix = settings.get_str('global', 'action_path_prefix', '')
-        if app_url_prefix and environ['PATH_INFO'].startswith(app_url_prefix):
-            environ['PATH_INFO'] = environ['PATH_INFO'][len(app_url_prefix):]
-
-        sessions = plugins.runtime.SESSIONS.instance
-        request = JSONRequest(environ)
-        sid = request.cookies.get(sessions.get_cookie_name())
-        if sid is None:
-            request.ctx.session = sessions.new()
-        else:
-            request.ctx.session = sessions.get(sid)
-
-        sid_is_valid = True
-        if environ['PATH_INFO'] in ('/', ''):
-            url = environ['REQUEST_URI'].split('?')[0]
-            if not url.endswith('/'):
-                url += '/'
-            status = '303 See Other'
-            headers = [('Location', f'{self._root_url(environ)}query')]
-            body = ''
-        # old-style (CGI version) URLs are redirected to new ones
-        elif '/run.cgi/' in environ['REQUEST_URI']:
-            status = '301 Moved Permanently'
-            headers = [('Location', environ['REQUEST_URI'].replace('/run.cgi/', '/'))]
-            body = ''
-        else:
-            app = self.create_controller(environ['PATH_INFO'], request=request, ui_lang=ui_lang)
-            status, headers, sid_is_valid, body = app.run()
-        response = Response(response=body, status=status, headers=headers)
-        if not sid_is_valid:
-            curr_data = dict(request.ctx.session)
-            request.ctx.session = sessions.new()
-            request.ctx.session.update(curr_data)
-            request.ctx.session.modified = True
-        if request.ctx.session.should_save:
-            sessions.save(request.ctx.session)
-            cookie_path = settings.get_str('global', 'cookie_path_prefix', '/')
-            cookies_same_site = settings.get('global', 'cookies_same_site', None)
-            response.set_cookie(
-                sessions.get_cookie_name(),
-                request.ctx.session.sid,
-                path=cookie_path,
-                secure=cookies_same_site is not None,
-                samesite=cookies_same_site
-            )
-
-        return response(environ, start_response)
-
-
 settings.load(path=CONF_PATH)
 
 if settings.get('global', 'manatee_path', None):
@@ -198,6 +109,7 @@ application.config['action_path_prefix'] = settings.get_str('global', 'action_pa
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
 session = Session()
+
 application.blueprint(root_bp)
 application.blueprint(conc_bp)
 application.blueprint(user_bp)
@@ -262,14 +174,6 @@ def get_locale(request: Request) -> str:
     if lgs_string is None:
         lgs_string = 'en_US'
     return lgs_string
-
-
-#robots_path = os.path.join(os.path.dirname(__file__), 'files/robots.txt')
-# if os.path.isfile(robots_path):
-#    from werkzeug.wsgi import SharedDataMiddleware
-#    application = SharedDataMiddleware(application, {
-#        '/robots.txt': robots_path
-#    })
 
 
 if __name__ == '__main__':
