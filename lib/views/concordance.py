@@ -886,7 +886,7 @@ async def ajax_send_group_selection_link_to_mail(amodel: ConcActionModel, req: K
     with plugins.runtime.AUTH as auth:
         user_info = await auth.get_user_info(amodel.plugin_ctx)
         user_email = user_info['email']
-        username = user_info['user']
+        username = user_info['username']
         smtp_server = mailing.smtp_factory()
         url = req.args.get('url')
         recip_email = req.args.get('email')

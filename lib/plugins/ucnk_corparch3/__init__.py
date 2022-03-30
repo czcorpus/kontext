@@ -36,6 +36,7 @@ import os
 from sanic import Blueprint
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.auth import AbstractAuth
 from plugin_types.integration_db import IntegrationDatabase
 
 
@@ -108,7 +109,7 @@ class UcnkCorpArch3(MySQLCorparch):
 
     SESSION_KEYWORDS_KEY = 'plugin_ucnkcorparch_default_keywords'
 
-    def __init__(self, db_backend, auth, user_items, tag_prefix, max_num_hints,
+    def __init__(self, db_backend, auth: AbstractAuth, user_items, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
                  access_req_recipients, default_label, registry_lang):
         super().__init__(

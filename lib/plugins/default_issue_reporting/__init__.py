@@ -22,6 +22,7 @@ from email.mime.text import MIMEText
 import json
 from datetime import datetime
 from sanic.blueprints import Blueprint
+from plugin_types.auth import AbstractAuth
 
 from plugins import inject
 import plugins
@@ -43,7 +44,7 @@ async def submit_issue(req, amodel):
 
 class DefaultErrorReporting(AbstractIssueReporting):
 
-    def __init__(self, auth, smtp_server, mail_sender, mail_recipients):
+    def __init__(self, auth: AbstractAuth, smtp_server, mail_sender, mail_recipients):
         self._auth = auth
         self._smtp_server = smtp_server
         self._mail_sender = mail_sender

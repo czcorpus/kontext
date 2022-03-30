@@ -30,7 +30,7 @@ from action.plugin.ctx import PluginCtx
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
+from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
 
 
 class TokenAuth(AbstractRemoteAuth):
@@ -73,8 +73,11 @@ class TokenAuth(AbstractRemoteAuth):
         else:
             return await self._get_permitted_corpora(user_dict)
 
-    async def get_user_info(self, plugin_ctx: PluginCtx) -> UserInfo:
-        return plugin_ctx.session['user']
+    async def get_user_info(self, plugin_ctx: PluginCtx) -> GetUserInfo:
+        return {
+            'username' if k == 'user' else k: v
+            for k, v in plugin_ctx.user_dict.items()
+        }
 
     def _get_api_key(self, plugin_ctx: PluginCtx) -> Optional[str]:
         if self._api_key_cookie_name:

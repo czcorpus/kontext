@@ -26,7 +26,8 @@ very secure.
 required xml conf: please see ./config.rng
 """
 import hashlib
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, UserInfo
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
 import plugins
 from dataclasses import dataclass
 from typing import Dict, List, Optional
@@ -99,8 +100,11 @@ class StaticAuth(AbstractRemoteAuth):
             zone = self._find_user(user_dict['id'])
             return list(zone.corpora.keys())
 
-    async def get_user_info(self, plugin_ctx):
-        return plugin_ctx.session['user']
+    async def get_user_info(self, plugin_ctx: PluginCtx) -> GetUserInfo:
+        return {
+            'username' if k == 'user' else k: v
+            for k, v in plugin_ctx.user_dict.items()
+        }
 
     def _hash_key(self, k):
         return hashlib.sha256(k.encode()).hexdigest()
@@ -113,7 +117,7 @@ class StaticAuth(AbstractRemoteAuth):
             key = 'HTTP_{0}'.format(self._api_key_http_header.upper().replace('-', '_'))
             return plugin_ctx.get_from_environ(key)
 
-    def revalidate(self, plugin_ctx):
+    async def revalidate(self, plugin_ctx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         api_key = self._get_api_key(plugin_ctx)
         hash_key = self._hash_key(api_key)

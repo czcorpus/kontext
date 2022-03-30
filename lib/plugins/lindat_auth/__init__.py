@@ -10,15 +10,20 @@
 import logging
 import os
 from typing import List
-import plugins
-from actions import corpora, user
-from controller import exposed
+
+from sanic import Blueprint
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.authorized import UserActionModel
+from action.response import KResponse
 from action.errors import ImmediateRedirectException
-from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess, UserInfo
+from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess
 from plugins.errors import PluginException
-from util import as_async
+import plugins
 
 _logger = logging.getLogger(__name__)
+
+bp = Blueprint('lindat_auth')
 
 
 def uni(s):
@@ -37,23 +42,25 @@ def uni(s):
     return str(bytes(s_int), 'utf-8')
 
 
-@exposed(http_method=('GET', 'POST'), template='user/login.html', page_model='login')
-def lindat_login(self, request):
+@bp.route('lindat_login', ['GET', 'POST'])
+@http_action(template='user/login.html', page_model='login', action_model=UserActionModel)
+async def lindat_login(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth:
         ans = {}
-        self._session['user'] = await auth.validate_user(self._plugin_ctx,
-                                                         request.form.get(
-                                                             'username') if request.form else None,
-                                                         request.form.get('password') if request.form else None)
-        if not auth.is_anonymous(self._session['user'].get('id', None)):
-            if request.args.get('redirectTo', None):
-                self.redirect(request.args.get('redirectTo'))
+        amodel.plugin_ctx.session['user'] = await auth.validate_user(
+            amodel.plugin_ctx,
+            req.form.get('username') if req.form else None,
+            req.form.get('password') if req.form else None,
+        )
+        if not auth.is_anonymous(amodel.plugin_ctx.session['user'].get('id', None)):
+            if req.args.get('redirectTo', None):
+                resp.redirect(req.args.get('redirectTo'))
             else:
-                self.redirect(self.create_url('query', {}))
+                resp.redirect(req.create_url('query', {}))
         else:
-            self.disabled_menu_items = user.USER_ACTIONS_DISABLED_ITEMS
-            self.add_system_message('error', request.translate('Incorrect username or password'))
-        self.refresh_session_id()
+            amodel.disabled_menu_items = user.USER_ACTIONS_DISABLED_ITEMS
+            amodel.add_system_message('error', req.translate('Incorrect username or password'))
+        amodel.refresh_session_id()
         return ans
 
 
@@ -214,8 +221,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
 
         return user_d
 
-    @as_async
-    def export(self, plugin_ctx):
+    async def export(self, plugin_ctx):
         return {
             'metadataFeed': self._conf['metadataFeed'],
             'login_url': plugin_ctx.root_url + self._conf['login_url'],
@@ -226,8 +232,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         }
 
     def export_actions(self):
-        return {corpora.Corpora: [ajax_get_permitted_corpora],
-                user.User: [lindat_login]}
+        return bp
 
     def get_groups_for(self, user_dict):
         groups = ['anonymous']
@@ -249,12 +254,13 @@ def _e2g_splitter(i):
     return parts[0].strip(), parts[1].strip()
 
 
-@exposed(return_type='json', skip_corpus_init=True)
-def ajax_get_permitted_corpora(ctrl, request):
+@bp.route('ajax_get_permitted_corpora')
+@http_action(return_type='json', action_model=UserActionModel)
+async def ajax_get_permitted_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     An exposed HTTP action showing permitted corpora required by client-side widget.
     """
-    corpora = plugins.runtime.AUTH.instance.permitted_corpora(ctrl.session_get('user'))
+    corpora = await plugins.runtime.AUTH.instance.permitted_corpora(amodel.session_get('user'))
     return dict(permitted_corpora=dict((c, '') for c in corpora))
 
 

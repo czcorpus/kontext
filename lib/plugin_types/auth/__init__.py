@@ -56,6 +56,15 @@ class UserInfo(TypedDict):
     """
 
 
+# TODO why is there `username`` instead of user as in UserInfo
+class GetUserInfo(TypedDict):
+    id: int
+    username: str
+    fullname: str
+    email: Optional[str]
+    api_key: Optional[str]
+
+
 class CorpusAccess(NamedTuple):
     is_owner: bool
     has_read_access: bool
@@ -171,7 +180,7 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
             raise ImmediateRedirectException(plugin_ctx.create_url('corpora/corplist', {}))
 
     @abc.abstractmethod
-    async def get_user_info(self, plugin_ctx: 'PluginCtx') -> UserInfo:
+    async def get_user_info(self, plugin_ctx: 'PluginCtx') -> GetUserInfo:
         """
         Return a dictionary containing all the data about a user.
         Sensitive information like password hashes, recovery questions
