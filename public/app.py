@@ -26,6 +26,7 @@ import sys
 import os
 import logging
 import locale
+import signal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
@@ -101,10 +102,8 @@ if settings.get('global', 'umask', None):
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
 application = Sanic('kontext')
-application.ctx = ApplicationContext(
-    templating=TplEngine(settings),
-    tt_cache=lambda: TextTypesCache(plugins.runtime.DB.instance),
-)
+
+
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
@@ -126,6 +125,23 @@ application.blueprint(fcs_common_bp)
 application.blueprint(fcs_v1_bp)
 setup_plugins()
 install_plugin_actions(application)
+
+tt_cache = TextTypesCache(plugins.runtime.DB.instance)
+
+application.ctx = ApplicationContext(
+    templating=TplEngine(settings),
+    tt_cache=tt_cache)
+
+
+def signal_handler(signal, frame):
+    for p in plugins.runtime:
+        fn = getattr(p.instance, 'on_soft_reset', None)
+        if callable(fn):
+            fn()
+    tt_cache.clear_all()
+
+
+signal.signal(signal.SIGUSR1, signal_handler)
 
 
 @application.listener('before_server_start')
