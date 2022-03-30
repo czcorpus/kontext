@@ -55,7 +55,7 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
 
 @bp.route('/subcmixer_create_subcorpus', methods='POST')
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
-def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
     Create a subcorpus in a low-level way.
     The action writes a list of 64-bit signed integers
@@ -69,7 +69,7 @@ def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: K
         return {}
     else:
         publish = bool(int(req.form.get('publish')))
-        subc_path = amodel.prepare_subc_path(
+        subc_path = await amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=False)
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
@@ -79,11 +79,11 @@ def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: K
                 fw.write(struct.pack('<q', attr.beg(idx)))
                 fw.write(struct.pack('<q', attr.end(idx)))
 
-        pub_path = amodel.prepare_subc_path(
+        pub_path = await amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
         if pub_path:
-            corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
-                                     req.form.get('description'))
+            await corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
+                                           req.form.get('description'))
 
         return dict(status=True)
 
@@ -157,8 +157,7 @@ class SubcMixer(AbstractSubcMixer[Dict[str, Any]]):
             ans = {}
             ans.update(self._calculate_real_sizes(
                 cat_tree, corpus_items.category_sizes, corpus_items.size_assembled))
-            doc_indices = [item[0] for item in [item for item in (
-                x for x in enumerate(corpus_items.variables)) if item[1] > 0]]
+            doc_indices = [i for i, variable in enumerate(corpus_items.variables) if variable > 0]
             ans['ids'] = doc_indices,
             ans['structs'] = list(used_structs)
             return ans

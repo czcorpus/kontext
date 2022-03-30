@@ -22,8 +22,8 @@ from plugin_types.taghelper import AbstractValueSelectionFetcher
 
 class NullSelectionFetcher(AbstractValueSelectionFetcher):
 
-    def fetch(self, request):
+    async def fetch(self, request):
         return []
 
-    def is_empty(self, val):
+    async def is_empty(self, val):
         return True

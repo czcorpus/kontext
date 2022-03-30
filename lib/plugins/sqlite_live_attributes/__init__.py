@@ -28,6 +28,9 @@ from sanic import Blueprint
 import sqlite3
 import logging
 from typing import Dict, List, Iterable
+
+from action.krequest import KRequest
+from action.response import KResponse
 try:
     from unidecode import unidecode
 except ImportError:
@@ -52,35 +55,35 @@ bp = Blueprint('sqlite_live_attributes')
 
 @bp.route('/filter_attributes', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-async def filter_attributes(self, request):
-    attrs = json.loads(request.form.get('attrs', '{}'))
-    aligned = json.loads(request.form.get('aligned', '[]'))
+async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    attrs = json.loads(req.form.get('attrs', '{}'))
+    aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
-                                     aligned_corpora=aligned)
+        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
+                                           aligned_corpora=aligned)
 
 
 @bp.route('/attr_val_autocomplete', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-async def attr_val_autocomplete(self, request):
-    attrs = json.loads(request.form.get('attrs', '{}'))
-    attrs[request.form.get('patternAttr')] = '%{}%'.format(request.form.get('pattern'))
-    aligned = json.loads(request.form.get('aligned', '[]'))
+async def attr_val_autocomplete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    attrs = json.loads(req.form.get('attrs', '{}'))
+    attrs[req.form.get('patternAttr')] = '%{}%'.format(req.form.get('pattern'))
+    aligned = json.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(self._plugin_ctx, corpus=self.corp, attr_map=attrs,
-                                     aligned_corpora=aligned,
-                                     autocomplete_attr=request.form.get('patternAttr'))
+        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
+                                           aligned_corpora=aligned,
+                                           autocomplete_attr=req.form.get('patternAttr'))
 
 
 @bp.route('/fill_attrs', methods=['POST'])
 @http_action(return_type='json', action_model=CorpusActionModel)
-async def fill_attrs(self, request):
-    search = request.json['search']
-    values = request.json['values']
-    fill = request.json['fill']
+async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    search = req.json['search']
+    values = req.json['values']
+    fill = req.json['fill']
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+        return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
 
 class LiveAttributes(CachedLiveAttributes):

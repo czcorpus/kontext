@@ -196,13 +196,11 @@ class CategoryTree(object):
             # update group size
             node.size = sum(res)
             # update child node sizes
-            i = 0
-            for n in node.children:
+            for i, n in enumerate(node.children):
                 d = n.size - res[i]
                 n.size = res[i]
                 if d > 0 and len(n.children) > 0:
                     self.compute_sizes(n)
-                i += 1
 
     def initialize_bounds(self):
         for i in range(1, len(self.category_list)):

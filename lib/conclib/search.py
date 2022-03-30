@@ -148,8 +148,8 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 
 async def get_conc(
-        corp: AbstractKCorpus, user_id, q: Union[List[str], Tuple[str, ...]] = None, fromp=0, pagesize=0, asnc=0,
-        samplesize=0, translate: Callable[[str], str] = lambda x: x) -> KConc:
+        corp: AbstractKCorpus, user_id: int, q: Optional[Union[List[str], Tuple[str, ...]]] = None, fromp: int=0, pagesize: int=0, asnc: int=0,
+        samplesize: int=0, translate: Callable[[str], str] = lambda x: x) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -191,8 +191,8 @@ async def get_conc(
     # move mid-sized aligned corpora or large non-aligned corpora to background
     if _should_be_bg_query(corp, q, asnc):
         minsize = fromp * pagesize
-        conc = _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
-                            calc_from=calc_from, minsize=minsize, translate=translate)
+        conc = await _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
+                                  calc_from=calc_from, minsize=minsize, translate=translate)
     else:
         worker = GeneralWorker()
         if isinstance(conc, InitialConc):

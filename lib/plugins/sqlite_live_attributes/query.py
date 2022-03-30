@@ -76,7 +76,8 @@ class AttrArgs(object):
                         cnf_item.append(f'{item_prefix}.{key} {cmp_operator(value)} ?')
                         sql_values.append(self.import_value(value))
                     else:
-                        cnf_item.append(f'{item_prefix}.{self._bib_label} {cmp_operator(value[1:])} ?')
+                        cnf_item.append(
+                            f'{item_prefix}.{self._bib_label} {cmp_operator(value[1:])} ?')
                         sql_values.append(self.import_value(value[1:]))
 
             elif is_range_argument(values):
@@ -87,7 +88,8 @@ class AttrArgs(object):
                 sql_values.append(self.import_value(values))
 
             else:
-                cnf_item.append(f'ktx_lower({item_prefix}.{key}) {cmp_operator(values)} ktx_lower(?)')
+                cnf_item.append(
+                    f'ktx_lower({item_prefix}.{key}) {cmp_operator(values)} ktx_lower(?)')
                 sql_values.append(self.import_value(values))
 
             if len(cnf_item) > 0:
@@ -140,12 +142,10 @@ class QueryBuilder(object):
                               empty_val_placeholder=self._empty_val_placeholder)
         where_sql, where_values = attr_items.export_sql('t1', self._corpus_info.id)
         join_sql = []
-        i = 2
-        for item in self._aligned_corpora:
+        for i, item in enumerate(self._aligned_corpora, 2):
             join_sql.append(f'JOIN item AS t{i} ON t1.item_id = t{i}.item_id')
             where_sql += f' AND t{i}.corpus_id = ?'
             where_values.append(item)
-            i += 1
 
         hidden_attrs = set()
         if bib_id is not None and bib_id not in self._srch_attrs:
@@ -156,10 +156,10 @@ class QueryBuilder(object):
 
         if len(where_sql) > 0:
             sql_template = "SELECT DISTINCT {} FROM item AS t1 {} WHERE {}".format(
-                            ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
+                ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql), where_sql)
         else:
             sql_template = "SELECT DISTINCT {} FROM item AS t1 {} ".format(
-                            ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
+                ', '.join(self.apply_prefix(selected_attrs, 't1')), ' '.join(join_sql))
         tmp = QueryComponents(sql_template, selected_attrs, hidden_attrs, where_values)
         return tmp
 

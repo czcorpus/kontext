@@ -975,7 +975,7 @@ async def audio(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     access corpus 'X' then all related audio files are accessible).
     """
     with plugins.runtime.AUDIO_PROVIDER as audiop:
-        headers, ans = audiop.get_audio(amodel.plugin_ctx, req)
+        headers, ans = await audiop.get_audio(amodel.plugin_ctx, req)
         for h, v in headers.items():
             resp.set_header(h, v)
         return ans
@@ -985,7 +985,7 @@ async def audio(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 @http_action(return_type='json', action_model=CorpusActionModel)
 async def audio_waveform(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUDIO_PROVIDER as audiop:
-        return audiop.get_waveform(amodel.plugin_ctx, req)
+        return await audiop.get_waveform(amodel.plugin_ctx, req)
 
 
 @bp.route('/get_adhoc_subcorp_size')
@@ -1068,7 +1068,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 @http_action(
     access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, template='txtexport/saveconc.html',
     return_type='plain')
-async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
+async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
 
     def merge_conc_line_parts(items):
         """
@@ -1159,7 +1159,8 @@ async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
                 f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
             if len(data['Lines']) > 0:
-                aligned_corpora = [amodel.corp] + [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+                aligned_corpora = [amodel.corp] + \
+                    [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
                 writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                       for c in aligned_corpora])
                 if req.mapped_args.heading:
@@ -1177,7 +1178,8 @@ async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
                     used_refs = ([('#', req.translate('Token number')), (doc_struct, req.translate('Document number'))] +
                                  [(x, x) for x in amodel.corp.get_structattrs()])
                     used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-                    writer.write_ref_headings([''] + used_refs if req.mapped_args.numbering else used_refs)
+                    writer.write_ref_headings(
+                        [''] + used_refs if req.mapped_args.numbering else used_refs)
 
                 if 'Left' in data['Lines'][0]:
                     left_key = 'Left'
@@ -1217,17 +1219,18 @@ async def saveconc(amodel, req: KRequest[SaveConcArgs], resp):
 @bp.route('/reduce', methods=['POST'])
 @http_action(
     action_model=ConcActionModel, access_level=0, template='view.html', page_model='view', mutates_result=True)
-def reduce(amodel, req, resp):
+async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     random sample
     """
     if len(amodel.lines_groups) > 0:
-        raise UserActionException('Cannot apply a random sample once a group of lines has been saved')
+        raise UserActionException(
+            'Cannot apply a random sample once a group of lines has been saved')
     qinfo = SampleFormArgs(persist=True)
     qinfo.rlines = amodel.args.rlines
     amodel.add_conc_form_args(qinfo)
     amodel.args.q.append('r' + amodel.args.rlines)
-    return _view(amodel, req, resp)
+    return await _view(amodel, req, resp)
 
 
 @dataclass
@@ -1249,5 +1252,6 @@ def structctx(amodel, req: KRequest[StructctxArgs], resp):
     beg, end = s.beg(struct_id), s.end(struct_id)
     amodel.args.detail_left_ctx = req.mapped_args.pos - beg
     amodel.args.detail_right_ctx = end - req.mapped_args.pos - 1
-    result = _widectx(amodel, req.mapped_args.pos, req.mapped_args.left_ctx, req.mapped_args.right_ctx)
+    result = _widectx(amodel, req.mapped_args.pos,
+                      req.mapped_args.left_ctx, req.mapped_args.right_ctx)
     return result

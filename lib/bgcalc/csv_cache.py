@@ -12,30 +12,31 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import csv
+import aiocsv
+import aiofiles
+
+from util import aenumerate, anext
 
 
-def load_cached_partial(path, offset, limit):
-    with open(path, 'r') as fr:
-        csv_reader = csv.reader(fr)
-        _, total_str = next(csv_reader)
+async def load_cached_partial(path, offset, limit):
+    async with aiofiles.open(path, 'r') as fr:
+        csv_reader = aiocsv.AsyncReader(fr)
+        _, total_str = await anext(csv_reader)
         for i in range(0, offset):
-            next(csv_reader)
+            await anext(csv_reader)
         ans = []
-        i = offset
-        for row in csv_reader:
+        async for i, row in aenumerate(csv_reader, offset):
             if i == offset + limit:
                 break
             ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
-            i += 1
     return int(total_str), ans
 
 
-def load_cached_full(path):
+async def load_cached_full(path):
     ans = []
-    with open(path, 'r') as fr:
-        csv_reader = csv.reader(fr)
-        _, total_str = next(csv_reader)
-        for row in csv_reader:
+    async with aiofiles.open(path, 'r') as fr:
+        csv_reader = aiocsv.AsyncReader(fr)
+        _, total_str = await anext(csv_reader)
+        async for row in csv_reader:
             ans.append((row[0], ) + tuple(int(x) for x in row[1:]))
     return int(total_str), ans

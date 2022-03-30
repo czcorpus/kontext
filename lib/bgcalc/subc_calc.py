@@ -23,7 +23,7 @@ class EmptySubcorpusException(Exception):
 
 class CreateSubcorpusTask(object):
 
-    def __init__(self, user_id, corpus_id, author, description):
+    def __init__(self, user_id: int, corpus_id: str, author, description):
         self._user_id = user_id
         self._cm = corplib.CorpusManager()
         self._corp = self._cm.get_corpus(corpus_id)
@@ -50,5 +50,5 @@ class CreateSubcorpusTask(object):
         # able to create hardlinks otherwise
         os.chmod(path, 0o664)
         if publish_path:
-            corplib.mk_publish_links(path, publish_path, self._author, self._description)
+            await corplib.mk_publish_links(path, publish_path, self._author, self._description)
         return ans

@@ -137,15 +137,15 @@ class SubcorpusActionModel(CorpusActionModel):
         if data.publish and not data.description:
             raise UserActionException(self._req.translate('No description specified'))
 
-        path = self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
-        publish_path = self.prepare_subc_path(
+        path = await self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
+        publish_path = await self.prepare_subc_path(
             self.args.corpname, data.subcname, publish=True) if data.publish else None
 
         if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = corplib.create_subcorpus(
                 path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
             if result and publish_path:
-                corplib.mk_publish_links(path, publish_path, self.session_get(
+                await corplib.mk_publish_links(path, publish_path, self.session_get(
                     'user', 'fullname'), data.description)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)

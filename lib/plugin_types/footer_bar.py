@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class AbstractFootbar(abc.ABC):
 
     @abc.abstractmethod
-    def get_contents(self, plugin_ctx: 'PluginCtx', return_url: Optional[str] = None):
+    async def get_contents(self, plugin_ctx: 'PluginCtx', return_url: Optional[str] = None):
         """
         arguments:
         plugin_ctx -- an instance of kontext.PluginCtx

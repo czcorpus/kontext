@@ -111,8 +111,16 @@ import copy
 import re
 import logging
 from dataclasses import dataclass, field
+import aiofiles
 from dataclasses_json import dataclass_json
 from typing import List, Optional
+
+from sanic import Blueprint
+
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.response import KResponse
+from action.model.authorized import UserActionModel
 
 try:
     from markdown import markdown
@@ -126,10 +134,10 @@ from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
 from plugin_types.corparch import CorplistProvider
 from plugins import inject
 import l10n
-from controller import exposed
 from action.plugin.ctx import PluginCtx
-import actions.user
 from settings import import_bool
+
+bp = Blueprint('lindat_corparch2')
 
 DEFAULT_LANG = 'en'
 DEFAULT_PAGE_LIST_SIZE = 20
@@ -297,7 +305,7 @@ class DefaultCorplistProvider(CorplistProvider):
             return None
 
         query_substrs, query_keywords = parse_query(self._tag_prefix, query)
-        all_keywords_map = dict(self._corparch.all_keywords(plugin_ctx))
+        all_keywords_map = dict(await self._corparch.all_keywords(plugin_ctx))
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
 
@@ -354,10 +362,11 @@ class DefaultCorplistProvider(CorplistProvider):
         return ans
 
 
-@exposed(return_type='json', access_level=1, skip_corpus_init=True)
-def get_favorite_corpora(ctrl, request):
+@bp.route('/get_favorite_corpora')
+@http_action(return_type='json', access_level=1, action_model=UserActionModel)
+async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return ca.export_favorite(ctrl._plugin_ctx, ui.get_user_items(ctrl._plugin_ctx))
+        return await ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
 
 
 class CorpusArchive(AbstractSearchableCorporaArchive):
@@ -399,11 +408,11 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def max_page_size(self):
         return self._max_page_size
 
-    def external_keywords_mapping(self, plugin_ctx: PluginCtx):
+    async def external_keywords_mapping(self, plugin_ctx: PluginCtx):
         if self._external_keyword_mapping is None:
             mapping = {}
             if self._keywords is None:
-                self._load(plugin_ctx)
+                await self._load(plugin_ctx)
             for label_key in self._keywords:
                 for lang_key in self._keywords[label_key]:
                     new_key = self._keywords[label_key][lang_key]
@@ -412,8 +421,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             self._external_keyword_mapping = mapping
         return copy.deepcopy(self._external_keyword_mapping)
 
-    def map_external_keywords(self, plugin_ctx, external_keywords):
-        mapping = self.external_keywords_mapping(plugin_ctx)
+    async def map_external_keywords(self, plugin_ctx, external_keywords):
+        mapping = await self.external_keywords_mapping(plugin_ctx)
         mapped = []
         for external_keyword in external_keywords:
             external_keyword = external_keyword.lower()
@@ -421,10 +430,10 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                 mapped.append(mapping[external_keyword])
         return mapped
 
-    def all_keywords(self, plugin_ctx: PluginCtx):
+    async def all_keywords(self, plugin_ctx: PluginCtx):
         ans = []
         if self._keywords is None:
-            self._load(plugin_ctx)
+            await self._load(plugin_ctx)
         lang_key = self._get_iso639lang(plugin_ctx.user_lang)
         for label_key, item in list(self._keywords.items()):
             if lang_key in item:
@@ -691,19 +700,19 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         if corp_name:
             # get rid of path-like corpus ID prefix
             corp_name = corp_name.split('/')[-1].lower()
-            if corp_name in self._raw_list(plugin_ctx):
+            if corp_name in await self._raw_list(plugin_ctx):
                 if plugin_ctx.user_lang is not None:
                     ans = await self._localize_corpus_info(
-                        plugin_ctx, self._raw_list(plugin_ctx)[corp_name], lang_code=plugin_ctx.user_lang)
+                        plugin_ctx, (await self._raw_list(plugin_ctx))[corp_name], lang_code=plugin_ctx.user_lang)
                 else:
-                    ans = self._raw_list(plugin_ctx)[corp_name]
+                    ans = (await self._raw_list(plugin_ctx))[corp_name]
                 ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name, plugin_ctx.translate)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
             return BrokenCorpusInfo()
 
-    def _load(self, plugin_ctx: PluginCtx):
+    async def _load(self, plugin_ctx: PluginCtx):
         """
         Loads data from a configuration file
         """
@@ -711,17 +720,18 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         self._keywords = OrderedDict()
         with open(self.file_path) as f:
             xml = etree.parse(f)
-            root = xml.find(self.root_xpath)
-            if root is not None:
-                self._parse_corplist_node(plugin_ctx, root, '/', data)
+
+        root = xml.find(self.root_xpath)
+        if root is not None:
+            self._parse_corplist_node(plugin_ctx, root, '/', data)
         self._corplist = OrderedDict([(item.id.lower(), item) for item in data])
 
-    def _raw_list(self, plugin_ctx: PluginCtx):
+    async def _raw_list(self, plugin_ctx: PluginCtx):
         """
         Returns list of all defined corpora including all lang. variants of labels etc.
         """
         if self._corplist is None:
-            self._load(plugin_ctx)
+            await self._load(plugin_ctx)
         return self._corplist
 
     def _get_iso639lang(self, lang):
@@ -741,7 +751,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         cm = plugin_ctx.corpus_manager
         featured = []
-        for x in list(self._raw_list(plugin_ctx).values()):
+        for x in list((await self._raw_list(plugin_ctx)).values()):
             if x.id in permitted_corpora and is_featured(x):
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
@@ -753,7 +763,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                     'description': self._export_untranslated_label(plugin_ctx, cm.get_info(x.id, plugin_ctx.translate).description)})
         return featured
 
-    def export_favorite(self, plugin_ctx: PluginCtx, favitems):
+    async def export_favorite(self, plugin_ctx: PluginCtx, favitems):
         ans = []
         for item in favitems:
             tmp = item.to_dict()
@@ -765,7 +775,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     async def export(self, plugin_ctx: PluginCtx):
         initial_keywords = plugin_ctx.session.get(self.SESSION_KEYWORDS_KEY, [self.default_label])
         external_keywords = plugin_ctx.request.args_getlist('keyword')
-        mapped_external_keywords = self.map_external_keywords(plugin_ctx, external_keywords)
+        mapped_external_keywords = await self.map_external_keywords(plugin_ctx, external_keywords)
         if len(mapped_external_keywords) != 0:
             initial_keywords.extend(mapped_external_keywords)
 
@@ -780,7 +790,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         )
 
     async def initial_search_params(self, plugin_ctx: PluginCtx):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
+        query_substrs, query_keywords = parse_query(
+            self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = await self.all_keywords(plugin_ctx)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in all_keywords]
@@ -794,8 +805,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             }
         }
 
+    @staticmethod
     def export_actions(self):
-        return {actions.user.User: [get_favorite_corpora]}
+        return bp
 
 
 @inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)

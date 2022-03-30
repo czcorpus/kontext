@@ -31,8 +31,8 @@ a new version of 'taghelper'.
 
 import abc
 from typing import Callable, TypeVar, Generic
-from werkzeug.wrappers import Request
 from action.plugin.ctx import PluginCtx
+from action.krequest import KRequest
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -42,20 +42,19 @@ class AbstractValueSelectionFetcher(abc.ABC, Generic[T]):
     """
     AbstractValueSelectionFetcher provides way how to
     obtain user tag value search query data from the
-    werkzeug.wrappers.Request (see a respective pyi file)
-    and encode them in a way suitable for a respective
+    KRequest and encode them in a way suitable for a respective
     loader.
     """
 
     @abc.abstractmethod
-    def fetch(self, request: Request) -> T:
+    async def fetch(self, request: KRequest) -> T:
         """
         fetch data from an HTTP request and encode
         using a custom data type
         """
 
     @abc.abstractmethod
-    def is_empty(self, val: T) -> bool:
+    async def is_empty(self, val: T) -> bool:
         """
         Test whether the 'val' (= fetched data)
         contains an empty query.
@@ -87,14 +86,14 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    def is_available(self, translate: Callable[[str], str]) -> bool:
+    async def is_available(self, translate: Callable[[str], str]) -> bool:
         """
         Return true if the loader is able to provide answers
         (e.g. source data files exist etc.)
         """
 
     @abc.abstractmethod
-    def get_initial_values(self, lang: str, translate: Callable[[str], str]) -> T:
+    async def get_initial_values(self, lang: str, translate: Callable[[str], str]) -> T:
         """
         Return all the possible properties of a respective tagset
         (i.e. all the positions/keys/whatever and their respective
@@ -102,7 +101,7 @@ class AbstractTagsetInfoLoader(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    def get_variant(self, user_selection: U, lang: str, translate: Callable[[str], str]) -> T:
+    async def get_variant(self, user_selection: U, lang: str, translate: Callable[[str], str]) -> T:
         """
         Based on user selection encoded as a list of tuples [(key1, value1), ...,(keyN, valueN)]
         return a filtered values matching the selected ones.

@@ -49,9 +49,7 @@ def load_variations(src_path, pos_idx: int, feat_idx: int):
     variations = set()
     example_shown = False
     with open(src_path, 'r') as fr:
-        i = -1
-        for line in fr:
-            i += 1
+        for i, line in enumerate(fr):
             if i % 1000000 == 0:
                 logging.getLogger(__name__).info(f'Processed {i} lines')
             if line.strip().startswith('<'):  # skip lines with xml tags

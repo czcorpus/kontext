@@ -27,10 +27,6 @@ To see the format of the "corplist.xml" file please
 see default_corparch/resources/corplist.rng.
 
 """
-try:
-    from markdown import markdown
-except ImportError:
-    def markdown(s): return s
 import smtplib
 from email.mime.text import MIMEText
 import time
@@ -38,6 +34,8 @@ import logging
 from collections import defaultdict
 import os
 from sanic import Blueprint
+from action.krequest import KRequest
+from action.response import KResponse
 from plugin_types.integration_db import IntegrationDatabase
 
 
@@ -51,7 +49,6 @@ from plugins.mysql_corparch.backend import Backend
 from action.errors import ForbiddenException
 from action.decorators import http_action
 from action.model.authorized import UserActionModel
-from util import as_async
 
 bp = Blueprint('ucnk_corparch3')
 
@@ -81,14 +78,14 @@ class UcnkCorpusInfo(CorpusInfo):
 
 @bp.route('/get_favorite_corpora')
 @http_action(return_type='json', access_level=1, action_model=UserActionModel)
-def get_favorite_corpora(amodel, req, resp):
+async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
+        return await ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
 
 
 @bp.route('/ask_corpus_access', methods=['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
-async def ask_corpus_access(amodel, req, resp):
+async def ask_corpus_access(amodel: UserActionModel, req: KRequest, resp: KResponse):
     ans = {}
     with plugins.runtime.CORPARCH as ca:
         if amodel.plugin_ctx.user_is_anonymous:
@@ -204,7 +201,7 @@ class UcnkCorpArch3(MySQLCorparch):
         return UcnkCorpusInfo()
 
     def export_actions(self):
-        return {actions.user.User: [ask_corpus_access, get_favorite_corpora]}
+        return bp
 
     def on_soft_reset(self):
         num_items = len(self._corpus_info_cache)

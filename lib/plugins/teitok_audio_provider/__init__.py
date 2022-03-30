@@ -46,16 +46,20 @@ An alternative to that would be using a custom CRON script.
 
 from typing import Optional
 import os
-import settings
 import logging
-from plugin_types.audio_provider import AbstractAudioProvider
-from plugins import inject
 import time
+
+import aiofiles
+import aiofiles.os
 import sox
 try:
     import numpy as np
 except ImportError:
     np = None
+
+from plugin_types.audio_provider import AbstractAudioProvider
+from plugins import inject
+import settings
 
 
 class TeitokAudioProvider(AbstractAudioProvider):
@@ -67,30 +71,30 @@ class TeitokAudioProvider(AbstractAudioProvider):
                 'Numpy not installed - the get_waveform function will be disabled')
 
     @staticmethod
-    def _create_audio_file_path(corpname: str, chunk: str) -> Optional[str]:
+    async def _create_audio_file_path(corpname: str, chunk: str) -> Optional[str]:
         rpath = os.path.realpath(os.path.join(
             settings.get('corpora', 'speech_files_path'), corpname, chunk
         ))
         # check correct base path for security measures
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
-        if os.path.isfile(rpath) and rpath.startswith(basepath):
+        if await aiofiles.os.path.isfile(rpath) and rpath.startswith(basepath):
             return rpath
         return None
 
-    def _mk_subchunk_path(self, corpname, name, ext, start, end):
+    async def _mk_subchunk_path(self, corpname, name, ext, start, end):
         corp_dir = os.path.join(self._audio_cache_path, corpname)
-        if not os.path.isdir(corp_dir):
-            os.mkdir(corp_dir)
+        if not await aiofiles.os.path.isdir(corp_dir):
+            await aiofiles.os.mkdir(corp_dir)
         return os.path.join(corp_dir, f'{name}.trimmed.{start}-{end}{ext}')
 
-    def _get_chunk_slice(self, corpname: str, chunk: str, start: float, end: Optional[float]) -> Optional[str]:
-        orig_path = self._create_audio_file_path(corpname, chunk)
+    async def _get_chunk_slice(self, corpname: str, chunk: str, start: float, end: Optional[float]) -> Optional[str]:
+        orig_path = await self._create_audio_file_path(corpname, chunk)
         if orig_path is None:
             return None
         if start or end:
             name, ext = os.path.splitext(os.path.basename(chunk))
-            rpath = self._mk_subchunk_path(corpname, name, ext, start, end)
-            if not os.path.isfile(rpath):
+            rpath = await self._mk_subchunk_path(corpname, name, ext, start, end)
+            if not await aiofiles.os.path.isfile(rpath):
                 tfm = sox.Transformer()
                 tfm.trim(start, end)
                 tfm.build(input_filepath=orig_path, output_filepath=rpath)
@@ -98,20 +102,20 @@ class TeitokAudioProvider(AbstractAudioProvider):
         else:
             return orig_path
 
-    def get_audio(self, plugin_ctx, req):
+    async def get_audio(self, plugin_ctx, req):
         chunk = req.args.get('chunk', '')
         start = float(req.args.get('start', '0'))
         end = req.args.get('end', None)
         end = None if end is None else float(end)
 
-        audio_path = self._get_chunk_slice(
+        audio_path = await self._get_chunk_slice(
             plugin_ctx.current_corpus.corpname, chunk, start, end)
         if audio_path is None:
             plugin_ctx.set_not_found()
             return {}, None
 
-        with open(audio_path, 'rb') as f:
-            file_size = os.path.getsize(audio_path)
+        async with aiofiles.open(audio_path, 'rb') as f:
+            file_size = await aiofiles.os.path.getsize(audio_path)
             headers = {
                 'Content-Type': 'audio/mpeg',
                 'Content-Length': f'{file_size}',
@@ -119,9 +123,9 @@ class TeitokAudioProvider(AbstractAudioProvider):
             }
             if req.headers.get('range'):
                 headers['Content-Range'] = f'bytes 0-{file_size - 1}/{file_size - 1}'
-            return headers, f.read()
+            return headers, await f.read()
 
-    def get_waveform(self, plugin_ctx, req):
+    async def get_waveform(self, plugin_ctx, req):
         if np is None:
             return None
         chunk = req.args.get('chunk', '')
@@ -129,7 +133,7 @@ class TeitokAudioProvider(AbstractAudioProvider):
         end = req.args.get('end', None)
         end = None if end is None else float(end)
 
-        audio_path = self._get_chunk_slice(
+        audio_path = await self._get_chunk_slice(
             plugin_ctx.current_corpus.corpname, chunk, start, end)
         if audio_path is None:
             plugin_ctx.set_not_found()

@@ -76,14 +76,14 @@ UD_KEYS = {  # taken from `universaldependencies.org` specification
 
 class KeyvalSelectionFetcher(AbstractValueSelectionFetcher):
 
-    def fetch(self, request):
+    async def fetch(self, request):
         # using startswith, because some features can be layered using [], like `Gender[psor]`
 
         filters = defaultdict(list)
         # sort filter values by category into lists
-        for key, value in request.args.items(multi=True):
+        for key, values in request.args.items():
             if any(key.startswith(ud_key) for ud_key in UD_KEYS):
-                filters[key].append(value)
+                filters[key].extend(values)
 
         # we don't want it to be defaultdict anymore so it can raise KeyError
         return dict(filters)

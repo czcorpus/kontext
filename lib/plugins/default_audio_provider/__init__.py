@@ -18,11 +18,11 @@
 
 from typing import Optional
 import os
-import settings
 import re
 import logging
-from plugin_types.audio_provider import AbstractAudioProvider
-from plugins import inject
+
+import aiofiles
+import aiofiles.os
 try:
     import sox
 except ImportError:
@@ -31,6 +31,10 @@ try:
     import numpy as np
 except ImportError:
     np = None
+
+from plugin_types.audio_provider import AbstractAudioProvider
+from plugins import inject
+import settings
 
 
 class DefaultAudioProvider(AbstractAudioProvider):
@@ -44,13 +48,13 @@ class DefaultAudioProvider(AbstractAudioProvider):
                 'Numpy not installed - the get_waveform function will be disabled')
 
     @staticmethod
-    def _create_audio_file_path(corpname: str, chunk: str) -> Optional[str]:
+    async def _create_audio_file_path(corpname: str, chunk: str) -> Optional[str]:
         rpath = os.path.realpath(os.path.join(
             settings.get('corpora', 'speech_files_path'), corpname, chunk
         ))
         # check correct base path for security measures
         basepath = os.path.realpath(settings.get('corpora', 'speech_files_path'))
-        if os.path.isfile(rpath) and rpath.startswith(basepath):
+        if await aiofiles.os.path.isfile(rpath) and rpath.startswith(basepath):
             return rpath
 
         return None
@@ -74,32 +78,32 @@ class DefaultAudioProvider(AbstractAudioProvider):
             logging.getLogger(__name__).warning(f'Invalid value for HTTP header Range: {rng}')
         return lft, rgt
 
-    def get_audio(self, plugin_ctx, req):
-        rpath = self._create_audio_file_path(
+    async def get_audio(self, plugin_ctx, req):
+        rpath = await self._create_audio_file_path(
             plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
         if rpath is None:
             plugin_ctx.set_not_found()
             return {}, None
+        file_size = await aiofiles.os.path.getsize(rpath)
         headers = {
             'Content-Type': 'audio/mpeg',
-            'Content-Length': str(os.path.getsize(rpath)),
+            'Content-Length': str(file_size),
             'Accept-Ranges': 'bytes'
         }
-        with open(rpath, 'rb') as f:
+        async with aiofiles.open(rpath, 'rb') as f:
             play_from, play_to = self._parse_range(req)
             if play_from > 0:
-                f.seek(play_from)
+                await f.seek(play_from)
 
             plugin_ctx.set_respose_status(206)
             if req.headers.get('range'):
-                headers['Content-Range'] = 'bytes 0-{}/{}'.format(
-                    os.path.getsize(rpath) - 1, os.path.getsize(rpath))
-            return headers, f.read() if not play_to else f.read(play_to - play_from)
+                headers['Content-Range'] = f'bytes 0-{file_size-1}/{file_size}'
+            return headers, await f.read() if not play_to else await f.read(play_to - play_from)
 
-    def get_waveform(self, plugin_ctx, req):
+    async def get_waveform(self, plugin_ctx, req):
         if sox is None or np is None:
             return None
-        rpath = self._create_audio_file_path(
+        rpath = await self._create_audio_file_path(
             plugin_ctx.current_corpus.corpname, req.args.get('chunk', ''))
         if rpath is None:
             plugin_ctx.set_not_found()

@@ -2,6 +2,7 @@ from dataclasses import fields
 import hashlib
 import os
 import time
+import aiofiles.os
 from sanic import Sanic
 from action.model.base import BaseActionModel, BasePluginCtx
 from action.krequest import KRequest
@@ -375,7 +376,7 @@ class UserActionModel(BaseActionModel):
         result['footer_bar'] = None
         result['footer_bar_css'] = None
         with plugins.runtime.FOOTER_BAR as fb:
-            result['footer_bar'] = fb.get_contents(self.plugin_ctx, self.return_url)
+            result['footer_bar'] = await fb.get_contents(self.plugin_ctx, self.return_url)
             result['footer_bar_css'] = fb.get_css_url()
 
         avail_languages = settings.get_full('global', 'translations')
@@ -418,18 +419,18 @@ class UserActionModel(BaseActionModel):
             return []
         return self.cm.subcorp_names(corpname)
 
-    def prepare_subc_path(self, corpname: str, subcname: str, publish: bool) -> str:
+    async def prepare_subc_path(self, corpname: str, subcname: str, publish: bool) -> str:
         if publish:
             code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
                 'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
             path = os.path.join(self.subcpath[1], corpname)
-            if not os.path.isdir(path):
-                os.makedirs(path)
+            if not await aiofiles.os.path.isdir(path):
+                await aiofiles.os.makedirs(path)
             return os.path.join(path, code) + '.subc'
         else:
             path = os.path.join(self.subcpath[0], corpname)
-            if not os.path.isdir(path):
-                os.makedirs(path)
+            if not await aiofiles.os.path.isdir(path):
+                await aiofiles.os.makedirs(path)
             return os.path.join(path, subcname) + '.subc'
 
     @staticmethod

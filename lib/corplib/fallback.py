@@ -117,7 +117,7 @@ class EmptyCorpus(AbstractKCorpus):
     def is_subcorpus(self):
         return False
 
-    def save_subc_description(self, desc: str):
+    async def save_subc_description(self, desc: str):
         pass
 
     def freq_precalc_file(self, attrname: str):

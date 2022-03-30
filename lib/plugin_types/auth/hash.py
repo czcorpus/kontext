@@ -1,5 +1,5 @@
 import os
-from werkzeug.security import pbkdf2_hex
+from hashlib import pbkdf2_hmac
 from base64 import b64encode
 
 
@@ -18,7 +18,7 @@ def mk_pwd_hash(data, salt, iterations, keylen, algo):
     """
     Returns a pbkdf2_hex hash of the passed data with specified parameters
     """
-    hashed = pbkdf2_hex(data, salt, iterations, keylen, algo)
+    hashed = pbkdf2_hmac(algo, data, salt, iterations, keylen).hex()
     return algo + "$" + salt + ":" + str(iterations) + "$" + hashed
 
 

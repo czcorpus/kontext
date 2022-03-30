@@ -37,7 +37,6 @@ import plugins
 from action.plugin.ctx import PluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
-from util import as_async
 
 
 class TextTypeCollector:

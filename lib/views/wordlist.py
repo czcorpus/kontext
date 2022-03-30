@@ -85,7 +85,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     rev = bool(int(req.args.get('reverse', '1')))
     page = int(req.args.get('wlpage', '1'))
     offset = (page - 1) * amodel.args.wlpagesize
-    total, data = require_existing_wordlist(
+    total, data = await require_existing_wordlist(
         form=amodel._curr_wlform_args, reverse=rev, offset=offset,
         limit=amodel.args.wlpagesize, wlsort=wlsort,
         collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
@@ -178,7 +178,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     if form_args.to_line is None:
         form_args.to_line = amodel.corp.size
     num_lines = form_args.to_line - form_args.from_line + 1
-    total, data = require_existing_wordlist(
+    total, data = await require_existing_wordlist(
         form=amodel._curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
         wlsort='', collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
     saved_filename = form_args.corpname
@@ -196,7 +196,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                     heading=form_args.heading)
     elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
         def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
-        writer: AbstractExport = plugins.runtime.EXPORT.instance.load_plugin(
+        writer = plugins.runtime.EXPORT.instance.load_plugin(
             form_args.saveformat, subtype='wordlist', translate=req.translate)
         writer.set_col_types(int, str, float)
 
@@ -213,10 +213,8 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                 'pattern': amodel._curr_wlform_args.wlpat
             })
 
-        i = 1
-        for item in data:
+        for i, item in enumerate(data, 1):
             writer.writerow(i, (item[0], str(item[1])))
-            i += 1
         return writer.raw_content()
     return None
 
@@ -233,4 +231,4 @@ async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
             tr = worker.AsyncResult(t)
             if tr.status == 'FAILURE':
                 raise BgCalcError(f'Task {t} failed')
-    return {'status': freq_calc.build_arf_db_status(amodel.corp, req.args.get('attrname', ''))}
+    return {'status': await freq_calc.build_arf_db_status(amodel.corp, req.args.get('attrname', ''))}
