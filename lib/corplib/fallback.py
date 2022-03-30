@@ -37,6 +37,10 @@ class EmptyCorpus(AbstractKCorpus):
         return self._corpname
 
     @property
+    def human_readable_corpname(self):
+        return self._corpname
+
+    @property
     def spath(self):
         return None
 
