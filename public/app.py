@@ -174,9 +174,10 @@ def get_locale(request: Request) -> str:
     """
     cookies = KonTextCookie(request.headers.get('cookie', ''))
 
-    if plugins.runtime.GETLANG.exists:
-        lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
-    else:
+    try:
+        with plugins.runtime.GETLANG as getlang:
+            lgs_string = getlang.fetch_current_language(cookies)
+    except plugins.PluginNotInstalled:
         lang_cookie = cookies.get('kontext_ui_lang')
         if not lang_cookie:
             langs = request.headers.get('accept-language')
@@ -193,6 +194,7 @@ def get_locale(request: Request) -> str:
                 lgs_string)  # TODO replace by application ctx?
         else:
             lgs_string = lgs_string.replace('-', '_')
+
     if lgs_string is None:
         lgs_string = 'en_US'
     return lgs_string

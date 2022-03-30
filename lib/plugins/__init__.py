@@ -62,6 +62,10 @@ T = TypeVar('T')
 _plugins: Dict[str, Any] = {}
 
 
+class PluginNotInstalled(Exception):
+    pass
+
+
 class _ID(Generic[T]):
     """
     A wrapper class used to represent a plug-in as
@@ -90,6 +94,14 @@ class _ID(Generic[T]):
             return _plugins[self._ident]
         return None
 
+    def __enter__(self) -> T:
+        if _has_plugin(self._ident):
+            return self.instance
+        raise PluginNotInstalled(f'Plugin {self._ident} was not installed!')
+
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
+        return exc_type is AttributeError
+
     @property
     def is_optional(self) -> bool:
         return self._optional
@@ -100,15 +112,6 @@ class _ID(Generic[T]):
 
     def force_module(self, mod: ModuleType):
         self._forced_module = mod
-
-    def __enter__(self) -> Optional[T]:
-        if _has_plugin(self._ident):
-            return self.instance
-        return None
-
-    def __exit__(self, type, value, traceback) -> bool:
-        # we ignore accessing plugins which are not installed
-        return self.instance is None and type is AttributeError
 
     @property
     def name(self) -> str:
