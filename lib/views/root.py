@@ -1,13 +1,12 @@
 from typing import Dict, Any
 from sanic import Blueprint
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException, CorpusForbiddenException
+from action.errors import FunctionNotSupported, ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.authorized import UserActionModel
 from action.response import KResponse
 
 import settings
-import plugins
 import bgcalc
 
 
@@ -68,36 +67,7 @@ async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KRespon
     return await _check_tasks_status(amodel, req, resp)
 
 
-@bp.exception(CorpusForbiddenException, Exception)
-@bp.route('/message')
-@http_action(page_model='message', template='message.html', action_model=UserActionModel)
-async def message(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    # TODO kwargs... replace with mapped args
-    kw['last_used_corp'] = dict(corpname=None, human_corpname=None)
-    if amodel.cm:
-        with plugins.runtime.QUERY_HISTORY as qh:
-            queries = await qh.get_user_queries(amodel.session_get('user', 'id'), amodel.cm, limit=1, translate=req.translate)
-            if len(queries) > 0:
-                kw['last_used_corp'] = dict(
-                    corpname=queries[0].get('corpname', None),
-                    human_corpname=queries[0].get('human_corpname', None))
-    kw['popup_server_messages'] = False
-    return kw
-
-
-@bp.route('/message_json')
-@http_action(return_type='json')
-async def message_json(amodel, req, resp):
-    return await message(amodel, req, resp)
-
-
-@bp.route('/message_xml')
-@http_action(return_type='xml')
-async def message_xml(amodel, req, resp):
-    return await message(amodel, req, resp)
-
-
 @bp.route('/compatibility')
-@http_action(template='compatibility.html')
+@http_action(action_model=UserActionModel, template='compatibility.html')
 async def compatibility(amodel, req, resp):
-    return {}
+    return {'_version': (None, None)}

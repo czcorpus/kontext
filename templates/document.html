@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <link href='{{ font }}' rel='stylesheet' type='text/css'>
 {%- endfor -%}
 
-<link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/common.css{{ deployment_suff }}" />
 <link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/{{ page_model }}.css{{ deployment_suff }}" />
 {% for item in app_bar_css %}
 <link rel="stylesheet" type="text/css" href="{{ item.url }}" />
@@ -42,6 +41,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 <noscript>
     <link rel="stylesheet" type="text/css" href="{{ files_path }}/css/main-menu.css" />
 </noscript>
+{% block tpl_style %}
+{% endblock %}
 <script type="text/javascript">
 if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=function(s){return''+s}},DateTimeFormat:function(){this.format=function(s){return s.toString()}},PluralRules:function(){this.select=function(s){return'one'}},Collator:function(){this.compare=function(a,b){return a.localeCompare(b)}}}}
 </script>
