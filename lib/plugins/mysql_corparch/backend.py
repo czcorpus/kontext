@@ -41,21 +41,28 @@ DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
 DFLT_USER_ACC_TABLE = 'kontext_user_access'
 DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
+DFLT_PARALLEL_CORP_TABLE = 'kontext_parallel_corpus'
+DFLT_GROUP_PC_ACC_TABLE = 'kontext_group_pc_access'
+DFLT_USER_PC_ACC_TABLE = 'kontext_user_pc_access'
 
 
 class Backend(DatabaseBackend):
 
     def __init__(
-            self,
-            db: MySQLOps,
-            user_table: str = DFLT_USER_TABLE,
-            corp_table: str = DFLT_CORP_TABLE,
-            corp_id_attr: str = DFLT_CORP_ID_ATTR,
-            group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-            group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,
-            group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
-            user_acc_table: str = DFLT_USER_ACC_TABLE,
-            user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR):
+        self,
+        db: MySQLOps,
+        user_table: str = DFLT_USER_TABLE,
+        corp_table: str = DFLT_CORP_TABLE,
+        corp_id_attr: str = DFLT_CORP_ID_ATTR,
+        group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+        group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,
+        group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+        user_acc_table: str = DFLT_USER_ACC_TABLE,
+        user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
+        parallel_corp_table: str = DFLT_PARALLEL_CORP_TABLE,
+        group_pc_acc_table: str = DFLT_GROUP_PC_ACC_TABLE,
+        user_pc_acc_table: str = DFLT_USER_PC_ACC_TABLE,
+    ):
         self._db = db
         self._user_table = user_table
         self._corp_table = corp_table
@@ -65,6 +72,9 @@ class Backend(DatabaseBackend):
         self._user_acc_corp_attr = user_acc_corp_attr
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
+        self._parallel_corp_table = parallel_corp_table
+        self._group_pc_acc_table = group_pc_acc_table
+        self._user_pc_acc_table = user_pc_acc_table
 
     async def contains_corpus(self, corpus_id: str) -> bool:
         async with self._db.cursor() as cursor:
@@ -95,7 +105,7 @@ class Backend(DatabaseBackend):
         if len(corp_ids) == 0:
             return {}
         placeholders = ', '.join(['%s'] * len(corp_ids))
-        col = 'description_{0}'.format(user_lang[:2])
+        col = f'description_{user_lang[:2]}'
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'SELECT name AS corpname, {col} AS contents '
@@ -146,21 +156,15 @@ class Backend(DatabaseBackend):
             for substr in substrs:
                 where_cond1.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
+                values_cond1.extend(4 * [f'%{substr}%'])
                 where_cond2.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
+                values_cond2.extend(4 * [f'%{substr}%'])
         if keywords is not None and len(keywords) > 0:
-            where_cond1.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
-            where_cond2.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond1.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
+            where_cond2.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
             for keyword in keywords:
                 values_cond1.append(keyword)
                 values_cond2.append(keyword)
@@ -250,7 +254,7 @@ class Backend(DatabaseBackend):
             return await cursor.fetchall()
 
     async def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
-        desc_col = 'c.description_{0}'.format(user_lang[:2])
+        desc_col = f'c.description_{user_lang[:2]}'
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
@@ -261,8 +265,8 @@ class Backend(DatabaseBackend):
             return await cursor.fetchall()
 
     async def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
-        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(REG_COLS_MAP.items())] +
-                ['rv.{0} AS {1}'.format(v, k) for k, v in list(REG_VAR_COLS_MAP.items())])
+        cols = ([f'rc.{v} AS {k}' for k, v in REG_COLS_MAP.items()] +
+                [f'rv.{v} AS {k}' for k, v in REG_VAR_COLS_MAP.items()])
         if variant:
             sql = (
                 'SELECT {0} FROM registry_conf AS rc '
@@ -281,7 +285,7 @@ class Backend(DatabaseBackend):
 
     async def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
-            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(POS_COLS_MAP.items())]))
+            ', '.join(['name', 'position'] + [f'`{v}` AS `{k}`' for k, v in POS_COLS_MAP.items()]))
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (corpus_id,))
             return await cursor.fetchall()
@@ -306,8 +310,7 @@ class Backend(DatabaseBackend):
             return [row['id'] async for row in cursor]
 
     async def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
-        cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
-                           for k, v in list(STRUCT_COLS_MAP.items())]
+        cols = ['name'] + [f'`{v}` AS `{k}`' for k, v in STRUCT_COLS_MAP.items()]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (corpus_id,))
@@ -319,11 +322,11 @@ class Backend(DatabaseBackend):
                 sql = (
                     'SELECT {0}, dt_format, structure_name, name '
                     'FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s').format(
-                        ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+                        ', '.join(['name'] + [f'`{v}` AS `{k}`' for k, v in SATTR_COLS_MAP.items()]))
                 await cursor.execute(sql, (corpus_id, structure_id))
             else:
                 sql = 'SELECT {0}, dt_format, structure_name, name FROM corpus_structattr WHERE corpus_name = %s'.format(
-                    ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+                    ', '.join(['name'] + [f'`{v}` AS `{k}`' for k, v in SATTR_COLS_MAP.items()]))
                 await cursor.execute(sql, (corpus_id,))
             return await cursor.fetchall()
 
