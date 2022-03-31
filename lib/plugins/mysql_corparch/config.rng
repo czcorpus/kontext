@@ -27,14 +27,6 @@
             <optional>
                 <externalRef href="../common/mysql.rng" />
             </optional>
-            <optional>
-                <element name="enable_parallel_acc">
-                    <choice>
-                        <value>false</value>
-                        <value>true</value>
-                    </choice>
-                </element>
-            </optional>
         </element>
     </start>
 </grammar>

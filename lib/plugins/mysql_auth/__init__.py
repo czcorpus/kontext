@@ -146,8 +146,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
         async with self.db.cursor() as cursor:
             await cursor.execute(
                 'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-                'FROM '
-                '  (SELECT c.name, gr.limited '
+                'FROM ('
+                '   SELECT c.name, gr.limited '
                 '   FROM kontext_corpus AS c '
                 '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
                 '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
@@ -156,9 +156,22 @@ class MysqlAuthHandler(AbstractInternalAuth):
                 '   SELECT c.name, ucr.limited '
                 '   FROM kontext_corpus AS c '
                 '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-                '   WHERE ucr.user_id = %s AND c.name = %s) AS guaccess '
+                '   WHERE ucr.user_id = %s AND c.name = %s '
+                '   UNION '
+                '   SELECT c.name, gr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_group_pc_access AS gr ON gr.parallel_corpus_id = c.parallel_corpus_id '
+                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+                '   WHERE ku.id = %s AND c.name = %s '
+                '   UNION '
+                '   SELECT c.name, ucr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_user_pc_access AS ucr ON c.parallel_corpus_id = ucr.parallel_corpus_id '
+                '   WHERE ucr.user_id = %s AND c.name = %s '
+                ') AS guaccess '
                 'GROUP BY guaccess.name',
-                (user_dict['id'], corpus_name, user_dict['id'], corpus_name))
+                4 * (user_dict['id'], corpus_name)
+            )
             row = await cursor.fetchone()
         if row is not None:
             return False, True, self._variant_prefix(corpus_name)
@@ -168,8 +181,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
         async with self.db.cursor() as cursor:
             await cursor.execute(
                 'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
-                'FROM '
-                '  (SELECT c.name, gr.limited '
+                'FROM ('
+                '   SELECT c.name, gr.limited '
                 '   FROM kontext_corpus AS c '
                 '     JOIN kontext_group_access AS gr ON gr.corpus_name = c.name '
                 '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
@@ -178,9 +191,22 @@ class MysqlAuthHandler(AbstractInternalAuth):
                 '   SELECT c.name, ucr.limited '
                 '   FROM kontext_corpus AS c '
                 '     JOIN kontext_user_access AS ucr ON  c.name = ucr.corpus_name '
-                '   WHERE ucr.user_id = %s) AS guaccess '
+                '   WHERE ucr.user_id = %s '
+                '   UNION '
+                '   SELECT c.name, gr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_group_pc_access AS gr ON gr.parallel_corpus_id = c.parallel_corpus_id '
+                '     JOIN kontext_user AS ku ON ku.group_access = gr.group_access '
+                '   WHERE ku.id = %s '
+                '   UNION '
+                '   SELECT c.name, ucr.limited '
+                '   FROM kontext_corpus AS c '
+                '     JOIN kontext_user_pc_access AS ucr ON c.parallel_corpus_id = ucr.parallel_corpus_id '
+                '   WHERE ucr.user_id = %s '
+                ') AS guaccess '
                 'GROUP BY guaccess.name',
-                (user_dict['id'], user_dict['id']))
+                4 * (user_dict['id'],)
+            )
             corpora = [row['name'] async for row in cursor]
             if IMPLICIT_CORPUS not in corpora:
                 corpora.append(IMPLICIT_CORPUS)
