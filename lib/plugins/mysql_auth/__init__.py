@@ -67,7 +67,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
             smtp_server,
             mail_sender,
             confirmation_token_ttl,
-            on_register_get_corpora):
+            on_register_get_corpora,
+    ):
         """
         """
         super().__init__(anonymous_user_id)

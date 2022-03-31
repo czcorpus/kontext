@@ -73,9 +73,12 @@ class Backend(DatabaseBackend):
             group_pc_acc_pc_attr: str = DFLT_GROUP_PC_ACC_PC_ATTR,
             group_pc_acc_group_attr: str = DFLT_GROUP_PC_ACC_GROUP_ATTR,
             user_pc_acc_table: str = DFLT_USER_PC_ACC_TABLE,
-            user_pc_acc_pc_attr: str = DFLT_USER_PC_ACC_PC_ATTR):
+            user_pc_acc_pc_attr: str = DFLT_USER_PC_ACC_PC_ATTR,
+            enable_parallel_acc: bool = False):
 
         self._db = db
+        self._enable_parallel_acc = enable_parallel_acc
+
         self._user_table = user_table
         self._corp_table = corp_table
         self._corp_id_attr = corp_id_attr
@@ -139,8 +142,9 @@ class Backend(DatabaseBackend):
             )
         '''
 
-    def _total_access_query(self, parallel=False) -> str:
-        if parallel:
+    @property
+    def _total_access_query(self) -> str:
+        if self._enable_parallel_acc:
             return f'{self._corpus_access_query} UNION {self._parallel_access_query}'
         return self._corpus_access_query
 
@@ -302,7 +306,7 @@ class Backend(DatabaseBackend):
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'JOIN ('
-            f' {self._total_access_query()} '
+            f' {self._total_access_query} '
             f') AS kcu ON c.{self._corp_id_attr} = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
@@ -418,7 +422,7 @@ class Backend(DatabaseBackend):
         cursor.execute(
             'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
-            f' {self._total_access_query()} '
+            f' {self._total_access_query} '
             ') as ucp '
             f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
             'ORDER BY ucp.limited LIMIT 1',
@@ -433,7 +437,7 @@ class Backend(DatabaseBackend):
         cursor.execute(
             'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
-            f' {self._total_access_query()} '
+            f' {self._total_access_query} '
             ') as ucp '
             f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
         return [r['corpus_id'] for r in cursor.fetchall()]
