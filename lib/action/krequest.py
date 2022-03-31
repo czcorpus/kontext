@@ -152,6 +152,14 @@ class KRequest(Generic[M_args]):
         prefix, action = self._request.server_path.rsplit('/', 1)
         return prefix.rsplit('/', 1)[-1], action
 
+    def get_protocol(self):
+        if 'HTTP_X_FORWARDED_PROTO' in self._request.headers:
+            return self._request.headers['HTTP_X_FORWARDED_PROTO']
+        elif 'HTTP_X_FORWARDED_PROTOCOL' in self._request.headers:
+            return self._request.headers['HTTP_X_FORWARDED_PROTOCOL']
+        else:
+            return self._request.scheme
+
     def get_root_url(self) -> str:
         """
         Returns the root URL of the application (based on environmental variables). All the action module
@@ -164,7 +172,7 @@ class KRequest(Generic[M_args]):
         """
         host_items = self._request.host.split(':')
         port_str = f':{host_items[1]}' if len(host_items) > 1 else ''
-        return f'{self._request.scheme}://{host_items[0]}{port_str}{self._app_prefix}/'
+        return f'{self.get_protocol()}://{host_items[0]}{port_str}{self._app_prefix}/'
 
     def updated_current_url(self, params: Dict[str, Any]) -> str:
         """

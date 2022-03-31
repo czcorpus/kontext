@@ -108,14 +108,15 @@ class CentralAuth(AbstractRemoteAuth):
         return f'user:{user_id}'
 
     def _create_session(self) -> aiohttp.ClientSession:
+        timeout = aiohttp.ClientTimeout(total=self._auth_conf.toolbar_server_timeout)
         if self._ssl_context is not None:
             return aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
-                timeout=self._auth_conf.toolbar_server_timeout,
+                timeout=timeout,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
             )
         return aiohttp.ClientSession(
-            timeout=self._auth_conf.toolbar_server_timeout,
+            timeout=timeout,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
         )
 
@@ -186,10 +187,10 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
                 plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
-    def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
+    async def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return CorpusAccess(False, True, '')
-        _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
+        _, access, variant = await self._db.corpus_access(user_dict['id'], corpus_name)
         return CorpusAccess(False, access, variant)
 
     async def permitted_corpora(self, user_dict):

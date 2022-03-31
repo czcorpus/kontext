@@ -137,7 +137,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
     def _variant_prefix(corpname):
         return corpname.rsplit('/', 1)[0] if '/' in corpname else ''
 
-    def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
+    async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
         corpora = self.db.get(mk_list_key(user_dict['id']), [])

@@ -189,7 +189,7 @@ class CentralAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
                 plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
-    def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
+    async def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return CorpusAccess(False, True, '')
         _, access, variant = self._db.corpus_access(user_dict['id'], corpus_name)
