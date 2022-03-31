@@ -243,7 +243,7 @@ class CorpusActionModel(UserActionModel):
                     raise AlignedCorpusForbiddenException(al_corp, al_variant)
             return corpname, variant
 
-    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+    async def pre_dispatch(self, req_args):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
@@ -611,8 +611,8 @@ class CorpusActionModel(UserActionModel):
         curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
-        subcorp_list = l10n.sort(self.user_subc_names(corpname),
-                                 loc=self.ui_lang, key=lambda x: x['n'])
+        subcorp_list = l10n.sort(
+            self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:

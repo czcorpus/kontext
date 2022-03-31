@@ -16,9 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, TYPE_CHECKING, List
+from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, List
 from types import ModuleType
-from inspect import iscoroutine
 from secure_cookie.session import Session
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.integration_db import IntegrationDatabase
@@ -47,10 +46,8 @@ from plugin_types.kwic_connect import AbstractKwicConnect
 from plugin_types.query_suggest import AbstractQuerySuggest
 from plugin_types.action_log import AbstractActionLog
 from plugin_types.audio_provider import AbstractAudioProvider
-# this is to fix cyclic imports when running the app caused by typing
-if TYPE_CHECKING:
-    from plugin_types.auth import AbstractAuth
-    from action.plugin.ctx import AbstractUserPluginCtx
+from plugin_types.auth import AbstractAuth
+from action.plugin.ctx import AbstractUserPluginCtx
 
 import logging
 

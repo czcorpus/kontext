@@ -32,6 +32,10 @@ from action.model.tools import apply_theme
 
 
 class PageConstructor:
+    """
+    PageConstructor is a minimal action model as seen from the "output result"
+    perspective.
+    """
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         pass
@@ -41,6 +45,10 @@ class PageConstructor:
 
 
 class BaseActionModel(PageConstructor):
+    """
+    BaseActionModel provides a bare minimum for what is needed from an action model.
+    Please note that in most cases, you will need some extended implementation.
+    """
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
@@ -61,10 +69,6 @@ class BaseActionModel(PageConstructor):
         # menu items - they should not be handled directly
         self._dynamic_menu_items: List[AbstractMenuItem] = []
         self._plugin_ctx: Optional[BasePluginCtx] = None
-
-    @property
-    def ui_lang(self):
-        return self._req.ui_lang
 
     @property
     def dynamic_menu_items(self):
@@ -105,7 +109,7 @@ class BaseActionModel(PageConstructor):
                                                      :6]) if deployment_id else ''
         result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
         result['user_id'] = self._req.session_get('user', 'id')
-        result['locale'] = self.ui_lang
+        result['locale'] = self._req.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
         result['use_conc_toolbar'] = False
@@ -123,7 +127,7 @@ class BaseActionModel(PageConstructor):
 
     async def pre_dispatch(
             self,
-            args_proxy: Union[RequestArgsProxy, JSONRequestArgsProxy]
+            args_proxy: Union[None, RequestArgsProxy, JSONRequestArgsProxy]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         if 'format' in self._req.args:
             if self._is_valid_return_type(self._req.args.get('format')):

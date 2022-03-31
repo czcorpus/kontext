@@ -108,7 +108,7 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
         attrs = self.corp.get_posattrs()
         return 'lemma' if 'lemma' in attrs else attrs[0]
 
-    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+    async def pre_dispatch(self, req_args):
         ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'pquery':
