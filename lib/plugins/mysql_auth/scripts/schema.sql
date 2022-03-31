@@ -40,7 +40,7 @@ CREATE TABLE kontext_group_pc_access (
   parallel_corpus_id int(11) NOT NULL,
   group_access varchar(63) NOT NULL,
   limited tinyint(1) NOT NULL,
-  PRIMARY KEY (corplist_id, parallel_corpus_id),
+  PRIMARY KEY (parallel_corpus_id, group_access),
   KEY corplist_parallel_corpus_fk_parallel_corpus_id (parallel_corpus_id),
   CONSTRAINT corplist_parallel_corpus_fk_parallel_corpus_id FOREIGN KEY (parallel_corpus_id) REFERENCES kontext_parallel_corpus (id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
