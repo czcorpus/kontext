@@ -1,6 +1,7 @@
-# Copyright (c) 2017 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
-# Copyright (c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2017 Charles University, Faculty of Arts,
+#                   Institute of the Czech National Corpus
+# Copyright(c) 2017 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,6 +13,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
 from typing import Any, List, Tuple, Dict
 import re
 from dataclasses import dataclass, field
@@ -19,7 +25,7 @@ from dataclasses_json import dataclass_json
 
 import plugins
 from plugin_types.corparch.corpus import TagsetInfo
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from action.argmapping.error import ArgumentMappingError, ValidationError
 from action.argmapping.conc.base import ConcFormArgs
 from .query import QueryFormArgs
@@ -53,12 +59,12 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
     form arguments represented by the _FilterFormArgs data class.
     """
     @classmethod
-    async def create(cls, plugin_ctx: PluginCtx, maincorp: str, persist: bool) -> 'FilterFormArgs':
+    async def create(cls, plugin_ctx: AbstractCorpusPluginCtx, maincorp: str, persist: bool) -> 'FilterFormArgs':
         self = FilterFormArgs(plugin_ctx, maincorp, persist)
         await self._add_corpus_metadata()
         return self
 
-    def __init__(self, plugin_ctx: PluginCtx, maincorp: str, persist: bool) -> None:
+    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, maincorp: str, persist: bool) -> None:
         super().__init__(persist)
         self._plugin_ctx = plugin_ctx
         self.data = _FilterFormArgs(
@@ -151,7 +157,7 @@ class ContextFilterArgsConv:
     form arguments into the regular filter ones.
     """
 
-    def __init__(self, plugin_ctx: PluginCtx, args: QueryFormArgs) -> None:
+    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, args: QueryFormArgs) -> None:
         self.plugin_ctx = plugin_ctx
         self.args = args
 
@@ -185,7 +191,7 @@ class ContextFilterArgsConv:
 
 class QuickFilterArgsConv:
 
-    def __init__(self, plugin_ctx: PluginCtx, args) -> None:  # TODO args type ???
+    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, args) -> None:  # TODO args type ???
         self.args = args
         self.plugin_ctx = plugin_ctx
 

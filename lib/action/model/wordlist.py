@@ -1,6 +1,7 @@
 # Copyright (c) 2013 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,33 +13,24 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, Optional, List, Tuple, Union
 
+from typing import Dict, Any, Optional
 from sanic import Sanic
 
-from main_menu.model import MainMenu
-from texttypes.model import TextTypesCache, TextTypeCollector
+from texttypes.model import TextTypesCache
 import plugins
-import conclib
-from conclib.common import KConc
-from conclib.search import get_conc
-from strings import re_escape
-from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from action.argmapping import ConcArgsMapping, WordlistArgsMapping
-from action.argmapping.conc import build_conc_form_args
 from action.argmapping.wordlist import WordlistFormArgs
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
-from action.errors import ImmediateRedirectException, UserActionException
+from action.errors import UserActionException
 import settings
-
 
 
 class WordlistError(UserActionException):
     pass
-
 
 
 class WordlistActionModel(CorpusActionModel):

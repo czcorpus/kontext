@@ -1,4 +1,7 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -9,6 +12,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
+
 
 from typing import Any, Dict
 import os
@@ -39,7 +43,8 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 
 @bp.route('/create', ['POST'])
-@http_action(access_level=1, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)
+@http_action(
+    access_level=1, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)
 async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
         return await amodel.create_subcorpus()
@@ -196,7 +201,7 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         raise UserActionException('Not a subcorpus')
     ans = dict(
         corpusId=amodel.corp.corpname,
-        corpusName=amodel.corp.human_readable_corpname(),
+        corpusName=amodel.corp.human_readable_corpname,
         subCorpusName=amodel.corp.subcname,
         origSubCorpusName=amodel.corp.orig_subcname,
         corpusSize=amodel.corp.size,
@@ -272,8 +277,7 @@ async def list_published(amodel: UserActionModel, req: KRequest, resp: KResponse
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit', '20'))
     if len(query) >= min_query_size:
-        subclist = await list_public_subcorpora(amodel.subcpath[-1], value_prefix=query,
-                                                offset=offset, limit=limit)
+        subclist = list_public_subcorpora(amodel.subcpath[-1], value_prefix=query, offset=offset, limit=limit)
     else:
         subclist = []
     return dict(data=subclist, min_query_size=min_query_size)

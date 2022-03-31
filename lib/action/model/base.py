@@ -28,7 +28,6 @@ import l10n
 import settings
 from sanic import Sanic
 from sanic_session import Session
-from action.model.tools import apply_theme
 
 
 class PageConstructor:
@@ -102,8 +101,6 @@ class BaseActionModel(PageConstructor):
         result['use_conc_toolbar'] = False
         result['shuffle_min_result_warning'] = 0
         result['multilevel_freq_dist_max_levels'] = 0
-        apply_theme(result, app, settings.get(
-            'global', 'static_files_prefix', '../files'), self._req.translate)
         page_model = action_props.page_model if action_props.page_model else l10n.camelize(
             action_props.action_name)
         result['page_model'] = page_model

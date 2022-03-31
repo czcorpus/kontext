@@ -22,6 +22,7 @@ from typing import Dict, Any, Optional, List, Tuple, Union
 from action.argmapping.conc.query import ConcFormArgs
 from collections import defaultdict
 import re
+import urllib.parse
 
 from action import ActionProps
 from main_menu.model import MainMenu
@@ -583,7 +584,7 @@ class ConcActionModel(CorpusActionModel):
                 opid=opid,
                 arg=a,
                 nicearg=nicearg(a),
-                tourl=self.urlencode(u2),
+                tourl=urllib.parse.urlencode(u2),
                 size=s))
 
         return out_list

@@ -147,5 +147,14 @@ class AbstractCorpusPluginCtx(AbstractUserPluginCtx, abc.ABC):
         pass
 
 
+class AbstractPqueryPluginCtx(AbstractCorpusPluginCtx, abc.ABC):
+    pass
+
+
+class AbstractWordlistPluginCtx(AbstractCorpusPluginCtx, abc.ABC):
+    pass
+
+
 class PluginCtx(AbstractCorpusPluginCtx, abc.ABC):
     pass
+

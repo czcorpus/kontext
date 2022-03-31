@@ -37,7 +37,7 @@ import inspect
 from main_menu import MainMenu, generate_main_menu
 import settings
 import corplib
-import plugins  # note - plugins are stateful
+import plugins
 
 
 class UserActionModel(BaseActionModel):

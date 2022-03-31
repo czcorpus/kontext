@@ -1,6 +1,7 @@
-# Copyright(c) 2022 Charles University, Faculty of Arts,
+# Copyright(c) 2013 Charles University, Faculty of Arts,
 #                   Institute of the Czech National Corpus
-# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright(c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,8 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Optional, List, Tuple, Union
-from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
+from typing import Dict, Any, Optional, List, Tuple
 
 import plugins
 from action import ActionProps
@@ -28,12 +28,13 @@ from action.argmapping.conc.filter import FilterFormArgs
 from action.argmapping.pquery import PqueryFormArgs
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.errors import UserActionException
+from action.plugin.ctx import AbstractPqueryPluginCtx
 from main_menu.model import EventTriggeringItem, MainMenu
 from texttypes.model import TextTypesCache
 import settings
 
 
-class PQueryPluginCtx(CorpusPluginCtx):
+class PQueryPluginCtx(CorpusPluginCtx, AbstractPqueryPluginCtx):
     pass
 
 
@@ -151,10 +152,16 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
                     MainMenu.SAVE, label, event_name, hint=hint).add_args(('saveformat', save_format)))
 
     def add_save_menu(self):
-        self._add_save_menu_item('CSV', save_format='csv',
-                                 hint=self._req.translate(f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
-        self._add_save_menu_item('XLSX', save_format='xlsx',
-                                 hint=self._req.translate(f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
-        self._add_save_menu_item('XML', save_format='xml',
-                                 hint=self._req.translate(f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(
+            'CSV', save_format='csv',
+            hint=self._req.translate(
+                f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(
+            'XLSX', save_format='xlsx',
+            hint=self._req.translate(
+                f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
+        self._add_save_menu_item(
+            'XML', save_format='xml',
+            hint=self._req.translate(
+                f'Saves at most {self.PQUERY_QUICK_SAVE_MAX_LINES} items. Use "Custom" for more options.'))
         self._add_save_menu_item(self._req.translate('Custom'))

@@ -1,3 +1,18 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 import collections
 from dataclasses import fields
 from sanic import Blueprint
@@ -15,8 +30,9 @@ import settings
 bp = Blueprint('options', url_prefix='options')
 
 
-def _set_new_viewopts(amodel: UserActionModel, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
-                      fmaxitems=0, fdefault_view='charts', citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
+def _set_new_viewopts(
+        amodel: UserActionModel, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
+        fmaxitems=0, fdefault_view='charts', citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
     amodel.args.pagesize = pagesize
     if ctxunit == '@pos':
         ctxunit = ''
@@ -56,7 +72,7 @@ async def viewattrs(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     out = {}
     if amodel.args.maincorp:
-        corp = await amodel.cm.get_corpus(amodel.args.maincorp, translate=req.translate)
+        corp = amodel.cm.get_corpus(amodel.args.maincorp, translate=req.translate)
     else:
         corp = amodel.corp
     out['AttrList'] = [

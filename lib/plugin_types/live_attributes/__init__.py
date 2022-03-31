@@ -21,9 +21,9 @@ from typing import Dict, List, NamedTuple, Optional, Union, Any
 from functools import wraps
 from hashlib import md5
 
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from plugin_types import CorpusDependentPlugin
-from corplib.corpus import KCorpus
+from corplib.corpus import AbstractKCorpus
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from plugin_types.general_storage import KeyValueStorage
@@ -58,7 +58,7 @@ class AttrValuesResponse:
 class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
-    async def is_enabled_for(self, plugin_ctx: PluginCtx, corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: AbstractCorpusPluginCtx, corpora: List[str]) -> bool:
         """
         Return True if live attributes are enabled for selected corpora
         else return False. The 'corpora' list can be also empty - in such
@@ -67,7 +67,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
     async def get_attr_values(
-            self, plugin_ctx: PluginCtx, corpus: KCorpus, attr_map: Dict[str, str],
+            self, plugin_ctx: AbstractCorpusPluginCtx, corpus: AbstractKCorpus, attr_map: Dict[str, str],
             aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
             limit_lists: bool = True) -> AttrValuesResponse:
         """
@@ -88,7 +88,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    async def get_subc_size(self, plugin_ctx: PluginCtx, corpora: List[str], attr_map: Dict[str, str]) -> int:
+    async def get_subc_size(
+            self, plugin_ctx: AbstractCorpusPluginCtx, corpora: List[str], attr_map: Dict[str, str]) -> int:
         """
         Return a size (in tokens) of a subcorpus defined by selected attributes
 
@@ -98,7 +99,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    async def get_supported_structures(self, plugin_ctx: PluginCtx, corpname: str) -> List[str]:
+    async def get_supported_structures(self, plugin_ctx: AbstractCorpusPluginCtx, corpname: str) -> List[str]:
         """
         Return a list of structure names the plug-in
         and its data support for the 'corpname' corpus.
@@ -112,13 +113,18 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    async def get_bibliography(self, plugin_ctx: PluginCtx, corpus: KCorpus, item_id: str) -> List[StructAttrValuePair]:
+    async def get_bibliography(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus: AbstractKCorpus,
+            item_id: str) -> List[StructAttrValuePair]:
         """
         Returns a list of 2-tuples (attr_name, attr_value).
         """
 
     @abc.abstractmethod
-    async def find_bib_titles(self, plugin_ctx: PluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
+    async def find_bib_titles(
+            self, plugin_ctx: AbstractCorpusPluginCtx, corpus_id: str, id_list: List[str]) -> List[BibTitle]:
         """
         For a list of bibliography item IDs (= typically unique document IDs)
         find respective titles.
@@ -128,7 +134,8 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
         """
 
     @abc.abstractmethod
-    async def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+    async def fill_attrs(
+            self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         """
         For a structattr and its values find values structattrs specified in fill list
 
@@ -160,7 +167,9 @@ def cached(f):
     time.
     """
     @wraps(f)
-    async def wrapper(self: CachedLiveAttributes, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+    async def wrapper(
+            self: CachedLiveAttributes, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None,
+            limit_lists=True):
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
                                    autocomplete_attr, limit_lists)
@@ -176,7 +185,7 @@ def cached(f):
     return wrapper
 
 
-class CachedLiveAttributes(AbstractLiveAttributes):
+class CachedLiveAttributes(AbstractLiveAttributes, abc.ABC):
 
     def __init__(self, db: KeyValueStorage):
         self._kvdb = db

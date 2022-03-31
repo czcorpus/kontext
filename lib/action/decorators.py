@@ -20,6 +20,7 @@ from typing import Optional, Union, Callable, Any, Type, Coroutine, List
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
+from action.theme import apply_theme
 from action.krequest import KRequest
 from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
@@ -33,6 +34,7 @@ async def _output_result(
         action_model: PageConstructor,
         action_props: ActionProps,
         tpl_engine: TplEngine,
+        translate: Callable[[str], str],
         result: ResultType,
         status: int,
         return_type: str) -> Union[str, bytes]:
@@ -65,6 +67,7 @@ async def _output_result(
         return result
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
+        apply_theme(result, app, translate)
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
     raise RuntimeError(
@@ -234,6 +237,7 @@ def http_action(
                     action_model=amodel,
                     action_props=aprops,
                     tpl_engine=application.ctx.templating,
+                    translate=req.translate,
                     result=ans,
                     status=resp.http_status_code,
                     return_type=aprops.return_type),

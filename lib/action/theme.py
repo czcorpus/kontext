@@ -1,10 +1,25 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+
 from typing import Callable
 import os
 from sanic import Sanic
 import settings
 
 
-def apply_theme(data, app: Sanic, public_files_path: str, translate: Callable[[str], str]):
+def apply_theme(data, app: Sanic, translate: Callable[[str], str]):
     theme_name = settings.get('theme', 'name')
     logo_img = settings.get('theme', 'logo')
     if settings.contains('theme', 'logo_mouseover'):
@@ -22,6 +37,7 @@ def apply_theme(data, app: Sanic, public_files_path: str, translate: Callable[[s
     else:
         logo_title = str(logo_href)
 
+    public_files_path = app.config['static_files_prefix']
     theme_favicon = settings.get('theme', 'favicon', None)
     theme_favicon_type = settings.get('theme', 'favicon_type', None)
     if (theme_favicon and not (theme_favicon.startswith('/') or theme_favicon.startswith('http://') or

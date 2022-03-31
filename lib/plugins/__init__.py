@@ -16,8 +16,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+"""
+The "plugins" module contains runtime instances of the installed plugins.
+This means that the module is stateful and shared between all the possible
+coroutines within a single process.
+"""
+
 from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, List
 from types import ModuleType
+import logging
 from secure_cookie.session import Session
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.integration_db import IntegrationDatabase
@@ -49,7 +56,6 @@ from plugin_types.audio_provider import AbstractAudioProvider
 from plugin_types.auth import AbstractAuth
 from action.plugin.ctx import AbstractUserPluginCtx
 
-import logging
 
 T = TypeVar('T')
 
