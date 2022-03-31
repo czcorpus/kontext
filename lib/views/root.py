@@ -5,7 +5,7 @@ import aiofiles
 from action.decorators import http_action
 from action.errors import FunctionNotSupported, ImmediateRedirectException, NotFoundException
 from action.krequest import KRequest
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.response import KResponse
 
 import settings

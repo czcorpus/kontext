@@ -20,10 +20,10 @@ import abc
 from typing import Dict, Any, List, Callable, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from action.plugin.ctx import PluginCtx
+    from action.plugin.ctx import AbstractUserPluginCtx
 
 
-class IssueReportingAction(object):
+class IssueReportingAction:
 
     def to_dict(self) -> Dict[Any, Any]:
         return self.__dict__
@@ -47,8 +47,8 @@ class StaticReportingAction(IssueReportingAction):
 
 class AbstractIssueReporting(abc.ABC):
 
-    def export_report_action(self, plugin_ctx: 'PluginCtx') -> Dict[Any, List[Callable[[Any], Any]]]:
+    def export_report_action(self, plugin_ctx: 'AbstractUserPluginCtx') -> IssueReportingAction:
         pass
 
-    async def submit(self, plugin_ctx: 'PluginCtx', args: Dict[str, str]):
+    async def submit(self, plugin_ctx: 'AbstractUserPluginCtx', args: Dict[str, str]):
         pass

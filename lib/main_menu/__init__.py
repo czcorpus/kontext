@@ -19,9 +19,9 @@
 from dataclasses import fields, Field
 from typing import Tuple, Dict, Any, Optional, Callable, List, Union
 
-from action.argmapping import Args
+from action.argmapping import MinArgs
 import plugins
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractUserPluginCtx
 from .model import OutData, MainMenu, MainMenuItemId, AbstractMenuItem
 from .submenus import (
     NewQuery, Corpora, Save, ConcordanceDefault, ConcordancePquery, Filter, Frequency, Collocations, View, Help)
@@ -29,11 +29,11 @@ from .submenus import (
 
 def generate_main_menu(
     tpl_data: Dict[str, Any],
-    args: Args,
+    args: MinArgs,
     disabled_items: Union[List[MainMenuItemId], Tuple[MainMenuItemId, ...]],
     dynamic_items: List[AbstractMenuItem],
     corpus_dependent: bool,
-    plugin_ctx: PluginCtx,
+    plugin_ctx: AbstractUserPluginCtx,
 ):
     """
     Generate main menu data based

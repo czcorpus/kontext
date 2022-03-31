@@ -15,7 +15,7 @@ import logging
 from sanic import Blueprint
 
 from action.errors import UserActionException, ImmediateRedirectException
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.decorators import http_action
 import plugins
 from plugin_types.auth import SignUpNeedsUpdateException

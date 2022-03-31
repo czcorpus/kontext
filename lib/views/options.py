@@ -1,21 +1,21 @@
 import collections
-
+from dataclasses import fields
 from sanic import Blueprint
 
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.response import KResponse
-from action.model.authorized import GeneralOptionsActionModel, UserActionModel
+from action.model.user import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.model.concordance import ConcActionModel
-from action.argmapping import WidectxArgsMapping
+from action.argmapping import WidectxArgsMapping, GeneralOptionsArgs
 import settings
 
 
 bp = Blueprint('options', url_prefix='options')
 
 
-def _set_new_viewopts(amodel: GeneralOptionsActionModel, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
+def _set_new_viewopts(amodel: UserActionModel, pagesize=0, newctxsize=0, ctxunit='', line_numbers=False, shuffle=False, wlpagesize=0,
                       fmaxitems=0, fdefault_view='charts', citemsperpage=0, pqueryitemsperpage=0, rich_query_editor=False):
     amodel.args.pagesize = pagesize
     if ctxunit == '@pos':
@@ -148,8 +148,8 @@ async def viewattrsx(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/viewopts')
-@http_action(return_type='json', action_model=GeneralOptionsActionModel)
-async def viewopts(amodel: GeneralOptionsActionModel, req: KRequest, resp: KResponse):
+@http_action(return_type='json', action_model=UserActionModel)
+async def viewopts(amodel: UserActionModel, req: KRequest, resp: KResponse):
     return dict(
         pagesize=amodel.args.pagesize,
         newctxsize=amodel.args.kwicleftctx[1:],
@@ -166,8 +166,8 @@ async def viewopts(amodel: GeneralOptionsActionModel, req: KRequest, resp: KResp
 
 
 @bp.route('/viewoptsx', ['POST'])
-@http_action(return_type='json', action_model=GeneralOptionsActionModel)
-async def viewoptsx(amodel: GeneralOptionsActionModel, req: KRequest, resp: KResponse):
+@http_action(return_type='json', action_model=UserActionModel)
+async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
     _set_new_viewopts(
         amodel,
         pagesize=req.json.get('pagesize'),
@@ -182,7 +182,8 @@ async def viewoptsx(amodel: GeneralOptionsActionModel, req: KRequest, resp: KRes
         pqueryitemsperpage=req.json.get('pqueryitemsperpage'),
         rich_query_editor=req.json.get('rich_query_editor')
     )
-    amodel.save_options()
+    amodel.save_options(
+        optlist=[field.name for field in fields(GeneralOptionsArgs)])
     return {}
 
 

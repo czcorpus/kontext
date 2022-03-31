@@ -27,7 +27,7 @@ from plugin_types.user_items import AbstractUserItems, UserItemException, Favori
 from plugins import inject
 import plugins
 from action.decorators import http_action
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 
 
 bp = Blueprint('mysql_user_items')

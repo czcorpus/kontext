@@ -120,7 +120,7 @@ from sanic import Blueprint
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.response import KResponse
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 
 try:
     from markdown import markdown

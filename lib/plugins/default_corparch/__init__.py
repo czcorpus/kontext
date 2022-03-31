@@ -46,7 +46,7 @@ import aiofiles.os
 from sanic import Blueprint
 
 from action.decorators import http_action
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.krequest import KRequest
 from action.response import KResponse
 import plugins

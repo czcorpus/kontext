@@ -1,6 +1,7 @@
 # Copyright (c) 2013 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +22,7 @@ from action.krequest import KRequest
 from action.response import KResponse
 from action.cookie import KonTextCookie
 from action.plugin.ctx import AbstractBasePluginCtx
-from main_menu.model import AbstractMenuItem
+from main_menu.model import AbstractMenuItem, MainMenuItemId
 from texttypes.cache import TextTypesCache
 import l10n
 import settings
@@ -56,7 +57,7 @@ class BaseActionModel(PageConstructor):
         self._action_props: ActionProps = action_props
         self._system_messages: List[Tuple[str, str]] = []
         self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
-        self.disabled_menu_items: Tuple[str, ...] = ()
+        self.disabled_menu_items: Tuple[MainMenuItemId, ...] = ()
         # menu items - they should not be handled directly
         self._dynamic_menu_items: List[AbstractMenuItem] = []
         self._plugin_ctx: Optional[BasePluginCtx] = None

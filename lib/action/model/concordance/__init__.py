@@ -1,6 +1,7 @@
 # Copyright(c) 2016 Charles University, Faculty of Arts,
 #                   Institute of the Czech National Corpus
-# Copyright(c) 2016 Tomas Machalek <tomas.machalek @ gmail.com>
+# Copyright(c) 2016 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,10 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""
-This module contains a functionality related to
-extended, re-editable query processing.
-"""
 import os
 from typing import Dict, Any, Optional, List, Tuple, Union
 from action.argmapping.conc.query import ConcFormArgs
@@ -51,11 +48,10 @@ import settings
 
 class ConcActionModel(CorpusActionModel):
     """
-    A controller for actions which rely on
-    query input form (either directly or indirectly).
-    It introduces a concept of a 'query pipeline' which
-    is in fact a series of stored form arguments chained
-    by 'prev_id' reference (i.e. a reversed list).
+    ConcActionModel contains general logic for dealing with
+    a concordance. Based on provided URL arguments (or form ones),
+    it always tries to instantiate required corpus and a concordance
+    (both typically identified by a concordance ID (q=~[hash])
     """
     CONC_QUICK_SAVE_MAX_LINES = 10000
     FREQ_QUICK_SAVE_MAX_LINES = 10000
@@ -122,24 +118,6 @@ class ConcActionModel(CorpusActionModel):
                             curr_posattrs=self.corp.get_posattrs())
                     return qf_args
         return None
-
-    def acknowledge_auto_generated_conc_op(self, q_idx: int, query_form_args: ConcFormArgs) -> None:
-        """
-        In some cases KonText may automatically (either
-        based on user's settings or for an internal reason)
-        append user-editable (which is a different situation
-        compared e.g. with aligned corpora where there are
-        also auto-added "q" elements but this is hidden from
-        user) operations right after the initial query.
-
-        To be able to chain these operations and offer
-        a way to edit them, KonText must store them too.
-
-        Arguments:
-        q_idx -- defines where the added operation resides within the q list
-        query_form_args -- ConcFormArgs instance
-        """
-        self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
     def add_conc_form_args(self, item: ConcFormArgs) -> None:
         """
@@ -247,6 +225,11 @@ class ConcActionModel(CorpusActionModel):
         self._auto_generated_conc_ops.append((q_idx, query_form_args))
 
     async def post_dispatch(self, action_props, result, err_desc):
+        """
+        post_dispatch calls its descendant first and then
+        it stores actual concordance parameters and updates
+        action result accordingly
+        """
         await super().post_dispatch(action_props, result, err_desc)
         # create and store concordance query key
         if type(result) is dict:

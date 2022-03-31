@@ -16,7 +16,7 @@ from typing import List, Union
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json, LetterCase
 from action.errors import ForbiddenException
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.decorators import http_action
 from sanic import Blueprint

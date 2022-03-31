@@ -68,7 +68,7 @@ from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInf
 from plugin_types.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
 from action.plugin.ctx import PluginCtx
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.decorators import http_action
 
 bp = Blueprint('tree_corparch')
