@@ -85,7 +85,7 @@ class StaticAuth(AbstractRemoteAuth):
     def is_administrator(self, user_id):
         return False
 
-    def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
+    async def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
         zone = self._find_user(user_dict['id'])
         if zone is None:
             return False, False, []
