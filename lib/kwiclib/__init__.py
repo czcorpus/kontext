@@ -27,7 +27,7 @@ import manatee
 from structures import FixedDict
 from conclib.empty import InitialConc
 from conclib.common import KConc
-from kwiclib_common import tokens2strclass, SortCritType, lngrp_sortcrit
+from kwiclib.common import tokens2strclass, SortCritType, lngrp_sortcrit
 from corplib.corpus import AbstractKCorpus
 
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]

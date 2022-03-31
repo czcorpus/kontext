@@ -17,7 +17,7 @@
 
 import unittest
 
-from kwiclib_common import tokens2strclass
+from kwiclib.common import tokens2strclass
 
 
 class Tokens2StrClassTest(unittest.TestCase):
