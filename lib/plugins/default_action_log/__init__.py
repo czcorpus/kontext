@@ -45,7 +45,7 @@ class DefaultActionLog(AbstractActionLog):
         else:
             return e[0].__class__.__name__, str(e[0]), e[1]
 
-    def collect_args(self, request, args_map, action_log_mapper, full_action_name, err_desc, proc_time):
+    def collect_args(self, request, args_map, action_log_mapper, full_action_name, err_desc):
         log_data = {'args': {}}
         if action_log_mapper:
             try:
@@ -63,8 +63,8 @@ class DefaultActionLog(AbstractActionLog):
             '%s.%%f' % settings.DEFAULT_DATETIME_FORMAT)
         log_data['action'] = full_action_name
         log_data['user_id'] = request.ctx.session.get('user', {}).get('id')
-        if proc_time is not None:
-            log_data['proc_time'] = proc_time
+        if request.current_proc_time:
+            log_data['proc_time'] = request.current_proc_time
         log_data['request'] = {
             'REMOTE_ADDR': request.remote_addr,
             'HTTP_X_FORWARDED_FOR': request.headers.get('x-forwarded-for'),

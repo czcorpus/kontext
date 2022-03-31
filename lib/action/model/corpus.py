@@ -33,7 +33,7 @@ import l10n
 from corplib.fallback import ErrorCorpus, EmptyCorpus
 from corplib.corpus import KCorpus
 from action.argmapping import ConcArgsMapping, Args
-from action import ActionProps
+from action.props import ActionProps
 from main_menu.model import MainMenu, EventTriggeringItem
 from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
 from action.errors import (
@@ -316,18 +316,6 @@ class CorpusActionModel(UserActionModel):
                 internal_message=f'Failed to fetch configuration for {info.name}')
 
         return req_args
-
-    async def post_dispatch(self, action_props, result, err_desc):
-        """
-        Runs after main action is processed but before any rendering (incl. HTTP headers)
-        """
-        with plugins.runtime.ACTION_LOG as alog:
-            alog.log_action(
-                self._req.unwrapped, self.args, action_props.action_log_mapper,
-                f'{action_props.action_prefix}{action_props.action_name}',
-                err_desc=err_desc, proc_time=self._proc_time)
-        with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
 
     def add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:

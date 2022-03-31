@@ -21,7 +21,7 @@ from plugin_types.dispatch_hook import AbstractDispatchHook
 from plugin_types.general_storage import KeyValueStorage
 from action.plugin.ctx import PluginCtx
 from action.errors import ServiceUnavailableException
-from action import ActionProps
+from action.props import ActionProps
 import plugins
 from plugins import inject
 import logging

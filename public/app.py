@@ -101,8 +101,9 @@ if settings.get('global', 'umask', None):
 
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
-application = Sanic('kontext')
+setup_logger(settings)
 
+application = Sanic('kontext')
 
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())

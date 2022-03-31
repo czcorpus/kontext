@@ -19,7 +19,7 @@ from sanic import response
 from typing import Optional, Union, Callable, Any, Type, Coroutine, List
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
-from action import ActionProps
+from action.props import ActionProps
 from action.theme import apply_theme
 from action.krequest import KRequest
 from action.response import KResponse
@@ -224,10 +224,9 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
-                if aprops.page_model:
-                    aprops.page_model = 'message'
                 if aprops.template:
                     aprops.template = 'message.html'
+                    aprops.page_model = 'message'
                 ans = await resolve_error(amodel, aprops, req, resp, ex)
                 resp.add_system_message('error', str(ex))
 
