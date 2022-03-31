@@ -384,7 +384,8 @@ def create_instance(conf, user_items, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
-        db_backend = Backend(integ_db)
+        db_backend = Backend(integ_db, enable_parallel_acc=plugin_conf.get(
+            'enable_parallel_acc', None) == 'true')
     else:
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
