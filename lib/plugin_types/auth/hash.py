@@ -14,11 +14,11 @@ def mk_pwd_hash_default(data):
     return mk_pwd_hash(data, salt, iterations, keylen, algo)
 
 
-def mk_pwd_hash(data, salt, iterations, keylen, algo):
+def mk_pwd_hash(data: str, salt: str, iterations: int, keylen: int, algo: str):
     """
     Returns a pbkdf2_hex hash of the passed data with specified parameters
     """
-    hashed = pbkdf2_hmac(algo, data, salt, iterations, keylen).hex()
+    hashed = pbkdf2_hmac(algo, data.encode(), salt.encode(), iterations, keylen).hex()
     return algo + "$" + salt + ":" + str(iterations) + "$" + hashed
 
 
