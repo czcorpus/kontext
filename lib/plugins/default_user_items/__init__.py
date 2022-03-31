@@ -90,7 +90,7 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
         return item.to_dict()
 
 
-@bp.route('/user/set_favorite_item', methods=['POST'])
+@bp.route('/user/unset_favorite_item', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
 async def unset_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.USER_ITEMS as uit:
