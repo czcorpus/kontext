@@ -87,7 +87,7 @@ async def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KRe
                 args=json.loads(req.form.get('expression'))
             )
     except ResultNotFoundException as err:
-        amodel.add_system_message('error', str(err))
+        resp.add_system_message('error', str(err))
         return {}
 
 
@@ -103,7 +103,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
     (Manatee does this).
     """
     if not req.form.get('subcname'):
-        amodel.add_system_message('error', 'Missing subcorpus name')
+        resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
         publish = bool(int(req.form.get('publish')))

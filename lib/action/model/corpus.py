@@ -382,7 +382,7 @@ class CorpusActionModel(UserActionModel):
     def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, ErrorCorpus):
             self._resp.set_http_status(404)
-            self.add_system_message('error', 'Failed to open corpus {0}'.format(
+            self._resp.add_system_message('error', 'Failed to open corpus {0}'.format(
                 getattr(self.args, 'corpname')))
         else:
             self._resp.set_http_status(500)

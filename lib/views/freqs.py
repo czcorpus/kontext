@@ -6,6 +6,7 @@ from action.errors import UserActionException
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.krequest import KRequest
+from action.response import KResponse
 from collections import defaultdict
 from dataclasses import dataclass, field
 import re
@@ -315,7 +316,7 @@ async def freqtt(amodel, req: KRequest[FreqttActionArgs], resp):
     return ans
 
 
-async def _freqct(amodel: ConcActionModel, req: KRequest):
+async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     args = freq_calc.Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=getattr(amodel.corp, 'subcname', None),
@@ -329,7 +330,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest):
         freq_data = freq_calc.calculate_freq2d(args)
     except UserActionException as ex:
         freq_data = dict(data=[], full_size=0)
-        amodel.add_system_message('error', str(ex))
+        resp.add_system_message('error', str(ex))
     amodel.add_save_menu_item('XLSX', save_format='xlsx')
 
     ans = dict(

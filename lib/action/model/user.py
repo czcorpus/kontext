@@ -201,7 +201,7 @@ class UserActionModel(BaseActionModel):
                         try:
                             ans = fn(*(), **action, translate=self._req.translate)
                             if 'message' in ans:
-                                self.add_system_message('message', ans['message'])
+                                self._resp.add_system_message('message', ans['message'])
                             continue
                         except Exception as e:
                             logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
@@ -276,7 +276,7 @@ class UserActionModel(BaseActionModel):
                 except Exception as ex:
                     self._req.ctx.session['user'] = auth.anonymous_user(self.plugin_ctx)
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                    self.add_system_message(
+                    self._resp.add_system_message(
                         'error',
                         self._req.translate(
                             'User authentication error. Please try to reload the page or '
@@ -443,7 +443,7 @@ class UserActionModel(BaseActionModel):
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
         if isinstance(result, dict):
-            result['messages'] = result.get('messages', []) + self._system_messages
+            result['messages'] = result.get('messages', []) + self._resp.system_messages
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(

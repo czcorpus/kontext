@@ -171,8 +171,9 @@ class SubcorpusActionModel(CorpusActionModel):
                                          cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
-                    self.add_system_message('warning',
-                                            self._req.translate('Subcorpus created but there was a problem saving a backup copy.'))
+                    self._resp.add_system_message(
+                        'warning',
+                        self._req.translate('Subcorpus created but there was a problem saving a backup copy.'))
             unfinished_corpora = [at for at in self.get_async_tasks(
                 category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
             return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])

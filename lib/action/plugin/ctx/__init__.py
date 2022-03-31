@@ -82,10 +82,6 @@ class AbstractBasePluginCtx(abc.ABC):
     def set_respose_status(self, status: int):
         pass
 
-    @abc.abstractmethod
-    def add_system_message(self, msg_type, text):
-        pass
-
     @property
     @abc.abstractmethod
     def cookies(self) -> KonTextCookie:

@@ -63,7 +63,6 @@ class BaseActionModel(PageConstructor):
         self._req: KRequest = req
         self._resp: KResponse = resp
         self._action_props: ActionProps = action_props
-        self._system_messages: List[Tuple[str, str]] = []
         self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
         self.disabled_menu_items: Tuple[MainMenuItemId, ...] = ()
         # menu items - they should not be handled directly
@@ -83,18 +82,6 @@ class BaseActionModel(PageConstructor):
     @staticmethod
     def _is_valid_return_type(f: str) -> bool:
         return f in ('template', 'json', 'xml', 'plain')
-
-    def add_system_message(self, msg_type: str, text: str) -> None:
-        """
-        Adds a system message which will be displayed
-        to a user. It is possible to add multiple messages
-        by repeatedly call this method.
-
-        arguments:
-        msg_type -- one of 'message', 'info', 'warning', 'error'
-        text -- text of the message
-        """
-        self._system_messages.append((msg_type, text))
 
     def init_session(self) -> None:
         pass
@@ -202,9 +189,6 @@ class BasePluginCtx(AbstractBasePluginCtx):
 
     def set_respose_status(self, status: int):
         self._response.set_http_status(status)
-
-    def add_system_message(self, msg_type, text):
-        self._action_model.add_system_message(msg_type, text)
 
     @property
     def cookies(self) -> KonTextCookie:

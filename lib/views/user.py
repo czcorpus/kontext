@@ -53,7 +53,7 @@ async def login(amodel, req, resp):
                 resp.redirect(req.create_url('query', {}))
         else:
             amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
-            amodel.add_system_message('error', req.translate('Incorrect username or password'))
+            resp.add_system_message('error', req.translate('Incorrect username or password'))
         amodel.refresh_session_id()
         return ans
 

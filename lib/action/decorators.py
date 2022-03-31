@@ -226,7 +226,7 @@ def http_action(
                 if aprops.template:
                     aprops.template = 'message.html'
                 ans = await resolve_error(amodel, aprops, req, resp, ex)
-                amodel.add_system_message('error', str(ex))
+                resp.add_system_message('error', str(ex))
 
             return HTTPResponse(
                 body=await _output_result(

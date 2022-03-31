@@ -62,7 +62,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         tt_sel = await amodel.tt.export_with_norms(subcnorm=subcnorm)
     except UserActionException as e:
         tt_sel = {'Normslist': [], 'Blocks': []}
-        amodel.add_system_message('warning', e)
+        resp.add_system_message('warning', e)
 
     out = dict(SubcorpList=())
     await amodel.attach_aligned_query_params(out)
@@ -224,12 +224,12 @@ async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRes
         subcorp_name = req.form.get('subcname')
         with plugins.runtime.SUBC_RESTORE as sr:
             await sr.delete_query(amodel.session_get('user', 'id'), corpus_id, subcorp_name)
-        amodel.add_system_message(
+        resp.add_system_message(
             'info',
             req.translate(f'Subcorpus {subcorp_name} has been deleted permanently.')
         )
     else:
-        amodel.add_system_message(
+        resp.add_system_message(
             'error',
             req.translate('Unsupported operation (plug-in not present)')
         )
