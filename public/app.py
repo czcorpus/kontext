@@ -148,7 +148,11 @@ signal.signal(signal.SIGUSR1, signal_handler)
 
 @application.listener('before_server_start')
 async def server_init(app, loop):
-    app.ctx.redis = aioredis.from_url('redis://ktm_redis_1:6379', decode_responses=True)
+    db_conf = settings.get('plugins', 'db')
+    # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
+    app.ctx.redis = aioredis.from_url(
+        f'redis://{db_conf["host"]}:{db_conf["port"]}',
+        decode_responses=True)
     # init extensions fabrics
     session.init_app(app, interface=AIORedisSessionInterface(app.ctx.redis))
 

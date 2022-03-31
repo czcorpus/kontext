@@ -144,21 +144,20 @@ class CentralAuth(AbstractRemoteAuth):
         """
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         cookie_sid = plugin_ctx.cookies[
-            self._conf.cookie_sid].value if self._conf.cookie_sid in plugin_ctx.cookies else ''
+            self._conf.cookie_sid] if self._conf.cookie_sid in plugin_ctx.cookies else ''
         cookie_at = plugin_ctx.cookies[
-            self._conf.cookie_at].value if self._conf.cookie_at in plugin_ctx.cookies else ''
+            self._conf.cookie_at] if self._conf.cookie_at in plugin_ctx.cookies else ''
         cookie_rmme = plugin_ctx.cookies[
-            self._conf.cookie_rmme].value if self._conf.cookie_rmme in plugin_ctx.cookies else '0'
+            self._conf.cookie_rmme] if self._conf.cookie_rmme in plugin_ctx.cookies else '0'
         cookie_lang = plugin_ctx.cookies[
-            self._conf.cookie_lang].value if self._conf.cookie_lang in plugin_ctx.cookies else 'en'
+            self._conf.cookie_lang] if self._conf.cookie_lang in plugin_ctx.cookies else 'en'
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
             ('rmme', cookie_rmme),
             ('lang', cookie_lang),
             ('current', 'kontext'),
-            ('continue', plugin_ctx.current_url)
-        ]
+            ('continue', plugin_ctx.current_url)]
         api_response = self._fetch_toolbar_api_response(api_args)
         response_obj = json.loads(api_response)
         plugin_ctx.set_shared('toolbar', response_obj)  # toolbar plug-in will access this
