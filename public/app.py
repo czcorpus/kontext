@@ -30,9 +30,9 @@ import signal
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
-CONF_PATH = os.getenv('KONTEXT_CONF', os.path.realpath(
-    '%s/../conf/config.xml' % os.path.dirname(__file__)))
-LOCALE_PATH = os.path.realpath('%s/../locale' % os.path.dirname(__file__))
+CONF_PATH = os.getenv(
+    'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
+LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
 
 import plugins
 import plugins.export
@@ -201,16 +201,19 @@ if __name__ == '__main__':
     DEFAULT_ADDR = '127.0.0.1'
 
     parser = argparse.ArgumentParser(description='Starts a local development server')
-    parser.add_argument('--port', dest='port_num', action=None, default=DEFAULT_PORT,
-                        help='a port the server listens on (default is %s)' % DEFAULT_PORT)
-    parser.add_argument('--address', dest='address', action=None, default=DEFAULT_ADDR,
-                        help='an address the server listens on (default is %s)' % DEFAULT_ADDR)
-    parser.add_argument('--use-reloader', action='store_true', default=False,
-                        help='Set embedded web server to watch for source code changes and reload itself if needed')
-    parser.add_argument('--debugpy', action='store_true', default=False,
-                        help='Use debugpy for debugging')
-    parser.add_argument('--debugmode', action='store_true', default=False,
-                        help='Force debug mode')
+    parser.add_argument(
+        '--port', dest='port_num', default=DEFAULT_PORT,
+        help=f'a port the server listens on (default is {DEFAULT_PORT})')
+    parser.add_argument(
+        '--address', dest='address', default=DEFAULT_ADDR,
+        help=f'an address the server listens on (default is {DEFAULT_ADDR})')
+    parser.add_argument('--workers', type=int, default=2, help='Number of worker processes')
+    parser.add_argument(
+        '--use-reloader', action='store_true', default=False,
+        help='Set embedded web server to watch for source code changes and reload itself if needed')
+    parser.add_argument(
+        '--debugpy', action='store_true', default=False, help='Use debugpy for debugging')
+    parser.add_argument('--debugmode', action='store_true', default=False, help='Force debug mode')
     args = parser.parse_args()
 
     if args.debugpy:
@@ -222,4 +225,4 @@ if __name__ == '__main__':
     if args.debugmode and not settings.is_debug_mode():
         settings.activate_debug()
     application.run(host=args.address, port=int(args.port_num),
-                    workers=2, debug=settings.is_debug_mode())
+                    workers=args.workers, debug=settings.is_debug_mode())
