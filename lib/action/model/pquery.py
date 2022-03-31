@@ -20,7 +20,7 @@
 from typing import Dict, Any, Optional, List, Tuple
 
 import plugins
-from action import ActionProps
+from action.props import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from action.argmapping.conc.query import QueryFormArgs

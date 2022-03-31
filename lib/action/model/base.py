@@ -15,7 +15,7 @@
 
 from typing import Union, Optional, List, Dict, Any, Tuple
 import hashlib
-from action import ActionProps
+from action.props import ActionProps
 from action.errors import UserActionException
 from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
 from action.krequest import KRequest

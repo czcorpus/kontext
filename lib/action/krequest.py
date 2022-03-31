@@ -21,7 +21,7 @@ from sanic.request import Request, RequestParameters
 from sanic_session import Session
 from urllib.parse import quote
 from plugin_types.auth import UserInfo
-from action import ActionProps
+import time
 from babel import Locale
 from sanic_babel import gettext, get_locale
 
@@ -39,6 +39,7 @@ class KRequest(Generic[M_args]):
         self._app_prefix = app_prefix if app_prefix else ''
         self._locale: Locale = get_locale(request)
         self._mapped_args = mapped_args
+        self._start_time = time.time()
 
     @property
     def mapped_args(self) -> M_args:
@@ -73,6 +74,10 @@ class KRequest(Generic[M_args]):
     @property
     def method(self):
         return self._request.method
+
+    @property
+    def current_proc_time(self):
+        return time.time() - self._start_time
 
     @property
     def headers(self):

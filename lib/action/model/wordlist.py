@@ -19,7 +19,7 @@ from sanic import Sanic
 
 from texttypes.model import TextTypesCache
 import plugins
-from action import ActionProps
+from action.props import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from action.argmapping import ConcArgsMapping, WordlistArgsMapping

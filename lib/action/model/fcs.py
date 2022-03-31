@@ -24,7 +24,7 @@ import math
 import kwiclib
 from corplib.corpus import KCorpus
 from conclib.search import get_conc
-from action import ActionProps
+from action.props import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
 from action.model.user import UserActionModel

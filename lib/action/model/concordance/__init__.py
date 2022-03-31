@@ -24,7 +24,7 @@ from collections import defaultdict
 import re
 import urllib.parse
 
-from action import ActionProps
+from action.props import ActionProps
 from main_menu.model import MainMenu
 from texttypes.model import TextTypesCache, TextTypeCollector
 import plugins
