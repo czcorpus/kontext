@@ -140,13 +140,13 @@ class CentralAuth(AbstractRemoteAuth):
         """
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
         cookie_sid = plugin_ctx.cookies[
-            self._auth_conf.cookie_sid].value if self._auth_conf.cookie_sid in plugin_ctx.cookies else ''
+            self._auth_conf.cookie_sid] if self._auth_conf.cookie_sid in plugin_ctx.cookies else ''
         cookie_at = plugin_ctx.cookies[
-            self._auth_conf.cookie_at].value if self._auth_conf.cookie_at in plugin_ctx.cookies else ''
+            self._auth_conf.cookie_at] if self._auth_conf.cookie_at in plugin_ctx.cookies else ''
         cookie_rmme = plugin_ctx.cookies[
-            self._auth_conf.cookie_rmme].value if self._auth_conf.cookie_rmme in plugin_ctx.cookies else '0'
+            self._auth_conf.cookie_rmme] if self._auth_conf.cookie_rmme in plugin_ctx.cookies else '0'
         cookie_lang = plugin_ctx.cookies[
-            self._auth_conf.cookie_lang].value if self._auth_conf.cookie_lang in plugin_ctx.cookies else 'en'
+            self._auth_conf.cookie_lang] if self._auth_conf.cookie_lang in plugin_ctx.cookies else 'en'
         api_args = [
             ('sid', cookie_sid),
             ('at', cookie_at),
