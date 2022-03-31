@@ -268,7 +268,7 @@ class UserActionModel(BaseActionModel):
     def _uses_internal_user_pages():
         return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
-    def init_session(self) -> None:
+    async def init_session(self) -> None:
         """
         Starts/reloads user's web session data. It can be called even
         if there is no 'sessions' plugin installed (in such case, it just
@@ -284,7 +284,7 @@ class UserActionModel(BaseActionModel):
 
             if hasattr(auth, 'revalidate'):
                 try:
-                    auth.revalidate(self.plugin_ctx)  # type: ignore
+                    await auth.revalidate(self.plugin_ctx)  # type: ignore
                 except Exception as ex:
                     self._req.ctx.session['user'] = auth.anonymous_user(self.plugin_ctx)
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)

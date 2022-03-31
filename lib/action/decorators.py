@@ -217,7 +217,7 @@ def http_action(
                 amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
 
             try:
-                amodel.init_session()
+                await amodel.init_session()
                 await amodel.pre_dispatch(None)
                 ans = await func(amodel, req, resp)
                 await amodel.post_dispatch(aprops, ans, None)  # TODO error desc

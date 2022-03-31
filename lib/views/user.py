@@ -67,7 +67,7 @@ async def login(amodel, req, resp):
 async def logoutx(amodel, req, resp):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
     plugins.runtime.AUTH.instance.logout(req.session)
-    amodel.init_session()
+    await amodel.init_session()
     amodel.refresh_session_id()
     plugins.runtime.AUTH.instance.logout_hook(amodel.plugin_ctx)
     resp.redirect(req.create_url('query', {}))

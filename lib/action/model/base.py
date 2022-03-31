@@ -82,7 +82,7 @@ class BaseActionModel(PageConstructor):
     def _is_valid_return_type(f: str) -> bool:
         return f in ('template', 'json', 'xml', 'plain')
 
-    def init_session(self) -> None:
+    async def init_session(self) -> None:
         pass
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
