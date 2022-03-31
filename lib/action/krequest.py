@@ -153,10 +153,10 @@ class KRequest(Generic[M_args]):
         return prefix.rsplit('/', 1)[-1], action
 
     def get_protocol(self):
-        if 'HTTP_X_FORWARDED_PROTO' in self._request.headers:
-            return self._request.headers['HTTP_X_FORWARDED_PROTO']
-        elif 'HTTP_X_FORWARDED_PROTOCOL' in self._request.headers:
-            return self._request.headers['HTTP_X_FORWARDED_PROTOCOL']
+        if 'x-forwarded-proto' in self._request.headers:
+            return self._request.headers['x-forwarded-proto']
+        elif 'x-forwarded-protocol' in self._request.headers:
+            return self._request.headers['x-forwarded-protocol']
         else:
             return self._request.scheme
 
