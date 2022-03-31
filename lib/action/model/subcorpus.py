@@ -1,4 +1,7 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright(c) 2015 Charles University, Faculty of Arts,
+#                   Institute of the Czech National Corpus
+# Copyright(c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -9,6 +12,10 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
 from typing import Any, List, Dict, Union
@@ -171,8 +178,9 @@ class SubcorpusActionModel(CorpusActionModel):
                                          cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
-                    self.add_system_message('warning',
-                                            self._req.translate('Subcorpus created but there was a problem saving a backup copy.'))
+                    self._resp.add_system_message(
+                        'warning',
+                        self._req.translate('Subcorpus created but there was a problem saving a backup copy.'))
             unfinished_corpora = [at for at in self.get_async_tasks(
                 category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
             return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])

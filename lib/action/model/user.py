@@ -25,8 +25,7 @@ from action.response import KResponse
 from action.argmapping import UserActionArgs
 from action.errors import UserActionException
 from action import ActionProps
-from typing import Any, Optional, Dict, List, Iterable, Tuple, Union
-from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
+from typing import Any, Optional, Dict, List, Iterable, Tuple
 from texttypes.cache import TextTypesCache
 from plugin_types.auth import UserInfo, AbstractInternalAuth
 from plugin_types import CorpusDependentPlugin
@@ -38,7 +37,7 @@ import inspect
 from main_menu import MainMenu, generate_main_menu
 import settings
 import corplib
-import plugins  # note - plugins are stateful
+import plugins
 
 
 class UserActionModel(BaseActionModel):
@@ -80,7 +79,7 @@ class UserActionModel(BaseActionModel):
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
-    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+    async def pre_dispatch(self, req_args):
         """
         pre_dispatch calls its descendant first and the it
         initializes scheduled actions, user settings, user paths
@@ -202,7 +201,7 @@ class UserActionModel(BaseActionModel):
                         try:
                             ans = fn(*(), **action, translate=self._req.translate)
                             if 'message' in ans:
-                                self.add_system_message('message', ans['message'])
+                                self._resp.add_system_message('message', ans['message'])
                             continue
                         except Exception as e:
                             logging.getLogger('SCHEDULING').error('task_id: {}, error: {} ({})'.format(
@@ -277,7 +276,7 @@ class UserActionModel(BaseActionModel):
                 except Exception as ex:
                     self._req.ctx.session['user'] = auth.anonymous_user(self.plugin_ctx)
                     logging.getLogger(__name__).error('Revalidation error: %s' % ex)
-                    self.add_system_message(
+                    self._resp.add_system_message(
                         'error',
                         self._req.translate(
                             'User authentication error. Please try to reload the page or '
@@ -410,7 +409,7 @@ class UserActionModel(BaseActionModel):
             result['footer_bar_css'] = fb.get_css_url()
 
         avail_languages = settings.get_full('global', 'translations')
-        ui_lang = self.ui_lang.replace('_', '-') if self.ui_lang else 'en-US'
+        ui_lang = self._req.ui_lang.replace('_', '-') if self._req.ui_lang else 'en-US'
         # available languages; used just by UI language switch
         result['avail_languages'] = avail_languages
         result['uiLang'] = ui_lang
@@ -428,7 +427,7 @@ class UserActionModel(BaseActionModel):
 
         # asynchronous tasks
         result['async_tasks'] = [t.to_dict() for t in self.get_async_tasks()]
-        result['help_links'] = settings.get_help_links(self.ui_lang)
+        result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')
         if 'popup_server_messages' not in result:
@@ -444,7 +443,7 @@ class UserActionModel(BaseActionModel):
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
         if isinstance(result, dict):
-            result['messages'] = result.get('messages', []) + self._system_messages
+            result['messages'] = result.get('messages', []) + self._resp.system_messages
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(

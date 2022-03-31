@@ -1,4 +1,7 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2015 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,7 +56,7 @@ async def login(amodel, req, resp):
                 resp.redirect(req.create_url('query', {}))
         else:
             amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
-            amodel.add_system_message('error', req.translate('Incorrect username or password'))
+            resp.add_system_message('error', req.translate('Incorrect username or password'))
         amodel.refresh_session_id()
         return ans
 

@@ -23,7 +23,7 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { PublicSubcorpListState, PublicSubcorpListModel, DataItem } from '../../models/subcorp/listPublic';
 import { Actions } from '../../models/subcorp/actions';
-import { List, tuple } from 'cnc-tskit';
+import { List } from 'cnc-tskit';
 
 import * as S from './style';
 
@@ -183,9 +183,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <th>{he.translate('subclist__public_code')}:</th>
                             <td>
                                 <a href={he.createActionLink(
-                                    'query', [
-                                        tuple('corpname', this.props.item.corpname),
-                                        tuple('usesubcorp', this.props.item.ident)])
+                                    'query', {
+                                        corpname: this.props.item.corpname,
+                                        usesubcorp: this.props.item.ident
+                                    })
                                 } title={he.translate('pubsubclist__use_in_query')}>
                                     {this.props.item.ident}
                                 </a>

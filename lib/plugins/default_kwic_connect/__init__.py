@@ -60,7 +60,7 @@ async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp:
     words = req.args_getlist('w')
     with plugins.runtime.CORPARCH as ca:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
-        args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, amodel.ui_lang)
+        args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, req.ui_lang)
                 for w in words]
         results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
@@ -83,7 +83,7 @@ async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: 
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
         mp = kc.map_providers(corpus_info.kwic_connect.providers)
         return dict(corpname=amodel.corp.corpname,
-                    providers=[dict(id=b.provider_id, label=f.get_heading(amodel.ui_lang)) for b, f in mp])
+                    providers=[dict(id=b.provider_id, label=f.get_heading(req.ui_lang)) for b, f in mp])
 
 
 class DefaultKwicConnect(AbstractKwicConnect):

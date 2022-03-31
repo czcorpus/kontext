@@ -28,10 +28,13 @@ import l10n
 import settings
 from sanic import Sanic
 from sanic_session import Session
-from action.model.tools import apply_theme
 
 
 class PageConstructor:
+    """
+    PageConstructor is a minimal action model as seen from the "output result"
+    perspective.
+    """
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
         pass
@@ -41,6 +44,10 @@ class PageConstructor:
 
 
 class BaseActionModel(PageConstructor):
+    """
+    BaseActionModel provides a bare minimum for what is needed from an action model.
+    Please note that in most cases, you will need some extended implementation.
+    """
 
     LOCAL_COLL_OPTIONS = ('cattr', 'cfromw', 'ctow', 'cminfreq', 'cminbgr', 'cbgrfns', 'csortfn')
 
@@ -55,16 +62,11 @@ class BaseActionModel(PageConstructor):
         self._req: KRequest = req
         self._resp: KResponse = resp
         self._action_props: ActionProps = action_props
-        self._system_messages: List[Tuple[str, str]] = []
         self._files_path: str = settings.get('global', 'static_files_prefix', '../files')
         self.disabled_menu_items: Tuple[MainMenuItemId, ...] = ()
         # menu items - they should not be handled directly
         self._dynamic_menu_items: List[AbstractMenuItem] = []
         self._plugin_ctx: Optional[BasePluginCtx] = None
-
-    @property
-    def ui_lang(self):
-        return self._req.ui_lang
 
     @property
     def dynamic_menu_items(self):
@@ -80,18 +82,6 @@ class BaseActionModel(PageConstructor):
     def _is_valid_return_type(f: str) -> bool:
         return f in ('template', 'json', 'xml', 'plain')
 
-    def add_system_message(self, msg_type: str, text: str) -> None:
-        """
-        Adds a system message which will be displayed
-        to a user. It is possible to add multiple messages
-        by repeatedly call this method.
-
-        arguments:
-        msg_type -- one of 'message', 'info', 'warning', 'error'
-        text -- text of the message
-        """
-        self._system_messages.append((msg_type, text))
-
     def init_session(self) -> None:
         pass
 
@@ -105,14 +95,12 @@ class BaseActionModel(PageConstructor):
                                                      :6]) if deployment_id else ''
         result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
         result['user_id'] = self._req.session_get('user', 'id')
-        result['locale'] = self.ui_lang
+        result['locale'] = self._req.ui_lang
         result['messages'] = []
         result['uses_corp_instance'] = False
         result['use_conc_toolbar'] = False
         result['shuffle_min_result_warning'] = 0
         result['multilevel_freq_dist_max_levels'] = 0
-        apply_theme(result, app, settings.get(
-            'global', 'static_files_prefix', '../files'), self._req.translate)
         page_model = action_props.page_model if action_props.page_model else l10n.camelize(
             action_props.action_name)
         result['page_model'] = page_model
@@ -123,7 +111,7 @@ class BaseActionModel(PageConstructor):
 
     async def pre_dispatch(
             self,
-            args_proxy: Union[RequestArgsProxy, JSONRequestArgsProxy]
+            args_proxy: Union[None, RequestArgsProxy, JSONRequestArgsProxy]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
         if 'format' in self._req.args:
             if self._is_valid_return_type(self._req.args.get('format')):
@@ -198,9 +186,6 @@ class BasePluginCtx(AbstractBasePluginCtx):
 
     def set_respose_status(self, status: int):
         self._response.set_http_status(status)
-
-    def add_system_message(self, msg_type, text):
-        self._action_model.add_system_message(msg_type, text)
 
     @property
     def cookies(self) -> KonTextCookie:

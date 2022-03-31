@@ -1,3 +1,19 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2020 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+
 import collections
 import os
 import json
@@ -211,7 +227,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     except UnknownConcordanceAction as ex:
         raise UserActionException(str(ex))
     except TypeError as ex:
-        amodel.add_system_message('error', str(ex))
+        resp.add_system_message('error', str(ex))
         logging.getLogger(__name__).error(ex)
     except (ConcordanceException, RuntimeError) as ex:
         manatee_error = extract_manatee_error(ex)
@@ -230,7 +246,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if conc.size() == 0 and conc.finished():
         msg = req.translate(
             'No result. Please make sure the query and selected query type are correct.')
-        amodel.add_system_message('info', msg)
+        resp.add_system_message('info', msg)
 
     amodel.add_save_menu_item(
         'CSV', save_format='csv',
@@ -409,11 +425,11 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                 out['next_action'] = 'dispersion'
                 out['next_action_args'] = {}
     except TypeError as ex:
-        amodel.add_system_message('error', str(ex))
+        resp.add_system_message('error', str(ex))
         logging.getLogger(__name__).error(ex)
     except ConcCacheStatusException as ex:
         if 'syntax error' in f'{ex}'.lower():
-            amodel.add_system_message(
+            resp.add_system_message(
                 'error', req.translate('Syntax error. Please check the query and its type.'))
         else:
             raise ex

@@ -1,3 +1,19 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+
 from typing import Optional, List, Tuple
 from sanic import Blueprint
 from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
@@ -315,7 +331,7 @@ async def freqtt(amodel, req: KRequest[FreqttActionArgs], resp):
     return ans
 
 
-async def _freqct(amodel: ConcActionModel, req: KRequest):
+async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     args = freq_calc.Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=getattr(amodel.corp, 'subcname', None),
@@ -329,7 +345,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest):
         freq_data = freq_calc.calculate_freq2d(args)
     except UserActionException as ex:
         freq_data = dict(data=[], full_size=0)
-        amodel.add_system_message('error', str(ex))
+        resp.add_system_message('error', str(ex))
     amodel.add_save_menu_item('XLSX', save_format='xlsx')
 
     ans = dict(

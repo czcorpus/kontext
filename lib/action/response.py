@@ -1,4 +1,4 @@
-from typing import Tuple, Iterable, Dict
+from typing import Tuple, Iterable, Dict, List
 from urllib.parse import urlparse
 from sanic.helpers import STATUS_CODES
 from action.errors import ForbiddenException
@@ -20,6 +20,23 @@ class KResponse:
         self._headers: Dict[str, str] = {'Content-Type': 'text/html'}
         self._new_cookies: KonTextCookie = KonTextCookie()
         self._cookies_same_site = cookies_same_site
+        self._system_messages: List[Tuple[str, str]] = []
+
+    def add_system_message(self, msg_type: str, text: str) -> None:
+        """
+        Adds a system message which will be displayed
+        to a user. It is possible to add multiple messages
+        by repeatedly call this method.
+
+        arguments:
+        msg_type -- one of 'message', 'info', 'warning', 'error'
+        text -- text of the message
+        """
+        self._system_messages.append((msg_type, text))
+
+    @property
+    def system_messages(self) -> List[Tuple[str, str]]:
+        return self._system_messages
 
     def set_header(self, name: str, value: str):
         self._headers[name] = value

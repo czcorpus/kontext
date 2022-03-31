@@ -31,7 +31,7 @@ a new version of 'taghelper'.
 
 import abc
 from typing import Callable, TypeVar, Generic
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from action.krequest import KRequest
 
 T = TypeVar('T')
@@ -126,7 +126,7 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
     """
 
     @abc.abstractmethod
-    async def tags_available_for(self, plugin_ctx: PluginCtx, corpus_id: str, tagset_id: str) -> bool:
+    async def tags_available_for(self, plugin_ctx: AbstractCorpusPluginCtx, corpus_id: str, tagset_id: str) -> bool:
         """
         Test whether tag variant data exist for a specified
         corpus.
@@ -136,13 +136,21 @@ class AbstractTaghelper(abc.ABC, Generic[T, U]):
         """
 
     @abc.abstractmethod
-    async def loader(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
+    async def loader(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus_name: str,
+            tagset_name: str) -> AbstractTagsetInfoLoader[T, U]:
         """
         Return a loader for the corpus_name
         """
 
     @abc.abstractmethod
-    async def fetcher(self, plugin_ctx: PluginCtx, corpus_name: str, tagset_name: str) -> AbstractValueSelectionFetcher[U]:
+    async def fetcher(
+            self,
+            plugin_ctx: AbstractCorpusPluginCtx,
+            corpus_name: str,
+            tagset_name: str) -> AbstractValueSelectionFetcher[U]:
         """
         Return a fetcher for the corpus_name
         """

@@ -34,7 +34,7 @@ from strings import escape_attr_val
 from corplib.corpus import AbstractKCorpus
 import settings
 import plugins
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
 
@@ -98,7 +98,8 @@ class TextTypesException(Exception):
 
 class TextTypes:
 
-    def __init__(self, corp: AbstractKCorpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: PluginCtx):
+    def __init__(
+            self, corp: AbstractKCorpus, corpname: str, tt_cache: TextTypesCache, plugin_ctx: AbstractCorpusPluginCtx):
         """
         arguments:
         corp --
@@ -127,7 +128,8 @@ class TextTypes:
                 subcorpattrs = self._corp.get_conf('FULLREF')
         if not subcorpattrs or subcorpattrs == '#':
             raise TextTypesException(
-                self._plugin_ctx.translate('Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
+                self._plugin_ctx.translate(
+                    'Missing display configuration of structural attributes (SUBCORPATTRS or FULLREF).'))
 
         corpus_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
             self._plugin_ctx, self._corpname)

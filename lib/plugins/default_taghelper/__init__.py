@@ -78,7 +78,7 @@ async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: 
     if await fetcher.is_empty(values_selection):
         ans = await tag_loader.get_initial_values(req.ui_lang, req.translate)
     else:
-        ans = await tag_loader.get_variant(values_selection, amodel.ui_lang, req.translate)
+        ans = await tag_loader.get_variant(values_selection, req.ui_lang, req.translate)
     return ans
 
 

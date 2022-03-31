@@ -1,3 +1,18 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
@@ -5,10 +20,11 @@ from typing import Optional, Union, Callable, Any, Type, Coroutine, List
 from functools import wraps
 from action.templating import CustomJSONEncoder, TplEngine, ResultType
 from action import ActionProps
+from action.theme import apply_theme
 from action.krequest import KRequest
 from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
-from action.errors import ImmediateRedirectException, UserActionException, NotFoundException
+from action.errors import ImmediateRedirectException, UserActionException
 from action.model.base import PageConstructor, BaseActionModel
 import json
 
@@ -18,11 +34,12 @@ async def _output_result(
         action_model: PageConstructor,
         action_props: ActionProps,
         tpl_engine: TplEngine,
+        translate: Callable[[str], str],
         result: ResultType,
         status: int,
         return_type: str) -> Union[str, bytes]:
     """
-    Renders a response body out of a provided data. The concrete form of data transformation
+    Renders a response body out of a provided data (result). The concrete form of data transformation
     depends on the combination of the 'return_type' argument and a type of the 'result'.
     Typical combinations are (ret. type, data type):
     'template' + dict
@@ -42,7 +59,6 @@ async def _output_result(
             else:
                 return json.dumps(result, cls=CustomJSONEncoder)
         except Exception as e:
-            status = 500
             return json.dumps(dict(messages=[('error', str(e))]))
     elif return_type == 'xml':
         from templating import Type2XML
@@ -51,14 +67,20 @@ async def _output_result(
         return result
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
+        apply_theme(result, app, translate)
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
     raise RuntimeError(
-        f'Unknown source ({result.__class__.__name__}) or return type ({return_type})')
+        f'Unsupported result and result_type combination: {result.__class__.__name__},  {return_type}')
 
 
 def create_mapped_args(tp: Type, req: Request):
-    # TODO handle Optional vs. default_factory etc.
+    """
+    Create an instance of a (dataclass) Type based on req arguments.
+    Please note that the Type should contain only str/List[str] and int/List[int] values.
+
+    TODO handle Optional vs. default_factory etc.
+    """
     props = tp.__annotations__
     data = {}
     for mk, mtype in props.items():
@@ -106,6 +128,10 @@ def create_mapped_args(tp: Type, req: Request):
 
 async def resolve_error(
         amodel: BaseActionModel, action_props: ActionProps, req: KRequest, resp: KResponse, err: Exception):
+    """
+    resolve_error provides a way how to finish an action with some
+    reasonable output in case the action has thrown an error.
+    """
 
     ans = {
         'last_used_corp': dict(corpname=None, human_corpname=None),
@@ -134,21 +160,30 @@ def http_action(
         return_type: str = 'template',
         action_log_mapper: Callable[[Request], Any] = False):
     """
-    This decorator allows more convenient way how to
-    set methods' attributes. Please note that there is
-    always an implicit property '__exposed__' set to True.
+    http_action decorator wraps Sanic view functions to provide more
+    convenient arguments (including important action models). KonText
+    action function has a signature:
+
+    def some_action(action_model: BaseActionModel, req: KRequest, resp: KResponse) -> ResultType
 
     arguments:
     access_level -- 0,1,... (0 = public user, 1 = logged in user)
-    template -- a Jinja2 template source path
-    vars -- deprecated; do not use
+    template -- a Jinja2 template source path (a relative path starting in the 'templates' dir)
+    action_model -- a model providing functions for handling user session (session in a general sense),
+                    accessing corpora and misc. search results
     page_model -- a JavaScript page module
     mapped_args -- any class (typically, a dataclass) request arguments will be mapped to; the class must
-                   provide
-    skip_corpus_init -- True/False (if True then all the corpus init. procedures are skipped
-    mutates_result -- store a new set of result parameters under a new key to query_peristence db
+                   provide one of the following typed arguments: int, List[int], str, List[str].
+                   All the values can be also Optional.
+    mutates_result -- If set to True, then after a respective action a configured action model is notified
+                      it should store actual result data. This is particularly important for concordance
+                      actions like filters, sorting etc. where the concordance changes based on the previous
+                      state.
     apply_semi_persist_args -- if True hen use session to initialize action args first
-    return_type -- {plain, json, template, xml}
+    return_type -- specifies how the result data should be interpreted for the client {plain, json, template, xml}.
+                   In some cases, a single result type (typically a Dict) can be transformed into multiple formats
+                   (html page, xml file, json file, plain text file) but in other cases the choice is limited
+                   (e.g. when returning some binary data, only 'plain' return_type makes sense)
     """
     def decorator(func: Callable[[BaseActionModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
         @wraps(func)
@@ -194,7 +229,7 @@ def http_action(
                 if aprops.template:
                     aprops.template = 'message.html'
                 ans = await resolve_error(amodel, aprops, req, resp, ex)
-                amodel.add_system_message('error', str(ex))
+                resp.add_system_message('error', str(ex))
 
             return HTTPResponse(
                 body=await _output_result(
@@ -202,6 +237,7 @@ def http_action(
                     action_model=amodel,
                     action_props=aprops,
                     tpl_engine=application.ctx.templating,
+                    translate=req.translate,
                     result=ans,
                     status=resp.http_status_code,
                     return_type=aprops.return_type),

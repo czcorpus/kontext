@@ -107,6 +107,7 @@ application = Sanic('kontext')
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
+application.config['static_files_prefix'] = settings.get('global', 'static_files_prefix', '../files')
 session = Session()
 
 application.blueprint(root_bp)

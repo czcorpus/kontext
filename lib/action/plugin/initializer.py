@@ -1,4 +1,6 @@
-# Copyright (c) 2015 Institute of the Czech National Corpus
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -10,10 +12,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301, USA.
 
 import logging
 from sanic import Sanic
@@ -22,7 +20,6 @@ import plugins
 import plugins.export_freq2d
 import plugins.export
 from plugins.errors import PluginException
-from types import MethodType
 
 
 def has_configured_plugin(name):
@@ -64,8 +61,8 @@ def init_plugin(name, module=None, optional=False):
                     logging.getLogger(__name__).info(f'Plug-in {plg.__class__.__name__} environment OK')
 
         except ImportError as e:
-            logging.getLogger(__name__).warning('Plugin [%s] configured but following error occurred: %r'
-                                             % (name, e))
+            logging.getLogger(__name__).warning(
+                f'Plugin [{name}] configured but the following error occurred: {e}')
         except (PluginException, Exception) as e:
             from action.errors import get_traceback
             logging.getLogger(__name__).critical('Failed to initiate plug-in %s: %s' % (name, e))

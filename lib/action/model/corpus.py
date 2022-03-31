@@ -1,6 +1,7 @@
-# Copyright (c) 2013 Charles University, Faculty of Arts,
-#                    Institute of the Czech National Corpus
-# Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2013 Charles University, Faculty of Arts,
+#                   Institute of the Czech National Corpus
+# Copyright(c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -12,12 +13,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
 from typing import Any, Optional, TypeVar, Dict, List, Tuple, Union, Iterable, Callable
 from corplib.abstract import AbstractKCorpus
 from action.argmapping.conc.query import ConcFormArgs
 from functools import partial
 from dataclasses import asdict
-import urllib
+import urllib.parse
 
 import corplib
 import plugins
@@ -35,9 +41,9 @@ from action.errors import (
     ForbiddenException)
 from action.krequest import KRequest
 from action.response import KResponse
-from action.model.base import BaseActionModel
 from action.model.user import UserActionModel, UserPluginCtx
 from texttypes.model import TextTypes, TextTypesCache
+from action.plugin.ctx import AbstractCorpusPluginCtx
 
 
 T = TypeVar('T')
@@ -45,8 +51,9 @@ T = TypeVar('T')
 
 class CorpusActionModel(UserActionModel):
     """
-    A controller.Controller extension implementing
-    KonText-specific requirements.
+    CorpusActionModel extends UserActionModel by corpus-related functionality.
+    It always tries to instantiate a corpus based on actual URL (form) arguments
+    or via some logic for inferring a default corpus.
     """
     # main menu items disabled for public users (this is applied automatically during
     # post_dispatch())
@@ -118,12 +125,6 @@ class CorpusActionModel(UserActionModel):
     async def get_corpus_info(self, corp: str) -> CorpusInfo:
         with plugins.runtime.CORPARCH as plg:
             return await plg.get_corpus_info(self.plugin_ctx, corp)
-
-    def urlencode(self, key_val_pairs: List[Tuple[str, Union[str, str, bool, int, float]]]) -> str:
-        """
-        Recodes values of key-value pairs and encodes them (by urllib.urlencode)
-        """
-        return urllib.parse.urlencode(key_val_pairs)
 
     def get_current_aligned_corpora(self) -> List[str]:
         """
@@ -243,7 +244,7 @@ class CorpusActionModel(UserActionModel):
                     raise AlignedCorpusForbiddenException(al_corp, al_variant)
             return corpname, variant
 
-    async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+    async def pre_dispatch(self, req_args):
         """
         Runs before main action is processed. The action includes
         mapping of URL/form parameters to self.args, loading user
@@ -382,7 +383,7 @@ class CorpusActionModel(UserActionModel):
     def handle_dispatch_error(self, ex: Exception):
         if isinstance(self.corp, ErrorCorpus):
             self._resp.set_http_status(404)
-            self.add_system_message('error', 'Failed to open corpus {0}'.format(
+            self._resp.add_system_message('error', 'Failed to open corpus {0}'.format(
                 getattr(self.args, 'corpname')))
         else:
             self._resp.set_http_status(500)
@@ -556,7 +557,7 @@ class CorpusActionModel(UserActionModel):
         await self._add_corpus_related_globals(result, thecorp)
         result['uses_corp_instance'] = True
 
-        result['undo_q'] = self.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
+        result['undo_q'] = urllib.parse.urlencode([('q', q) for q in getattr(self.args, 'q')[:-1]])
         result['shuffle_min_result_warning'] = settings.get_int(
             'global', 'shuffle_min_result_warning', 100000)
 
@@ -611,8 +612,8 @@ class CorpusActionModel(UserActionModel):
         curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
-        subcorp_list = l10n.sort(self.user_subc_names(corpname),
-                                 loc=self.ui_lang, key=lambda x: x['n'])
+        subcorp_list = l10n.sort(
+            self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:
@@ -669,7 +670,7 @@ class CorpusActionModel(UserActionModel):
                 tpl_out['input_languages'][al] = corp_info.collator_locale
 
 
-class CorpusPluginCtx(UserPluginCtx):
+class CorpusPluginCtx(UserPluginCtx, AbstractCorpusPluginCtx):
 
     def __init__(self, action_model: CorpusActionModel, request: KRequest, response: KResponse):
         super().__init__(action_model, request, response)

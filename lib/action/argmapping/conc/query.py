@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 
 import plugins
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx
 from action.argmapping.error import ArgumentMappingError
 from action.argmapping.conc.base import ConcFormArgs
 
@@ -64,13 +64,13 @@ class QueryFormArgs(ConcFormArgs[_QueryFormArgs]):
     """
 
     @classmethod
-    async def create(cls, plugin_ctx: PluginCtx, corpora: List[str], persist: bool) -> 'QueryFormArgs':
+    async def create(cls, plugin_ctx: AbstractCorpusPluginCtx, corpora: List[str], persist: bool) -> 'QueryFormArgs':
         self = QueryFormArgs(plugin_ctx, corpora, persist)
         for corp in corpora:
             await self._add_corpus_metadata(corp)
         return self
 
-    def __init__(self, plugin_ctx: PluginCtx, corpora: List[str], persist: bool):
+    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, corpora: List[str], persist: bool):
         super().__init__(persist)
         self._plugin_ctx = plugin_ctx
         self.data = _QueryFormArgs(
