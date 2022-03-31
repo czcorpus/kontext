@@ -46,7 +46,6 @@ DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
 DFLT_USER_ACC_TABLE = 'kontext_user_access'
 DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
-DFLT_PARALLEL_CORP_TABLE = 'kontext_parallel_corpus'
 DFLT_GROUP_PC_ACC_TABLE = 'kontext_group_pc_access'
 DFLT_GROUP_PC_ACC_PC_ATTR = 'parallel_corpus_id'
 DFLT_GROUP_PC_ACC_GROUP_ATTR = 'group_access'
@@ -68,7 +67,6 @@ class Backend(DatabaseBackend):
             group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
             user_acc_table: str = DFLT_USER_ACC_TABLE,
             user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
-            parallel_corp_table: str = DFLT_PARALLEL_CORP_TABLE,
             group_pc_acc_table: str = DFLT_GROUP_PC_ACC_TABLE,
             group_pc_acc_pc_attr: str = DFLT_GROUP_PC_ACC_PC_ATTR,
             group_pc_acc_group_attr: str = DFLT_GROUP_PC_ACC_GROUP_ATTR,
@@ -88,7 +86,6 @@ class Backend(DatabaseBackend):
         self._user_acc_corp_attr = user_acc_corp_attr
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
-        self._parallel_corp_table = parallel_corp_table
         self._group_pc_acc_table = group_pc_acc_table
         self._group_pc_acc_pc_attr = group_pc_acc_pc_attr
         self._group_pc_acc_group_attr = group_pc_acc_group_attr
@@ -106,7 +103,8 @@ class Backend(DatabaseBackend):
                 acc.limited AS limited
             FROM {self._user_acc_table} AS acc
             WHERE acc.user_id = %s
-            UNION SELECT
+            UNION
+            SELECT
                 g_acc.{self._group_acc_corp_attr} AS corpus_id,
                 g_acc.limited AS limited
             FROM {self._group_acc_table} AS g_acc
@@ -127,14 +125,15 @@ class Backend(DatabaseBackend):
                 corp.{self._corp_id_attr} AS corpus_id,
                 pc_acc.limited AS limited
             FROM {self._user_pc_acc_table} AS pc_acc
-            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = pc_acc.id
+            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = pc_acc.{self._user_pc_acc_pc_attr}
             WHERE
                 pc_acc.user_id = %s
-            UNION SELECT
-                corp.{self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id,
+            UNION
+            SELECT
+                corp.{self._corp_id_attr} AS corpus_id,
                 g_pc_acc.limited AS limited
             FROM {self._group_pc_acc_table} AS g_pc_acc
-            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.id
+            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.{self._group_pc_acc_pc_attr}
             WHERE g_pc_acc.{self._group_pc_acc_group_attr} = (
                 SELECT user.{self._group_acc_group_attr}
                 FROM {self._user_table} AS user
@@ -222,7 +221,10 @@ class Backend(DatabaseBackend):
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
         # the first item belongs to setting a special @ variable
-        values_cond2 = [user_id, user_id, 1]
+        if self._enable_parallel_acc:
+            values_cond2 = [user_id, user_id, user_id, user_id, 1]
+        else:
+            values_cond2 = [user_id, user_id, 1]
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(
