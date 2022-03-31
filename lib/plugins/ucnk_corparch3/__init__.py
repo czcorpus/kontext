@@ -49,7 +49,7 @@ from plugins.mysql_corparch.corplist import parse_query
 from plugins.mysql_corparch.backend import Backend
 from action.errors import ForbiddenException
 from action.decorators import http_action
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 
 bp = Blueprint('ucnk_corparch3')
 

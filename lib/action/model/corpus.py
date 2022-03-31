@@ -36,7 +36,7 @@ from action.errors import (
 from action.krequest import KRequest
 from action.response import KResponse
 from action.model.base import BaseActionModel
-from action.model.authorized import UserActionModel, UserPluginCtx
+from action.model.user import UserActionModel, UserPluginCtx
 from texttypes.model import TextTypes, TextTypesCache
 
 

@@ -10,7 +10,7 @@ from conclib.search import get_conc
 from action import ActionProps
 from action.krequest import KRequest
 from action.response import KResponse
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from texttypes.cache import TextTypesCache
 import plugins
 import settings

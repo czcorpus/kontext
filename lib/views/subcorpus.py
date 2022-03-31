@@ -23,7 +23,7 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.corpus import list_public_subcorpora
 from action.decorators import http_action
 from action.krequest import KRequest
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
 from action.response import KResponse

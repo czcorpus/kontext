@@ -14,7 +14,7 @@ from action.krequest import KRequest
 from action.response import KResponse
 from action.errors import NotFoundException, UserActionException
 from action.model.base import BaseActionModel
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups

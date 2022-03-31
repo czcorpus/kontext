@@ -4,7 +4,7 @@ from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormAr
 from action.decorators import http_action
 from action.errors import UserActionException
 from action.model.concordance import ConcActionModel
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.krequest import KRequest
 from collections import defaultdict
 from dataclasses import dataclass, field

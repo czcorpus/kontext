@@ -28,7 +28,7 @@ from plugins import inject
 import plugins
 from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
 from action.decorators import http_action
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 
 
 bp = Blueprint('default_issue_reporting')

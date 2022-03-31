@@ -14,7 +14,7 @@ from typing import List
 from sanic import Blueprint
 from action.decorators import http_action
 from action.krequest import KRequest
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.response import KResponse
 from action.errors import ImmediateRedirectException
 from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess

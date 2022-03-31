@@ -20,13 +20,13 @@ import abc
 from typing import Optional, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from action.plugin.ctx import PluginCtx
+    from action.plugin.ctx import AbstractUserPluginCtx
 
 
 class AbstractFootbar(abc.ABC):
 
     @abc.abstractmethod
-    async def get_contents(self, plugin_ctx: 'PluginCtx', return_url: Optional[str] = None):
+    async def get_contents(self, plugin_ctx: 'AbstractUserPluginCtx', return_url: Optional[str] = None):
         """
         arguments:
         plugin_ctx -- an instance of kontext.PluginCtx

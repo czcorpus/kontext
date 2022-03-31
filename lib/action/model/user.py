@@ -1,3 +1,18 @@
+# Copyright (c) 2013 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 from dataclasses import fields
 import hashlib
 import os
@@ -7,7 +22,7 @@ from sanic import Sanic
 from action.model.base import BaseActionModel, BasePluginCtx
 from action.krequest import KRequest
 from action.response import KResponse
-from action.argmapping import GeneralOptionsArgs, MinArgs
+from action.argmapping import UserActionArgs
 from action.errors import UserActionException
 from action import ActionProps
 from typing import Any, Optional, Dict, List, Iterable, Tuple, Union
@@ -27,6 +42,16 @@ import plugins  # note - plugins are stateful
 
 
 class UserActionModel(BaseActionModel):
+    """
+    UserActionModel represents a minimal model for any user action
+    (i.e. an action where we distinguish between anonymous
+    and authenticated user). Any more complicated action model
+    will likely inherit from this one.
+
+    The model also provides a CorpusManager instance but it
+    does not perform any implicit actions on it. It is provided
+    purely for the 'view' functions.
+    """
     USER_ACTIONS_DISABLED_ITEMS = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE, MainMenu.VIEW)
 
@@ -49,13 +74,18 @@ class UserActionModel(BaseActionModel):
         self._uses_valid_sid: bool = True
         self.return_url: Optional[str] = None
         self._plugin_ctx: Optional[UserPluginCtx] = None
-        self.args = MinArgs()
+        self.args = UserActionArgs()
         self.subcpath: List[str] = []
         # a CorpusManager instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
         self.cm: Optional[corplib.CorpusManager] = None
 
     async def pre_dispatch(self, req_args: Union[RequestArgsProxy, JSONRequestArgsProxy]):
+        """
+        pre_dispatch calls its descendant first and the it
+        initializes scheduled actions, user settings, user paths
+        and the CorpusManager.
+        """
         req_args = await super().pre_dispatch(req_args)
         with plugins.runtime.DISPATCH_HOOK as dhook:
             dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
@@ -70,7 +100,6 @@ class UserActionModel(BaseActionModel):
         try:
             options.update(self._load_general_settings())
             self.args.map_args_to_attrs(options)
-
             self._setup_user_paths()
             self.cm = corplib.CorpusManager(self.subcpath)
         except ValueError as ex:
@@ -112,7 +141,7 @@ class UserActionModel(BaseActionModel):
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
         return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
 
-    def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Union[str, None] = None):
+    def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Optional[str] = None):
         """
         Saves user's options to a storage
 
@@ -329,7 +358,8 @@ class UserActionModel(BaseActionModel):
     def set_async_tasks(self, task_list: Iterable[AsyncTaskStatus]):
         self._req.ctx.session['async_tasks'] = [at.to_dict() for at in task_list]
 
-    def mark_timeouted_tasks(self, *tasks):
+    @staticmethod
+    def mark_timeouted_tasks(*tasks):
         now = time.time()
         task_limit = settings.get_int('calc_backend', 'task_time_limit')
         for at in tasks:
@@ -500,17 +530,3 @@ class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
     @property
     def user_dict(self) -> UserInfo:
         return self._request.ctx.session.get('user', {'id': None})
-
-
-class GeneralOptionsActionModel(UserActionModel):
-
-    def __init__(
-            self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
-        self.args = GeneralOptionsArgs()
-
-    def save_options(self):
-        '''
-        Saves general options args fields as defined by GeneralOptionsArgs dataclass
-        '''
-        return super().save_options([field.name for field in fields(GeneralOptionsArgs)])

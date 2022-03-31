@@ -50,7 +50,7 @@ from plugin_types.audio_provider import AbstractAudioProvider
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from plugin_types.auth import AbstractAuth
-    from action.plugin.ctx import PluginCtx
+    from action.plugin.ctx import AbstractUserPluginCtx
 
 import logging
 
@@ -121,7 +121,7 @@ class _ID(Generic[T]):
         """
         return _plugins.get(self._ident) is not None
 
-    async def is_enabled_for(self, plugin_ctx: 'PluginCtx', corpora: List[str]) -> bool:
+    async def is_enabled_for(self, plugin_ctx: 'AbstractUserPluginCtx', corpora: List[str]) -> bool:
         """
         Returns True if the plugin exists and is enabled for a specified
         corpus or it is corpus independent (e.g. db plugin, session,...)

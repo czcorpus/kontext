@@ -26,7 +26,7 @@ import json
 from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
-from action.model.authorized import UserActionModel
+from action.model.user import UserActionModel
 from action.krequest import KRequest
 from action.plugin.ctx import PluginCtx
 from plugins.common.mysql import MySQLOps, MySQLConf

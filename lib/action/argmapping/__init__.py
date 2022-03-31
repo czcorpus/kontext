@@ -124,7 +124,12 @@ class GeneralOptionsArgs:
 
 
 @dataclass
-class Args(MinArgs, GeneralOptionsArgs):
+class UserActionArgs(GeneralOptionsArgs, MinArgs):  # note - order of parents matter here!
+    pass
+
+
+@dataclass
+class Args(UserActionArgs):
     """
     """
     @staticmethod

@@ -14,7 +14,7 @@ import abc
 from typing import Dict, Optional, Any, TYPE_CHECKING
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
-    from action.plugin.ctx import PluginCtx
+    from action.plugin.ctx import AbstractUserPluginCtx
 
 """
 All the application_bar plug-in implementations should inherit from AbstractApplicationBar
@@ -29,7 +29,7 @@ class AbstractApplicationBar(abc.ABC):
         Returns an HTML content usable as a fallback replacement for the standard content
         """
 
-    def get_styles(self, plugin_ctx: 'PluginCtx'):
+    def get_styles(self, plugin_ctx: 'AbstractUserPluginCtx'):
         """
         Returns a list of dicts {'url': ...} defining external CSS requirements KonText
         must load.
@@ -41,7 +41,7 @@ class AbstractApplicationBar(abc.ABC):
         """
         return []
 
-    def get_scripts(self, plugin_ctx: 'PluginCtx') -> Optional[Dict[str, Any]]:
+    def get_scripts(self, plugin_ctx: 'AbstractUserPluginCtx') -> Optional[Dict[str, Any]]:
         """
         Returns a dict:
             'main': ... url of the main script ...,
@@ -57,7 +57,7 @@ class AbstractApplicationBar(abc.ABC):
         return None
 
     @abc.abstractmethod
-    async def get_contents(self, plugin_ctx: 'PluginCtx', return_url: str) -> str:
+    async def get_contents(self, plugin_ctx: 'AbstractUserPluginCtx', return_url: str) -> str:
         """
         Returns standard HTML content based on set language and user identification/settings stored in cookies.
 
