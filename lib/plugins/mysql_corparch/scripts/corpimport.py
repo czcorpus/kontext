@@ -43,7 +43,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
 
-def parse_registry(infile: io.StringIO, variant: str) -> Tuple[str, RegistryConf]:
+def parse_registry(infile: io.StringIO, variant: str, wbackend: WriteBackend) -> Tuple[str, RegistryConf]:
     logging.getLogger(__name__).info(f'Parsing file {infile.name}')
     corpus_id = os.path.basename(infile.name)
     tokenize = Tokenizer(infile)
@@ -52,70 +52,71 @@ def parse_registry(infile: io.StringIO, variant: str) -> Tuple[str, RegistryConf
     return corpus_id, parse()
 
 
-async def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: Backend):
+async def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: Backend, wbackend: WriteBackend):
     """
     Perform basic comparison of defined posattrs and structattrs
     """
-    corpus_id, registry_conf = parse_registry(infile, variant)
+    corpus_id, registry_conf = parse_registry(infile, variant, wbackend)
     # posattrs
-    reg_pos = set(x.name for x in registry_conf.posattrs)
-    db_pos = set(x['name'] for x in await rbackend.load_corpus_posattrs(corpus_id))
-    if len(reg_pos - db_pos) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t registry has extra pos. attribute(s): {(reg_pos - db_pos)}')
-    elif len(db_pos - reg_pos) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t database has extra pos. attribute(s): {(db_pos - reg_pos)}')
-    # structs
-    reg_struct = set(x.name for x in registry_conf.structs)
-    db_struct = set(x['name'] for x in await rbackend.load_corpus_structures(corpus_id))
-    if len(reg_struct - db_struct) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t registry has extra structure(s): {(reg_struct - db_struct)}')
-    elif len(db_struct - reg_struct) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t database has extra structure(s): {(db_struct - reg_struct)}')
-    # structattrs
-    reg_sattr = set(f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
-    db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in await rbackend.load_corpus_structattrs(corpus_id, struct))
-    if len(reg_sattr - db_sattr) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t registry has extra structural attribute(s): {(reg_sattr - db_sattr)}')
-    elif len(db_sattr - reg_sattr) > 0:
-        print('Configuration inconsistency detected:')
-        print(f'\t database has extra structural attribute(s):: {(db_sattr - reg_sattr)}')
+    async with rbackend.cursor() as cursor:
+        reg_pos = set(x.name for x in registry_conf.posattrs)
+        db_pos = set(x['name'] for x in await rbackend.load_corpus_posattrs(cursor, corpus_id))
+        if len(reg_pos - db_pos) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t registry has extra pos. attribute(s): {(reg_pos - db_pos)}')
+        elif len(db_pos - reg_pos) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t database has extra pos. attribute(s): {(db_pos - reg_pos)}')
+        # structs
+        reg_struct = set(x.name for x in registry_conf.structs)
+        db_struct = set(x['name'] for x in await rbackend.load_corpus_structures(cursor, corpus_id))
+        if len(reg_struct - db_struct) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t registry has extra structure(s): {(reg_struct - db_struct)}')
+        elif len(db_struct - reg_struct) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t database has extra structure(s): {(db_struct - reg_struct)}')
+        # structattrs
+        reg_sattr = set(f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
+        db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in await rbackend.load_corpus_structattrs(cursor, corpus_id, struct))
+        if len(reg_sattr - db_sattr) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t registry has extra structural attribute(s): {(reg_sattr - db_sattr)}')
+        elif len(db_sattr - reg_sattr) > 0:
+            print('Configuration inconsistency detected:')
+            print(f'\t database has extra structural attribute(s):: {(db_sattr - reg_sattr)}')
 
 
-async def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Backend):
+async def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Backend, wbackend: WriteBackend):
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
         with open(fpath) as fr:
-            await compare_registry_and_db(fr, variant, rbackend)
+            await compare_registry_and_db(fr, variant, rbackend, wbackend)
 
 
-def parse_registry_and_import(
+async def parse_registry_and_import(
         infile: io.StringIO, collator_locale: str, variant: str, rbackend: Backend,
         wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
-    corpus_id, registry_conf = parse_registry(infile, variant)
+    corpus_id, registry_conf = parse_registry(infile, variant, wbackend)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
-
     try:
         corp = corp_factory(infile.name)
         csize = corp.size()
     except Exception as ex:
         print('WARNING: {}'.format(ex))
         csize = 0
-    tst = rbackend.load_corpus(corpus_id)
-    if tst is None:
-        wbackend.save_corpus_config(iconf, registry_conf, csize)
-    elif update_if_exists:
-        logging.getLogger(__file__).warning(
-            f'Corpus {corpus_id} already in database - registry-related data will be updated based '
-            'on the provided registry file')
-        wbackend.update_corpus_config(iconf, registry_conf, csize)
-    else:
-        raise Exception(f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
-    return registry_conf.save()
+    async with rbackend.cursor() as cursor:
+        tst = await rbackend.load_corpus(cursor, corpus_id)
+        if tst is None:
+            await wbackend.save_corpus_config(cursor, iconf, registry_conf, csize)
+        elif update_if_exists:
+            logging.getLogger(__file__).warning(
+                f'Corpus {corpus_id} already in database - registry-related data will be updated based '
+                'on the provided registry file')
+            await wbackend.update_corpus_config(cursor, iconf, registry_conf, csize)
+        else:
+            raise Exception(f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
+        return await registry_conf.save()
 
 
 def remove_comments(infile):
@@ -126,7 +127,7 @@ def remove_comments(infile):
     return ''.join(ans)
 
 
-def process_directory(
+async def process_directory(
         dir_path: str, variant: Optional[str], rbackend: Backend, wbackend: WriteBackend,
         corp_factory: Callable, collator_locale: str, auto_align: bool, update_if_exists: bool):
     if variant:
@@ -139,7 +140,7 @@ def process_directory(
         if os.path.isfile(fpath):
             try:
                 with open(fpath) as fr:
-                    ans = parse_registry_and_import(
+                    ans = await parse_registry_and_import(
                         infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
                         corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
                     created_rt[ans['corpus_id']] = ans['created_rt']
@@ -162,10 +163,10 @@ def process_directory(
                 except KeyError:
                     logging.getLogger(__name__).warning(
                         'Ignored alignment {0} --> {1}'.format(id, a))
-
-    for corpus_id, aligned_ids in list(aligned_ids_map.items()):
-        if created_rt.get(corpus_id, False):
-            wbackend.save_corpus_alignments(corpus_id, aligned_ids)
+    async with wbackend.cursor() as cursor:
+        for corpus_id, aligned_ids in list(aligned_ids_map.items()):
+            if created_rt.get(corpus_id, False):
+                await wbackend.save_corpus_alignments(cursor, corpus_id, aligned_ids)
 
 
 async def main():
@@ -229,39 +230,40 @@ async def main():
     if db.is_autocommit:
         logging.getLogger(__name__).info('Detected auto-commit feature. Starting explicit transaction')
     async with db.connection() as conn:
-        conn.start_transaction()
+        await conn.begin()
         try:
             if args.action == 'import':
                 if os.path.isdir(args.rpath):
-                    process_directory(
+                    await process_directory(
                         dir_path=args.rpath, variant=None, rbackend=rbackend, wbackend=wbackend, auto_align=args.auto_align,
                         collator_locale=args.collator_locale, corp_factory=corp_factory, update_if_exists=args.update)
                     if args.variant:
-                        process_directory(
+                        await process_directory(
                             dir_path=args.rpath, variant=args.variant, wbackend=wbackend, rbackend=rbackend,
                             auto_align=args.auto_align, collator_locale=args.collator_locale, corp_factory=corp_factory,
                             update_if_exists=args.update)
                 else:
                     with open(args.rpath) as fr:
-                        parse_registry_and_import(
+                        await parse_registry_and_import(
                             infile=fr, wbackend=wbackend, rbackend=rbackend, variant=args.variant,
                             corp_factory=corp_factory, collator_locale=args.collator_locale,
                             update_if_exists=args.update)
             elif args.action == 'compare':
                 print('About to compare registry with respective database records...')
                 if os.path.isdir(args.rpath):
-                    await compare_registry_dir_and_db(args.rpath, args.variant, rbackend)
+                    await compare_registry_dir_and_db(args.rpath, args.variant, rbackend, wbackend)
                 else:
                     with open(args.rpath) as fr:
-                        await compare_registry_and_db(fr, args.variant, rbackend)
+                        await compare_registry_and_db(fr, args.variant, rbackend, wbackend)
             else:
+                await conn.rollback()
                 print(f'Invalid action {args.action}')
                 sys.exit(1)
-            conn.commit()
+            await conn.commit()
         except Exception as ex:
             print(ex)
             print('Rolling back database operations')
-            conn.rollback()
+            await conn.rollback()
             if args.verbose:
                 import traceback
                 traceback.print_exc()

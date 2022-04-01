@@ -134,7 +134,7 @@ class Struct:
         return (x for x in self.attrs if isinstance(x, SimpleAttr))
 
 
-class RegistryConf(object):
+class RegistryConf:
     """
     Main registry configuration object.
     """
@@ -241,87 +241,87 @@ class RegistryConf(object):
                 return split_clean(',', item.value)
         return []
 
-    def save(self):
+    async def save(self):
         # top level keys and values
-        created_rt = self._backend.save_registry_table(
+        created_rt = await self._backend.save_registry_table(
             self._corpus_id, self._variant, [(x.name, x.value) for x in self.simple_items])
-
         # now we fill in self references MAPTO, FROMATTR
         for pos in self.posattrs:
             fromattr_id = None
             mapto_id = None
-            self._backend.update_corpus_posattr_references(self._corpus_id, pos.name, fromattr_id, mapto_id)
+            await self._backend.update_corpus_posattr_references(self._corpus_id, pos.name, fromattr_id, mapto_id)
             for pitem in pos.attrs:
                 if pitem.name == 'FROMATTR':
                     fromattr_id = pitem.value
                 elif pitem.name == 'MAPTO':
                     mapto_id = pitem.value
             if fromattr_id is not None or mapto_id is not None:
-                self._backend.update_corpus_posattr_references(
+                await self._backend.update_corpus_posattr_references(
                     self._corpus_id, pos.name, fromattr_id, mapto_id)
 
         if created_rt:
             # positional attributes
             for pos in self.posattrs:
-                self._backend.save_corpus_posattr(
+                await self._backend.save_corpus_posattr(
                     self._corpus_id, pos.name, pos.position, [(x.name, x.value) for x in pos.attrs])
 
             # structures >>>
             for i, struct in enumerate(self.structs):
-                self._backend.save_corpus_structure(
+                await self._backend.save_corpus_structure(
                     corpus_id=self._corpus_id, name=struct.name, position=i, values=[
                         (x.name, x.value) for x in struct.simple_items])
 
                 for i, structattr in enumerate(struct.attributes):
-                    self._backend.save_corpus_structattr(
+                    await self._backend.save_corpus_structattr(
                         self._corpus_id, struct.name, structattr.name,
                         i, [(x.name, x.value) for x in structattr.attrs])
 
             for i, sc in enumerate(self.subcorpattrs):
                 struct, attr = sc.split('.')
-                self._backend.save_subcorpattr(self._corpus_id, struct, attr, i)
+                await self._backend.save_subcorpattr(self._corpus_id, struct, attr, i)
 
             for i, fc in enumerate(self.freqttattrs):
                 struct, attr = sc.split('.')
-                self._backend.save_freqttattr(self._corpus_id, struct, attr, i)
-        self._backend.commit()
+                await self._backend.save_freqttattr(self._corpus_id, struct, attr, i)
+        await self._backend.commit()
         return dict(corpus_id=self._corpus_id, aligned=self.aligned, created_rt=created_rt)
 
     async def load(self):
         self._items = []
-        data = await self._backend.load_registry_table(self._corpus_id, variant=self._variant)
-        if data is None:
-            raise RecordNotFound('Corpus record not found for {0} (variant: {1})'.format(
-                self._corpus_id, self._variant if self._variant else '--'))
-        for k, v in list(dict(data).items()):
-            if re.match(r'[A-Z_]+', k):
-                self._items.append(SimpleAttr(name=k, value=v))
-        self.set_subcorpattrs(await self._backend.load_subcorpattrs(self._corpus_id))
-        self.set_freqttattrs(await self._backend.load_freqttattrs(self._corpus_id))
-        self.set_aligned(await self._backend.load_corpus_alignments(self._corpus_id))
+        async with self._backend.cursor() as cursor:
+            data = await self._backend.load_registry_table(cursor, self._corpus_id, variant=self._variant)
+            if data is None:
+                raise RecordNotFound('Corpus record not found for {0} (variant: {1})'.format(
+                    self._corpus_id, self._variant if self._variant else '--'))
+            for k, v in list(dict(data).items()):
+                if re.match(r'[A-Z_]+', k):
+                    self._items.append(SimpleAttr(name=k, value=v))
+            self.set_subcorpattrs(await self._backend.load_subcorpattrs(cursor, self._corpus_id))
+            self.set_freqttattrs(await self._backend.load_freqttattrs(cursor, self._corpus_id))
+            self.set_aligned(await self._backend.load_corpus_alignments(cursor, self._corpus_id))
 
-        for item in await self._backend.load_corpus_posattrs(self._corpus_id):
-            pa = PosAttribute(name=item['name'], position=item['position'])
-            for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
-                pa.new_item(SimpleAttr(k, value=v))
-            fromattr, mapto = await self._backend.load_corpus_posattr_references(
-                self._corpus_id, item['name'])
-            if fromattr:
-                pa.new_item(SimpleAttr('FROMATTR', fromattr))
-            if mapto:
-                pa.new_item(SimpleAttr('MAPTO', mapto))
-            self.add_item(pa)
+            for item in await self._backend.load_corpus_posattrs(cursor, self._corpus_id):
+                pa = PosAttribute(name=item['name'], position=item['position'])
+                for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
+                    pa.new_item(SimpleAttr(k, value=v))
+                fromattr, mapto = await self._backend.load_corpus_posattr_references(
+                    cursor, self._corpus_id, item['name'])
+                if fromattr:
+                    pa.new_item(SimpleAttr('FROMATTR', fromattr))
+                if mapto:
+                    pa.new_item(SimpleAttr('MAPTO', mapto))
+                self.add_item(pa)
 
-        for item in await self._backend.load_corpus_structures(self._corpus_id):
-            st = Struct(name=item['name'])
-            for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
-                st.new_item(SimpleAttr(k, value=v))
-            for sattr in await self._backend.load_corpus_structattrs(self._corpus_id, item['name']):
-                sobj = Attribute(name=sattr['name'])
-                for k, v in [x for x in list(dict(sattr).items()) if x[0].upper() == x[0]]:
-                    sobj.new_item(SimpleAttr(k, value=v))
-                st.new_item(sobj)
-            self.add_item(st)
+            for item in await self._backend.load_corpus_structures(cursor, self._corpus_id):
+                st = Struct(name=item['name'])
+                for k, v in [x for x in list(dict(item).items()) if x[0].upper() == x[0]]:
+                    st.new_item(SimpleAttr(k, value=v))
+                for sattr in await self._backend.load_corpus_structattrs(cursor, self._corpus_id, item['name']):
+                    sobj = Attribute(name=sattr['name'])
+                    for k, v in [x for x in list(dict(sattr).items()) if x[0].upper() == x[0]]:
+                        sobj.new_item(SimpleAttr(k, value=v))
+                    st.new_item(sobj)
+                self.add_item(st)
 
 
 class RegModelSerializer(object):
