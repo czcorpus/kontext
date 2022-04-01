@@ -65,6 +65,8 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 import re
 import json
+from plugin_types.auth import AbstractAuth
+from plugin_types.general_storage import KeyValueStorage
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
@@ -109,9 +111,9 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
     def __init__(
             self,
             settings,
-            db,
+            db: KeyValueStorage,
             sql_backend: MySQLOps,
-            auth):
+            auth: AbstractAuth):
         plugin_conf = settings.get('plugins', 'query_persistence')
         ttl_days = int(plugin_conf.get('ttl_days', MySqlQueryPersistence.DEFAULT_TTL_DAYS))
         self._ttl_days = ttl_days
@@ -302,7 +304,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
 
 @inject(plugins.runtime.DB, plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, db, integration_db: MySqlIntegrationDb, auth):
+def create_instance(settings, db: KeyValueStorage, integration_db: MySqlIntegrationDb, auth: AbstractAuth):
     """
     Creates a plugin instance.
     """

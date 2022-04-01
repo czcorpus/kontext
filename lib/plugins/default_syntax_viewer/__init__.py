@@ -48,10 +48,11 @@ import logging
 import os
 from typing import Dict
 from sanic.blueprints import Blueprint
+from plugin_types.auth import AbstractAuth
 
 import plugins
 from plugin_types.integration_db import IntegrationDatabase
-from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded
+from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded, SearchBackend
 from action.errors import UserActionException
 from action.plugin.ctx import PluginCtx
 from .manatee_backend import ManateeBackend
@@ -87,7 +88,7 @@ class SyntaxDataProviderError(Exception):
 
 class SyntaxDataProvider(AbstractSyntaxViewerPlugin):
 
-    def __init__(self, corpora_conf, backend, auth):
+    def __init__(self, corpora_conf, backend: SearchBackend, auth: AbstractAuth):
         self._conf = corpora_conf
         self._backend = backend
         self._auth = auth
@@ -144,7 +145,7 @@ def load_plugin_conf_from_db(db: IntegrationDatabase, corp_table='kontext_corpus
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, auth, integ_db: IntegrationDatabase):
+def create_instance(conf, auth: AbstractAuth, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(

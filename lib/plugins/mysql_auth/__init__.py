@@ -27,6 +27,7 @@ import re
 import time
 import datetime
 from action.plugin.ctx import PluginCtx
+from secure_cookie.session import Session
 from plugins.mysql_integration_db import MySqlIntegrationDb
 import mailing
 import logging
@@ -57,7 +58,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
     def __init__(
             self,
             db: MySQLOps,
-            sessions,
+            sessions: Session,
             anonymous_user_id,
             case_sensitive_corpora_names: bool,
             login_url,
@@ -394,7 +395,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.SESSIONS)
-def create_instance(conf, integ_db: MySqlIntegrationDb, sessions):
+def create_instance(conf, integ_db: MySqlIntegrationDb, sessions: Session):
     """
     This function must be always implemented. KonText uses it to create an instance of your
     authentication object. The settings module is passed as a parameter.

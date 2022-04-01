@@ -27,10 +27,12 @@ from collections import defaultdict, OrderedDict
 from sanic import Blueprint
 import sqlite3
 import logging
-from typing import Dict, List, Iterable
+from typing import Any, Dict, List, Iterable
 
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.general_storage import KeyValueStorage
 try:
     from unidecode import unidecode
 except ImportError:
@@ -88,7 +90,7 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
 class LiveAttributes(CachedLiveAttributes):
 
-    def __init__(self, corparch, db, max_attr_list_size, empty_val_placeholder,
+    def __init__(self, corparch: AbstractCorporaArchive, db: KeyValueStorage, max_attr_list_size: int, empty_val_placeholder: Any,
                  max_attr_visible_chars):
         super().__init__(db)
         self.corparch = corparch
@@ -347,7 +349,7 @@ class LiveAttributes(CachedLiveAttributes):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
-def create_instance(settings, corparch, db):
+def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStorage):
     """
     creates an instance of the plugin
 

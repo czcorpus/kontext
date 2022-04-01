@@ -160,7 +160,7 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
     cache-control object.
     """
 
-    def __init__(self, cache_dir, db):
+    def __init__(self, cache_dir: str, db: KeyValueStorage):
         self._cache_dir = cache_dir
         self._db = db
 

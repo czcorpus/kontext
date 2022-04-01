@@ -111,7 +111,6 @@ import copy
 import re
 import logging
 from dataclasses import dataclass, field
-import aiofiles
 from dataclasses_json import dataclass_json
 from typing import List, Optional
 
@@ -121,6 +120,8 @@ from action.decorators import http_action
 from action.krequest import KRequest
 from action.response import KResponse
 from action.model.user import UserActionModel
+from plugin_types.auth import AbstractAuth
+from plugin_types.user_items import AbstractUserItems
 
 try:
     from markdown import markdown
@@ -386,7 +387,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     SESSION_KEYWORDS_KEY = 'plugin_lindatcorparch_default_keywords'
 
     def __init__(
-            self, auth, user_items, file_path, root_xpath, tag_prefix, max_num_hints,
+            self, auth: AbstractAuth, user_items: AbstractUserItems, file_path, root_xpath, tag_prefix, max_num_hints,
             max_page_size, default_label, registry_lang):
         super(CorpusArchive, self).__init__()
         self._auth = auth
@@ -811,7 +812,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.AUTH, plugins.runtime.USER_ITEMS)
-def create_instance(conf, auth, user_items):
+def create_instance(conf, auth: AbstractAuth, user_items: AbstractUserItems):
     """
     Interface function called by KonText creates new plugin instance
     """

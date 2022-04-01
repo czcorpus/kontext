@@ -28,6 +28,7 @@ from sanic.blueprints import Blueprint
 from action.decorators import http_action
 from action.model.user import UserActionModel
 from action.plugin.ctx import PluginCtx
+from plugin_types.user_items import AbstractUserItems
 from plugins.common.mysql import MySQLOps, MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
@@ -68,7 +69,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
     LABEL_OVERLAY_TRANSPARENCY = 0.20
 
-    def __init__(self, db_backend: DatabaseBackend, user_items, tag_prefix, max_num_hints, max_page_size, registry_lang):
+    def __init__(self, db_backend: DatabaseBackend, user_items: AbstractUserItems, tag_prefix, max_num_hints, max_page_size, registry_lang):
         """
 
         arguments:
@@ -79,7 +80,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             max_page_size --
             registry_lang --
         """
-        self._backend: DatabaseBackend = db_backend
+        self._backend = db_backend
         self._user_items = user_items
         self._tag_prefix = tag_prefix
         self._max_num_hints = int(max_num_hints)
@@ -380,7 +381,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, integ_db: MySqlIntegrationDb):
+def create_instance(conf, user_items: AbstractUserItems, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')

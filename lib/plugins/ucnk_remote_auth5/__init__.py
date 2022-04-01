@@ -34,6 +34,7 @@ import json
 import ssl
 import logging
 from action.plugin.ctx import PluginCtx
+from secure_cookie.session import Session
 from plugin_types.integration_db import IntegrationDatabase
 
 import plugins
@@ -73,7 +74,7 @@ class CentralAuth(AbstractRemoteAuth):
     A custom authentication class for the Institute of the Czech National Corpus
     """
 
-    def __init__(self, db: DatabaseBackend, sessions, conf: AuthConf, toolbar_conf: ToolbarConf):
+    def __init__(self, db: DatabaseBackend, sessions: Session, conf: AuthConf, toolbar_conf: ToolbarConf):
         """
         arguments:
         db -- a key-value storage plug-in
@@ -227,7 +228,7 @@ class CentralAuth(AbstractRemoteAuth):
 
 
 @inject(plugins.runtime.SESSIONS, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, sessions, cnc_db: IntegrationDatabase):
+def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
     logging.getLogger(__name__).info(f'ucnk_remote_auth5 uses integration_db[{cnc_db.info}]')
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',

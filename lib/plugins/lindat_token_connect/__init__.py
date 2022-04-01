@@ -16,13 +16,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from plugin_types.corparch import AbstractCorporaArchive
 import plugins
 
 from plugins.default_token_connect import DefaultTokenConnect, setup_providers
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
-def create_instance(settings, corparch):
+def create_instance(settings, corparch: AbstractCorporaArchive):
     providers, cache_path = setup_providers(settings.get('plugins', 'token_connect'))
     tok_det = DefaultTokenConnect(providers, corparch)
     if cache_path:

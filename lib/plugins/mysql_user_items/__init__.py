@@ -17,6 +17,7 @@ import logging
 from sanic.blueprints import Blueprint
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.auth import AbstractAuth
 
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from plugins.common.mysql import MySQLOps, MySQLConf
@@ -109,7 +110,7 @@ class MySQLUserItems(AbstractUserItems):
     A mysql implementation of user_items plug-in.
     """
 
-    def __init__(self, settings, db_backend: Backend, auth):
+    def __init__(self, settings, db_backend: Backend, auth: AbstractAuth):
         super(MySQLUserItems, self).__init__()
         self._settings = settings
         self._auth = auth
@@ -148,7 +149,7 @@ class MySQLUserItems(AbstractUserItems):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.AUTH)
-def create_instance(settings, integ_db: MySqlIntegrationDb, auth):
+def create_instance(settings, integ_db: MySqlIntegrationDb, auth: AbstractAuth):
     plugin_conf = settings.get('plugins', 'user_items')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_user_items uses integration_db[{integ_db.info}]')

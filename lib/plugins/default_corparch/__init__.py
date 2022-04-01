@@ -50,7 +50,7 @@ from action.model.user import UserActionModel
 from action.krequest import KRequest
 from action.response import KResponse
 import plugins
-from plugin_types.corparch import AbstractSearchableCorporaArchive
+from plugin_types.corparch import AbstractCorporaArchive, AbstractSearchableCorporaArchive
 from plugin_types.corparch.corpus import CorpusInfo, BrokenCorpusInfo, TagsetInfo, PosCategoryItem
 from plugin_types.corparch import CorplistProvider
 from plugin_types.auth import AbstractAuth
@@ -103,7 +103,7 @@ class DefaultCorplistProvider(CorplistProvider):
     Corpus listing and filtering service
     """
 
-    def __init__(self, plugin_ctx, auth, corparch, tag_prefix):
+    def __init__(self, plugin_ctx: PluginCtx, auth: AbstractAuth, corparch: AbstractCorporaArchive, tag_prefix: str):
         """
         arguments:
         plugin_ctx -- a controller.PluginCtx instance

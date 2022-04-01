@@ -17,6 +17,8 @@ from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse
 from action.errors import ImmediateRedirectException
+from plugin_types.general_storage import KeyValueStorage
+from secure_cookie.session import Session
 from plugin_types.auth import AbstractSemiInternalAuth, CorpusAccess
 from plugins.errors import PluginException
 import plugins
@@ -77,7 +79,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     async def get_user_info(self, plugin_ctx):
         raise NotImplementedError()
 
-    def __init__(self, corplist, db, sessions, conf, failover):
+    def __init__(self, corplist, db: KeyValueStorage, sessions: Session, conf, failover):
         """
 
         Arguments:
@@ -331,7 +333,7 @@ def _get_non_empty_header(ftor, *args):
 # =============================================================================
 
 @plugins.inject(plugins.runtime.DB, plugins.runtime.SESSIONS)
-def create_instance(conf, db, sessions):
+def create_instance(conf, db: KeyValueStorage, sessions: Session):
     auth_conf = conf.get('plugins', 'auth')
     corparch_conf = conf.get('plugins', 'corparch')
     corplist_file = None
