@@ -223,7 +223,7 @@ def create_instance(conf, user_items, auth, cnc_db: IntegrationDatabase):
         user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id',
         group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
         group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
-        user_pc_acc_pc_attr='parallel_corpus_id')
+        user_pc_acc_pc_attr='parallel_corpus_id', enable_parallel_acc=True)
     logging.getLogger(__name__).info(f'ucnk_corparch6 uses integration_db[{cnc_db.info}]')
     return UcnkCorpArch6(
         db_backend=db_backend,
