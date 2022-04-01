@@ -21,7 +21,7 @@ from typing import Tuple, List, Union
 
 import manatee
 import settings
-from kwiclib_common import tokens2strclass
+from kwiclib.common import tokens2strclass
 import plugins
 from corplib.corpus import AbstractKCorpus
 
