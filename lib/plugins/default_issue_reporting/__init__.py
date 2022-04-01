@@ -44,7 +44,7 @@ async def submit_issue(req, amodel):
 
 class DefaultErrorReporting(AbstractIssueReporting):
 
-    def __init__(self, auth: AbstractAuth, smtp_server, mail_sender, mail_recipients):
+    def __init__(self, auth: AbstractAuth, smtp_server: str, mail_sender: str, mail_recipients: str):
         self._auth = auth
         self._smtp_server = smtp_server
         self._mail_sender = mail_sender

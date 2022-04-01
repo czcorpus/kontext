@@ -16,13 +16,14 @@
 # 02110-1301, USA.
 
 import logging
+from plugin_types.general_storage import KeyValueStorage
 from plugins.default_conc_cache import CacheMappingFactory
 from plugins import inject
 import plugins
 
 
 @inject(plugins.runtime.DB)
-def create_instance(settings, db):
+def create_instance(settings, db: KeyValueStorage):
     logging.getLogger(__name__).warning('Plug-in redis_conc_cache has been renamed to default_conc_cache '
                                         '- please update your config.xml. The old name will be removed '
                                         'in future versions')

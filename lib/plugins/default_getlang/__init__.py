@@ -31,7 +31,7 @@ class GetLang(AbstractGetLang):
     fallback_lang -- language code to be used in case no setting is found (default is '')
     """
 
-    def __init__(self, cookie_name, fallback_lang='en_US'):
+    def __init__(self, cookie_name: str, fallback_lang: str = 'en_US'):
         self.cookie_name = cookie_name
         self.fallback_lang = fallback_lang
         self._translations = self.fetch_translations()

@@ -321,7 +321,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
 
 @inject(plugins.runtime.INTEGRATION_DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db: MySqlIntegrationDb, query_persistence, auth):
+def create_instance(settings, db: MySqlIntegrationDb, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
     """
     arguments:
     settings -- the settings.py module

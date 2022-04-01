@@ -34,6 +34,7 @@ import time
 import os
 import sqlite3
 import logging
+from plugin_types.general_storage import KeyValueStorage
 
 from plugins import inject
 import plugins
@@ -53,7 +54,7 @@ def mk_key(code):
 
 class StableQueryPersistence(AbstractQueryPersistence):
 
-    def __init__(self, db, settings):
+    def __init__(self, db: KeyValueStorage, settings):
         self.db = db
         plugin_conf = settings.get('plugins', 'query_persistence')
         self._ttl_days = int(plugin_conf.get('ttl_days', DEFAULT_TTL_DAYS))
@@ -222,5 +223,5 @@ class StableQueryPersistence(AbstractQueryPersistence):
 
 
 @inject(plugins.runtime.DB)
-def create_instance(settings, db):
+def create_instance(settings, db: KeyValueStorage):
     return StableQueryPersistence(db=db, settings=settings)

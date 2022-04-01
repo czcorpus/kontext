@@ -11,6 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 import os
+from plugin_types.auth import AbstractAuth
 from plugin_types.appbar import AbstractApplicationBar
 from plugins import inject
 import plugins
@@ -78,7 +79,7 @@ class LindatTopBar(AbstractApplicationBar):
 
 
 @inject(plugins.runtime.AUTH)
-def create_instance(settings, auth):
+def create_instance(settings, auth: AbstractAuth):
     """
         Auth must provide `get_logout_url`
     """

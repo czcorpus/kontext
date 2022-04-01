@@ -178,7 +178,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, corparch, integ_db: MySqlIntegrationDb):
+def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'subc_restore')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_restore uses integration_db[{integ_db.info}]')

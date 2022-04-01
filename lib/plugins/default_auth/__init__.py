@@ -26,6 +26,7 @@ import re
 import time
 import datetime
 from action.plugin.ctx import PluginCtx
+from plugin_types.general_storage import KeyValueStorage
 import mailing
 from collections import defaultdict
 from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo, SignUpNeedsUpdateException
@@ -33,6 +34,7 @@ from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_h
 from .sign_up import SignUpToken
 import plugins
 from plugins import inject
+from sanic_session import Session
 
 
 IMPLICIT_CORPUS = 'ud_fused_test_a'
@@ -65,7 +67,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     USER_INDEX_KEY = 'user_index'
 
-    def __init__(self, db, sessions, anonymous_user_id, case_sensitive_corpora_names: bool,
+    def __init__(self, db: KeyValueStorage, sessions, anonymous_user_id: int, case_sensitive_corpora_names: bool,
                  login_url, logout_url, smtp_server, mail_sender,
                  confirmation_token_ttl, on_register_get_corpora):
         """

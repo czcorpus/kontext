@@ -34,11 +34,14 @@ Required XML configuration: please see config.rng
 
 import json
 import logging
+from typing import Any, Dict, List, Sequence, Tuple
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.general_storage import KeyValueStorage
 import manatee
 from sanic.blueprints import Blueprint
 
 import plugins
-from plugin_types.token_connect import AbstractTokenConnect, find_implementation
+from plugin_types.token_connect import AbstractBackend, AbstractFrontend, AbstractTokenConnect, find_implementation
 from corplib.corpus import KCorpus
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
@@ -124,14 +127,14 @@ def add_structattr_support(corp: KCorpus, attrs, token_id):
 
 class DefaultTokenConnect(AbstractTokenConnect):
 
-    def __init__(self, providers, corparch):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive):
         self._corparch = corparch
         self._providers = providers
 
-    def map_providers(self, providers):
+    def map_providers(self, providers: Sequence[str, bool]):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
-    def fetch_data(self, providers, corpus, corpora, token_id, num_tokens, lang, context=None):
+    def fetch_data(self, providers: Sequence[str, bool], corpus: KCorpus, corpora: List[str], token_id: int, num_tokens: int, lang: str, context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
@@ -183,7 +186,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
         return bp
 
 
-def init_provider(conf, ident, db, ttl):
+def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: int) -> Tuple[AbstractBackend, AbstractFrontend]:
     """
     Create and return both backend and frontend.
 
@@ -198,16 +201,18 @@ def init_provider(conf, ident, db, ttl):
     return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-def setup_providers(plg_conf, db):
+def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage):
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
-    providers = dict((b['ident'], init_provider(b, b['ident'], db, plg_conf['ttl']))
-                     for b in providers_conf)
+    providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]] = {
+        b['ident']: init_provider(b, b['ident'], db, plg_conf['ttl'])
+        for b in providers_conf
+    }
     return providers
 
 
 @plugins.inject(plugins.runtime.CORPARCH, plugins.runtime.DB)
-def create_instance(settings, corparch, db):
+def create_instance(settings, corparch: AbstractCorporaArchive, db: KeyValueStorage):
     providers = setup_providers(settings.get('plugins', 'token_connect'), db)
     tok_det = DefaultTokenConnect(providers, corparch)
     return tok_det

@@ -36,6 +36,7 @@ import os
 from sanic import Blueprint
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.user_items import AbstractUserItems
 from plugin_types.auth import AbstractAuth
 from plugin_types.integration_db import IntegrationDatabase
 
@@ -109,7 +110,7 @@ class UcnkCorpArch3(MySQLCorparch):
 
     SESSION_KEYWORDS_KEY = 'plugin_ucnkcorparch_default_keywords'
 
-    def __init__(self, db_backend, auth: AbstractAuth, user_items, tag_prefix, max_num_hints,
+    def __init__(self, db_backend: Backend, auth: AbstractAuth, user_items: AbstractUserItems, tag_prefix, max_num_hints,
                  max_page_size, access_req_sender, access_req_smtp_server,
                  access_req_recipients, default_label, registry_lang):
         super().__init__(
@@ -215,7 +216,7 @@ class UcnkCorpArch3(MySQLCorparch):
 
 
 @inject(plugins.runtime.USER_ITEMS, plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, user_items, auth, cnc_db: IntegrationDatabase):
+def create_instance(conf, user_items: AbstractUserItems, auth: AbstractAuth, cnc_db: IntegrationDatabase):
     db_backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
         group_acc_table='relation', group_acc_corp_attr='corpora', group_acc_group_attr='corplist',

@@ -22,6 +22,7 @@ Required XML configuration: please see ./config.rng
 
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.kwic_connect import AbstractKwicConnect
 from plugins.default_token_connect import setup_providers
 import plugins
@@ -88,7 +89,7 @@ async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: 
 
 class DefaultKwicConnect(AbstractKwicConnect):
 
-    def __init__(self, providers, corparch, max_kwic_words, load_chunk_size):
+    def __init__(self, providers, corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size

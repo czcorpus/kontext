@@ -26,13 +26,15 @@ be: <js_module>syntaxViewer2</js_module>
 """
 
 import logging
+from plugin_types.auth import AbstractAuth
+from plugin_types.integration_db import IntegrationDatabase
 import plugins
 import plugins.default_syntax_viewer as dsv
 from plugins.syntax_viewer2.backend.manatee import ManateeBackend2
 
 
 @plugins.inject(plugins.runtime.AUTH, plugins.runtime.INTEGRATION_DB)
-def create_instance(conf, auth, integ_db):
+def create_instance(conf, auth: AbstractAuth, integ_db: IntegrationDatabase):
     plugin_conf = conf.get('plugins', 'syntax_viewer')
     if integ_db.is_active and 'config_path' not in plugin_conf:
         logging.getLogger(__name__).info(

@@ -17,6 +17,8 @@ import logging
 from sanic import Blueprint
 from action.krequest import KRequest
 from action.response import KResponse
+from plugin_types.auth import AbstractAuth
+from plugin_types.general_storage import KeyValueStorage
 
 from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
 from plugins import inject
@@ -108,7 +110,7 @@ class UserItems(AbstractUserItems):
     be random - i.e. sorting must be performed externally.
     """
 
-    def __init__(self, settings, db, auth):
+    def __init__(self, settings, db: KeyValueStorage, auth: AbstractAuth):
         super(UserItems, self).__init__()
         self._settings = settings
         self._db = db
@@ -152,5 +154,5 @@ class UserItems(AbstractUserItems):
 
 
 @inject(plugins.runtime.DB, plugins.runtime.AUTH)
-def create_instance(settings, db, auth):
+def create_instance(settings, db: KeyValueStorage, auth: AbstractAuth):
     return UserItems(settings, db, auth)

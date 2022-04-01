@@ -131,7 +131,7 @@ class StaticApplicationBar(AbstractApplicationBar):
 
 
 @plugins.inject(plugins.runtime.AUTH)
-def create_instance(settings, auth):
+def create_instance(settings, auth: AbstractAuth):
     plg_conf = settings.get('plugins', 'application_bar')
     return StaticApplicationBar(html_dir=plg_conf['html_dir'], css_urls=plg_conf.get('css_urls', []),
                                 js_urls=plg_conf.get('js_urls', []),

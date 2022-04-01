@@ -65,7 +65,8 @@ class UcnkDispatchHook(AbstractDispatchHook):
                     return  # we don't want to restrict users who registered for API use
                 created_dt = time.mktime(time.strptime(report.created, '%Y-%m-%dT%H:%M:%Sz'))
                 if (time.time() - created_dt) / 3600 < self.ban_length_hours:
-                    raise ServiceUnavailableException('Service unavailable due to bot-like activity')
+                    raise ServiceUnavailableException(
+                        'Service unavailable due to bot-like activity')
                 else:
                     logging.getLogger(__name__).warning(f'client ban expired for IP {client_ip}')
                     self._db.hash_del(self.bot_clients_key, client_ip)
@@ -75,7 +76,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
 
 
 @inject(plugins.runtime.DB)
-def create_instance(conf, db):
+def create_instance(conf, db: KeyValueStorage):
     plg_conf = conf.get('plugins', 'dispatch_hook')
     return UcnkDispatchHook(
         db=db,
