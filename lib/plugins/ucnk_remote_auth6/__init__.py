@@ -198,7 +198,8 @@ class CentralAuth(AbstractRemoteAuth):
     async def corpus_access(self, user_dict, corpus_name: str) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return CorpusAccess(False, True, '')
-        _, access, variant = await self._db.corpus_access(user_dict['id'], corpus_name)
+        with self._db.cursor() as cursor:
+            _, access, variant = await self._db.corpus_access(cursor, user_dict['id'], corpus_name)
         return CorpusAccess(False, access, variant)
 
     async def permitted_corpora(self, user_dict):
@@ -208,7 +209,8 @@ class CentralAuth(AbstractRemoteAuth):
         arguments:
         user_dict -- a user credentials dictionary
         """
-        corpora = await self._db.get_permitted_corpora(str(user_dict['id']))
+        with self._db.cursor() as cursor:
+            corpora = await self._db.get_permitted_corpora(cursor, str(user_dict['id']))
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return corpora

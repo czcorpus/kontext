@@ -21,12 +21,10 @@ import time
 from dataclasses import asdict
 
 import aiomysql
-import pymysql
 import pymysql.cursors
 from plugins.common.mysql import MySQLOps
 
 from plugin_types.integration_db import IntegrationDatabase
-
 
 
 class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor, pymysql.Connection, pymysql.cursors.Cursor]):
@@ -58,7 +56,7 @@ class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiom
 
     @property
     def is_autocommit(self):
-        return self._conn_args.get('autocommit', False)
+        return self._conn_args.autocommit
 
     @property
     def info(self):

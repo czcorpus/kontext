@@ -29,7 +29,7 @@ class ConnectionArgs:
     db: str
     user: str
     password: str
-    autocommit: bool
+    autocommit: bool = False
     host: str = field(default='localhost')
     port: int = field(default=3306)
 
@@ -48,7 +48,7 @@ class MySQLConf:
     pool_size: int
     conn_retry_delay: int
     conn_retry_attempts: int
-    
+
     host: str = field(default='localhost')
     port: int = field(default=3306)
     autocommit: bool = field(default=True)
@@ -64,7 +64,7 @@ class MySQLConf:
             conn_retry_delay=conf['mysql_retry_delay'],
             conn_retry_attempts=conf['mysql_retry_attempts'],
         )
-    
+
     @property
     def conn_dict(self) -> Dict[str, Any]:
         return asdict(self)
