@@ -551,8 +551,8 @@ class CorpusActionModel(UserActionModel):
 
         result['has_subcmixer'] = plugins.runtime.SUBCMIXER.exists
         result['use_conc_toolbar'] = settings.get_bool('global', 'use_conc_toolbar')
-        result['conc_url_ttl_days'] = plugins.runtime.QUERY_PERSISTENCE.instance.get_conc_ttl_days(
-            self.session_get('user', 'id'))
+        with plugins.runtime.QUERY_PERSISTENCE as qp:
+            result['conc_url_ttl_days'] = qp.get_conc_ttl_days(self.session_get('user', 'id'))
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
@@ -574,15 +574,15 @@ class CorpusActionModel(UserActionModel):
 
     async def get_tt_bib_mapping(self, tt_data):
         bib_mapping = {}
-        if await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
-                self.plugin_ctx, [self.args.corpname] + self.args.align):
-            corpus_info = await plugins.runtime.CORPARCH.instance.get_corpus_info(
-                self.plugin_ctx, self.args.corpname)
-            id_attr = corpus_info.metadata.id_attr
-            if id_attr in tt_data:
-                bib_mapping = dict(
-                    await plugins.runtime.LIVE_ATTRIBUTES.instance.find_bib_titles(
-                        self.plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]))
+        with plugins.runtime.LIVE_ATTRIBUTES as la:
+            if await la.is_enabled_for(self.plugin_ctx, [self.args.corpname] + self.args.align):
+                with plugins.runtime.CORPARCH as ca:
+                    corpus_info = await ca.get_corpus_info(self.plugin_ctx, self.args.corpname)
+                id_attr = corpus_info.metadata.id_attr
+                if id_attr in tt_data:
+                    bib_mapping = dict(await la.find_bib_titles(
+                        self.plugin_ctx, getattr(self.args, 'corpname'), tt_data[id_attr]
+                    ))
         return bib_mapping
 
     def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):

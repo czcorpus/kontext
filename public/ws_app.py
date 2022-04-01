@@ -182,7 +182,9 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
 
 
 async def get_conc_cache_status(corp: KCorpus, conc_id: str):
-    cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
+    with plugins.runtime.CONC_CACHE as cc:
+        cache_map = cc.get_mapping(corp)
+
     q = []
     try:
         with plugins.runtime.QUERY_PERSISTENCE as qp:

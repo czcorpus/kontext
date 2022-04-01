@@ -108,7 +108,8 @@ application = Sanic('kontext')
 application.config['action_path_prefix'] = settings.get_str('global', 'action_path_prefix', '/')
 application.config['redirect_safe_domains'] = settings.get('global', 'redirect_safe_domains', ())
 application.config['cookies_same_site'] = settings.get('global', 'cookies_same_site', None)
-application.config['static_files_prefix'] = settings.get('global', 'static_files_prefix', '../files')
+application.config['static_files_prefix'] = settings.get(
+    'global', 'static_files_prefix', '../files')
 session = Session()
 
 application.blueprint(root_bp)
@@ -128,7 +129,8 @@ application.blueprint(fcs_v1_bp)
 setup_plugins()
 install_plugin_actions(application)
 
-tt_cache = TextTypesCache(plugins.runtime.DB.instance)
+with plugins.runtime.DB as db:
+    tt_cache = TextTypesCache(db)
 
 application.ctx = ApplicationContext(
     templating=TplEngine(settings),
@@ -174,9 +176,10 @@ def get_locale(request: Request) -> str:
     """
     cookies = KonTextCookie(request.headers.get('cookie', ''))
 
-    if plugins.runtime.GETLANG.exists:
-        lgs_string = plugins.runtime.GETLANG.instance.fetch_current_language(cookies)
-    else:
+    try:
+        with plugins.runtime.GETLANG as getlang:
+            lgs_string = getlang.fetch_current_language(cookies)
+    except plugins.PluginNotInstalled:
         lang_cookie = cookies.get('kontext_ui_lang')
         if not lang_cookie:
             langs = request.headers.get('accept-language')
@@ -193,6 +196,7 @@ def get_locale(request: Request) -> str:
                 lgs_string)  # TODO replace by application ctx?
         else:
             lgs_string = lgs_string.replace('-', '_')
+
     if lgs_string is None:
         lgs_string = 'en_US'
     return lgs_string

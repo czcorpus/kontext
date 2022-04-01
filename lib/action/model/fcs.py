@@ -80,9 +80,8 @@ class FCSActionModel(UserActionModel):
         resources: List[Tuple[str, str, Dict[str, Any]]] = []
         corpora_d = [value]
         if value == 'root':
-            corpora_d = await plugins.runtime.AUTH.instance.permitted_corpora(
-                self.session_get('user')
-            )
+            with plugins.runtime.AUTH as auth:
+                corpora_d = await auth.permitted_corpora(self.session_get('user'))
 
         for i, corpus_id in enumerate(corpora_d):
             if i >= max_items:
@@ -159,7 +158,8 @@ class FCSActionModel(UserActionModel):
         fromp = int(math.floor((start - 1) / max_rec)) + 1
         # try to get concordance
         try:
-            anon_id = plugins.runtime.AUTH.instance.anonymous_user()['id']
+            with plugins.runtime.AUTH as auth:
+                anon_id = auth.anonymous_user()['id']
             q = ['q' + rq]
             conc = await get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
