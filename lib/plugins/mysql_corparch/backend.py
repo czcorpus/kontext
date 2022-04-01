@@ -17,8 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-A corparch database backend for MySQL/MariaDB for 'read' operations
+A corparch database backend for MySQL/MariaDB for 'read' operations. Please note
+that the backend also covers operations required by mysql_auth plug-in.
 """
+
 from typing import Any, Dict, Iterable, List, Tuple, Optional
 from plugin_types.auth import CorpusAccess
 from plugins.common.mysql import MySQLOps

@@ -241,5 +241,5 @@ def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
         user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id',
         group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
         group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
-        user_pc_acc_pc_attr='parallel_corpus_id')
+        user_pc_acc_pc_attr='parallel_corpus_id', enable_parallel_acc=True)
     return CentralAuth(db=backend, sessions=sessions, auth_conf=AuthConf.from_conf(conf))
