@@ -12,8 +12,16 @@
 
 """
 This is the 6-generation of UCNK-specific authentication module.
-It leaves all the authentication and authorization on an external
-HTTP service. Once the service receives a specific cookie-stored token,
+The main difference between this version and the previous (5) is:
+
+1) adoption of async/await for IO operations (aiohttp in this case)
+2) access rights for a new entity "kontext_parallel_corpus" which
+   groups mutually aligned corpora
+
+The key principle remains the same in this version:
+All the authentication operations are left on an external
+HTTP service accessed via an internal network.
+Once the service receives a specific cookie-stored token,
 it returns two values (everything is JSON-encoded):
 
 1. user credentials and authentication status
@@ -21,7 +29,7 @@ it returns two values (everything is JSON-encoded):
 
 The ucnk_remote_auth6 plug-in stores the received HTML code into a special
 'shared' storage for ucnk_appbar3 (which, in consequence, does not have to
-produce another HTTP request).
+trigger another HTTP request to get its HTML code).
 
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
@@ -32,7 +40,7 @@ import json
 import ssl
 import logging
 import aiohttp
-from attr import dataclass
+from dataclasses import dataclass
 
 from secure_cookie.session import Session
 from action.plugin.ctx import PluginCtx
@@ -230,5 +238,8 @@ def create_instance(conf, sessions: Session, cnc_db: IntegrationDatabase):
     backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
         group_acc_table='relation', group_acc_group_attr='corplist', group_acc_corp_attr='corpora',
-        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id')
+        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id',
+        group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
+        group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
+        user_pc_acc_pc_attr='parallel_corpus_id')
     return CentralAuth(db=backend, sessions=sessions, auth_conf=AuthConf.from_conf(conf))
