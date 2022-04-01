@@ -304,7 +304,7 @@ class CorpusActionModel(UserActionModel):
 
         # plugins setup
         for p in plugins.runtime:
-            if p.instance is not None and callable(getattr(p.instance, 'setup', None)):
+            if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
 
         if isinstance(self.corp, ErrorCorpus):

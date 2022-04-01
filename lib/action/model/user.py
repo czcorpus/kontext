@@ -86,8 +86,11 @@ class UserActionModel(BaseActionModel):
         and the CorpusManager.
         """
         req_args = await super().pre_dispatch(req_args)
-        with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
+        try:
+            with plugins.runtime.DISPATCH_HOOK as dhook:
+                dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
+        except plugins.PluginNotInstalled:
+            pass
 
         options = {}
         self._scheduled_actions(options)
@@ -114,8 +117,11 @@ class UserActionModel(BaseActionModel):
                 self._req, self.args, action_props.action_log_mapper,
                 f'{action_props.action_prefix}{action_props.action_name}',
                 err_desc=err_desc)
-        with plugins.runtime.DISPATCH_HOOK as dhook:
-            dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
+        try:
+            with plugins.runtime.DISPATCH_HOOK as dhook:
+                dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
+        except plugins.PluginNotInstalled:
+            pass
 
     @staticmethod
     def _init_default_settings(options):

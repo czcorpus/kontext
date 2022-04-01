@@ -20,8 +20,10 @@ from sanic import Blueprint
 from action.errors import UserActionException, ImmediateRedirectException
 from action.model.user import UserActionModel
 from action.decorators import http_action
+from action.krequest import KRequest
+from action.response import KResponse
 import plugins
-from plugin_types.auth import SignUpNeedsUpdateException
+from plugin_types.auth import AbstractInternalAuth, SignUpNeedsUpdateException
 import settings
 
 bp = Blueprint('user', url_prefix='user')
@@ -29,13 +31,14 @@ bp = Blueprint('user', url_prefix='user')
 
 @bp.route('/loginx', methods=['GET'])
 @http_action(template='user/login.html', action_model=UserActionModel)
-async def loginx(amodel, req, resp):
+async def loginx(amodel: UserActionModel, req: KRequest, resp: KResponse):
     """
     This method is used by some of the installations with Shibboleth-based authentication.
     So for compatibility reasons, let's keep this.
     """
-    with plugins.runtime.AUTH as auth:
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         req.ctx.session['user'] = await auth.validate_user(amodel.plugin_ctx, None, None)
+
     if req.args.get('return_url', None):
         amodel.redirect(req.args.get('return_url'))
     return {}
@@ -43,7 +46,7 @@ async def loginx(amodel, req, resp):
 
 @bp.route('/login', methods=['POST'])
 @http_action(template='user/login.html', action_model=UserActionModel)
-async def login(amodel, req, resp):
+async def login(amodel: UserActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
     with plugins.runtime.AUTH as auth:
         ans = {}
@@ -64,13 +67,14 @@ async def login(amodel, req, resp):
 @bp.route('/logoutx', methods=['POST'])
 @http_action(
     access_level=1, template='user/login.html', page_model='login', action_model=UserActionModel)
-async def logoutx(amodel, req, resp):
-    amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
-    plugins.runtime.AUTH.instance.logout(req.session)
-    await amodel.init_session()
-    amodel.refresh_session_id()
-    plugins.runtime.AUTH.instance.logout_hook(amodel.plugin_ctx)
-    resp.redirect(req.create_url('query', {}))
+async def logoutx(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
+        amodel.disabled_menu_items = amodel.USER_ACTIONS_DISABLED_ITEMS
+        auth.logout(req.session)
+        await amodel.init_session()
+        amodel.refresh_session_id()
+        auth.logout_hook(amodel.plugin_ctx)
+        resp.redirect(req.create_url('query', {}))
     return {}
 
 
@@ -78,9 +82,9 @@ async def logoutx(amodel, req, resp):
 @http_action(
     access_level=0, template='user/administration.html', page_model='userSignUp',
     action_model=UserActionModel)
-async def sign_up_form(amodel, req, resp):
+async def sign_up_form(amodel: UserActionModel, req: KRequest, resp: KResponse):
     ans = dict(credentials_form={}, username_taken=False, user_registered=False)
-    with plugins.runtime.AUTH as auth:
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         token_key = req.args.get('key')
         username_taken = bool(int(req.args.get('username_taken', '0')))
         if token_key:
@@ -100,8 +104,8 @@ async def sign_up_form(amodel, req, resp):
 @bp.route('/sign_up', methods=['POST'])
 @http_action(
     access_level=0, return_type='json', action_model=UserActionModel)
-async def sign_up(amodel, req, resp):
-    with plugins.runtime.AUTH as auth:
+async def sign_up(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         errors = await auth.sign_up_user(amodel.plugin_ctx, dict(
             username=req.form.get('username'),
             firstname=req.form.get('firstname'),
@@ -119,8 +123,8 @@ async def sign_up(amodel, req, resp):
 
 @bp.route('/test_username')
 @http_action(access_level=0, return_type='json', action_model=UserActionModel)
-async def test_username(amodel, req, resp):
-    with plugins.runtime.AUTH as auth:
+async def test_username(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         available, valid = await auth.validate_new_username(
             amodel.plugin_ctx, req.args.get('username'))
         return dict(available=available if available and valid else False, valid=valid)
@@ -129,24 +133,24 @@ async def test_username(amodel, req, resp):
 @bp.route('/sign_up_confirm_email')
 @http_action(
     access_level=0, template='user/token_confirm.html', page_model='userTokenConfirm', action_model=UserActionModel)
-async def sign_up_confirm_email(self, request):
-    with plugins.runtime.AUTH as auth:
+async def sign_up_confirm_email(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         try:
-            key = request.args.get('key')
-            ans = dict(sign_up_url=self.create_url('user/sign_up_form', {}))
-            ans.update(await auth.sign_up_confirm(self._plugin_ctx, key))
+            key = req.args.get('key')
+            ans = dict(sign_up_url=req.create_url('user/sign_up_form', {}))
+            ans.update(await auth.sign_up_confirm(amodel.plugin_ctx, key))
             return ans
         except SignUpNeedsUpdateException as ex:
             logging.getLogger(__name__).warning(ex)
-            raise ImmediateRedirectException(self.create_url('user/sign_up_form',
-                                                             dict(key=key, username_taken=1)))
+            raise ImmediateRedirectException(req.create_url('user/sign_up_form',
+                                                            dict(key=key, username_taken=1)))
 
 
 @bp.route('/set_user_password', methods=['POST'])
 @http_action(
     access_level=1, return_type='json', action_model=UserActionModel)
-async def set_user_password(amodel, req, resp):
-    with plugins.runtime.AUTH as auth:
+async def set_user_password(amodel: UserActionModel, req: KRequest, resp: KResponse):
+    with plugins.runtime.AUTH(AbstractInternalAuth) as auth:
         curr_passwd = req.form.get('curr_passwd')
         new_passwd = req.form.get('new_passwd')
         new_passwd2 = req.form.get('new_passwd2')
@@ -180,8 +184,8 @@ async def set_user_password(amodel, req, resp):
 
 
 async def _load_query_history(
-        amodel: UserActionModel, user_id, offset, limit, from_date, to_date, q_supertype, corpname, archived_only):
-    if plugins.runtime.QUERY_HISTORY.exists:
+        amodel: UserActionModel, user_id: int, offset: int, limit: int, from_date: str, to_date: str, q_supertype: str, corpname: str, archived_only: bool):
+    try:
         with plugins.runtime.QUERY_HISTORY as qh:
             rows = await qh.get_user_queries(
                 user_id,
@@ -191,14 +195,14 @@ async def _load_query_history(
                 from_date=from_date, to_date=to_date,
                 archived_only=archived_only,
                 translate=amodel.plugin_ctx.translate)
-    else:
+    except plugins.PluginNotInstalled:
         rows = ()
     return rows
 
 
 @bp.route('/ajax_query_history')
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
-async def ajax_query_history(amodel, req, resp):
+async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResponse):
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit'))
     query_supertype = req.args.get('query_supertype')

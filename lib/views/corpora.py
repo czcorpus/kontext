@@ -27,7 +27,7 @@ from action.krequest import KRequest
 from action.response import KResponse
 
 import plugins
-from plugin_types.corparch import AbstractSearchableCorporaArchive
+from plugin_types.corparch import AbstractSearchableCorporaArchive, SimpleCorporaArchive
 from plugin_types.corparch.corpus import CitationInfo
 
 
@@ -71,7 +71,7 @@ bp = Blueprint('corpora', url_prefix='corpora')
 @http_action(action_model=UserActionModel, template='corpora/corplist.html')
 async def corplist(amodel: UserActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
-    with plugins.runtime.CORPARCH as cp:
+    with plugins.runtime.CORPARCH([AbstractSearchableCorporaArchive, SimpleCorporaArchive]) as cp:
         if isinstance(cp, AbstractSearchableCorporaArchive):
             params = await cp.initial_search_params(amodel.plugin_ctx)
             data = await cp.search(
@@ -79,17 +79,17 @@ async def corplist(amodel: UserActionModel, req: KRequest, resp: KResponse):
                 query=False,
                 offset=0,
                 limit=req.args.get('limit', None))
-        else:
+        elif isinstance(cp, SimpleCorporaArchive):
             params = {}
             data = await cp.get_all(amodel.plugin_ctx)
-        data['search_params'] = params
-        return dict(corplist_data=data)
+    data['search_params'] = params
+    return dict(corplist_data=data)
 
 
 @bp.route('/ajax_list_corpora')
 @http_action(action_model=UserActionModel, return_type='json')
 async def ajax_list_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
-    with plugins.runtime.CORPARCH as cp:
+    with plugins.runtime.CORPARCH(AbstractSearchableCorporaArchive) as cp:
         return await cp.search(
             plugin_ctx=amodel.plugin_ctx, query=req.args.get('query', None),
             offset=req.args.get('offset', None), limit=req.args.get('limit', None))

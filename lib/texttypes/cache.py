@@ -32,8 +32,8 @@ class TextTypesCache:
     the corpus.
     """
 
-    def __init__(self, db):
-        self._db: KeyValueStorage = db
+    def __init__(self, db: KeyValueStorage):
+        self._db = db
 
     @staticmethod
     def _mk_cache_key(corpname):

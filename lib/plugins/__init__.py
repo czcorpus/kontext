@@ -22,7 +22,7 @@ This means that the module is stateful and shared between all the possible
 coroutines within a single process.
 """
 
-from typing import TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, List
+from typing import Sequence, TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, List, Union
 from types import ModuleType
 import logging
 from secure_cookie.session import Session
@@ -58,11 +58,16 @@ from action.plugin.ctx import AbstractUserPluginCtx
 
 
 T = TypeVar('T')
+U = TypeVar('U')
 
 _plugins: Dict[str, Any] = {}
 
 
 class PluginNotInstalled(Exception):
+    pass
+
+
+class InvalidPluginInstalled(Exception):
     pass
 
 
@@ -94,13 +99,21 @@ class _ID(Generic[T]):
             return _plugins[self._ident]
         return None
 
+    def __call__(self, required_type: Union[U, Sequence[U]] = T) -> '_ID[U]':
+        if not _has_plugin(self._ident):
+            raise PluginNotInstalled(f'Plugin {self._ident} was not installed!')
+        if not isinstance(self.instance, required_type):
+            raise InvalidPluginInstalled(
+                f'Required instance of {required_type} for plugin {self.name}!')
+        return self
+
     def __enter__(self) -> T:
         if _has_plugin(self._ident):
             return self.instance
         raise PluginNotInstalled(f'Plugin {self._ident} was not installed!')
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
-        return exc_type is AttributeError
+        return False
 
     @property
     def is_optional(self) -> bool:
