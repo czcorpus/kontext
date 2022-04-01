@@ -36,35 +36,112 @@ class MySQLConfException(Exception):
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_CORP_ID_ATTR = 'name'
+DFLT_CORP_PC_ID_ATTR = 'parallel_corpus_id'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
 DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
 DFLT_USER_ACC_TABLE = 'kontext_user_access'
 DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
+DFLT_GROUP_PC_ACC_TABLE = 'kontext_group_pc_access'
+DFLT_GROUP_PC_ACC_PC_ATTR = 'parallel_corpus_id'
+DFLT_GROUP_PC_ACC_GROUP_ATTR = 'group_access'
+DFLT_USER_PC_ACC_TABLE = 'kontext_user_pc_access'
+DFLT_USER_PC_ACC_PC_ATTR = 'parallel_corpus_id'
 
 
 class Backend(DatabaseBackend):
 
     def __init__(
-            self,
-            db: MySQLOps,
-            user_table: str = DFLT_USER_TABLE,
-            corp_table: str = DFLT_CORP_TABLE,
-            corp_id_attr: str = DFLT_CORP_ID_ATTR,
-            group_acc_table: str = DFLT_GROUP_ACC_TABLE,
-            group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,
-            group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
-            user_acc_table: str = DFLT_USER_ACC_TABLE,
-            user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR):
+        self,
+        db: MySQLOps,
+        user_table: str = DFLT_USER_TABLE,
+        corp_table: str = DFLT_CORP_TABLE,
+        corp_id_attr: str = DFLT_CORP_ID_ATTR,
+        corp_pc_id_attr: str = DFLT_CORP_PC_ID_ATTR,
+        group_acc_table: str = DFLT_GROUP_ACC_TABLE,
+        group_acc_group_attr: str = DFLT_GROUP_ACC_GROUP_ATTR,
+        group_acc_corp_attr: str = DFLT_GROUP_ACC_CORP_ATTR,
+        user_acc_table: str = DFLT_USER_ACC_TABLE,
+        user_acc_corp_attr: str = DFLT_USER_ACC_CORP_ATTR,
+        group_pc_acc_table: str = DFLT_GROUP_PC_ACC_TABLE,
+        group_pc_acc_pc_attr: str = DFLT_GROUP_PC_ACC_PC_ATTR,
+        group_pc_acc_group_attr: str = DFLT_GROUP_PC_ACC_GROUP_ATTR,
+        user_pc_acc_table: str = DFLT_USER_PC_ACC_TABLE,
+        user_pc_acc_pc_attr: str = DFLT_USER_PC_ACC_PC_ATTR,
+        enable_parallel_acc: bool = False,
+    ):
         self._db = db
+        self._enable_parallel_acc = enable_parallel_acc
+
         self._user_table = user_table
         self._corp_table = corp_table
         self._corp_id_attr = corp_id_attr
+        self._corp_pc_id_attr = corp_pc_id_attr
         self._group_acc_table = group_acc_table
         self._user_acc_table = user_acc_table
         self._user_acc_corp_attr = user_acc_corp_attr
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
+        self._group_pc_acc_table = group_pc_acc_table
+        self._group_pc_acc_pc_attr = group_pc_acc_pc_attr
+        self._group_pc_acc_group_attr = group_pc_acc_group_attr
+        self._user_pc_acc_table = user_pc_acc_table
+        self._user_pc_acc_pc_attr = user_pc_acc_pc_attr
+
+    @property
+    def _corpus_access_query(self) -> str:
+        """
+        Query to get corpora user has access to. It accepts 2 `user_id` arguments
+        """
+        return f'''
+            SELECT
+                acc.{self._user_acc_corp_attr} AS corpus_id,
+                acc.limited AS limited
+            FROM {self._user_acc_table} AS acc
+            WHERE acc.user_id = %s
+            UNION
+            SELECT
+                g_acc.{self._group_acc_corp_attr} AS corpus_id,
+                g_acc.limited AS limited
+            FROM {self._group_acc_table} AS g_acc
+            WHERE g_acc.{self._group_acc_group_attr} = (
+                SELECT {self._user_table}.{self._group_acc_group_attr}
+                FROM {self._user_table}
+                WHERE {self._user_table}.id = %s
+            )
+        '''
+
+    @property
+    def _parallel_access_query(self) -> str:
+        """
+        Query to get parallel corpora user has access to. It accepts 2 `user_id` arguments.
+        """
+        return f'''
+            SELECT
+                corp.{self._corp_id_attr} AS corpus_id,
+                pc_acc.limited AS limited
+            FROM {self._user_pc_acc_table} AS pc_acc
+            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = pc_acc.{self._user_pc_acc_pc_attr}
+            WHERE
+                pc_acc.user_id = %s
+            UNION
+            SELECT
+                corp.{self._corp_id_attr} AS corpus_id,
+                g_pc_acc.limited AS limited
+            FROM {self._group_pc_acc_table} AS g_pc_acc
+            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.{self._group_pc_acc_pc_attr}
+            WHERE g_pc_acc.{self._group_pc_acc_group_attr} = (
+                SELECT user.{self._group_acc_group_attr}
+                FROM {self._user_table} AS user
+                WHERE user.id = %s
+            )
+        '''
+
+    @property
+    def _total_access_query(self) -> str:
+        if self._enable_parallel_acc:
+            return f'{self._corpus_access_query} UNION {self._parallel_access_query}'
+        return self._corpus_access_query
 
     async def contains_corpus(self, corpus_id: str) -> bool:
         async with self._db.cursor() as cursor:
@@ -95,7 +172,7 @@ class Backend(DatabaseBackend):
         if len(corp_ids) == 0:
             return {}
         placeholders = ', '.join(['%s'] * len(corp_ids))
-        col = 'description_{0}'.format(user_lang[:2])
+        col = f'description_{user_lang[:2]}'
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'SELECT name AS corpname, {col} AS contents '
@@ -141,26 +218,23 @@ class Backend(DatabaseBackend):
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
         # the first item belongs to setting a special @ variable
-        values_cond2 = [user_id, user_id, 1]
+        if self._enable_parallel_acc:
+            values_cond2 = [user_id, user_id, user_id, user_id, 1]
+        else:
+            values_cond2 = [user_id, user_id, 1]
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
+                values_cond1.extend(4 * [f'%{substr}%'])
                 where_cond2.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
+                values_cond2.extend(4 * [f'%{substr}%'])
         if keywords is not None and len(keywords) > 0:
-            where_cond1.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
-            where_cond2.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond1.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
+            where_cond2.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
             for keyword in keywords:
                 values_cond1.append(keyword)
                 values_cond2.append(keyword)
@@ -226,16 +300,7 @@ class Backend(DatabaseBackend):
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'JOIN ('
-            f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
-            f'    {self._user_acc_table}.limited AS limited '
-            f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
-            '  UNION '
-            f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
-            f'    {self._group_acc_table}.limited AS limited '
-            f'  FROM {self._group_acc_table} '
-            f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-            f'     (SELECT {self._user_table}.{self._group_acc_group_attr} '
-            f'          FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
+            f' {self._total_access_query} '
             f') AS kcu ON c.{self._corp_id_attr} = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
@@ -250,7 +315,7 @@ class Backend(DatabaseBackend):
             return await cursor.fetchall()
 
     async def load_featured_corpora(self, user_lang: str) -> Iterable[Dict[str, str]]:
-        desc_col = 'c.description_{0}'.format(user_lang[:2])
+        desc_col = f'c.description_{user_lang[:2]}'
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 'SELECT c.name AS corpus_id, c.name AS id, ifnull(rc.name, c.name) AS name, '
@@ -261,8 +326,8 @@ class Backend(DatabaseBackend):
             return await cursor.fetchall()
 
     async def load_registry_table(self, corpus_id: str, variant: str) -> Dict[str, str]:
-        cols = (['rc.{0} AS {1}'.format(v, k) for k, v in list(REG_COLS_MAP.items())] +
-                ['rv.{0} AS {1}'.format(v, k) for k, v in list(REG_VAR_COLS_MAP.items())])
+        cols = ([f'rc.{v} AS {k}' for k, v in REG_COLS_MAP.items()] +
+                [f'rv.{v} AS {k}' for k, v in REG_VAR_COLS_MAP.items()])
         if variant:
             sql = (
                 'SELECT {0} FROM registry_conf AS rc '
@@ -281,7 +346,7 @@ class Backend(DatabaseBackend):
 
     async def load_corpus_posattrs(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
         sql = 'SELECT {0} FROM corpus_posattr WHERE corpus_name = %s ORDER BY position'.format(
-            ', '.join(['name', 'position'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(POS_COLS_MAP.items())]))
+            ', '.join(['name', 'position'] + [f'`{v}` AS `{k}`' for k, v in POS_COLS_MAP.items()]))
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (corpus_id,))
             return await cursor.fetchall()
@@ -306,8 +371,7 @@ class Backend(DatabaseBackend):
             return [row['id'] async for row in cursor]
 
     async def load_corpus_structures(self, corpus_id: str) -> Iterable[Dict[str, Any]]:
-        cols = ['name'] + ['`{0}` AS `{1}`'.format(v, k)
-                           for k, v in list(STRUCT_COLS_MAP.items())]
+        cols = ['name'] + [f'`{v}` AS `{k}`' for k, v in STRUCT_COLS_MAP.items()]
         sql = 'SELECT {0} FROM corpus_structure WHERE corpus_name = %s'.format(', '.join(cols))
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, (corpus_id,))
@@ -319,11 +383,11 @@ class Backend(DatabaseBackend):
                 sql = (
                     'SELECT {0}, dt_format, structure_name, name '
                     'FROM corpus_structattr WHERE corpus_name = %s AND structure_name = %s').format(
-                        ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+                        ', '.join(['name'] + [f'`{v}` AS `{k}`' for k, v in SATTR_COLS_MAP.items()]))
                 await cursor.execute(sql, (corpus_id, structure_id))
             else:
                 sql = 'SELECT {0}, dt_format, structure_name, name FROM corpus_structattr WHERE corpus_name = %s'.format(
-                    ', '.join(['name'] + ['`{0}` AS `{1}`'.format(v, k) for k, v in list(SATTR_COLS_MAP.items())]))
+                    ', '.join(['name'] + [f'`{v}` AS `{k}`' for k, v in SATTR_COLS_MAP.items()]))
                 await cursor.execute(sql, (corpus_id,))
             return await cursor.fetchall()
 
@@ -357,20 +421,12 @@ class Backend(DatabaseBackend):
             await cursor.execute(
                 'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                 'FROM ( '
-                f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
-                f'    {self._user_acc_table}.limited AS limited '
-                f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
-                '  UNION '
-                f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
-                f'    {self._group_acc_table}.limited AS limited '
-                f'  FROM {self._group_acc_table} '
-                f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-                f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
-                f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
+                f' {self._total_access_query} '
                 ') as ucp '
                 f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
                 'ORDER BY ucp.limited LIMIT 1',
-                (user_id, user_id, user_id, corpus_id))
+                (user_id, *(user_id,) * (4 if self._enable_parallel_acc else 2), corpus_id)
+            )
             row = await cursor.fetchone()
         if not row:
             return CorpusAccess(False, False, '')
@@ -381,18 +437,11 @@ class Backend(DatabaseBackend):
             await cursor.execute(
                 'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
                 'FROM ( '
-                f'  SELECT {self._user_acc_table}.{self._user_acc_corp_attr} AS corpus_id, '
-                f'    {self._user_acc_table}.limited AS limited '
-                f'  FROM {self._user_acc_table} WHERE ({self._user_acc_table}.user_id = %s) '
-                '  UNION '
-                f'  SELECT {self._group_acc_table}.{self._group_acc_corp_attr} AS corpus_id, '
-                f'     {self._group_acc_table}.limited AS limited '
-                f'  FROM {self._group_acc_table} '
-                f'  WHERE ({self._group_acc_table}.{self._group_acc_group_attr} = '
-                f'      (SELECT {self._user_table}.{self._group_acc_group_attr} '
-                f'           FROM {self._user_table} WHERE ({self._user_table}.id = %s))) '
+                f' {self._total_access_query} '
                 ') as ucp '
-                f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
+                f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id',
+                (user_id, *(user_id,) * (4 if self._enable_parallel_acc else 2))
+            )
             return [r['corpus_id'] async for r in cursor]
 
     async def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:

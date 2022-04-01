@@ -27,7 +27,6 @@ from sanic.blueprints import Blueprint
 
 from action.decorators import http_action
 from action.model.user import UserActionModel
-from action.krequest import KRequest
 from action.plugin.ctx import PluginCtx
 from plugins.common.mysql import MySQLOps, MySQLConf
 from plugins.mysql_integration_db import MySqlIntegrationDb
@@ -347,7 +346,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         return ans
 
     async def initial_search_params(self, plugin_ctx: PluginCtx):
-        query_substrs, query_keywords = parse_query(self._tag_prefix, plugin_ctx.request.args.get('query'))
+        query_substrs, query_keywords = parse_query(
+            self._tag_prefix, plugin_ctx.request.args.get('query'))
         all_keywords = await self.all_keywords(plugin_ctx.user_lang)
         exp_keywords = [(k, lab, k in query_keywords, self.get_label_color(k))
                         for k, lab in list(all_keywords.items())]
@@ -384,7 +384,7 @@ def create_instance(conf, user_items, integ_db: MySqlIntegrationDb):
     plugin_conf = conf.get('plugins', 'corparch')
     if integ_db.is_active and 'mysql_host' not in plugin_conf:
         logging.getLogger(__name__).info(f'mysql_corparch uses integration_db[{integ_db.info}]')
-        db_backend = Backend(integ_db)
+        db_backend = Backend(integ_db, enable_parallel_acc=True)
     else:
         logging.getLogger(__name__).info(
             'mysql_user_items uses custom database configuration {}@{}'.format(
