@@ -142,7 +142,7 @@ class MysqlAuthHandler(AbstractInternalAuth):
 
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
-            return False, True, ''
+            return CorpusAccess(False, True, '')
         async with self.db.cursor() as cursor:
             await cursor.execute(
                 'SELECT guaccess.name, MAX(guaccess.limited) AS limited '
@@ -174,8 +174,8 @@ class MysqlAuthHandler(AbstractInternalAuth):
             )
             row = await cursor.fetchone()
         if row is not None:
-            return False, True, self._variant_prefix(corpus_name)
-        return False, False, ''
+            return CorpusAccess(False, True, self._variant_prefix(corpus_name))
+        return CorpusAccess(False, False, '')
 
     async def permitted_corpora(self, user_dict) -> List[str]:
         async with self.db.cursor() as cursor:

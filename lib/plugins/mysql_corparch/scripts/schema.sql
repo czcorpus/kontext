@@ -62,6 +62,7 @@ CREATE TABLE kontext_corpus (
   syntax_viewer_conf_json text,
   UNIQUE KEY corpora_name_uniq (name),
   KEY corpora_requestable_idx (requestable),
+  CONSTRAINT corpora_parallel_corpus_id_fkey FOREIGN KEY (parallel_corpus_id) REFERENCES kontext_parallel_corpus (id),
   CONSTRAINT corpora_bib_id_structattr_fkey FOREIGN KEY (name, bib_id_struct, bib_id_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_bib_label_structattr_fkey FOREIGN KEY (name, bib_label_struct, bib_label_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_sentence_struct_fkey FOREIGN KEY (name, sentence_struct) REFERENCES corpus_structure (corpus_name, name),
