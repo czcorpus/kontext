@@ -16,15 +16,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import Any, List, Mapping, Dict, Tuple, Union
+from typing import Any, List, Mapping, Dict, Tuple, Union, Optional
 
 from collections import defaultdict
 import re
 import itertools
 import math
+from dataclasses import dataclass, asdict, field
 
 import manatee
-from structures import FixedDict
 from conclib.empty import InitialConc
 from conclib.common import KConc
 from kwiclib.common import tokens2strclass, SortCritType, lngrp_sortcrit
@@ -68,40 +68,42 @@ class Pagination:
                     nextPage=self.next_page, lastPage=self.last_page)
 
 
-class KwicPageData(FixedDict):
+@dataclass
+class KwicPageData:
     """
     Defines data required to render a KWIC page
     """
-    Lines = None
-    GroupNumbers = None
-    fromp = None
-    Page = None
-    pagination = None
-    concsize = None
-    result_arf = None
-    result_relative_freq = None
-    KWICCorps = ()
-    CorporaColumns = ()
+    Lines: Optional[List[Any]] = None
+    GroupNumbers: Optional[List[Any]] = None
+    fromp: Optional[int] = None
+    Page: List[Any] = field(default_factory=list)
+    pagination: Pagination = field(default_factory=lambda: Pagination())
+    concsize: Optional[int] = None
+    result_arf: Optional[float] = None
+    result_relative_freq: Optional[float] = None
+    KWICCorps: List[Any] = field(default_factory=list)
+    CorporaColumns: List[Any] = field(default_factory=list)
 
 
-class KwicLinesArgs(object):
+@dataclass
+class KwicLinesArgs:
     """
     note: please see KwicPageArgs attributes for more information
     """
-    speech_segment = None
-    fromline = None
-    toline = None
-    leftctx = '-5'
-    rightctx = '5'
-    attrs = 'word'
-    ctxattrs = 'word'
-    refs = '#'
-    user_structs = 'p'
-    labelmap: Dict[str, str] = {}
-    righttoleft = False
-    alignlist = ()
-    attr_vmode = 'visible-kwic'
-    base_attr = 'word'
+    speech_segment: Optional[str] = None
+    fromline: Optional[int] = None
+    toline: Optional[int] = None
+    leftctx: str = '-5'
+    rightctx: str = '5'
+    attrs: str = 'word'
+    ctxattrs: str = 'word'
+    refs: str = '#'
+    user_structs: str = 'p'
+    labelmap: Dict[str, str] = field(default_factory=dict)
+    righttoleft: bool = False
+    alignlist: List[Any] = field(default_factory=list)
+    attr_vmode: str = 'visible-kwic'
+    base_attr: str = 'word'
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
@@ -111,52 +113,52 @@ class KwicLinesArgs(object):
             setattr(ans, k, v)
         return ans
 
-
-class KwicPageArgs(object):
+@dataclass
+class KwicPageArgs:
     # 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
-    speech_attr = None
+    speech_attr: Optional[Tuple[str, str]] = None
 
     # page number (starts from 1)
-    fromp = 1
+    fromp: int = 1
 
     # first line of the listing (starts from 0)
-    line_offset = 0
+    line_offset: int = 0
 
     # how many characters/positions/whatever_struct_attrs display on the left side; Use 'str' type!
-    leftctx = '-5'
+    leftctx: str = '-5'
 
     # how many characters/positions/whatever_struct_attrs display on the right side; Use 'str' type!
-    rightctx = '5'
+    rightctx: str = '5'
 
     # positional attributes to be displayed for KWIC (word, lemma, tag,...)
-    attrs = 'word'
+    attrs: str = 'word'
 
     # positional attributes to be displayed for non-KWIC tokens (word, lemma, tag)
-    ctxattrs = 'word'
+    ctxattrs: str = 'word'
 
     # references (text type information derived from structural attributes) to be displayed
-    refs = '#'
+    refs: str = '#'
 
     # structures to be displayed
-    structs = 'p'
+    structs: str = 'p'
 
     # number of lines per page
-    pagesize = 40
+    pagesize: int = 40
 
     # ???
-    labelmap: Dict[str, str] = {}
+    labelmap: Dict[str, str] = field(default_factory=dict)
 
     # whether the text flows from right to left
-    righttoleft = False
+    righttoleft: bool = False
 
     # ???
-    alignlist: List[Any] = []  # TODO better type
+    alignlist: List[Any] = field(default_factory=list)  # TODO better type
 
     # whether display ===EMPTY=== or '' in case a value is empty
-    hidenone = 0
+    hidenone: int = 0
 
     # determine whether the non-word attributes should be rendered directly or as a meta-data
-    attr_vmode = 'visible-kwic'
+    attr_vmode:  str = 'visible-kwic'
 
     def __init__(self, argmapping: Dict[str, Any], base_attr: str):
         for k, v in argmapping.items():
@@ -177,7 +179,7 @@ class KwicPageArgs(object):
             return v
 
     def to_dict(self):
-        return self.__dict__
+        return asdict(self)
 
     def calc_fromline(self):
         return (self.fromp - 1) * self.pagesize + self.line_offset
@@ -280,7 +282,8 @@ class Kwic:
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
         out.pagination = pagination.export()
-        return dict(out)
+        print('==== {}'.format(asdict(out)))
+        return asdict(out)
 
     def add_aligns(self, result, args):
         """

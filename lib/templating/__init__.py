@@ -15,7 +15,7 @@
 from xml.sax.saxutils import escape
 
 
-class Type2XML(object):
+class Type2XML:
 
     @staticmethod
     def _list_to_xml(d, indent):
