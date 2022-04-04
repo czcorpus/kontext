@@ -28,7 +28,7 @@ import json
 import logging
 from typing import Dict, Tuple
 
-from lib.plugin_types.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 DEFAULT_TTL = 60  # in minutes

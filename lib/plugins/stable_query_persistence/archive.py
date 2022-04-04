@@ -30,6 +30,8 @@ from datetime import datetime
 import redis
 import sqlite3
 
+from plugin_types.general_storage import KeyValueStorage
+
 
 def redis_connection(host, port, db_id):
     """
@@ -63,7 +65,7 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db, to_db, archive_queue_key):
+    def __init__(self, from_db: KeyValueStorage, to_db: SQLite3Ops, archive_queue_key: str):
         """
         arguments:
         from_db -- a Redis connection
@@ -74,10 +76,10 @@ class Archiver(object):
         self._to_db = to_db
         self._archive_queue_key = archive_queue_key
 
-    def _get_queue_size(self):
-        return self._from_db.llen(self._archive_queue_key)
+    async def _get_queue_size(self):
+        return await self._from_db.llen(self._archive_queue_key)
 
-    def run(self, num_proc, dry_run):
+    async def run(self, num_proc, dry_run):
         """
         Performs actual archiving process according to the parameters passed
         in constructor.
@@ -99,11 +101,11 @@ class Archiver(object):
         i = 0
         try:
             while i < num_proc:
-                qitem = self._from_db.lpop(self._archive_queue_key)
+                qitem = await self._from_db.lpop(self._archive_queue_key)
                 if qitem is None:
                     break
                 qitem = json.loads(qitem)
-                data = self._from_db.get(qitem['key'])
+                data = await self._from_db.get(qitem['key'])
                 inserts.append((qitem['key'][len(conc_prefix):], data, curr_time, 0))
                 i += 1
 
@@ -113,25 +115,25 @@ class Archiver(object):
                 self._to_db.commit()
             else:
                 for ins in reversed(inserts):
-                    self._from_db.lpush(self._archive_queue_key,
-                                        json.dumps(dict(key=conc_prefix + ins[0])))
+                    await self._from_db.lpush(self._archive_queue_key,
+                                              json.dumps(dict(key=conc_prefix + ins[0])))
         except Exception as ex:
             for item in inserts:
-                self._from_db.rpush(self._archive_queue_key, json.dumps(
+                await self._from_db.rpush(self._archive_queue_key, json.dumps(
                     dict(key=conc_prefix + item[0])))
             return dict(
                 num_processed=i,
                 error=str(ex),
                 dry_run=dry_run,
-                queue_size=self._get_queue_size())
+                queue_size=await self._get_queue_size())
         return dict(
             num_processed=i,
             error=None,
             dry_run=dry_run,
-            queue_size=self._get_queue_size())
+            queue_size=await self._get_queue_size())
 
 
-def run(conf, num_proc, dry_run):
+async def run(conf, num_proc, dry_run):
     from_db = redis_connection(conf.get('plugins', 'db')['host'],
                                conf.get('plugins', 'db')['port'],
                                conf.get('plugins', 'db')['id'])
@@ -139,7 +141,7 @@ def run(conf, num_proc, dry_run):
 
     archive_queue_key = conf.get('plugins')['query_persistence']['archive_queue_key']
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
-    return archiver.run(num_proc, dry_run)
+    return await archiver.run(num_proc, dry_run)
 
 
 def _create_archive(conf, dry_run):

@@ -66,10 +66,10 @@ class Archiver(object):
         self._to_db: MySQLOps = to_db
         self._archive_queue_key = archive_queue_key
 
-    def _get_queue_size(self):
-        return self._from_db.list_len(self._archive_queue_key)
+    async def _get_queue_size(self):
+        return await self._from_db.list_len(self._archive_queue_key)
 
-    def run(self, num_proc, dry_run):
+    async def run(self, num_proc, dry_run):
         """
         Performs actual archiving process according to the parameters passed
         in constructor.
@@ -94,13 +94,13 @@ class Archiver(object):
                 with connection.cursor() as cursor:
                     proc_keys = set()
                     while i < num_proc:
-                        qitem = self._from_db.list_pop(self._archive_queue_key)
+                        qitem = await self._from_db.list_pop(self._archive_queue_key)
                         if qitem is None:
                             break
                         key = qitem['key']
                         if key in proc_keys:  # there are possible duplicates in the queue
                             continue
-                        data = self._from_db.get(key)
+                        data = await self._from_db.get(key)
                         if not is_archived(cursor, key):
                             inserts.append((key[len(conc_prefix):], json.dumps(data), curr_time, 0))
                             i += 1
@@ -115,23 +115,23 @@ class Archiver(object):
                         connection.commit()
                     else:
                         for ins in reversed(inserts):
-                            self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
+                            await self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
             for item in inserts:
-                self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + item[0]))
+                await self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + item[0]))
             return dict(
                 num_processed=i,
                 error=str(ex),
                 dry_run=dry_run,
-                queue_size=self._get_queue_size())
+                queue_size=await self._get_queue_size())
         return dict(
             num_processed=i,
             error=None,
             dry_run=dry_run,
-            queue_size=self._get_queue_size())
+            queue_size=await self._get_queue_size())
 
 
-def run(from_db, to_db, archive_queue_key: str, num_proc: int, dry_run: bool):
+async def run(from_db, to_db, archive_queue_key: str, num_proc: int, dry_run: bool):
     archiver = Archiver(from_db=from_db, to_db=to_db, archive_queue_key=archive_queue_key)
-    return archiver.run(num_proc, dry_run)
+    return await archiver.run(num_proc, dry_run)
