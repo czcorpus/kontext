@@ -66,7 +66,7 @@ def del_silent(path: str):
         logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}')
 
 
-def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: Tuple[str, ...]):
+async def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: Tuple[str, ...]):
     """
     Removes conc. cache entry and also a respective calculation task (silently).
     """
@@ -213,7 +213,7 @@ def find_cached_conc_base(
                                             q=q[:i], minsize=minsize)
                 if not ready:
                     if minsize != 0:
-                        cancel_conc_task(cache_map, subchash, q[:i])
+                        await cancel_conc_task(cache_map, subchash, q[:i])
                         logging.getLogger(__name__).warning(
                             'Removed unfinished concordance cache record due to exceeded time limit')
                     continue
@@ -229,7 +229,7 @@ def find_cached_conc_base(
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error(
                     f'Failed to use cached concordance for {q[:i]}: {ex}')
-                cancel_conc_task(cache_map, subchash, q[:i])
+                await cancel_conc_task(cache_map, subchash, q[:i])
                 continue
             ans = (i, conc)
             break
@@ -277,7 +277,7 @@ class ConcCalculation(GeneralWorker):
                 while not conc.finished():
                     conc.save(cachefile + '.tmp', False, True)
                     os.rename(cachefile + '.tmp', cachefile)
-                    sizes = self.get_cached_conc_sizes(corpus_obj, query)
+                    sizes = await self.get_cached_conc_sizes(corpus_obj, query)
                     await cache_map.update_calc_status(subchash, query, finished=sizes.finished,
                                                        concsize=sizes.concsize, fullsize=sizes.fullsize,
                                                        relconcsize=sizes.relconcsize, arf=None, task_id=self._task_id)
@@ -287,7 +287,7 @@ class ConcCalculation(GeneralWorker):
                 conc.save(cachefile + '.tmp')  # whole
                 os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
-                sizes = self.get_cached_conc_sizes(corpus_obj, query)
+                sizes = await self.get_cached_conc_sizes(corpus_obj, query)
                 await cache_map.update_calc_status(
                     subchash, query, finished=sizes.finished, concsize=conc.size(), fullsize=sizes.fullsize,
                     relconcsize=sizes.relconcsize,

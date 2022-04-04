@@ -144,7 +144,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         else:
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
-    amodel.attach_query_overview(ans)
+    await amodel.attach_query_overview(ans)
     return ans
 
 
@@ -174,10 +174,10 @@ async def get_conc_cache_status(amodel, req, resp):
             relconcsize=cache_status.relconcsize,
             arf=cache_status.arf)
     except CalcTaskNotFoundError as ex:
-        cancel_conc_task(cache_map, subchash, q)
+        await cancel_conc_task(cache_map, subchash, q)
         raise NotFoundException(f'Concordance calculation is lost: {ex}')
     except Exception as ex:
-        cancel_conc_task(cache_map, subchash, q)
+        await cancel_conc_task(cache_map, subchash, q)
         raise ex
 
 
@@ -308,7 +308,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         out['conc_cache_key'] = os.path.splitext(os.path.basename(conc.get_conc_file()))[0]
     else:
         out['conc_cache_key'] = None
-    amodel.attach_query_overview(out)
+    await amodel.attach_query_overview(out)
     return out
 
 
@@ -487,7 +487,7 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, List[Dict[str, Any]]]:
-    return {'Desc': amodel.concdesc_json()}
+    return {'Desc': await amodel.concdesc_json()}
 
 
 @bp.route('/ajax_fetch_conc_form_args')
@@ -1031,7 +1031,7 @@ async def load_query_pipeline(amodel: ConcActionModel, req: KRequest, resp: KRes
     with plugins.runtime.QUERY_PERSISTENCE as qp:
         pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
     ans = dict(ops=[dict(id=x.op_key, form_args=x.to_dict()) for x in pipeline])
-    amodel.attach_query_overview(ans)
+    await amodel.attach_query_overview(ans)
     return ans
 
 
@@ -1164,7 +1164,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             # to offer a custom i.p.m. calculation before the download starts
             output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
                 amodel, contains_within=False, translate=req.translate)
-            output['Desc'] = amodel.concdesc_json()['Desc']
+            output['Desc'] = (await amodel.concdesc_json())['Desc']
         elif req.mapped_args.saveformat in ('csv', 'xlsx', 'xml'):
             writer = plugins.runtime.EXPORT.instance.load_plugin(
                 req.mapped_args.saveformat, subtype='concordance')
@@ -1186,7 +1186,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                         'concordance_size': data['concsize'],
                         'arf': data['result_arf'],
                         'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
-                                  for x in amodel.concdesc_json().get('Desc', [])]
+                                  for x in (await amodel.concdesc_json()).get('Desc', [])]
                     })
 
                     doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')

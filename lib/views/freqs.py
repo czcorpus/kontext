@@ -266,7 +266,7 @@ async def _freqs(
     result['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
     result['quick_save_row_limit'] = amodel.FREQ_QUICK_SAVE_MAX_LINES
     await amodel.attach_query_params(result)
-    amodel.attach_query_overview(result)
+    await amodel.attach_query_overview(result)
     return result
 
 

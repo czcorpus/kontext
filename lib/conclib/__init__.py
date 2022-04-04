@@ -38,7 +38,7 @@ def conc_is_sorted(q: Union[List[str], Tuple[str, ...]]) -> bool:
     return ans
 
 
-def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):
+async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internals=True, translator=lambda x: x):
     """
     arguments:
     corpus -- a KCorpus instance

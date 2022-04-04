@@ -59,7 +59,7 @@ class GeneralWorker:
     def create_new_calc_status(self) -> ConcCacheStatus:
         return ConcCacheStatus(task_id=self._task_id)
 
-    def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
+    async def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
         """
         Extract concordance size, ipm etc. from a concordance file (specified by provided corpus and query).
         """

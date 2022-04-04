@@ -70,7 +70,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['save_line_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
         ans['text_types_data'] = await amodel.tt.export_with_norms(ret_nums=True)
         ans['quick_save_row_limit'] = amodel.COLLS_QUICK_SAVE_MAX_LINES
-        amodel.attach_query_overview(ans)
+        await amodel.attach_query_overview(ans)
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('collx')
@@ -132,7 +132,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
                 'Content-Disposition',
                 f'attachment; filename="{saved_filename}-collocations.txt"')
             out_data = asdict(result)
-            out_data['Desc'] = amodel.concdesc_json()['Desc']
+            out_data['Desc'] = (await amodel.concdesc_json())['Desc']
             out_data['saveformat'] = req.mapped_args.saveformat
             out_data['from_line'] = from_line
             out_data['to_line'] = to_line
