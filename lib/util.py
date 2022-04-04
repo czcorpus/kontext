@@ -14,6 +14,16 @@ def as_async(func):
     return run
 
 
+def as_sync(func):
+    """
+    Runs the wrapped asynchronous function as a blocking one via asyncio.run().
+    """
+    @wraps(func)
+    def run(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
+    return run
+
+
 async def anext(ait: AsyncIterator):
     return await ait.__anext__()
 

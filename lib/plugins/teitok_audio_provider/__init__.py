@@ -167,7 +167,7 @@ class TeitokAudioProvider(AbstractAudioProvider):
                     freed += nfreed
             return num_del, freed
 
-        def audio_cache_cleanup(ttl: int):
+        async def audio_cache_cleanup(ttl: int):
             num_del, bytes_freed = _process_dir(self._audio_cache_path, ttl)
             logging.getLogger(__name__).info(
                 'Audio cache cleanup - deleted {0} file(s), freed {1:.1f}kB'.format(num_del, bytes_freed / 1024))

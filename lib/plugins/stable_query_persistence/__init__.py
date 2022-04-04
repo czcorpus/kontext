@@ -203,7 +203,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
         """
         Export tasks for Celery worker(s)
         """
-        def archive_concordance(num_proc, dry_run):
+        async def archive_concordance(num_proc, dry_run):
             from . import archive
             return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
