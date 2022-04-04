@@ -20,7 +20,6 @@
 import datetime
 from collections import OrderedDict, defaultdict
 import pytz
-from typing import Generator
 import logging
 import re
 from contextlib import asynccontextmanager
@@ -227,15 +226,15 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
 
         # Dependent stuctures, structural attributes
         await self._create_struct_if_none(cursor, install_json.ident, install_json.sentence_struct)
-        sseg_struct, sseg_attr = self._create_structattr_if_none(
+        sseg_struct, sseg_attr = await self._create_structattr_if_none(
             cursor, install_json.ident, install_json.speech_segment)
-        spk_struct, spk_attr = self._create_structattr_if_none(
+        spk_struct, spk_attr = await self._create_structattr_if_none(
             cursor, install_json.ident, install_json.speaker_id_attr)
-        spe_struct, spe_attr = self._create_structattr_if_none(
+        spe_struct, spe_attr = await self._create_structattr_if_none(
             cursor, install_json.ident, install_json.speech_overlap_attr)
-        bla_struct, bla_attr = self._create_structattr_if_none(
+        bla_struct, bla_attr = await self._create_structattr_if_none(
             cursor, install_json.ident, install_json.metadata.label_attr)
-        bli_struct, bli_attr = self._create_structattr_if_none(
+        bli_struct, bli_attr = await self._create_structattr_if_none(
             cursor, install_json.ident, install_json.metadata.id_attr)
         await cursor.execute(
             f'UPDATE {self._corp_table} SET sentence_struct = %s, '
@@ -247,8 +246,8 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             'text_types_db = %s, featured = %s '
             'WHERE name = %s',
             (install_json.sentence_struct, sseg_struct, sseg_attr, spk_struct, spk_attr, spe_struct,
-            spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
-            int(install_json.metadata.featured), install_json.ident))
+             spe_attr, bla_struct, bla_attr, bli_struct, bli_attr, install_json.metadata.database,
+             int(install_json.metadata.featured), install_json.ident))
 
     async def update_corpus_config(self, cursor: Cursor, install_json, registry_conf, corp_size):
         t1 = datetime.datetime.now(
@@ -415,7 +414,8 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 tz=pytz.timezone('Europe/Prague')).strftime("%Y-%m-%dT%H:%M:%S%z")
 
             if await self._registry_table_exists(cursor, corpus_id):
-                cols = ['updated'] + [REG_COLS_MAP[k] for k, v in list(values.items()) if k in REG_COLS_MAP]
+                cols = ['updated'] + [REG_COLS_MAP[k]
+                                      for k, v in list(values.items()) if k in REG_COLS_MAP]
                 vals = [t1]
                 for k, v in values.items():
                     if k in ('SUBCORPATTRS', 'FREQTTATTRS'):
@@ -451,7 +451,8 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                         'DELETE FROM registry_variable WHERE corpus_name = %s AND variant IS NULL', (corpus_id,))
             cols = ['corpus_name', 'variant'] + [REG_VAR_COLS_MAP[k] for k, v in list(values.items())
                                                  if k in REG_VAR_COLS_MAP]
-            vals = [corpus_id, variant] + [v for k, v in list(values.items()) if k in REG_VAR_COLS_MAP]
+            vals = [corpus_id, variant] + \
+                [v for k, v in list(values.items()) if k in REG_VAR_COLS_MAP]
             sql = 'INSERT INTO registry_variable ({0}) VALUES ({1})'.format(
                 ', '.join(cols), ', '.join(len(cols) * ['%s']))
             await cursor.execute(sql, vals)
@@ -473,7 +474,8 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
                 await cursor.execute(sql, vals)
             else:
                 ucols = ', '.join(f'{v} = %s' for v in cols)
-                sql = 'UPDATE corpus_posattr SET {0} WHERE corpus_name = %s AND name = %s'.format(ucols)
+                sql = 'UPDATE corpus_posattr SET {0} WHERE corpus_name = %s AND name = %s'.format(
+                    ucols)
                 await cursor.execute(sql, vals + [corpus_id, name])
         except Exception as ex:
             logging.getLogger(__name__).error(
@@ -539,7 +541,8 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
         if await self._structattr_exists(cursor, corpus_id, struct_id, name):
             cols = [SATTR_COLS_MAP[k] for k, v in values if k in SATTR_COLS_MAP] + ['position']
             if len(cols) > 0:
-                vals = [v for k, v in values if k in SATTR_COLS_MAP] + [position, corpus_id, struct_id, name]
+                vals = [v for k, v in values if k in SATTR_COLS_MAP] + \
+                    [position, corpus_id, struct_id, name]
                 sql = (
                     'UPDATE corpus_structattr '
                     'SET {0} '

@@ -58,7 +58,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         hint=req.translate(
             'Saves at most {0} items. Use "Custom" for more options.'.format(amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
-    amodel.save_options(amodel.LOCAL_COLL_OPTIONS, amodel.args.corpname)
+    await amodel.save_options(amodel.LOCAL_COLL_OPTIONS, amodel.args.corpname)
 
     try:
         await require_existing_conc(amodel.corp, amodel.args.q)

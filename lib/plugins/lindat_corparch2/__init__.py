@@ -310,7 +310,7 @@ class DefaultCorplistProvider(CorplistProvider):
         normalized_query_substrs = [s.lower() for s in query_substrs]
         used_keywords = set()
 
-        for corp in self._corparch.get_list(plugin_ctx):
+        for corp in (await self._corparch.get_list(plugin_ctx)):
             full_data = await self._corparch.get_corpus_info(plugin_ctx, corp['id'])
             if not isinstance(full_data, BrokenCorpusInfo):
                 keywords = [k for k, _ in full_data.metadata.keywords]
@@ -460,14 +460,14 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def customize_corpus_info(self, corpus_info, node):
         pass
 
-    def get_list(self, plugin_ctx: PluginCtx, user_allowed_corpora=None):
+    async def get_list(self, plugin_ctx: PluginCtx, user_allowed_corpora=None):
         """
         arguments:
         user_allowed_corpora -- a dict (corpus_id, corpus_variant) containing corpora ids
                                 accessible by the current user
         """
         cl = []
-        for item in list(self._raw_list(plugin_ctx).values()):
+        for item in (await self._raw_list(plugin_ctx)).values():
             corp_id, path, web = item.id, item.path, item.sentence_struct
             if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 corp_info = dict(name=corp_id)
@@ -770,7 +770,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_ctx, await (plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate)).description)
+                plugin_ctx, (await plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate)).description)
             ans.append(tmp)
         return ans
 

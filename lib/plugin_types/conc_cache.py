@@ -189,7 +189,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_calc_status(self, subchash: str, query: QueryType) -> ConcCacheStatus:
+    async def get_calc_status(self, subchash: str, query: QueryType) -> Union[ConcCacheStatus, None]:
         pass
 
     @abc.abstractmethod

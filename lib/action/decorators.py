@@ -13,6 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import sys
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
@@ -27,6 +28,7 @@ from dataclasses_json import DataClassJsonMixin
 from action.errors import ImmediateRedirectException, UserActionException
 from action.model.base import PageConstructor, BaseActionModel
 import json
+import settings
 
 
 async def _output_result(
@@ -230,7 +232,11 @@ def http_action(
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
                 ans = await resolve_error(amodel, aprops, req, resp, ex)
-                resp.add_system_message('error', str(ex))
+
+                if settings.is_debug_mode():
+                    resp.add_system_message('error', traceback.format_exc())
+                else:
+                    resp.add_system_message('error', str(ex))
 
             return HTTPResponse(
                 body=await _output_result(

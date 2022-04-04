@@ -93,7 +93,7 @@ class UserActionModel(BaseActionModel):
             pass
 
         options = {}
-        self._scheduled_actions(options)
+        await self._scheduled_actions(options)
 
         # only general setting can be applied now because
         # we do not know final corpus name yet
@@ -158,7 +158,7 @@ class UserActionModel(BaseActionModel):
     def _get_save_excluded_attributes() -> Tuple[str, ...]:
         return 'corpname', BaseActionModel.SCHEDULED_ACTIONS_KEY
 
-    def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Optional[str] = None):
+    async def save_options(self, optlist: Optional[Iterable] = None, corpus_id: Optional[str] = None):
         """
         Saves user's options to a storage
 
@@ -186,13 +186,13 @@ class UserActionModel(BaseActionModel):
         with plugins.runtime.SETTINGS_STORAGE as settings_storage:
             if self._user_has_persistent_settings():
                 if corpus_id:
-                    options = settings_storage.load(self.session_get('user', 'id'), corpus_id)
+                    options = await settings_storage.load(self.session_get('user', 'id'), corpus_id)
                     options = merge_incoming_opts_to(options)
-                    settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
+                    await settings_storage.save(self.session_get('user', 'id'), corpus_id, options)
                 else:
-                    options = settings_storage.load(self.session_get('user', 'id'))
+                    options = await settings_storage.load(self.session_get('user', 'id'))
                     options = merge_incoming_opts_to(options)
-                    settings_storage.save(self.session_get('user', 'id'), None, options)
+                    await settings_storage.save(self.session_get('user', 'id'), None, options)
             else:
                 options = {}
                 sess_options = self.session_get('settings')
@@ -201,7 +201,7 @@ class UserActionModel(BaseActionModel):
                 merge_incoming_opts_to(options)
                 self._req.ctx.session['settings'] = options
 
-    def _scheduled_actions(self, user_settings):
+    async def _scheduled_actions(self, user_settings):
         actions = []
         if BaseActionModel.SCHEDULED_ACTIONS_KEY in user_settings:
             value = user_settings[BaseActionModel.SCHEDULED_ACTIONS_KEY]
@@ -227,7 +227,7 @@ class UserActionModel(BaseActionModel):
                 # avoided by 'continue' in case everything is OK
                 logging.getLogger('SCHEDULING').error('task_id: {}, Failed to invoke scheduled action: {}'.format(
                     action.get('id', '??'), action,))
-            self.save_options()  # this causes scheduled task to be removed from settings
+            await self.save_options()  # this causes scheduled task to be removed from settings
 
     @property
     def plugin_ctx(self):

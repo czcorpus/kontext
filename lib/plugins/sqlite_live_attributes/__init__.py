@@ -344,7 +344,7 @@ class LiveAttributes(CachedLiveAttributes):
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
         return [BibTitle(r[0], r[1]) for r in ans]
 
-    def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
+    async def fill_attrs(self, corpus_id: str, search: str, values: List[str], fill: List[str]) -> Dict[str, Dict[str, str]]:
         raise NotImplementedError()
 
 
