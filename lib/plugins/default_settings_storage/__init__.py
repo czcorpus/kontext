@@ -72,7 +72,7 @@ class SettingsStorage(AbstractSettingsStorage):
         if corpus_id:
             return await self.db.hash_get(self._mk_corp_key(user_id), corpus_id)
         else:
-            return self._upgrade_general_settings(await self.db.get(self._mk_key(user_id)), user_id)
+            return await self._upgrade_general_settings(await self.db.get(self._mk_key(user_id)), user_id)
 
     def get_excluded_users(self):
         return self._excluded_users

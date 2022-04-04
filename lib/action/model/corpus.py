@@ -143,12 +143,12 @@ class CorpusActionModel(UserActionModel):
         """
         return [self.args.corpname] + [c for c in self.corp.get_conf('ALIGNED').split(',') if len(c) > 0]
 
-    def _load_corpus_settings(self, corpus_id):
+    async def _load_corpus_settings(self, corpus_id):
         """
         """
         if self._user_has_persistent_settings():
             with plugins.runtime.SETTINGS_STORAGE as settings_plg:
-                data = settings_plg.load(self.session_get('user', 'id'), corpus_id)
+                data = await settings_plg.load(self.session_get('user', 'id'), corpus_id)
         else:
             data = self.session_get('corpus_settings')
         if not data:
@@ -269,7 +269,7 @@ class CorpusActionModel(UserActionModel):
             else:
                 corpus_options = {}
                 corpus_options.update((await self.get_corpus_info(corpname)).default_view_opts)
-                corpus_options.update(self._load_corpus_settings(corpname))
+                corpus_options.update(await self._load_corpus_settings(corpname))
                 self.args.map_args_to_attrs(corpus_options)
                 req_args.set_forced_arg('corpname', corpname)
 
