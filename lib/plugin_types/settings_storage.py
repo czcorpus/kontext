@@ -27,7 +27,7 @@ import abc
 class AbstractSettingsStorage(abc.ABC):
 
     @abc.abstractmethod
-    def save(self, user_id: int, corpus_id: Union[str, None], data: Dict[str, Any]):
+    async def save(self, user_id: int, corpus_id: Union[str, None], data: Dict[str, Any]):
         """
         Save either general (if corpus_id is None) or corpus specific settings.
         Old user settings are expected to be rewritten.
@@ -38,7 +38,7 @@ class AbstractSettingsStorage(abc.ABC):
         data -- a dictionary containing user settings
         """
 
-    def load(self, user_id: int, corpus_id: Optional[str] = None) -> Dict[str, Any]:
+    async def load(self, user_id: int, corpus_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Load either general (if corpus_id is None) or corpus-specific settings
 

@@ -589,7 +589,7 @@ class ConcActionModel(CorpusActionModel):
 
         return out_list
 
-    await def attach_query_overview(self, out):
+    async def attach_query_overview(self, out):
         out['query_overview'] = await self.concdesc_json()
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(

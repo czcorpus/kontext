@@ -56,7 +56,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and
                 query_items[pos + 2].startswith('x-'))
 
-    def detect_internal_op(qx, pos):
+    async def detect_internal_op(qx, pos):
         if pos > len(qx) - 3 or not skip_internals:
             return False, await get_size(pos)
         align_end = 0
@@ -86,7 +86,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
     desc = []
     i = 0
     while i < len(q):
-        is_align_op, size = detect_internal_op(q, i)
+        is_align_op, size = await detect_internal_op(q, i)
         # in case of aligned corpus (= 3 operations) we update previous
         # user operation and ignore the rest (as it is just an internal operation
         # a common user does not understand).
@@ -97,7 +97,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
                     tmp = desc[last_user_op_idx]
                     desc[last_user_op_idx] = tmp[:4] + (size,) + tmp[-1:]
                 i += 3  # ignore aligned corpus operation, i is now the next valid operation
-                is_align_op, size = detect_internal_op(q, i)
+                is_align_op, size = await detect_internal_op(q, i)
             if i > len(q) - 1:
                 break
         size = get_size(i)

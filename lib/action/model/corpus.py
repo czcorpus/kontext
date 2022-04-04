@@ -44,6 +44,7 @@ from action.response import KResponse
 from action.model.user import UserActionModel, UserPluginCtx
 from texttypes.model import TextTypes, TextTypesCache
 from action.plugin.ctx import AbstractCorpusPluginCtx
+from util import as_sync
 
 
 T = TypeVar('T')
@@ -376,6 +377,11 @@ class CorpusActionModel(UserActionModel):
         else:
             self._resp.set_http_status(500)
 
+    async def _corp(self):
+        return await self.cm.get_corpus(
+            self.args.corpname, subcname=self.args.usesubcorp,
+            corp_variant=self._corpus_variant, translate=self._req.translate)
+
     @property
     def corp(self) -> AbstractKCorpus:
         """
@@ -393,8 +399,7 @@ class CorpusActionModel(UserActionModel):
         if self.args.corpname:
             try:
                 if not self._curr_corpus or self.args.usesubcorp and not self._curr_corpus.is_subcorpus:
-                    self._curr_corpus = await self.cm.get_corpus(self.args.corpname, subcname=self.args.usesubcorp,
-                                                                 corp_variant=self._corpus_variant, translate=self._req.translate)
+                    self._curr_corpus = as_sync(self._corp)()
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:

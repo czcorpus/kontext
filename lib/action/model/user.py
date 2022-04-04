@@ -100,7 +100,7 @@ class UserActionModel(BaseActionModel):
         self._init_default_settings(options)
 
         try:
-            options.update(self._load_general_settings())
+            options.update(await self._load_general_settings())
             self.args.map_args_to_attrs(options)
             self._setup_user_paths()
             self.cm = corplib.CorpusManager(self.subcpath)
@@ -142,12 +142,12 @@ class UserActionModel(BaseActionModel):
             return (self.session_get('user', 'id') not in getattr(sstorage, 'get_excluded_users')()
                     and not self.user_is_anonymous())
 
-    def _load_general_settings(self) -> Dict[str, Any]:
+    async def _load_general_settings(self) -> Dict[str, Any]:
         """
         """
         if self._user_has_persistent_settings():
             with plugins.runtime.SETTINGS_STORAGE as settings_plg:
-                return settings_plg.load(self.session_get('user', 'id'))
+                return await settings_plg.load(self.session_get('user', 'id'))
         else:
             data = self.session_get('settings')
             if not data:

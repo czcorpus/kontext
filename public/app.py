@@ -60,6 +60,7 @@ from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 from action.cookie import KonTextCookie
+from util import as_sync
 
 
 # we ensure that the application's locale is always the same
@@ -138,11 +139,14 @@ application.ctx = ApplicationContext(
 
 
 def signal_handler(signal, frame):
-    for p in plugins.runtime:
-        fn = getattr(p.instance, 'on_soft_reset', None)
-        if callable(fn):
-            fn()
-    await tt_cache.clear_all()
+
+    async def _async_run():
+        for p in plugins.runtime:
+            fn = getattr(p.instance, 'on_soft_reset', None)
+            if callable(fn):
+                fn()
+        await tt_cache.clear_all()
+    as_sync(_async_run)()
 
 
 signal.signal(signal.SIGUSR1, signal_handler)
@@ -150,7 +154,7 @@ signal.signal(signal.SIGUSR1, signal_handler)
 
 @application.listener('before_server_start')
 async def server_init(app, loop):
-    db_conf = settings.get('plugins', 'db')
+    db_conf = settings.get('plugins', 'sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
     app.ctx.redis = aioredis.from_url(
         f'redis://{db_conf["host"]}:{db_conf["port"]}',

@@ -193,7 +193,7 @@ class AbstractConcCache(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def refresh_map(self):
+    async def refresh_map(self):
         """
         Test whether the data for a given corpus (the one this instance
         has been created for) is ready and valid (e.g. a directory

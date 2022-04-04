@@ -71,7 +71,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
     Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
     """
     try:
-        require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+        await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
         ans = await _freqs(
             amodel,
             req,
@@ -301,7 +301,7 @@ async def _freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
     mapped_args=MLFreqRequestArgs)
 async def freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
     try:
-        require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+        await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
         return await _freqml(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqml')
@@ -365,12 +365,12 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/freqct')
 @http_action(action_model=ConcActionModel, access_level=1, page_model='freq', template='freqs.html')
-def freqct(amodel, req: KRequest, resp):
+async def freqct(amodel, req: KRequest, resp):
     """
     """
     try:
-        require_existing_conc(amodel.corp, amodel.args.q)
-        return _freqct(amodel, req)
+        await require_existing_conc(amodel.corp, amodel.args.q)
+        return _freqct(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqct')
 

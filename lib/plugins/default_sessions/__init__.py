@@ -49,14 +49,14 @@ import uuid
 import hashlib
 import random
 
-from secure_cookie.session import SessionStore, Session
+from secure_cookie.session import Session
 from plugin_types.general_storage import KeyValueStorage
 
 import plugins
 from plugins import inject
 
 
-class DefaultSessions(SessionStore):
+class DefaultSessions:
 
     DEFAULT_TTL = 7200
 
@@ -64,7 +64,6 @@ class DefaultSessions(SessionStore):
         """
         Initialization according to the 'settings' object/module
         """
-        super(DefaultSessions, self).__init__(session_class=None)
         self.db = db
         self._cookie_name = settings.get('plugins', 'auth')['auth_cookie_name']
         self.ttl = int(settings.get('plugins', 'sessions').get('ttl', DefaultSessions.DEFAULT_TTL))
@@ -75,25 +74,25 @@ class DefaultSessions(SessionStore):
     def _mk_key(self, session_id):
         return 'session:%s' % (session_id, )
 
-    def _set_ttl(self, key):
+    async def _set_ttl(self, key):
         if hasattr(self.db, 'set_ttl'):
             await self.db.set_ttl(key, self.ttl)
 
     def generate_key(self, salt=None):
         return hashlib.sha1(uuid.uuid1().bytes + str(random.random()).encode()).hexdigest()
 
-    def delete(self, session):
+    async def delete(self, session):
         await self.db.remove(self._mk_key(session.sid))
 
-    def get(self, sid):
+    async def get(self, sid):
         if not self.is_valid_key(sid):
-            return self.new()
+            return await self.new()
         return Session(await self.db.get(self._mk_key(sid)), sid)
 
-    def is_valid_key(self, key):
+    async def is_valid_key(self, key):
         return await self.db.exists(self._mk_key(key))
 
-    def new(self):
+    async def new(self):
         """
         Writes a new session record to the storage
         """
@@ -101,17 +100,17 @@ class DefaultSessions(SessionStore):
         data = {}
         sess_key = self._mk_key(session_id)
         await self.db.set(sess_key, data)
-        self._set_ttl(sess_key)
+        await self._set_ttl(sess_key)
         return Session(data, session_id)
 
-    def save(self, session):
+    async def save(self, session):
         sess_key = self._mk_key(session.sid)
         await self.db.set(sess_key, dict(session))
-        self._set_ttl(sess_key)
+        await self._set_ttl(sess_key)
 
-    def save_if_modified(self, session):
+    async def save_if_modified(self, session):
         if session.should_save:
-            self.save(session)
+            await self.save(session)
 
 
 @inject(plugins.runtime.DB)

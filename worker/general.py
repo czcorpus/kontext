@@ -213,7 +213,7 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, q
 async def calculate_colls(coll_args: coll_calc.CollCalcArgs):
     """
     """
-    ans = coll_calc.calculate_colls_bg(coll_args)
+    ans = await coll_calc.calculate_colls_bg(coll_args)
     if not ans['processing'] and len(ans['data']['Items']) > 0:
         with open(coll_args.cache_path, 'wb') as f:
             pickle.dump(ans['data'], f)
@@ -230,7 +230,7 @@ async def clean_colls_cache():
 async def calculate_freqs(args):
     args = freq_calc.FreqCalcArgs(**args)
     calculate_freqs.cache_path = args.cache_path
-    ans = freq_calc.calculate_freqs_bg(args)
+    ans = await freq_calc.calculate_freqs_bg(args)
     trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
     if args.force_cache or max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
         calculate_freqs.cache_data = ans

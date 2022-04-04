@@ -43,13 +43,13 @@ class SettingsStorage(AbstractSettingsStorage):
     def _mk_corp_key(self, user_id):
         return f'corpus_settings:user:{user_id}'
 
-    def save(self, user_id, corpus_id, data):
+    async def save(self, user_id, corpus_id, data):
         if corpus_id:
             await self.db.hash_set(self._mk_corp_key(user_id), corpus_id, data)
         else:
             await self.db.set(self._mk_key(user_id), data)
 
-    def _upgrade_general_settings(self, data, user_id):
+    async def _upgrade_general_settings(self, data, user_id):
         if data is None:
             return {}
         corp_set = defaultdict(lambda: {})
@@ -68,7 +68,7 @@ class SettingsStorage(AbstractSettingsStorage):
             await self.db.set(self._mk_key(user_id), gen)
         return gen
 
-    def load(self, user_id, corpus_id=None):
+    async def load(self, user_id, corpus_id=None):
         if corpus_id:
             return await self.db.hash_get(self._mk_corp_key(user_id), corpus_id)
         else:

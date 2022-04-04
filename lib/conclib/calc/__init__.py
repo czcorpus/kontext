@@ -138,7 +138,7 @@ async def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subcha
     return status.has_some_result(minsize=minsize), status.finished
 
 
-def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]], translate: Callable[[str], str] = lambda x: x) -> PyConc:
+async def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]], translate: Callable[[str], str] = lambda x: x) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
@@ -163,7 +163,7 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
         'Concordance broken. File: {}, error: {}'.format(status.cachefile, status.error))
 
 
-def find_cached_conc_base(
+async def find_cached_conc_base(
         corp: AbstractKCorpus, subchash: Optional[str], q: Tuple[str, ...],
         minsize: int, translate: Callable[[str], str] = lambda x: x) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
     """
@@ -333,7 +333,7 @@ class ConcSyncCalculation(GeneralWorker):
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 
         try:
-            calc_from, conc = find_cached_conc_base(
+            calc_from, conc = await find_cached_conc_base(
                 self.corpus_obj, subchash, query, minsize=0, translate=self._translate)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
                 for i in range(0, len(query)):

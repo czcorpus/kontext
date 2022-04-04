@@ -262,7 +262,7 @@ class FreqCalcCache(object):
         return data, cache_path
 
 
-def calculate_freqs_bg(args: FreqCalcArgs):
+async def calculate_freqs_bg(args: FreqCalcArgs):
     """
     Calculate actual frequency data.
 
@@ -274,7 +274,7 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     """
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = await cm.get_corpus(args.corpname, subcname=args.subcname)
-    conc = require_existing_conc(corp=corp, q=args.q)
+    conc = await require_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
             'Cannot calculate yet - source concordance not finished. Please try again later.')
@@ -441,7 +441,7 @@ class Freq2DCalculation:
                 'The result is too large. Please try to increase the minimum frequency.')
         return ans, len(mans)
 
-    def run(self):
+    async def run(self):
         """
         note: this is called by a background worker
         """

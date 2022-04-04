@@ -93,7 +93,7 @@ class DefaultCacheMapping(AbstractConcCache):
         val = await self._get_entry(subchash, q)
         return val.concsize if val else None
 
-    def refresh_map(self):
+    async def refresh_map(self):
         """
         TODO change the name to something meaningful
         """

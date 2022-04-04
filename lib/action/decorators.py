@@ -224,6 +224,8 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
+                import traceback
+                traceback.print_stack()
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'

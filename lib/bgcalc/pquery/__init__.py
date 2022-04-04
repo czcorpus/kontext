@@ -28,6 +28,7 @@ from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
 from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
 import settings
+from util import as_sync
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -135,6 +136,11 @@ def create_freq_calc_args(
         ftt_include_empty=False)
 
 
+@as_sync
+async def _calculate_freqs_bg_sync(args: FreqCalcArgs):
+    return await calculate_freqs_bg(args)
+
+
 @cached
 def calc_merged_freqs(
         pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: List[str], user_id: int,
@@ -155,7 +161,7 @@ def calc_merged_freqs(
             collator_locale=collator_locale))
     with Pool(processes=len(tasks)) as pool:
         # calculate realizations' frequencies
-        specif_done = pool.map_async(calculate_freqs_bg, tasks)
+        specif_done = pool.map_async(_calculate_freqs_bg_sync, tasks)
         # calculate auxiliary data for the "(almost) never" condition
         if pquery.conc_subset_complements:
             cond1_tasks = []
@@ -163,7 +169,7 @@ def calc_merged_freqs(
                 cond1_tasks.append(create_freq_calc_args(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
                     collator_locale=collator_locale, flimit_override=1))
-            cond1_done = pool.map_async(calculate_freqs_bg, cond1_tasks)
+            cond1_done = pool.map_async(_calculate_freqs_bg_sync, cond1_tasks)
         else:
             cond1_done = None
         # calculate auxiliary data (the superset here) for the "(almost) always" condition
@@ -171,7 +177,7 @@ def calc_merged_freqs(
             args = create_freq_calc_args(
                 pquery=pquery, conc_id=pquery.conc_superset.conc_id, raw_queries=raw_queries, subcpath=subcpath,
                 user_id=user_id, collator_locale=collator_locale)
-            cond2_done = pool.apply_async(calculate_freqs_bg, (args,))
+            cond2_done = pool.apply_async(_calculate_freqs_bg_sync, (args,))
         else:
             cond2_done = None
 

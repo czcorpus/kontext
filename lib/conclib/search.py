@@ -180,12 +180,12 @@ async def get_conc(
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
     # try to locate concordance in cache
-    calc_from, conc = find_cached_conc_base(corp, subchash, q, minsize, translate)
+    calc_from, conc = await find_cached_conc_base(corp, subchash, q, minsize, translate)
     if not conc and q[0][0] == 'R':  # online sample
         q_copy = list(q)
         q_copy[0] = q[0][1:]
         q_copy = tuple(q_copy)
-        find_cached_conc_base(corp, subchash, q_copy, -1, translate)
+        await find_cached_conc_base(corp, subchash, q_copy, -1, translate)
         # TODO this branch has no use (unless we want to revive online sample func)
 
     # move mid-sized aligned corpora or large non-aligned corpora to background
