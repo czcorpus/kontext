@@ -51,7 +51,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
         self.num_reports_threshold = num_reports_threshold
         self.ban_length_hours = ban_length_hours
 
-    def _check_client(self, plugin_ctx: PluginCtx):
+    async def _check_client(self, plugin_ctx: PluginCtx):
         """
         """
         client_ip = plugin_ctx.client_ip
@@ -71,8 +71,8 @@ class UcnkDispatchHook(AbstractDispatchHook):
                     logging.getLogger(__name__).warning(f'client ban expired for IP {client_ip}')
                     await self._db.hash_del(self.bot_clients_key, client_ip)
 
-    def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
-        self._check_client(plugin_ctx)
+    async def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
+        await self._check_client(plugin_ctx)
 
 
 @inject(plugins.runtime.DB)
