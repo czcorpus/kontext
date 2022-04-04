@@ -29,7 +29,7 @@ class StructNormsCalc(object):
     An instance is always bound to a concrete structure and required value type.
     """
 
-    def __init__(self, corpus: AbstractKCorpus, structname, subcnorm):
+    def __init__(self, corpus: AbstractKCorpus, structname: str, subcnorm: str):
         """
         arguments:
         corpus --
@@ -67,7 +67,7 @@ class StructNormsCalc(object):
         except ValueError:
             return 0
 
-    def compute_norm(self, attrname, value):
+    async def compute_norm(self, attrname, value):
         attr = self._struct.get_attr(attrname)
         valid = attr.str2id(value)
         r = self._corp.filter_query(self._struct.attr_val(attrname, valid))
@@ -84,7 +84,7 @@ class CachedStructNormsCalc(StructNormsCalc):
     store values.
     """
 
-    def __init__(self, corpus: AbstractKCorpus, structname, subcnorm, tt_cache: TextTypesCache):
+    def __init__(self, corpus: AbstractKCorpus, structname: str, subcnorm: str, tt_cache: TextTypesCache):
         """
         arguments:
         corpus --
@@ -94,16 +94,20 @@ class CachedStructNormsCalc(StructNormsCalc):
         """
         super().__init__(corpus, structname, subcnorm)
         self._tt_cache = tt_cache
+        self._data = None
+
+    async def _init_data(self):
         mkdict = partial(collections.defaultdict, lambda: {})
         try:
-            self._data = mkdict(self._tt_cache.get_attr_values(corpus.corpname, structname, subcnorm))
+            self._data = mkdict(await self._tt_cache.get_attr_values(self._corp.corpname, self._structname, self._subcnorm))
         except (IOError, TypeError):
             self._data = mkdict()
 
-    def compute_norm(self, attrname, value):
+    async def compute_norm(self, attrname, value):
+        if self._data is None:
+            await self._init_data()
         if attrname not in self._data or value not in self._data[attrname]:
-            self._data[attrname][value] = super(
+            self._data[attrname][value] = await super(
                 CachedStructNormsCalc, self).compute_norm(attrname, value)
-            self._tt_cache.set_attr_values(self._corp.corpname, self._structname, self._subcnorm, self._data)
+            await self._tt_cache.set_attr_values(self._corp.corpname, self._structname, self._subcnorm, self._data)
         return self._data[attrname][value]
-

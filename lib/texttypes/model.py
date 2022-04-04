@@ -112,7 +112,7 @@ class TextTypes:
         self._tt_cache = tt_cache
 
     async def export(self, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
-        return self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
+        return await self._tt_cache.get_values(self._corp, subcorpattrs, maxlistsize, shrink_list, collator_locale)
 
     async def export_with_norms(self, subcorpattrs='', ret_nums=True, subcnorm='tokens') -> Dict[str, Any]:
         """
@@ -162,8 +162,8 @@ class TextTypes:
             ans['bib_attr'] = None
             ans['id_attr'] = None
             list_none = ()
-        tt = self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
-                                       shrink_list=list_none, collator_locale=corpus_info.collator_locale)
+        tt = await self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
+                                             shrink_list=list_none, collator_locale=corpus_info.collator_locale)
         await self._add_tt_custom_metadata(tt)
 
         if ret_nums:
@@ -177,13 +177,13 @@ class TextTypes:
                     structname, attrname = col['name'].split('.')
                     for val in col['Values']:
                         try:
-                            v = struct_calc[structname].compute_norm(attrname, val['v'])
+                            v = await struct_calc[structname].compute_norm(attrname, val['v'])
                         except KeyError:
                             v = 0  # no problem here as the value is actually not required by subcorpattrs
                             cache_ok = False
                         val['xcnt'] = v
             if not cache_ok:
-                self._tt_cache.clear(self._corp)
+                await self._tt_cache.clear(self._corp)
                 logging.getLogger(__name__).warning(
                     'Removed invalid tt cache entry for corpus {0}'.format(self._corpname))
             ans['Blocks'] = tt

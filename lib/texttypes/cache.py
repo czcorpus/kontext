@@ -43,7 +43,7 @@ class TextTypesCache:
     def _mk_attr_cache_key(corpname: str, structname: str, subcnorm: str):
         return f'ttcache:{corpname}:{structname}:{subcnorm}'
 
-    def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
+    async def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         text_types = await self._db.hash_get(BASE_KEY, self._mk_cache_key(corp.corpname))
         if text_types is None:
             text_types = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs,
@@ -52,16 +52,16 @@ class TextTypesCache:
             await self._db.hash_set(BASE_KEY, self._mk_cache_key(corp.corpname), text_types)
         return text_types
 
-    def get_attr_values(self, corpname, structname, subcorm):
+    async def get_attr_values(self, corpname, structname, subcorm):
         ans = await self._db.hash_get(BASE_KEY, self._mk_attr_cache_key(corpname, structname, subcorm))
         return ans if ans is not None else {}
 
-    def set_attr_values(self, corpname, structname, subcnorm, data):
+    async def set_attr_values(self, corpname, structname, subcnorm, data):
         await self._db.hash_set(BASE_KEY, self._mk_attr_cache_key(corpname, structname, subcnorm), data)
 
-    def clear(self, corp):
+    async def clear(self, corp):
         await self._db.hash_del(BASE_KEY, self._mk_cache_key(corp.corpname))
 
-    def clear_all(self):
+    async def clear_all(self):
         logging.getLogger(__name__).warning('Clearing all the ttcache records')
         await self._db.remove(BASE_KEY)
