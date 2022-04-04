@@ -49,8 +49,8 @@ def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internal
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corpus)
     q = tuple(q)
 
-    def get_size(pos):
-        return cache_map.get_stored_size(corpus.subchash, q[:pos + 1])
+    async def get_size(pos):
+        return await cache_map.get_stored_size(corpus.subchash, q[:pos + 1])
 
     def is_aligned_op(query_items, pos):
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and
@@ -58,12 +58,12 @@ def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_internal
 
     def detect_internal_op(qx, pos):
         if pos > len(qx) - 3 or not skip_internals:
-            return False, get_size(pos)
+            return False, await get_size(pos)
         align_end = 0
         for j in range(pos, len(qx) - 2, 3):
             if is_aligned_op(qx, j):
                 align_end = j + 2
-        return align_end > 0, get_size(align_end)
+        return align_end > 0, await get_size(align_end)
 
     if q is None:
         q = []

@@ -70,8 +70,8 @@ def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: T
     """
     Removes conc. cache entry and also a respective calculation task (silently).
     """
-    cachefile = cache_map.readable_cache_path(subchash, q)
-    status = cache_map.get_calc_status(subchash, q)
+    cachefile = await cache_map.readable_cache_path(subchash, q)
+    status = await cache_map.get_calc_status(subchash, q)
     if status:
         try:
             if status.task_id:
@@ -79,11 +79,11 @@ def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str], q: T
                 worker.control.revoke(status.task_id, terminate=True, signal='SIGKILL')
         except (IOError, CalcTaskNotFoundError):
             pass
-    cache_map.del_entry(subchash, q)
+    await cache_map.del_entry(subchash, q)
     del_silent(cachefile)
 
 
-def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Optional[str], minsize: int) -> bool:
+async def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Optional[str], minsize: int) -> bool:
     """
     Find a conc. calculation record in cache (matching provided subchash and query)
     and wait until a result is available. The behavior is modified by 'minsize' (see below).
@@ -97,21 +97,21 @@ def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     time_limit = 7 if minsize >= 0 else 20   # 7 => ~2s, 20 => ~19s
     t0 = t1 = time.time()
     i = 1
-    has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
+    has_min_result, finished = await _check_result(cache_map, q, subchash, minsize)
     while not (finished or has_min_result) and t1 - t0 < time_limit:
         time.sleep(i * 0.1)
         i += 1
         t1 = time.time()
-        has_min_result, finished = _check_result(cache_map, q, subchash, minsize)
+        has_min_result, finished = await _check_result(cache_map, q, subchash, minsize)
     if not has_min_result:
         if finished:  # cache vs. filesystem mismatch
-            cache_map.del_entry(subchash, q)
+            await cache_map.del_entry(subchash, q)
         return False
     return True
 
 
-def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Optional[str],
-                  minsize: int) -> Tuple[bool, bool]:
+async def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Optional[str],
+                        minsize: int) -> Tuple[bool, bool]:
     """
     Check for result status while validating calculation
     status. In case of an error an Exception can be thrown.
@@ -128,12 +128,12 @@ def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Op
     In case the calculation finished due to an error
     the function throws a ConcCalculationStatusException.
     """
-    status = cache_map.get_calc_status(subchash, q)
+    status = await cache_map.get_calc_status(subchash, q)
     if status is None:
         return False, False
     status.check_for_errors(TASK_TIME_LIMIT)
     if status.error is not None:
-        cache_map.del_full_entry(subchash, q)
+        await cache_map.del_full_entry(subchash, q)
         raise status.error
     return status.has_some_result(minsize=minsize), status.finished
 
@@ -146,7 +146,7 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
     corpus_manager = CorpusManager(subcpath=[])
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     subchash = getattr(corp, 'subchash', None)
-    status = cache_map.get_calc_status(subchash, q)
+    status = await cache_map.get_calc_status(subchash, q)
     if status is None:
         raise ConcNotFoundException('Concordance not found: {}'.format(', '.join(q)))
     if status.finished and status.readable:
@@ -182,17 +182,17 @@ def find_cached_conc_base(
     start_time = time.time()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     cache_map.refresh_map()
-    calc_status = cache_map.get_calc_status(subchash, q)
+    calc_status = await cache_map.get_calc_status(subchash, q)
     if calc_status:
         if calc_status.error is None:
             if calc_status.created - corp.corp_mtime < 0:
                 logging.getLogger(__name__).warning(
                     'Removed outdated cache file (older than corpus indices)')
-                cache_map.del_full_entry(subchash, q)
+                await cache_map.del_full_entry(subchash, q)
         else:
             logging.getLogger(__name__).warning(
                 'Removed failed calculation cache record (error: {0}'.format(calc_status.error))
-            cache_map.del_full_entry(subchash, q)
+            await cache_map.del_full_entry(subchash, q)
             raise calc_status.normalized_error
 
     if _contains_shuffle_seq(q):
@@ -205,19 +205,19 @@ def find_cached_conc_base(
     # try to find the most complete cached operation
     # (e.g. query + filter + sample)
     for i in range(srch_from, 0, -1):
-        cache_path = cache_map.readable_cache_path(subchash, q[:i])
+        cache_path = await cache_map.readable_cache_path(subchash, q[:i])
         # now we know that someone already calculated the conc (but it might not be finished yet)
         if cache_path:
             try:
-                ready = wait_for_conc(cache_map=cache_map, subchash=subchash,
-                                      q=q[:i], minsize=minsize)
+                ready = await wait_for_conc(cache_map=cache_map, subchash=subchash,
+                                            q=q[:i], minsize=minsize)
                 if not ready:
                     if minsize != 0:
                         cancel_conc_task(cache_map, subchash, q[:i])
                         logging.getLogger(__name__).warning(
                             'Removed unfinished concordance cache record due to exceeded time limit')
                     continue
-                _, finished = _check_result(
+                _, finished = await _check_result(
                     cache_map=cache_map, subchash=subchash, q=q[:i], minsize=minsize)
                 if finished:
                     mcorp = corp
@@ -273,14 +273,14 @@ class ConcCalculation(GeneralWorker):
                 cachefile = initial_args['cachefile']
                 conc.save(cachefile, False, True)  # partial
                 os.chmod(cachefile, 0o664)
-                cache_map.update_calc_status(subchash, query, readable=True, task_id=self._task_id)
+                await cache_map.update_calc_status(subchash, query, readable=True, task_id=self._task_id)
                 while not conc.finished():
                     conc.save(cachefile + '.tmp', False, True)
                     os.rename(cachefile + '.tmp', cachefile)
                     sizes = self.get_cached_conc_sizes(corpus_obj, query)
-                    cache_map.update_calc_status(subchash, query, finished=sizes.finished,
-                                                 concsize=sizes.concsize, fullsize=sizes.fullsize,
-                                                 relconcsize=sizes.relconcsize, arf=None, task_id=self._task_id)
+                    await cache_map.update_calc_status(subchash, query, finished=sizes.finished,
+                                                       concsize=sizes.concsize, fullsize=sizes.fullsize,
+                                                       relconcsize=sizes.relconcsize, arf=None, task_id=self._task_id)
                     time.sleep(sleeptime)
                     sleeptime += 0.1
 
@@ -288,7 +288,7 @@ class ConcCalculation(GeneralWorker):
                 os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
                 sizes = self.get_cached_conc_sizes(corpus_obj, query)
-                cache_map.update_calc_status(
+                await cache_map.update_calc_status(
                     subchash, query, finished=sizes.finished, concsize=conc.size(), fullsize=sizes.fullsize,
                     relconcsize=sizes.relconcsize,
                     arf=round(conc.compute_ARF(), 2) if not corpus_obj.is_subcorpus else None,
@@ -300,7 +300,7 @@ class ConcCalculation(GeneralWorker):
             manatee_err = extract_manatee_error(e)
             norm_err = manatee_err if manatee_err else e
             if cache_map is not None:
-                cache_map.update_calc_status(subchash, query, finished=True, error=norm_err)
+                await cache_map.update_calc_status(subchash, query, finished=True, error=norm_err)
 
 
 class ConcSyncCalculation(GeneralWorker):
@@ -322,9 +322,9 @@ class ConcSyncCalculation(GeneralWorker):
         self.corpus_obj = None
         self.cache_map = None
 
-    def _mark_calc_states_err(self, subchash: Optional[str], query: Tuple[str, ...], from_idx: int, err: BaseException):
+    async def _mark_calc_states_err(self, subchash: Optional[str], query: Tuple[str, ...], from_idx: int, err: BaseException):
         for i in range(from_idx, len(query)):
-            self.cache_map.update_calc_status(subchash, query[:i + 1], error=err, finished=True)
+            await self.cache_map.update_calc_status(subchash, query[:i + 1], error=err, finished=True)
 
     async def run(self,  subchash, query: Tuple[str, ...], samplesize: int):
         self.corpus_obj = await self.corpus_manager.get_corpus(
@@ -337,9 +337,9 @@ class ConcSyncCalculation(GeneralWorker):
                 self.corpus_obj, subchash, query, minsize=0, translate=self._translate)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
                 for i in range(0, len(query)):
-                    self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
-                                              overwrite=True)
-                calc_status = self.cache_map.get_calc_status(subchash, query[:1])
+                    await self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
+                                                    overwrite=True)
+                calc_status = await self.cache_map.get_calc_status(subchash, query[:1])
                 conc = self.compute_conc(self.corpus_obj, query[:1], samplesize)
                 conc.sync()
                 conc.save(calc_status.cachefile)
@@ -351,17 +351,17 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_status.recalc_relconcsize(self.corpus_obj)
                 calc_status.arf = round(
                     conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
-                self.cache_map.add_to_map(subchash, query[:1], calc_status, overwrite=True)
+                await self.cache_map.add_to_map(subchash, query[:1], calc_status, overwrite=True)
                 calc_from = 1
             else:
                 for i in range(calc_from, len(query)):
-                    self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
-                                              overwrite=True)
+                    await self.cache_map.add_to_map(subchash, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
+                                                    overwrite=True)
         except Exception as ex:
             logging.getLogger(__name__).error(ex)
             manatee_err = extract_manatee_error(ex)
             norm_err = manatee_err if manatee_err else ex
-            self._mark_calc_states_err(subchash, query, 0, norm_err)
+            await self._mark_calc_states_err(subchash, query, 0, norm_err)
             return
         # save additional concordance actions to cache (e.g. sample, aligned corpus without a query,...)
         for act in range(calc_from, len(query)):
@@ -370,7 +370,7 @@ class ConcSyncCalculation(GeneralWorker):
                 conc.exec_command(command, args)
                 if command in 'gae':  # user specific/volatile actions, cannot save
                     raise NotImplementedError(f'Cannot run command {command} in background')  # TODO
-                calc_status = self.cache_map.get_calc_status(subchash, query[:act + 1])
+                calc_status = await self.cache_map.get_calc_status(subchash, query[:act + 1])
                 conc.save(calc_status.cachefile)
                 os.chmod(calc_status.cachefile, 0o664)
                 calc_status.readable = True
@@ -380,8 +380,8 @@ class ConcSyncCalculation(GeneralWorker):
                 calc_status.recalc_relconcsize(self.corpus_obj)
                 calc_status.arf = round(
                     conc.compute_ARF(), 2) if not self.corpus_obj.is_subcorpus else None
-                self.cache_map.add_to_map(subchash, query[:act + 1], calc_status, overwrite=True)
+                await self.cache_map.add_to_map(subchash, query[:act + 1], calc_status, overwrite=True)
             except Exception as ex:
-                self._mark_calc_states_err(subchash, query, act, ex)
+                await self._mark_calc_states_err(subchash, query, act, ex)
                 logging.getLogger(__name__).error(ex)
                 return

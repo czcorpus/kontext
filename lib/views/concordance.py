@@ -157,7 +157,7 @@ async def get_conc_cache_status(amodel, req, resp):
     subchash = amodel.corp.subchash
 
     try:
-        cache_status = cache_map.get_calc_status(subchash, q)
+        cache_status = await cache_map.get_calc_status(subchash, q)
         if cache_status is None:  # conc is not cached nor calculated
             raise NotFoundException('Concordance calculation is lost')
         elif not cache_status.finished and cache_status.task_id:

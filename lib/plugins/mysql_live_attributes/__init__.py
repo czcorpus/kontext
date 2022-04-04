@@ -135,7 +135,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
 
     def on_soft_reset(self) -> None:
         logging.getLogger(__name__).warning('soft reset, cleaning all liveattrs caches')
-        self.clear_cache()
+        await self.clear_cache()
 
     @staticmethod
     def import_key(k: Optional[str]) -> Optional[StructAttr]:

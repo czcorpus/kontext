@@ -190,7 +190,7 @@ async def get_conc_cache_status(corp: KCorpus, conc_id: str):
         with plugins.runtime.QUERY_PERSISTENCE as qp:
             data = await qp.open(conc_id)
             q = data.get('q', [])
-        cache_status = cache_map.get_calc_status(corp.subchash, data.get('q', []))
+        cache_status = await cache_map.get_calc_status(corp.subchash, data.get('q', []))
         if cache_status is None:  # conc is not cached nor calculated
             return Exception('Concordance calculation is lost')
         elif not cache_status.finished and cache_status.task_id:
