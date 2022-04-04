@@ -221,6 +221,41 @@ class KeyValueStorage(abc.ABC):
         key -- data access key
         """
 
+    @abc.abstractmethod
+    def setnx(self, key, value):
+        """
+        An atomic operation "set if not exists".
+
+        returns:
+        1 if the key was set
+        0 if the key was not set
+        """
+
+    @abc.abstractmethod
+    def getset(self, key, value):
+        """
+        An atomic operation which obtains current key first and then
+        sets a new value under that key
+
+        returns:
+        previous key if any or None
+        """
+
+    @abc.abstractmethod
+    def incr(self, key, amount=1):
+        """
+        Increments the value of 'key' by 'amount'.  If no key exists,
+        the value will be initialized as 'amount'
+        """
+
+    @abc.abstractmethod
+    def hash_set_map(self, key, mapping):
+        """
+        Set key to value within hash 'name' for each corresponding
+        key and value from the 'mapping' dict.
+        Before setting, the values are json-serialized
+        """
+
     async def get_instance(self, plugin_id):
         """
         Return the current instance of the plug-in
