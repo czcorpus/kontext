@@ -175,7 +175,7 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         from .monitor import run as run_monitor
 
         async def conc_cache_cleanup(ttl_hours, subdir, dry_run, corpus_id=None):
-            return run_cleanup(
+            return await run_cleanup(
                 root_dir=self._cache_dir,
                 corpus_id=corpus_id, ttl_hours=ttl_hours, subdir=subdir, dry_run=dry_run,
                 db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c))
@@ -193,10 +193,11 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
             elastic_conf -- a tuple (URL, index, type) containing ElasticSearch server, index and document type
                             configuration for storing monitoring info; if None then the function is disabled
             """
-            return run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
-                               entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c),
-                               min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
-                               free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
+            return await run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
+                                     entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(
+                                         c),
+                                     min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
+                                     free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
 
         return conc_cache_cleanup, conc_cache_monitor
 
