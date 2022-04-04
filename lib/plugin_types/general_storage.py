@@ -222,7 +222,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def setnx(self, key, value):
+    async def setnx(self, key: str, value):
         """
         An atomic operation "set if not exists".
 
@@ -232,7 +232,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def getset(self, key, value):
+    async def getset(self, key, value):
         """
         An atomic operation which obtains current key first and then
         sets a new value under that key
@@ -242,14 +242,14 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    def incr(self, key, amount=1):
+    async def incr(self, key, amount=1):
         """
         Increments the value of 'key' by 'amount'.  If no key exists,
         the value will be initialized as 'amount'
         """
 
     @abc.abstractmethod
-    def hash_set_map(self, key, mapping):
+    async def hash_set_map(self, key, mapping: Serializable):
         """
         Set key to value within hash 'name' for each corresponding
         key and value from the 'mapping' dict.
