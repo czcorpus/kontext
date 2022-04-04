@@ -282,7 +282,6 @@ class Kwic:
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
         out.pagination = pagination.export()
-        print('==== {}'.format(asdict(out)))
         return asdict(out)
 
     def add_aligns(self, result, args):
