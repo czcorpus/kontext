@@ -33,66 +33,57 @@ The sqlite3 plugin stores data in a single table called "data" with the followin
 CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 """
 
-import threading
 import json
 import time
-
-import sqlite3
+import aiosqlite
+from util import as_sync
 
 from plugin_types.general_storage import KeyValueStorage
 
-thread_local = threading.local()
-
 
 class DefaultDb(KeyValueStorage):
-    def __init__(self, conf):
+
+    def __init__(self, conf, conn: aiosqlite.Connection):
         """
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
         self.conf = conf
+        self._conn = conn
 
-    def _conn(self):
-        """
-        Returns thread-local connection
-        """
-        if not hasattr(thread_local, 'conn'):
-            thread_local.conn = sqlite3.connect(self.conf.get('db_path'))
-        return thread_local.conn
+    async def _delete_expired(self, key):
+        async with self._conn.cursor() as cursor:
+            await cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
+            ans = await cursor.fetchone()
+            if ans and -1 < ans[0] < time.time():
+                await cursor.execute('DELETE FROM data WHERE key = ?', (key,))
+                await cursor.commit()
+            return None
 
-    def _delete_expired(self, key):
-        cursor = self._conn().cursor()
-        cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
-        ans = cursor.fetchone()
-        if ans and -1 < ans[0] < time.time():
-            cursor.execute('DELETE FROM data WHERE key = ?', (key,))
-            self._conn().commit()
-        return None
+    async def _load_raw_data(self, key):
+        await self._delete_expired(key)
+        async with self._conn.cursor() as cursor:
+            await cursor.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
+            ans = await cursor.fetchone()
+            if ans:
+                return ans
+            return None
 
-    def _load_raw_data(self, key):
-        self._delete_expired(key)
-        cursor = self._conn().cursor()
-        cursor.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
-        ans = cursor.fetchone()
-        if ans:
-            return ans
-        return None
+    async def _save_raw_data(self, path, data):
+        async with self._conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, ?)', (path, data, -1))
+            await cursor.connection.commit()
 
-    def _save_raw_data(self, path, data):
-        cursor = self._conn().cursor()
-        cursor.execute('INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, ?)',
-                       (path, data, -1))
-        self._conn().commit()
+    async def rename(self, key, new_key):
+        await self._delete_expired(key)
+        async with self._conn.cursor() as cursor:
+            await cursor.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
+            await cursor.connection.commit()
 
-    def rename(self, key, new_key):
-        self._delete_expired(key)
-        cursor = self._conn().cursor()
-        cursor.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
-        self._conn().commit()
-
-    def list_get(self, key, from_idx=0, to_idx=-1):
+    async def list_get(self, key, from_idx=0, to_idx=-1):
         data = []
-        raw_data = self._load_raw_data(key)
+        raw_data = await self._load_raw_data(key)
         if raw_data is not None:
             data = json.loads(raw_data[0])
             if type(data) is not list:
@@ -107,36 +98,36 @@ class DefaultDb(KeyValueStorage):
             data = data[from_idx:to_idx]
         return data
 
-    def list_append(self, key, value):
-        data = self.list_get(key)
+    async def list_append(self, key, value):
+        data = await self.list_get(key)
         data.append(value)
-        self.set(key, data)
+        await self.set(key, data)
 
-    def list_pop(self, key):
-        data = self.list_get(key)
+    async def list_pop(self, key):
+        data = await self.list_get(key)
         ans = data.pop(0)
-        self.set(key, data)
+        await self.set(key, data)
         return ans
 
-    def list_len(self, key):
-        return len(self.list_get(key))
+    async def list_len(self, key):
+        return len(await self.list_get(key))
 
-    def list_set(self, key, idx, value):
-        data = self.list_get(key)
+    async def list_set(self, key, idx, value):
+        data = await self.list_get(key)
         data[idx] = value
-        self.set(key, data)
+        await self.set(key, data)
 
-    def list_trim(self, key, keep_left, keep_right):
-        data = self.list_get(key, keep_left, keep_right)
-        self.set(key, data)
+    async def list_trim(self, key, keep_left, keep_right):
+        data = await self.list_get(key, keep_left, keep_right)
+        await self.set(key, data)
 
-    def hash_get(self, key, field):
-        data = self.get(key)
+    async def hash_get(self, key, field):
+        data = await self.get(key)
         if type(data) is not dict:
             return {}
-        return data.get(field, None)
+        return await data.get(field, None)
 
-    def hash_set(self, key, field, value):
+    async def hash_set(self, key, field, value):
         """
         Puts a value into a hash table stored under the passed key
 
@@ -145,23 +136,23 @@ class DefaultDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        data = self.get(key)
+        data = await self.get(key)
         if type(data) is not dict:
             data = {}
         data[field] = value
-        self.set(key, data)
+        await self.set(key, data)
 
-    def hash_del(self, key, field):
-        sdata = self._load_raw_data(key)
+    async def hash_del(self, key, field):
+        sdata = await self._load_raw_data(key)
         data = json.loads(sdata[0])
         if field in data:
             del data[field]
         if len(data):
-            self._save_raw_data(key, json.dumps(data))
+            await self._save_raw_data(key, json.dumps(data))
         else:
-            self.remove(key)
+            await self.remove(key)
 
-    def hash_get_all(self, key):
+    async def hash_get_all(self, key):
         """
         Returns a complete hash object (= Python dict) stored under the passed
         key. If the provided key is not present then an empty dict is returned.
@@ -169,10 +160,10 @@ class DefaultDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        sdata = self._load_raw_data(key)
+        sdata = await self._load_raw_data(key)
         return json.loads(sdata[0]) if sdata is not None else {}
 
-    def get(self, key, default=None):
+    async def get(self, key, default=None):
         """
         Loads data from key->value storage
 
@@ -183,7 +174,7 @@ class DefaultDb(KeyValueStorage):
         returns:
         a dictionary containing respective data
         """
-        raw_data = self._load_raw_data(key)
+        raw_data = await self._load_raw_data(key)
         if raw_data is not None:
             data = json.loads(raw_data[0])
             if type(data) is dict:
@@ -192,7 +183,7 @@ class DefaultDb(KeyValueStorage):
             return data
         return default
 
-    def set(self, key, data):
+    async def set(self, key, data):
         """
         Saves 'data' with 'key'.
 
@@ -205,21 +196,19 @@ class DefaultDb(KeyValueStorage):
                       for k, v in list(data.items()) if not k.startswith('__') and not k.endswith('__'))
         else:
             d2 = data
-        self._save_raw_data(key, json.dumps(d2))
+        await self._save_raw_data(key, json.dumps(d2))
 
-    def remove(self, key):
+    async def remove(self, key):
         """
         Deletes data with passed access key
 
         arguments:
         key -- an access key
         """
-        conn = self._conn()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM data WHERE key = ?', (key,))
-        conn.commit()
+        async with self._conn.execute('DELETE FROM data WHERE key = ?', (key,)) as cursor:
+            cursor.connection.commit()
 
-    def exists(self, key):
+    async def exists(self, key):
         """
         Tests whether the 'key' exists in the storage
 
@@ -229,12 +218,11 @@ class DefaultDb(KeyValueStorage):
         returns:
         boolean answer
         """
-        self._delete_expired(key)
-        cursor = self._conn().cursor()
-        cursor.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,))
-        return cursor.fetchone()[0] > 0
+        await self._delete_expired(key)
+        async with self._conn.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,)) as cursor:
+            return await cursor.fetchone()[0] > 0
 
-    def set_ttl(self, key, ttl):
+    async def set_ttl(self, key, ttl):
         """
         Set auto expiration timeout in seconds.
 
@@ -243,44 +231,41 @@ class DefaultDb(KeyValueStorage):
         ttl -- number of seconds to wait before the value is removed
         (please note that set/update actions reset the timer to zero)
         """
-        self._delete_expired(key)
-        if self.exists(key):
-            cursor = self._conn().cursor()
-            cursor.execute('UPDATE data SET expires = ? WHERE key = ?', (time.time() + ttl, key))
-            self._conn().commit()
+        await self._delete_expired(key)
+        if await self.exists(key):
+            async with self._conn.execute('UPDATE data SET expires = ? WHERE key = ?', (time.time() + ttl, key)) as cursor:
+                cursor.connection.commit()
         return None
 
-    def get_ttl(self, key):
-        cursor = self._conn().cursor()
-        cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
-        return cursor.fetchone()[0]
+    async def get_ttl(self, key):
+        async with self._conn.execute('SELECT expires FROM data WHERE key = ?', (key,)) as cursor:
+            return await cursor.fetchone()[0]
 
-    def clear_ttl(self, key):
-        self._delete_expired(key)
-        if self.exists(key):
-            cursor = self._conn().cursor()
-            cursor.execute('UPDATE data SET expires = -1 WHERE key = ?', (key,))
-            self._conn().commit()
+    async def clear_ttl(self, key):
+        await self._delete_expired(key)
+        if await self.exists(key):
+            async with self._conn.execute('UPDATE data SET expires = -1 WHERE key = ?', (key,)) as cursor:
+                cursor.connection.commit()
         return None
 
-    def incr(self, key, amount=1):
+    async def incr(self, key, amount=1):
         """
         Increments the value of 'key' by 'amount'.  If no key exists,
         the value will be initialized as 'amount'
         """
-        val = self.get(key)
+        val = await self.get(key)
         if val is None:
             val = 0
         val += amount
-        self.set(key, val)
+        await self.set(key, val)
         return val
 
-    def hash_set_map(self, key, mapping):
+    async def hash_set_map(self, key, mapping):
         """
         Set key to value within hash 'name' for each corresponding
         key and value from the 'mapping' dict.
         """
-        self.set(key, mapping)
+        await self.set(key, mapping)
         return True
 
 
@@ -289,4 +274,7 @@ def create_instance(conf):
     Arguments:
     conf -- a dictionary containing imported XML configuration of the plugin
     """
-    return DefaultDb(conf.get('plugins', 'db'))
+    async def _conn():
+        return await aiosqlite.connect(conf.get('db_path'))
+
+    return DefaultDb(conf.get('plugins', 'db'), as_sync(_conn)())
