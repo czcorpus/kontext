@@ -133,7 +133,7 @@ class MysqlLiveAttributes(CachedLiveAttributes):
                     data[k] = int(data[k])
         return data
 
-    def on_soft_reset(self) -> None:
+    async def on_soft_reset(self) -> None:
         logging.getLogger(__name__).warning('soft reset, cleaning all liveattrs caches')
         await self.clear_cache()
 

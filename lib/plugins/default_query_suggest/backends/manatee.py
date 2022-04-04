@@ -25,6 +25,12 @@ from plugin_types.query_suggest import AbstractBackend
 from strings import re_escape
 import logging
 import l10n
+from util import as_sync
+
+
+@as_sync
+async def _load_corp_sync(name: str, translate: Callable[[str], str]):
+    return await CorpusManager().get_corpus(name, translate=translate) if name else None
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -34,7 +40,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         self._conf = conf
         self._translate = translate
         fixed_corp = conf.get('corpus')
-        self._preset_corp = await CorpusManager().get_corpus(fixed_corp, translate=self._translate) if fixed_corp else None
+        self._preset_corp = _load_corp_sync(fixed_corp, translate)
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = freq_calc.FreqCalcArgs(

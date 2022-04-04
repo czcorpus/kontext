@@ -69,7 +69,7 @@ def _get_freq_dispersion(conc: PyConc, resolution: int) -> List[FreqDispersionBi
 @bp.route('/ajax_get_freq_dispersion')
 @http_action(action_model=ConcActionModel, return_type='json')
 async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]:
-    conc = require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+    conc = await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
     resolution = int(req.args.get('resolution', 100))
     if 0 < resolution < 1000:
         return _get_freq_dispersion(conc, resolution)
@@ -80,7 +80,7 @@ async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]
 @http_action(action_model=ConcActionModel, page_model='dispersion', template='dispersion.html')
 async def index(amodel, req, response):
     try:
-        conc = require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+        conc = await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
     except ConcNotFoundException:
         args = list(req.args.items()) + [('next', 'dispersion')]
         raise ImmediateRedirectException(req.create_url('restore_conc', args))

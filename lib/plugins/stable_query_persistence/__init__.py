@@ -74,7 +74,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
     def get_conc_ttl_days(self, user_id):
         return self._ttl_days
 
-    def find_used_corpora(self, query_id):
+    async def find_used_corpora(self, query_id):
         """
         Because the operations are chained via 'prev_id' and the corpname
         information is not stored for all the steps, for any n-th step > 1

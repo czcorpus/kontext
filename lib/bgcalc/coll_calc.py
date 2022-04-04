@@ -91,7 +91,7 @@ class CollCalcCache(object):
 
 
 # TODO !!!! FIX (missing user-id, deprecated handling of MissingSubCorpFreqFile
-def calculate_colls_bg(coll_args: CollCalcArgs):
+async def calculate_colls_bg(coll_args: CollCalcArgs):
     """
     Background collocations calculation running on a worker server.
     In case auxiliary data files are needed and not present already

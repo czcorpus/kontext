@@ -205,7 +205,7 @@ class UcnkCorpArch3(MySQLCorparch):
     def export_actions(self):
         return bp
 
-    def on_soft_reset(self):
+    async def on_soft_reset(self):
         num_items = len(self._corpus_info_cache)
         self._corpus_info_cache = {}
         self._keywords = None

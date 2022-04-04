@@ -43,6 +43,12 @@ from plugin_types.general_storage import KeyValueStorage
 
 class DefaultDb(KeyValueStorage):
 
+    async def getset(self, key, value):  # TODO
+        pass
+
+    async def setnx(self, key: str, value):  # TODO
+        pass
+
     def __init__(self, conf, conn: aiosqlite.Connection):
         """
         arguments:
