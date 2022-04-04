@@ -50,6 +50,7 @@ import hashlib
 import random
 
 from secure_cookie.session import SessionStore, Session
+from plugin_types.general_storage import KeyValueStorage
 
 import plugins
 from plugins import inject
@@ -59,7 +60,7 @@ class DefaultSessions(SessionStore):
 
     DEFAULT_TTL = 7200
 
-    def __init__(self, settings, db):
+    def __init__(self, settings, db: KeyValueStorage):
         """
         Initialization according to the 'settings' object/module
         """
@@ -76,21 +77,21 @@ class DefaultSessions(SessionStore):
 
     def _set_ttl(self, key):
         if hasattr(self.db, 'set_ttl'):
-            self.db.set_ttl(key, self.ttl)
+            await self.db.set_ttl(key, self.ttl)
 
     def generate_key(self, salt=None):
         return hashlib.sha1(uuid.uuid1().bytes + str(random.random()).encode()).hexdigest()
 
     def delete(self, session):
-        self.db.remove(self._mk_key(session.sid))
+        await self.db.remove(self._mk_key(session.sid))
 
     def get(self, sid):
         if not self.is_valid_key(sid):
             return self.new()
-        return Session(self.db.get(self._mk_key(sid)), sid)
+        return Session(await self.db.get(self._mk_key(sid)), sid)
 
     def is_valid_key(self, key):
-        return self.db.exists(self._mk_key(key))
+        return await self.db.exists(self._mk_key(key))
 
     def new(self):
         """
@@ -99,13 +100,13 @@ class DefaultSessions(SessionStore):
         session_id = self.generate_key()
         data = {}
         sess_key = self._mk_key(session_id)
-        self.db.set(sess_key, data)
+        await self.db.set(sess_key, data)
         self._set_ttl(sess_key)
         return Session(data, session_id)
 
     def save(self, session):
         sess_key = self._mk_key(session.sid)
-        self.db.set(sess_key, dict(session))
+        await self.db.set(sess_key, dict(session))
         self._set_ttl(sess_key)
 
     def save_if_modified(self, session):
@@ -114,7 +115,7 @@ class DefaultSessions(SessionStore):
 
 
 @inject(plugins.runtime.DB)
-def create_instance(config, db):
+def create_instance(config, db: KeyValueStorage):
     """
     This is an expected plugin module method to create instance of the service
     """

@@ -74,23 +74,23 @@ class DefaultCacheMapping(AbstractConcCache):
         self._corpus = corpus
         self._db = db
 
-    def _get_entry(self, subchash, q) -> Union[ConcCacheStatus, None]:
-        val = self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
+    async def _get_entry(self, subchash, q) -> Union[ConcCacheStatus, None]:
+        val = await self._db.hash_get(self._mk_key(), _uniqname(subchash, q))
         if val and type(val) is dict:
             return ConcCacheStatus.from_storage(**val)
         return None
 
     def _set_entry(self, subchash, q, data: ConcCacheStatus):
-        self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
+        await self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname)
 
     def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
-        return self._get_entry(subchash, q)
+        return await self._get_entry(subchash, q)
 
     def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
-        val = self._get_entry(subchash, q)
+        val = await self._get_entry(subchash, q)
         return val.concsize if val else None
 
     def refresh_map(self):
@@ -109,7 +109,7 @@ class DefaultCacheMapping(AbstractConcCache):
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
 
     def readable_cache_path(self, subchash, q) -> Optional[str]:
-        val = self._get_entry(subchash, q)
+        val = await self._get_entry(subchash, q)
         return val.cachefile if val and val.readable else None
 
     def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: ConcCacheStatus,
@@ -118,7 +118,7 @@ class DefaultCacheMapping(AbstractConcCache):
         return:
         path to a created cache file
         """
-        prev_status = self._get_entry(subchash, query)
+        prev_status = await self._get_entry(subchash, query)
         if prev_status and not overwrite:
             return prev_status
         calc_status.q0hash = _uniqname(subchash, query[:1])
@@ -127,30 +127,30 @@ class DefaultCacheMapping(AbstractConcCache):
         return calc_status
 
     def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
-        return self._get_entry(subchash, query)
+        return await self._get_entry(subchash, query)
 
     def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
-        stored_data = self._get_entry(subchash, query)
+        stored_data = await self._get_entry(subchash, query)
         if stored_data:
             stored_data.update(**kw)
             self._set_entry(subchash, query, stored_data)
 
     def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
-        self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
+        await self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
     def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
-        for k, stored in self._db.hash_get_all(self._mk_key()).items():
+        for k, stored in (await self._db.hash_get_all(self._mk_key())).items():
             if stored:
                 if type(stored) is not dict:
                     logging.getLogger(__name__).warning(
                         'Removed unsupported conc cache value: {}'.format(stored))
-                    self._db.hash_del(self._mk_key(), k)
+                    await self._db.hash_del(self._mk_key(), k)
                 else:
                     status = ConcCacheStatus.from_storage(**stored)
                     if _uniqname(subchash, q[:1]) == status.q0hash:
                         # original record's key must be used (k ~ entry_key match can be partial)
                         # must use direct access here (no del_entry())
-                        self._db.hash_del(self._mk_key(), k)
+                        await self._db.hash_del(self._mk_key(), k)
 
 
 class CacheMappingFactory(AbstractCacheMappingFactory):

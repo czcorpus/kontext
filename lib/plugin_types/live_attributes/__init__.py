@@ -173,14 +173,14 @@ def cached(f):
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size, aligned_corpora,
                                    autocomplete_attr, limit_lists)
-            ans = self.from_cache(corpus.corpname, key)
+            ans = await self.from_cache(corpus.corpname, key)
             if ans:
                 return AttrValuesResponse.from_dict(ans)
         ans = await f(self, plugin_ctx, corpus, attr_map, aligned_corpora, autocomplete_attr, limit_lists)
         if len(attr_map) < 2:
             key = create_cache_key(attr_map, self.max_attr_list_size,
                                    aligned_corpora, autocomplete_attr, limit_lists)
-            self.to_cache(corpus.corpname, key, ans.to_dict())
+            await self.to_cache(corpus.corpname, key, ans.to_dict())
         return self.export_num_strings(ans)
     return wrapper
 
@@ -201,7 +201,7 @@ class CachedLiveAttributes(AbstractLiveAttributes, abc.ABC):
                     data[k] = int(data[k])
         return data
 
-    def from_cache(self, corpname: str, key: str) -> Optional[Dict[str, Any]]:
+    async def from_cache(self, corpname: str, key: str) -> Optional[Dict[str, Any]]:
         """
         Loads a value from cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -213,11 +213,11 @@ class CachedLiveAttributes(AbstractLiveAttributes, abc.ABC):
         returns:
         a stored value matching provided argument or None if nothing is found
         """
-        v = self._kvdb.hash_get(CACHE_MAIN_KEY.format(corpname), key)
-        self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
+        v = await self._kvdb.hash_get(CACHE_MAIN_KEY.format(corpname), key)
+        await self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
         return CachedLiveAttributes.export_num_strings(v) if v else None
 
-    def to_cache(self, corpname: str, key: str, values: str):
+    async def to_cache(self, corpname: str, key: str, values: str):
         """
         Stores a data object "values" into the cache. The key is whole attribute_map as selected
         by a user. But there is no guarantee that all the keys and values will be
@@ -227,16 +227,16 @@ class CachedLiveAttributes(AbstractLiveAttributes, abc.ABC):
         key -- a cache key
         values -- a dictionary with arbitrary nesting level
         """
-        self._kvdb.hash_set(CACHE_MAIN_KEY.format(corpname), key, values)
-        self._kvdb.hash_set(CACHE_REG_CORPORA_KEY, corpname, True)
-        self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
+        await self._kvdb.hash_set(CACHE_MAIN_KEY.format(corpname), key, values)
+        await self._kvdb.hash_set(CACHE_REG_CORPORA_KEY, corpname, True)
+        await self._kvdb.set_ttl(CACHE_MAIN_KEY.format(corpname), CACHE_MAX_TTL)
 
-    def clear_cache(self):
+    async def clear_cache(self):
         """
         Remove all the cached liveattrs
         """
-        corpora = list(self._kvdb.hash_get_all(CACHE_REG_CORPORA_KEY).keys())
+        corpora = (await self._kvdb.hash_get_all(CACHE_REG_CORPORA_KEY)).keys()
         # now other workers may set values again and we don't care much
-        self._kvdb.remove(CACHE_REG_CORPORA_KEY)
+        await self._kvdb.remove(CACHE_REG_CORPORA_KEY)
         for corp in corpora:
-            self._kvdb.remove(CACHE_MAIN_KEY.format(corp))
+            await self._kvdb.remove(CACHE_MAIN_KEY.format(corp))

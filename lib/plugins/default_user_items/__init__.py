@@ -133,7 +133,7 @@ class UserItems(AbstractUserItems):
     async def get_user_items(self, plugin_ctx):
         ans = []
         if self._auth.anonymous_user(plugin_ctx)['id'] != plugin_ctx.user_id:
-            for item_id, item in list(self._db.hash_get_all(self._mk_key(plugin_ctx.user_id)).items()):
+            for item_id, item in (await self._db.hash_get_all(self._mk_key(plugin_ctx.user_id))).items():
                 ans.append(import_record(item))
             ans = l10n.sort(ans, plugin_ctx.user_lang, key=lambda itm: itm.sort_key, reverse=False)
         return ans
@@ -143,10 +143,10 @@ class UserItems(AbstractUserItems):
             raise UserItemException('Max. number of fav. items exceeded',
                                     error_code='defaultCorparch__err001',
                                     error_args={'maxNum': self.max_num_favorites})
-        self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, item.to_dict())
+        await self._db.hash_set(self._mk_key(plugin_ctx.user_id), item.ident, item.to_dict())
 
     async def delete_user_item(self, plugin_ctx, item_id):
-        self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)
+        await self._db.hash_del(self._mk_key(plugin_ctx.user_id), item_id)
 
     @staticmethod
     def export_actions():

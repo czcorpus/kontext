@@ -23,6 +23,7 @@ as a back-end.
 required config.xml entries: please see config.rng
 """
 
+from ctypes import Union
 import hashlib
 import re
 import uuid
@@ -31,6 +32,8 @@ import logging
 import sqlite3
 import json
 import time
+from lib.plugin_types.auth import AbstractAuth
+from lib.plugin_types.general_storage import KeyValueStorage
 
 from plugin_types.query_persistence import AbstractQueryPersistence
 import plugins
@@ -120,19 +123,19 @@ class Sqlite3ArchBackend(object):
             conn = sqlite3.connect(self._archive_path)
         return conn
 
-    def archive(self, data, db_key):
+    async def archive(self, data, db_key):
         save_time = int(round(time.time()))
         cursor = self.archive_db.cursor()
         cursor.execute('INSERT OR IGNORE INTO conc_archive (id, data, created, num_access) VALUES (?, ?, ?, ?)',
                        (db_key, json.dumps(data), save_time, 0))
         self.archive_db.commit()
 
-    def revoke(self, db_key):
+    async def revoke(self, db_key):
         cursor = self.archive_db.cursor()
         cursor.execute('DELETE FROM conc_archive WHERE id = ?', (db_key,))
         self.archive_db.commit()
 
-    def load(self, db_key):
+    async def load(self, db_key):
         cursor = self.archive_db.cursor()
         cursor.execute('SELECT data FROM conc_archive WHERE id = ?', (db_key,))
         raw_ans = cursor.fetchone()
@@ -140,7 +143,7 @@ class Sqlite3ArchBackend(object):
             return json.loads(raw_ans[0])
         return None
 
-    def is_archived(self, db_key):
+    async def is_archived(self, db_key):
         cursor = self.archive_db.cursor()
         cursor.execute('SELECT id FROM conc_archive WHERE id = ?', (db_key,))
         return cursor.fetchone() is not None
@@ -155,22 +158,22 @@ class DbPluginArchBackend(object):
     then this is not an issue.
     """
 
-    def __init__(self, db, ttl, anonymous_ttl):
+    def __init__(self, db: KeyValueStorage, ttl: int, anonymous_ttl: int):
         self._db = db
         self._ttl = ttl
         self._anonymous_ttl = anonymous_ttl
 
-    def archive(self, data, db_key):
-        self._db.clear_ttl(db_key)
+    async def archive(self, data, db_key):
+        await self._db.clear_ttl(db_key)
 
-    def revoke(self, db_key):
-        self._db.set_ttl(db_key, self._ttl)
+    async def revoke(self, db_key):
+        await self._db.set_ttl(db_key, self._ttl)
 
-    def load(self, db_key):
+    async def load(self, db_key):
         return None  # can't help here as normal load searches in the very same db
 
-    def is_archived(self, db_key):
-        return self._db.get_ttl(db_key) == -1
+    async def is_archived(self, db_key):
+        return (await self._db.get_ttl(db_key)) == -1
 
 
 class DefaultQueryPersistence(AbstractQueryPersistence):
@@ -178,7 +181,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
     This class stores user's queries in their internal form (see Kontext.q attribute).
     """
 
-    def __init__(self, db, auth, ttl_days, anonymous_ttl_days, archive_backend):
+    def __init__(self, db: KeyValueStorage, auth: AbstractAuth, ttl_days: int, anonymous_ttl_days: int, archive_backend: Union[DbPluginArchBackend, Sqlite3ArchBackend]):
         self._db = db
         self._auth = auth
         self._ttl_days = ttl_days
@@ -228,9 +231,9 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         a dictionary containing operation data or None if nothing is found
         """
         key = self._mk_key(data_id)
-        ans = self._db.get(key)
+        ans = await self._db.get(key)
         if ans is None:
-            ans = self._archive_backend.load(key)
+            ans = await self._archive_backend.load(key)
         return ans
 
     async def store(self, user_id, curr_data, prev_data=None):
@@ -260,8 +263,8 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
                 curr_data['prev_id'] = prev_data['id']
             data_key = self._mk_key(data_id)
 
-            self._db.set(data_key, curr_data)
-            self._db.set_ttl(data_key, self._get_ttl_for(user_id))
+            await self._db.set(data_key, curr_data)
+            await self._db.set_ttl(data_key, self._get_ttl_for(user_id))
             latest_id = curr_data['id']
         else:
             latest_id = prev_data['id']
@@ -278,15 +281,15 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
                 'Cannot change status of a concordance belonging to another user')
 
         if revoke:
-            self._db.set(key, data)
-            self._archive_backend.revoke(key)
+            await self._db.set(key, data)
+            await self._archive_backend.revoke(key)
         else:
-            self._archive_backend.archive(data, key)
+            await self._archive_backend.archive(data, key)
 
         return 1, data
 
     async def is_archived(self, conc_id):
-        return self._archive_backend.is_archived(self._mk_key(conc_id))
+        return await self._archive_backend.is_archived(self._mk_key(conc_id))
 
     async def will_be_archived(self, plugin_ctx, conc_id: str):
         return not self.is_archived(conc_id)\

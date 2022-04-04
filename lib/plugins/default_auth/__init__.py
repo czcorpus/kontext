@@ -84,7 +84,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         self._case_sensitive_corpora_names = case_sensitive_corpora_names
 
     async def validate_user(self, plugin_ctx, username, password):
-        user_data = self._find_user(username)
+        user_data = await self._find_user(username)
         valid_pwd = False
         if user_data:
             split = split_pwd_hash(user_data['pwd_hash'])
@@ -128,10 +128,10 @@ class DefaultAuthHandler(AbstractInternalAuth):
         password -- new password
         """
         user_key = mk_user_key(user_id)
-        user_data = self.db.get(user_key)
+        user_data = await self.db.get(user_key)
         if user_data:
             user_data['pwd_hash'] = mk_pwd_hash_default(password)
-            self.db.set(user_key, user_data)
+            await self.db.set(user_key, user_data)
         else:
             raise AuthException(plugin_ctx.translate('User %s not found.') % user_id)
 
@@ -142,13 +142,13 @@ class DefaultAuthHandler(AbstractInternalAuth):
     async def corpus_access(self, user_dict, corpus_name) -> CorpusAccess:
         if corpus_name == IMPLICIT_CORPUS:
             return False, True, ''
-        corpora = self.db.get(mk_list_key(user_dict['id']), [])
+        corpora = await self.db.get(mk_list_key(user_dict['id']), [])
         if corpus_name in corpora:
             return False, True, self._variant_prefix(corpus_name)
         return False, False, ''
 
     async def permitted_corpora(self, user_dict) -> List[str]:
-        corpora = self.db.get(mk_list_key(user_dict['id']), [])
+        corpora = await self.db.get(mk_list_key(user_dict['id']), [])
         if IMPLICIT_CORPUS not in corpora:
             corpora.append(IMPLICIT_CORPUS)
         return corpora
@@ -158,7 +158,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
 
     async def get_user_info(self, plugin_ctx: PluginCtx) -> GetUserInfo:
         user_key = mk_user_key(plugin_ctx.user_id)
-        info = self.db.get(user_key)
+        info = await self.db.get(user_key)
         info.pop('pwd_hash', None)
         info.pop('recovery_hash', None)
         return info
@@ -197,7 +197,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
         else:
             return self._logout_url
 
-    def _find_user(self, username):
+    async def _find_user(self, username):
         """
         Searches for user's data by his username. We assume that username is unique.
 
@@ -207,8 +207,8 @@ class DefaultAuthHandler(AbstractInternalAuth):
         returns:
         a dictionary containing user data or None if nothing is found
         """
-        user_key = self.db.hash_get(self.USER_INDEX_KEY, username)
-        return None if user_key is None else self.db.get(user_key)
+        user_key = await self.db.hash_get(self.USER_INDEX_KEY, username)
+        return None if user_key is None else await self.db.get(user_key)
 
     def get_required_username_properties(self, plugin_ctx):
         return (plugin_ctx.translate(
@@ -216,7 +216,7 @@ class DefaultAuthHandler(AbstractInternalAuth):
             % self.MIN_USERNAME_LENGTH)
 
     async def validate_new_username(self, plugin_ctx, username):
-        avail = self._find_user(username) is None and 'admin' not in username
+        avail = (await self._find_user(username)) is None and 'admin' not in username
         valid = re.match(r'^[a-zA-Z0-9_-]{3,}$', username) is not None
         return avail, valid
 
@@ -289,34 +289,34 @@ class DefaultAuthHandler(AbstractInternalAuth):
             text=text, reply_to=None)
         return mailing.send_mail(server, msg, [user_email])
 
-    def find_free_user_id(self):
-        v = self.db.get(self.LAST_USER_ID_KEY)
+    async def find_free_user_id(self):
+        v = await self.db.get(self.LAST_USER_ID_KEY)
         if v is None:
             v = 0
         avail = False
         while not avail:
             v += 1
-            avail = (self.db.get(mk_user_key(v)) is None)
+            avail = (await self.db.get(mk_user_key(v)) is None)
         return v
 
     async def sign_up_confirm(self, plugin_ctx, key):
         token = SignUpToken(value=key)
         await token.load(self.db)
         if token.is_stored():
-            user_test = self.db.hash_get(self.USER_INDEX_KEY, token.user['username'])
+            user_test = await self.db.hash_get(self.USER_INDEX_KEY, token.user['username'])
             if user_test:
                 raise SignUpNeedsUpdateException()
-            new_id = self.find_free_user_id()
-            self.db.set(mk_user_key(new_id),
-                        dict(id=new_id, username=token.user['username'],
-                             firstname=token.user['firstname'],
-                             lastname=token.user['lastname'],
-                             affiliation=token.user['affiliation'],
-                             email=token.user['email'],
-                             pwd_hash=token.user['password']))
-            self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
-            self.db.set(self.LAST_USER_ID_KEY, new_id)
-            self.db.set(mk_list_key(new_id), self._on_register_get_corpora)
+            new_id = await self.find_free_user_id()
+            await self.db.set(mk_user_key(new_id),
+                              dict(id=new_id, username=token.user['username'],
+                                   firstname=token.user['firstname'],
+                                   lastname=token.user['lastname'],
+                                   affiliation=token.user['affiliation'],
+                                   email=token.user['email'],
+                                   pwd_hash=token.user['password']))
+            await self.db.hash_set(self.USER_INDEX_KEY, token.user['username'], mk_user_key(new_id))
+            await self.db.set(self.LAST_USER_ID_KEY, new_id)
+            await self.db.set(mk_list_key(new_id), self._on_register_get_corpora)
             await token.delete(self.db)
             return dict(ok=True, label=token.label)
         else:
