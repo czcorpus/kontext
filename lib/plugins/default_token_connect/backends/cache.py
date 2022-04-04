@@ -52,7 +52,7 @@ def cached(fn):
     """
 
     @wraps(fn)
-    def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context):
+    async def wrapper(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context):
         """
         get cache db using a method defined in the abstract class
         """

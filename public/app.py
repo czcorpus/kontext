@@ -142,7 +142,7 @@ def signal_handler(signal, frame):
         fn = getattr(p.instance, 'on_soft_reset', None)
         if callable(fn):
             fn()
-    tt_cache.clear_all()
+    await tt_cache.clear_all()
 
 
 signal.signal(signal.SIGUSR1, signal_handler)

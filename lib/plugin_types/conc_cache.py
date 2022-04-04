@@ -177,7 +177,7 @@ class ConcCacheStatus:
 class AbstractConcCache(abc.ABC):
 
     @abc.abstractmethod
-    def get_stored_size(self, subchash: str, q: QueryType) -> Union[int, None]:
+    async def get_stored_size(self, subchash: str, q: QueryType) -> Union[int, None]:
         """
         Return stored concordance size.
         The method should return None if no record is found at all.
@@ -189,7 +189,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_calc_status(self, subchash: str, query: QueryType) -> ConcCacheStatus:
+    async def get_calc_status(self, subchash: str, query: QueryType) -> ConcCacheStatus:
         pass
 
     @abc.abstractmethod
@@ -207,7 +207,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def readable_cache_path(self, subchash: str, q: QueryType) -> Optional[str]:
+    async def readable_cache_path(self, subchash: str, q: QueryType) -> Optional[str]:
         """
         Return a path to a cache file matching provided subcorpus hash and query
         elements. If there is no entry matching (subchash, q) or if a respective
@@ -219,8 +219,8 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: ConcCacheStatus,
-                   overwrite: bool = False) -> ConcCacheStatus:
+    async def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: ConcCacheStatus,
+                         overwrite: bool = False) -> ConcCacheStatus:
         """
         Add a cache entry. If already present, the stored version is returned unless overwrite is set to True
 
@@ -236,7 +236,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_entry(self, subchash: Optional[str], q: QueryType):
+    async def del_entry(self, subchash: Optional[str], q: QueryType):
         """
         Remove a specific entry with concrete subchash and query.
 
@@ -246,7 +246,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def del_full_entry(self, subchash: Optional[str], q: QueryType):
+    async def del_full_entry(self, subchash: Optional[str], q: QueryType):
         """
         Removes all the entries with the same base query no matter
         what other operations the query (e.g. shuffle, filter) contains.
@@ -257,7 +257,7 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
+    async def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         pass
 
 

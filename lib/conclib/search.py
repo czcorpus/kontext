@@ -48,7 +48,7 @@ async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize, trans
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    status = cache_map.get_calc_status(subchash, q)
+    status = await cache_map.get_calc_status(subchash, q)
     if not status or status.error:
         worker = bgcalc.calc_backend_client(settings)
         ans = await worker.send_task(
@@ -59,9 +59,9 @@ async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize, trans
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q), translate=translate)
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
-        return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
+        return InitialConc(corp, await cache_map.readable_cache_path(subchash, q))
 
 
 async def _get_bg_conc(
@@ -73,13 +73,13 @@ async def _get_bg_conc(
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
 
-    status = cache_map.get_calc_status(subchash, q)
+    status = await cache_map.get_calc_status(subchash, q)
     if status and not status.finished:  # the calc is already running, the client has to wait and check regularly
         return InitialConc(corp, status.cachefile)
     # let's create cache records of the operations we'll have to perform
     if calc_from < len(q):
         for i in range(calc_from, len(q)):
-            status = cache_map.add_to_map(subchash, q[:i + 1], ConcCacheStatus(), overwrite=True)
+            status = await cache_map.add_to_map(subchash, q[:i + 1], ConcCacheStatus(), overwrite=True)
             # the file cannot be valid as otherwise, calc_from would be higher
             if os.path.isfile(status.cachefile):
                 del_silent(status.cachefile)
@@ -94,10 +94,10 @@ async def _get_bg_conc(
     # is ready in a few seconds - let's try this:
     conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', cache_map.readable_cache_path(subchash, q), translate=translate)
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
-        return InitialConc(corp, cache_map.readable_cache_path(subchash, q))
+        return InitialConc(corp, await cache_map.readable_cache_path(subchash, q))
 
 
 def _normalize_permissions(path: str):
@@ -105,7 +105,7 @@ def _normalize_permissions(path: str):
         os.chmod(path, 0o664)
 
 
-def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int) -> PyConc:
+async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: Optional[str], samplesize: int) -> PyConc:
     """
     Calculate a concordance via a provided worker. On the Manatee side,
     wait until the concordance is complete.
@@ -121,11 +121,11 @@ def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: 
         status.fullsize = conc.fullsize()
         status.recalc_relconcsize(corp)
         status.arf = round(conc.compute_ARF(), 2) if not corp.is_subcorpus else None
-        status = cache_map.add_to_map(subchash, q[:1], status)
+        status = await cache_map.add_to_map(subchash, q[:1], status)
         _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
         _normalize_permissions(status.cachefile)
-        cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
+        await cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
         # update size in map file
         return conc
     except Exception as e:
@@ -136,7 +136,7 @@ def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subchash: 
         status.finished = True
         status.concsize = 0
         status.error = manatee_err if manatee_err else e
-        status = cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
+        status = await cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
         raise status.normalized_error
 
 
@@ -205,15 +205,14 @@ async def get_conc(
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:
-                tf = partial(_get_sync_conc, worker=worker, corp=corp,
-                             q=q, subchash=subchash, samplesize=samplesize)
-                conc = await asyncio.get_event_loop().run_in_executor(None, tf)
+                conc = await _get_sync_conc(worker=worker, corp=corp, q=q, subchash=subchash, samplesize=samplesize)
+
         # save additional concordance actions to cache (e.g. sample)
         for act in range(calc_from, len(q)):
             command, args = q[act][0], q[act][1:]
             conc.exec_command(command, args)
             cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-            curr_status = cache_map.get_calc_status(subchash, q[:act + 1])
+            curr_status = await cache_map.get_calc_status(subchash, q[:act + 1])
             if curr_status and not curr_status.finished:
                 ready = wait_for_conc(cache_map=cache_map,
                                       subchash=subchash, q=q[:act + 1], minsize=-1)
@@ -223,10 +222,10 @@ async def get_conc(
             elif not curr_status:
                 calc_status = worker.create_new_calc_status()
                 calc_status.concsize = conc.size()
-                calc_status = cache_map.add_to_map(subchash, q[:act + 1], calc_status)
+                calc_status = await cache_map.add_to_map(subchash, q[:act + 1], calc_status)
                 conc.save(calc_status.cachefile)
                 _normalize_permissions(calc_status.cachefile)
                 # TODO can we be sure here that conc is finished even if its not the first query op.?
-                cache_map.update_calc_status(
+                await cache_map.update_calc_status(
                     subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())
     return conc

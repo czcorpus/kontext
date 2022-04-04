@@ -32,8 +32,8 @@ import logging
 import sqlite3
 import json
 import time
-from lib.plugin_types.auth import AbstractAuth
-from lib.plugin_types.general_storage import KeyValueStorage
+from plugin_types.auth import AbstractAuth
+from plugin_types.general_storage import KeyValueStorage
 
 from plugin_types.query_persistence import AbstractQueryPersistence
 import plugins

@@ -205,7 +205,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
         """
         async def archive_concordance(num_proc, dry_run):
             from . import archive
-            return archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
+            return await archive.run(conf=self._settings, num_proc=num_proc, dry_run=dry_run)
         return archive_concordance,
 
     def _open_archives(self):

@@ -72,10 +72,10 @@ async def fetch_token_detail(amodel, req, resp):
                int(req.args.get('detail_right_ctx', 40)))
     with plugins.runtime.TOKEN_CONNECT as td, plugins.runtime.CORPARCH as ca:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
-        token, resp_data = td.fetch_data(corpus_info.token_connect.providers, amodel.corp,
-                                         [amodel.corp.corpname] +
-                                         amodel.args.align, token_id, num_tokens, req.ui_lang,
-                                         context)
+        token, resp_data = await td.fetch_data(corpus_info.token_connect.providers, amodel.corp,
+                                               [amodel.corp.corpname] +
+                                               amodel.args.align, token_id, num_tokens, req.ui_lang,
+                                               context)
     return dict(token=token, items=[item for item in resp_data])
 
 
@@ -134,7 +134,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
     def map_providers(self, providers: Sequence[Tuple[str, bool]]):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
-    def fetch_data(
+    async def fetch_data(
             self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str],
             token_id: int, num_tokens: int, lang: str, context=None):
         ans = []
@@ -160,7 +160,7 @@ class DefaultTokenConnect(AbstractTokenConnect):
                         args[s][sa] = v
                     else:
                         args[attr] = v
-                data, status = backend.fetch(
+                data, status = await backend.fetch(
                     corpora, corpus, token_id, num_tokens, args, lang, context)
                 ans.append(frontend.export_data(data, status, lang, is_kwic_view).to_dict())
             except TypeError as ex:

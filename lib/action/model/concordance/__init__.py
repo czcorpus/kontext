@@ -554,9 +554,9 @@ class ConcActionModel(CorpusActionModel):
                     relconcsize=1e6 * fullsize / self.corp.search_size,
                     fullsize=fullsize, finished=conc.finished())
 
-    def concdesc_json(self):
+    async def concdesc_json(self):
         out_list: List[Dict[str, Any]] = []
-        conc_desc = conclib.get_conc_desc(corpus=self.corp, q=self.args.q)
+        conc_desc = await conclib.get_conc_desc(corpus=self.corp, q=self.args.q)
 
         def nicearg(arg):
             args = arg.split('"')
@@ -589,8 +589,8 @@ class ConcActionModel(CorpusActionModel):
 
         return out_list
 
-    def attach_query_overview(self, out):
-        out['query_overview'] = self.concdesc_json()
+    await def attach_query_overview(self, out):
+        out['query_overview'] = await self.concdesc_json()
         if len(out['query_overview']) > 0:
             out['page_title'] = '{0} / {1}'.format(
                 self.corp.human_readable_corpname, out['query_overview'][0].get('nicearg'))

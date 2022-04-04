@@ -80,7 +80,7 @@ class Monitor(object):
     def create_doc_hash(doc):
         return sha1(json.dumps(doc).encode('utf-8')).hexdigest()
 
-    def run(self):
+    async def run(self):
         self._time = time.time()
         self._data = []
         self.analyze_directory(self._root_dir)
@@ -93,7 +93,7 @@ class Monitor(object):
                    sum_cache_bytes=round(total_bytes / 1e6), disk_free_bytes=round(free_sp / 1e6))
 
         if free_sp < self.free_capacity_trigger:
-            rm_ans = self.find_rm_candidates()
+            rm_ans = await self.find_rm_candidates()
             ans.update(rm_ans)
 
         if self.elastic_conf:
@@ -111,7 +111,7 @@ class Monitor(object):
     def parse_conc_code(self, path):
         return self.entry_key_gen(os.path.basename(os.path.dirname(path))), os.path.basename(path)[:-len('.conc')]
 
-    def find_rm_candidates(self):
+    async def find_rm_candidates(self):
         rmlist = sorted([v for v in self._data if v.age > self.min_file_age],
                         key=lambda v: v.size * v.age, reverse=True)
         total = 0
@@ -133,12 +133,12 @@ class Monitor(object):
         pass
 
 
-def run(db_plugin, entry_key_gen, root_dir, min_file_age, free_capacity_goal, free_capacity_trigger,
-        elastic_conf=None):
+async def run(db_plugin, entry_key_gen, root_dir, min_file_age, free_capacity_goal, free_capacity_trigger,
+              elastic_conf=None):
     """
     See Monitor.__init__() for arguments.
     """
     monitor = Monitor(root_dir=root_dir, db_plugin=db_plugin, entry_key_gen=entry_key_gen,
                       min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
                       free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
-    return monitor.run()
+    return await monitor.run()

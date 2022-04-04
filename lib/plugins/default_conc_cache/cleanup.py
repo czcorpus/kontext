@@ -28,7 +28,7 @@ import json
 import logging
 from typing import Dict, Tuple
 
-from lib.plugin_types.general_storage import KeyValueStorage
+from plugin_types.general_storage import KeyValueStorage
 
 
 DEFAULT_TTL = 60  # in minutes
@@ -106,7 +106,7 @@ class CacheCleanup(CacheFiles):
                 'count': len(v)
             }))
 
-    def run(self, dry_run=False):
+    async def run(self, dry_run=False):
         """
         Performs the clean-up operation by taking the following sequence of steps:
          1. lists all cache files in individual corpora cache dirs
@@ -182,8 +182,8 @@ class CacheCleanup(CacheFiles):
         return ans
 
 
-def run(root_dir, corpus_id, ttl_hours, subdir, dry_run, db_plugin, entry_key_gen):
+async def run(root_dir, corpus_id, ttl_hours, subdir, dry_run, db_plugin, entry_key_gen):
     proc = CacheCleanup(
         db=db_plugin, root_path=root_dir, corpus=corpus_id, ttl_hours=ttl_hours, subdir=subdir,
         entry_key_gen=entry_key_gen)
-    return proc.run(dry_run=dry_run)
+    return await proc.run(dry_run=dry_run)

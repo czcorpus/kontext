@@ -16,6 +16,7 @@
 A simple script for manual cache clean-up
 """
 
+import asyncio
 import os
 import sys
 
@@ -59,5 +60,5 @@ if __name__ == '__main__':
                           logging_level=autoconf.LOG_LEVELS[args.log_level])
     root_dir = autoconf.settings.get('plugins', 'conc_cache')['cache_dir']
 
-    cleanup.run(root_dir=root_dir, corpus_id=args.corpus, ttl=args.ttl, subdir=args.subdir,
-                dry_run=args.dry_run, db_plugin=plugins.runtime.DB.instance, entry_key_gen=mk_key)
+    asyncio.run(cleanup.run(root_dir=root_dir, corpus_id=args.corpus, ttl=args.ttl, subdir=args.subdir,
+                            dry_run=args.dry_run, db_plugin=plugins.runtime.DB.instance, entry_key_gen=mk_key))

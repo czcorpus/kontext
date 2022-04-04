@@ -31,7 +31,7 @@ class ManateeWideCtxBackend(AbstractBackend):
         self._conf = conf
 
     @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         """
         display a hit in a wider context
         """

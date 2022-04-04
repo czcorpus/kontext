@@ -80,16 +80,16 @@ class DefaultCacheMapping(AbstractConcCache):
             return ConcCacheStatus.from_storage(**val)
         return None
 
-    def _set_entry(self, subchash, q, data: ConcCacheStatus):
+    async def _set_entry(self, subchash, q, data: ConcCacheStatus):
         await self._db.hash_set(self._mk_key(), _uniqname(subchash, q), data.to_dict())
 
     def _mk_key(self) -> str:
         return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname)
 
-    def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
+    async def get_stored_calc_status(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return await self._get_entry(subchash, q)
 
-    def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
+    async def get_stored_size(self, subchash: Optional[str], q: Tuple[str, ...]) -> Union[int, None]:
         val = await self._get_entry(subchash, q)
         return val.concsize if val else None
 
@@ -108,12 +108,12 @@ class DefaultCacheMapping(AbstractConcCache):
     def _create_cache_file_path(self, subchash: Optional[str], q: Tuple[str, ...]) -> str:
         return os.path.normpath('%s/%s.conc' % (self._cache_dir_path(), _uniqname(subchash, q)))
 
-    def readable_cache_path(self, subchash, q) -> Optional[str]:
+    async def readable_cache_path(self, subchash, q) -> Optional[str]:
         val = await self._get_entry(subchash, q)
         return val.cachefile if val and val.readable else None
 
-    def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: ConcCacheStatus,
-                   overwrite: bool = False) -> ConcCacheStatus:
+    async def add_to_map(self, subchash: Optional[str], query: Tuple[str, ...], calc_status: ConcCacheStatus,
+                         overwrite: bool = False) -> ConcCacheStatus:
         """
         return:
         path to a created cache file
@@ -123,22 +123,22 @@ class DefaultCacheMapping(AbstractConcCache):
             return prev_status
         calc_status.q0hash = _uniqname(subchash, query[:1])
         calc_status.cachefile = self._create_cache_file_path(subchash, query)
-        self._set_entry(subchash, query, calc_status)
+        await self._set_entry(subchash, query, calc_status)
         return calc_status
 
-    def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
+    async def get_calc_status(self, subchash: Optional[str], query: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return await self._get_entry(subchash, query)
 
-    def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
+    async def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
         stored_data = await self._get_entry(subchash, query)
         if stored_data:
             stored_data.update(**kw)
-            self._set_entry(subchash, query, stored_data)
+            await self._set_entry(subchash, query, stored_data)
 
-    def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
+    async def del_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         await self._db.hash_del(self._mk_key(), _uniqname(subchash, q))
 
-    def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
+    async def del_full_entry(self, subchash: Optional[str], q: Tuple[str, ...]):
         for k, stored in (await self._db.hash_get_all(self._mk_key())).items():
             if stored:
                 if type(stored) is not dict:
@@ -175,7 +175,7 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         from .monitor import run as run_monitor
 
         async def conc_cache_cleanup(ttl_hours, subdir, dry_run, corpus_id=None):
-            return run_cleanup(
+            return await run_cleanup(
                 root_dir=self._cache_dir,
                 corpus_id=corpus_id, ttl_hours=ttl_hours, subdir=subdir, dry_run=dry_run,
                 db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c))
@@ -193,10 +193,11 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
             elastic_conf -- a tuple (URL, index, type) containing ElasticSearch server, index and document type
                             configuration for storing monitoring info; if None then the function is disabled
             """
-            return run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
-                               entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c),
-                               min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
-                               free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
+            return await run_monitor(root_dir=self._cache_dir, db_plugin=self._db,
+                                     entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(
+                                         c),
+                                     min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,
+                                     free_capacity_trigger=free_capacity_trigger, elastic_conf=elastic_conf)
 
         return conc_cache_cleanup, conc_cache_monitor
 

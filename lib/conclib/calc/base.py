@@ -59,7 +59,7 @@ class GeneralWorker:
     def create_new_calc_status(self) -> ConcCacheStatus:
         return ConcCacheStatus(task_id=self._task_id)
 
-    def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
+    async def get_cached_conc_sizes(self, corp: AbstractKCorpus, q: Tuple[str, ...] = None) -> CachedConcSizes:
         """
         Extract concordance size, ipm etc. from a concordance file (specified by provided corpus and query).
         """
@@ -69,7 +69,7 @@ class GeneralWorker:
             q = ()
         ans = CachedConcSizes()
         cache_map = self._cache_factory.get_mapping(corp)
-        status = cache_map.get_calc_status(corp.subchash, q)
+        status = await cache_map.get_calc_status(corp.subchash, q)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
         status.check_for_errors(TASK_TIME_LIMIT)
@@ -124,10 +124,10 @@ class TaskRegistration(GeneralWorker):
         corpus_manager = CorpusManager(subcpath=subcpaths)
         corpus_obj = await corpus_manager.get_corpus(corpus_name, subcname=subc_name, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        status = cache_map.get_calc_status(subchash, query)
+        status = await cache_map.get_calc_status(subchash, query)
         if status is None or status.error:
             status = self.create_new_calc_status()
-            status = cache_map.add_to_map(subchash, query, status, overwrite=True)
+            status = await cache_map.add_to_map(subchash, query, status, overwrite=True)
             already_running = False
         else:
             already_running = True

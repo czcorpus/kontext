@@ -22,7 +22,7 @@ from action.props import ActionProps
 
 class AbstractDispatchHook(abc.ABC):
 
-    def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
+    async def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
         """
         A function run right after Controller.pre_dispatch and before
         any Kontext.pre_dispatch.
@@ -38,7 +38,7 @@ class AbstractDispatchHook(abc.ABC):
             request -- current request (Werkzeug Request)
         """
 
-    def post_dispatch(self, plugin_ctx, methodname, action_metadata):
+    async def post_dispatch(self, plugin_ctx, methodname, action_metadata):
         """
         A function run right after Controller.post_dispatch and before
         Kontext.post_dispatch.
