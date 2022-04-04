@@ -472,7 +472,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 corp_info = dict(name=corp_id)
                 try:
-                    corp_info = plugin_ctx.corpus_manager.get_info(corp_id, plugin_ctx.translate)
+                    corp_info = await plugin_ctx.corpus_manager.get_info(corp_id, plugin_ctx.translate)
                     cl.append({'id': corp_id,
                                'name': corp_info.name,
                                'desc': corp_info.description,
@@ -569,7 +569,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _process_corpus_node(self, plugin_ctx: PluginCtx, node, path, data):
+    async def _process_corpus_node(self, plugin_ctx: PluginCtx, node, path, data):
         corpus_id = node.attrib['ident'].lower()
         web_url = node.attrib['repo'] if 'repo' in node.attrib else None
         sentence_struct = node.attrib['sentence_struct'] if 'sentence_struct' in node.attrib else None
@@ -580,7 +580,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate).name
+        ans.name = (await plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate)).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -621,8 +621,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.sort_attrs = True if meta_elm.find(
                 self.SORT_ATTRS_KEY) is not None else False
             # ans.metadata.desc = self._parse_meta_desc(meta_elm)
-            ans.metadata.desc = plugin_ctx.corpus_manager.get_info(
-                ans.id, plugin_ctx.translate).description
+            ans.metadata.desc = (await plugin_ctx.corpus_manager.get_info(
+                ans.id, plugin_ctx.translate)).description
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
             ans.metadata.group_duplicates = True if meta_elm.find(
@@ -656,7 +656,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         data.append(ans)
         return ans
 
-    def _parse_corplist_node(self, plugin_ctx: PluginCtx, root, path, data):
+    async def _parse_corplist_node(self, plugin_ctx: PluginCtx, root, path, data):
         """
         """
         if not hasattr(root, 'tag') or not root.tag == 'corplist':
@@ -670,11 +670,11 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             elif item.tag == 'keywords':
                 self._parse_keywords(item)
             elif item.tag == 'corplist':
-                self._parse_corplist_node(plugin_ctx, item, path, data)
+                await self._parse_corplist_node(plugin_ctx, item, path, data)
             elif item.tag == 'corpus':
-                self._process_corpus_node(plugin_ctx, item, path, data)
+                await self._process_corpus_node(plugin_ctx, item, path, data)
 
-    def _localize_corpus_info(self, plugin_ctx, data, lang_code):
+    async def _localize_corpus_info(self, plugin_ctx, data, lang_code):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -693,8 +693,8 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
-        ans.description = plugin_ctx.corpus_manager.get_info(
-            ans.id, plugin_ctx.translate).description
+        ans.description = (await plugin_ctx.corpus_manager.get_info(
+            ans.id, plugin_ctx.translate)).description
         return ans
 
     async def get_corpus_info(self, plugin_ctx, corp_name):
@@ -707,7 +707,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         plugin_ctx, (await self._raw_list(plugin_ctx))[corp_name], lang_code=plugin_ctx.user_lang)
                 else:
                     ans = (await self._raw_list(plugin_ctx))[corp_name]
-                ans.manatee = plugin_ctx.corpus_manager.get_info(corp_name, plugin_ctx.translate)
+                ans.manatee = await plugin_ctx.corpus_manager.get_info(corp_name, plugin_ctx.translate)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
@@ -724,7 +724,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         root = xml.find(self.root_xpath)
         if root is not None:
-            self._parse_corplist_node(plugin_ctx, root, '/', data)
+            await self._parse_corplist_node(plugin_ctx, root, '/', data)
         self._corplist = OrderedDict([(item.id.lower(), item) for item in data])
 
     async def _raw_list(self, plugin_ctx: PluginCtx):
@@ -754,14 +754,15 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         featured = []
         for x in list((await self._raw_list(plugin_ctx)).values()):
             if x.id in permitted_corpora and is_featured(x):
+                corpus_info = await cm.get_info(x.id, plugin_ctx.translate)
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x.id,
                     'corpus_id': x.id,
-                    'name': cm.get_info(x.id, plugin_ctx.translate).name,
-                    'size': cm.get_info(x.id, plugin_ctx.translate).size,
-                    'size_info': l10n.simplify_num(cm.get_info(x.id, plugin_ctx.translate).size),
-                    'description': self._export_untranslated_label(plugin_ctx, cm.get_info(x.id, plugin_ctx.translate).description)})
+                    'name': corpus_info.name,
+                    'size': corpus_info.size,
+                    'size_info': l10n.simplify_num(corpus_info.size),
+                    'description': self._export_untranslated_label(plugin_ctx, corpus_info.description)})
         return featured
 
     async def export_favorite(self, plugin_ctx: PluginCtx, favitems):
@@ -769,7 +770,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_ctx, plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate).description)
+                plugin_ctx, await (plugin_ctx.corpus_manager.get_info(item.main_corpus_id, plugin_ctx.translate)).description)
             ans.append(tmp)
         return ans
 

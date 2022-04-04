@@ -72,7 +72,7 @@ async def viewattrs(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     out = {}
     if amodel.args.maincorp:
-        corp = amodel.cm.get_corpus(amodel.args.maincorp, translate=req.translate)
+        corp = await amodel.cm.get_corpus(amodel.args.maincorp, translate=req.translate)
     else:
         corp = amodel.corp
     out['AttrList'] = [

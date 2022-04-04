@@ -244,7 +244,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     #  id, label_cs, label_en, color
                     self._keywords['cs'][row['id']] = row['label_cs']
                     self._keywords['en'][row['id']] = row['label_en']
-                    self._colors[row['id']] = self._parse_color(row['color']) if row['color'] else None
+                    self._colors[row['id']] = self._parse_color(
+                        row['color']) if row['color'] else None
         lang_key = self._get_iso639lang(lang)
         return self._keywords[lang_key]
 
@@ -301,7 +302,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                             ans = await self._localize_corpus_info(corp_info, lang_code=plugin_ctx.user_lang)
                         else:
                             ans = corp_info
-                        ans.manatee = plugin_ctx.corpus_manager.get_info(
+                        ans.manatee = await plugin_ctx.corpus_manager.get_info(
                             corp_name, plugin_ctx.translate)
                         ans.token_connect, ans.kwic_connect, ans.query_suggest = await self._get_tckcqs_providers(
                             cursor, corp_name)

@@ -153,7 +153,7 @@ def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
-                mcorp = corpus_manager.get_corpus(qq[2:], translate=translate)
+                mcorp = await corpus_manager.get_corpus(qq[2:], translate=translate)
                 break
         try:
             return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp, translate=translate)
@@ -223,7 +223,7 @@ def find_cached_conc_base(
                     mcorp = corp
                     for qq in reversed(q[:i]):  # find the right main corp, if aligned
                         if qq.startswith('x-'):
-                            mcorp = corpus_manager.get_corpus(qq[2:], translate=translate)
+                            mcorp = await corpus_manager.get_corpus(qq[2:], translate=translate)
                             break
                     conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp, translate=translate)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
@@ -248,7 +248,7 @@ class ConcCalculation(GeneralWorker):
         super(ConcCalculation, self).__init__(task_id=task_id,
                                               cache_factory=cache_factory, translate=translate)
 
-    def __call__(self, initial_args, subc_dirs, corpus_name, subc_name, subchash, query, samplesize):
+    async def run(self, initial_args, subc_dirs, corpus_name, subc_name, subchash, query, samplesize):
         """
         initial_args -- a dict(cachefile=..., already_running=...)
         subc_dirs -- a list of directories where to look for subcorpora
@@ -261,7 +261,7 @@ class ConcCalculation(GeneralWorker):
         cache_map = None
         try:
             corpus_manager = CorpusManager(subcpath=subc_dirs)
-            corpus_obj = corpus_manager.get_corpus(
+            corpus_obj = await corpus_manager.get_corpus(
                 corpus_name, subcname=subc_name, translate=self._translate)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
             if not initial_args['already_running']:
@@ -315,16 +315,23 @@ class ConcSyncCalculation(GeneralWorker):
     def __init__(self, task_id, cache_factory, subc_dirs, corpus_name, subc_name: str, conc_dir: str, translate: Callable[[str], str] = lambda x: x):
         super().__init__(task_id, cache_factory, translate)
         self.corpus_manager = CorpusManager(subcpath=subc_dirs)
-        self.corpus_obj = self.corpus_manager.get_corpus(
-            corpus_name, subcname=subc_name, translate=self._translate)
-        setattr(self.corpus_obj, '_conc_dir', conc_dir)
-        self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
+        self.corpus_name = corpus_name
+        self.subcname = subc_name
+        self.conc_dir = conc_dir
+
+        self.corpus_obj = None
+        self.cache_map = None
 
     def _mark_calc_states_err(self, subchash: Optional[str], query: Tuple[str, ...], from_idx: int, err: BaseException):
         for i in range(from_idx, len(query)):
             self.cache_map.update_calc_status(subchash, query[:i + 1], error=err, finished=True)
 
-    def __call__(self,  subchash, query: Tuple[str, ...], samplesize: int):
+    async def run(self,  subchash, query: Tuple[str, ...], samplesize: int):
+        self.corpus_obj = await self.corpus_manager.get_corpus(
+            self.corpus_name, subcname=self.subcname, translate=self._translate)
+        setattr(self.corpus_obj, '_conc_dir', self.conc_dir)
+        self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
+
         try:
             calc_from, conc = find_cached_conc_base(
                 self.corpus_obj, subchash, query, minsize=0, translate=self._translate)

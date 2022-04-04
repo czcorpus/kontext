@@ -170,7 +170,7 @@ class CorpusManager:
                 return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
         return None
 
-    def get_corpus(
+    async def get_corpus(
             self, corpname: str, corp_variant: str = '', subcname: str = '',
             decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
         """
@@ -206,9 +206,9 @@ class CorpusManager:
             self._cache[cache_key] = kcorp
         return kcorp
 
-    def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> DefaultManateeCorpusInfo:
+    async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> DefaultManateeCorpusInfo:
         try:
-            corp = self.get_corpus(corpus_id, '', '', True, translate=translate)
+            corp = await self.get_corpus(corpus_id, '', '', True, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)

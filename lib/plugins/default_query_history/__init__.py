@@ -40,11 +40,11 @@ class CorpusCache:
         self._cm = corpus_manager
         self._corpora = {}
 
-    def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
+    async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = self._cm.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cm.get_corpus(cname, translate=translate)
         return self._corpora[cname]
 
 
@@ -217,10 +217,10 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
-                    tmp['human_corpname'] = corpora.corpus(
+                    tmp['human_corpname'] = await corpora.corpus(
                         tmp['corpname'], translate).get_conf('NAME')
                     for ac in tmp['aligned']:
-                        ac['human_corpname'] = corpora.corpus(
+                        ac['human_corpname'] = await corpora.corpus(
                             ac['corpname'], translate).get_conf('NAME')
                     full_data.append(tmp)
                 elif item_qs == 'pquery':
@@ -228,7 +228,7 @@ class QueryHistory(AbstractQueryHistory):
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
-                    tmp['human_corpname'] = corpora.corpus(
+                    tmp['human_corpname'] = await corpora.corpus(
                         tmp['corpname'], translate).get_conf('NAME')
                     q_join = []
 
@@ -274,7 +274,7 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = dict(
                         corpname=stored['corpora'][0],
                         aligned=[],
-                        human_corpname=corpora.corpus(
+                        human_corpname=await corpora.corpus(
                             stored['corpora'][0], translate).get_conf('NAME'),
                         query=stored.get('form', {}).get('wlpat'),
                         pfilter_words=stored['form']['pfilter_words'],

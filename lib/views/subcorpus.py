@@ -135,7 +135,7 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     for corp in user_corpora:
         for item in amodel.user_subc_names(corp):
             try:
-                sc = amodel.cm.get_corpus(
+                sc = await amodel.cm.get_corpus(
                     corp, subcname=item['n'], decode_desc=False, translate=req.translate)
                 data.append({
                     'name': '%s / %s' % (corp, item['n']),
@@ -277,7 +277,8 @@ async def list_published(amodel: UserActionModel, req: KRequest, resp: KResponse
     offset = int(req.args.get('offset', '0'))
     limit = int(req.args.get('limit', '20'))
     if len(query) >= min_query_size:
-        subclist = list_public_subcorpora(amodel.subcpath[-1], value_prefix=query, offset=offset, limit=limit)
+        subclist = list_public_subcorpora(
+            amodel.subcpath[-1], value_prefix=query, offset=offset, limit=limit)
     else:
         subclist = []
     return dict(data=subclist, min_query_size=min_query_size)

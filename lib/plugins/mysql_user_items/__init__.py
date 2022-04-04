@@ -76,7 +76,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     corpora = []
     main_size = None
     for i, c_id in enumerate(req.form_getlist('corpora')):
-        corp = amodel.cm.get_corpus(c_id, subcname=req.form.get(
+        corp = await amodel.cm.get_corpus(c_id, subcname=req.form.get(
             'subcorpus_id') if i == 0 else None, translate=req.translate)
         if i == 0:
             main_size = corp.search_size

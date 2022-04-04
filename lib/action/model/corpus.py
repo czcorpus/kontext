@@ -393,8 +393,8 @@ class CorpusActionModel(UserActionModel):
         if self.args.corpname:
             try:
                 if not self._curr_corpus or self.args.usesubcorp and not self._curr_corpus.is_subcorpus:
-                    self._curr_corpus = self.cm.get_corpus(self.args.corpname, subcname=self.args.usesubcorp,
-                                                           corp_variant=self._corpus_variant, translate=self._req.translate)
+                    self._curr_corpus = await self.cm.get_corpus(self.args.corpname, subcname=self.args.usesubcorp,
+                                                                 corp_variant=self._corpus_variant, translate=self._req.translate)
                 self._curr_corpus._conc_dir = self._conc_dir
                 return self._curr_corpus
             except Exception as ex:
@@ -457,7 +457,7 @@ class CorpusActionModel(UserActionModel):
 
         align_common_posattrs = set(self.corp.get_posattrs())
         for a in self.args.align:
-            align_corp = self.cm.get_corpus(a, translate=self._req.translate)
+            align_corp = await self.cm.get_corpus(a, translate=self._req.translate)
             align_common_posattrs.intersection_update(align_corp.get_posattrs())
         result['AlignCommonPosAttrs'] = list(align_common_posattrs)
 
@@ -536,7 +536,7 @@ class CorpusActionModel(UserActionModel):
 
         if self.args.maincorp and self.args.maincorp != self.args.corpname:
             try:
-                thecorp = self.cm.get_corpus(self.args.maincorp, translate=self._req.translate)
+                thecorp = await self.cm.get_corpus(self.args.maincorp, translate=self._req.translate)
             except Exception as ex:
                 thecorp = ErrorCorpus(ex)
         else:
@@ -644,7 +644,7 @@ class CorpusActionModel(UserActionModel):
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = self.cm.get_corpus(al, translate=self._req.translate)
+                alcorp = await self.cm.get_corpus(al, translate=self._req.translate)
                 corp_info = await self.get_corpus_info(al)
 
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))
