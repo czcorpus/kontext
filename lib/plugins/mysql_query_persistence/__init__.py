@@ -188,7 +188,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         a dictionary containing operation data or None if nothing is found
         """
         try:
-            data = self.db.get(mk_key(data_id))
+            data = await self.db.get(mk_key(data_id))
             if data is None:
                 async with self._archive.cursor() as cursor:
                     await cursor.execute(
@@ -236,10 +236,10 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             curr_data[PERSIST_LEVEL_KEY] = self._get_persist_level_for(user_id)
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
-            self.db.set(data_key, curr_data)
-            self.db.set_ttl(data_key, self._get_ttl_for(user_id))
+            await self.db.set(data_key, curr_data)
+            await self.db.set_ttl(data_key, self._get_ttl_for(user_id))
             if not self._auth.is_anonymous(user_id):
-                self.db.list_append(self._archive_queue_key, dict(key=data_key))
+                await self.db.list_append(self._archive_queue_key, dict(key=data_key))
             latest_id = curr_data[ID_KEY]
         else:
             latest_id = prev_data[ID_KEY]
@@ -263,7 +263,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     raise NotFoundException(
                         'Archive revoke error - concordance {0} not archived'.format(conc_id))
             else:
-                data = self.db.get(mk_key(conc_id))
+                data = await self.db.get(mk_key(conc_id))
                 if data is None and archived_rec is None:
                     raise NotFoundException(
                         'Archive store error - concordance {0} not found'.format(conc_id))

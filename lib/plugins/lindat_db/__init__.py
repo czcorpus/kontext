@@ -26,7 +26,7 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see ./config.rng
 """
 
-import redis
+import aioredis
 from plugins.redis_db import RedisDb
 
 
@@ -40,12 +40,14 @@ class LindatRedisDb(RedisDb):
         self._host = host
         self._port = port
         self._shard_id = shard_id
-        self.redis = redis.StrictRedis(host=self._host, port=self._port, db=self._shard_id)
+        self._pool = aioredis.ConnectionPool(
+            max_connections=10, host=host, port=port, db=shard_id)
         self._scan_chunk_size = 50
 
-    def keys(self, pattern='*'):
+    async def keys(self, pattern='*'):
         """Returns a list fo keys matching ``pattern``"""
-        return self.redis.keys(pattern)
+        async with self.redis as conn:
+            return await conn.keys(pattern)
 
 
 class RedisDbManager(LindatRedisDb):

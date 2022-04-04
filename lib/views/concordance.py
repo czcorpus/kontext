@@ -216,8 +216,8 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
-            kwic_args.alignlist = [amodel.cm.get_corpus(
-                c, translate=req.translate) for c in amodel.args.align if c]
+            kwic_args.alignlist = [(await amodel.cm.get_corpus(
+                c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
@@ -238,7 +238,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     if amodel.corp.get_conf('ALIGNED'):
         out['Aligned'] = [{'n': w,
-                           'label': amodel.cm.get_corpus(w, translate=req.translate).get_conf(
+                           'label': (await amodel.cm.get_corpus(w, translate=req.translate)).get_conf(
                                'NAME') or w}
                           for w in amodel.corp.get_conf('ALIGNED').split(',')]
     if amodel.args.align and not amodel.args.maincorp:
@@ -371,8 +371,8 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
-            kwic_args.alignlist = [amodel.cm.get_corpus(
-                c, translate=req.translate) for c in amodel.args.align if c]
+            kwic_args.alignlist = [(await amodel.cm.get_corpus(
+                c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
 
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
@@ -546,7 +546,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
 
     avail_al_corp = []
     for al in [x for x in amodel.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
-        alcorp = amodel.cm.get_corpus(al, translate=req.translate)
+        alcorp = await amodel.cm.get_corpus(al, translate=req.translate)
         avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
         if al in amodel.args.align:
             align_common_posattrs.intersection_update(alcorp.get_posattrs())
@@ -1144,7 +1144,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic_args.line_offset = (from_line - 1)
         kwic_args.labelmap = {}
         kwic_args.align = ()
-        kwic_args.alignlist = [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+        kwic_args.alignlist = [(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c]
         kwic_args.leftctx = amodel.args.leftctx
         kwic_args.rightctx = amodel.args.rightctx
         kwic_args.structs = amodel.get_struct_opts()
@@ -1176,7 +1176,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
             if len(data['Lines']) > 0:
                 aligned_corpora = [amodel.corp] + \
-                    [amodel.cm.get_corpus(c) for c in amodel.args.align if c]
+                    [(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c]
                 writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                       for c in aligned_corpora])
                 if req.mapped_args.heading:

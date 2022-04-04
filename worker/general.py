@@ -106,7 +106,7 @@ def is_compiled(corp: KCorpus, attr, method):
     return False
 
 
-def _load_corp(corp_id, subc: str, user_id):
+async def _load_corp(corp_id, subc: str, user_id):
     """
     Instantiate a manatee.Corpus (or manatee.SubCorpus)
     instance
@@ -120,7 +120,7 @@ def _load_corp(corp_id, subc: str, user_id):
     if user_id is not None:
         subc_paths.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id)))
     cm = CorpusManager(subc_paths)
-    return cm.get_corpus(corp_id, '', subc)
+    return await cm.get_corpus(corp_id, '', subc)
 
 
 def _compile_frq(corp: KCorpus, attr, logfile):
@@ -163,10 +163,10 @@ async def conc_register(self, user_id, corpus_id, subc_name, subchash, query, sa
     returns:
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
-    reg_fn = conclib.calc.base.TaskRegistration(task_id=self.request.id)
+    task = conclib.calc.base.TaskRegistration(task_id=self.request.id)
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
-    initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
+    initial_args = await task.run(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
         worker.send_task_sync(
             'conc_calculate', object.__class__,
@@ -193,7 +193,7 @@ async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, su
     task = conclib.calc.ConcCalculation(task_id=self.request.id)
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
-    return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
+    return await task.run(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
 
 
 async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
@@ -204,7 +204,7 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, q
                                             subc_dirs=(
                                                 subc_path, pub_path), corpus_name=corpus_name,
                                             subc_name=subc_name, conc_dir=conc_dir)
-    return task(subchash, query, samplesize)
+    return await task.run(subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
@@ -258,7 +258,7 @@ async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     Precalculate freqency data for collocations and wordlists.
     (see freq_calc.build_arf_db)worker.py
     """
-    corp = _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corp_id, subcorp, user_id)
     return _compile_frq(corp, attr, logfile)
 
 
@@ -267,7 +267,7 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     Precalculate ARF data for collocations and wordlists.
     (see freq_calc.build_arf_db)
     """
-    corp = _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corp_id, subcorp, user_id)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
         base_path = freq_calc.corp_freqs_cache_path(corp, attr)
@@ -279,7 +279,7 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
             num_wait -= 1
         if not os.path.isfile(frq_data_file):
             _compile_frq(corp, attr, logfile)
-        corp = _load_corp(corp_id, subcorp, user_id)  # must reopen freq files
+        corp = await _load_corp(corp_id, subcorp, user_id)  # must reopen freq files
     if is_compiled(corp, attr, 'arf'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -297,7 +297,7 @@ async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     Precalculate document counts data for collocations and wordlists.
     (see freq_calc.build_arf_db)
     """
-    corp = _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corp_id, subcorp, user_id)
     if is_compiled(corp, attr, 'docf'):
         with open(logfile, 'a') as f:
             f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -322,7 +322,7 @@ async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, 
     try:
         worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id,
                                                description=description, author=author)
-        return worker.run(tt_query, cql, path, publish_path)
+        return await worker.run(tt_query, cql, path, publish_path)
     except Exception as ex:
         msg = getattr(ex, 'message', None)
         if not msg:
@@ -334,7 +334,7 @@ async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, 
 
 async def get_wordlist(args, max_items, user_id):
     form = WordlistFormArgs.from_dict(args)
-    corp = _load_corp(form.corpname, form.usesubcorp, user_id)
+    corp = await _load_corp(form.corpname, form.usesubcorp, user_id)
     wordlist.wordlist(corp, form, max_items)
 
 

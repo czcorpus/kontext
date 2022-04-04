@@ -18,6 +18,8 @@ import time
 from datetime import datetime
 from hashlib import sha1
 import json
+
+from plugin_types.general_storage import KeyValueStorage
 try:
     from elasticsearch import Elasticsearch
 except ImportError:
@@ -39,15 +41,15 @@ class Record(object):
 
 class Monitor(object):
 
-    def __init__(self, root_dir, db_plugin, entry_key_gen, min_file_age, free_capacity_goal, free_capacity_trigger,
+    def __init__(self, root_dir, db_plugin: KeyValueStorage, entry_key_gen, min_file_age, free_capacity_goal, free_capacity_trigger,
                  elastic_conf):
         """
         arguments:
             root_dir -- cache root directory
             db_plugin -- KonText database plug-in
-            entry_key_gen -- a function generating first level key for 
-                             a specific corpus cache entries within key-value database 
-            min_file_age -- a minimum age a cache file must be of to be deletable (in seconds) 
+            entry_key_gen -- a function generating first level key for
+                             a specific corpus cache entries within key-value database
+            min_file_age -- a minimum age a cache file must be of to be deletable (in seconds)
             free_capacity_goal -- a minimum capacity the task will try to free up in a single run (in bytes)
             free_capacity_trigger -- a maximum disk free capacity which triggers file removal process
             elastic_conf -- a tuple (URL, index, type) containing ElasticSearch server, index and document type
@@ -118,7 +120,7 @@ class Monitor(object):
         while i < len(rmlist) and total < self.free_capacity_goal:
             try:
                 key, key2 = self.parse_conc_code(rmlist[i].path)
-                self.db_plugin.hash_del(key, key2)
+                await self.db_plugin.hash_del(key, key2)
                 os.unlink(rmlist[i].path)
                 total += rmlist[i].size
                 i += 1
@@ -134,7 +136,7 @@ class Monitor(object):
 def run(db_plugin, entry_key_gen, root_dir, min_file_age, free_capacity_goal, free_capacity_trigger,
         elastic_conf=None):
     """
-    See Monitor.__init__() for arguments. 
+    See Monitor.__init__() for arguments.
     """
     monitor = Monitor(root_dir=root_dir, db_plugin=db_plugin, entry_key_gen=entry_key_gen,
                       min_file_age=min_file_age, free_capacity_goal=free_capacity_goal,

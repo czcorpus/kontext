@@ -110,9 +110,9 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             if username == FederatedAuthWithFailover.RESERVED_USER:
                 _logger.warning(f'Reserved username used [{username}]!')
                 return self.anonymous_user(plugin_ctx)
-            user_d = self._failover_auth.auth(self._db, username, password)
+            user_d = await self._failover_auth.auth(self._db, username, password)
         else:
-            user_d = self._auth(plugin_ctx)
+            user_d = await self._auth(plugin_ctx)
 
         if user_d is not None:
             user_d['id'] = int(user_d['id'])
@@ -166,10 +166,10 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
     def logout_hook(self, plugin_ctx):
         plugin_ctx.redirect('%squery' % (plugin_ctx.root_url,))
 
-    def _new_user_id(self):
-        return self._db.incr(FederatedAuthWithFailover.RESERVED_USER)
+    async def _new_user_id(self):
+        return await self._db.incr(FederatedAuthWithFailover.RESERVED_USER)
 
-    def _auth(self, plugin_ctx):
+    async def _auth(self, plugin_ctx):
         """
             Inspect HTTP headers and try to find a shibboleth user.
         """
@@ -196,15 +196,15 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         idp = uni(_get_non_empty_header(
             plugin_ctx.get_from_environ, "HTTP_SHIB_IDENTITY_PROVIDER") or "")
 
-        db_user_d = self._db.hash_get_all(username)
+        db_user_d = await self._db.hash_get_all(username)
         if 0 == len(db_user_d):
             user_d = {
-                "id": self._new_user_id(),
+                "id": await self._new_user_id(),
                 "username": username,
                 "idp": idp,
                 "fullname": "%s %s" % (firstname, surname)
             }
-            self._db.hash_set_map(username, user_d)
+            await self._db.hash_set_map(username, user_d)
         else:
             if idp != db_user_d["idp"]:
                 _logger.warning("User's [%s] idp has changed [%s]->[%s]",
@@ -277,8 +277,8 @@ class LocalFailover(object):
     def __init__(self):
         pass
 
-    def auth(self, db, user, password):
-        d = db.hash_get_all(user)
+    async def auth(self, db, user, password):
+        d = await db.hash_get_all(user)
         if 0 == len(d):
             return None
         p = d.get("password", "")

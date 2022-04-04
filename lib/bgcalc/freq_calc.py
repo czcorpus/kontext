@@ -273,7 +273,7 @@ def calculate_freqs_bg(args: FreqCalcArgs):
     a dict(freqs=..., conc_size=...)
     """
     cm = corplib.CorpusManager(subcpath=args.subcpath)
-    corp = cm.get_corpus(args.corpname, subcname=args.subcname)
+    corp = await cm.get_corpus(args.corpname, subcname=args.subcname)
     conc = require_existing_conc(corp=corp, q=args.q)
     if not conc.finished():
         raise UnfinishedConcordanceError(
@@ -446,7 +446,7 @@ class Freq2DCalculation:
         note: this is called by a background worker
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
-        self._corp = cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
+        self._corp = await cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(
             self._args.fcrit, limit=self._args.ctminfreq, limit_type=self._args.ctminfreq_type)

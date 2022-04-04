@@ -33,28 +33,28 @@ class SignUpToken(AbstractSignUpToken[KeyValueStorage]):
     def _mk_key(self):
         return 'signup:{0}'.format(self.value)
 
-    def save(self, db):
+    def save(self, db: KeyValueStorage):
         rec = dict(value=self.value, user=self.user, created=self.created, label=self.label)
         k = self._mk_key()
-        db.set(k, rec)
-        db.set_ttl(k, self.ttl)
+        await db.set(k, rec)
+        await db.set_ttl(k, self.ttl)
         self.bound = True
 
-    def load(self, db):
-        rec = db.get(self._mk_key())
+    def load(self, db: KeyValueStorage):
+        rec = await db.get(self._mk_key())
         if rec:
             self.user = rec['user']
             self.created = rec['created']
             self.label = rec['label']
             self.bound = True
-        self.ttl = db.get_ttl(self._mk_key())
+        self.ttl = await db.get_ttl(self._mk_key())
 
-    def delete(self, db):
-        db.remove(self._mk_key())
+    def delete(self, db: KeyValueStorage):
+        await db.remove(self._mk_key())
         self.bound = False
 
-    def is_valid(self, db):
-        return db.get_ttl(self._mk_key()) > 0
+    def is_valid(self, db: KeyValueStorage):
+        return await db.get_ttl(self._mk_key()) > 0
 
     def is_stored(self):
         return self.bound

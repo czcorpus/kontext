@@ -81,18 +81,18 @@ class StableQueryPersistence(AbstractQueryPersistence):
         we have to go backwards and find an actual corpname stored in the
         1st operation.
         """
-        data = self._load_query(query_id, save_access=False)
+        data = await self._load_query(query_id, save_access=False)
         while data is not None and 'corpname' not in data:
-            data = self._load_query(data.get('prev_id', ''), save_access=False)
+            data = await self._load_query(data.get('prev_id', ''), save_access=False)
         return data.get('corpora', []) if data is not None else []
 
     async def open(self, data_id):
-        ans = self._load_query(data_id, save_access=True)
+        ans = await self._load_query(data_id, save_access=True)
         if ans is not None and 'corpora' not in ans:
             ans['corpora'] = self.find_used_corpora(ans.get('prev_id'))
         return ans
 
-    def _load_query(self, data_id: str, save_access: bool):
+    async def _load_query(self, data_id: str, save_access: bool):
         """
         Loads operation data according to the passed data_id argument.
         The data are assumed to be public (as are URL parameters of a query).
@@ -103,7 +103,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
         returns:
         a dictionary containing operation data or None if nothing is found
         """
-        data = self.db.get(mk_key(data_id))
+        data = await self.db.get(mk_key(data_id))
         if data is None and self._archive_db_path is not None:
             for arch_db in self._archives:
                 cursor = arch_db.cursor()
@@ -139,8 +139,8 @@ class StableQueryPersistence(AbstractQueryPersistence):
             curr_data[ID_KEY] = data_id
             curr_data[USER_ID_KEY] = user_id
             data_key = mk_key(data_id)
-            self.db.set(data_key, curr_data)
-            self.db.set_ttl(data_key, self.ttl)
+            await self.db.set(data_key, curr_data)
+            await self.db.set_ttl(data_key, self.ttl)
             latest_id = curr_data[ID_KEY]
         else:
             latest_id = prev_data[ID_KEY]
@@ -172,7 +172,7 @@ class StableQueryPersistence(AbstractQueryPersistence):
                 raise NotFoundException('Concordance {0} not archived'.format(conc_id))
         else:
             cursor = self._latest_archive.cursor()  # writing to the latest archive
-            data = self.db.get(mk_key(conc_id))
+            data = await self.db.get(mk_key(conc_id))
             if data is None and archived_rec is None:
                 raise NotFoundException('Concordance {0} not found'.format(conc_id))
             elif archived_rec:

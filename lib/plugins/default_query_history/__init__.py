@@ -23,6 +23,7 @@ import time
 import random
 import logging
 from typing import Callable
+from plugin_types.general_storage import KeyValueStorage
 from plugin_types.auth import AbstractAuth
 from plugin_types.query_persistence import AbstractQueryPersistence
 
@@ -39,11 +40,11 @@ class CorpusCache:
         self._cm = corpus_manager
         self._corpora = {}
 
-    def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
+    async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = self._cm.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cm.get_corpus(cname, translate=translate)
         return self._corpora[cname]
 
 
@@ -54,7 +55,7 @@ class QueryHistory(AbstractQueryHistory):
 
     DEFAULT_TTL_DAYS = 10
 
-    def __init__(self, conf, db, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
+    def __init__(self, conf, db: KeyValueStorage, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
         """
         arguments:
         conf -- the 'settings' module (or some compatible object)
@@ -92,14 +93,14 @@ class QueryHistory(AbstractQueryHistory):
         """
         ts = self._current_timestamp()
         item = dict(created=ts, query_id=query_id, name=None, q_supertype=q_supertype)
-        self.db.list_append(self._mk_key(user_id), item)
+        await self.db.list_append(self._mk_key(user_id), item)
         if random.random() < QueryHistory.PROB_DELETE_OLD_RECORDS:
             await self._delete_old_records(user_id)
         return ts
 
     async def make_persistent(self, user_id, query_id, q_supertype, created, name):
         k = self._mk_key(user_id)
-        data = self.db.list_get(k)
+        data = await self.db.list_get(k)
         last_match_idx = -1
         for i, item in enumerate(data):
             if item.get('query_id') == query_id:
@@ -108,32 +109,32 @@ class QueryHistory(AbstractQueryHistory):
                     break
         if last_match_idx > -1:
             data[last_match_idx]['name'] = name
-            self.db.list_set(k, last_match_idx, data[last_match_idx])
+            await self.db.list_set(k, last_match_idx, data[last_match_idx])
             await self._query_persistence.archive(user_id, query_id)
         else:
             ts = self._current_timestamp()
             item = dict(created=ts, query_id=query_id, name=name, q_supertype=q_supertype)
-            self.db.list_append(self._mk_key(user_id), item)
+            await self.db.list_append(self._mk_key(user_id), item)
         return True
 
     async def make_transient(self, user_id, query_id, created, name):
         k = self._mk_key(user_id)
-        data = self.db.list_get(k)
+        data = await self.db.list_get(k)
         for i, item in enumerate(data):
             if item.get('query_id', None) == query_id and item.get('created') == created and item.get('name') == name:
                 item['name'] = None
-                self.db.list_set(k, i, item)
+                await self.db.list_set(k, i, item)
                 return True
         return False
 
     async def delete(self, user_id, query_id, created):
         k = self._mk_key(user_id)
-        data = self.db.list_get(k)
-        self.db.remove(k)
+        data = await self.db.list_get(k)
+        await self.db.remove(k)
         deleted = 0
         for item in data:
             if item.get('query_id') != query_id or item.get('created', 0) != created:
-                self.db.list_append(k, item)
+                await self.db.list_append(k, item)
             else:
                 deleted += 1
         return deleted
@@ -201,7 +202,7 @@ class QueryHistory(AbstractQueryHistory):
                     return True
             return False
 
-        data = self.db.list_get(self._mk_key(user_id))
+        data = await self.db.list_get(self._mk_key(user_id))
         if limit is None:
             limit = len(data)
         data = list(reversed(data))[offset:(offset + limit)]
@@ -216,10 +217,10 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
-                    tmp['human_corpname'] = corpora.corpus(
+                    tmp['human_corpname'] = await corpora.corpus(
                         tmp['corpname'], translate).get_conf('NAME')
                     for ac in tmp['aligned']:
-                        ac['human_corpname'] = corpora.corpus(
+                        ac['human_corpname'] = await corpora.corpus(
                             ac['corpname'], translate).get_conf('NAME')
                     full_data.append(tmp)
                 elif item_qs == 'pquery':
@@ -227,7 +228,7 @@ class QueryHistory(AbstractQueryHistory):
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
-                    tmp['human_corpname'] = corpora.corpus(
+                    tmp['human_corpname'] = await corpora.corpus(
                         tmp['corpname'], translate).get_conf('NAME')
                     q_join = []
 
@@ -273,7 +274,7 @@ class QueryHistory(AbstractQueryHistory):
                     tmp = dict(
                         corpname=stored['corpora'][0],
                         aligned=[],
-                        human_corpname=corpora.corpus(
+                        human_corpname=await corpora.corpus(
                             stored['corpora'][0], translate).get_conf('NAME'),
                         query=stored.get('form', {}).get('wlpat'),
                         pfilter_words=stored['form']['pfilter_words'],
@@ -329,9 +330,9 @@ class QueryHistory(AbstractQueryHistory):
         kept intact.
         """
         data_key = self._mk_key(user_id)
-        curr_data = self.db.list_get(data_key)
+        curr_data = await self.db.list_get(data_key)
         tmp_key = self._mk_tmp_key(user_id)
-        self.db.remove(tmp_key)
+        await self.db.remove(tmp_key)
         curr_time = time.time()
         new_list = []
         for item in curr_data:
@@ -345,15 +346,15 @@ class QueryHistory(AbstractQueryHistory):
             elif int(curr_time - item.get('created', 0)) / 86400 < self.ttl_days:
                 new_list.append(item)
         for item in new_list:
-            self.db.list_append(tmp_key, item)
-        self.db.rename(tmp_key, data_key)
+            await self.db.list_append(tmp_key, item)
+        await self.db.rename(tmp_key, data_key)
 
     async def export(self, plugin_ctx):
         return {'page_num_records': self._page_num_records}
 
 
 @inject(plugins.runtime.DB, plugins.runtime.QUERY_PERSISTENCE, plugins.runtime.AUTH)
-def create_instance(settings, db, query_persistence, auth):
+def create_instance(settings, db: KeyValueStorage, query_persistence: AbstractQueryPersistence, auth: AbstractAuth):
     """
     arguments:
     settings -- the settings.py module

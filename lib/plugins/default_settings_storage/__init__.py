@@ -16,6 +16,8 @@
 A simple settings storage which relies on default_db plug-in.
 """
 
+from typing import List
+from plugin_types.general_storage import KeyValueStorage
 import plugins
 from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject
@@ -25,7 +27,7 @@ import logging
 
 class SettingsStorage(AbstractSettingsStorage):
 
-    def __init__(self, db, excluded_users):
+    def __init__(self, db: KeyValueStorage, excluded_users: List[int]):
         """
         arguments:
         conf -- the 'settings' module (or a compatible object)
@@ -43,9 +45,9 @@ class SettingsStorage(AbstractSettingsStorage):
 
     def save(self, user_id, corpus_id, data):
         if corpus_id:
-            self.db.hash_set(self._mk_corp_key(user_id), corpus_id, data)
+            await self.db.hash_set(self._mk_corp_key(user_id), corpus_id, data)
         else:
-            self.db.set(self._mk_key(user_id), data)
+            await self.db.set(self._mk_key(user_id), data)
 
     def _upgrade_general_settings(self, data, user_id):
         if data is None:
@@ -59,25 +61,25 @@ class SettingsStorage(AbstractSettingsStorage):
             else:
                 gen[k] = v
         for corp, cs in corp_set.items():
-            self.db.hash_set(self._mk_corp_key(user_id), corp, cs)
+            await self.db.hash_set(self._mk_corp_key(user_id), corp, cs)
         if len(gen) < len(data):
             logging.getLogger(__name__).warning(
                 'Upgraded legacy format settings for user {}'.format(user_id))
-            self.db.set(self._mk_key(user_id), gen)
+            await self.db.set(self._mk_key(user_id), gen)
         return gen
 
     def load(self, user_id, corpus_id=None):
         if corpus_id:
-            return self.db.hash_get(self._mk_corp_key(user_id), corpus_id)
+            return await self.db.hash_get(self._mk_corp_key(user_id), corpus_id)
         else:
-            return self._upgrade_general_settings(self.db.get(self._mk_key(user_id)), user_id)
+            return self._upgrade_general_settings(await self.db.get(self._mk_key(user_id)), user_id)
 
     def get_excluded_users(self):
         return self._excluded_users
 
 
 @inject(plugins.runtime.DB)
-def create_instance(conf, db):
+def create_instance(conf, db: KeyValueStorage):
     conf = conf.get('plugins', 'settings_storage')
     excluded_users = conf.get('excluded_users', None)
     if excluded_users is None:

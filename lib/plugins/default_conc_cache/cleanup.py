@@ -28,6 +28,8 @@ import json
 import logging
 from typing import Dict, Tuple
 
+from lib.plugin_types.general_storage import KeyValueStorage
+
 
 DEFAULT_TTL = 60  # in minutes
 
@@ -60,7 +62,8 @@ class CacheFiles(object):
         where 3-tuple is
         (cache_file_abs_path, age_of_file_in_sec, size_of_file_in_Bytes)
         """
-        path = self._root_path if not self._subdir else os.path.normpath(os.path.join(self._root_path, self._subdir))
+        path = self._root_path if not self._subdir else os.path.normpath(
+            os.path.join(self._root_path, self._subdir))
         if self._corpus:
             corpora_dirs = [self._corpus]
         elif os.path.isdir(path):
@@ -75,7 +78,8 @@ class CacheFiles(object):
                 continue
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = os.path.join(corp_full_path, cache_file)
-                corpus_key = corpus_dir if not self._subdir else os.path.join(self._subdir, corpus_dir)
+                corpus_key = corpus_dir if not self._subdir else os.path.join(
+                    self._subdir, corpus_dir)
                 ans[corpus_key].append(
                     (cache_full_path,
                      self._curr_time - os.path.getmtime(cache_full_path),
@@ -85,7 +89,7 @@ class CacheFiles(object):
 
 class CacheCleanup(CacheFiles):
 
-    def __init__(self, db, root_path, corpus, ttl_hours, subdir, entry_key_gen):
+    def __init__(self, db: KeyValueStorage, root_path, corpus, ttl_hours, subdir, entry_key_gen):
         super(CacheCleanup, self).__init__(root_path, subdir, corpus)
         self._db = db
         self._ttl_hours = ttl_hours
@@ -144,28 +148,28 @@ class CacheCleanup(CacheFiles):
                     to_del[item_key] = item_path
 
             cache_key = self._entry_key_gen(corpus_id)
-            cache_map = self._db.hash_get_all(cache_key)
+            cache_map = await self._db.hash_get_all(cache_key)
             if cache_map:
                 try:
                     for item_hash, _ in list(cache_map.items()):
                         if item_hash in to_del:
                             if not dry_run:
                                 os.unlink(to_del[item_hash])
-                                self._db.hash_del(cache_key, item_hash)
+                                await self._db.hash_del(cache_key, item_hash)
                             else:
                                 del to_del[item_hash]
                             num_deleted += 1
                         elif item_hash not in real_file_hashes:
                             if not dry_run:
-                                self._db.hash_del(cache_key, item_hash)
+                                await self._db.hash_del(cache_key, item_hash)
                             logging.getLogger().warning(
                                 'deleted stale cache map entry [%s][%s]' % (cache_key, item_hash))
                 except Exception as ex:
                     logging.getLogger().warning('Failed to process cache map file (will be deleted): %s' % (ex,))
-                    self._db.remove(cache_key)
+                    await self._db.remove(cache_key)
             else:
                 logging.getLogger().error('Cache map [%s] not found' % cache_key)
-                for item_hash, unbound_file in list(to_del.items()):
+                for item_hash, unbound_file in to_del.items():
                     if not dry_run:
                         try:
                             os.unlink(unbound_file)

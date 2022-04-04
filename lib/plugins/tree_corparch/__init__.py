@@ -178,7 +178,7 @@ class TreeCorparch(AbstractCorporaArchive):
                 return item
         return None
 
-    def _localize_corpus_info(self, plugin_ctx: PluginCtx, data: Union[CorpusInfo, BrokenCorpusInfo]):
+    async def _localize_corpus_info(self, plugin_ctx: PluginCtx, data: Union[CorpusInfo, BrokenCorpusInfo]):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant
@@ -191,8 +191,8 @@ class TreeCorparch(AbstractCorporaArchive):
         if isinstance(data, BrokenCorpusInfo):
             ans.description = 'An uninitialized corpus'
         else:
-            ans.description = plugin_ctx.corpus_manager.get_info(
-                ans.id, plugin_ctx.translate).description
+            ans.description = (await plugin_ctx.corpus_manager.get_info(
+                ans.id, plugin_ctx.translate)).description
         return ans
 
     def setup(self, controller_obj):

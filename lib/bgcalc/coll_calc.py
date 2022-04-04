@@ -99,7 +99,7 @@ def calculate_colls_bg(coll_args: CollCalcArgs):
     a respective calculation.
     """
     cm = corplib.CorpusManager(subcpath=coll_args.subcpath)
-    corp = cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
+    corp = await cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         corplib.frq_db(corp, coll_args.cattr)

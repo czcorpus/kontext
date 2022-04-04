@@ -119,10 +119,10 @@ class TaskRegistration(GeneralWorker):
     def __init__(self, task_id: str):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
-    def __call__(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
-                 query: Tuple[str, ...], samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
+    async def run(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
+                  query: Tuple[str, ...], samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
         corpus_manager = CorpusManager(subcpath=subcpaths)
-        corpus_obj = corpus_manager.get_corpus(corpus_name, subcname=subc_name, translate=translate)
+        corpus_obj = await corpus_manager.get_corpus(corpus_name, subcname=subc_name, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = cache_map.get_calc_status(subchash, query)
         if status is None or status.error:

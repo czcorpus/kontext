@@ -162,7 +162,7 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
             subcpath.insert(0, os.path.join(settings.get(
                 'corpora', 'users_subcpath'), str(params['user_id'])))
     cm = CorpusManager(subcpath)
-    corp = cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
+    corp = await cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
     # check until finished
     while not ws.closed:

@@ -55,7 +55,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
         """
         """
         client_ip = plugin_ctx.client_ip
-        rec = self._db.hash_get(self.bot_clients_key, client_ip)
+        rec = await self._db.hash_get(self.bot_clients_key, client_ip)
         if rec:
             report: ActivityReport = ActivityReport.from_dict(rec)
             logging.getLogger(__name__).warning(
@@ -69,7 +69,7 @@ class UcnkDispatchHook(AbstractDispatchHook):
                         'Service unavailable due to bot-like activity')
                 else:
                     logging.getLogger(__name__).warning(f'client ban expired for IP {client_ip}')
-                    self._db.hash_del(self.bot_clients_key, client_ip)
+                    await self._db.hash_del(self.bot_clients_key, client_ip)
 
     def pre_dispatch(self, plugin_ctx, action_props: ActionProps, request):
         self._check_client(plugin_ctx)
