@@ -131,10 +131,12 @@ class DefaultTokenConnect(AbstractTokenConnect):
         self._corparch = corparch
         self._providers = providers
 
-    def map_providers(self, providers: Sequence[str, bool]):
+    def map_providers(self, providers: Sequence[Tuple[str, bool]]):
         return [self._providers[ident] + (is_kwic_view,) for ident, is_kwic_view in providers]
 
-    def fetch_data(self, providers: Sequence[str, bool], corpus: KCorpus, corpora: List[str], token_id: int, num_tokens: int, lang: str, context=None):
+    def fetch_data(
+            self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str],
+            token_id: int, num_tokens: int, lang: str, context=None):
         ans = []
         # first, we pre-load all possible required (struct/pos) attributes all
         # the defined providers need
