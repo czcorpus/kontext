@@ -15,6 +15,7 @@ lxml >= 3.4
 Markdown >= 3.3.6
 openpyxl >= 3.0.5
 redis >= 4.2.0rc1
+uvloop >= 0.16.0
 aiomysql >= 0.0.22
 aiofiles >= 0.8.0
 aiocsv >= 1.2.1

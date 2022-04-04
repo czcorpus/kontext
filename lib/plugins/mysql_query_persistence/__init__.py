@@ -296,7 +296,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         """
         Export tasks for async queue worker(s)
         """
-        def archive_concordance(num_proc: int, dry_run: bool):
+        async def archive_concordance(num_proc: int, dry_run: bool):
             from . import archive
             return archive.run(from_db=self.db, to_db=self._archive, archive_queue_key=self._archive_queue_key,
                                dry_run=dry_run, num_proc=num_proc)

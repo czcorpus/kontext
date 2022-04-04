@@ -174,13 +174,13 @@ class CacheMappingFactory(AbstractCacheMappingFactory):
         from .cleanup import run as run_cleanup
         from .monitor import run as run_monitor
 
-        def conc_cache_cleanup(ttl_hours, subdir, dry_run, corpus_id=None):
+        async def conc_cache_cleanup(ttl_hours, subdir, dry_run, corpus_id=None):
             return run_cleanup(
                 root_dir=self._cache_dir,
                 corpus_id=corpus_id, ttl_hours=ttl_hours, subdir=subdir, dry_run=dry_run,
                 db_plugin=self._db, entry_key_gen=lambda c: DefaultCacheMapping.KEY_TEMPLATE.format(c))
 
-        def conc_cache_monitor(min_file_age, free_capacity_goal, free_capacity_trigger, elastic_conf):
+        async def conc_cache_monitor(min_file_age, free_capacity_goal, free_capacity_trigger, elastic_conf):
             """
             This function is exported as a Celery task within KonText's worker and
             is intended to be used via Celery Beat as an additional monitoring and

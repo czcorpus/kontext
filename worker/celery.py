@@ -32,11 +32,13 @@ complete and properly configured KonText package.
 import os
 import sys
 import pickle
+import uvloop
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/lib')
 import settings
 import plugins
+from util import as_sync
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
@@ -44,6 +46,8 @@ if settings.get('global', 'manatee_path', None):
 
 from worker import general
 from bgcalc.adapter.factory import init_backend
+
+uvloop.install()
 
 worker = init_backend(settings, '')
 
@@ -65,36 +69,41 @@ class CustomTasks:
             if callable(getattr(p.instance, 'export_tasks', None)):
                 for tsk in p.instance.export_tasks():
                     setattr(self, '%s_%s' % (p.name, tsk.__name__,),
-                            worker.task(tsk, name='%s.%s' % (p.name, tsk.__name__,)))
+                            worker.task(as_sync(tsk), name='%s.%s' % (p.name, tsk.__name__,)))
 
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
 @worker.task(bind=True, name='conc_register')
-def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
+@as_sync
+async def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
     return general.conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
 
 
 @worker.task(bind=True, name='conc_calculate')
-def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+@as_sync
+async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
 @worker.task(bind=True, name='conc_sync_calculate')
-def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
+@as_sync
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
 @worker.task(name='calculate_colls')
-def calculate_colls(coll_args):
+@as_sync
+async def calculate_colls(coll_args):
     return general.calculate_colls(coll_args)
 
 
 @worker.task(name='clean_colls_cache')
-def clean_colls_cache():
+@as_sync
+async def clean_colls_cache():
     return general.clean_colls_cache()
 
 
@@ -114,53 +123,62 @@ class FreqsTask(worker.Task):
 
 
 @worker.task(base=FreqsTask, name='calculate_freqs')
-def calculate_freqs(args):
+@as_sync
+async def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
 @worker.task(name='calculate_freq2d')
-def calculate_freq2d(args):
+@as_sync
+async def calculate_freq2d(args):
     return general.calculate_freq2d(args)
 
 
 @worker.task(name='clean_freqs_cache')
-def clean_freqs_cache():
+@as_sync
+async def clean_freqs_cache():
     return general.clean_freqs_cache()
 
 
 @worker.task(name='calc_merged_freqs')
-def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+@as_sync
+async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     return general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
 @worker.task(name='compile_frq')
-def compile_frq(user_id, corp_id, subcorp, attr, logfile):
+@as_sync
+async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_arf')
-def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
+@as_sync
+async def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_docf')
-def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
+@as_sync
+async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
 @worker.task(name='create_subcorpus')
-def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
+@as_sync
+async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
 
 
 # ----------------------------- WORD LIST -------------------------------------
 
 @worker.task(name='get_wordlist')
-def get_wordlist(args, max_items, user_id):
+@as_sync
+async def get_wordlist(args, max_items, user_id):
     return general.get_wordlist(args, max_items, user_id)
 
 

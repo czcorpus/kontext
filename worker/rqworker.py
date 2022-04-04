@@ -21,6 +21,7 @@ import os
 import sys
 from rq import Connection, Worker, get_current_job
 import redis
+import uvloop
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))
@@ -28,6 +29,7 @@ sys.path.insert(0, os.path.join(APP_PATH, 'worker'))
 
 import settings
 import plugins
+from util import as_sync
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
@@ -36,6 +38,8 @@ if settings.get('global', 'manatee_path', None):
 import general
 from bgcalc.adapter.factory import init_backend
 import logging
+
+uvloop.install()
 
 worker = init_backend(settings, 'rq')
 
@@ -48,73 +52,86 @@ class TaskWrapper:
 
 # ----------------------------- CONCORDANCE -----------------------------------
 
-
-def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
+@as_sync
+async def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
     return general.conc_register(
         TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
 
 
-def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+@as_sync
+async def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
-def conc_sync_calculate(user_id, corpus_name, subc_name, subchash, query, samplesize):
+@as_sync
+async def conc_sync_calculate(user_id, corpus_name, subc_name, subchash, query, samplesize):
     return general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, subchash, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
 
-def calculate_colls(coll_args):
+@as_sync
+async def calculate_colls(coll_args):
     return general.calculate_colls(coll_args)
 
 
-def clean_colls_cache():
+@as_sync
+async def clean_colls_cache():
     return general.clean_colls_cache()
 
 
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-def calculate_freqs(args):
+@as_sync
+async def calculate_freqs(args):
     return general.calculate_freqs(args)
 
 
-def calculate_freq2d(args):
+@as_sync
+async def calculate_freq2d(args):
     return general.calculate_freq2d(args)
 
 
-def clean_freqs_cache():
+@as_sync
+async def clean_freqs_cache():
     return general.clean_freqs_cache()
 
 
-def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+@as_sync
+async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     return general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-def compile_frq(user_id, corp_id, subcorp: str, attr, logfile):
+@as_sync
+async def compile_frq(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
-def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
+@as_sync
+async def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
-def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
+@as_sync
+async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
     return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- WORD LIST -------------------------------------
 
 
-def get_wordlist(args, max_items, user_id):
+@as_sync
+async def get_wordlist(args, max_items, user_id):
     return general.get_wordlist(args, max_items, user_id)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
+@as_sync
+async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
 
 
@@ -125,7 +142,8 @@ def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author
 for p in plugins.runtime:
     if callable(getattr(p.instance, 'export_tasks', None)):
         for tsk in p.instance.export_tasks():
-            globals()[f'{p.name}__{tsk.__name__}'] = tsk
+
+            globals()[f'{p.name}__{tsk.__name__}'] = as_sync(tsk)
 
 
 if __name__ == "__main__":

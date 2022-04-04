@@ -147,7 +147,7 @@ def _compile_frq(corp: KCorpus, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker):
+async def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker):
     """
     Register concordance calculation and initiate the calculation.
 
@@ -168,7 +168,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     initial_args = reg_fn(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
-        worker.send_task_sync(
+        await worker.send_task_sync(
             'conc_calculate', object.__class__,
             args=(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize),
             soft_time_limit=time_limit)
@@ -176,7 +176,7 @@ def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesi
     return initial_args
 
 
-def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
@@ -196,7 +196,7 @@ def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash
     return task(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
 
 
-def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
     subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
     pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
@@ -210,7 +210,7 @@ def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, 
 # ----------------------------- COLLOCATIONS ----------------------------------
 
 
-def calculate_colls(coll_args: coll_calc.CollCalcArgs):
+async def calculate_colls(coll_args: coll_calc.CollCalcArgs):
     """
     """
     ans = coll_calc.calculate_colls_bg(coll_args)
@@ -220,14 +220,14 @@ def calculate_colls(coll_args: coll_calc.CollCalcArgs):
     return ans
 
 
-def clean_colls_cache():
+async def clean_colls_cache():
     return coll_calc.clean_colls_cache()
 
 
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-def calculate_freqs(args):
+async def calculate_freqs(args):
     args = freq_calc.FreqCalcArgs(**args)
     calculate_freqs.cache_path = args.cache_path
     ans = freq_calc.calculate_freqs_bg(args)
@@ -239,21 +239,21 @@ def calculate_freqs(args):
     return ans
 
 
-def calculate_freq2d(args: freq_calc.Freq2DCalcArgs):
+async def calculate_freq2d(args: freq_calc.Freq2DCalcArgs):
     return freq_calc.Freq2DCalculation(args).run()
 
 
-def clean_freqs_cache():
+async def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
 
-def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
+async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
     return pquery.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-def compile_frq(user_id, corp_id, subcorp, attr, logfile):
+async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
     (see freq_calc.build_arf_db)worker.py
@@ -262,7 +262,7 @@ def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     return _compile_frq(corp, attr, logfile)
 
 
-def compile_arf(user_id, corp_id, subcorp, attr, logfile):
+async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
     (see freq_calc.build_arf_db)
@@ -292,7 +292,7 @@ def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
 
 
-def compile_docf(user_id, corp_id, subcorp, attr, logfile):
+async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
     (see freq_calc.build_arf_db)
@@ -318,7 +318,7 @@ def compile_docf(user_id, corp_id, subcorp, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
+async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
     try:
         worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id,
                                                description=description, author=author)
@@ -332,7 +332,7 @@ def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author
 
 # ----------------------------- WORD LIST -------------------------------------
 
-def get_wordlist(args, max_items, user_id):
+async def get_wordlist(args, max_items, user_id):
     form = WordlistFormArgs.from_dict(args)
     corp = _load_corp(form.corpname, form.usesubcorp, user_id)
     wordlist.wordlist(corp, form, max_items)
