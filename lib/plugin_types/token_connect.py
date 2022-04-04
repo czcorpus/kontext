@@ -44,7 +44,7 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 import abc
-from typing import Dict, Any, List, Tuple, Iterable, TYPE_CHECKING
+from typing import Dict, Any, List, Tuple, Iterable, Sequence, TYPE_CHECKING
 from corplib.corpus import KCorpus
 from plugin_types.general_storage import KeyValueStorage
 # this is to fix cyclic imports when running the app caused by typing
@@ -59,7 +59,7 @@ class BackendException(Exception):
     pass
 
 
-class Response(object):
+class Response:
     """
     A response as returned by server-side frontend (where server-side
     frontend receives data from backend).
@@ -198,11 +198,15 @@ def find_implementation(path: str) -> Any:
 
 class AbstractTokenConnect(CorpusDependentPlugin):
 
-    def map_providers(self, provider_ids: List[str]):
+    def map_providers(self, providers: Sequence[Tuple[str, bool]]) -> Tuple[AbstractBackend, AbstractFrontend, bool]:
+        """
+        Based on provider selection (identifier and bool specifying whether it should be a KWIC view alternative),
+        list all respective backends, frontends and "is kwic view" info into 3-tuples.
+        """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def fetch_data(self, provider_ids: List[str], corpus: KCorpus, corpora: List[str], token_id: int,
+    def fetch_data(self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str], token_id: int,
                    num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
