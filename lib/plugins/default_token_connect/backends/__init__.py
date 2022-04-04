@@ -86,7 +86,7 @@ class HTTPBackend(AbstractBackend):
             return self._conf.get('attrs', [])
 
     @cached
-    def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
+    async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         connection = self.create_connection()
         try:
             args = dict(

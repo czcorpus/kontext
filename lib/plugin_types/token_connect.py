@@ -110,8 +110,8 @@ class AbstractBackend(abc.ABC):
         return self._ttl
 
     @abc.abstractmethod
-    def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
-              query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
+    async def fetch(self, corpora: List[str], maincorp: KCorpus, token_id: int, num_tokens: int,
+                    query_args: Dict[str, str], lang: str, context: Tuple[int, int] = None) -> Tuple[Any, bool]:
         pass
 
     def enabled_for_corpora(self, corpora: Iterable[str]) -> bool:
@@ -206,8 +206,8 @@ class AbstractTokenConnect(CorpusDependentPlugin):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def fetch_data(self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str], token_id: int,
-                   num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
+    async def fetch_data(self, providers: Sequence[Tuple[str, bool]], corpus: KCorpus, corpora: List[str], token_id: int,
+                         num_tokens: int, lang: str, context: Tuple[int, int] = None) -> List[Tuple[Any, bool]]:
         """
         Obtain (in a synchronous way) data from all the backends
         identified by a list of provider ids.
