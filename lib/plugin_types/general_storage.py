@@ -75,7 +75,7 @@ class KeyValueStorage(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def list_len(self, key: str) -> Serializable:
+    async def list_len(self, key: str) -> int:
         """
         Return length of a list. If there is a non-list value stored with the passed key
         then TypeError is raised.

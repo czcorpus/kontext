@@ -32,17 +32,19 @@ from plugin_types.general_storage import KeyValueStorage
 
 
 class RedisDb(KeyValueStorage):
-    def __init__(self, conf):
+
+    def __init__(self, conf, encoder=None, decoder=None):
         """
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        self._host = conf['host']
-        self._port = int(conf['port'])
-        self._db = int(conf['id'])
+
         self._pool = aioredis.ConnectionPool(
-            max_connections=10, host=self._host, port=self._port, db=self._db)
-        self._scan_chunk_size = 50
+            max_connections=int(conf.get('max_connections', 10)),
+            host=conf['host'],
+            port=int(conf['port']),
+            db=int(conf['id']),
+        )
 
     @property
     def redis(self):
@@ -50,7 +52,7 @@ class RedisDb(KeyValueStorage):
 
     async def rename(self, key, new_key):
         async with self.redis as conn:
-            return await conn.rename(key, new_key)
+            await conn.rename(key, new_key)
 
     async def list_get(self, key, from_idx=0, to_idx=-1):
         """
@@ -109,7 +111,7 @@ class RedisDb(KeyValueStorage):
         value -- a JSON-serializable value to be inserted
         """
         async with self.redis as conn:
-            return await conn.lset(key, idx, json.dumps(value))
+            await conn.lset(key, idx, json.dumps(value))
 
     async def list_trim(self, key, keep_left, keep_right):
         """
@@ -216,7 +218,7 @@ class RedisDb(KeyValueStorage):
 
     async def clear_ttl(self, key):
         async with self.redis as conn:
-            return await conn.persist(key)
+            await conn.persist(key)
 
     async def remove(self, key):
         """
@@ -250,7 +252,7 @@ class RedisDb(KeyValueStorage):
         0 if the key was not set
         """
         async with self.redis as conn:
-            return await conn.setnx(key, value)
+            await conn.setnx(key, value)
 
     async def getset(self, key, value):
         """
@@ -269,7 +271,7 @@ class RedisDb(KeyValueStorage):
         the value will be initialized as 'amount'
         """
         async with self.redis as conn:
-            return await conn.incr(key, amount)
+            await conn.incr(key, amount)
 
     async def hash_set_map(self, key, mapping):
         """
@@ -281,7 +283,7 @@ class RedisDb(KeyValueStorage):
         for name in mapping:
             new_mapping[name] = json.dumps(mapping[name])
         async with self.redis as conn:
-            return await conn.hmset(key, new_mapping)
+            await conn.hmset(key, new_mapping)
 
 
 def create_instance(conf):
