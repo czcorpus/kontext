@@ -318,7 +318,8 @@ class CorpusActionModel(UserActionModel):
 
     async def resolve_error_state(self, req, resp, result, err):
         await super().resolve_error_state(req, resp, result, err)
-        self._curr_corpus = ErrorCorpus(err)
+        if self._curr_corpus is None:
+            self._curr_corpus = ErrorCorpus(err)
 
     def add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
