@@ -256,12 +256,10 @@ class CorpusActionModel(UserActionModel):
         It is also OK to raise UserActionException types if necessary.
         """
         req_args = await super().pre_dispatch(req_args)
-
         try:
             await self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
             corpname, self._corpus_variant = await self._check_corpus_access(req_args, self._action_props)
-
             # now we can apply also corpus-dependent settings
             # because the corpus name is already known
             if corpname is None:
@@ -273,13 +271,11 @@ class CorpusActionModel(UserActionModel):
                 corpus_options.update(await self._load_corpus_settings(corpname))
                 self.args.map_args_to_attrs(corpus_options)
                 req_args.set_forced_arg('corpname', corpname)
-
             # always prefer corpname returned by _check_corpus_access()
             # TODO we should reflect align here if corpus has changed
 
             # now we apply args from URL (highest priority)
             self.args.map_args_to_attrs(req_args)
-
             # validate self.args.maincorp which is dependent on 'corpname', 'align'
             if self.args.maincorp and (self.args.maincorp != self.args.corpname and
                                        self.args.maincorp not in self.args.align):
@@ -303,7 +299,6 @@ class CorpusActionModel(UserActionModel):
         access_level = self._action_props.access_level
         if access_level and self.user_is_anonymous():
             raise ForbiddenException(self._req.translate('Access forbidden - please log-in.'))
-
         self._curr_corpus = await self._load_corpus()
 
         # plugins setup
@@ -320,6 +315,10 @@ class CorpusActionModel(UserActionModel):
                 internal_message=f'Failed to fetch configuration for {info.name}')
 
         return req_args
+
+    async def resolve_error_state(self, req, resp, result, err):
+        await super().resolve_error_state(req, resp, result, err)
+        self._curr_corpus = ErrorCorpus(err)
 
     def add_save_menu_item(self, label: str, save_format: Optional[str] = None, hint: Optional[str] = None):
         if save_format is None:
@@ -371,14 +370,6 @@ class CorpusActionModel(UserActionModel):
                 cn = await settings.get_default_corpus(partial(test_fn, auth))
                 redirect = True
         return cn, redirect
-
-    def handle_dispatch_error(self, ex: Exception):
-        if isinstance(self.corp, ErrorCorpus):
-            self._resp.set_http_status(404)
-            self._resp.add_system_message('error', 'Failed to open corpus {0}'.format(
-                getattr(self.args, 'corpname')))
-        else:
-            self._resp.set_http_status(500)
 
     async def _load_corpus(self):
         if self.args.corpname:
