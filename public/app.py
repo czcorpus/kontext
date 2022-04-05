@@ -21,7 +21,7 @@ It can be run in two modes:
  1) as a standalone application (useful for development/testing purposes)
  2) within a WSGI-enabled web server (Gunicorn, uwsgi, Apache + mod_wsgi)
 """
-
+import asyncio
 import sys
 import os
 import logging
@@ -60,7 +60,6 @@ from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 from action.cookie import KonTextCookie
-from util import as_sync
 
 
 # we ensure that the application's locale is always the same
@@ -138,22 +137,18 @@ application.ctx = ApplicationContext(
     tt_cache=tt_cache)
 
 
-def signal_handler(signal, frame):
-
-    async def _async_run():
-        for p in plugins.runtime:
-            fn = getattr(p.instance, 'on_soft_reset', None)
-            if callable(fn):
-                fn()
-        await tt_cache.clear_all()
-    as_sync(_async_run)()
-
-
-signal.signal(signal.SIGUSR1, signal_handler)
+async def sigusr1_handler():
+    logging.getLogger(__name__).warning('Caught signal SIGUSR1')
+    for p in plugins.runtime:
+        fn = getattr(p.instance, 'on_soft_reset', None)
+        if callable(fn):
+            await fn()
+    await tt_cache.clear_all()
 
 
 @application.listener('before_server_start')
 async def server_init(app, loop):
+    loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     db_conf = settings.get('plugins', 'sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
     app.ctx.redis = aioredis.from_url(
