@@ -102,7 +102,7 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
     corp = await cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
-        corplib.frq_db(corp, coll_args.cattr)
+        await corplib.frq_db(corp, coll_args.cattr)
         conc = await require_existing_conc(corp=corp, q=coll_args.q)
         if not conc.finished():
             raise UnfinishedConcordanceError(

@@ -35,6 +35,9 @@ import sys
 import time
 import pickle
 
+import aiofiles
+import aiofiles.os
+
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/../lib')
 import settings
@@ -123,7 +126,7 @@ async def _load_corp(corp_id, subc: str, user_id):
     return await cm.get_corpus(corp_id, '', subc)
 
 
-def _compile_frq(corp: KCorpus, attr, logfile):
+async def _compile_frq(corp: KCorpus, attr, logfile):
     """
     Generate pre-calculated data for frequency distribution pages.
 
@@ -134,14 +137,14 @@ def _compile_frq(corp: KCorpus, attr, logfile):
                (bonito-open approach)
     """
     if is_compiled(corp, attr, 'freq'):
-        with open(logfile, 'a') as f:
-            f.write('\n100 %\n')  # to get proper calculation of total progress
+        async with aiofiles.open(logfile, 'a') as f:
+            await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'freq already compiled'}
     with stderr_redirector(open(logfile, 'a')):
         corp.compile_frq(attr)
-        with open(logfile, 'a') as f:
-            f.write('\n100 %\n')
-    return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
+        async with aiofiles.open(logfile, 'a') as f:
+            await f.write('\n100 %\n')
+    return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
 
 
 # ----------------------------- CONCORDANCE -----------------------------------
@@ -240,7 +243,7 @@ async def calculate_freqs(args):
 
 
 async def calculate_freq2d(args: freq_calc.Freq2DCalcArgs):
-    return freq_calc.Freq2DCalculation(args).run()
+    return await freq_calc.Freq2DCalculation(args).run()
 
 
 async def clean_freqs_cache():
@@ -248,7 +251,7 @@ async def clean_freqs_cache():
 
 
 async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
-    return pquery.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
+    return await pquery.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
@@ -259,7 +262,7 @@ async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     (see freq_calc.build_arf_db)worker.py
     """
     corp = await _load_corp(corp_id, subcorp, user_id)
-    return _compile_frq(corp, attr, logfile)
+    return await _compile_frq(corp, attr, logfile)
 
 
 async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
@@ -270,26 +273,26 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     corp = await _load_corp(corp_id, subcorp, user_id)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
-        base_path = freq_calc.corp_freqs_cache_path(corp, attr)
+        base_path = await freq_calc.corp_freqs_cache_path(corp, attr)
         frq_data_file = f'{base_path}.frq'
-        while num_wait > 0 and freq_calc.calc_is_running(base_path, 'frq'):
-            if os.path.isfile(frq_data_file):
+        while num_wait > 0 and await freq_calc.calc_is_running(base_path, 'frq'):
+            if await aiofiles.os.path.isfile(frq_data_file):
                 break
             time.sleep(1)
             num_wait -= 1
-        if not os.path.isfile(frq_data_file):
-            _compile_frq(corp, attr, logfile)
+        if not await aiofiles.os.path.isfile(frq_data_file):
+            await _compile_frq(corp, attr, logfile)
         corp = await _load_corp(corp_id, subcorp, user_id)  # must reopen freq files
     if is_compiled(corp, attr, 'arf'):
-        with open(logfile, 'a') as f:
-            f.write('\n100 %\n')  # to get proper calculation of total progress
+        async with aiofiles.open(logfile, 'a') as f:
+            await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'arf already compiled'}
     else:
         with stderr_redirector(open(logfile, 'a')):
             corp.compile_arf(attr)
-            with open(logfile, 'a') as f:
-                f.write('\n100 %\n')
-    return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
+            async with aiofiles.open(logfile, 'a') as f:
+                await f.write('\n100 %\n')
+    return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
 
 
 async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
@@ -299,17 +302,17 @@ async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     """
     corp = await _load_corp(corp_id, subcorp, user_id)
     if is_compiled(corp, attr, 'docf'):
-        with open(logfile, 'a') as f:
-            f.write('\n100 %\n')  # to get proper calculation of total progress
+        async with aiofiles.open(logfile, 'a') as f:
+            await f.write('\n100 %\n')  # to get proper calculation of total progress
         return {'message': 'docf already compiled'}
     doc_struct = corp.get_conf('DOCSTRUCTURE')
     try:
         doc = corp.get_struct(doc_struct)
         with stderr_redirector(open(logfile, 'a')):
             corp.compile_docf(attr, doc.name)
-            with open(logfile, 'a') as f:
-                f.write('\n100 %\n')
-        return {'message': 'OK', 'last_log_record': freq_calc.get_log_last_line(logfile)}
+            async with aiofiles.open(logfile, 'a') as f:
+                await f.write('\n100 %\n')
+        return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
         raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))
@@ -335,7 +338,7 @@ async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, 
 async def get_wordlist(args, max_items, user_id):
     form = WordlistFormArgs.from_dict(args)
     corp = await _load_corp(form.corpname, form.usesubcorp, user_id)
-    wordlist.wordlist(corp, form, max_items)
+    await wordlist.wordlist(corp, form, max_items)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
-import io
+from aiofiles.threadpool.text import AsyncTextIOWrapper
 
 
 class Token(object):
@@ -32,12 +32,12 @@ class Token(object):
 
 class Tokenizer(object):
 
-    def __init__(self, infile: io.StringIO):
+    def __init__(self, infile: AsyncTextIOWrapper):
         self._fr = infile
 
-    def __call__(self):
+    async def __await__(self):
         ans = []
-        for line in self._fr:
+        async for line in self._fr:
             items = re.split(r'\s+', line)
             line_ans = []
             is_q = False

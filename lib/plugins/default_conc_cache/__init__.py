@@ -35,6 +35,8 @@ import hashlib
 from typing import Union, Tuple, Optional
 import logging
 
+import aiofiles.os
+
 import plugins
 from plugin_types.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, ConcCacheStatus
 from plugins import inject
@@ -98,8 +100,8 @@ class DefaultCacheMapping(AbstractConcCache):
         TODO change the name to something meaningful
         """
         cache_dir = self._cache_dir_path()
-        if not os.path.isdir(cache_dir):
-            os.makedirs(cache_dir)
+        if not await aiofiles.os.path.isdir(cache_dir):
+            await aiofiles.os.makedirs(cache_dir)
             os.chmod(cache_dir, 0o775)
 
     def _cache_dir_path(self) -> str:

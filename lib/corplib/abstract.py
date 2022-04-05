@@ -18,7 +18,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, Awaitable, List
 from manatee import Corpus
 
 
@@ -153,7 +153,7 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
-    def corp_mtime(self) -> int:
+    def corp_mtime(self) -> Awaitable[float]:
         pass
 
     @abstractmethod

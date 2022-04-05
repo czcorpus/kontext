@@ -16,10 +16,12 @@ from typing import List, Dict, Tuple
 from functools import wraps
 import hashlib
 import os
-import csv
 import sys
 
+import aiocsv
+import aiofiles
 import aiofiles.os
+from util import anext
 from manatee import Structure   # TODO wrap this out
 
 import l10n
@@ -61,21 +63,21 @@ def cached(f):
     A decorator for caching wordlist to a CSV file
     """
     @wraps(f)
-    def wrapper(corp: KCorpus, args: WordlistFormArgs, max_items: int):
+    async def wrapper(corp: KCorpus, args: WordlistFormArgs, max_items: int):
         path = _create_cache_path(args)
 
-        if os.path.exists(path):  # TODO we do not use this branch
-            with open(path, 'r') as fr:
-                csv_reader = csv.reader(fr)
-                next(csv_reader)  # skip __total__ info
-                return [item for item in csv_reader]
+        if await aiofiles.os.path.exists(path):  # TODO we do not use this branch
+            async with aiofiles.open(path, 'r') as fr:
+                csv_reader = aiocsv.AsyncReader(fr)
+                anext(csv_reader)  # skip __total__ info
+                return [item async for item in csv_reader]
         else:
             ans = f(corp, args, sys.maxsize)
             num_lines = len(ans)
-            with open(path, 'w') as fw:
-                csv_writer = csv.writer(fw)
-                csv_writer.writerow(('__total__', num_lines))
-                csv_writer.writerows(ans)
+            async with aiofiles.open(path, 'w') as fw:
+                csv_writer = aiocsv.AsyncWriter(fw)
+                await csv_writer.writerow(('__total__', num_lines))
+                await csv_writer.writerows(ans)
             return ans[:max_items]
 
     return wrapper
@@ -127,7 +129,7 @@ def doc_sizes(corp: KCorpus, struct: Structure, attrname: str, i: int, normvals:
     return cnt
 
 
-def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
+async def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
     if '.' in wlattr:  # attribute of a structure
         struct = corp.get_struct(wlattr.split('.')[0])
         if wlnums == 'doc sizes':
@@ -138,17 +140,17 @@ def _get_attrfreq(corp: KCorpus, attr, wlattr, wlnums):
         attrfreq = dict([(i, doc_sizes(corp, struct, wlattr, i, normvals))
                          for i in range(attr.id_range())])
     else:  # positional attribute
-        attrfreq = frq_db(corp, wlattr, wlnums)
+        attrfreq = await frq_db(corp, wlattr, wlnums)
     return attrfreq
 
 
 @cached
-def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tuple[str, int]]:
+async def wordlist(corp: KCorpus, args: WordlistFormArgs, max_items: int) -> List[Tuple[str, int]]:
     """
     Note: 'pfilter_words' and 'nfilter_words' are expected to contain utf-8-encoded strings.
     """
     attr = corp.get_attr(args.wlattr)
-    attrfreq = _get_attrfreq(corp=corp, attr=attr, wlattr=args.wlattr, wlnums=args.wlnums)
+    attrfreq = await _get_attrfreq(corp=corp, attr=attr, wlattr=args.wlattr, wlnums=args.wlnums)
     if args.pfilter_words and args.wlpat in ('.*', '.+', ''):  # word list just for given words
         items = _wordlist_from_list(attr=attr, attrfreq=attrfreq, pfilter_words=args.pfilter_words,
                                     nfilter_words=args.nfilter_words, wlminfreq=args.wlminfreq,

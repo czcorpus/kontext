@@ -149,26 +149,26 @@ class TeitokAudioProvider(AbstractAudioProvider):
         Export tasks for the worker
         """
 
-        def _process_dir(path, ttl):
+        async def _process_dir(path, ttl):
             num_del = 0
             freed = 0
             time_now = time.time()
             for item in os.listdir(path):
                 full_path = os.path.join(path, item)
-                if os.path.isfile(full_path):
-                    if time_now - int(os.path.getmtime(full_path)) >= ttl:
-                        sz = os.path.getsize(full_path)
+                if await aiofiles.os.path.isfile(full_path):
+                    if time_now - int(await aiofiles.os.path.getmtime(full_path)) >= ttl:
+                        sz = await aiofiles.os.path.getsize(full_path)
                         os.unlink(full_path)
                         num_del += 1
                         freed += sz
-                elif os.path.isdir(full_path):
-                    nnum, nfreed = _process_dir(full_path, ttl)
+                elif await aiofiles.os.path.isdir(full_path):
+                    nnum, nfreed = await _process_dir(full_path, ttl)
                     num_del += nnum
                     freed += nfreed
             return num_del, freed
 
         async def audio_cache_cleanup(ttl: int):
-            num_del, bytes_freed = _process_dir(self._audio_cache_path, ttl)
+            num_del, bytes_freed = await _process_dir(self._audio_cache_path, ttl)
             logging.getLogger(__name__).info(
                 'Audio cache cleanup - deleted {0} file(s), freed {1:.1f}kB'.format(num_del, bytes_freed / 1024))
 

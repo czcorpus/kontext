@@ -149,7 +149,7 @@ class SubcorpusActionModel(CorpusActionModel):
             self.args.corpname, data.subcname, publish=True) if data.publish else None
 
         if len(tt_query) == 1 and not data.has_aligned_corpora():
-            result = corplib.create_subcorpus(
+            result = await corplib.create_subcorpus(
                 path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
             if result and publish_path:
                 await corplib.mk_publish_links(path, publish_path, self.session_get(

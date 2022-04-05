@@ -20,7 +20,7 @@
 
 import logging
 import time
-import os
+import aiofiles.os
 from typing import Callable, Tuple, Optional,  Dict, Any
 from dataclasses import dataclass
 
@@ -76,7 +76,7 @@ class GeneralWorker:
         if status.error:
             ans.finished = True
             ans.error = status.error
-        elif status.cachefile and os.path.isfile(status.cachefile):
+        elif status.cachefile and await aiofiles.os.path.isfile(status.cachefile):
             cache = open(status.cachefile, 'rb')
             cache.seek(15)
             finished = bool(ord(cache.read(1)))

@@ -28,6 +28,8 @@ import json
 import logging
 from typing import Dict, Tuple
 
+import aiofiles.os
+
 from plugin_types.general_storage import KeyValueStorage
 
 
@@ -42,7 +44,7 @@ class CacheFiles(object):
         self._corpus = corpus
         self._curr_time = time.time()
 
-    def list_dir(self) -> Dict[str, Tuple[str, float, int]]:
+    async def list_dir(self) -> Dict[str, Tuple[str, float, int]]:
         """
         Searches for cache files in a directory specified by the 'path'
         argument. The method expects a specific fixed directory structure:
@@ -66,7 +68,7 @@ class CacheFiles(object):
             os.path.join(self._root_path, self._subdir))
         if self._corpus:
             corpora_dirs = [self._corpus]
-        elif os.path.isdir(path):
+        elif await aiofiles.os.path.isdir(path):
             corpora_dirs = os.listdir(path)
         else:
             corpora_dirs = []
@@ -74,7 +76,7 @@ class CacheFiles(object):
         ans = collections.defaultdict(list)
         for corpus_dir in corpora_dirs:
             corp_full_path = os.path.join(path, corpus_dir)
-            if not os.path.isdir(corp_full_path):
+            if not await aiofiles.os.path.isdir(corp_full_path):
                 continue
             for cache_file in os.listdir(corp_full_path):
                 cache_full_path = os.path.join(corp_full_path, cache_file)
@@ -82,8 +84,8 @@ class CacheFiles(object):
                     self._subdir, corpus_dir)
                 ans[corpus_key].append(
                     (cache_full_path,
-                     self._curr_time - os.path.getmtime(cache_full_path),
-                     os.path.getsize(cache_full_path)))
+                     self._curr_time - (await aiofiles.os.path.getmtime(cache_full_path)),
+                     await aiofiles.os.path.getsize(cache_full_path)))
         return dict(ans)
 
 
@@ -134,7 +136,7 @@ class CacheCleanup(CacheFiles):
         num_deleted = 0
         num_processed = 0
 
-        cache_files = self.list_dir()
+        cache_files = await self.list_dir()
         self._log_stats(cache_files)
         to_del = {}
         # processing corpus by corpus

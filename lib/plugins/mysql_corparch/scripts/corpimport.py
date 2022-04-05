@@ -23,14 +23,17 @@ configured for a corpus (e.g. settings for spoken corpora, query suggestion,
 multiple tagsets per corpus etc.).
 """
 
+from typing import Callable, Optional, Tuple
+from collections import defaultdict
 import os
 import argparse
 import sys
 import logging
-from collections import defaultdict
-from typing import Callable, Optional, Tuple
-import io
 import asyncio
+
+import aiofiles
+import aiofiles.os
+from aiofiles.threadpool.text import AsyncTextIOWrapper
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import plugins
@@ -43,20 +46,20 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
 
-def parse_registry(infile: io.StringIO, variant: str, wbackend: WriteBackend) -> Tuple[str, RegistryConf]:
+async def parse_registry(infile: AsyncTextIOWrapper, variant: str, wbackend: WriteBackend) -> Tuple[str, RegistryConf]:
     logging.getLogger(__name__).info(f'Parsing file {infile.name}')
     corpus_id = os.path.basename(infile.name)
     tokenize = Tokenizer(infile)
-    tokens = tokenize()
+    tokens = await tokenize()
     parse = Parser(corpus_id, variant, tokens, wbackend)
     return corpus_id, parse()
 
 
-async def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: Backend, wbackend: WriteBackend):
+async def compare_registry_and_db(infile: AsyncTextIOWrapper, variant: str, rbackend: Backend, wbackend: WriteBackend):
     """
     Perform basic comparison of defined posattrs and structattrs
     """
-    corpus_id, registry_conf = parse_registry(infile, variant, wbackend)
+    corpus_id, registry_conf = await parse_registry(infile, variant, wbackend)
     # posattrs
     async with rbackend.cursor() as cursor:
         reg_pos = set(x.name for x in registry_conf.posattrs)
@@ -77,8 +80,10 @@ async def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: B
             print('Configuration inconsistency detected:')
             print(f'\t database has extra structure(s): {(db_struct - reg_struct)}')
         # structattrs
-        reg_sattr = set(f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
-        db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in await rbackend.load_corpus_structattrs(cursor, corpus_id, struct))
+        reg_sattr = set(
+            f'{struct.name}.{x.name}' for struct in registry_conf.structs for x in struct.attributes)
+        db_sattr = set(f'{struct}.{x["name"]}' for struct in db_struct for x in await rbackend.load_corpus_structattrs(
+            cursor, corpus_id, struct))
         if len(reg_sattr - db_sattr) > 0:
             print('Configuration inconsistency detected:')
             print(f'\t registry has extra structural attribute(s): {(reg_sattr - db_sattr)}')
@@ -90,14 +95,14 @@ async def compare_registry_and_db(infile: io.StringIO, variant: str, rbackend: B
 async def compare_registry_dir_and_db(dir_path: str, variant: str, rbackend: Backend, wbackend: WriteBackend):
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
-        with open(fpath) as fr:
+        async with aiofiles.open(fpath) as fr:
             await compare_registry_and_db(fr, variant, rbackend, wbackend)
 
 
 async def parse_registry_and_import(
-        infile: io.StringIO, collator_locale: str, variant: str, rbackend: Backend,
+        infile: AsyncTextIOWrapper, collator_locale: str, variant: str, rbackend: Backend,
         wbackend: WriteBackend, corp_factory: Callable, update_if_exists: bool):
-    corpus_id, registry_conf = parse_registry(infile, variant, wbackend)
+    corpus_id, registry_conf = await parse_registry(infile, variant, wbackend)
     iconf = InstallJson(ident=corpus_id, collator_locale=collator_locale)
     try:
         corp = corp_factory(infile.name)
@@ -115,7 +120,8 @@ async def parse_registry_and_import(
                 'on the provided registry file')
             await wbackend.update_corpus_config(cursor, iconf, registry_conf, csize)
         else:
-            raise Exception(f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
+            raise Exception(
+                f'Corpus {corpus_id} already in database - use the "-u" option to update registry-based data')
         return await registry_conf.save()
 
 
@@ -137,9 +143,9 @@ async def process_directory(
     created_rt = {}
     for item in os.listdir(dir_path):
         fpath = os.path.join(dir_path, item)
-        if os.path.isfile(fpath):
+        if await aiofiles.os.path.isfile(fpath):
             try:
-                with open(fpath) as fr:
+                async with aiofiles.open(fpath) as fr:
                     ans = await parse_registry_and_import(
                         infile=fr, variant=variant, rbackend=rbackend, wbackend=wbackend,
                         corp_factory=corp_factory, collator_locale=collator_locale, update_if_exists=update_if_exists)
@@ -228,12 +234,13 @@ async def main():
         return manatee.Corpus(reg_path)
 
     if db.is_autocommit:
-        logging.getLogger(__name__).info('Detected auto-commit feature. Starting explicit transaction')
+        logging.getLogger(__name__).info(
+            'Detected auto-commit feature. Starting explicit transaction')
     async with db.connection() as conn:
         await conn.begin()
         try:
             if args.action == 'import':
-                if os.path.isdir(args.rpath):
+                if await aiofiles.os.path.isdir(args.rpath):
                     await process_directory(
                         dir_path=args.rpath, variant=None, rbackend=rbackend, wbackend=wbackend, auto_align=args.auto_align,
                         collator_locale=args.collator_locale, corp_factory=corp_factory, update_if_exists=args.update)
@@ -243,17 +250,17 @@ async def main():
                             auto_align=args.auto_align, collator_locale=args.collator_locale, corp_factory=corp_factory,
                             update_if_exists=args.update)
                 else:
-                    with open(args.rpath) as fr:
+                    async with aiofiles.open(args.rpath) as fr:
                         await parse_registry_and_import(
                             infile=fr, wbackend=wbackend, rbackend=rbackend, variant=args.variant,
                             corp_factory=corp_factory, collator_locale=args.collator_locale,
                             update_if_exists=args.update)
             elif args.action == 'compare':
                 print('About to compare registry with respective database records...')
-                if os.path.isdir(args.rpath):
+                if await aiofiles.os.path.isdir(args.rpath):
                     await compare_registry_dir_and_db(args.rpath, args.variant, rbackend, wbackend)
                 else:
-                    with open(args.rpath) as fr:
+                    async with aiofiles.open(args.rpath) as fr:
                         await compare_registry_and_db(fr, args.variant, rbackend, wbackend)
             else:
                 await conn.rollback()

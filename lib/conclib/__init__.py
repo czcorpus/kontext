@@ -24,7 +24,8 @@ import settings
 from kwiclib.common import tokens2strclass
 import plugins
 from corplib.corpus import AbstractKCorpus
-
+from action.argmapping.wordlist import WordlistFormArgs
+from bgcalc import wordlist
 from .common import KConc
 
 
@@ -206,7 +207,7 @@ def get_detail_context(
     return data
 
 
-def fcs_scan(corpname: str, scan_query: str, max_ter: int, start: int):
+async def fcs_scan(corpname: str, scan_query: str, max_ter: int, start: int):
     """
     aux function for federated content search: operation=scan
     """
@@ -238,12 +239,14 @@ def fcs_scan(corpname: str, scan_query: str, max_ter: int, start: int):
         raise Exception(10, scan_query, 'Query syntax error')
     if attr not in attrs:
         raise Exception(16, attr, 'Unsupported index')
-    import corplib
+
     if exact_match:
         wlpattern = '^' + value + '$'
     else:
         wlpattern = '.*' + value + '.*'
-    wl = corplib.wordlist(corp, wlattr=attr, wlpat=wlpattern, wlsort='f')
+
+    args = WordlistFormArgs(wlattr=attr, wlpat=wlpattern, wlsort='f')
+    wl = await wordlist.wordlist(corp, args, max_ter)
     return [(d['str'], d['freq']) for d in wl][start:][:max_ter]
 
 

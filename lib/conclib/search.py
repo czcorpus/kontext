@@ -21,8 +21,8 @@
 import logging
 from typing import Callable, Tuple, Optional, Union, List
 import os
-from functools import partial
-import asyncio
+
+import aiofiles.os
 
 import settings
 import plugins
@@ -81,8 +81,8 @@ async def _get_bg_conc(
         for i in range(calc_from, len(q)):
             status = await cache_map.add_to_map(subchash, q[:i + 1], ConcCacheStatus(), overwrite=True)
             # the file cannot be valid as otherwise, calc_from would be higher
-            if os.path.isfile(status.cachefile):
-                del_silent(status.cachefile)
+            if await aiofiles.os.path.isfile(status.cachefile):
+                await del_silent(status.cachefile)
                 logging.getLogger(__name__).warning(
                     f'Removed unbound conc. cache file {status.cachefile}')
         worker = bgcalc.calc_backend_client(settings)
@@ -100,8 +100,8 @@ async def _get_bg_conc(
         return InitialConc(corp, await cache_map.readable_cache_path(subchash, q))
 
 
-def _normalize_permissions(path: str):
-    if os.path.isfile(path) and os.getuid() == os.stat(path).st_uid:
+async def _normalize_permissions(path: str):
+    if await aiofiles.os.path.isfile(path) and os.getuid() == (await aiofiles.os.stat(path)).st_uid:
         os.chmod(path, 0o664)
 
 
@@ -122,9 +122,9 @@ async def _get_sync_conc(worker, corp: AbstractKCorpus, q: Tuple[str, ...], subc
         status.recalc_relconcsize(corp)
         status.arf = round(conc.compute_ARF(), 2) if not corp.is_subcorpus else None
         status = await cache_map.add_to_map(subchash, q[:1], status)
-        _normalize_permissions(status.cachefile)  # in case the file already exists
+        await _normalize_permissions(status.cachefile)  # in case the file already exists
         conc.save(status.cachefile)
-        _normalize_permissions(status.cachefile)
+        await _normalize_permissions(status.cachefile)
         await cache_map.add_to_map(subchash, q[:1], status, overwrite=True)
         # update size in map file
         return conc
@@ -224,7 +224,7 @@ async def get_conc(
                 calc_status.concsize = conc.size()
                 calc_status = await cache_map.add_to_map(subchash, q[:act + 1], calc_status)
                 conc.save(calc_status.cachefile)
-                _normalize_permissions(calc_status.cachefile)
+                await _normalize_permissions(calc_status.cachefile)
                 # TODO can we be sure here that conc is finished even if its not the first query op.?
                 await cache_map.update_calc_status(
                     subchash, q[:act + 1], finished=True, readable=True, concsize=conc.size())

@@ -18,7 +18,6 @@ import sys
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../..')))
 import autoconf
-import plugins
 import MySQLdb
 
 if __name__ == '__main__':

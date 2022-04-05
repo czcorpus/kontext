@@ -182,7 +182,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 value = scanClause.split('=')[1]
                 common_data.result = await amodel.corpora_info(value, common_data.maximumTerms)
             else:
-                common_data.result = conclib.fcs_scan(
+                common_data.result = await conclib.fcs_scan(
                     corpname, scanClause, common_data.maximumTerms, common_data.responsePosition)
             additional_data['resourceInfoRequest'] = req.args.get(
                 'x-cmd-resource-info', '') == 'true'
