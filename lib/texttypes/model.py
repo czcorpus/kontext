@@ -162,8 +162,9 @@ class TextTypes:
             ans['bib_attr'] = None
             ans['id_attr'] = None
             list_none = ()
-        tt = await self._tt_cache.get_values(corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize,
-                                             shrink_list=list_none, collator_locale=corpus_info.collator_locale)
+        tt = await self._tt_cache.get_values(
+            corp=self._corp, subcorpattrs=subcorpattrs, maxlistsize=maxlistsize, shrink_list=list_none,
+            collator_locale=corpus_info.collator_locale)
         await self._add_tt_custom_metadata(tt)
 
         if ret_nums:

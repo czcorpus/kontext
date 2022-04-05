@@ -71,7 +71,7 @@ bp = Blueprint('corpora', url_prefix='corpora')
 @http_action(action_model=UserActionModel, template='corpora/corplist.html')
 async def corplist(amodel: UserActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = amodel.CONCORDANCE_ACTIONS
-    with plugins.runtime.CORPARCH([AbstractSearchableCorporaArchive, SimpleCorporaArchive]) as cp:
+    with plugins.runtime.CORPARCH((AbstractSearchableCorporaArchive, SimpleCorporaArchive)) as cp:
         if isinstance(cp, AbstractSearchableCorporaArchive):
             params = await cp.initial_search_params(amodel.plugin_ctx)
             data = await cp.search(

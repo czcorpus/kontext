@@ -250,8 +250,12 @@ class CorpusManager:
 
 
 def texttype_values(
-        corp: AbstractKCorpus, subcorpattrs: str, maxlistsize: int, shrink_list: Union[Tuple[str, ...],
-                                                                                       List[str]] = (), collator_locale: Optional[str] = None) -> List[Dict[str, Any]]:
+        corp: AbstractKCorpus,
+        subcorpattrs: str,
+        maxlistsize: int,
+        shrink_list: Union[Tuple[str, ...], List[str]] = (),
+        collator_locale: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
     arguments:
     corp --

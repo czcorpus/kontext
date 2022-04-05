@@ -46,9 +46,9 @@ class TextTypesCache:
     async def get_values(self, corp, subcorpattrs, maxlistsize, shrink_list=False, collator_locale=None):
         text_types = await self._db.hash_get(BASE_KEY, self._mk_cache_key(corp.corpname))
         if text_types is None:
-            text_types = corplib.texttype_values(corp=corp, subcorpattrs=subcorpattrs,
-                                                 maxlistsize=maxlistsize, shrink_list=shrink_list,
-                                                 collator_locale=collator_locale)
+            text_types = corplib.texttype_values(
+                corp=corp, subcorpattrs=subcorpattrs,
+                maxlistsize=maxlistsize, shrink_list=shrink_list, collator_locale=collator_locale)
             await self._db.hash_set(BASE_KEY, self._mk_cache_key(corp.corpname), text_types)
         return text_types
 
