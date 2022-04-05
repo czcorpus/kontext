@@ -63,11 +63,11 @@ class DefaultQuerySuggest(AbstractQuerySuggest):
             if ident not in corpus_info.query_suggest.providers:
                 continue
             backend, frontend = provider
-            resp = backend.find_suggestion(user_id=plugin_ctx.user_id, ui_lang=plugin_ctx.user_lang,
-                                           maincorp=plugin_ctx.current_corpus, corpora=corpora,
-                                           subcorpus=subcorpus, value=value, value_type=value_type,
-                                           value_subformat=value_subformat, query_type=query_type,
-                                           p_attr=p_attr, struct=struct, s_attr=s_attr)
+            resp = await backend.find_suggestion(user_id=plugin_ctx.user_id, ui_lang=plugin_ctx.user_lang,
+                                                 maincorp=plugin_ctx.current_corpus, corpora=corpora,
+                                                 subcorpus=subcorpus, value=value, value_type=value_type,
+                                                 value_subformat=value_subformat, query_type=query_type,
+                                                 p_attr=p_attr, struct=struct, s_attr=s_attr)
             ans.append(frontend.export_data(resp, value, plugin_ctx.user_lang).to_dict())
         return ans
 

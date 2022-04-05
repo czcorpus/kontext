@@ -25,7 +25,7 @@ class HTTPBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-        self._client = HTTPClient(server=conf['server'], port=conf['port'], ssl=conf['ssl'])
+        self._client = HTTPClient(server=conf['server'], port=conf['port'], enable_ssl=conf['ssl'])
 
     def get_required_attrs(self):
         if 'posAttrs' in self._conf:
@@ -35,10 +35,10 @@ class HTTPBackend(AbstractBackend):
         else:
             return self._conf.get('attrs', [])
 
-    def find_suggestion(
+    async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         args = dict(
-            ui_lang=self.enc_val(ui_lang), corpora=[self.enc_val(c) for c in corpora])
+            ui_lang=self._client.enc_val(ui_lang), corpora=[self._client.enc_val(c) for c in corpora])
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
-        return self._client.request('GET', self._conf['path'], args)
+        return await self._client.request('GET', self._conf['path'], args)

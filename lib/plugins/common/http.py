@@ -16,10 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import http.client
-import logging
-import urllib.parse
 from typing import Dict, Any, List, Union, Tuple
+import logging
+import ssl
+import urllib.parse
+
+import aiohttp
 
 
 class HTTPClientException(Exception):
@@ -28,35 +30,34 @@ class HTTPClientException(Exception):
 
 class HTTPClient:
 
-    def __init__(self, server: str, port: int = 80, ssl: bool = False):
+    def __init__(self, server: str, port: int = 80, enable_ssl: bool = False):
         self._server = server
         self._port = port
-        self._ssl = ssl
+        self._ssl_context = ssl.create_default_context() if enable_ssl else None
 
     @staticmethod
-    def _is_valid_response(response):
+    def _is_valid_response(response: aiohttp.ClientResponse) -> bool:
         return response and (200 <= response.status < 300 or 400 <= response.status < 500)
 
     @staticmethod
-    def _is_found(response):
+    def _is_found(response: aiohttp.ClientResponse) -> bool:
         return 200 <= response.status < 300
 
-    def create_connection(self):
-        if self._ssl:
-            return http.client.HTTPSConnection(
-                self._server, port=self._port, timeout=15)
-        else:
-            return http.client.HTTPConnection(
-                self._server, port=self._port, timeout=15)
+    def create_connection(self) -> aiohttp.ClientSession:
+        timeout = aiohttp.ClientTimeout(total=15)
+        if self._ssl_context is not None:
+            return aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(ssl_context=self._ssl_context),
+                timeout=timeout,
+            )
+        return aiohttp.ClientSession(timeout=timeout)
 
-    def process_response(self, connection):
-        response = connection.getresponse()
+    async def process_response(self, response: aiohttp.ClientResponse):
         if self._is_valid_response(response):
-            logging.getLogger(__name__).debug(
-                'HTTP client response status: {0}'.format(response.status))
-            return response.read().decode('utf-8'), self._is_found(response)
+            logging.getLogger(__name__).debug(f'HTTP client response status: {response.status}')
+            return (await response.read()).decode('utf-8'), self._is_found(response)
         else:
-            raise HTTPClientException('HTTP client response error {0}'.format(response.status))
+            raise HTTPClientException(f'HTTP client response error {response.status}')
 
     @staticmethod
     def enc_val(s):
@@ -73,12 +74,8 @@ class HTTPClient:
                 ans.append(f'{key}={self.enc_val(val)}')
         return '&'.join(ans)
 
-    def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None,
-                headers=None):
-        connection = self.create_connection()
-        try:
-            connection.request(method, path + '?' + self._process_args(args), body,
-                               headers if headers is not None else {})
-            return self.process_response(connection)
-        finally:
-            connection.close()
+    async def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None,
+                      headers=None):
+        async with self.create_connection() as session:
+            async with session.request(method, path + '?' + self._process_args(args), body=body, headers=headers if headers is not None else {}) as response:
+                return await self.process_response(response)

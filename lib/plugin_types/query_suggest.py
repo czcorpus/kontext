@@ -61,7 +61,7 @@ class AbstractBackend(abc.ABC, Generic[S]):
         self._ident = ident
 
     @abc.abstractmethod
-    def find_suggestion(
+    async def find_suggestion(
             self, user_id: int, ui_lang: str, maincorp: KCorpus, corpora: List[str], subcorpus: str,
             value: str, value_type: str, value_subformat: str, query_type: str, p_attr: str, struct: str,
             s_attr: str) -> S:

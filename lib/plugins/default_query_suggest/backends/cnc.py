@@ -28,14 +28,14 @@ class WordSimilarityBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-        self._client = HTTPClient(server=conf['server'], port=conf['port'], ssl=conf['ssl'])
+        self._client = HTTPClient(server=conf['server'], port=conf['port'], enable_ssl=conf['ssl'])
 
-    def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
-                        query_type, p_attr, struct, s_attr):
+    async def find_suggestion(self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
+                              query_type, p_attr, struct, s_attr):
         if p_attr == 'lemma':
             path = '/'.join([self._conf['path'], 'corpora', self._conf['corpus'], 'similarWords',
                              self._conf['model'], self._client.enc_val(value)])
-            ans, is_found = self._client.request('GET', path, {}, None)
+            ans, is_found = await self._client.request('GET', path, {}, None)
             if is_found:
                 return [v['word'] for v in json.loads(ans)]
         return []
