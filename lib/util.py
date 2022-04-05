@@ -17,6 +17,7 @@ def as_async(func):
 def as_sync(func):
     """
     Runs the wrapped asynchronous function as a blocking one via asyncio.run().
+    This can be run only when there is no loop running.
     """
     @wraps(func)
     def run(*args, **kwargs):

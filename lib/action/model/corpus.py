@@ -256,6 +256,7 @@ class CorpusActionModel(UserActionModel):
         It is also OK to raise UserActionException types if necessary.
         """
         req_args = await super().pre_dispatch(req_args)
+
         try:
             await self._restore_prev_query_params(req_args)
             # corpus access check and modify path in case user cannot access currently requested corp.
@@ -302,6 +303,8 @@ class CorpusActionModel(UserActionModel):
         access_level = self._action_props.access_level
         if access_level and self.user_is_anonymous():
             raise ForbiddenException(self._req.translate('Access forbidden - please log-in.'))
+
+        self._curr_corpus = await self._load_corpus()
 
         # plugins setup
         for p in plugins.runtime:
@@ -377,10 +380,18 @@ class CorpusActionModel(UserActionModel):
         else:
             self._resp.set_http_status(500)
 
-    async def _corp(self):
-        return await self.cm.get_corpus(
-            self.args.corpname, subcname=self.args.usesubcorp,
-            corp_variant=self._corpus_variant, translate=self._req.translate)
+    async def _load_corpus(self):
+        if self.args.corpname:
+            try:
+                corp = await self.cm.get_corpus(
+                    self.args.corpname, subcname=self.args.usesubcorp,
+                    corp_variant=self._corpus_variant, translate=self._req.translate)
+                corp._conc_dir = self._conc_dir
+                return corp
+            except Exception as ex:
+                return ErrorCorpus(ex)
+        else:
+            return EmptyCorpus()
 
     @property
     def corp(self) -> AbstractKCorpus:
@@ -396,16 +407,7 @@ class CorpusActionModel(UserActionModel):
         This should be always preferred over accessing _curr_corpus attribute.
 
         """
-        if self.args.corpname:
-            try:
-                if not self._curr_corpus or self.args.usesubcorp and not self._curr_corpus.is_subcorpus:
-                    self._curr_corpus = as_sync(self._corp)()
-                self._curr_corpus._conc_dir = self._conc_dir
-                return self._curr_corpus
-            except Exception as ex:
-                return ErrorCorpus(ex)
-        else:
-            return EmptyCorpus()
+        return self._curr_corpus
 
     @property
     def tt(self) -> TextTypes:
