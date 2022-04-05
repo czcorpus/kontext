@@ -69,10 +69,10 @@ def cached(f):
         if await aiofiles.os.path.exists(path):  # TODO we do not use this branch
             async with aiofiles.open(path, 'r') as fr:
                 csv_reader = aiocsv.AsyncReader(fr)
-                anext(csv_reader)  # skip __total__ info
+                await anext(csv_reader)  # skip __total__ info
                 return [item async for item in csv_reader]
         else:
-            ans = f(corp, args, sys.maxsize)
+            ans = await f(corp, args, sys.maxsize)
             num_lines = len(ans)
             async with aiofiles.open(path, 'w') as fw:
                 csv_writer = aiocsv.AsyncWriter(fw)
