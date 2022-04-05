@@ -100,7 +100,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
                 is_align_op, size = await detect_internal_op(q, i)
             if i > len(q) - 1:
                 break
-        size = get_size(i)
+        size = await get_size(i)
         opid = q[i][0]
         args = q[i][1:]
         url1 = [('q', qi) for qi in q[:i]]

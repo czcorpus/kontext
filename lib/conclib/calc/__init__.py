@@ -181,7 +181,7 @@ async def find_cached_conc_base(
     corpus_manager = CorpusManager(subcpath=[])
     start_time = time.time()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    cache_map.refresh_map()
+    await cache_map.refresh_map()
     calc_status = await cache_map.get_calc_status(subchash, q)
     if calc_status:
         if calc_status.error is None:
