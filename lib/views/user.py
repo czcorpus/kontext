@@ -88,7 +88,7 @@ async def sign_up_form(amodel: UserActionModel, req: KRequest, resp: KResponse):
         token_key = req.args.get('key')
         username_taken = bool(int(req.args.get('username_taken', '0')))
         if token_key:
-            credentials = auth.get_form_props_from_token(token_key)
+            credentials = await auth.get_form_props_from_token(token_key)
             if not credentials:
                 raise UserActionException('Invalid confirmation token')
             del credentials['password']

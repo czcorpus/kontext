@@ -194,7 +194,7 @@ class CentralAuth(AbstractRemoteAuth):
         if corpus_name == IMPLICIT_CORPUS:
             return CorpusAccess(False, True, '')
         with self._db.cursor() as cursor:
-            _, access, variant = self._db.corpus_access(cursor, user_dict['id'], corpus_name)
+            _, access, variant = await self._db.corpus_access(cursor, user_dict['id'], corpus_name)
         return CorpusAccess(False, access, variant)
 
     async def permitted_corpora(self, user_dict):

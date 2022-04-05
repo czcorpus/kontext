@@ -23,9 +23,8 @@ import { IActionDispatcher, BoundWithProps } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { MessageModel, MessageModelState } from '../../models/common/layout';
 import { ConcServerArgs } from '../../models/concordance/common';
-import { Dict } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 import * as S from './style';
-import { MessagesDiv as Style_MessagesDiv } from '../document/style';
 
 
 export interface MessageViewProps {
@@ -56,7 +55,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
             <div className="message">
                 <layoutViews.StatusIcon status={props.status} />
                 <div className="message-text">
-                    {props.text}
+                    {
+                        List.flatMap(
+                            v => {
+                                const whitespaces = v.match(/^\s*/)[0].length
+                                return [<span style={{marginLeft: `${whitespaces}em`}}>{v.trimStart()}</span>, <br/>]
+                            },
+                            props.text.split('\n')
+                        )
+                    }
                 </div>
             </div>
         );

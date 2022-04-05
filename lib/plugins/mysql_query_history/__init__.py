@@ -219,19 +219,19 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     tmp = await self._merge_conc_data(item)
                     if not tmp:
                         continue
-                    tmp['human_corpname'] = await corpora.corpus(
-                        tmp['corpname'], translate).get_conf('NAME')
+                    tmp['human_corpname'] = (await corpora.corpus(
+                        tmp['corpname'], translate)).get_conf('NAME')
                     for ac in tmp['aligned']:
-                        ac['human_corpname'] = await corpora.corpus(
-                            ac['corpname'], translate).get_conf('NAME')
+                        ac['human_corpname'] = (await corpora.corpus(
+                            ac['corpname'], translate)).get_conf('NAME')
                     full_data.append(tmp)
                 elif q_supertype == 'pquery':
                     stored = await self._query_persistence.open(item['query_id'])
                     if not stored:
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
-                    tmp['human_corpname'] = await corpora.corpus(
-                        tmp['corpname'], translate).get_conf('NAME')
+                    tmp['human_corpname'] = (await corpora.corpus(
+                        tmp['corpname'], translate)).get_conf('NAME')
                     q_join = []
 
                     for q in stored.get('form', {}).get('conc_ids', []):
@@ -276,8 +276,8 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     tmp = dict(
                         corpname=stored['corpora'][0],
                         aligned=[],
-                        human_corpname=await corpora.corpus(
-                            stored['corpora'][0], translate).get_conf('NAME'),
+                        human_corpname=(await corpora.corpus(
+                            stored['corpora'][0], translate)).get_conf('NAME'),
                         query=stored.get('form', {}).get('wlpat'),
                         pfilter_words=stored['form']['pfilter_words'],
                         nfilter_words=stored['form']['nfilter_words'])

@@ -46,7 +46,7 @@ class RedisDb(KeyValueStorage):
 
     @property
     def redis(self):
-        return aioredis.Redis(self._pool)
+        return aioredis.Redis(connection_pool=self._pool)
 
     async def rename(self, key, new_key):
         async with self.redis as conn:

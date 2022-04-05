@@ -150,7 +150,7 @@ async def viewattrsx(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         qs_enabled=req.json.get('qs_enabled'),
         base_viewattr=req.json.get('base_viewattr'),
     )
-    amodel.save_options(
+    await amodel.save_options(
         ['attrs', 'attr_vmode', 'structs', 'refs', 'structattrs', 'base_viewattr', 'qs_enabled'],
         amodel.args.corpname,
     )
@@ -198,7 +198,7 @@ async def viewoptsx(amodel: UserActionModel, req: KRequest, resp: KResponse):
         pqueryitemsperpage=req.json.get('pqueryitemsperpage'),
         rich_query_editor=req.json.get('rich_query_editor')
     )
-    amodel.save_options(
+    await amodel.save_options(
         optlist=[field.name for field in fields(GeneralOptionsArgs)])
     return {}
 
