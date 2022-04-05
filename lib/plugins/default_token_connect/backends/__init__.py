@@ -27,6 +27,7 @@ from plugins.default_token_connect.backends.cache import cached
 from plugin_types.token_connect import AbstractBackend, BackendException
 
 
+# TODO make async http async backend using aiohttp
 class HTTPBackend(AbstractBackend):
     """
     The default_token_connect's JSON config file defines a template of an abstract path identifying a resource.

@@ -16,15 +16,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from corplib.abstract import AbstractKCorpus
-from manatee import Corpus, SubCorpus
-from typing import Union, Optional, Tuple, List, Dict, Any
-from hashlib import md5
-from datetime import datetime
+from typing import Awaitable, Union, Optional, Tuple, List, Dict, Any
 import os
 import glob
 import json
 import logging
+from hashlib import md5
+from datetime import datetime
+
+import aiofiles
+import aiofiles.os
+from manatee import Corpus, SubCorpus
+
+from util import aenumerate
+from corplib.abstract import AbstractKCorpus
 
 try:
     from markdown import markdown
@@ -62,7 +67,7 @@ class _PublishedSubcMetadata(object):
         return _PublishedSubcMetadata(**json.loads(data))
 
 
-def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Optional[str]]:
+async def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Optional[str]]:
     """
     Obtain publishing information stored in a dedicated file.
     """
@@ -70,10 +75,10 @@ def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Optional[
     namepath = os.path.splitext(spath)[0] + '.name'
     metadata = _PublishedSubcMetadata()
 
-    if os.path.isfile(namepath):
-        with open(namepath, 'r') as nf:
+    if await aiofiles.os.path.isfile(namepath):
+        async with aiofiles.open(namepath, 'r') as nf:
             desc = ''
-            for i, line in enumerate(nf):
+            for i, line in aenumerate(nf):
                 if i == 0:
                     try:
                         metadata = _PublishedSubcMetadata.from_json(line)
@@ -85,12 +90,12 @@ def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Optional[
     return metadata, desc
 
 
-def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str]) -> List[Dict[str, Any]]:
+async def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str]) -> List[Dict[str, Any]]:
     ans: List[Dict[str, Any]] = []
     subc_root = os.path.dirname(os.path.dirname(path))
     for item in glob.glob(f'{path}/*.subc'):
         full_path = os.path.join(path, item)
-        meta, desc = _get_subcorp_pub_info(full_path)
+        meta, desc = await _get_subcorp_pub_info(full_path)
         if meta.subcpath is None or meta.author_name is None or not desc:
             logging.getLogger(__name__).warning(
                 f'Missing metainformation for published subcorpus {item}')
@@ -106,7 +111,7 @@ def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str])
                         corpname=corpname,
                         author=meta.author_name,
                         description=k_markdown(desc),
-                        created=int(os.path.getctime(full_path)),
+                        created=int(await aiofiles.os.path.getctime(full_path)),
                         userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
                     ))
             except Exception as ex:
@@ -114,15 +119,15 @@ def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str])
     return ans
 
 
-def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
-                           offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
+async def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
+                                 offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
     """
     List subcorpora stored in a provided subcpath (typically a path dedicated to a specific user)
     """
     data: List[Dict[str, Any]] = []
     for corp in os.listdir(subcpath):
         try:
-            data += _list_public_corp_dir(corp, os.path.join(subcpath, corp), value_prefix)
+            data += await _list_public_corp_dir(corp, os.path.join(subcpath, corp), value_prefix)
             if len(data) >= offset + limit:
                 break
         except Exception as ex:
@@ -294,22 +299,24 @@ class KCorpus(AbstractKCorpus):
     def is_subcorpus(self):
         return False
 
-    def save_subc_description(self, desc: str):
-        meta, _ = _get_subcorp_pub_info(self._spath)
-        with open(os.path.splitext(self._spath)[0] + '.name', 'wb') as fw:
-            fw.write(meta.to_json().encode('utf-8') + '\n\n')
-            fw.write(desc.encode('utf-8'))
+    async def save_subc_description(self, desc: str):
+        meta, _ = await _get_subcorp_pub_info(self._spath)
+        async with aiofiles.open(os.path.splitext(self._spath)[0] + '.name', 'wb') as fw:
+            await fw.write(meta.to_json().encode('utf-8') + '\n\n')
+            await fw.write(desc.encode('utf-8'))
 
     def freq_precalc_file(self, attrname: str) -> str:
         return self._corp.get_conf('PATH') + attrname
 
     @property
-    def corp_mtime(self) -> float:
-        reg_mtime = os.path.getmtime(self._corp.get_confpath())
-        data_path = self._corp.get_conf('PATH')
-        data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
-        data_mtime = os.path.getmtime(data_dir)
-        return max(reg_mtime, data_mtime)
+    def corp_mtime(self) -> Awaitable[float]:
+        async def awaitable():
+            reg_mtime = await aiofiles.os.path.getmtime(self._corp.get_confpath())
+            data_path = self._corp.get_conf('PATH')
+            data_dir = os.path.dirname(data_path) if data_path.endswith('/') else data_path
+            data_mtime = await aiofiles.os.path.getmtime(data_dir)
+            return max(reg_mtime, data_mtime)
+        return awaitable()
 
     def get_posattrs(self) -> List[str]:
         items = self._corp.get_conf('ATTRLIST')
@@ -343,7 +350,7 @@ class KSubcorpus(KCorpus):
         return f'KSubcorpus(ident={self.corpname}, subcname={self.subcname})'
 
     @staticmethod
-    def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KSubcorpus':
+    async def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KSubcorpus':
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """
@@ -356,12 +363,12 @@ class KSubcorpus(KCorpus):
         except IOError:
             pass
         kcorp._subcname = subcname
-        with open(spath, 'rb') as subcinfo:
-            kcorp._subchash = md5(subcinfo.read()).hexdigest()
-        kcorp._created = datetime.fromtimestamp(int(os.path.getctime(spath)))
+        async with aiofiles.open(spath, 'rb') as subcinfo:
+            kcorp._subchash = md5(await subcinfo.read()).hexdigest()
+        kcorp._created = datetime.fromtimestamp(int(await aiofiles.os.path.getctime(spath)))
         stat = os.lstat(spath)
         kcorp._is_published = stat.st_nlink > 1
-        meta, desc = _get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
+        meta, desc = await _get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
         if meta.subcpath:
             kcorp._orig_spath = meta.subcpath
             kcorp._orig_subcname = os.path.splitext(os.path.basename(meta.subcpath))[0]

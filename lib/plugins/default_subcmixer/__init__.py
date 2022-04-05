@@ -19,6 +19,7 @@ import json
 from collections import defaultdict
 import struct
 from typing import Any, Dict, List
+import aiofiles
 from sanic.blueprints import Blueprint
 from action.krequest import KRequest
 from action.response import KResponse
@@ -74,10 +75,10 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        with open(subc_path, 'wb') as fw:
+        async with aiofiles.open(subc_path, 'wb') as fw:
             for idx in struct_indices:
-                fw.write(struct.pack('<q', attr.beg(idx)))
-                fw.write(struct.pack('<q', attr.end(idx)))
+                await fw.write(struct.pack('<q', attr.beg(idx)))
+                await fw.write(struct.pack('<q', attr.end(idx)))
 
         pub_path = await amodel.prepare_subc_path(
             req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None

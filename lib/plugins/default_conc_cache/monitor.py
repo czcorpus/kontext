@@ -19,6 +19,8 @@ from datetime import datetime
 from hashlib import sha1
 import json
 
+import aiofiles.os
+
 from plugin_types.general_storage import KeyValueStorage
 try:
     from elasticsearch import Elasticsearch
@@ -65,16 +67,16 @@ class Monitor(object):
         self._data = []
         self._time = None
 
-    def create_record(self, file_path):
-        return Record(file_path, round(self._time - os.path.getctime(file_path)), os.path.getsize(file_path))
+    async def create_record(self, file_path):
+        return Record(file_path, round(self._time - (await aiofiles.os.path.getctime(file_path))), await aiofiles.os.path.getsize(file_path))
 
-    def analyze_directory(self, path):
+    async def analyze_directory(self, path):
         for item in os.listdir(path):
             abs_path = os.path.join(path, item)
-            if os.path.isdir(abs_path):
-                self.analyze_directory(abs_path)
+            if await aiofiles.os.path.isdir(abs_path):
+                await self.analyze_directory(abs_path)
             else:
-                self._data.append(self.create_record(abs_path))
+                self._data.append(await self.create_record(abs_path))
 
     @staticmethod
     def create_doc_hash(doc):
@@ -83,7 +85,7 @@ class Monitor(object):
     async def run(self):
         self._time = time.time()
         self._data = []
-        self.analyze_directory(self._root_dir)
+        await self.analyze_directory(self._root_dir)
         free_sp = get_disk_free_space(self._root_dir)
         top_10 = self.get_10_largest_items_size()
         total_files = len(self._data)

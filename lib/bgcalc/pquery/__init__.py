@@ -18,8 +18,9 @@ import os.path
 from collections import defaultdict
 from multiprocessing import Pool
 from functools import wraps
-import csv
 
+import aiocsv
+import aiofiles
 import aiofiles.os
 
 import l10n
@@ -61,20 +62,20 @@ def cached(f):
     A decorator for caching freq merge results (using "pickle" serialization)
     """
     @wraps(f)
-    def wrapper(pquery: PqueryFormArgs, raw_queries, subcpath, user_id, collator_locale):
+    async def wrapper(pquery: PqueryFormArgs, raw_queries, subcpath, user_id, collator_locale):
         path = _create_cache_path(pquery)
 
-        if os.path.exists(path):
-            with open(path, 'r') as fr:
-                csv_reader = csv.reader(fr)
-                return [item for item in csv_reader]
+        if await aiofiles.os.path.exists(path):
+            async with aiofiles.open(path, 'r') as fr:
+                csv_reader = aiocsv.AsyncReader(fr)
+                return [item async for item in csv_reader]
         else:
             ans = f(pquery, raw_queries, subcpath, user_id, collator_locale)
             num_lines = ans[0][1]
-            with open(path, 'w') as fw:
-                csv_writer = csv.writer(fw)
-                csv_writer.writerow(('__total__', num_lines))
-                csv_writer.writerows(ans[1:])
+            async with aiofiles.open(path, 'w') as fw:
+                csv_writer = aiocsv.AsyncWriter(fw)
+                await csv_writer.writerow(('__total__', num_lines))
+                await csv_writer.writerows(ans[1:])
             return ans[1:]
 
     return wrapper
@@ -142,7 +143,7 @@ async def _calculate_freqs_bg_sync(args: FreqCalcArgs):
 
 
 @cached
-def calc_merged_freqs(
+async def calc_merged_freqs(
         pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: List[str], user_id: int,
         collator_locale: str):
     """

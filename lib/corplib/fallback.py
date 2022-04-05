@@ -10,7 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, List
+from typing import Any, Awaitable, List
 from corplib.abstract import AbstractKCorpus
 from manatee import Corpus
 
@@ -128,8 +128,10 @@ class EmptyCorpus(AbstractKCorpus):
         return None
 
     @property
-    def corp_mtime(self):
-        return -1
+    def corp_mtime(self) -> Awaitable[float]:
+        async def awaitable():
+            return -1.0
+        return awaitable()
 
     def get_posattrs(self) -> List[str]:
         return []

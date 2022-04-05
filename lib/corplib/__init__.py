@@ -65,7 +65,7 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str, translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
+async def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str, translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -75,7 +75,7 @@ def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str,
     structname -- a structure used to specify subcorpus content (only one structure name can be used)
     subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
     """
-    if os.path.exists(path):
+    if await aiofiles.os.path.exists(path):
         raise RuntimeError(translate('Subcorpus already exists'))
     return manatee.create_subcorpus(path, corpus.unwrap(), structname, subquery)
 
@@ -196,8 +196,8 @@ class CorpusManager:
                 subcname = public_subcname
             for sp in self.subcpath:
                 spath = os.path.join(sp, corpname, subcname + '.subc')
-                if os.path.isfile(spath):
-                    subc = KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
+                if await aiofiles.os.path.isfile(spath):
+                    subc = await KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
                     self._cache[cache_key] = subc
                     return subc
             raise RuntimeError(translate(f'Subcorpus "{subcname}" not found'))   # TODO error type
@@ -222,13 +222,13 @@ class CorpusManager:
             reg_root = os.path.join(reg_root, variant)
         fullpath = os.path.join(reg_root, full_corpname)
         with plugins.runtime.DB as db, plugins.runtime.AUTH as auth:
-            if not os.path.isfile(fullpath) and auth.ignores_corpora_names_case():
+            if not await aiofiles.os.path.isfile(fullpath) and auth.ignores_corpora_names_case():
                 cached = await db.hash_get(TYPO_CACHE_KEY, full_corpname)
                 if cached:
                     return cached
                 for item in os.listdir(reg_root):
                     fp = os.path.join(reg_root, item)
-                    if os.path.isfile(fp) and item.lower() == corpname.lower():
+                    if await aiofiles.os.path.isfile(fp) and item.lower() == corpname.lower():
                         await db.hash_set(TYPO_CACHE_KEY, full_corpname, fp)
                         await db.set_ttl(TYPO_CACHE_KEY, TYPO_CACHE_TTL)
                         return fp
@@ -391,7 +391,7 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     return result
 
 
-def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
+async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
     filename = (corp.freq_precalc_file(attrname) + '.' + nums)
     if not id_range:
@@ -403,7 +403,7 @@ def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: in
         except IOError as ex:
             raise MissingSubCorpFreqFile(ex)
         except EOFError as ex:
-            os.remove(filename.rsplit('.', 1)[0] + '.docf')
+            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.docf')
             raise MissingSubCorpFreqFile(ex)
     else:
         try:
@@ -412,9 +412,9 @@ def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: in
             frq = array.array('i')
             frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
         except EOFError as ex:
-            os.remove(filename.rsplit('.', 1)[0] + '.docf')
-            os.remove(filename.rsplit('.', 1)[0] + '.arf')
-            os.remove(filename.rsplit('.', 1)[0] + '.frq')
+            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.docf')
+            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.arf')
+            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.frq')
             raise MissingSubCorpFreqFile(ex)
         except IOError:
             try:

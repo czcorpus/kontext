@@ -22,6 +22,8 @@ import os
 import time
 import logging
 
+import aiofiles.os
+
 import settings
 import plugins
 from plugin_types.conc_cache import AbstractConcCache, ConcCacheStatus
@@ -56,12 +58,12 @@ def _contains_shuffle_seq(q_ops: Tuple[str, ...]) -> bool:
     return False
 
 
-def del_silent(path: str):
+async def del_silent(path: str):
     """
     Remove a file without complaining in case of a error (OSError, TypeError)
     """
     try:
-        os.remove(path)
+        await aiofiles.os.remove(path)
     except (OSError, TypeError) as ex:
         logging.getLogger(__name__).warning(f'del_silent problem: {ex} (file: {path}')
 
@@ -80,7 +82,7 @@ async def cancel_conc_task(cache_map: AbstractConcCache, subchash: Optional[str]
         except (IOError, CalcTaskNotFoundError):
             pass
     await cache_map.del_entry(subchash, q)
-    del_silent(cachefile)
+    await del_silent(cachefile)
 
 
 async def wait_for_conc(cache_map: AbstractConcCache, q: Tuple[str, ...], subchash: Optional[str], minsize: int) -> bool:
@@ -185,7 +187,7 @@ async def find_cached_conc_base(
     calc_status = await cache_map.get_calc_status(subchash, q)
     if calc_status:
         if calc_status.error is None:
-            if calc_status.created - corp.corp_mtime < 0:
+            if (calc_status.created - (await corp.corp_mtime)) < 0:
                 logging.getLogger(__name__).warning(
                     'Removed outdated cache file (older than corpus indices)')
                 await cache_map.del_full_entry(subchash, q)
@@ -276,7 +278,7 @@ class ConcCalculation(GeneralWorker):
                 await cache_map.update_calc_status(subchash, query, readable=True, task_id=self._task_id)
                 while not conc.finished():
                     conc.save(cachefile + '.tmp', False, True)
-                    os.rename(cachefile + '.tmp', cachefile)
+                    await aiofiles.os.rename(cachefile + '.tmp', cachefile)
                     sizes = await self.get_cached_conc_sizes(corpus_obj, query)
                     await cache_map.update_calc_status(subchash, query, finished=sizes.finished,
                                                        concsize=sizes.concsize, fullsize=sizes.fullsize,
@@ -285,7 +287,7 @@ class ConcCalculation(GeneralWorker):
                     sleeptime += 0.1
 
                 conc.save(cachefile + '.tmp')  # whole
-                os.rename(cachefile + '.tmp', cachefile)
+                await aiofiles.os.rename(cachefile + '.tmp', cachefile)
                 os.chmod(cachefile, 0o664)
                 sizes = await self.get_cached_conc_sizes(corpus_obj, query)
                 await cache_map.update_calc_status(

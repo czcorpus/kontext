@@ -17,6 +17,7 @@ from typing import Dict, Any
 from sanic import Blueprint
 import os
 import aiofiles
+import aiofiles.os
 from action.decorators import http_action
 from action.errors import FunctionNotSupported, ImmediateRedirectException, NotFoundException
 from action.krequest import KRequest
@@ -94,7 +95,7 @@ async def compatibility(amodel, req, resp):
 @http_action(action_model=UserActionModel, return_type='plain')
 async def robots(amodel, req, resp):
     rpath = os.path.join(os.path.dirname(__file__), '..', '..', 'public', 'files', 'robots.txt')
-    if os.path.isfile(rpath):
+    if await aiofiles.os.path.isfile(rpath):
         async with aiofiles.open(rpath) as fr:
             return await fr.read()
     raise NotFoundException('File robots.txt is not defined')

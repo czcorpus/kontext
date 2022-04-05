@@ -10,7 +10,9 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-import os
+
+import aiofiles
+import aiofiles.os
 from plugin_types.auth import AbstractAuth
 from plugin_types.appbar import AbstractApplicationBar
 from plugins import inject
@@ -39,10 +41,10 @@ class LindatTopBar(AbstractApplicationBar):
 
     async def get_contents(self, plugin_ctx, return_url):
         tpl_path = self.get_template(plugin_ctx.user_lang)
-        if not os.path.exists(tpl_path):
+        if not await aiofiles.os.path.exists(tpl_path):
             return "template [%s] does not exist!" % tpl_path
-        with open(tpl_path, mode='rb') as fin:
-            html = fin.read().decode('utf-8')
+        async with aiofiles.open(tpl_path, mode='rb') as fin:
+            html = (await fin.read()).decode('utf-8')
             user_classes = "user"
 
             if not plugin_ctx.user_is_anonymous:

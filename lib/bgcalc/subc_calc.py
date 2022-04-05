@@ -13,6 +13,7 @@
 import corplib
 import conclib.search
 import os
+import aiofiles.os
 import time
 import logging
 
@@ -43,7 +44,8 @@ class CreateSubcorpusTask(object):
         ans = corplib.subcorpus_from_conc(path, conc)
         if ans is False:
             raise EmptySubcorpusException('Failed to create the subcorpus from a concordance')
-        if not os.path.isfile(path):  # this should not happen but it looks like it did
+        # this should not happen but it looks like it did
+        if not await aiofiles.os.path.isfile(path):
             logging.getLogger(__name__).warning(
                 'Sync. called conc. file not created (path: {})'.format(path))
             time.sleep(5)

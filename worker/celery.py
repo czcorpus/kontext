@@ -125,25 +125,25 @@ class FreqsTask(worker.Task):
 @worker.task(base=FreqsTask, name='calculate_freqs')
 @as_sync
 async def calculate_freqs(args):
-    return general.calculate_freqs(args)
+    return await general.calculate_freqs(args)
 
 
 @worker.task(name='calculate_freq2d')
 @as_sync
 async def calculate_freq2d(args):
-    return general.calculate_freq2d(args)
+    return await general.calculate_freq2d(args)
 
 
 @worker.task(name='clean_freqs_cache')
 @as_sync
 async def clean_freqs_cache():
-    return general.clean_freqs_cache()
+    return await general.clean_freqs_cache()
 
 
 @worker.task(name='calc_merged_freqs')
 @as_sync
 async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
-    return general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
+    return await general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
@@ -151,19 +151,19 @@ async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collat
 @worker.task(name='compile_frq')
 @as_sync
 async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
-    return general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
+    return await general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_arf')
 @as_sync
 async def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
-    return general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
+    return await general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_docf')
 @as_sync
 async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
-    return general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
+    return await general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 
@@ -171,7 +171,7 @@ async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
 @worker.task(name='create_subcorpus')
 @as_sync
 async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
-    return general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
+    return await general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
 
 
 # ----------------------------- WORD LIST -------------------------------------
@@ -179,7 +179,7 @@ async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, 
 @worker.task(name='get_wordlist')
 @as_sync
 async def get_wordlist(args, max_items, user_id):
-    return general.get_wordlist(args, max_items, user_id)
+    return await general.get_wordlist(args, max_items, user_id)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------
