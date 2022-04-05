@@ -36,7 +36,10 @@ CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 import json
 import time
 import aiosqlite
-from util import as_sync
+import os
+import logging
+from contextlib import asynccontextmanager
+
 
 from plugin_types.general_storage import KeyValueStorage
 
@@ -49,17 +52,21 @@ class DefaultDb(KeyValueStorage):
     async def setnx(self, key: str, value):  # TODO
         pass
 
-    def __init__(self, conf, conn: aiosqlite.Connection):
+    def __init__(self, db_path: str):
         """
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
-        self.conf = conf
-        self._conn = conn
+        self._db_path = db_path
+
+    @asynccontextmanager
+    async def connection(self):
+        async with aiosqlite.connect(self._db_path) as conn:
+            yield conn
 
     async def _delete_expired(self, key):
-        async with self._conn.cursor() as cursor:
-            await cursor.execute('SELECT expires FROM data WHERE key = ?', (key,))
+        async with self.connection() as conn:
+            cursor = await conn.execute('SELECT expires FROM data WHERE key = ?', (key,))
             ans = await cursor.fetchone()
             if ans and -1 < ans[0] < time.time():
                 await cursor.execute('DELETE FROM data WHERE key = ?', (key,))
@@ -68,24 +75,22 @@ class DefaultDb(KeyValueStorage):
 
     async def _load_raw_data(self, key):
         await self._delete_expired(key)
-        async with self._conn.cursor() as cursor:
-            await cursor.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
+        async with self.connection() as conn:
+            cursor = await conn.execute('SELECT value, expires FROM data WHERE key = ?', (key,))
             ans = await cursor.fetchone()
-            if ans:
-                return ans
-            return None
+            return ans if ans else None
 
     async def _save_raw_data(self, path, data):
-        async with self._conn.cursor() as cursor:
-            await cursor.execute(
+        async with self.connection() as conn:
+            await conn.execute(
                 'INSERT OR REPLACE INTO data (key, value, expires) VALUES (?, ?, ?)', (path, data, -1))
-            await cursor.connection.commit()
+            await conn.commit()
 
     async def rename(self, key, new_key):
         await self._delete_expired(key)
-        async with self._conn.cursor() as cursor:
-            await cursor.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
-            await cursor.connection.commit()
+        async with self.connection() as conn:
+            await conn.execute('UPDATE data SET key = ? WHERE key = ?', (new_key, key))
+            await conn.commit()
 
     async def list_get(self, key, from_idx=0, to_idx=-1):
         data = []
@@ -129,9 +134,11 @@ class DefaultDb(KeyValueStorage):
 
     async def hash_get(self, key, field):
         data = await self.get(key)
-        if type(data) is not dict:
-            return {}
-        return await data.get(field, None)
+        if data is None:
+            return None
+        elif type(data) is not dict:
+            raise TypeError('Invalid type for hash_get: {}'.format(type(data)))
+        return data.get(field, None)
 
     async def hash_set(self, key, field, value):
         """
@@ -211,8 +218,9 @@ class DefaultDb(KeyValueStorage):
         arguments:
         key -- an access key
         """
-        async with self._conn.execute('DELETE FROM data WHERE key = ?', (key,)) as cursor:
-            cursor.connection.commit()
+        async with self.connection() as conn:
+            await conn.execute('DELETE FROM data WHERE key = ?', (key,))
+            await conn.commit()
 
     async def exists(self, key):
         """
@@ -225,8 +233,9 @@ class DefaultDb(KeyValueStorage):
         boolean answer
         """
         await self._delete_expired(key)
-        async with self._conn.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,)) as cursor:
-            return await cursor.fetchone()[0] > 0
+        async with self.connection() as conn:
+            cursor = await conn.execute('SELECT COUNT(*) FROM data WHERE key = ?', (key,))
+            return (await cursor.fetchone())[0] > 0
 
     async def set_ttl(self, key, ttl):
         """
@@ -239,19 +248,22 @@ class DefaultDb(KeyValueStorage):
         """
         await self._delete_expired(key)
         if await self.exists(key):
-            async with self._conn.execute('UPDATE data SET expires = ? WHERE key = ?', (time.time() + ttl, key)) as cursor:
-                cursor.connection.commit()
+            async with self.connection() as conn:
+                await conn.execute('UPDATE data SET expires = ? WHERE key = ?', (time.time() + ttl, key))
+                await conn.commit()
         return None
 
     async def get_ttl(self, key):
-        async with self._conn.execute('SELECT expires FROM data WHERE key = ?', (key,)) as cursor:
-            return await cursor.fetchone()[0]
+        async with self.connection() as conn:
+            cursor = await conn.execute('SELECT expires FROM data WHERE key = ?', (key,))
+            return (await cursor.fetchone())[0]
 
     async def clear_ttl(self, key):
         await self._delete_expired(key)
         if await self.exists(key):
-            async with self._conn.execute('UPDATE data SET expires = -1 WHERE key = ?', (key,)) as cursor:
-                cursor.connection.commit()
+            async with self.connection() as conn:
+                await conn.execute('UPDATE data SET expires = -1 WHERE key = ?', (key,))
+                await conn.commit()
         return None
 
     async def incr(self, key, amount=1):
@@ -280,7 +292,10 @@ def create_instance(conf):
     Arguments:
     conf -- a dictionary containing imported XML configuration of the plugin
     """
-    async def _conn():
-        return await aiosqlite.connect(conf.get('db_path'))
-
-    return DefaultDb(conf.get('plugins', 'db'), as_sync(_conn)())
+    db_conf = conf.get('plugins', 'db')
+    db_path = db_conf['db_path']
+    if not os.path.isfile(db_path):
+        logging.getLogger(__name__).error(
+            f'sqlite3_db data file {db_path} not found. '
+            'Please create one with CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)')
+    return DefaultDb(db_path)
