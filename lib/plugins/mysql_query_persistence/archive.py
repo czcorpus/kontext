@@ -24,17 +24,9 @@ import datetime
 import logging
 
 import json
-import redis
 from aiomysql import Cursor
 from plugins.common.mysql import MySQLOps
 from plugin_types.general_storage import KeyValueStorage
-
-
-def redis_connection(host, port, db_id):
-    """
-    Creates a connection to a Redis instance
-    """
-    return redis.StrictRedis(host=host, port=port, db=db_id)
 
 
 def get_iso_datetime():

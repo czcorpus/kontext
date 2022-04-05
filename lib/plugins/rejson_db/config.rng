@@ -5,7 +5,7 @@
     <start>
         <element name="db">
             <element name="module">
-                <value>redis_json_db</value>
+                <value>rejson_db</value>
             </element>
             <element name="host">
                 <text />
@@ -13,9 +13,14 @@
             <element name="port">
                 <data type="integer" />
             </element>
-             <element name="id">
-                 <data type="integer" />
-             </element>
+            <element name="id">
+                <data type="integer" />
+            </element>
+            <optional>
+                <element name="max_connections">
+                    <data type="positiveInteger" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>

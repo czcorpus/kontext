@@ -42,7 +42,6 @@ class LindatRedisDb(RedisDb):
         self._shard_id = shard_id
         self._pool = aioredis.ConnectionPool(
             max_connections=10, host=host, port=port, db=shard_id)
-        self._scan_chunk_size = 50
 
     async def keys(self, pattern='*'):
         """Returns a list fo keys matching ``pattern``"""

@@ -13,9 +13,14 @@
             <element name="port">
                 <data type="integer" />
             </element>
-             <element name="id">
-                 <data type="integer" />
-             </element>
+            <element name="id">
+                <data type="integer" />
+            </element>
+            <optional>
+                <element name="max_connections">
+                    <data type="positiveInteger" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
