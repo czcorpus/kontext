@@ -30,6 +30,7 @@ import manatee
 import corplib
 from corplib.corpus import KCorpus
 from conclib.calc import require_existing_conc
+from conclib.pyconc import PyConc
 import settings
 import bgcalc
 from bgcalc.errors import UnfinishedConcordanceError, BgCalcError
@@ -239,6 +240,21 @@ class FreqCalcCache(object):
         return data, cache_path
 
 
+def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc):
+    """
+    This is a blocking variant of calculate_freqs_bg which requires a concordance
+    instance to be already available. This is mostly intended for passing sub-calculations
+    to separate threads.
+    """
+    if not conc.finished():
+        raise UnfinishedConcordanceError(
+            'Cannot calculate yet - source concordance not finished. Please try again later.')
+    freqs = [conc.xfreq_dist(
+        cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
+        for cr in args.fcrit]
+    return dict(freqs=freqs, conc_size=conc.size())
+
+
 async def calculate_freqs_bg(args: FreqCalcArgs):
     """
     Calculate actual frequency data.
@@ -252,13 +268,7 @@ async def calculate_freqs_bg(args: FreqCalcArgs):
     cm = corplib.CorpusManager(subcpath=args.subcpath)
     corp = await cm.get_corpus(args.corpname, subcname=args.subcname)
     conc = await require_existing_conc(corp=corp, q=args.q)
-    if not conc.finished():
-        raise UnfinishedConcordanceError(
-            'Cannot calculate yet - source concordance not finished. Please try again later.')
-    freqs = [conc.xfreq_dist(
-        cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
-        for cr in args.fcrit]
-    return dict(freqs=freqs, conc_size=conc.size())
+    return calculate_freqs_bg_sync(args, conc)
 
 
 async def calculate_freqs(args: FreqCalcArgs):

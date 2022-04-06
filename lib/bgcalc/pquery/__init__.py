@@ -11,12 +11,13 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+import asyncio
 from typing import Tuple, Optional, Dict, List
 import hashlib
 import os.path
 from collections import defaultdict
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Thread
 from functools import wraps
 
 import aiocsv
@@ -27,9 +28,10 @@ import l10n
 from .errors import PqueryResultNotFound, PqueryArgumentError
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.csv_cache import load_cached_partial, load_cached_full
-from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
+from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg_sync
+from corplib import CorpusManager
+from conclib.calc import require_existing_conc
 import settings
-from util import as_sync
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -70,7 +72,7 @@ def cached(f):
                 csv_reader = aiocsv.AsyncReader(fr)
                 return [item async for item in csv_reader]
         else:
-            ans = f(pquery, raw_queries, subcpath, user_id, collator_locale)
+            ans = await f(pquery, raw_queries, subcpath, user_id, collator_locale)
             num_lines = ans[0][1]
             async with aiofiles.open(path, 'w') as fw:
                 csv_writer = aiocsv.AsyncWriter(fw)
@@ -137,11 +139,6 @@ def create_freq_calc_args(
         ftt_include_empty=False)
 
 
-@as_sync
-async def _calculate_freqs_bg_sync(args: FreqCalcArgs):
-    return await calculate_freqs_bg(args)
-
-
 @cached
 async def calc_merged_freqs(
         pquery: PqueryFormArgs, raw_queries: Dict[str, List[str]], subcpath: List[str], user_id: int,
@@ -155,59 +152,62 @@ async def calc_merged_freqs(
     user_id -- user ID
     collator_locale -- a locale used for collation within the current corpus
     """
-    tasks = []
-    for conc_id in pquery.conc_ids:
-        tasks.append(create_freq_calc_args(
-            pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
-            collator_locale=collator_locale))
-    with Pool(processes=len(tasks)) as pool:
-        # calculate realizations' frequencies
-        specif_done = pool.map_async(_calculate_freqs_bg_sync, tasks)
+    cm = CorpusManager(subcpath=subcpath)
+    corp = await cm.get_corpus(pquery.corpname, subcname=pquery.usesubcorp)
+
+    with ThreadPoolExecutor(max_workers=len(pquery.conc_ids)) as executor:
+        specif_futures = []
+        for conc_id in pquery.conc_ids:
+            freq_args = create_freq_calc_args(
+                pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
+                collator_locale=collator_locale)
+            conc = await require_existing_conc(corp, freq_args.q)
+            specif_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, conc))
+
         # calculate auxiliary data for the "(almost) never" condition
+        cond1_futures = []
         if pquery.conc_subset_complements:
-            cond1_tasks = []
             for conc_id in pquery.conc_subset_complements.conc_ids:
-                cond1_tasks.append(create_freq_calc_args(
+                freq_args = create_freq_calc_args(
                     pquery=pquery, conc_id=conc_id, raw_queries=raw_queries, subcpath=subcpath, user_id=user_id,
-                    collator_locale=collator_locale, flimit_override=1))
-            cond1_done = pool.map_async(_calculate_freqs_bg_sync, cond1_tasks)
-        else:
-            cond1_done = None
+                    collator_locale=collator_locale, flimit_override=1)
+                conc = await require_existing_conc(corp, freq_args.q)
+                cond1_futures.append(executor.submit(calculate_freqs_bg_sync, freq_args, conc))
         # calculate auxiliary data (the superset here) for the "(almost) always" condition
+        cond2_future = None
         if pquery.conc_superset:
-            args = create_freq_calc_args(
+            freq_args = create_freq_calc_args(
                 pquery=pquery, conc_id=pquery.conc_superset.conc_id, raw_queries=raw_queries, subcpath=subcpath,
                 user_id=user_id, collator_locale=collator_locale)
-            cond2_done = pool.apply_async(_calculate_freqs_bg_sync, (args,))
-        else:
-            cond2_done = None
+            conc = await require_existing_conc(corp, freq_args.q)
+            cond2_future = executor.submit(calculate_freqs_bg_sync, freq_args, conc)
 
         # merge frequencies of individual realizations
-        realizations = specif_done.get(timeout=SUBTASK_TIMEOUT_SECS)
+        realizations = as_completed(specif_futures, timeout=SUBTASK_TIMEOUT_SECS)
         merged = defaultdict(lambda: [])
-        for freq_table in realizations[:len(pquery.conc_ids)]:
-            freq_info = _extract_freqs(freq_table)
+        for freq_table in realizations:
+            freq_info = _extract_freqs(freq_table.result())
             for word, freq in freq_info:
                 merged[word].append(freq)
         for w in list(merged.keys()):
             if len(merged[w]) < len(pquery.conc_ids):  # all the realizations must be present
                 del merged[w]
-        if cond1_done:
+        if len(cond1_futures) > 0:
             # ask for the results of the "(almost) never"
             # and filter out values with too high ratio of "opposite examples"
             complements = defaultdict(lambda: 0)
-            for cond1_item in cond1_done.get(timeout=SUBTASK_TIMEOUT_SECS):
-                for v, freq in _extract_freqs(cond1_item):
+            for cond1_item in as_completed(cond1_futures, timeout=SUBTASK_TIMEOUT_SECS):
+                for v, freq in _extract_freqs(cond1_item.result()):
                     complements[v] += freq
             for k in [k2 for k2 in merged.keys() if k2 in complements]:
                 ratio = complements[k] / (sum(merged[k]) + complements[k])
                 if ratio * 100 > pquery.conc_subset_complements.max_non_matching_ratio:
                     del merged[k]
-        if cond2_done:
+        if cond2_future is not None:
             # ask for the results of the "(almost) always"
             # and filter out values found as extra instances too many times in the superset
             cond2_freqs = defaultdict(
-                lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_done.get(timeout=SUBTASK_TIMEOUT_SECS))))
+                lambda: 0, **dict((v, f) for v, f in _extract_freqs(cond2_future.result(timeout=SUBTASK_TIMEOUT_SECS))))
             for k in list(merged.keys()):
                 if cond2_freqs[k] == 0:  # => not in superset
                     del merged[k]
