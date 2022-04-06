@@ -250,8 +250,10 @@ async def clean_freqs_cache():
     return freq_calc.clean_freqs_cache()
 
 
-async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
-    return await pquery.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
+async def calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id, collator_locale):
+    # TODO for performance testing switch between the two implementations
+    # return await pquery.calc_merged_freqs_worker(worker, request_json, raw_queries, subcpath, user_id, collator_locale)
+    return await pquery.calc_merged_freqs_threaded(worker, request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
