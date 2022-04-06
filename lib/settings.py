@@ -23,7 +23,7 @@ from typing import Any, Dict, Optional, Union, DefaultDict
 
 import os
 from lxml import etree
-import json
+import ujson as json
 
 
 TypeAliasTable = Union[Dict[str, Union[str, None]], DefaultDict[str, Union[str, None]]]

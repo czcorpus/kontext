@@ -21,7 +21,7 @@ It is recommended to install Unidecode package (pip install Unidecode)
 """
 
 import re
-import json
+import ujson as json
 from functools import partial
 from collections import defaultdict, OrderedDict
 from sanic import Blueprint

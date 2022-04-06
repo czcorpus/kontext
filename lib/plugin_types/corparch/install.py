@@ -18,7 +18,7 @@
 
 from typing import List, Dict, Any, IO, Optional, Tuple, Mapping
 import manatee
-import json
+import ujson as json
 import re
 import os
 from dataclasses import dataclass, field

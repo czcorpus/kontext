@@ -25,7 +25,7 @@ import os
 import sys
 import argparse
 import time
-import json
+import ujson as json
 from datetime import datetime
 
 import aioredis

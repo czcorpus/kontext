@@ -14,7 +14,7 @@
 
 from plugin_types.query_suggest import AbstractBackend
 from plugins.common.http import HTTPClient
-import json
+import ujson as json
 
 
 class KorpusDBBackend(AbstractBackend):

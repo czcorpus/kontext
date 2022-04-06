@@ -15,8 +15,7 @@
 from plugin_types.query_suggest import AbstractBackend
 from typing import List
 from plugins.common.http import HTTPClient
-import json
-import manatee
+import ujson as json
 
 
 class WordSimilarityBackend(AbstractBackend):

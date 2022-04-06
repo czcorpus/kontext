@@ -64,7 +64,7 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 """
 
 import re
-import json
+import ujson as json
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugins.mysql_integration_db import MySqlIntegrationDb

@@ -27,7 +27,7 @@ from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
 from action.errors import ImmediateRedirectException, UserActionException
 from action.model.base import PageConstructor, BaseActionModel
-import json
+import ujson as json
 import settings
 
 

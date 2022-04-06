@@ -16,7 +16,7 @@
 
 import collections
 import os
-import json
+import ujson as json
 import re
 import time
 import mailing

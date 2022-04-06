@@ -30,7 +30,7 @@ import uuid
 import os
 import logging
 import sqlite3
-import json
+import ujson as json
 import time
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage

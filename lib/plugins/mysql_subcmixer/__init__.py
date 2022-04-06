@@ -28,7 +28,7 @@ try:
 except ImportError:
     from typing_extensions import TypedDict
 from collections import defaultdict
-import json
+import ujson as json
 import struct
 
 from sanic.blueprints import Blueprint

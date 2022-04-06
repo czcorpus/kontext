@@ -24,7 +24,7 @@ to your custom values and everything should work well.
 import os
 import time
 import collections
-import json
+import ujson as json
 import logging
 from typing import Dict, Tuple
 

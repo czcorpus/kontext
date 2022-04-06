@@ -21,7 +21,7 @@ import copy
 from collections import OrderedDict, defaultdict
 import logging
 from typing import Dict, List, Tuple, Iterable
-import json
+import ujson as json
 from aiomysql.cursors import Cursor
 
 from sanic.blueprints import Blueprint

@@ -23,7 +23,7 @@ A script to archive outdated concordance queries from Redis to a MySQL database.
 import datetime
 import logging
 
-import json
+import ujson as json
 from aiomysql import Cursor
 from plugins.common.mysql import MySQLOps
 from plugin_types.general_storage import KeyValueStorage

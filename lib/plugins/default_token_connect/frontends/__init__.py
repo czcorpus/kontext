@@ -22,7 +22,7 @@ Please note that each of the frontends is paired with a concrete React component
 on the client-side (see plugins/defaultTokenConnect/init.py method selectRenderer()).
 """
 
-import json
+import ujson as json
 from plugin_types.token_connect import AbstractFrontend
 
 

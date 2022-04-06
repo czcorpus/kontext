@@ -26,7 +26,7 @@ required XML: please see config.rng
 """
 
 import aioredis
-import json
+import ujson as json
 from util import as_sync
 from plugin_types.general_storage import KeyValueStorage
 import logging

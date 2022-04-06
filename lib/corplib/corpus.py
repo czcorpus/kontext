@@ -19,7 +19,7 @@
 from typing import Awaitable, Union, Optional, Tuple, List, Dict, Any
 import os
 import glob
-import json
+import ujson as json
 import logging
 from hashlib import md5
 from datetime import datetime

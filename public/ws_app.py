@@ -5,7 +5,7 @@ from aiohttp import web, WSMsgType
 
 import os
 import sys
-import json
+import ujson as json
 import time
 import argparse
 from redis import Redis

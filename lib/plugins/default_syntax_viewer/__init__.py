@@ -43,7 +43,7 @@ Configuration JSON:
 }
 """
 
-import json
+import ujson as json
 import logging
 import os
 from typing import Dict

@@ -30,7 +30,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import http.client
-import json
+import ujson as json
 import ssl
 import logging
 from action.plugin.ctx import PluginCtx
