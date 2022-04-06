@@ -33,7 +33,7 @@ from plugin_types.general_storage import KeyValueStorage
 
 class RedisDb(KeyValueStorage):
 
-    def __init__(self, conf, encoder=None, decoder=None):
+    def __init__(self, conf):
         """
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
@@ -104,7 +104,6 @@ class RedisDb(KeyValueStorage):
         value -- a JSON-serializable value to be inserted
         """
         return await self._redis.lset(key, idx, json.dumps(value))
-
 
     async def list_trim(self, key, keep_left, keep_right):
         """

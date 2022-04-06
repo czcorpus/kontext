@@ -13,7 +13,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import sys
 from sanic.request import Request
 from sanic import HTTPResponse, Sanic
 from sanic import response
@@ -27,7 +26,7 @@ from action.response import KResponse
 from dataclasses_json import DataClassJsonMixin
 from action.errors import ImmediateRedirectException, UserActionException
 from action.model.base import PageConstructor, BaseActionModel
-import ujson as json
+import json
 import settings
 
 

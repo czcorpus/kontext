@@ -53,7 +53,7 @@ An expected configuration:
 }
 """
 
-import ujson as json
+import json
 from corplib.abstract import AbstractKCorpus
 import manatee
 from typing import Dict, Any, List, Optional

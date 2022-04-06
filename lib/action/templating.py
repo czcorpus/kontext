@@ -1,6 +1,6 @@
 import os
 import jinja2
-import ujson as json
+import json
 import re
 from typing import Union, Callable, Any, Dict
 from dataclasses_json import DataClassJsonMixin
