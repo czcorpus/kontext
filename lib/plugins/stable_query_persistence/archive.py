@@ -30,8 +30,6 @@ from datetime import datetime
 import redis
 import sqlite3
 
-from plugin_types.general_storage import KeyValueStorage
-
 
 def redis_connection(host, port, db_id):
     """
@@ -65,7 +63,7 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db: KeyValueStorage, to_db: SQLite3Ops, archive_queue_key: str):
+    def __init__(self, from_db: redis.StrictRedis, to_db: SQLite3Ops, archive_queue_key: str):
         """
         arguments:
         from_db -- a Redis connection
