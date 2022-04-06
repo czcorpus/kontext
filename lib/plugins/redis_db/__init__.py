@@ -40,17 +40,15 @@ class RedisDb(KeyValueStorage):
         self._host = conf['host']
         self._port = int(conf['port'])
         self._db = int(conf['id'])
-        self._pool = aioredis.ConnectionPool(
-            max_connections=10, host=self._host, port=self._port, db=self._db)
         self._scan_chunk_size = 50
+        self._redis = aioredis.from_url(f'redis://{self._host}:{self._port}', db=self._db)
 
     @property
     def redis(self):
-        return aioredis.Redis(connection_pool=self._pool)
+        return self._redis
 
     async def rename(self, key, new_key):
-        async with self.redis as conn:
-            return await conn.rename(key, new_key)
+        return await self._redis.rename(key, new_key)
 
     async def list_get(self, key, from_idx=0, to_idx=-1):
         """
@@ -63,8 +61,7 @@ class RedisDb(KeyValueStorage):
         to_idx -- optional (default is -1) end index (including, i.e. unlike Python);
         negative values are supported (-1 = last, -2 = penultimate,...)
         """
-        async with self.redis as conn:
-            return [json.loads(s) for s in (await conn.lrange(key, from_idx, to_idx))]
+        return [json.loads(s) for s in (await self._redis.lrange(key, from_idx, to_idx))]
 
     async def list_append(self, key, value):
         """
@@ -74,8 +71,7 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         value -- value to be pushed
         """
-        async with self.redis as conn:
-            await conn.rpush(key, json.dumps(value))
+        await self._redis.rpush(key, json.dumps(value))
 
     async def list_pop(self, key):
         """
@@ -84,8 +80,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- list access key
         """
-        async with self.redis as conn:
-            tmp = await conn.lpop(key)
+        tmp = await self._redis.lpop(key)
         return json.loads(tmp) if tmp is not None else None
 
     async def list_len(self, key):
@@ -96,8 +91,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        async with self.redis as conn:
-            return await conn.llen(key)
+        return await self._redis.llen(key)
 
     async def list_set(self, key, idx, value):
         """
@@ -108,8 +102,7 @@ class RedisDb(KeyValueStorage):
         idx -- a zero based index where the set should be performed
         value -- a JSON-serializable value to be inserted
         """
-        async with self.redis as conn:
-            return await conn.lset(key, idx, json.dumps(value))
+        return await self._redis.lset(key, idx, json.dumps(value))
 
     async def list_trim(self, key, keep_left, keep_right):
         """
@@ -121,8 +114,7 @@ class RedisDb(KeyValueStorage):
         keep_left -- the first value to be kept
         keep_right -- the last value to be kept
         """
-        async with self.redis as conn:
-            await conn.ltrim(key, keep_left, keep_right)
+        await self._redis.ltrim(key, keep_left, keep_right)
 
     async def hash_get(self, key, field):
         """
@@ -132,8 +124,7 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        async with self.redis as conn:
-            v = await conn.hget(key, field)
+        v = await self._redis.hget(key, field)
         return json.loads(v) if v else None
 
     async def hash_set(self, key, field, value):
@@ -145,8 +136,7 @@ class RedisDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        async with self.redis as conn:
-            await conn.hset(key, field, json.dumps(value))
+        await self._redis.hset(key, field, json.dumps(value))
 
     async def hash_del(self, key, field):
         """
@@ -156,8 +146,7 @@ class RedisDb(KeyValueStorage):
         key -- hash item access key
         field -- the field to be deleted
         """
-        async with self.redis as conn:
-            await conn.hdel(key, field)
+        await self._redis.hdel(key, field)
 
     async def hash_get_all(self, key):
         """
@@ -167,11 +156,10 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        async with self.redis as conn:
-            return {
-                k.decode('utf-8'): json.loads(v)
-                for k, v in (await conn.hgetall(key)).items()
-            }
+        return {
+            k.decode('utf-8'): json.loads(v)
+            for k, v in (await self._redis.hgetall(key)).items()
+        }
 
     async def get(self, key, default=None):
         """
@@ -181,8 +169,7 @@ class RedisDb(KeyValueStorage):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        async with self.redis as conn:
-            data = await conn.get(key)
+        data = await self._redis.get(key)
         if data:
             return json.loads(data)
         return default
@@ -195,8 +182,7 @@ class RedisDb(KeyValueStorage):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        async with self.redis as conn:
-            await conn.set(key, json.dumps(data))
+        await self._redis.set(key, json.dumps(data))
 
     async def set_ttl(self, key, ttl):
         """
@@ -207,16 +193,13 @@ class RedisDb(KeyValueStorage):
         ttl -- number of seconds to wait before the value is removed
         (please note that update actions reset the timer to zero)
         """
-        async with self.redis as conn:
-            await conn.expire(key, ttl)
+        await self._redis.expire(key, ttl)
 
     async def get_ttl(self, key):
-        async with self.redis as conn:
-            return await conn.ttl(key)
+        return await self._redis.ttl(key)
 
     async def clear_ttl(self, key):
-        async with self.redis as conn:
-            return await conn.persist(key)
+        return await self._redis.persist(key)
 
     async def remove(self, key):
         """
@@ -225,8 +208,7 @@ class RedisDb(KeyValueStorage):
         arguments:
         key -- key of the data to be removed
         """
-        async with self.redis as conn:
-            await conn.delete(key)
+        await self._redis.delete(key)
 
     async def exists(self, key):
         """
@@ -238,8 +220,7 @@ class RedisDb(KeyValueStorage):
         returns:
         boolean value
         """
-        async with self.redis as conn:
-            return await conn.exists(key)
+        return await self._redis.exists(key)
 
     async def setnx(self, key, value):
         """
@@ -249,8 +230,7 @@ class RedisDb(KeyValueStorage):
         1 if the key was set
         0 if the key was not set
         """
-        async with self.redis as conn:
-            return await conn.setnx(key, value)
+        return await self._redis.setnx(key, value)
 
     async def getset(self, key, value):
         """
@@ -260,16 +240,14 @@ class RedisDb(KeyValueStorage):
         returns:
         previous key if any or None
         """
-        async with self.redis as conn:
-            return await conn.getset(key, value)
+        return await self._redis.getset(key, value)
 
     async def incr(self, key, amount=1):
         """
         Increments the value of 'key' by 'amount'.  If no key exists,
         the value will be initialized as 'amount'
         """
-        async with self.redis as conn:
-            return await conn.incr(key, amount)
+        return await self._redis.incr(key, amount)
 
     async def hash_set_map(self, key, mapping):
         """
@@ -280,8 +258,7 @@ class RedisDb(KeyValueStorage):
         new_mapping = {}
         for name in mapping:
             new_mapping[name] = json.dumps(mapping[name])
-        async with self.redis as conn:
-            return await conn.hmset(key, new_mapping)
+        return await self._redis.hmset(key, new_mapping)
 
 
 def create_instance(conf):
