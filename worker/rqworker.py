@@ -101,7 +101,7 @@ async def clean_freqs_cache():
 
 @as_sync
 async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale):
-    return await general.calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collator_locale)
+    return await general.calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id, collator_locale)
 
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
