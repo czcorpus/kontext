@@ -16,11 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import json
+import ujson as json
 import logging
-import urllib.request
 import urllib.parse
-import urllib.error
 
 from plugins.default_token_connect.backends.cache import cached
 from plugins.default_token_connect.backends import HTTPBackend
@@ -127,19 +125,17 @@ class TreqBackend(HTTPBackend):
             treq_link = (self.mk_server_addr() + '/index.php', t_args)
             ta_args = self.mk_api_args(lang1=args['lang1'], lang2=args['lang2'], groups=args['groups'],
                                        lemma=args['lemma'])
-            connection = self.create_connection()
+
             try:
                 logging.getLogger(__name__).debug('Treq request args: {0}'.format(ta_args))
-                connection.request('GET', self.mk_api_path(ta_args))
-                data, status = self.process_response(connection)
+                data, status = await self._client.request('GET', self.mk_api_path(ta_args))
                 data = json.loads(data)
                 max_items = self._conf.get('maxResultItems', self.DEFAULT_MAX_RESULT_LINES)
                 data['lines'] = data['lines'][:max_items]
             except ValueError:
                 logging.getLogger(__name__).error('Failed to parse response: {0}'.format(data))
                 data = dict(sum=0, lines=[])
-            finally:
-                connection.close()
+
         else:
             data = dict(sum=0, lines=[])
         return json.dumps(dict(treq_link=treq_link,

@@ -28,7 +28,7 @@ one with default_conc_persistence on top of the same database and generate worki
 not supported).
 """
 
-import json
+import ujson as json
 import re
 import time
 import os

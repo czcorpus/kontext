@@ -26,46 +26,31 @@ required XML: please see config.rng
 """
 
 import aioredis
-import json
+import ujson as json
+from plugins.redis_db import RedisDb
 from util import as_sync
-from plugin_types.general_storage import KeyValueStorage
 import logging
 
 
-class RejsonDb(KeyValueStorage):
+class RejsonDb(RedisDb):
 
-    def __init__(self, conf, encoder=None, decoder=None):
+    def __init__(self, conf):
         """
         arguments:
         conf -- a dictionary containing 'settings' module compatible configuration of the plug-in
         """
 
-        self._pool = aioredis.ConnectionPool(
-            max_connections=int(conf.get('max_connections', 10)),
-            host=conf['host'],
-            port=int(conf['port']),
-            db=int(conf['id']),
-        )
-
+        super().__init__(conf)
         as_sync(self._check_rejson_db())
 
     async def _check_rejson_db(self):
         try:
-            async with self.redis as conn:
-                await conn.execute_command('JSON.GET', '-')
+            await self.get('-')
         except aioredis.ResponseError as e:
             if 'unknown command' in str(e):
                 logging.fatal("Rejson DB Plug-in requires Redis with RedisJSON module enabled")
             else:
                 raise e
-
-    @property
-    def redis(self):
-        return aioredis.Redis(connection_pool=self._pool)
-
-    async def rename(self, key, new_key):
-        async with self.redis as conn:
-            await conn.rename(key, new_key)
 
     async def list_get(self, key, from_idx=0, to_idx=-1):
         """
@@ -93,10 +78,10 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         value -- value to be pushed
         """
-        async with self.redis as conn:
-            if not await conn.exists(key):
-                await conn.execute_command('JSON.SET', key, '.', json.dumps([]))
-            await conn.execute_command('JSON.ARRAPPEND', key, '.', json.dumps(value))
+
+        if not await self.exists(key):
+            await self.set(key, '[]')
+        await self._redis.execute_command('JSON.ARRAPPEND', key, '.', json.dumps(value))
 
     async def list_pop(self, key):
         """
@@ -105,8 +90,8 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- list access key
         """
-        async with self.redis as conn:
-            return json.loads(await conn.execute_command('JSON.ARRPOP', key, '.', -1))
+        tmp = await self._redis.execute_command('JSON.ARRPOP', key, '.', -1)
+        return json.loads(tmp) if tmp is not None else None
 
     async def list_len(self, key):
         """
@@ -116,10 +101,9 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- data access key
         """
-        async with self.redis as conn:
-            if not await conn.exists(key):
-                return 0
-            return await conn.execute_command('JSON.ARRLEN', key, '.')
+        if not await self.exists(key):
+            return 0
+        return await self._redis.execute_command('JSON.ARRLEN', key, '.')
 
     async def list_set(self, key, idx, value):
         """
@@ -131,9 +115,8 @@ class RejsonDb(KeyValueStorage):
         value -- a JSON-serializable value to be inserted
         """
         # TODO the operation pair should be atomic to avoid possible race conditions
-        async with self.redis as conn:
-            await conn.execute_command('JSON.ARRPOP', key, '.', idx)
-            await conn.execute_command('JSON.INSERT', key, '.', idx, json.dumps(value))
+        await self._redis.execute_command('JSON.ARRPOP', key, '.', idx)
+        await self._redis.execute_command('JSON.INSERT', key, '.', idx, json.dumps(value))
 
     async def list_trim(self, key, keep_left, keep_right):
         """
@@ -145,8 +128,7 @@ class RejsonDb(KeyValueStorage):
         keep_left -- the first value to be kept
         keep_right -- the last value to be kept
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.ARRTRIM', key, '.', keep_left, keep_right)
+        await self._redis.execute_command('JSON.ARRTRIM', key, '.', keep_left, keep_right)
 
     async def hash_get(self, key, field):
         """
@@ -156,10 +138,9 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         field -- hash table entry key
         """
-        async with self.redis as conn:
-            if await conn.execute_command('JSON.TYPE', key, f'["{field}"]') is None:
-                return None
-            return json.loads(await conn.execute_command('JSON.GET', key, f'["{field}"]'))
+        if await self._redis.execute_command('JSON.TYPE', key, f'["{field}"]') is None:
+            return None
+        return json.loads(await self._redis.execute_command('JSON.GET', key, f'["{field}"]'))
 
     async def hash_set(self, key, field, value):
         """
@@ -170,10 +151,9 @@ class RejsonDb(KeyValueStorage):
         field -- hash table entry key
         value -- a value to be stored
         """
-        async with self.redis as conn:
-            if not await conn.exists(key):
-                await conn.execute_command('JSON.SET', key, '.', json.dumps({}))
-            await conn.execute_command('JSON.SET', key, f'["{field}"]', json.dumps(value))
+        if not await self.exists(key):
+            await self.set(key, '{}')
+        await self._redis.execute_command('JSON.SET', key, f'["{field}"]', json.dumps(value))
 
     async def hash_del(self, key, field):
         """
@@ -183,8 +163,7 @@ class RejsonDb(KeyValueStorage):
         key -- hash item access key
         field -- the field to be deleted
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.DEL', key, f'["{field}"]')
+        await self._redis.execute_command('JSON.DEL', key, f'["{field}"]')
 
     async def hash_get_all(self, key):
         """
@@ -204,9 +183,7 @@ class RejsonDb(KeyValueStorage):
         key -- data access key
         default -- a value to be returned in case there is no such key
         """
-        async with self.redis as conn:
-            data = await conn.execute_command('JSON.GET', key, '.')
-
+        data = await self._redis.execute_command('JSON.GET', key, '.')
         if data is None:
             return default
         return json.loads(data)
@@ -219,28 +196,7 @@ class RejsonDb(KeyValueStorage):
         key -- an access key
         data -- a dictionary containing data to be saved
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.SET', key, '.', json.dumps(data))
-
-    async def set_ttl(self, key, ttl):
-        """
-        Set auto expiration timeout in seconds.
-
-        arguments:
-        key -- data access key
-        ttl -- number of seconds to wait before the value is removed
-        (please note that update actions reset the timer to zero)
-        """
-        async with self.redis as conn:
-            await conn.expire(key, ttl)
-
-    async def get_ttl(self, key):
-        async with self.redis as conn:
-            return await conn.ttl(key)
-
-    async def clear_ttl(self, key):
-        async with self.redis as conn:
-            await conn.persist(key)
+        await self._redis.execute_command('JSON.SET', key, '.', json.dumps(data))
 
     async def remove(self, key):
         """
@@ -249,21 +205,7 @@ class RejsonDb(KeyValueStorage):
         arguments:
         key -- key of the data to be removed
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.DEL', key, '.')
-
-    async def exists(self, key):
-        """
-        Tests whether there is a value with the specified key
-
-        arguments:
-        key -- the key to be tested
-
-        returns:
-        boolean value
-        """
-        async with self.redis as conn:
-            return await conn.exists(key)
+        await self._redis.execute_command('JSON.DEL', key, '.')
 
     async def setnx(self, key, value):
         """
@@ -273,8 +215,7 @@ class RejsonDb(KeyValueStorage):
         1 if the key was set
         0 if the key was not set
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.SET', key, '.', json.dumps(value), 'NX')
+        await self._redis.execute_command('JSON.SET', key, '.', json.dumps(value), 'NX')
 
     async def getset(self, key, value):
         """
@@ -284,20 +225,18 @@ class RejsonDb(KeyValueStorage):
         returns:
         previous key if any or None
         """
-        async with self.redis as conn:
-            data = await conn.execute_command('JSON.GET', key, '.')
-            await conn.execute_command('JSON.SET', key, '.', json.dumps(value))
-        return json.loads(data)
+        data = await self.get(key, '.')
+        await self.set(key, json.dumps(value))
+        return json.loads(data) if data is not None else None
 
     async def incr(self, key, amount=1):
         """
         Increments the value of 'key' by 'amount'.  If no key exists,
         the value will be initialized as 'amount'
         """
-        async with self.redis as conn:
-            if not await conn.exists(key):
-                await conn.execute_command('JSON.SET', key, '.', 0)
-            await conn.execute_command('JSON.NUMINCRBY', key, '.', amount)
+        if not await self._redis.exists(key):
+            await self.set(key, 0)
+        await self._redis.execute_command('JSON.NUMINCRBY', key, '.', amount)
 
     async def hash_set_map(self, key, mapping):
         """
@@ -305,8 +244,7 @@ class RejsonDb(KeyValueStorage):
         key and value from the 'mapping' dict.
         Before setting, the values are json-serialized
         """
-        async with self.redis as conn:
-            await conn.execute_command('JSON.SET', key, '.', json.dumps(mapping))
+        await self.set(key, json.dumps(mapping))
 
 
 def create_instance(conf):

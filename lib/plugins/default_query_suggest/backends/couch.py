@@ -54,10 +54,11 @@ class CouchDBBackend(AbstractBackend[Dict[str, CncSublemmaSuggestion]]):
             self._db = client[self._conf['database']]
         return self._db
 
-    def find_suggestion(
+    async def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr) -> CncSublemmaSuggestion:
-        tmp = self.db.view(self._conf['view'], start_key=norm_str(value), end_key=norm_str(value), include_docs=True)
+        tmp = self.db.view(self._conf['view'], start_key=norm_str(
+            value), end_key=norm_str(value), include_docs=True)
         merged = {}
         for item in tmp:
             lemma = item['doc']['lemma']

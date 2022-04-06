@@ -19,7 +19,7 @@
 import logging
 import smtplib
 from email.mime.text import MIMEText
-import json
+import ujson as json
 from datetime import datetime
 from sanic.blueprints import Blueprint
 from plugin_types.auth import AbstractAuth

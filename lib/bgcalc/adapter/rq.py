@@ -22,7 +22,7 @@ from rq_scheduler import Scheduler
 from bgcalc.errors import CalcTaskNotFoundError, BgCalcError
 from bgcalc.adapter.abstract import AbstractBgClient, AbstractResultWrapper
 from action.errors import UserActionException
-import json
+import ujson as json
 import re
 import importlib
 import sys
@@ -143,7 +143,8 @@ class RqClient(AbstractBgClient):
                         kwargs=entry['kwargs'] if 'kwargs' in entry else None,
                         use_local_timezone=True,
                     )
-            logging.getLogger(__name__).info(f'Loaded configuration for Rq-scheduler from {self.scheduler_conf_path}')
+            logging.getLogger(__name__).info(
+                f'Loaded configuration for Rq-scheduler from {self.scheduler_conf_path}')
         else:
             logging.getLogger(__name__).warning(
                 'No Rq-scheduler configuration path defined. '

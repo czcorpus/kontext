@@ -32,7 +32,7 @@ backends (see especially HTTP backend which uses these attributes to construct a
 Required XML configuration: please see config.rng
 """
 
-import json
+import ujson as json
 import logging
 from typing import Any, Dict, List, Sequence, Tuple
 from plugin_types.corparch import AbstractCorporaArchive

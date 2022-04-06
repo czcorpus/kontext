@@ -23,7 +23,7 @@ from action.response import KResponse
 from plugins.mysql_integration_db import MySqlIntegrationDb
 from .common import AttrValueKey, StructAttr
 import re
-import json
+import ujson as json
 from itertools import chain
 from functools import partial
 from collections import defaultdict, OrderedDict

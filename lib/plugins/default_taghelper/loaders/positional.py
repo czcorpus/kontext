@@ -20,7 +20,7 @@ from typing import DefaultDict, Set, List, Union
 from collections import defaultdict
 import os
 import time
-import json
+import ujson as json
 import re
 
 from lxml import etree

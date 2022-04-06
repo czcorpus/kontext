@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import logging
-import json
+import ujson as json
 import datetime
 import settings
 from typing import Tuple, Union, Optional

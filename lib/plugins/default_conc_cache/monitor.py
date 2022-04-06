@@ -17,7 +17,7 @@ import os.path
 import time
 from datetime import datetime
 from hashlib import sha1
-import json
+import ujson as json
 
 import aiofiles.os
 

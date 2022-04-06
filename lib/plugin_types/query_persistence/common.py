@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import hashlib
-import json
+import ujson as json
 import uuid
 from typing import Dict, Any, Union
 import logging
@@ -50,7 +50,8 @@ def _to_json(data: Dict[str, Any]) -> Union[str, None]:
     try:
         return json.dumps(data)
     except TypeError as ex:
-        logging.getLogger(__name__).warning('Failed to encode concordance data to generate a key: {}'.format(ex))
+        logging.getLogger(__name__).warning(
+            'Failed to encode concordance data to generate a key: {}'.format(ex))
         return None
 
 

@@ -36,7 +36,7 @@ Required config.xml/plugins entries (RelaxNG compact format): please see config.
 
 from typing import List, Optional, Tuple
 import urllib.parse
-import json
+import ujson as json
 import ssl
 import logging
 import aiohttp

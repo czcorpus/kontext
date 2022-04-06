@@ -25,7 +25,7 @@
 import time
 import datetime
 import abc
-import json
+import ujson as json
 import uuid
 from sanic_session.utils import CallbackDict
 

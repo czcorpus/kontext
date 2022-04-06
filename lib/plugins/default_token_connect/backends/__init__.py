@@ -17,17 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import http.client
-import urllib.request
-import urllib.parse
-import urllib.error
 import logging
+from plugins.common.http import HTTPClient
 from plugins.default_token_connect.backends.cache import cached
 
 from plugin_types.token_connect import AbstractBackend, BackendException
 
 
-# TODO make async http async backend using aiohttp
 class HTTPBackend(AbstractBackend):
     """
     The default_token_connect's JSON config file defines a template of an abstract path identifying a resource.
@@ -46,64 +42,21 @@ class HTTPBackend(AbstractBackend):
     def __init__(self, conf, ident, db, ttl):
         super(HTTPBackend, self).__init__(ident, db, ttl)
         self._conf = conf
-
-    @staticmethod
-    def _is_valid_response(response):
-        return response and (200 <= response.status < 300 or 400 <= response.status < 500)
-
-    @staticmethod
-    def _is_found(response):
-        return 200 <= response.status < 300
-
-    def create_connection(self):
-        if self._conf['ssl']:
-            return http.client.HTTPSConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
-        else:
-            return http.client.HTTPConnection(
-                self._conf['server'], port=self._conf['port'], timeout=15)
-
-    def process_response(self, connection):
-        response = connection.getresponse()
-        if self._is_valid_response(response):
-            logging.getLogger(__name__).debug(
-                'HTTP Backend response status: {0}'.format(response.status))
-            return response.read().decode('utf-8'), self._is_found(response)
-        else:
-            raise Exception('Failed to load the data - error {0}'.format(response.status))
-
-    @staticmethod
-    def enc_val(s):
-        if type(s) is str:
-            return urllib.parse.quote(s.encode('utf-8'))
-        return urllib.parse.quote(s)
-
-    def get_required_attrs(self):
-        if 'posAttrs' in self._conf:
-            logging.getLogger(__name__).warning(
-                'You are using a deprecated "conf.posAttr" value; please use "conf.attrs" instead.')
-            return self._conf.get('posAttrs', [])
-        else:
-            return self._conf.get('attrs', [])
+        self._client = HTTPClient(self._conf['server'], self._conf['port'], self._conf['ssl'])
 
     @cached
     async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
-        connection = self.create_connection()
+        args = dict(
+            ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
+            corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
+            token_id=token_id, num_tokens=num_tokens,
+            **dict((k, dict((k2, self.enc_val(v2)) for k2, v2 in list(v.items())) if type(v) is dict else self.enc_val(v)
+                    ) for k, v in list(query_args.items())))
+        logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
+
         try:
-            args = dict(
-                ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
-                corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
-                token_id=token_id, num_tokens=num_tokens,
-                **dict((k, dict((k2, self.enc_val(v2)) for k2, v2 in list(v.items())) if type(v) is dict else self.enc_val(v)
-                        ) for k, v in list(query_args.items())))
-            logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
+            query_string = self._conf['path'].format(**args)
+        except KeyError as ex:
+            raise BackendException('Failed to build query - value {0} not found'.format(ex))
 
-            try:
-                query_string = self._conf['path'].format(**args)
-            except KeyError as ex:
-                raise BackendException('Failed to build query - value {0} not found'.format(ex))
-
-            connection.request('GET', query_string)
-            return self.process_response(connection)
-        finally:
-            connection.close()
+        return await self._client.request('GET', query_string)

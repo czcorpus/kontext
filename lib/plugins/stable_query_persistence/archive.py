@@ -20,41 +20,40 @@ A script to archive outdated concordance queries from Redis to a SQLite3 databas
 are still transparently available to end-users.
 """
 
+import asyncio
 import os
 import sys
 import argparse
 import time
-import json
+import ujson as json
 from datetime import datetime
 
-import redis
-import sqlite3
+import aioredis
+import aiosqlite
 
 
 def redis_connection(host, port, db_id):
     """
     Creates a connection to a Redis instance
     """
-    return redis.StrictRedis(host=host, port=port, db=db_id)
+    return aioredis.Redis(host=host, port=port, db=db_id)
 
 
 class SQLite3Ops(object):
     def __init__(self, db_path):
-        self._db = sqlite3.connect(db_path)
-        self._db.row_factory = sqlite3.Row
+        self._db = aiosqlite.connect(db_path)
+        self._db.row_factory = aiosqlite.Row
 
-    def execute(self, sql, args):
-        cursor = self._db.cursor()
-        cursor.execute(sql, args)
+    async def execute(self, sql, args):
+        cursor = await self._db.execute(sql, args)
         return cursor
 
-    def executemany(self, sql, args_rows):
-        cursor = self._db.cursor()
-        cursor.executemany(sql, args_rows)
+    async def executemany(self, sql, args_rows):
+        cursor = await self._db.executemany(sql, args_rows)
         return cursor
 
-    def commit(self):
-        self._db.commit()
+    async def commit(self):
+        await self._db.commit()
 
 
 class Archiver(object):
@@ -63,7 +62,7 @@ class Archiver(object):
     from fast database (Redis) to a slow one (SQLite3)
     """
 
-    def __init__(self, from_db: redis.StrictRedis, to_db: SQLite3Ops, archive_queue_key: str):
+    def __init__(self, from_db: aioredis.Redis, to_db: SQLite3Ops, archive_queue_key: str):
         """
         arguments:
         from_db -- a Redis connection
@@ -108,9 +107,9 @@ class Archiver(object):
                 i += 1
 
             if not dry_run:
-                self._to_db.executemany(
+                await self._to_db.executemany(
                     'INSERT OR IGNORE INTO archive (id, data, created, num_access) VALUES (?, ?, ?, ?)', inserts)
-                self._to_db.commit()
+                await self._to_db.commit()
             else:
                 for ins in reversed(inserts):
                     await self._from_db.lpush(self._archive_queue_key,
@@ -191,7 +190,7 @@ if __name__ == '__main__':
                               '(not 100%% error prone as it reads/writes to Redis)'))
     args = parser.parse_args()
     if args.action == 'backup':
-        ans = run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run)
+        ans = asyncio.run(run(conf=settings, num_proc=args.num_proc, dry_run=args.dry_run))
         print(ans)
     elif args.action == 'new_archive':
         try:

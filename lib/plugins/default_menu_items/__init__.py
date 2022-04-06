@@ -51,12 +51,12 @@ required menu data format (JSON):
    ...
 ]
 
-For the list of main menu section identifiers please refer 
+For the list of main menu section identifiers please refer
 to the main_menu.MainMenu class.
 
 """
 
-import json
+import ujson as json
 
 from plugin_types.menu_items import AbstractMenuItems, StaticMenuItem, DynamicMenuItem
 

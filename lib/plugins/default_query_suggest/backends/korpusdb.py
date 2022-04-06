@@ -14,7 +14,7 @@
 
 from plugin_types.query_suggest import AbstractBackend
 from plugins.common.http import HTTPClient
-import json
+import ujson as json
 
 
 class KorpusDBBackend(AbstractBackend):
@@ -26,7 +26,7 @@ class KorpusDBBackend(AbstractBackend):
         self._conf = conf
         self._client = HTTPClient(conf['server'], conf['port'], conf['ssl'])
 
-    def find_suggestion(
+    async def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         body = {
@@ -61,7 +61,7 @@ class KorpusDBBackend(AbstractBackend):
             '_client': 'kontext'
         }
 
-        resp, is_found = self._client.request(
+        resp, is_found = await self._client.request(
             'POST',
             self.API_PATH,
             {},
