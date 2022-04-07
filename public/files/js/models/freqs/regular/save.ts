@@ -202,6 +202,7 @@ export class FreqResultsSaveModel extends StatefulModel<FreqResultsSaveModelStat
             format: undefined
         };
         this.saveLinkFn(
+            undefined,
             this.state.saveformat,
             this.layoutModel.createActionUrl('savefreq', args)
         );

@@ -208,6 +208,7 @@ export class ConcSaveModel extends StatefulModel<ConcSaveModelState> {
             align_kwic: this.state.alignKwic
         };
         this.saveLinkFn(
+            undefined,
             this.state.saveformat,
             this.layoutModel.createActionUrl('saveconc', args)
         );

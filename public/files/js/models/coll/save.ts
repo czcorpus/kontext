@@ -204,6 +204,7 @@ export class CollResultsSaveModel extends StatelessModel<CollResultsSaveModelSta
                                 undefined
                 };
                 this.saveLinkFn(
+                    undefined,
                     state.saveformat,
                     this.layoutModel.createActionUrl('savecoll', args)
                 );
