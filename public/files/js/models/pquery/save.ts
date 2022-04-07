@@ -187,6 +187,7 @@ export class PqueryResultsSaveModel extends StatefulModel<PqueryResultsSaveModel
 
     private submit(pqueryResultArgs:{queryId:string; sort:string; reverse:number}):void {
         this.saveLinkFn(
+            undefined,
             this.state.saveformat,
             this.layoutModel.createActionUrl(
                 'pquery/download',

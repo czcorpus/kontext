@@ -29,11 +29,6 @@ import { WordlistSaveArgs, WordlistSubmitArgs } from './common';
 import { DataSaveFormat } from '../../app/navigation/save';
 
 
-export interface WordlistSaveLinkHandler {
-    (suffix:string, url:string, args:WordlistSaveArgs):void;
-}
-
-
 export interface WordlistSaveModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
@@ -57,7 +52,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
 
     private readonly layoutModel:PageModel;
 
-    private readonly saveLinkFn:WordlistSaveLinkHandler;
+    private readonly saveLinkFn:SaveLinkHandler<WordlistSaveArgs>;
 
 
     constructor({dispatcher, layoutModel, quickSaveRowLimit, queryId, saveLinkFn}:WordlistSaveModelArgs) {
@@ -232,6 +227,7 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
             submitArgs.colheaders = true;
         }
         this.saveLinkFn(
+            undefined,
             state.saveFormat,
             this.layoutModel.createActionUrl('wordlist/savewl'),
             submitArgs

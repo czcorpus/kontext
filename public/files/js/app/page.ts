@@ -79,8 +79,8 @@ export function isDownloadType(s:string):s is DownloadType {
         s === DownloadType.CHART;
 }
 
-export interface SaveLinkHandler {
-    (suffix:string, url:string):void;
+export interface SaveLinkHandler<T = any> {
+    (name:string, format:string, url:string, args?:T):void;
 }
 
 export class UnsupportedBlob implements Blob {
