@@ -20,7 +20,7 @@
 
 import * as React from 'react';
 import * as Kontext from '../../../types/kontext';
-import { Dict, List, Maths, pipe } from 'cnc-tskit';
+import { Dict, Keyboard, List, Maths, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
@@ -74,19 +74,29 @@ export function init(
                 name: Actions.ResultSetCurrentPage.name,
                 payload: {
                     value: String(Number(curr) + step),
-                    sourceId: props.sourceId
+                    sourceId: props.sourceId,
+                    confirmed: true,
                 }
             });
         };
 
-        const handlePageChange = (evt) => {
+        const handlePageChange = (evt, confirmed: boolean = false) => {
             dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
                 name: Actions.ResultSetCurrentPage.name,
                 payload: {
                     value: evt.target.value,
-                    sourceId: props.sourceId
+                    sourceId: props.sourceId,
+                    confirmed: confirmed,
                 }
             });
+        };
+
+        const handleKeyPress = (evt) => {
+            if (evt.key === Keyboard.Value.ENTER) {
+                handlePageChange(evt, true);
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
         };
 
         const renderPageNum = () => {
@@ -103,6 +113,7 @@ export function init(
                 return (
                     <input type="text" value={props.currentPage}
                         title={he.translate('global__curr_page_num')}
+                        onKeyPress={handleKeyPress}
                         onChange={handlePageChange}
                         disabled={props.totalPages === 1}
                         style={{width: '3em'}} />

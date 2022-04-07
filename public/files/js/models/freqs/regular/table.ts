@@ -408,21 +408,21 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultSetCurrentPage,
             (state, action) => {
-                state.currentPage[action.payload.sourceId] = action.payload.value;
-                if (validateNumber(action.payload.value, 1)) {
-                    state.isBusy[action.payload.sourceId] = true;
-                    state.isError[action.payload.sourceId] = null;
+                const sourceId = action.payload.sourceId;
+                state.currentPage[sourceId] = action.payload.value;
+                if (validateNumber(action.payload.value, 1) && action.payload.confirmed) {
+                    if (parseInt(action.payload.value) > state.data[sourceId].TotalPages) {
+                        state.currentPage[sourceId] = `${state.data[sourceId].TotalPages}`;
+                        this.pageModel.showMessage('info', this.pageModel.translate('global__no_more_pages'));
 
-                } else {
-                    state.isBusy[action.payload.sourceId] = false;
-                }
-                if (!action.payload.debouncedFor) {
-                    this.debouncedAction$.next(action);
+                    }
+                    state.isBusy[sourceId] = true;
+                    state.isError[sourceId] = null;
                 }
             },
             (state, action, dispatch) => {
-                if (action.payload.debouncedFor) {
-                    if (validateNumber(action.payload.value, 1)) {
+                if (validateNumber(action.payload.value, 1)) {
+                    if (action.payload.confirmed) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(
                                 this.getSubmitArgs(state, action.payload.sourceId)
@@ -432,12 +432,12 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                             true,
                             action.payload.sourceId
                         );
-
-                    } else {
-                        this.pageModel.showMessage(
-                            'error', this.pageModel.translate('freq__page_invalid_val'));
                     }
+                } else {
+                    this.pageModel.showMessage(
+                        'error', this.pageModel.translate('freq__page_invalid_val'));
                 }
+
             }
         );
 
