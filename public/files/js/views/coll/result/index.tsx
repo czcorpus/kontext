@@ -271,9 +271,7 @@ export function init(
 
         const handleKeyPress = (evt) => {
             if (evt.key === Keyboard.Value.ENTER) {
-                dispatcher.dispatch<typeof Actions.ResultConfirmPageValue>({
-                    name: Actions.ResultConfirmPageValue.name
-                });
+                dispatcher.dispatch(Actions.ResultConfirmPageValue);
                 evt.preventDefault();
                 evt.stopPropagation();
             }
