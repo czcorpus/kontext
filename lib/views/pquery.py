@@ -27,7 +27,7 @@ from action.argmapping.pquery import PqueryFormArgs
 from action.errors import NotFoundException
 from action.model.pquery import ParadigmaticQueryActionModel
 import bgcalc
-from bgcalc.pquery import require_existing_pquery
+from bgcalc.pquery.storage import require_existing_pquery
 from bgcalc.pquery.errors import PqueryResultNotFound
 from bgcalc.task import AsyncTaskStatus
 from main_menu import MainMenu
