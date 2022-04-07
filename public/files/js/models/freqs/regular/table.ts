@@ -33,7 +33,7 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
-import { AttrItem, BasicFreqModuleType, FormValue, newFormValue, updateFormValue } from '../../../types/kontext';
+import { AttrItem, BasicFreqModuleType, newFormValue, updateFormValue } from '../../../types/kontext';
 
 
 export interface FreqDataRowsModelArgs {
@@ -227,6 +227,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             Actions.ResultSetActiveTab,
             (state, action) => {
                 state.isActive = action.payload.value === 'tables';
+            },
+            (state, action, dispatch) => {
+                this.pushStateToHistory(state);
             }
         );
 
@@ -474,6 +477,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 )
             }
         );
+
     }
 
     private dispatchLoad(
@@ -524,6 +528,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         const args = {
             ...this.getSubmitArgs(state, firstCrit.n),
             fcrit_async: List.map(v => v.n, state.freqCritAsync),
+            fdefault_view: state.isActive ? 'tables' : 'charts',
+            freq_type: state.freqType,
             format: undefined
         };
         this.pageModel.getHistory().pushState(
@@ -549,6 +555,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             fcrit,
             flimit: parseInt(state.flimit.value),
             freq_sort: state.sortColumn[fcrit],
+            freq_type: state.freqType,
             fpage: parseInt(state.currentPage[fcrit]),
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
@@ -562,6 +569,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             fcrit: Dict.keys(state.data),
             flimit: parseInt(state.flimit.value),
             freq_sort: 'freq',
+            freq_type: state.freqType,
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,

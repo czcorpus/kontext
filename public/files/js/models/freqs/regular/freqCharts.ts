@@ -480,6 +480,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             freq_sort: state.type[fcrit] === 'timeline' || state.type[fcrit] === 'timescatter' ?
                 '0' :
                 state.sortColumn[fcrit],
+            freq_type: state.freqType,
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
