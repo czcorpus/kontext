@@ -196,6 +196,22 @@ class AbstractAuth(abc.ABC, metaclass=MetaAbstractAuth):
     def ignores_corpora_names_case(self):
         return True
 
+    @abc.abstractmethod
+    def get_login_url(self, return_url: Optional[str] = None) -> str:
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log in. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
+
+    @abc.abstractmethod
+    def get_logout_url(self, return_url: Optional[str] = None) -> str:
+        """
+        Specifies where should KonText redirect a user in case
+        he wants to log out. In general, it can be KonText's URL
+        or a URL of some other authentication application.
+        """
+
 
 class AbstractSemiInternalAuth(AbstractAuth):
 
@@ -222,22 +238,6 @@ class AbstractInternalAuth(AbstractSemiInternalAuth):
     """
     A general authentication running within KonText.
     """
-
-    @abc.abstractmethod
-    def get_login_url(self, return_url: Optional[str] = None) -> str:
-        """
-        Specifies where should KonText redirect a user in case
-        he wants to log in. In general, it can be KonText's URL
-        or a URL of some other authentication application.
-        """
-
-    @abc.abstractmethod
-    def get_logout_url(self, return_url: Optional[str] = None) -> str:
-        """
-        Specifies where should KonText redirect a user in case
-        he wants to log out. In general, it can be KonText's URL
-        or a URL of some other authentication application.
-        """
 
     @abc.abstractmethod
     async def update_user_password(self, plugin_ctx: 'PluginCtx', user_id: int, password: str):

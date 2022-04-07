@@ -328,9 +328,8 @@ class UserActionModel(BaseActionModel):
     def configure_auth_urls(self, out):
         try:
             with plugins.runtime.AUTH as auth:
-                if isinstance(auth, AbstractInternalAuth):
-                    out['login_url'] = auth.get_login_url(self.return_url)
-                    out['logout_url'] = auth.get_logout_url(self._req.get_root_url())
+                out['login_url'] = auth.get_login_url(self.return_url)
+                out['logout_url'] = auth.get_logout_url(self._req.get_root_url())
         except plugins.PluginNotInstalled:
             out['login_url'] = None
             out['logout_url'] = None
