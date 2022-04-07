@@ -152,7 +152,8 @@ async def server_init(app, loop):
     db_conf = settings.get('plugins', 'sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
     app.ctx.redis = aioredis.from_url(
-        f'redis://{db_conf["host"]}:{db_conf["port"]}',
+        f'redis://{db_conf["backend_host"]}:{db_conf["backend_port"]}',
+        db=db_conf["backend_db"],
         decode_responses=True)
     # init extensions fabrics
     session.init_app(app, interface=AIORedisSessionInterface(app.ctx.redis))

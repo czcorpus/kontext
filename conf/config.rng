@@ -752,10 +752,21 @@
                     <element name="sessions">
                         <a:documentation>A plug-in for handling web sessions.</a:documentation>
                         <ref name="plugin_common" />
-                        <element name="ttl">
-                            <a:documentation>number of seconds of inactivity</a:documentation>
-                            <data type="positiveInteger" />
-                        </element>
+                        <optional>
+                            <element name="backend_host">
+                                <text />
+                            </element>
+                            <element name="backend_port">
+                                <data type="positiveInteger" />
+                            </element>
+                            <element name="backend_db">
+                                <data type="positiveInteger" />
+                            </element>
+                            <element name="ttl">
+                                <a:documentation>number of seconds of inactivity</a:documentation>
+                                <data type="positiveInteger" />
+                            </element>
+                        </optional>
                         <ref name="customPluginConfiguration" />
                     </element>
                     <element name="corparch">
