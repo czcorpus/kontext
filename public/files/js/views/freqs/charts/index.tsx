@@ -408,7 +408,7 @@ export function init(
                             <XAxis type='number' height={50}>
                                 <Label value={xUnits} position="insideBottom" />
                             </XAxis>
-                            <YAxis type="category" interval={0} dataKey={v => v.Word[0]}
+                            <YAxis type="category" interval={0} dataKey={v => v.Word.join(' ')}
                                 width={Math.max(60, Math.min(BAR_CHART_MAX_LABEL_LENGTH, maxLabelLength) * 7)}
                                 tickFormatter={value => Strings.shortenText(value, BAR_CHART_MAX_LABEL_LENGTH)} />
                             <Tooltip formatter={tooltipFormatter}/>
