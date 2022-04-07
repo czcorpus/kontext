@@ -475,6 +475,7 @@ class FreqPage {
                     ...this.freqResultModel.getSubmitArgs(state, firstCrit.n),
                     fcrit_async: List.map(v => v.n, state.freqCritAsync),
                     freq_type: state.freqType,
+                    fdefault_view: this.layoutModel.getConf<FreqResultViews>('FreqDefaultView'),
                     format: undefined
                 };
                 this.layoutModel.getHistory().replaceState(
