@@ -29,6 +29,7 @@ import { GeneralViewOptionsModelState } from '../models/options/general';
 import { CorpusSwitchModel } from '../models/common/corpusSwitch';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { ScreenProps } from '../views/document/responsiveWrapper';
+import { Dict, List, pipe } from 'cnc-tskit';
 
 
 /**
@@ -46,10 +47,29 @@ export interface StructuralAttribute {
     name:string;
     structureName:string;
     label:string;
+    n: string;
     dtFormat?:string;
 }
 
 export type StructsAndAttrs = {[struct:string]:Array<StructuralAttribute>};
+
+export type AttrItem = {n:string; label:string};
+
+export function structAndAttrsToStructList(structAndAttrs: StructsAndAttrs):Array<string> {
+    return Dict.keys(structAndAttrs);
+}
+
+export function structAndAttrsToStructAttrList(structAndAttrs: StructsAndAttrs):Array<AttrItem> {
+    return pipe(
+        structAndAttrs,
+        Dict.values(),
+        List.flatMap(v => v),
+        List.map(v => ({
+            label: v.label,
+            n: v.n,
+        }))
+    )
+}
 
 export type ResponseFormat = 'plain'|'json'|'template'|'xml';
 
@@ -432,8 +452,6 @@ export interface QueryOperation {
      */
     size:number;
 }
-
-export type AttrItem = {n:string; label:string};
 
 export type VirtualKeys = Array<Array<[string, string]>>;
 
