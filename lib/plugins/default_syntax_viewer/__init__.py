@@ -51,8 +51,10 @@ from typing import Dict
 import plugins
 from action.decorators import http_action
 from action.errors import UserActionException
+from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.plugin.ctx import PluginCtx
+from action.response import KResponse
 from plugin_types.auth import AbstractAuth
 from plugin_types.integration_db import IntegrationDatabase
 from plugin_types.syntax_viewer import (AbstractSyntaxViewerPlugin,
@@ -67,7 +69,7 @@ bp = Blueprint('default_syntax_viewer')
 
 @bp.route('/get_syntax_data')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def get_syntax_data(amodel, req, resp):
+async def get_syntax_data(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     This is the actual controller method exported by the plug-in.
     To be able to export a JSON with custom encoder this method

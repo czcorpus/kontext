@@ -105,11 +105,11 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
 
 @dataclass
 class SavecollArgs:
-    from_line: Optional[int] = 1
+    from_line: int = 1
     to_line: Optional[int] = None
-    saveformat: Optional[str] = 'text'
-    heading: Optional[int] = 0
-    colheaders: Optional[int] = 0
+    saveformat: str = 'text'
+    heading: int = 0
+    colheaders: int = 0
 
 
 @bp.route('/savecoll')

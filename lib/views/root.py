@@ -24,6 +24,7 @@ from action.decorators import http_action
 from action.errors import (FunctionNotSupported, ImmediateRedirectException,
                            NotFoundException)
 from action.krequest import KRequest
+from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
 from sanic import Blueprint
@@ -33,7 +34,7 @@ bp = Blueprint('root')
 
 @bp.route('/')
 @http_action()
-async def root_action(amodel, req, resp):
+async def root_action(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     raise ImmediateRedirectException(req.create_url('query', {}))
 
 
@@ -71,7 +72,7 @@ async def check_tasks_status(amodel: UserActionModel, req: KRequest, resp: KResp
 
 @bp.route('/get_task_result')
 @http_action(return_type='json')
-async def get_task_result(amodel, req, resp):
+async def get_task_result(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     worker = bgcalc.calc_backend_client(settings)
     result = worker.AsyncResult(req.args.get('task_id'))
     return dict(result=result.get())
@@ -87,13 +88,13 @@ async def remove_task_info(amodel: UserActionModel, req: KRequest, resp: KRespon
 
 @bp.route('/compatibility')
 @http_action(action_model=UserActionModel, template='compatibility.html')
-async def compatibility(amodel, req, resp):
+async def compatibility(amodel: UserActionModel, req: KRequest, resp: KResponse):
     return {'_version': (None, None)}
 
 
 @bp.route('/robots.txt')
 @http_action(action_model=UserActionModel, return_type='plain')
-async def robots(amodel, req, resp):
+async def robots(amodel: UserActionModel, req: KRequest, resp: KResponse):
     rpath = os.path.join(os.path.dirname(__file__), '..', '..', 'public', 'files', 'robots.txt')
     if await aiofiles.os.path.isfile(rpath):
         async with aiofiles.open(rpath) as fr:

@@ -271,7 +271,7 @@ async def _freqs(
     return result
 
 
-async def _freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
+async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp: KResponse):
     """
     multilevel frequency list
     """
@@ -300,7 +300,7 @@ async def _freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
 @http_action(
     access_level=0, template='freqs.html', page_model='freq', action_model=ConcActionModel,
     mapped_args=MLFreqRequestArgs)
-async def freqml(amodel, req: KRequest[MLFreqRequestArgs], resp):
+async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp: KResponse):
     try:
         await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
         return await _freqml(amodel, req, resp)
@@ -319,7 +319,7 @@ class FreqttActionArgs:
 @http_action(
     access_level=1, template='freqs.html', action_model=ConcActionModel, page_model='freq',
     mapped_args=FreqttActionArgs)
-async def freqtt(amodel, req: KRequest[FreqttActionArgs], resp):
+async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp: KResponse):
     if not req.mapped_args.fttattr:
         raise ConcordanceQueryParamsError(req.translate('No text type selected'))
     ans = await _freqs(
@@ -366,7 +366,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/freqct')
 @http_action(action_model=ConcActionModel, access_level=1, page_model='freq', template='freqs.html')
-async def freqct(amodel, req: KRequest, resp):
+async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     """
     try:

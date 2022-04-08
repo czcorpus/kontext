@@ -17,7 +17,9 @@ from typing import List
 
 from action.decorators import http_action
 from action.errors import ImmediateRedirectException, UserActionException
+from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
+from action.response import KResponse
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 from conclib.pyconc import PyConc
@@ -69,7 +71,7 @@ def _get_freq_dispersion(conc: PyConc, resolution: int) -> List[FreqDispersionBi
 
 @bp.route('/ajax_get_freq_dispersion')
 @http_action(action_model=ConcActionModel, return_type='json')
-async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]:
+async def ajax_get_freq_dispersion(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> List[FreqDispersionBin]:
     conc = await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
     resolution = int(req.args.get('resolution', 100))
     if 0 < resolution < 1000:
@@ -79,7 +81,7 @@ async def ajax_get_freq_dispersion(amodel, req, resp) -> List[FreqDispersionBin]
 
 @bp.route('/index')
 @http_action(action_model=ConcActionModel, page_model='dispersion', template='dispersion.html')
-async def index(amodel, req, response):
+async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
     try:
         conc = await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
     except ConcNotFoundException:

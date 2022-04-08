@@ -153,7 +153,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/get_conc_cache_status')
 @http_action(return_type='json', action_model=ConcActionModel)
-async def get_conc_cache_status(amodel, req, resp):
+async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     resp.set_header('Content-Type', 'text/plain')
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)
@@ -1262,7 +1262,7 @@ class StructctxArgs:
 
 @bp.route('/structctx')
 @http_action(action_model=ConcActionModel, mapped_args=StructctxArgs, access_level=1, return_type='json')
-def structctx(amodel, req: KRequest[StructctxArgs], resp):
+def structctx(amodel: ConcActionModel, req: KRequest[StructctxArgs], resp: KResponse):
     """
     display a hit in a context of a structure"
     """

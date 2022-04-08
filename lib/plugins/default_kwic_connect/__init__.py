@@ -22,6 +22,7 @@ Required XML configuration: please see ./config.rng
 
 import logging
 from multiprocessing.pool import ThreadPool
+from typing import Dict, List, Tuple
 
 import plugins
 from action.decorators import http_action
@@ -30,6 +31,7 @@ from action.model.concordance import ConcActionModel
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.kwic_connect import AbstractKwicConnect
+from plugin_types.token_connect import AbstractBackend, AbstractFrontend
 from plugins.default_token_connect import setup_providers
 from sanic.blueprints import Blueprint
 from util import as_async
@@ -37,7 +39,7 @@ from util import as_async
 bp = Blueprint('default_kwic_connect')
 
 
-def merge_results(curr, new, word):
+def merge_results(curr, new, word: str):
     for item in new:
         item['kwic'] = word
     if len(curr) == 0:
@@ -88,7 +90,7 @@ async def get_corpus_kc_providers(amodel: ConcActionModel, req: KRequest, resp: 
 
 class DefaultKwicConnect(AbstractKwicConnect):
 
-    def __init__(self, providers, corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: AbstractCorporaArchive, max_kwic_words: int, load_chunk_size: int):
         self._corparch = corparch
         self._max_kwic_words = max_kwic_words
         self._load_chunk_size = load_chunk_size
@@ -114,7 +116,7 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export_actions():
         return bp
 
-    def fetch_data(self, provider_ids, corpora, lemma, lang):
+    def fetch_data(self, provider_ids: List[str], corpora: List[str], lemma: str, lang: str) -> List[Dict]:
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:

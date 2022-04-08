@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
+from typing import Any, Dict, List
 
 from plugin_types import CorpusDependentPlugin
 
@@ -28,9 +29,8 @@ class AbstractKwicConnect(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    def fetch_data(self, provider_ids, corpora, lemma, lang):
+    def fetch_data(self, provider_ids, corpora, lemma, lang) -> List[Dict[str, Any]]:
         pass
 
     def gives_kwic_hints(self, corpora):
         return [False for _ in corpora]
-
