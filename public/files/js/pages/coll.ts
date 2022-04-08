@@ -78,7 +78,7 @@ export class CollPage {
     initAnalysisViews():void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const currArgs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
-        const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
+        const structAttrs = Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'));
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
 
@@ -124,7 +124,7 @@ export class CollPage {
         const tt = this.initAdhocSubcDetector();
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             ctattr1: ctFormInputs.ctattr1,
             ctattr2: ctFormInputs.ctattr2,
             ctfcrit1: ctFormInputs.ctfcrit1,

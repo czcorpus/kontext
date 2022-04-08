@@ -55,13 +55,13 @@ export type StructsAndAttrs = {[struct:string]:Array<StructuralAttribute>};
 
 export type AttrItem = {n:string; label:string};
 
-export function structAndAttrsToStructList(structAndAttrs: StructsAndAttrs):Array<string> {
-    return Dict.keys(structAndAttrs);
+export function structsAndAttrsToStructList(structsAndAttrs: StructsAndAttrs):Array<string> {
+    return Dict.keys(structsAndAttrs);
 }
 
-export function structAndAttrsToStructAttrList(structAndAttrs: StructsAndAttrs):Array<AttrItem> {
+export function structsAndAttrsToStructAttrList(structsAndAttrs: StructsAndAttrs):Array<AttrItem> {
     return pipe(
-        structAndAttrs,
+        structsAndAttrs,
         Dict.values(),
         List.flatMap(v => v),
         List.map(v => ({

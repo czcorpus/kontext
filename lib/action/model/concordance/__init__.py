@@ -324,12 +324,18 @@ class ConcActionModel(CorpusActionModel):
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
     async def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
-        structs_and_attrs: Dict[str, List[StructAttrInfo]] = defaultdict(list)
-        attrs = [t for t in self.corp.get_structattrs() if t != '']
+        structs_and_attrs: Dict[str, List[StructAttrInfo]] = {
+            attr: []
+            for attr in self.corp.get_structs()
+        }
+        attrs = [
+            {'label': self.corp.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
+            for n in self.corp.get_structattrs() if n
+        ]
         with plugins.runtime.CORPARCH as ca:
             for attr in await ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
                 structs_and_attrs[attr.structure_name].append(attr)
-        return dict(structs_and_attrs)
+        return structs_and_attrs
 
     async def add_globals(self, app, action_props, result):
         """

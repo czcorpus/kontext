@@ -70,8 +70,8 @@ class ParadigmaticQueryPage {
 
             const attrHelper = new AttrHelper(
                 this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                this.layoutModel.getConf<Array<string>>('StructList'),
+                Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
+                Kontext.structsAndAttrsToStructList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                 this.layoutModel.getConf<Array<PluginInterfaces.TagHelper.TagsetInfo>>('Tagsets')
             );
             const pqForm = this.layoutModel.getConf<FreqIntersectionArgs>('FormData');
@@ -83,7 +83,7 @@ class ParadigmaticQueryPage {
                         this.layoutModel.getConf<InvolvedConcFormArgs>('ConcForms')
                     ),
                     this.layoutModel.getConf('AttrList'),
-                    this.layoutModel.getConf('StructAttrList'),
+                    Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                     this.layoutModel.getConf<boolean>('UseRichQueryEditor')
                 ),
                 this.layoutModel,

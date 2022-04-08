@@ -101,7 +101,7 @@ class AbstractCorporaArchive(abc.ABC):
         """
 
     async def get_structattrs_info(
-            self, plugin_ctx: 'CorpusPluginCtx', corp_name: str, full_names: Iterable[str]) -> List[StructAttrInfo]:
+            self, plugin_ctx: 'CorpusPluginCtx', corp_name: str, full_names: Iterable[Dict[str, str]]) -> List[StructAttrInfo]:
         """
         Return information for one or more structural attributes. Please note that it should always return
         at least 'name' and 'structure_name'. In case no 'label' is available, None should be used
@@ -112,10 +112,11 @@ class AbstractCorporaArchive(abc.ABC):
         """
         ans = []
         for full_name in full_names:
-            tmp = full_name.split('.')
+            tmp = full_name['n'].split('.')
             if len(tmp) != 2:
                 raise CorparchError(f'invalid structattr full_name: {full_name}')
-            ans.append(StructAttrInfo(structure_name=tmp[0], name=tmp[1]))
+            ans.append(StructAttrInfo(
+                structure_name=tmp[0], name=tmp[1], label=full_name['label'], n=full_name['n']))
         return ans
 
     def mod_corplist_menu(self, plugin_ctx: 'CorpusPluginCtx', menu_item):

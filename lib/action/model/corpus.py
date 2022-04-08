@@ -445,22 +445,18 @@ class CorpusActionModel(UserActionModel):
         result['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0'
                                              for a in sref.split(',')])
         result['default_attr'] = maincorp.get_conf('DEFAULTATTR')
-        for listname in ['AttrList', 'StructAttrList']:
-            if listname in result:
-                continue
-            result[listname] = [{
+        if 'AttrList' not in result:
+            result['AttrList'] = [{
                 'label': maincorp.get_conf(f'{n}.LABEL') or n,
                 'n': n,
-                **({'multisep': maincorp.get_conf(f'{n}.MULTISEP')} if listname == 'AttrList' else {})
-            } for n in maincorp.get_conf(listname.upper()).split(',') if n]
+                'multisep': maincorp.get_conf(f'{n}.MULTISEP'),
+            } for n in maincorp.get_conf('ATTRLIST').split(',') if n]
 
         align_common_posattrs = set(self.corp.get_posattrs())
         for a in self.args.align:
             align_corp = await self.cm.get_corpus(a, translate=self._req.translate)
             align_common_posattrs.intersection_update(align_corp.get_posattrs())
         result['AlignCommonPosAttrs'] = list(align_common_posattrs)
-
-        result['StructList'] = self.corp.get_structs()
 
         if maincorp.get_conf('FREQTTATTRS'):
             ttcrit_attrs = maincorp.get_conf('FREQTTATTRS')

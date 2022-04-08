@@ -77,7 +77,7 @@ async def first_form(_, req: KRequest, resp: KResponse):
 
 @bp.route('/query')
 @http_action(template='query.html', page_model='query', action_model=ConcActionModel)
-async def query(amodel: ConcActionModel, req, resp):
+async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE,
         MainMenu.VIEW('kwic-sent-switch'))
@@ -567,10 +567,6 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         'multisep': amodel.corp.get_conf(f'{n}.MULTISEP')
     } for n in attrlist if n]
 
-    tmp_out['StructAttrList'] = [{'label': amodel.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
-                                 for n in amodel.corp.get_structattrs()
-                                 if n]
-    tmp_out['StructList'] = amodel.corp.get_structs()
     sref = amodel.corp.get_conf('SHORTREF')
     tmp_out['fcrit_shortref'] = '+'.join([a.strip('=') + ' 0' for a in sref.split(',')])
 
@@ -626,8 +622,6 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         Wposlist=[{'n': x.pos, 'v': x.pattern} for x in poslist],
         AttrList=tmp_out['AttrList'],
         AlignCommonPosAttrs=list(align_common_posattrs),
-        StructAttrList=tmp_out['StructAttrList'],
-        StructList=tmp_out['StructList'],
         InputLanguages=tmp_out['input_languages'],
         ConcFormsArgs=tmp_out['conc_forms_args'],
         CurrentSubcorp=amodel.args.usesubcorp,

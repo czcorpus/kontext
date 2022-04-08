@@ -110,7 +110,7 @@ export class WordlistPage {
                 corpusIdent: this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent'),
                 subcorpList: this.layoutModel.getConf<Array<string>>('SubcorpList'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+                structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                 initialArgs: this.layoutModel.getConf<WordlistFormModelArgs['initialArgs']>('Form')
             });
 
