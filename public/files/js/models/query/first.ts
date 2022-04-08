@@ -22,13 +22,12 @@
 
 import { IFullActionControl } from 'kombo';
 import { Observable } from 'rxjs';
-import { tap, map, concatMap } from 'rxjs/operators';
+import { tap, map, concatMap, reduce } from 'rxjs/operators';
 import { Dict, tuple, List, pipe, HTTP } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
-import { TextTypesModel } from '../textTypes/main';
 import { QueryContextModel } from './context';
 import { GeneralQueryFormProperties, QueryFormModel, QueryFormModelState,
     ConcQueryArgs, QueryContextArgs, determineSupportedWidgets, getTagBuilderSupport, suggestionsEnabled } from './common';
@@ -45,7 +44,6 @@ import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from '../cqleditor/attrs';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
-import { QuickSubcorpModel } from '../subcorp/quickSubcorp';
 
 
 export interface QueryFormUserEntries {
@@ -305,23 +303,30 @@ export interface FirstQueryFormModelSwitchPreserve {
 }
 
 
+interface FirstQueryFormModelArgs {
+    dispatcher:IFullActionControl;
+    pageModel:PageModel;
+    queryContextModel:QueryContextModel;
+    qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    props:QueryFormProperties;
+    quickSubcorpActive:boolean;
+}
+
+
 /**
  *
  */
 export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState>
     implements IUnregistrable {
 
-    protected readonly quickSubcorpModel:QuickSubcorpModel;
-
-    constructor(
-            dispatcher:IFullActionControl,
-            pageModel:PageModel,
-            textTypesModel: TextTypesModel,
-            quickSubcorpModel:QuickSubcorpModel,
-            queryContextModel:QueryContextModel,
-            qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
-            props:QueryFormProperties
-    ) {
+    constructor({
+            dispatcher,
+            pageModel,
+            quickSubcorpActive,
+            queryContextModel,
+            qsPlugin,
+            props
+    }:FirstQueryFormModelArgs) {
         const corpora = props.corpora;
         const queries = importUserQueries(
             corpora, props, props.simpleQueryDefaultAttrs, props.attrList);
@@ -334,7 +339,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         super(
             dispatcher,
             pageModel,
-            textTypesModel,
             queryContextModel,
             qsPlugin,
             attrHelper,
@@ -424,11 +428,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 alignedCorporaVisible: List.size(corpora) > 1,
                 isLocalUiLang: props.isLocalUiLang,
                 quickSubcorpVisible: false,
-                quickSubcorpActive: Dict.size(textTypesModel.UNSAFE_exportSelections(false)) > 0,
+                quickSubcorpActive,
                 concViewPosAttrs: props.concViewPosAttrs,
                 alignCommonPosAttrs: props.alignCommonPosAttrs
         });
-        this.quickSubcorpModel = quickSubcorpModel;
 
         this.addActionHandler(
             Actions.QueryInputSelectSubcorp,
@@ -492,13 +495,34 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 this.changeState(state => {
                     state.isBusy = true;
                 });
-                this.suspend({}, (action, syncData) => {
-                    return action.name === Actions.QueryContextFormPrepareArgsDone.name ?
-                        null : syncData;
 
-                }).pipe(
+                this.suspendWithTimeout(
+                    2000,
+                    {ttSelections: false, contextData: false},
+                    (action, syncData) => {
+                        if (Actions.isQueryContextFormPrepareArgsDone(action)) {
+                            return syncData.ttSelections ? null : {...syncData, contextData: true};
+
+                        } else if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                            return syncData.contextData ? null : {...syncData, ttSelections: true};
+                        }
+                        return syncData;
+                    }
+                ).pipe(
+                    reduce(
+                        (acc, curr) => {
+                            if (Actions.isQueryContextFormPrepareArgsDone(curr)) {
+                                return {...acc, contextData: curr.payload.data};
+
+                            } else if (TTActions.isTextTypesQuerySubmitReady(curr)) {
+                                return {...acc, ttSelections: curr.payload.selections};
+                            }
+                            return acc;
+                        },
+                        {ttSelections: undefined, contextData: undefined}
+                    ),
                     concatMap(
-                        (wAction) => {
+                        ({ttSelections, contextData}) => {
                             let err:Error;
                             err = this.testPrimaryQueryNonEmpty();
                             if (err !== null) {
@@ -508,10 +532,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             if (err !== null) {
                                 throw err;
                             }
-                            return this.submitQuery(
-                                (wAction as typeof Actions.QueryContextFormPrepareArgsDone).payload.data,
-                                true
-                            );
+                            return this.submitQuery(contextData, true, ttSelections);
                         }
                     )
 
@@ -903,6 +924,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     createSubmitArgs(
         contextFormArgs:QueryContextArgs,
         async:boolean,
+        ttSelection:TextTypes.ExportedSelection,
         noQueryHistory:boolean
     ):ConcQueryArgs {
 
@@ -921,7 +943,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             fromp: currArgs.fromp || 0,
             shuffle: this.state.shuffleConcByDefault && !this.state.shuffleForbidden ? 1 : 0,
             queries: [],
-            text_types: this.disableRestrictSearch(this.state) ? {} : this.textTypesModel.UNSAFE_exportSelections(false),
+            text_types: this.disableRestrictSearch(this.state) ? {} : ttSelection,
             context: contextFormArgs,
             async,
             no_query_history: noQueryHistory
@@ -956,6 +978,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
     submitQuery(
         contextFormArgs:QueryContextArgs,
         async:boolean,
+        ttSelection:TextTypes.ExportedSelection,
         noQueryHistory?:boolean
     ):Observable<[ConcQueryResponse|null, Array<[Kontext.UserMessageTypes, string]>]> {
 
@@ -965,7 +988,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 'query_submit',
                 {format: 'json'}
             ),
-            this.createSubmitArgs(contextFormArgs, async, noQueryHistory),
+            this.createSubmitArgs(contextFormArgs, async, ttSelection, noQueryHistory),
             {
                 contentType: 'application/json'
             }

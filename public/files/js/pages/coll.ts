@@ -35,7 +35,7 @@ import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
-import { List, pipe, URL } from 'cnc-tskit';
+import { List, pipe, tuple, URL } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
 import { CollResultData, CollResultHeading } from '../models/coll/common';
 import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoDimension/common';
@@ -124,7 +124,8 @@ export class CollPage {
         );
 
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
-        const tt = this.initAdhocSubcDetector();
+        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+        const [tt, ttSelections] = this.initTextTypesModel(ttData);
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
             structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
@@ -134,8 +135,13 @@ export class CollPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: tt.usesAdHocSubcorpus(),
-            selectedTextTypes: tt.UNSAFE_exportSelections(false)
+            usesAdHocSubcorpus:  TextTypesModel.findHasSelectedItems(ttSelections),
+            selectedTextTypes: TextTypesModel.exportSelections(
+                ttSelections,
+                ttData.id_attr,
+                ttData.bib_attr,
+                false
+            )
         };
 
 
@@ -309,12 +315,11 @@ export class CollPage {
         });
     }
 
-    initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
+    initTextTypesModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
         const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -325,7 +330,7 @@ export class CollPage {
             bibLabelAttr: ttData.bib_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
-        return ttModel;
+        return tuple(ttModel, attributes);
     }
 
     private setupBackButtonListening():void {

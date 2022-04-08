@@ -101,7 +101,11 @@ class FreqPage {
         this.layoutModel = layoutModel;
     }
 
-    private initAnalysisViews(adhocSubcDetector:TextTypes.IAdHocSubcorpusDetector):void {
+    private initAnalysisViews(
+        ttSelection:Array<TextTypes.AnyTTSelection>,
+        bibIdAttr:string,
+        bibLabelAttr:string
+    ):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
 
         // -------------------- freq form -------------------
@@ -145,8 +149,8 @@ class FreqPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: adhocSubcDetector.usesAdHocSubcorpus(),
-            selectedTextTypes: adhocSubcDetector.UNSAFE_exportSelections(false)
+            usesAdHocSubcorpus: TextTypesModel.findHasSelectedItems(ttSelection),
+            selectedTextTypes: TextTypesModel.exportSelections(ttSelection, bibIdAttr, bibLabelAttr, false)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
@@ -450,12 +454,11 @@ class FreqPage {
         );
     }
 
-    initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
+    initTTModel(ttData:TTInitialData):[TextTypesModel, Array<TextTypes.AnyTTSelection>] {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
         const attributes = importInitialTTData(ttData, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
@@ -466,7 +469,7 @@ class FreqPage {
             bibLabelAttr: ttData.bib_attr
         });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
-        return ttModel;
+        return tuple(ttModel, attributes);
     }
 
     private setupBackButtonListening():void {
@@ -571,8 +574,9 @@ class FreqPage {
                     }
                 }
             );
-            const adhocSubcIdentifier = this.initAdhocSubcDetector();
-            this.initAnalysisViews(adhocSubcIdentifier);
+            const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+            const [,ttSelection] = this.initTTModel(ttData);
+            this.initAnalysisViews(ttSelection, ttData.id_attr, ttData.bib_attr);
             this.initQueryOpNavigation();
             this.initHelp();
             this.initFreqResult();

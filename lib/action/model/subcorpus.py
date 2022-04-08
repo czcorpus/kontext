@@ -172,10 +172,11 @@ class SubcorpusActionModel(CorpusActionModel):
         if result is not False:
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
-                    await sr.store_query(user_id=self.session_get('user', 'id'),
-                                         corpname=self.args.corpname,
-                                         subcname=data.subcname,
-                                         cql=full_cql.strip().split('[]', 1)[-1])
+                    await sr.store_query(
+                        user_id=self.session_get('user', 'id'),
+                        corpname=self.args.corpname,
+                        subcname=data.subcname,
+                        cql=full_cql.strip().split('[]', 1)[-1])
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self._resp.add_system_message(

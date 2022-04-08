@@ -25,6 +25,16 @@ import { SelectionFilterMap } from './common';
 
 export class Actions {
 
+    static TextTypesQuerySubmitReady:Action<{
+        selections:TextTypes.ExportedSelection;
+    }> = {
+        name: 'TT_TEXT_TYPES_QUERY_SUBMIT_READY'
+    }
+
+    static isTextTypesQuerySubmitReady(a:Action):a is typeof Actions.TextTypesQuerySubmitReady {
+        return a.name === Actions.TextTypesQuerySubmitReady.name;
+    }
+
     static SetWaitingForValueDomainsSizes:Action<{
 
     }> = {

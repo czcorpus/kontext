@@ -291,6 +291,15 @@ function pnfilterInclKwicConv(v:FilterTypes, inclKwic:boolean):FilterTypes {
     } as {[key:string]:FilterTypes})[`${v}${inclKwic ? '+' : '-'}k`];
 }
 
+interface FilterFormModelArgs {
+    dispatcher:IFullActionControl;
+    pageModel:PageModel;
+    queryContextModel:QueryContextModel;
+    qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    props:FilterFormProperties;
+    syncInitialArgs:formArgs.FilterFormArgs;
+}
+
 /**
  * FilterFormModel handles all the filtsters applied within a query "pipeline".
  * Each filter is identified by its database ID (i.e. a key used by conc_persistence
@@ -299,14 +308,14 @@ function pnfilterInclKwicConv(v:FilterTypes, inclKwic:boolean):FilterTypes {
  */
 export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
 
-    constructor(
-            dispatcher:IFullActionControl,
-            pageModel:PageModel,
-            textTypesModel:TextTypesModel,
-            queryContextModel:QueryContextModel,
-            qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
-            props:FilterFormProperties,
-            syncInitialArgs:formArgs.FilterFormArgs) {
+    constructor({
+            dispatcher,
+            pageModel,
+            queryContextModel,
+            qsPlugin,
+            props,
+            syncInitialArgs
+    }:FilterFormModelArgs) {
         const queries:{[sourceId:string]:AnyQuery} = {
             ...importFormValues(props)
         };
@@ -319,7 +328,6 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
         super(
             dispatcher,
             pageModel,
-            textTypesModel,
             queryContextModel,
             qsPlugin,
             attrHelper,

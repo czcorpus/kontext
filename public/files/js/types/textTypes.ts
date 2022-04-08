@@ -125,18 +125,6 @@ export type AnyTTSelection = TextInputAttributeSelection|FullAttributeSelection|
 
 export type ExportedSelection = {[sca:string]:Array<string>|string};
 
-/**
- *
- */
-export interface IAdHocSubcorpusDetector {
-    usesAdHocSubcorpus():boolean;
-    UNSAFE_exportSelections(lockedOnesOnly:boolean):ExportedSelection;
-}
-
-export interface ITextTypesModel<T> extends IModel<T> {
-    UNSAFE_exportSelections(lockedOnesOnly:boolean):ExportedSelection;
-    getInitialAvailableValues():Array<AnyTTSelection>;
-}
 
 /**
  * An additional information containing information

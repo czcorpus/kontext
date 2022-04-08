@@ -24,10 +24,12 @@ import { PageModel } from '../../app/page';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { InputMode, BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
 import { ITranslator, IFullActionControl } from 'kombo';
-import { List } from 'cnc-tskit';
+import { Dict, List } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
+import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
+import { concatMap, map } from 'rxjs';
 
 /**
  * Validates form fields and stored possible errors there. In case of errors
@@ -106,67 +108,112 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             }
         );
 
-        this.addActionHandler<typeof Actions.FormSetInputMode>(
-            Actions.FormSetInputMode.name,
+        this.addActionHandler(
+            Actions.FormSetInputMode,
             action => this.changeState(state => {state.inputMode = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.FormSetSubcAsPublic>(
-            Actions.FormSetSubcAsPublic.name,
+        this.addActionHandler(
+            Actions.FormSetSubcAsPublic,
             action => this.changeState(state => {state.isPublic = action.payload.value})
         );
 
-        this.addActionHandler<typeof Actions.FormSetDescription>(
-            Actions.FormSetDescription.name,
+        this.addActionHandler(
+            Actions.FormSetDescription,
             action => this.changeState(state => {
                 state.description = Kontext.updateFormValue(
                     this.state.description, {value: action.payload.value})
             })
         );
 
-        this.addActionHandler<typeof Actions.FormSubmit>(
-            Actions.FormSubmit.name,
+        this.addActionHandler(
+            Actions.FormWithinSubmit,
             action => {
                 if (this.state.inputMode === 'gui') {
-                    this.changeState(state => { state.isBusy = true });
-                    this.submit(this.getSubmitArgs(), (args) => this.validateForm(true)).subscribe({
-                        next: () => {
-                            this.changeState(state => {
-                                state.isBusy = false
-                            });
-                            window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/list');
-                        },
-                        error: (err) => {
-                            this.changeState(state => { state.isBusy = false });
-                            this.pageModel.showMessage('error', err);
-                        }
-                    });
+                    this.pageModel.showMessage('error', 'Invalid input mode');
+                    return;
+                }
+                this.validateForm({}, false);
+                if (this.state.otherValidationError) {
+                    this.pageModel.showMessage('error', this.state.otherValidationError);
 
-                } else if (this.state.inputMode === 'within') {
-                    this.validateForm(false);
-                    if (this.state.otherValidationError) {
-                        this.pageModel.showMessage('error', this.state.otherValidationError);
-                    }
+                } else {
+                    this.dispatchSideEffect({
+                        ...Actions.FormWithinSubmitArgsReady,
+                        payload: {
+                            corpname: this.state.corpname,
+                            subcname: this.state.subcname,
+                            publish:  this.state.isPublic,
+                            description: this.state.description.value,
+                        }
+                    })
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.FormSetSubcName>(
-            Actions.FormSetSubcName.name,
+        this.addActionHandler(
+            Actions.FormSubmit,
+            action => {
+                if (this.state.inputMode === 'within') {
+                    this.pageModel.showMessage('error', 'Invalid input mode');
+                }
+                this.changeState(state => { state.isBusy = true });
+
+                this.suspendWithTimeout(
+                    5000,
+                    {},
+                    (action, syncData) => {
+                        if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+                ).pipe(
+                    map(
+                        action => {
+                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                                return action.payload.selections;
+                            }
+                            return undefined;
+                        }
+                    ),
+                    concatMap(
+                        (ttData) => this.submit(
+                            this.getSubmitArgs(ttData),
+                            (args) => this.validateForm(ttData, true))
+                    )
+
+                ).subscribe({
+                    next: () => {
+                        this.changeState(state => {
+                            state.isBusy = false
+                        });
+                        window.location.href = this.pageModel.createActionUrl(
+                            'subcorpus/list');
+                    },
+                    error: (err) => {
+                        this.changeState(state => { state.isBusy = false });
+                        this.pageModel.showMessage('error', err);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.FormSetSubcName,
             (action) => {
                 this.changeState(state => {state.subcname.value = action.payload.value});
             }
         );
 
-        this.addActionHandler<typeof Actions.FormSetAlignedCorpora>(
-            Actions.FormSetAlignedCorpora.name,
+        this.addActionHandler(
+            Actions.FormSetAlignedCorpora,
             action => this.changeState(state => {
                 state.alignedCorpora = action.payload.alignedCorpora
             })
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
+        this.addActionHandler(
             GlobalActions.SwitchCorpus.name,
             action => {
                 this.dispatchSideEffect<typeof GlobalActions.SwitchCorpusReady>({
@@ -184,61 +231,30 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         return 'subcorp-form-model';
     }
 
-    private getSubmitArgs():CreateSubcorpusArgs {
+    private getSubmitArgs(ttSelection:TextTypes.ExportedSelection):CreateSubcorpusArgs {
         return {
             corpname: this.state.corpname,
             subcname: this.state.subcname.value,
             publish: this.state.isPublic,
             description: this.state.description.value,
             aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
-            text_types: this.textTypesModel.UNSAFE_exportSelections(false),
+            text_types: ttSelection,
             form_type: 'tt-sel'
         };
     }
 
-    validateForm(mustHaveTTSelection:boolean):Error|null {
+    validateForm(ttData:TextTypes.ExportedSelection, mustHaveTTSelection:boolean):Error|null {
         let err:Error|null;
         this.changeState(state => {
             state.otherValidationError = null;
             err = validateSubcProps(
                 state,
                 mustHaveTTSelection,
-                this.textTypesModel.hasSelectedItems(),
+                !Dict.empty(ttData),
                 this.pageModel
             );
         });
         return err;
     }
 
-    getCorpname():string {
-        return this.state.corpname;
-    }
-
-    getSubcname():Kontext.FormValue<string> {
-        return this.state.subcname;
-    }
-
-    getInputMode():string {
-        return this.state.inputMode;
-    }
-
-    getIsPublic():boolean {
-        return this.state.isPublic;
-    }
-
-    getDescription():Kontext.FormValue<string> {
-        return this.state.description;
-    }
-
-    getIsBusy():boolean {
-        return this.state.isBusy;
-    }
-
-    getAlignedCorpora():Array<TextTypes.AlignedLanguageItem> {
-        return this.state.alignedCorpora;
-    }
-
-    getTTSelections():TextTypes.ExportedSelection {
-        return this.textTypesModel.UNSAFE_exportSelections(false);
-    }
 }

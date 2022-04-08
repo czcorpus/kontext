@@ -88,6 +88,7 @@ import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcSummaryModel } from '../models/concordance/summary';
 import * as formArgs from '../models/query/formArgs';
 import { DispersionResultModel } from '../models/dispersion/result';
+import { AnyTTSelection } from '../types/textTypes';
 
 
 export class QueryModels {
@@ -328,7 +329,10 @@ export class ViewPage {
     /**
      *
      */
-    private initQueryForm(queryFormArgs:formArgs.QueryFormArgsResponse):void {
+    private initQueryForm(
+        queryFormArgs:formArgs.QueryFormArgsResponse,
+        ttSelections:Array<AnyTTSelection>
+    ):void {
         this.queryModels.queryHintModel = new UsageTipsModel(
             this.layoutModel.dispatcher,
             this.layoutModel.translate.bind(this.layoutModel)
@@ -417,15 +421,14 @@ export class ViewPage {
             alignCommonPosAttrs: this.layoutModel.getConf<Array<string>>('AlignCommonPosAttrs')
         };
 
-        this.queryModels.queryModel = new FirstQueryFormModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.queryModels.textTypesModel,
-            undefined,
-            this.queryModels.queryContextModel,
-            this.layoutModel.qsuggPlugin,
-            queryFormProps
-        );
+        this.queryModels.queryModel = new FirstQueryFormModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            quickSubcorpActive: TextTypesModel.findHasSelectedItems(ttSelections),
+            queryContextModel: this.queryModels.queryContextModel,
+            qsPlugin: this.layoutModel.qsuggPlugin,
+            props: queryFormProps
+        });
 
         this.queryFormViews = queryFormInit({
             dispatcher: this.layoutModel.dispatcher,
@@ -503,16 +506,14 @@ export class ViewPage {
             }
         };
 
-        this.queryModels.filterModel = new FilterFormModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.queryModels.textTypesModel,
-            this.queryModels.queryContextModel,
-            querySuggest,
-            filterFormProps,
-            this.concFormsInitialArgs.filter
-        );
-
+        this.queryModels.filterModel = new FilterFormModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            queryContextModel: this.queryModels.queryContextModel,
+            qsPlugin:  querySuggest,
+            props: filterFormProps,
+            syncInitialArgs: this.concFormsInitialArgs.filter
+        });
 
         this.filterFormViews = filterFormInit({
             dispatcher: this.layoutModel.dispatcher,
@@ -754,7 +755,11 @@ export class ViewPage {
         );
     }
 
-    initAnalysisViews(ttModel:TextTypesModel):void {
+    initAnalysisViews(
+        ttSelections:Array<AnyTTSelection>,
+        bibIdAttr:string,
+        bibLabelAttr:string
+    ):void {
         const attrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         // ------------------ coll ------------
         const collFormInputs = this.layoutModel.getConf<CollFormInputs>('CollFormProps');
@@ -817,8 +822,13 @@ export class ViewPage {
             ctfcrit2: ctFormInputs.ctfcrit2,
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
-            usesAdHocSubcorpus: ttModel.usesAdHocSubcorpus(),
-            selectedTextTypes: ttModel.UNSAFE_exportSelections(false)
+            usesAdHocSubcorpus: TextTypesModel.findHasSelectedItems(ttSelections),
+            selectedTextTypes: TextTypesModel.exportSelections(
+                ttSelections,
+                bibIdAttr,
+                bibLabelAttr,
+                false
+            )
         };
 
         this.ctFreqFormModel = new Freq2DFormModel(
@@ -863,14 +873,13 @@ export class ViewPage {
         );
     }
 
-    private initTextTypesModel():TextTypesModel {
+    private initTextTypesModel(ttData:TTInitialData):[TextTypesModel, Array<AnyTTSelection>] {
         const concFormArgs = this.layoutModel.getConf<{[ident:string]:formArgs.ConcFormArgs}>(
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
         const attributes = importInitialTTData(ttData, {});
-        this.queryModels.textTypesModel = new TextTypesModel({
+        const textTypesModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),
             attributes,
@@ -882,8 +891,8 @@ export class ViewPage {
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still
         // applied thanks to this).
-        this.queryModels.textTypesModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
-        return this.queryModels.textTypesModel;
+        textTypesModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return tuple(textTypesModel, attributes);
     }
 
     private initTokenConnect():PluginInterfaces.TokenConnect.IPlugin {
@@ -1080,7 +1089,9 @@ export class ViewPage {
             ];
 
         this.layoutModel.init(true, disabledMenuItems, () => {
-            const ttModel = this.initTextTypesModel();
+            const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+            const [ttModel, ttInitialData] = this.initTextTypesModel(ttData);
+            this.queryModels.textTypesModel = ttModel;
             let syntaxViewerModel:PluginInterfaces.SyntaxViewer.IPlugin =
                 syntaxViewerInit(this.layoutModel.pluginApi());
             if (!this.layoutModel.isNotEmptyPlugin(syntaxViewerModel)) {
@@ -1113,14 +1124,14 @@ export class ViewPage {
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             this.setupHistoryOnPopState();
-            this.initQueryForm(queryFormArgs);
+            this.initQueryForm(queryFormArgs, ttInitialData);
             this.initFirsthitsForm();
             this.initFilterForm(this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);
             this.initQueryOverviewArea(tagHelperPlg);
-            this.initAnalysisViews(ttModel);
+            this.initAnalysisViews(ttInitialData, ttData.id_attr, ttData.bib_attr);
             this.layoutModel.initKeyShortcuts();
             this.updateHistory();
             if (this.layoutModel.getConf<boolean>('Unfinished')) {

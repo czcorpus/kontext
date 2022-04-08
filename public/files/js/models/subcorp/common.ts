@@ -26,13 +26,16 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { TextTypesModel } from '../textTypes/main';
 
+
 export type InputMode = 'gui'|'within';
+
 
 export interface BaseSubcorpFormState {
     subcname:Kontext.FormValue<string>;
     description:Kontext.FormValue<string>;
     otherValidationError:Error|null;
 }
+
 
 interface SubmitBase {
     corpname:string;
@@ -41,11 +44,13 @@ interface SubmitBase {
     description:string;
 }
 
+
 export interface CreateSubcorpusArgs extends SubmitBase {
     text_types:TextTypes.ExportedSelection;
     aligned_corpora:Array<string>;
     form_type:'tt-sel';
 }
+
 
 export interface CreateSubcorpusWithinArgs extends SubmitBase {
     within:Array<{
@@ -55,6 +60,7 @@ export interface CreateSubcorpusWithinArgs extends SubmitBase {
     }>;
     form_type:'within';
 }
+
 
 export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
     cql:string;
@@ -77,6 +83,7 @@ export interface ServerSubcorpListItem {
     description:string;
 }
 
+
 export interface SubcorpList extends Kontext.AjaxResponse {
     SubcorpList:Array<any>; // TODO - do we need this?
     subcorp_list:Array<ServerSubcorpListItem>;
@@ -86,9 +93,24 @@ export interface SubcorpList extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
 }
 
+
 export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
 }
+
+
+/**
+ * Arguments common for both "gui" and "within" modes.
+ * This is mainly used by "within" model to obtain common
+ * args handled by SubcorpForm model.
+ */
+export interface FormWithinSubmitCommonArgs {
+    corpname:string;
+    subcname:string;
+    publish:boolean;
+    description:string;
+}
+
 
 export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
 

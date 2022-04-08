@@ -20,14 +20,15 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { CreateSubcorpusWithinArgs, InputMode } from './common';
+import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode } from './common';
 import { SubcorpFormModel } from './form';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { throwError } from 'rxjs';
-import { List, pipe, HTTP, tuple, Dict } from 'cnc-tskit';
+import { concatMap, throwError } from 'rxjs';
+import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
+import { Action } from 'rxjs/internal/scheduler/Action';
 
 /**
  *
@@ -107,15 +108,15 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         this.pageModel = pageModel;
         this.subcFormModel = subcFormModel;
 
-        this.addActionHandler<typeof Actions.FormSetInputMode>(
-            Actions.FormSetInputMode.name,
+        this.addActionHandler(
+            Actions.FormSetInputMode,
             (state, action) => {
                 state.inputMode = action.payload.value;
             }
         );
 
-        this.addActionHandler<typeof Actions.FormWithinLineAdded>(
-            Actions.FormWithinLineAdded.name,
+        this.addActionHandler(
+            Actions.FormWithinLineAdded,
             (state, action) => {
                 this.addLine(
                     state,
@@ -126,84 +127,101 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             }
         );
 
-        this.addActionHandler<typeof Actions.FormWithinLineSetType>(
-            Actions.FormWithinLineSetType.name,
+        this.addActionHandler(
+            Actions.FormWithinLineSetType,
             (state, action) => {
                 this.updateWithinType(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<typeof Actions.FormWithinLineSetStruct>(
-            Actions.FormWithinLineSetStruct.name,
+        this.addActionHandler(
+            Actions.FormWithinLineSetStruct,
             (state, action) => {
                 this.updateStruct(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<typeof Actions.FormWithinLineSetCQL>(
-            Actions.FormWithinLineSetCQL.name,
+        this.addActionHandler(
+            Actions.FormWithinLineSetCQL,
             (state, action) => {
                 this.updateCql(state, action.payload.rowIdx, action.payload.value);
             }
         );
 
-        this.addActionHandler<typeof Actions.FormWithinLineRemoved>(
-            Actions.FormWithinLineRemoved.name,
+        this.addActionHandler(
+            Actions.FormWithinLineRemoved,
             (state, action) => {
                 this.removeLine(state, action.payload.rowIdx);
             }
         );
 
-        this.addActionHandler<typeof Actions.FormShowRawWithinHint>(
-            Actions.FormShowRawWithinHint.name,
+        this.addActionHandler(
+            Actions.FormShowRawWithinHint,
             (state, action) => {
                 state.helpHintVisible = true;
             }
         );
 
-        this.addActionHandler<typeof Actions.FormHideRawWithinHint>(
-            Actions.FormHideRawWithinHint.name,
+        this.addActionHandler(
+            Actions.FormHideRawWithinHint,
             (state, action) => {
                 state.helpHintVisible = false;
             }
         );
 
-        this.addActionHandler<typeof Actions.FormSubmit>(
-            Actions.FormSubmit.name,
+        this.addActionHandler(
+            Actions.FormWithinSubmit,
             null,
             (state, action, dispatch) => {
-                if (state.inputMode === 'within') {
-                    const args = this.getSubmitArgs(state);
-                    const err = this.validateForm(state);
-                    (err === null ?
-                        this.pageModel.ajax$<any>(
-                            HTTP.Method.POST,
-                            this.pageModel.createActionUrl(
-                                '/subcorpus/create',
-                                {format: 'json'}
-                            ),
-                            args,
-                            {
-                                contentType: 'application/json'
-                            }
-                        ) :
-                        throwError(err)
-
-                    ).subscribe({
-                        next: () => {
-                            window.location.href = this.pageModel.createActionUrl(
-                                'subcorpus/list');
-                        },
-                        error: error => {
-                            this.pageModel.showMessage('error', error);
-                        }
-                    });
+                if (state.inputMode !== 'within') {
+                    return;
                 }
+                this.suspendWithTimeout(
+                    5,
+                    {},
+                    (action, syncData) => {
+                        if (Actions.isFormWithinSubmitArgsReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+
+                ).pipe(
+                    concatMap(
+                        action => {
+                            if (Actions.isFormWithinSubmitArgsReady(action)) {
+                                const args = this.getSubmitArgs(state, action.payload);
+                                const err = this.validateForm(state);
+                                return err === null ?
+                                    this.pageModel.ajax$<any>(
+                                        HTTP.Method.POST,
+                                        this.pageModel.createActionUrl(
+                                            '/subcorpus/create',
+                                            {format: 'json'}
+                                        ),
+                                        args,
+                                        {
+                                            contentType: 'application/json'
+                                        }
+                                    ) :
+                                    throwError(err)
+                            }
+                        }
+                    )
+                ).subscribe({
+                    next: () => {
+                        window.location.href = this.pageModel.createActionUrl(
+                            'subcorpus/list');
+                    },
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
+                    }
+                });
             }
         );
 
-        this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
-            GlobalActions.SwitchCorpus.name,
+        this.addActionHandler(
+            GlobalActions.SwitchCorpus,
             null,
             (state, action, dispatch) => {
                 dispatch<typeof GlobalActions.SwitchCorpusReady>({
@@ -304,12 +322,13 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         return null;
     }
 
-    private getSubmitArgs(state:SubcorpWithinFormModelState):CreateSubcorpusWithinArgs {
+    private getSubmitArgs(
+        state:SubcorpWithinFormModelState,
+        commonArgs:FormWithinSubmitCommonArgs
+    ):CreateSubcorpusWithinArgs {
+
         return {
-            corpname: this.subcFormModel.getCorpname(),
-            subcname: this.subcFormModel.getSubcname().value,
-            publish: this.subcFormModel.getIsPublic(),
-            description: this.subcFormModel.getDescription().value,
+            ...commonArgs,
             within: pipe(
                 state.lines,
                 List.filter((v)=>v != null),

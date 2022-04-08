@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
-import { InputMode } from './common';
+import { FormWithinSubmitCommonArgs, InputMode } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
@@ -139,6 +139,19 @@ export class Actions {
     }> = {
         name: 'SUBCORP_FORM_SUBMIT'
     };
+
+    static FormWithinSubmit:Action<{
+    }> = {
+        name: 'SUBCORP_FORM_WITHIN_SUBMIT'
+    };
+
+    static FormWithinSubmitArgsReady:Action<FormWithinSubmitCommonArgs> = {
+        name: 'SUBCORP_FORM_WITHIN_SUBMIT_ARGS_READY'
+    };
+
+    static isFormWithinSubmitArgsReady(a:Action):a is typeof Actions.FormWithinSubmitArgsReady {
+        return a.name === Actions.FormWithinSubmitArgsReady.name;
+    }
 
     static FormSetAlignedCorpora:Action<{
         alignedCorpora:Array<TextTypes.AlignedLanguageItem>;
