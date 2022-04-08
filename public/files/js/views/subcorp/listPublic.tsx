@@ -183,10 +183,12 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <th>{he.translate('subclist__public_code')}:</th>
                             <td>
                                 <a href={he.createActionLink(
-                                    'query', [
-                                        tuple('corpname', this.props.item.corpname),
-                                        tuple('usesubcorp', this.props.item.ident)])
-                                } title={he.translate('pubsubclist__use_in_query')}>
+                                    'query',
+                                    {
+                                        corpname: this.props.item.corpname,
+                                        usesubcorp: this.props.item.ident
+                                    }
+                                )} title={he.translate('pubsubclist__use_in_query')}>
                                     {this.props.item.ident}
                                 </a>
                             </td>
