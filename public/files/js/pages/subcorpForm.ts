@@ -37,6 +37,9 @@ import corplistComponent from 'plugins/corparch/init';
 import liveAttributes from 'plugins/liveAttributes/init';
 import subcMixer from 'plugins/subcmixer/init';
 import { Actions as GlobalActions } from '../models/common/actions';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
+import { ConcFormArgs } from '../models/query/formArgs';
+import { fetchQueryFormArgs } from '../models/query/first';
 
 
 interface TTProps {
@@ -94,14 +97,23 @@ export class SubcorpForm {
     }
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
-        const textTypesData = this.layoutModel.getConf<any>('textTypesData');
-        this.textTypesModel = new TextTypesModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel.pluginApi(),
-                textTypesData,
-                false,
-                selectedTextTypes
+        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+        const attributes = importInitialTTData(ttData, {});
+        this.textTypesModel = new TextTypesModel({
+                dispatcher: this.layoutModel.dispatcher,
+                pluginApi: this.layoutModel.pluginApi(),
+                attributes,
+                readonlyMode: false,
+                bibIdAttr: ttData.id_attr,
+                bibLabelAttr: ttData.bib_attr
+        });
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
+            'ConcFormsArgs'
         );
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        this.textTypesModel.applyCheckedItems(selectedTextTypes, queryFormArgs.bib_mapping);
+
+
         const ttViewComponents = ttViewsInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
@@ -113,7 +125,7 @@ export class SubcorpForm {
             this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             true, // manual aligned corp. selection mode
             {
-                bibAttr: textTypesData['bib_attr'],
+                bibAttr: ttData.bib_attr,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
                 ),

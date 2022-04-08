@@ -56,6 +56,7 @@ import { ImageConversionModel } from '../models/common/imgConv';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { FreqResultsSaveModel } from '../models/freqs/regular/save';
 import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 
 /**
  *
@@ -454,12 +455,16 @@ class FreqPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const ttModel = new TextTypesModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<any>('textTypesData'),
-            true
-        );
+        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+        const attributes = importInitialTTData(ttData, {});
+        const ttModel = new TextTypesModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pluginApi: this.layoutModel.pluginApi(),
+            attributes,
+            readonlyMode: true,
+            bibIdAttr: ttData.id_attr,
+            bibLabelAttr: ttData.bib_attr
+        });
         ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
         return ttModel;
     }

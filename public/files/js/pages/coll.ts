@@ -42,6 +42,9 @@ import { CTFormInputs, CTFormProperties, AlignTypes } from '../models/freqs/twoD
 import { Actions as MainMenuActions } from '../models/mainMenu/actions';
 import { Actions } from '../models/coll/actions';
 import { DispersionResultModel } from '../models/dispersion/result';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
+import { ConcFormArgs } from '../models/query/formArgs';
+import { fetchQueryFormArgs } from '../models/query/first';
 
 
 /**
@@ -307,12 +310,22 @@ export class CollPage {
     }
 
     initAdhocSubcDetector():TextTypes.IAdHocSubcorpusDetector {
-        return  new TextTypesModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<any>('textTypesData'),
-            true
+        const concFormArgs = this.layoutModel.getConf<{[ident:string]:ConcFormArgs}>(
+            'ConcFormsArgs'
         );
+        const queryFormArgs = fetchQueryFormArgs(concFormArgs);
+        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+        const attributes = importInitialTTData(ttData, {});
+        const ttModel = new TextTypesModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pluginApi: this.layoutModel.pluginApi(),
+            attributes,
+            readonlyMode: true,
+            bibIdAttr: ttData.id_attr,
+            bibLabelAttr: ttData.bib_attr
+        });
+        ttModel.applyCheckedItems(queryFormArgs.selected_text_types, {});
+        return ttModel;
     }
 
     private setupBackButtonListening():void {

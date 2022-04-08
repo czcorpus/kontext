@@ -81,7 +81,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import syntaxViewerInit from 'plugins/syntaxViewer/init';
 import tokenConnectInit from 'plugins/tokenConnect/init';
 import kwicConnectInit from 'plugins/kwicConnect/init';
-import { TTInitialData } from '../models/textTypes/common';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { QueryType } from '../models/query/query';
 import { HitReloader } from '../models/concordance/concStatus';
 import { QueryHelpModel } from '../models/help/queryHelp';
@@ -868,12 +868,16 @@ export class ViewPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        this.queryModels.textTypesModel = new TextTypesModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel.pluginApi(),
-            this.layoutModel.getConf<TTInitialData>('textTypesData'),
-            true
-        );
+        const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+        const attributes = importInitialTTData(ttData, {});
+        this.queryModels.textTypesModel = new TextTypesModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pluginApi: this.layoutModel.pluginApi(),
+            attributes,
+            readonlyMode: true,
+            bibIdAttr: ttData.id_attr,
+            bibLabelAttr: ttData.bib_attr
+        });
 
         // we restore checked text types but with no bib-mapping; hidden IDs are enough here as
         // the pop-up query form does not display text-types form (yet the values are still

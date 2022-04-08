@@ -27,8 +27,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
-    WidgetView } from './common';
+import { SelectionFilterMap, IntervalChar, WidgetView } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
@@ -103,6 +102,15 @@ interface TextTypesModelStatePreserve {
 }
 
 
+export interface TextTypesModelArgs {
+    dispatcher:IFullActionControl;
+    pluginApi:IPluginApi;
+    attributes:Array<TextTypes.AnyTTSelection>;
+    readonlyMode:boolean;
+    bibLabelAttr:string;
+    bibIdAttr:string;
+}
+
 
 /**
  * Provides essential general operations on available text types
@@ -125,20 +133,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
 
 
-    constructor(
-        dispatcher:IFullActionControl,
-        pluginApi:IPluginApi,
-        data:TTInitialData,
-        readonlyMode:boolean,
-        selectedItems?:TextTypes.ExportedSelection
-    ) {
-        const attributes = importInitialData(data, selectedItems || {});
+    constructor({
+        dispatcher,
+        pluginApi,
+        attributes,
+        readonlyMode,
+        bibLabelAttr,
+        bibIdAttr
+    }:TextTypesModelArgs) {
         super(
             dispatcher,
             {
                 attributes,
-                bibLabelAttr: data.bib_attr,
-                bibIdAttr: data.id_attr,
+                bibLabelAttr,
+                bibIdAttr,
                 selectionHistory: [List.map(
                     x => TTSelOps.mapValues(x, x => x),
                     attributes

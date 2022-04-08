@@ -43,7 +43,7 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
-import { TTInitialData } from '../models/textTypes/common';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
 
 
@@ -108,12 +108,15 @@ export class QueryPage {
 
     createTTViews(queryFormArgs:QueryFormArgs):QueryFormProps {
         const textTypesData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        this.textTypesModel = new TextTypesModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel.pluginApi(),
-                textTypesData,
-                false
-        );
+        const attributes = importInitialTTData(textTypesData, {});
+        this.textTypesModel = new TextTypesModel({
+                dispatcher: this.layoutModel.dispatcher,
+                pluginApi: this.layoutModel.pluginApi(),
+                attributes,
+                readonlyMode: false,
+                bibIdAttr: textTypesData.id_attr,
+                bibLabelAttr: textTypesData.bib_attr
+        });
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
             queryFormArgs.bib_mapping
