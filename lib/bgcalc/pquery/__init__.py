@@ -13,13 +13,14 @@
 # GNU General Public License for more details.
 
 import asyncio
-from typing import Optional, Dict, List
 from collections import defaultdict
+from typing import Dict, List, Optional
 
-from .errors import PqueryResultNotFound, PqueryArgumentError
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
 from bgcalc.pquery.storage import require_existing_pquery, stored_to_fs
+
+from .errors import PqueryArgumentError, PqueryResultNotFound
 
 """
 This module contains function for calculating Paradigmatic queries

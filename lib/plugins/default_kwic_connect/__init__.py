@@ -20,20 +20,19 @@
 Required XML configuration: please see ./config.rng
 """
 
+import logging
+from multiprocessing.pool import ThreadPool
+
+import plugins
+from action.decorators import http_action
 from action.krequest import KRequest
+from action.model.concordance import ConcActionModel
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.kwic_connect import AbstractKwicConnect
 from plugins.default_token_connect import setup_providers
-import plugins
-import logging
-from multiprocessing.pool import ThreadPool
 from sanic.blueprints import Blueprint
-
-from action.decorators import http_action
-from action.model.concordance import ConcActionModel
 from util import as_async
-
 
 bp = Blueprint('default_kwic_connect')
 

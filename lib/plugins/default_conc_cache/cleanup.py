@@ -21,17 +21,15 @@ alternative compatible modules you can modify imports 'from plugins import ...'
 to your custom values and everything should work well.
 """
 
+import collections
+import logging
 import os
 import time
-import collections
-import ujson as json
-import logging
 from typing import Dict, Tuple
 
 import aiofiles.os
-
+import ujson as json
 from plugin_types.general_storage import KeyValueStorage
-
 
 DEFAULT_TTL = 60  # in minutes
 

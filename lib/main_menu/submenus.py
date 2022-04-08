@@ -17,11 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional, List
+from typing import Callable, List, Optional
 
-from .model import (
-    AbstractMenuItem, ConcMenuItem, MainMenu, EventTriggeringItem, MenuItemInternal, HideOnCustomCondItem, OutData
-)
+from .model import (AbstractMenuItem, ConcMenuItem, EventTriggeringItem,
+                    HideOnCustomCondItem, MainMenu, MenuItemInternal, OutData)
 
 
 def _create_archive_conc_item(args):

@@ -13,21 +13,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Union, Optional, List, Dict, Any, Tuple
 import hashlib
-from action.props import ActionProps
-from action.errors import UserActionException
-from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy
-from action.krequest import KRequest
-from action.response import KResponse
-from action.cookie import KonTextCookie
-from action.plugin.ctx import AbstractBasePluginCtx
-from main_menu.model import AbstractMenuItem, MainMenuItemId
-from texttypes.cache import TextTypesCache
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import l10n
 import settings
+from action.cookie import KonTextCookie
+from action.errors import UserActionException
+from action.krequest import KRequest
+from action.plugin.ctx import AbstractBasePluginCtx
+from action.props import ActionProps
+from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
+                             create_req_arg_proxy)
+from action.response import KResponse
+from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
 from sanic_session import Session
+from texttypes.cache import TextTypesCache
 
 
 class PageConstructor:

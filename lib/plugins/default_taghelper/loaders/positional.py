@@ -16,17 +16,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import DefaultDict, Set, List, Union
-from collections import defaultdict
 import os
-import time
-import ujson as json
 import re
+import time
+from collections import defaultdict
+from typing import DefaultDict, List, Set, Union
 
-from lxml import etree
 import aiofiles
 import aiofiles.os
-
+import ujson as json
+from lxml import etree
 from plugin_types.taghelper import AbstractTagsetInfoLoader
 
 

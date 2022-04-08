@@ -17,13 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Optional, Set, Tuple, List, Dict
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pulp
-
-from util import aenumerate
 from plugins.mysql_integration_db import MySqlIntegrationDb
+from util import aenumerate
+
 from .category_tree import CategoryTree, CategoryTreeNode
 
 

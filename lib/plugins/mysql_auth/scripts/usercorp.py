@@ -12,16 +12,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
-import sys
 import argparse
+import os
 import re
-from typing import Union, Tuple
+import sys
+from typing import Tuple, Union
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../..')))
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../scripts')))
-from action.plugin import initializer
 import plugins
+from action.plugin import initializer
+
 initializer.init_plugin('integration_db')
 initializer.init_plugin('auth')
 

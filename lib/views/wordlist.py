@@ -17,22 +17,20 @@
 import logging
 from typing import List
 
-from sanic import Blueprint
-
-from action.decorators import http_action
-from action.krequest import KRequest
-from action.response import KResponse
+import plugins
+import settings
 from action.argmapping import log_mapping
 from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
+from action.decorators import http_action
+from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
+from action.response import KResponse
 from bgcalc import calc_backend_client, freq_calc
-from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 from bgcalc.errors import BgCalcError
+from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 from corplib.errors import MissingSubCorpFreqFile
-import plugins
 from main_menu import MainMenu
-import settings
-
+from sanic import Blueprint
 
 bp = Blueprint('wordlist', url_prefix='wordlist')
 

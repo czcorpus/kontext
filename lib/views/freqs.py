@@ -14,29 +14,30 @@
 # GNU General Public License for more details.
 
 
-from typing import Optional, List, Tuple
-from sanic import Blueprint
-from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
-from action.decorators import http_action
-from action.errors import UserActionException
-from action.model.concordance import ConcActionModel
-from action.model.user import UserActionModel
-from action.krequest import KRequest
-from collections import defaultdict
-from dataclasses import dataclass, field
+import logging
 import re
 import sys
-import logging
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple
 
-from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
-from conclib.freq import multi_level_crit, MLFreqArgs
-from conclib.calc import require_existing_conc
-from conclib.search import get_conc
-from action.response import KResponse
-from main_menu import MainMenu
-from bgcalc import freq_calc
-from strings import escape_attr_val
 import plugins
+from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
+                                         FreqFormArgs)
+from action.decorators import http_action
+from action.errors import UserActionException
+from action.krequest import KRequest
+from action.model.concordance import ConcActionModel
+from action.model.user import UserActionModel
+from action.response import KResponse
+from bgcalc import freq_calc
+from conclib.calc import require_existing_conc
+from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
+from conclib.freq import MLFreqArgs, multi_level_crit
+from conclib.search import get_conc
+from main_menu import MainMenu
+from sanic import Blueprint
+from strings import escape_attr_val
 
 bp = Blueprint('freqs')
 

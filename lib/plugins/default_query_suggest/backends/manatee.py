@@ -13,18 +13,19 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import logging
 from collections import defaultdict
 from typing import Callable, Tuple
-from corplib import CorpusManager
-from corplib.corpus import KCorpus
-from conclib.search import get_conc
+
+import l10n
+from bgcalc import freq_calc
 from conclib.freq import multi_level_crit
 from conclib.pyconc import PyConc
-from bgcalc import freq_calc
+from conclib.search import get_conc
+from corplib import CorpusManager
+from corplib.corpus import KCorpus
 from plugin_types.query_suggest import AbstractBackend
 from strings import re_escape
-import logging
-import l10n
 from util import as_sync
 
 

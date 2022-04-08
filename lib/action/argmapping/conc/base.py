@@ -12,7 +12,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, Optional, TypeVar, Generic
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 T = TypeVar('T')
 

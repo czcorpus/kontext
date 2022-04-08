@@ -30,10 +30,12 @@ function (doc) {
 """
 
 
-from plugin_types.query_suggest import AbstractBackend
-import couchdb
-from plugins.default_query_suggest.formats.cnc_sublemma import CncSublemmaSuggestion, SuggestionLemmaData
 from typing import Dict
+
+import couchdb
+from plugin_types.query_suggest import AbstractBackend
+from plugins.default_query_suggest.formats.cnc_sublemma import (
+    CncSublemmaSuggestion, SuggestionLemmaData)
 
 
 def norm_str(s):

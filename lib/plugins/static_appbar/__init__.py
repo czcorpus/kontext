@@ -68,12 +68,13 @@ username, firstname, lastname, email, id
 e.g.: <p>you're logged in as <strong>{username}</strong></p>
 """
 
+import logging
 import os
 import os.path
-import logging
-from plugin_types.auth import AbstractAuth
-from plugin_types.appbar import AbstractApplicationBar
+
 import plugins
+from plugin_types.appbar import AbstractApplicationBar
+from plugin_types.auth import AbstractAuth
 
 
 class StaticApplicationBar(AbstractApplicationBar):

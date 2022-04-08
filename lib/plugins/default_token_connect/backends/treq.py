@@ -16,12 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import ujson as json
 import logging
 import urllib.parse
 
-from plugins.default_token_connect.backends.cache import cached
+import ujson as json
 from plugins.default_token_connect.backends import HTTPBackend
+from plugins.default_token_connect.backends.cache import cached
 
 
 class TreqBackend(HTTPBackend):

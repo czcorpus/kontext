@@ -17,10 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Tuple, Dict, Optional, List
-from action.plugin.ctx import PluginCtx
+from typing import Dict, List, Optional, Tuple
 
 from action.krequest import KRequest
+from action.plugin.ctx import PluginCtx
 
 
 class AbstractAudioProvider(abc.ABC):

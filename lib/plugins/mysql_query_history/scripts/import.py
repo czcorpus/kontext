@@ -17,16 +17,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from collections import defaultdict
 import logging
-import sys
 import os
+import sys
+from collections import defaultdict
 
 sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.realpath(__file__))))
 
+import plugins
 import settings
 from action.plugin import initializer
-import plugins
 from plugins import sqlite3_db
 
 # imports data from KeyValueStorage query persistence plugin db

@@ -17,25 +17,29 @@
 A simple authentication module to start with.
 It relies on default_db module which requires no database backend.
 """
+import datetime
 import hashlib
-from typing import List
-import urllib.request
-import urllib.parse
-import urllib.error
 import re
 import time
-import datetime
-from action.plugin.ctx import PluginCtx
-from plugin_types.general_storage import KeyValueStorage
-import mailing
+import urllib.error
+import urllib.parse
+import urllib.request
 from collections import defaultdict
-from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo, SignUpNeedsUpdateException
-from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
-from .sign_up import SignUpToken
+from typing import List
+
+import mailing
 import plugins
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import (AbstractInternalAuth, AuthException,
+                               CorpusAccess, GetUserInfo,
+                               SignUpNeedsUpdateException)
+from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
+                                    split_pwd_hash)
+from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
 from sanic_session import Session
 
+from .sign_up import SignUpToken
 
 IMPLICIT_CORPUS = 'ud_fused_test_a'
 

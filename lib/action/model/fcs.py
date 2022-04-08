@@ -17,20 +17,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
-import math
 
 import kwiclib
-from corplib.corpus import KCorpus
-from conclib.search import get_conc
-from action.props import ActionProps
-from action.krequest import KRequest
-from action.response import KResponse
-from action.model.user import UserActionModel
-from texttypes.cache import TextTypesCache
 import plugins
 import settings
+from action.krequest import KRequest
+from action.model.user import UserActionModel
+from action.props import ActionProps
+from action.response import KResponse
+from conclib.search import get_conc
+from corplib.corpus import KCorpus
+from texttypes.cache import TextTypesCache
 
 
 @dataclass

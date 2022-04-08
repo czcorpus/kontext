@@ -22,9 +22,8 @@ from dataclasses import asdict
 
 import aiomysql
 import pymysql.cursors
-from plugins.common.mysql import MySQLOps
-
 from plugin_types.integration_db import IntegrationDatabase
+from plugins.common.mysql import MySQLOps
 
 
 class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiomysql.Cursor, pymysql.Connection, pymysql.cursors.Cursor]):

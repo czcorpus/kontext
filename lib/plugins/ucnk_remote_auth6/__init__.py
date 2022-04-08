@@ -34,24 +34,23 @@ trigger another HTTP request to get its HTML code).
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
-from typing import List, Optional, Tuple
-import urllib.parse
-import ujson as json
-import ssl
 import logging
-import aiohttp
+import ssl
+import urllib.parse
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
-from secure_cookie.session import Session
+import aiohttp
+import plugins
+import ujson as json
 from action.plugin.ctx import PluginCtx
-
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
+from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
+                               UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.integration_db import IntegrationDatabase
-import plugins
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
-
+from secure_cookie.session import Session
 
 IMPLICIT_CORPUS = 'susanne'
 

@@ -26,8 +26,8 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see config.rng
 """
 
-import ujson as json
 import aioredis
+import ujson as json
 from plugin_types.general_storage import KeyValueStorage
 
 

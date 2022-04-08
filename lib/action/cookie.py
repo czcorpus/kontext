@@ -17,8 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from urllib.parse import unquote, quote
 import http.cookies
+from urllib.parse import quote, unquote
 
 
 class KonTextCookie(http.cookies.BaseCookie):

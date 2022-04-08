@@ -13,20 +13,20 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any
-from sanic import Blueprint
 import os
+from typing import Any, Dict
+
 import aiofiles
 import aiofiles.os
+import bgcalc
+import settings
 from action.decorators import http_action
-from action.errors import FunctionNotSupported, ImmediateRedirectException, NotFoundException
+from action.errors import (FunctionNotSupported, ImmediateRedirectException,
+                           NotFoundException)
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse
-
-import settings
-import bgcalc
-
+from sanic import Blueprint
 
 bp = Blueprint('root')
 

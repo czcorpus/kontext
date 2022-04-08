@@ -54,11 +54,12 @@ An expected configuration:
 """
 
 import json
-from corplib.abstract import AbstractKCorpus
-import manatee
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from plugin_types.syntax_viewer import SearchBackend, MaximumContextExceeded, BackendDataParseException
+import manatee
+from corplib.abstract import AbstractKCorpus
+from plugin_types.syntax_viewer import (BackendDataParseException,
+                                        MaximumContextExceeded, SearchBackend)
 from util import as_async
 
 

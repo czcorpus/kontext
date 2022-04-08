@@ -63,21 +63,21 @@ PARTITION BY RANGE (UNIX_TIMESTAMP(created)) (
 
 """
 
+import logging
 import re
-import ujson as json
-from plugin_types.auth import AbstractAuth
-from plugin_types.general_storage import KeyValueStorage
-from plugins.mysql_integration_db import MySqlIntegrationDb
 
 import plugins
+import ujson as json
+from action.errors import ForbiddenException, NotFoundException
+from plugin_types.auth import AbstractAuth
+from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_persistence.common import generate_idempotent_id
 from plugins import inject
-from action.errors import ForbiddenException, NotFoundException
-import logging
-from plugins.common.mysql import MySQLOps, MySQLConf
-from .archive import get_iso_datetime, is_archived
+from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
+from .archive import get_iso_datetime, is_archived
 
 PERSIST_LEVEL_KEY = 'persist_level'
 USER_ID_KEY = 'user_id'

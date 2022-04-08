@@ -12,30 +12,30 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional, List, Union, Tuple, Dict, Any
-from dataclasses import dataclass, field, asdict
-import os
-import re
-from datetime import datetime
-import time
-import math
 import hashlib
 import logging
+import math
+import os
 import pickle
+import re
+import time
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import aiofiles
 import aiofiles.os
-import manatee
-
+import bgcalc
 import corplib
-from corplib.corpus import KCorpus
+import manatee
+import settings
+from action.errors import UserActionException
+from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
+from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
 from conclib.pyconc import PyConc
-import settings
-import bgcalc
-from bgcalc.errors import UnfinishedConcordanceError, BgCalcError
-from bgcalc.task import AsyncTaskStatus
-from action.errors import UserActionException
+from corplib.corpus import KCorpus
+
 from .errors import CalcArgsAssertionError
 
 MAX_LOG_FILE_AGE = 1800  # in seconds

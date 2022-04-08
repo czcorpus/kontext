@@ -16,9 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from typing import Any, Dict, List
 
 
 def _set_qtype_q(data, sid, value):

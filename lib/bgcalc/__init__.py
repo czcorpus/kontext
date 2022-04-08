@@ -15,7 +15,6 @@
 
 from bgcalc.adapter.factory import init_backend
 
-
 _backend_app = None
 
 

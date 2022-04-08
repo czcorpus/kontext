@@ -13,15 +13,16 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
-from sanic import Blueprint
 from typing import List
-from action.model.concordance import ConcActionModel
+
 from action.decorators import http_action
 from action.errors import ImmediateRedirectException, UserActionException
-from conclib.pyconc import PyConc
+from action.model.concordance import ConcActionModel
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
+from conclib.pyconc import PyConc
+from dataclasses_json import dataclass_json
+from sanic import Blueprint
 
 bp = Blueprint('dispersion', url_prefix='dispersion')
 

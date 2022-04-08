@@ -13,10 +13,10 @@
 
 import aiofiles
 import aiofiles.os
-from plugin_types.auth import AbstractAuth
-from plugin_types.appbar import AbstractApplicationBar
-from plugins import inject
 import plugins
+from plugin_types.appbar import AbstractApplicationBar
+from plugin_types.auth import AbstractAuth
+from plugins import inject
 
 
 class LindatTopBar(AbstractApplicationBar):

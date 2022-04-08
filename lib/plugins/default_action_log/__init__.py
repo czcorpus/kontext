@@ -12,13 +12,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import logging
-import ujson as json
 import datetime
+import logging
+from typing import Optional, Tuple, Union
+
 import settings
-from typing import Tuple, Union, Optional
+import ujson as json
+from action.errors import ImmediateRedirectException, UserActionException
 from plugin_types.action_log import AbstractActionLog
-from action.errors import UserActionException, ImmediateRedirectException
 
 
 class DefaultActionLog(AbstractActionLog):

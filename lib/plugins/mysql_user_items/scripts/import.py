@@ -17,11 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import sys
-import json
-import redis
-import mysql.connector
 import argparse
+import json
+import sys
+
+import mysql.connector
+import redis
 
 
 def import_favitems(redis_db: redis.Redis, mysql_db: mysql.connector.MySQLConnection, dry_run: bool):

@@ -24,7 +24,6 @@ import os
 
 import aiofiles
 import aiofiles.os
-
 from plugin_types.footer_bar import AbstractFootbar
 
 

@@ -13,21 +13,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from sanic.request import Request
-from sanic import HTTPResponse, Sanic
-from sanic import response
-from typing import Optional, Union, Callable, Any, Type, Coroutine, List
-from functools import wraps
-from action.templating import CustomJSONEncoder, TplEngine, ResultType
-from action.props import ActionProps
-from action.theme import apply_theme
-from action.krequest import KRequest
-from action.response import KResponse
-from dataclasses_json import DataClassJsonMixin
-from action.errors import ImmediateRedirectException, UserActionException
-from action.model.base import PageConstructor, BaseActionModel
 import json
+from functools import wraps
+from typing import Any, Callable, Coroutine, List, Optional, Type, Union
+
 import settings
+from action.errors import ImmediateRedirectException, UserActionException
+from action.krequest import KRequest
+from action.model.base import BaseActionModel, PageConstructor
+from action.props import ActionProps
+from action.response import KResponse
+from action.templating import CustomJSONEncoder, ResultType, TplEngine
+from action.theme import apply_theme
+from dataclasses_json import DataClassJsonMixin
+from sanic import HTTPResponse, Sanic, response
+from sanic.request import Request
 
 
 async def _output_result(

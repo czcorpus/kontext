@@ -29,8 +29,8 @@ Required plug-in configuration:
 please see ./config.rng
 """
 
-import os
 import logging
+import os
 
 import aiofiles
 

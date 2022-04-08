@@ -1,6 +1,7 @@
 
-from typing import Any, Dict, Callable
 from types import MethodType
+from typing import Any, Callable, Dict
+
 import werkzeug
 
 

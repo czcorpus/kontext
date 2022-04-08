@@ -13,8 +13,9 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from .common import StructAttr
 from typing import Any, Dict, List, Set, Tuple, Union
+
+from .common import StructAttr
 
 
 def is_range_argument(item) -> bool:

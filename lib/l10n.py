@@ -33,12 +33,12 @@ internationalisation of KonText:
    processed using the same module.
 """
 
-from typing import Dict, Any
-
 from functools import cmp_to_key
 from threading import local
+from typing import Any, Dict
+
 try:
-    from icu import Locale, Collator
+    from icu import Collator, Locale
 except ImportError:
     import locale
 

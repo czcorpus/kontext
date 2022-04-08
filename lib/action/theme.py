@@ -13,10 +13,11 @@
 # GNU General Public License for more details.
 
 
-from typing import Callable
 import os
-from sanic import Sanic
+from typing import Callable
+
 import settings
+from sanic import Sanic
 
 
 def apply_theme(data, app: Sanic, translate: Callable[[str], str]):

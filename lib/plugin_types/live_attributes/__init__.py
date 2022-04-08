@@ -17,15 +17,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, List, NamedTuple, Optional, Union, Any
+from dataclasses import dataclass
 from functools import wraps
 from hashlib import md5
+from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 from action.plugin.ctx import AbstractCorpusPluginCtx
-from plugin_types import CorpusDependentPlugin
 from corplib.corpus import AbstractKCorpus
-from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+from plugin_types import CorpusDependentPlugin
 from plugin_types.general_storage import KeyValueStorage
 
 

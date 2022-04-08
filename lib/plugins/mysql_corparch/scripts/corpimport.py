@@ -23,13 +23,13 @@ configured for a corpus (e.g. settings for spoken corpora, query suggestion,
 multiple tagsets per corpus etc.).
 """
 
-from typing import Callable, Optional, Tuple
-from collections import defaultdict
-import os
 import argparse
-import sys
-import logging
 import asyncio
+import logging
+import os
+import sys
+from collections import defaultdict
+from typing import Callable, Optional, Tuple
 
 import aiofiles
 import aiofiles.os
@@ -37,10 +37,10 @@ from aiofiles.threadpool.text import AsyncTextIOWrapper
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 import plugins
-from plugin_types.corparch.registry.tokenizer import Tokenizer
-from plugin_types.corparch.registry.parser import Parser, RegistryConf
 from plugin_types.corparch.install import InstallJson
-from plugins.mysql_corparch.backendw import WriteBackend, Backend
+from plugin_types.corparch.registry.parser import Parser, RegistryConf
+from plugin_types.corparch.registry.tokenizer import Tokenizer
+from plugins.mysql_corparch.backendw import Backend, WriteBackend
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
@@ -206,8 +206,8 @@ async def main():
 
     args = parser.parse_args()
     import manatee
-    from action.plugin import initializer
     import settings
+    from action.plugin import initializer
     conf_path = args.conf if args.conf else os.path.realpath(
         os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'conf', 'config.xml'))
     settings.load(conf_path, defaultdict(lambda: None))

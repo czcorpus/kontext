@@ -20,12 +20,13 @@
 Script to import ucnk_live_attributes data from sqlite to mysql
 '''
 
+import argparse
 import sqlite3
 import sys
-from typing import Optional
-import mysql.connector
-import argparse
 from collections import defaultdict
+from typing import Optional
+
+import mysql.connector
 
 
 def import_data(sqlite_db: sqlite3.Connection, mysql_db: mysql.connector.MySQLConnection, batch: int, corpus_id: Optional[str] = None):

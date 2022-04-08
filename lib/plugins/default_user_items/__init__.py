@@ -12,20 +12,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import ujson as json
 import logging
-from sanic import Blueprint
+
+import l10n
+import plugins
+import ujson as json
+from action.decorators import http_action
 from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
 from action.response import KResponse
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
-
-from plugin_types.user_items import AbstractUserItems, UserItemException, FavoriteItem
+from plugin_types.user_items import (AbstractUserItems, FavoriteItem,
+                                     UserItemException)
 from plugins import inject
-import plugins
-import l10n
-from action.decorators import http_action
-from action.model.corpus import CorpusActionModel
+from sanic import Blueprint
 
 bp = Blueprint('default_user_items')
 

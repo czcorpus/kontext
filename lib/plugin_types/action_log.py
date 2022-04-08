@@ -12,10 +12,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Callable, Any, Tuple, Optional, Dict
-from action.krequest import KRequest
 import abc
+from typing import Any, Callable, Dict, Optional, Tuple
+
 from action.argmapping import MinArgs
+from action.krequest import KRequest
 
 
 class AbstractActionLog:

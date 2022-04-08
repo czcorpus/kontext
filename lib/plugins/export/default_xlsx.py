@@ -21,10 +21,11 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 from io import BytesIO
+
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 
-from . import AbstractExport, lang_row_to_list, ExportPluginException
+from . import AbstractExport, ExportPluginException, lang_row_to_list
 
 
 class XLSXExport(AbstractExport):

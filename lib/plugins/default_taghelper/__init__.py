@@ -38,23 +38,25 @@ element taghelper {
 """
 from typing import Any, Dict
 
-from sanic.blueprints import Blueprint
-
+import plugins
+from action.decorators import http_action
 from action.errors import UserActionException
 from action.krequest import KRequest
-from action.response import KResponse
-from action.decorators import http_action
 from action.model.corpus import CorpusActionModel
+from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.taghelper import AbstractTaghelper, AbstractTagsetInfoLoader, AbstractValueSelectionFetcher
-import plugins
-from plugins.default_taghelper.loaders.positional import PositionalTagVariantLoader
-from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
-from plugins.default_taghelper.loaders import NullTagVariantLoader
-from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
-from plugins.default_taghelper.fetchers.positional import PositionalSelectionFetcher
+from plugin_types.taghelper import (AbstractTaghelper,
+                                    AbstractTagsetInfoLoader,
+                                    AbstractValueSelectionFetcher)
 from plugins.default_taghelper.fetchers import NullSelectionFetcher
-
+from plugins.default_taghelper.fetchers.keyval import KeyvalSelectionFetcher
+from plugins.default_taghelper.fetchers.positional import \
+    PositionalSelectionFetcher
+from plugins.default_taghelper.loaders import NullTagVariantLoader
+from plugins.default_taghelper.loaders.keyval import KeyvalTagVariantLoader
+from plugins.default_taghelper.loaders.positional import \
+    PositionalTagVariantLoader
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('default_taghelper')
 

@@ -11,6 +11,7 @@
 # GNU General Public License for more details.
 
 from typing import Any, Awaitable, List
+
 from corplib.abstract import AbstractKCorpus
 from manatee import Corpus
 

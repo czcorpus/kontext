@@ -44,22 +44,23 @@ An alternative to that would be using a custom CRON script.
 
 """
 
-from typing import Optional
-import os
 import logging
+import os
 import time
+from typing import Optional
 
 import aiofiles
 import aiofiles.os
 import sox
+
 try:
     import numpy as np
 except ImportError:
     np = None
 
+import settings
 from plugin_types.audio_provider import AbstractAudioProvider
 from plugins import inject
-import settings
 
 
 class TeitokAudioProvider(AbstractAudioProvider):

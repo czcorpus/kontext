@@ -18,18 +18,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.realpath('%s/../' % os.path.dirname(os.path.realpath(__file__))))
 sys.path.insert(0, os.path.realpath('%s/../../../../scripts/' %
                                     os.path.dirname(os.path.realpath(__file__))))
 
-import sqlite3
-import autoconf
 import argparse
 import datetime
+import sqlite3
+
+import autoconf
 from action.plugin import initializer
+
 initializer.init_plugin('integration_db')
 import plugins
 

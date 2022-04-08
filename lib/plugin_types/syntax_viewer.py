@@ -13,8 +13,9 @@
 # GNU General Public License for more details.
 
 import abc
-from plugin_types import CorpusDependentPlugin
+
 from corplib.corpus import KCorpus
+from plugin_types import CorpusDependentPlugin
 
 
 class AbstractSyntaxViewerPlugin(CorpusDependentPlugin):

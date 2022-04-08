@@ -19,12 +19,11 @@ This module wraps application's configuration (as specified in config.xml) and
 provides some additional helper methods.
 """
 
-from typing import Any, Dict, Optional, Union, DefaultDict
-
 import os
-from lxml import etree
-import ujson as json
+from typing import Any, DefaultDict, Dict, Optional, Union
 
+import ujson as json
+from lxml import etree
 
 TypeAliasTable = Union[Dict[str, Union[str, None]], DefaultDict[str, Union[str, None]]]
 

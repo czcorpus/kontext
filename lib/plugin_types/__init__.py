@@ -8,6 +8,7 @@ classes to keep the plug-in implementation clear and consistent.
 
 import abc
 from typing import TYPE_CHECKING, List
+
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx

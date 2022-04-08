@@ -12,11 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import hashlib
+import time
+import uuid
+
 from plugin_types.auth.sign_up import AbstractSignUpToken
 from plugin_types.general_storage import KeyValueStorage
-import hashlib
-import uuid
-import time
 
 
 class SignUpToken(AbstractSignUpToken[KeyValueStorage]):

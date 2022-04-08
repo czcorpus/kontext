@@ -16,12 +16,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
 
+from plugin_types.issue_reporting import (AbstractIssueReporting,
+                                          StaticReportingAction)
 from plugins import inject
-from plugin_types.issue_reporting import AbstractIssueReporting, StaticReportingAction
 
 
 class UcnkErrorReporting(AbstractIssueReporting):

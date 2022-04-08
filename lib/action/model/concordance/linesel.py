@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from typing import List, Any, Iterator, Dict, Union, Tuple
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 
 class LinesGroups:

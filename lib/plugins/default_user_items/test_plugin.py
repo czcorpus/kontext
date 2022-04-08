@@ -12,21 +12,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import unittest
 import json
+import unittest
 
 import plugins
-from mocks.storage import TestingKeyValueStorage
-from mocks.request import Request, Controller, PluginCtx
 from mocks import mplugins
+from mocks.request import Controller, PluginCtx, Request
+from mocks.storage import TestingKeyValueStorage
 from plugin_types.user_items import FavoriteItem
 from plugins.default_user_items import UserItems
-
 
 plugins.inject_plugin(plugins.runtime.DB, TestingKeyValueStorage({}))
 plugins.inject_plugin(plugins.runtime.AUTH, mplugins.MockAuth(0))
 plugins.inject_plugin(plugins.runtime.USER_ITEMS, mplugins.MockUserItems())
-from plugins.default_user_items import import_legacy_record, set_favorite_item, unset_favorite_item
+from plugins.default_user_items import (import_legacy_record,
+                                        set_favorite_item, unset_favorite_item)
 
 
 def create_corpus_obj(name='korpus syn 2010'):

@@ -17,12 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import argparse
 import os
 import sys
-import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-from plugin_types.corparch.registry import RegModelSerializer, RegistryConf
+from plugin_types.corparch.registry import RegistryConf, RegModelSerializer
 from plugins.mysql_corparch.backend import Backend
 
 

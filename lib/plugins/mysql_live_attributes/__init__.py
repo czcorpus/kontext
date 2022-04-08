@@ -17,37 +17,38 @@ Interactive (ad hoc) subcorpus selection.
 Required XML configuration: please see config.rng
 """
 
-from aiomysql import Cursor
-from action.krequest import KRequest
-from action.response import KResponse
-from plugins.mysql_integration_db import MySqlIntegrationDb
-from .common import AttrValueKey, StructAttr
-import re
-import ujson as json
-from itertools import chain
-from functools import partial
-from collections import defaultdict, OrderedDict
-from dataclasses import astuple
 import logging
+import re
+from collections import OrderedDict, defaultdict
+from dataclasses import astuple
+from functools import partial
+from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Union
-from corplib.corpus import KCorpus
-from sanic.blueprints import Blueprint
 
 import l10n
-from plugins import inject
 import plugins
+import strings
+import ujson as json
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
+from action.plugin.ctx import PluginCtx
+from action.response import KResponse
+from aiomysql import Cursor
+from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.corparch.corpus import CorpusInfo
 from plugin_types.general_storage import KeyValueStorage
-from plugin_types.live_attributes import (
-    CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
+from plugin_types.live_attributes import (AttrValue, AttrValuesResponse,
+                                          BibTitle, CachedLiveAttributes,
+                                          StructAttrValuePair, cached)
+from plugins import inject
 from plugins.errors import PluginCompatibilityException
-import strings
-from action.krequest import KRequest
-from action.plugin.ctx import PluginCtx
-from action.decorators import http_action
-from action.model.corpus import CorpusActionModel
+from plugins.mysql_integration_db import MySqlIntegrationDb
+from sanic.blueprints import Blueprint
+
 from . import query
+from .common import AttrValueKey, StructAttr
 
 bp = Blueprint('mysql_live_attributes')
 

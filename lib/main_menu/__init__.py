@@ -16,15 +16,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from dataclasses import fields, Field
-from typing import Tuple, Dict, Any, Optional, Callable, List, Union
+from dataclasses import Field, fields
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from action.argmapping import MinArgs
 import plugins
+from action.argmapping import MinArgs
 from action.plugin.ctx import AbstractUserPluginCtx
-from .model import OutData, MainMenu, MainMenuItemId, AbstractMenuItem
-from .submenus import (
-    NewQuery, Corpora, Save, ConcordanceDefault, ConcordancePquery, Filter, Frequency, Collocations, View, Help)
+
+from .model import AbstractMenuItem, MainMenu, MainMenuItemId, OutData
+from .submenus import (Collocations, ConcordanceDefault, ConcordancePquery,
+                       Corpora, Filter, Frequency, Help, NewQuery, Save, View)
 
 
 def generate_main_menu(

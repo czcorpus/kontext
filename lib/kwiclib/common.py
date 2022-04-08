@@ -20,7 +20,6 @@
 import re
 from typing import List, Tuple, Union
 
-
 SortCritType = List[Tuple[str, Union[str, int]]]
 
 

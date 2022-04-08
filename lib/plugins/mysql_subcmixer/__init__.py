@@ -21,29 +21,31 @@ from typing import Any, Dict, List, Tuple, Union
 import aiofiles
 from action.krequest import KRequest
 from action.response import KResponse
-
 from plugins.mysql_integration_db import MySqlIntegrationDb
+
 try:
     from typing import TypedDict
 except ImportError:
     from typing_extensions import TypedDict
-from collections import defaultdict
-import ujson as json
+
 import struct
+from collections import defaultdict
 
-from sanic.blueprints import Blueprint
-
+import corplib
 import plugins
-from plugins import inject
+import ujson as json
+from action.decorators import http_action
+from action.model.corpus import CorpusActionModel
+from action.plugin.ctx import PluginCtx
+from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subcmixer import AbstractSubcMixer, ExpressionItem
-from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
-from action.plugin.ctx import PluginCtx
-import corplib
-from corplib.corpus import KCorpus
-from action.model.corpus import CorpusActionModel
-from action.decorators import http_action
-from .category_tree import CategoryTree, CategoryExpression, TaskArgs
+from plugin_types.subcmixer.error import (ResultNotFoundException,
+                                          SubcMixerException)
+from plugins import inject
+from sanic.blueprints import Blueprint
+
+from .category_tree import CategoryExpression, CategoryTree, TaskArgs
 from .metadata_model import MetadataModel
 
 """

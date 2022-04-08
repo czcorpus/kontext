@@ -12,17 +12,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, NamedTuple, Optional, Tuple, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Tuple
+
 try:
     from typing import TypedDict
 except ImportError:
     from typing_extensions import TypedDict
+
 from secure_cookie.session import Session
+
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx
 
 import abc
+
 from action.errors import CorpusForbiddenException, ImmediateRedirectException
 
 

@@ -26,11 +26,13 @@ very secure.
 required xml conf: please see ./config.rng
 """
 import hashlib
-from action.plugin.ctx import PluginCtx
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
-import plugins
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
+import plugins
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
+                               UserInfo)
 
 
 @dataclass

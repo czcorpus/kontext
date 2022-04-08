@@ -12,14 +12,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List, Tuple
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from typing import Any, Dict, List, Tuple
 
 import plugins
-from action.plugin.ctx import AbstractCorpusPluginCtx
-from action.argmapping.error import ArgumentMappingError
 from action.argmapping.conc.base import ConcFormArgs
+from action.argmapping.error import ArgumentMappingError
+from action.plugin.ctx import AbstractCorpusPluginCtx
+from dataclasses_json import dataclass_json
 
 
 @dataclass_json

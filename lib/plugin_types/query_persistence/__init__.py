@@ -18,16 +18,18 @@
 
 import abc
 import logging
-from typing import Dict, Optional, Tuple, Any, Union, List, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union
+
 import settings
+
 if settings.get_bool('global', 'legacy_support', False):
     from legacy.concordance import upgrade_stored_record
 else:
     from legacy.concordance import nop_upgrade_stored_record as upgrade_stored_record
-from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
-from action.plugin.ctx import PluginCtx
-from action.argmapping.conc.base import ConcFormArgs
 
+from action.argmapping.conc.base import ConcFormArgs
+from action.plugin.ctx import PluginCtx
+from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
 
 ConcFormArgsFactory = Callable[
     [PluginCtx, List[str], Dict[str, Any], str],

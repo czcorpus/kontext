@@ -14,30 +14,28 @@
 # GNU General Public License for more details.
 
 
-from typing import Any, Dict
-import os
 import logging
+import os
 import time
+from typing import Any, Dict
+
 import aiofiles.os
-
-from sanic import Blueprint
-
-from action.errors import UserActionException
-from bgcalc.task import AsyncTaskStatus
-from corplib.corpus import list_public_subcorpora
+import corplib
+import l10n
+import plugins
+from action.argmapping import log_mapping
 from action.decorators import http_action
+from action.errors import UserActionException
 from action.krequest import KRequest
-from action.model.user import UserActionModel
 from action.model.corpus import CorpusActionModel
 from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
+from action.model.user import UserActionModel
 from action.response import KResponse
+from bgcalc.task import AsyncTaskStatus
+from corplib.corpus import list_public_subcorpora
 from main_menu.model import MainMenu
-import plugins
-import l10n
-import corplib
+from sanic import Blueprint
 from texttypes.model import TextTypeCollector
-from action.argmapping import log_mapping
-
 
 bp = Blueprint('subcorpus', url_prefix='subcorpus')
 

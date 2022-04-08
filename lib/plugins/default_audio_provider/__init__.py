@@ -16,13 +16,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Optional
+import logging
 import os
 import re
-import logging
+from typing import Optional
 
 import aiofiles
 import aiofiles.os
+
 try:
     import sox
 except ImportError:
@@ -32,9 +33,9 @@ try:
 except ImportError:
     np = None
 
+import settings
 from plugin_types.audio_provider import AbstractAudioProvider
 from plugins import inject
-import settings
 
 
 class DefaultAudioProvider(AbstractAudioProvider):

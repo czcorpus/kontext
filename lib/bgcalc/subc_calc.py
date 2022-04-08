@@ -10,12 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import corplib
-import conclib.search
-import os
-import aiofiles.os
-import time
 import logging
+import os
+import time
+
+import aiofiles.os
+import conclib.search
+import corplib
 
 
 class EmptySubcorpusException(Exception):

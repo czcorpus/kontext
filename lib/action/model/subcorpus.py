@@ -18,17 +18,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from typing import Any, List, Dict, Union
-
 from dataclasses import dataclass
-from action.errors import FunctionNotSupported, UserActionException
-from bgcalc.task import AsyncTaskStatus
-from action.model.corpus import CorpusActionModel
-import plugins
-import corplib
-from texttypes.model import TextTypeCollector
-import settings
+from typing import Any, Dict, List, Union
+
 import bgcalc
+import corplib
+import plugins
+import settings
+from action.errors import FunctionNotSupported, UserActionException
+from action.model.corpus import CorpusActionModel
+from bgcalc.task import AsyncTaskStatus
+from texttypes.model import TextTypeCollector
 
 
 class SubcorpusError(Exception):

@@ -18,10 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from plugins.common.http import HTTPClient
-from plugins.default_token_connect.backends.cache import cached
 
 from plugin_types.token_connect import AbstractBackend, BackendException
+from plugins.common.http import HTTPClient
+from plugins.default_token_connect.backends.cache import cached
 
 
 class HTTPBackend(AbstractBackend):

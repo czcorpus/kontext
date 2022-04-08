@@ -17,11 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from typing import NamedTuple, Optional, Dict, Any, List, Tuple
-from dataclasses_json.api import LetterCase
-from corplib.abstract import AbstractKCorpus
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+
+from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
+from dataclasses_json.api import LetterCase
 from plugin_types.corparch.error import CorpusInfoError
 
 

@@ -19,27 +19,31 @@ The database can be configured either manually or automatically
 (in case integration_db is enabled)
 """
 
+import datetime
 import hashlib
-import urllib.request
-import urllib.parse
-import urllib.error
+import logging
 import re
 import time
-import datetime
-from action.plugin.ctx import PluginCtx
-from secure_cookie.session import Session
-from plugins.mysql_integration_db import MySqlIntegrationDb
-import mailing
-import logging
+import urllib.error
+import urllib.parse
+import urllib.request
 from collections import defaultdict
 from typing import List
 
-from plugin_types.auth import AbstractInternalAuth, AuthException, CorpusAccess, GetUserInfo, SignUpNeedsUpdateException
-from plugin_types.auth.hash import mk_pwd_hash, mk_pwd_hash_default, split_pwd_hash
-from .sign_up import SignUpToken
+import mailing
 import plugins
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import (AbstractInternalAuth, AuthException,
+                               CorpusAccess, GetUserInfo,
+                               SignUpNeedsUpdateException)
+from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
+                                    split_pwd_hash)
 from plugins import inject
-from plugins.common.mysql import MySQLOps, MySQLConf
+from plugins.common.mysql import MySQLConf, MySQLOps
+from plugins.mysql_integration_db import MySqlIntegrationDb
+from secure_cookie.session import Session
+
+from .sign_up import SignUpToken
 
 IMPLICIT_CORPUS = 'susanne'
 

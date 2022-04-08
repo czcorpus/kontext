@@ -16,10 +16,11 @@
 # 02110-1301, USA.
 
 import logging
-from plugin_types.general_storage import KeyValueStorage
-from plugins.default_conc_cache import CacheMappingFactory
-from plugins import inject
+
 import plugins
+from plugin_types.general_storage import KeyValueStorage
+from plugins import inject
+from plugins.default_conc_cache import CacheMappingFactory
 
 
 @inject(plugins.runtime.DB)

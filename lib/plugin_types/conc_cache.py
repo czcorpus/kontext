@@ -24,15 +24,15 @@ of AbstractCacheMappingFactory (i.e. not AbstractConcCache) because
 the instance of AbstractConcCache is request-dependent.
 """
 
-import os
-import time
+import abc
 import importlib
 import logging
-import abc
-from typing import Dict, Any, Optional, Union, Tuple, List
-from corplib.corpus import AbstractKCorpus
-from dataclasses import dataclass, field, asdict
+import os
+import time
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from corplib.corpus import AbstractKCorpus
 
 QueryType = Tuple[str, ...]
 

@@ -18,6 +18,7 @@
 # 02110-1301, USA.
 
 from typing import Optional
+
 from corplib.corpus import AbstractKCorpus
 
 

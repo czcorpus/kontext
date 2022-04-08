@@ -12,10 +12,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugin_types.query_suggest import AbstractBackend
 from typing import List
-from plugins.common.http import HTTPClient
+
 import ujson as json
+from plugin_types.query_suggest import AbstractBackend
+from plugins.common.http import HTTPClient
 
 
 class WordSimilarityBackend(AbstractBackend):

@@ -17,15 +17,16 @@
 # 02110-1301, USA.
 
 import sys
-from typing import Tuple, List, Union
+from typing import List, Tuple, Union
 
 import manatee
-import settings
-from kwiclib.common import tokens2strclass
 import plugins
-from corplib.corpus import AbstractKCorpus
+import settings
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import wordlist
+from corplib.corpus import AbstractKCorpus
+from kwiclib.common import tokens2strclass
+
 from .common import KConc
 
 

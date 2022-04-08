@@ -12,25 +12,24 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import List, Dict, Tuple
-from functools import wraps
 import hashlib
 import os
 import sys
+from functools import wraps
+from typing import Dict, List, Tuple
 
 import aiocsv
 import aiofiles
 import aiofiles.os
-from util import anext
-from manatee import Structure   # TODO wrap this out
-
 import l10n
+import settings
 from action.argmapping.wordlist import WordlistFormArgs
-from bgcalc.wordlist.errors import WordlistResultNotFound
 from bgcalc.csv_cache import load_cached_full
+from bgcalc.wordlist.errors import WordlistResultNotFound
 from corplib import frq_db
 from corplib.corpus import KCorpus
-import settings
+from manatee import Structure  # TODO wrap this out
+from util import anext
 
 
 def _create_cache_path(form: WordlistFormArgs) -> str:

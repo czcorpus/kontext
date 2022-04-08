@@ -30,18 +30,18 @@ element conc_cache {
 }
 
 """
-import os
 import hashlib
-from typing import Union, Tuple, Optional
 import logging
+import os
+from typing import Optional, Tuple, Union
 
 import aiofiles.os
-
 import plugins
-from plugin_types.conc_cache import AbstractConcCache, AbstractCacheMappingFactory, ConcCacheStatus
-from plugins import inject
-from plugin_types.general_storage import KeyValueStorage
 from corplib.corpus import KCorpus
+from plugin_types.conc_cache import (AbstractCacheMappingFactory,
+                                     AbstractConcCache, ConcCacheStatus)
+from plugin_types.general_storage import KeyValueStorage
+from plugins import inject
 
 
 def _uniqname(subchash: Optional[str], query: Tuple[str, ...]):

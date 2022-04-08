@@ -10,12 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Union, List, Optional, Dict, Any, Callable
-from enum import Enum
 import logging
-from dataclasses import dataclass, field, Field
+from dataclasses import Field, dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from action.req_args import RequestArgsProxy, JSONRequestArgsProxy, create_req_arg_proxy, is_req_args_proxy
+from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
+                             create_req_arg_proxy, is_req_args_proxy)
 
 
 class Persistence(Enum):

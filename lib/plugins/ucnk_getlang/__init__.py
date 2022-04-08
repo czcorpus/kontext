@@ -22,8 +22,8 @@ element getlang {
   }
 }
 """
-import os
 import http.cookies
+import os
 from collections import defaultdict
 
 from plugin_types.getlang import AbstractGetLang

@@ -17,7 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, Any, List, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, List
+
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import AbstractUserPluginCtx

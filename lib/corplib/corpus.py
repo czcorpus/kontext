@@ -16,20 +16,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Awaitable, Union, Optional, Tuple, List, Dict, Any
-import os
 import glob
-import ujson as json
 import logging
-from hashlib import md5
+import os
 from datetime import datetime
+from hashlib import md5
+from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
 
 import aiofiles
 import aiofiles.os
-from manatee import Corpus, SubCorpus
-
-from util import aenumerate
+import ujson as json
 from corplib.abstract import AbstractKCorpus
+from manatee import Corpus, SubCorpus
+from util import aenumerate
 
 try:
     from markdown import markdown

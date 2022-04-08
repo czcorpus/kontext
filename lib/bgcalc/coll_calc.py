@@ -12,23 +12,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import pickle
 import hashlib
 import os
+import pickle
 import time
-from typing import List, Any, Optional
 from dataclasses import dataclass, field
+from typing import Any, List, Optional
 
 import aiofiles
 import aiofiles.os
-
+import bgcalc
 import corplib
+import settings
+from bgcalc import freq_calc
+from bgcalc.errors import UnfinishedConcordanceError
 from conclib.calc import require_existing_conc
 from corplib.errors import MissingSubCorpFreqFile
-from bgcalc import freq_calc
-import settings
-from bgcalc.errors import UnfinishedConcordanceError
-import bgcalc
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 

@@ -21,8 +21,8 @@ changed/configured. On the other side, concrete export modules are
 free to be replaced/changed.
 """
 
-from typing import Callable, List, Any
 import abc
+from typing import Any, Callable, List
 
 
 class ExportPluginException(Exception):

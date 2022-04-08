@@ -20,19 +20,18 @@
 
 import logging
 import time
-import aiofiles.os
-from typing import Callable, Tuple, Optional,  Dict, Any
 from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional, Tuple
 
+import aiofiles.os
+import manatee
+import plugins
+import settings
+from conclib.errors import ConcCalculationStatusException
+from conclib.pyconc import PyConc
 from corplib import CorpusManager
 from corplib.corpus import AbstractKCorpus
 from plugin_types.conc_cache import ConcCacheStatus
-import plugins
-from conclib.errors import ConcCalculationStatusException
-from conclib.pyconc import PyConc
-import manatee
-import settings
-
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 

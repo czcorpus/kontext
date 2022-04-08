@@ -13,18 +13,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Tuple
 from io import BytesIO
-
-from sanic import Blueprint
-from cairosvg import svg2png, svg2svg, svg2pdf
-from lxml import etree
+from typing import Tuple
 
 from action.decorators import http_action
+from action.errors import UserActionException
 from action.krequest import KRequest
 from action.response import KResponse
-from action.errors import UserActionException
-
+from cairosvg import svg2pdf, svg2png, svg2svg
+from lxml import etree
+from sanic import Blueprint
 
 bp = Blueprint('tools', url_prefix='tools')
 

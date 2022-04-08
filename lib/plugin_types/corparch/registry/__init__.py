@@ -16,9 +16,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Optional
 import re
 from functools import cmp_to_key
+from typing import Optional
 
 
 def should_be_quoted(attr, s):

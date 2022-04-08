@@ -12,11 +12,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import io
+
 from openpyxl import Workbook
 from openpyxl.chart import PieChart, Reference
-
 from plugin_types.chart_export import AbstractChartExport
-import io
 
 
 class ExcelExport(AbstractChartExport):

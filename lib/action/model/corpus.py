@@ -18,34 +18,34 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from typing import Any, Optional, TypeVar, Dict, List, Tuple, Union, Iterable, Callable
-from corplib.abstract import AbstractKCorpus
-from action.argmapping.conc.query import ConcFormArgs
-from functools import partial
-from dataclasses import asdict
 import urllib.parse
+from dataclasses import asdict
+from functools import partial
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    TypeVar, Union)
 
 import corplib
-import plugins
-from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
-import settings
 import l10n
-from corplib.fallback import ErrorCorpus, EmptyCorpus
-from corplib.corpus import KCorpus
-from action.argmapping import ConcArgsMapping, Args
-from action.props import ActionProps
-from main_menu.model import MainMenu, EventTriggeringItem
-from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
-from action.errors import (
-    UserActionException, ImmediateRedirectException, AlignedCorpusForbiddenException, NotFoundException,
-    ForbiddenException)
+import plugins
+import settings
+from action.argmapping import Args, ConcArgsMapping
+from action.argmapping.conc.query import ConcFormArgs
+from action.errors import (AlignedCorpusForbiddenException, ForbiddenException,
+                           ImmediateRedirectException, NotFoundException,
+                           UserActionException)
 from action.krequest import KRequest
-from action.response import KResponse
 from action.model.user import UserActionModel, UserPluginCtx
-from texttypes.model import TextTypes, TextTypesCache
 from action.plugin.ctx import AbstractCorpusPluginCtx
+from action.props import ActionProps
+from action.req_args import JSONRequestArgsProxy, RequestArgsProxy
+from action.response import KResponse
+from corplib.abstract import AbstractKCorpus
+from corplib.corpus import KCorpus
+from corplib.fallback import EmptyCorpus, ErrorCorpus
+from main_menu.model import EventTriggeringItem, MainMenu
+from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
+from texttypes.model import TextTypes, TextTypesCache
 from util import as_sync
-
 
 T = TypeVar('T')
 

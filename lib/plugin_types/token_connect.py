@@ -44,14 +44,17 @@ it will be probably enough to extend this plug-in by an empty class and
 add your frontend or backend (depending on what needs to be customized).
 """
 import abc
-from typing import Dict, Any, List, Tuple, Iterable, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Sequence, Tuple
+
 from corplib.corpus import KCorpus
 from plugin_types.general_storage import KeyValueStorage
+
 # this is to fix cyclic imports when running the app caused by typing
 if TYPE_CHECKING:
     from action.plugin.ctx import PluginCtx
 
 import importlib
+
 from plugin_types import CorpusDependentPlugin
 
 

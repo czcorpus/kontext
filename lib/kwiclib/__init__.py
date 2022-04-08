@@ -16,19 +16,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import Any, List, Mapping, Dict, Tuple, Union, Optional
-
-from collections import defaultdict
-import re
 import itertools
 import math
-from dataclasses import dataclass, asdict, field
+import re
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import manatee
-from conclib.empty import InitialConc
 from conclib.common import KConc
-from kwiclib.common import tokens2strclass, SortCritType, lngrp_sortcrit
+from conclib.empty import InitialConc
 from corplib.corpus import AbstractKCorpus
+from kwiclib.common import SortCritType, lngrp_sortcrit, tokens2strclass
 
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
 

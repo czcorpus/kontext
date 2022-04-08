@@ -16,8 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugin_types.token_connect import AbstractBackend
 import conclib
+from plugin_types.token_connect import AbstractBackend
 from plugins.default_token_connect.backends.cache import cached
 
 

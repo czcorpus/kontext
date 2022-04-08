@@ -22,15 +22,15 @@ An integration db token auth for users with private API keys.
 required xml conf: please see ./config.rng
          mysql schema: please see ./scripts/schema.sql
 """
-from datetime import datetime
 import hashlib
+from datetime import datetime
 from typing import List, Optional
 
-from action.plugin.ctx import PluginCtx
-from plugins.mysql_integration_db import MySqlIntegrationDb
-
 import plugins
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
+                               UserInfo)
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
 class TokenAuth(AbstractRemoteAuth):

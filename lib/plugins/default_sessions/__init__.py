@@ -45,15 +45,14 @@ request processing.
 
 """
 
-import uuid
 import hashlib
 import random
-
-from secure_cookie.session import Session
-from plugin_types.general_storage import KeyValueStorage
+import uuid
 
 import plugins
+from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
+from secure_cookie.session import Session
 
 
 class DefaultSessions:

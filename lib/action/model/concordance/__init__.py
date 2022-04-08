@@ -18,33 +18,34 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-from typing import Dict, Any, Optional, List, Tuple, Union
-from action.argmapping.conc.query import ConcFormArgs
-from collections import defaultdict
 import re
 import urllib.parse
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from action.props import ActionProps
-from main_menu.model import MainMenu
-from texttypes.model import TextTypesCache, TextTypeCollector
-import plugins
 import conclib
+import plugins
+import settings
+from action.argmapping import ConcArgsMapping
+from action.argmapping.conc import build_conc_form_args
+from action.argmapping.conc.filter import (ContextFilterArgsConv,
+                                           FilterFormArgs,
+                                           FirstHitsFilterFormArgs)
+from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
+from action.argmapping.conc.query import ConcFormArgs, QueryFormArgs
+from action.argmapping.conc.sort import SortFormArgs
+from action.errors import ImmediateRedirectException
+from action.krequest import KRequest
+from action.model.concordance.linesel import LinesGroups
+from action.model.corpus import CorpusActionModel, CorpusPluginCtx
+from action.props import ActionProps
+from action.response import KResponse
 from conclib.common import KConc
 from conclib.search import get_conc
+from main_menu.model import MainMenu
+from plugin_types.corparch.corpus import CorpusInfo, StructAttrInfo
 from strings import re_escape
-from plugin_types.corparch.corpus import StructAttrInfo, CorpusInfo
-from action.argmapping import ConcArgsMapping
-from action.argmapping.conc.query import QueryFormArgs
-from action.argmapping.conc.filter import FilterFormArgs, FirstHitsFilterFormArgs, ContextFilterArgsConv
-from action.argmapping.conc.sort import SortFormArgs
-from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
-from action.argmapping.conc import build_conc_form_args
-from action.krequest import KRequest
-from action.response import KResponse
-from action.model.corpus import CorpusActionModel, CorpusPluginCtx
-from action.errors import ImmediateRedirectException
-from action.model.concordance.linesel import LinesGroups
-import settings
+from texttypes.model import TextTypeCollector, TextTypesCache
 
 
 class ConcActionModel(CorpusActionModel):

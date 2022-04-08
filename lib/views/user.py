@@ -13,18 +13,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import time
 import logging
-from sanic import Blueprint
+import time
 
-from action.errors import UserActionException, ImmediateRedirectException
-from action.model.user import UserActionModel
-from action.decorators import http_action
-from action.krequest import KRequest
-from action.response import KResponse
 import plugins
-from plugin_types.auth import AbstractInternalAuth, SignUpNeedsUpdateException
 import settings
+from action.decorators import http_action
+from action.errors import ImmediateRedirectException, UserActionException
+from action.krequest import KRequest
+from action.model.user import UserActionModel
+from action.response import KResponse
+from plugin_types.auth import AbstractInternalAuth, SignUpNeedsUpdateException
+from sanic import Blueprint
 
 bp = Blueprint('user', url_prefix='user')
 

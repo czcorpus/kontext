@@ -20,19 +20,20 @@ Required XML configuration: please see config.rng
 It is recommended to install Unidecode package (pip install Unidecode)
 """
 
-import re
-import ujson as json
-from functools import partial
-from collections import defaultdict, OrderedDict
-from sanic import Blueprint
-import sqlite3
 import logging
-from typing import Any, Dict, List, Iterable
+import re
+import sqlite3
+from collections import OrderedDict, defaultdict
+from functools import partial
+from typing import Any, Dict, Iterable, List
 
+import ujson as json
 from action.krequest import KRequest
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.general_storage import KeyValueStorage
+from sanic import Blueprint
+
 try:
     from unidecode import unidecode
 except ImportError:
@@ -42,14 +43,16 @@ except ImportError:
     def unidecode(v): return v
 
 import l10n
-from plugins import inject
 import plugins
-from plugin_types.live_attributes import (
-    CachedLiveAttributes, AttrValue, AttrValuesResponse, BibTitle, StructAttrValuePair, cached)
 import strings
-from action.plugin.ctx import PluginCtx
 from action.decorators import http_action
 from action.model.corpus import CorpusActionModel
+from action.plugin.ctx import PluginCtx
+from plugin_types.live_attributes import (AttrValue, AttrValuesResponse,
+                                          BibTitle, CachedLiveAttributes,
+                                          StructAttrValuePair, cached)
+from plugins import inject
+
 from . import query
 
 bp = Blueprint('sqlite_live_attributes')
