@@ -47,19 +47,20 @@ import json
 import logging
 import os
 from typing import Dict
-from sanic.blueprints import Blueprint
-from plugin_types.auth import AbstractAuth
 
 import plugins
-from plugin_types.integration_db import IntegrationDatabase
-from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin, MaximumContextExceeded, SearchBackend
-from action.errors import UserActionException
-from action.plugin.ctx import PluginCtx
-from .manatee_backend import ManateeBackend
 from action.decorators import http_action
+from action.errors import UserActionException
 from action.model.concordance import ConcActionModel
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import AbstractAuth
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.syntax_viewer import (AbstractSyntaxViewerPlugin,
+                                        MaximumContextExceeded, SearchBackend)
+from sanic.blueprints import Blueprint
 from util import as_async
 
+from .manatee_backend import ManateeBackend
 
 bp = Blueprint('default_syntax_viewer')
 

@@ -18,16 +18,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from typing import Any, List, Tuple, Dict
 import re
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from typing import Any, Dict, List, Tuple
 
 import plugins
-from plugin_types.corparch.corpus import TagsetInfo
-from action.plugin.ctx import AbstractCorpusPluginCtx
-from action.argmapping.error import ArgumentMappingError, ValidationError
 from action.argmapping.conc.base import ConcFormArgs
+from action.argmapping.error import ArgumentMappingError, ValidationError
+from action.plugin.ctx import AbstractCorpusPluginCtx
+from dataclasses_json import dataclass_json
+from plugin_types.corparch.corpus import TagsetInfo
+
 from .query import QueryFormArgs
 
 

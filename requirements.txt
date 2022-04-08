@@ -1,7 +1,7 @@
 # to install all the KonText dependencies use command
 # pip install -r requirements.txt
 #
-# for more convenient logging, install concurrent_log_handler
+concurrent_log_handler >= 0.9.20
 PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3

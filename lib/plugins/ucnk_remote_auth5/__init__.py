@@ -26,23 +26,23 @@ produce another HTTP request).
 Required config.xml/plugins entries (RelaxNG compact format): please see config.rng
 """
 
-import urllib.request
-import urllib.parse
-import urllib.error
 import http.client
-import ujson as json
-import ssl
 import logging
-from action.plugin.ctx import PluginCtx
-from secure_cookie.session import Session
-from plugin_types.integration_db import IntegrationDatabase
+import ssl
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import plugins
-from plugin_types.auth import AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo
+import ujson as json
+from action.plugin.ctx import PluginCtx
+from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
+                               UserInfo)
 from plugin_types.corparch.backend import DatabaseBackend
+from plugin_types.integration_db import IntegrationDatabase
 from plugins import inject
 from plugins.mysql_corparch.backend import Backend
-
+from secure_cookie.session import Session
 
 IMPLICIT_CORPUS = 'susanne'
 

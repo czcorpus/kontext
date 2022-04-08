@@ -25,8 +25,14 @@ import asyncio
 import sys
 import os
 import logging
+from logging.handlers import QueueHandler, QueueListener
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 import locale
 import signal
+try:
+    from queue import SimpleQueue as Queue
+except ImportError:
+    from queue import Queue
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
@@ -60,6 +66,7 @@ from action.templating import TplEngine
 from action.context import ApplicationContext
 from plugin_types.auth import UserInfo
 from action.cookie import KonTextCookie
+from typing import Optional
 
 
 # we ensure that the application's locale is always the same
@@ -67,27 +74,28 @@ locale.setlocale(locale.LC_ALL, 'en_US.utf-8')
 logger = logging.getLogger('')  # root logger
 
 
-def setup_logger(conf):
+def setup_logger(conf) -> Optional[logging.handlers.QueueListener]:
     """
     Sets up file-based rotating logger based on XML config.xml.
     """
     if conf.contains('logging', 'stderr'):
         handler = logging.StreamHandler(sys.stderr)
+        listener = None
     elif conf.contains('logging', 'stdout'):
         handler = logging.StreamHandler(sys.stdout)
+        listener = None
     else:
-        try:
-            from concurrent_log_handler import ConcurrentRotatingFileHandler as HandlerClass
-        except ImportError:
-            from logging.handlers import RotatingFileHandler as HandlerClass
-        handler = HandlerClass(conf.get('logging', 'path').format(pid=os.getpid()),
-                               maxBytes=conf.get_int(
-                                   'logging', 'file_size', 8000000),
-                               backupCount=conf.get_int('logging', 'num_files', 10))
-
+        handler = ConcurrentRotatingFileHandler(
+            conf.get('logging', 'path').format(pid=os.getpid()),
+            maxBytes=conf.get_int('logging', 'file_size', 8000000),
+            backupCount=conf.get_int('logging', 'num_files', 10))
+        queue = Queue()
+        listener = QueueListener(queue, handler)
+        listener.start()
     handler.setFormatter(logging.Formatter(fmt='%(asctime)s [%(name)s] %(levelname)s: %(message)s'))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO if not settings.is_debug_mode() else logging.DEBUG)
+    return listener
 
 
 settings.load(path=CONF_PATH)
@@ -101,7 +109,7 @@ if settings.get('global', 'umask', None):
 
 os.environ['MANATEE_REGISTRY'] = settings.get('corpora', 'manatee_registry')
 
-setup_logger(settings)
+log_listener = setup_logger(settings)
 
 application = Sanic('kontext')
 
@@ -230,7 +238,12 @@ if __name__ == '__main__':
             debugpy.listen(('0.0.0.0', 5678))
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
-    if args.debugmode and not settings.is_debug_mode():
-        settings.activate_debug()
-    application.run(host=args.address, port=int(args.port_num),
-                    workers=args.workers, debug=settings.is_debug_mode())
+    try:
+        if args.debugmode and not settings.is_debug_mode():
+            settings.activate_debug()
+        application.run(
+            host=args.address, port=int(args.port_num), workers=args.workers, debug=settings.is_debug_mode(),
+            access_log=False)
+    finally:
+        if log_listener:
+            log_listener.stop()

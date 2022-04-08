@@ -12,9 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from sanic.request import RequestParameters
 from collections import defaultdict
-from typing import List, Union, Dict, Any
+from typing import Any, Dict, List, Union
+
+from sanic.request import RequestParameters
 
 
 def import_request_parameters(data: Dict[str, Any]):

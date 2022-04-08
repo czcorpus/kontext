@@ -16,9 +16,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from plugin_types.corparch import AbstractCorporaArchive
 import plugins
-
+from plugin_types.corparch import AbstractCorporaArchive
 from plugins.default_token_connect import DefaultTokenConnect, setup_providers
 
 

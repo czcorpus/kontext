@@ -12,14 +12,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-from action.plugin.ctx import PluginCtx
 from action.argmapping.conc.base import ConcFormArgs
+from action.plugin.ctx import PluginCtx
+
+from .filter import (FilterFormArgs, FirstHitsFilterFormArgs,
+                     SubHitsFilterFormArgs)
+from .other import (KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs,
+                    SampleFormArgs, ShuffleFormArgs)
 from .query import QueryFormArgs
-from .filter import FilterFormArgs, SubHitsFilterFormArgs, FirstHitsFilterFormArgs
 from .sort import SortFormArgs
-from .other import SampleFormArgs, ShuffleFormArgs, KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs
 
 
 async def build_conc_form_args(plugin_ctx: PluginCtx, corpora: List[str], data: Dict[str, Any], op_key: str) -> ConcFormArgs:

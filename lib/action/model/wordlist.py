@@ -14,19 +14,19 @@
 # GNU General Public License for more details.
 
 
-from typing import Dict, Any, Optional
-from sanic import Sanic
+from typing import Any, Dict, Optional
 
-from texttypes.model import TextTypesCache
 import plugins
-from action.props import ActionProps
-from action.krequest import KRequest
-from action.response import KResponse
+import settings
 from action.argmapping import ConcArgsMapping, WordlistArgsMapping
 from action.argmapping.wordlist import WordlistFormArgs
-from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.errors import UserActionException
-import settings
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel, CorpusPluginCtx
+from action.props import ActionProps
+from action.response import KResponse
+from sanic import Sanic
+from texttypes.model import TextTypesCache
 
 
 class WordlistError(UserActionException):

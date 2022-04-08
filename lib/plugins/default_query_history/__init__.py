@@ -18,20 +18,20 @@ A plugin providing a history for user's queries for services such as 'query hist
 Required config.xml/plugins entries: please see config.rng
 """
 
-from datetime import datetime
-import time
-import random
 import logging
+import random
+import time
+from datetime import datetime
 from typing import Callable
-from plugin_types.general_storage import KeyValueStorage
-from plugin_types.auth import AbstractAuth
-from plugin_types.query_persistence import AbstractQueryPersistence
 
-from plugin_types.query_history import AbstractQueryHistory
-from plugins import inject
 import plugins
-from manatee import Corpus
 from corplib.fallback import EmptyCorpus
+from manatee import Corpus
+from plugin_types.auth import AbstractAuth
+from plugin_types.general_storage import KeyValueStorage
+from plugin_types.query_history import AbstractQueryHistory
+from plugin_types.query_persistence import AbstractQueryPersistence
+from plugins import inject
 
 
 class CorpusCache:

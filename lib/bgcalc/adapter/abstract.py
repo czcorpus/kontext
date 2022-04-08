@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import abc
-from typing import TypeVar, Type, Generic, Union
+from typing import Generic, Type, TypeVar, Union
 
 T = TypeVar('T')
 

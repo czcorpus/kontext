@@ -12,8 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from plugin_types.query_suggest import AbstractBackend
 import logging
+
+from plugin_types.query_suggest import AbstractBackend
 from plugins.common.http import HTTPClient
 
 

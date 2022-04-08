@@ -52,24 +52,25 @@ grammar {
 """
 
 
-from lxml import etree
 import copy
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-from typing import Union, List
 import uuid
-from sanic import Blueprint
-from action.krequest import KRequest
-from action.response import KResponse
+from dataclasses import dataclass, field
+from typing import List, Union
 
 import plugins
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.user import UserActionModel
+from action.plugin.ctx import PluginCtx
+from action.response import KResponse
+from dataclasses_json import dataclass_json
+from lxml import etree
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, TagsetInfo
+from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
+                                          TagsetInfo)
 from plugin_types.corparch.error import CorparchError
 from plugins.default_corparch import process_pos_categories
-from action.plugin.ctx import PluginCtx
-from action.model.user import UserActionModel
-from action.decorators import http_action
+from sanic import Blueprint
 
 bp = Blueprint('tree_corparch')
 

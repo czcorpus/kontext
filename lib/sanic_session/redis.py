@@ -23,6 +23,7 @@
 # SOFTWARE.
 
 from typing import Callable
+
 from sanic_session.base import BaseSessionInterface
 
 try:

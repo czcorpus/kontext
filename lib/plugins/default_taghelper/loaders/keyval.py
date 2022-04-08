@@ -18,12 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-import ujson as json
 from collections import defaultdict
 
 import aiofiles
 import aiofiles.os
-
+import ujson as json
 from plugin_types.taghelper import AbstractTagsetInfoLoader
 
 

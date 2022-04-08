@@ -1,6 +1,6 @@
 import os
-from hashlib import pbkdf2_hmac
 from base64 import b64encode
+from hashlib import pbkdf2_hmac
 
 
 def mk_pwd_hash_default(data):

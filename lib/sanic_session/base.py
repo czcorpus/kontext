@@ -22,11 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import time
-import datetime
 import abc
-import ujson as json
+import datetime
+import time
 import uuid
+
+import ujson as json
 from sanic_session.utils import CallbackDict
 
 

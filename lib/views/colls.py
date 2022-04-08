@@ -13,21 +13,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from dataclasses import asdict, dataclass
 from typing import Optional
-from sanic import Blueprint
-from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
+
+import plugins
+from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
+                                         FreqFormArgs)
 from action.decorators import http_action
 from action.errors import UserActionException
-from action.model.concordance import ConcActionModel
 from action.krequest import KRequest
-from dataclasses import dataclass, asdict
-
-from conclib.errors import ConcNotFoundException
-from conclib.calc import require_existing_conc
+from action.model.concordance import ConcActionModel
 from action.response import KResponse
+from bgcalc.coll_calc import (CalculateCollsResult, CollCalcArgs,
+                              calculate_colls)
+from conclib.calc import require_existing_conc
+from conclib.errors import ConcNotFoundException
 from main_menu import MainMenu
-from bgcalc.coll_calc import CalculateCollsResult, CollCalcArgs, calculate_colls
-import plugins
+from sanic import Blueprint
 
 bp = Blueprint('colls')
 

@@ -19,23 +19,22 @@
 # 02110-1301, USA.
 
 import logging
-from typing import Callable, Tuple, Optional, Union, List
 import os
+from typing import Callable, List, Optional, Tuple, Union
 
 import aiofiles.os
-
-import settings
-import plugins
-from plugin_types.conc_cache import ConcCacheStatus
-from conclib.pyconc import PyConc
-from conclib.empty import InitialConc
-from conclib.calc.base import GeneralWorker
-from conclib.calc import find_cached_conc_base, wait_for_conc, del_silent, extract_manatee_error
-from conclib.errors import ConcCalculationStatusException
-from conclib.common import KConc
-from corplib.corpus import AbstractKCorpus
 import bgcalc
-
+import plugins
+import settings
+from conclib.calc import (del_silent, extract_manatee_error,
+                          find_cached_conc_base, wait_for_conc)
+from conclib.calc.base import GeneralWorker
+from conclib.common import KConc
+from conclib.empty import InitialConc
+from conclib.errors import ConcCalculationStatusException
+from conclib.pyconc import PyConc
+from corplib.corpus import AbstractKCorpus
+from plugin_types.conc_cache import ConcCacheStatus
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 CONC_REGISTER_TASK_LIMIT = 5  # task itself should be super-fast

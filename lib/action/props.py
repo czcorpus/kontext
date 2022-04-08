@@ -18,7 +18,8 @@
 
 
 from dataclasses import dataclass
-from typing import Union, Optional, Tuple, Callable, Any
+from typing import Any, Callable, Optional, Tuple, Union
+
 from action.krequest import KRequest
 
 

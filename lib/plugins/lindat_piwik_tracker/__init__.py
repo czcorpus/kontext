@@ -43,9 +43,8 @@ element dispatch_hook {
 }
 """
 
-from piwikapi.tracking import PiwikTracker
 from piwikapi.tests.request import FakeRequest
-
+from piwikapi.tracking import PiwikTracker
 from plugin_types.dispatch_hook import AbstractDispatchHook
 
 

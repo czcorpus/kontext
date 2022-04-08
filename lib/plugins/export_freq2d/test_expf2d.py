@@ -17,8 +17,9 @@
 Unittests for the export_freq2d plugin
 """
 import unittest
-from openpyxl import load_workbook
 from io import BytesIO
+
+from openpyxl import load_workbook
 from plugins.export_freq2d.default_xlsx import XLSXExport
 
 

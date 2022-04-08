@@ -15,27 +15,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import ujson as json
-from collections import defaultdict
 import struct
+from collections import defaultdict
 from typing import Any, Dict, List
+
 import aiofiles
-from sanic.blueprints import Blueprint
-from action.krequest import KRequest
-from action.response import KResponse
-
-from plugin_types.subcmixer import AbstractSubcMixer
-from plugin_types.subcmixer.error import SubcMixerException, ResultNotFoundException
-from plugins import inject
-import plugins
 import corplib
+import plugins
+import ujson as json
 from action.decorators import http_action
+from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
+from action.response import KResponse
+from plugin_types.subcmixer import AbstractSubcMixer
+from plugin_types.subcmixer.error import (ResultNotFoundException,
+                                          SubcMixerException)
+from plugins import inject
+from sanic.blueprints import Blueprint
 
+from .category_tree import CategoryExpression, CategoryTree
 from .database import Database
-from .category_tree import CategoryTree, CategoryExpression
 from .metadata_model import MetadataModel
-
 
 bp = Blueprint('default_subcmixer')
 

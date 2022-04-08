@@ -20,16 +20,16 @@ A script to archive outdated concordance queries from Redis to a SQLite3 databas
 are still transparently available to end-users.
 """
 
+import argparse
 import asyncio
 import os
 import sys
-import argparse
 import time
-import ujson as json
 from datetime import datetime
 
 import aioredis
 import aiosqlite
+import ujson as json
 
 
 def redis_connection(host, port, db_id):

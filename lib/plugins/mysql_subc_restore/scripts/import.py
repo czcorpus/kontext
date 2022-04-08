@@ -17,18 +17,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import sys
 import os
+import sys
 from collections import defaultdict
 
 sys.path.insert(0, os.path.realpath('%s/../../..' % os.path.dirname(os.path.realpath(__file__))))
 
-import sqlite3
 import argparse
 import datetime
-from action.plugin import initializer
-import settings
+import sqlite3
+
 import plugins
+import settings
+from action.plugin import initializer
 
 
 def import_sqlite_db(db_path, chunk_size):

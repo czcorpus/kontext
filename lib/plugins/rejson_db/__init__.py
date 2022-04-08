@@ -25,11 +25,12 @@ This plug-in should be able to handle high-load installations without any proble
 required XML: please see config.rng
 """
 
+import logging
+
 import aioredis
 import ujson as json
 from plugins.redis_db import RedisDb
 from util import as_sync
-import logging
 
 
 class RejsonDb(RedisDb):

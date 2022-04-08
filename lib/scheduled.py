@@ -19,9 +19,9 @@ tasks administrator can schedule. Each task requires specific JSON format.
 """
 
 
-import shutil
 import os
 import re
+import shutil
 
 
 class add_subcorpus(object):

@@ -18,8 +18,9 @@
 A plug-in allowing export of a concordance (in fact, any row/cell
 like data can be used) to XML format.
 """
-from lxml import etree
 import logging
+
+from lxml import etree
 
 from . import AbstractExport, ExportPluginException
 

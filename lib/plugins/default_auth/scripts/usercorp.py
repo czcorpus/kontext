@@ -12,17 +12,19 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import os
-import sys
 import argparse
+import os
 import re
+import sys
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../..')))
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../../scripts')))
 import autoconf
-from action.plugin import initializer
 import plugins
-from plugins.default_auth import mk_list_key, mk_user_key, get_user_id_from_key, DefaultAuthHandler
+from action.plugin import initializer
+from plugins.default_auth import (DefaultAuthHandler, get_user_id_from_key,
+                                  mk_list_key, mk_user_key)
+
 initializer.init_plugin('db')
 
 

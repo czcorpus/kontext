@@ -17,8 +17,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-import corplib
 import logging
+
+import corplib
 from plugin_types.general_storage import KeyValueStorage
 
 BASE_KEY = 'ttcache'

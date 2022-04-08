@@ -29,18 +29,18 @@ configuration.
 }
 """
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Callable
-from plugins.mysql_integration_db import MySqlIntegrationDb
 
-from plugin_types.auth import AbstractAuth
-from corplib.abstract import AbstractKCorpus
-from plugin_types.query_history import AbstractQueryHistory
-from plugins import inject
 import plugins
+from corplib.abstract import AbstractKCorpus
 from corplib.fallback import EmptyCorpus
+from plugin_types.auth import AbstractAuth
+from plugin_types.query_history import AbstractQueryHistory
 from plugin_types.query_persistence import AbstractQueryPersistence
+from plugins import inject
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
 class CorpusCache:

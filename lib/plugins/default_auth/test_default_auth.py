@@ -21,10 +21,11 @@ import json
 import os
 import unittest
 
+from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
+                                    split_pwd_hash)
 from plugins.default_auth import DefaultAuthHandler
-from plugin_types.auth.hash import mk_pwd_hash_default, mk_pwd_hash, split_pwd_hash
-from plugins.default_auth.mock_redis import MockRedisPlugin, MockRedisCommon
-from translation import load_translations, activate
+from plugins.default_auth.mock_redis import MockRedisCommon, MockRedisPlugin
+from translation import activate, load_translations
 
 
 class AuthTest(unittest.TestCase):

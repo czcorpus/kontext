@@ -12,8 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from action.argmapping.conc.base import ConcFormArgs
 from dataclasses import dataclass
+
+from action.argmapping.conc.base import ConcFormArgs
 from dataclasses_json import dataclass_json
 
 

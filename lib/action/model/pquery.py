@@ -17,21 +17,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import plugins
-from action.props import ActionProps
-from action.krequest import KRequest
-from action.response import KResponse
-from action.argmapping.conc.query import QueryFormArgs
+import settings
 from action.argmapping.conc.filter import FilterFormArgs
+from action.argmapping.conc.query import QueryFormArgs
 from action.argmapping.pquery import PqueryFormArgs
-from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.errors import UserActionException
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.plugin.ctx import AbstractPqueryPluginCtx
+from action.props import ActionProps
+from action.response import KResponse
 from main_menu.model import EventTriggeringItem, MainMenu
 from texttypes.model import TextTypesCache
-import settings
 
 
 class PQueryPluginCtx(CorpusPluginCtx, AbstractPqueryPluginCtx):

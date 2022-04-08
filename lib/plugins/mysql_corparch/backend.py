@@ -21,16 +21,18 @@ A corparch database backend for MySQL/MariaDB for 'read' operations. Please note
 that the backend also covers operations required by mysql_auth plug-in.
 """
 
-from typing import Any, Dict, Iterable, List, Tuple, Optional, Generator
-from plugin_types.auth import CorpusAccess
-from plugins.common.mysql import MySQLOps
-from aiomysql.cursors import Cursor
 from contextlib import asynccontextmanager
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
 
-from plugin_types.corparch.corpus import TagsetInfo, PosCategoryItem
+from aiomysql.cursors import Cursor
+from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.corparch.backend.regkeys import (
-    REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
+from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
+                                                   REG_VAR_COLS_MAP,
+                                                   SATTR_COLS_MAP,
+                                                   STRUCT_COLS_MAP)
+from plugin_types.corparch.corpus import PosCategoryItem, TagsetInfo
+from plugins.common.mysql import MySQLOps
 
 
 class MySQLConfException(Exception):

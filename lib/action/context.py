@@ -1,8 +1,10 @@
 import os
 from typing import Callable
-from .templating import TplEngine
-from texttypes.model import TextTypesCache
+
 import plugins
+from texttypes.model import TextTypesCache
+
+from .templating import TplEngine
 
 
 class ApplicationContext:

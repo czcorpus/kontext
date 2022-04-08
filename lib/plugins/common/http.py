@@ -16,10 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, List, Union, Tuple
 import logging
 import ssl
 import urllib.parse
+from typing import Any, Dict, List, Tuple, Union
 
 import aiohttp
 

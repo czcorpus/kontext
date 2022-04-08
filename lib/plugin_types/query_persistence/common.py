@@ -17,11 +17,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import hashlib
-import ujson as json
-import uuid
-from typing import Dict, Any, Union
 import logging
+import uuid
+from typing import Any, Dict, Union
 
+import ujson as json
 
 DEFAULT_CONC_ID_LENGTH = 12
 

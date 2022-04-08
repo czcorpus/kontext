@@ -18,7 +18,7 @@
 
 import abc
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
-from typing import TypeVar, Generic, Optional
+from typing import Generic, Optional, TypeVar
 
 N = TypeVar('N')
 R = TypeVar('R')

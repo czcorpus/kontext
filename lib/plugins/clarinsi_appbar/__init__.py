@@ -13,10 +13,9 @@
 
 import aiofiles
 import aiofiles.os
-
+import plugins
 from plugin_types.appbar import AbstractApplicationBar
 from plugins import inject
-import plugins
 
 
 class ClarinSiTopBar(AbstractApplicationBar):

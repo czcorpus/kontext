@@ -16,30 +16,32 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import re
 import copy
-from collections import OrderedDict, defaultdict
 import logging
-from typing import Dict, List, Tuple, Iterable
+import re
+from collections import OrderedDict, defaultdict
+from typing import Dict, Iterable, List, Tuple
+
+import plugins
 import ujson as json
-from aiomysql.cursors import Cursor
-
-from sanic.blueprints import Blueprint
-
 from action.decorators import http_action
 from action.model.user import UserActionModel
 from action.plugin.ctx import PluginCtx
-from plugin_types.user_items import AbstractUserItems
-from plugins.common.mysql import MySQLOps, MySQLConf
-from plugins.mysql_integration_db import MySqlIntegrationDb
-import plugins
-from plugins import inject
-from plugin_types.corparch import AbstractSearchableCorporaArchive, CorpusListItem
+from aiomysql.cursors import Cursor
+from plugin_types.corparch import (AbstractSearchableCorporaArchive,
+                                   CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
-from plugin_types.corparch.corpus import (
-    BrokenCorpusInfo, TokenConnect, KwicConnect, QuerySuggest, CorpusInfo, StructAttrInfo)
+from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
+                                          KwicConnect, QuerySuggest,
+                                          StructAttrInfo, TokenConnect)
+from plugin_types.user_items import AbstractUserItems
+from plugins import inject
+from plugins.common.mysql import MySQLConf, MySQLOps
 from plugins.mysql_corparch.backend import Backend
-from plugins.mysql_corparch.corplist import DefaultCorplistProvider, parse_query
+from plugins.mysql_corparch.corplist import (DefaultCorplistProvider,
+                                             parse_query)
+from plugins.mysql_integration_db import MySqlIntegrationDb
+from sanic.blueprints import Blueprint
 
 try:
     from markdown import markdown

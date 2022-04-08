@@ -26,8 +26,8 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 import hashlib
-import l10n
 
+import l10n
 from action.errors import UserActionException
 
 

@@ -15,53 +15,56 @@
 
 
 import collections
+import logging
 import os
-import ujson as json
 import re
 import time
+from dataclasses import asdict, dataclass
+from typing import Any, Callable, Dict, List, Optional
+
+import conclib
+import corplib
 import mailing
-from typing import Optional, Dict, List, Any, Callable
-from dataclasses import dataclass
-from sanic import Blueprint
-import logging
-from dataclasses import asdict
+import plugins
+import settings
+import ujson as json
+from action.argmapping import ConcArgsMapping, WidectxArgsMapping, log_mapping
+from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
+                                         FreqFormArgs)
+from action.argmapping.conc import (QueryFormArgs, ShuffleFormArgs,
+                                    build_conc_form_args)
+from action.argmapping.conc.filter import (FilterFormArgs,
+                                           FirstHitsFilterFormArgs,
+                                           QuickFilterArgsConv,
+                                           SubHitsFilterFormArgs)
+from action.argmapping.conc.other import (KwicSwitchArgs, LgroupOpArgs,
+                                          LockedOpFormsArgs, SampleFormArgs)
+from action.argmapping.conc.sort import SortFormArgs
 from action.decorators import http_action
-from action.krequest import KRequest
-from action.response import KResponse
 from action.errors import NotFoundException, UserActionException
+from action.krequest import KRequest
 from action.model.base import BaseActionModel
-from action.model.user import UserActionModel
-from action.model.corpus import CorpusActionModel
 from action.model.concordance import ConcActionModel
 from action.model.concordance.linesel import LinesGroups
-from action.argmapping import log_mapping, ConcArgsMapping, WidectxArgsMapping
-from action.argmapping.conc import build_conc_form_args, QueryFormArgs, ShuffleFormArgs
-from action.argmapping.conc.other import SampleFormArgs
-from action.argmapping.conc.filter import (
-    FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs)
-from action.argmapping.conc.sort import SortFormArgs
-from action.argmapping.conc.other import KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs
-from action.argmapping.analytics import CollFormArgs, FreqFormArgs, CTFreqFormArgs
-from texttypes.model import TextTypeCollector
-from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
-from plugin_types.conc_cache import ConcCacheStatusException
-import corplib
-from corplib.corpus import AbstractKCorpus
-import conclib
-from conclib.freq import one_level_crit
-from conclib.search import get_conc
-from conclib.calc import cancel_conc_task
-from conclib.errors import (
-    ConcordanceException, ConcordanceQueryParamsError, ConcordanceSpecificationError, UnknownConcordanceAction,
-    extract_manatee_error)
-from conclib.empty import InitialConc
-from kwiclib import KwicPageArgs, Kwic
-import plugins
-from main_menu import MainMenu, generate_main_menu
+from action.model.corpus import CorpusActionModel
+from action.model.user import UserActionModel
+from action.response import KResponse
 from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
-import settings
-
+from conclib.calc import cancel_conc_task
+from conclib.empty import InitialConc
+from conclib.errors import (ConcordanceException, ConcordanceQueryParamsError,
+                            ConcordanceSpecificationError,
+                            UnknownConcordanceAction, extract_manatee_error)
+from conclib.freq import one_level_crit
+from conclib.search import get_conc
+from corplib.corpus import AbstractKCorpus
+from kwiclib import Kwic, KwicPageArgs
+from main_menu import MainMenu, generate_main_menu
+from plugin_types.conc_cache import ConcCacheStatusException
+from plugin_types.query_persistence.error import QueryPersistenceRecNotFound
+from sanic import Blueprint
+from texttypes.model import TextTypeCollector
 
 bp = Blueprint('concordance')
 

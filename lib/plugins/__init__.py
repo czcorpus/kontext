@@ -22,40 +22,42 @@ This means that the module is stateful and shared between all the possible
 coroutines within a single process.
 """
 
-from typing import Sequence, TypeVar, Generic, Any, Iterator, Callable, Optional, Dict, List, Union
-from types import ModuleType
 import logging
-from secure_cookie.session import Session
-from plugin_types.general_storage import KeyValueStorage
-from plugin_types.integration_db import IntegrationDatabase
-from plugin_types.settings_storage import AbstractSettingsStorage
-from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.conc_cache import AbstractCacheMappingFactory
-from .export import Loader
-from .export_freq2d import Loader as LoaderFreq2d
-from plugin_types.user_items import AbstractUserItems
-from plugin_types.menu_items import AbstractMenuItems
-from plugin_types.getlang import AbstractGetLang
-from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.query_history import AbstractQueryHistory
-from plugin_types.appbar import AbstractApplicationBar
-from plugin_types.footer_bar import AbstractFootbar
-from plugin_types.live_attributes import AbstractLiveAttributes
-from plugin_types.subc_restore import AbstractSubcRestore
-from plugin_types.taghelper import AbstractTaghelper
-from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
-from plugin_types.subcmixer import AbstractSubcMixer
-from plugin_types.chart_export import AbstractChartExportPlugin
-from plugin_types.issue_reporting import AbstractIssueReporting
-from plugin_types.dispatch_hook import AbstractDispatchHook
-from plugin_types.token_connect import AbstractTokenConnect
-from plugin_types.kwic_connect import AbstractKwicConnect
-from plugin_types.query_suggest import AbstractQuerySuggest
+from types import ModuleType
+from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional,
+                    Sequence, TypeVar, Union)
+
+from action.plugin.ctx import AbstractUserPluginCtx
 from plugin_types.action_log import AbstractActionLog
+from plugin_types.appbar import AbstractApplicationBar
 from plugin_types.audio_provider import AbstractAudioProvider
 from plugin_types.auth import AbstractAuth
-from action.plugin.ctx import AbstractUserPluginCtx
+from plugin_types.chart_export import AbstractChartExportPlugin
+from plugin_types.conc_cache import AbstractCacheMappingFactory
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.dispatch_hook import AbstractDispatchHook
+from plugin_types.footer_bar import AbstractFootbar
+from plugin_types.general_storage import KeyValueStorage
+from plugin_types.getlang import AbstractGetLang
+from plugin_types.integration_db import IntegrationDatabase
+from plugin_types.issue_reporting import AbstractIssueReporting
+from plugin_types.kwic_connect import AbstractKwicConnect
+from plugin_types.live_attributes import AbstractLiveAttributes
+from plugin_types.menu_items import AbstractMenuItems
+from plugin_types.query_history import AbstractQueryHistory
+from plugin_types.query_persistence import AbstractQueryPersistence
+from plugin_types.query_suggest import AbstractQuerySuggest
+from plugin_types.settings_storage import AbstractSettingsStorage
+from plugin_types.subc_restore import AbstractSubcRestore
+from plugin_types.subcmixer import AbstractSubcMixer
+from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
+from plugin_types.taghelper import AbstractTaghelper
+from plugin_types.token_connect import AbstractTokenConnect
+from plugin_types.user_items import AbstractUserItems
+from secure_cookie.session import Session
 
+from .export import Loader
+from .export_freq2d import Loader as LoaderFreq2d
 
 T = TypeVar('T')
 U = TypeVar('U')

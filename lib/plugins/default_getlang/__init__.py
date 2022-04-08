@@ -13,8 +13,9 @@
 # GNU General Public License for more details.
 
 import http.cookies
-from collections import defaultdict
 import os
+from collections import defaultdict
+
 from plugin_types.getlang import AbstractGetLang
 
 

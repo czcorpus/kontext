@@ -13,21 +13,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from sanic.request import Request
-from sanic import HTTPResponse, Sanic
-from sanic import response
-from typing import Optional, Union, Callable, Any, Type, Coroutine, List
-from functools import wraps
-from action.templating import CustomJSONEncoder, TplEngine, ResultType
-from action.props import ActionProps
-from action.theme import apply_theme
-from action.krequest import KRequest
-from action.response import KResponse
-from dataclasses_json import DataClassJsonMixin
-from action.errors import ImmediateRedirectException, UserActionException
-from action.model.base import PageConstructor, BaseActionModel
 import json
+from functools import wraps
+from typing import Any, Callable, Coroutine, List, Optional, Type, Union
+
 import settings
+from action.errors import ImmediateRedirectException, UserActionException
+from action.krequest import KRequest
+from action.model.base import BaseActionModel, PageConstructor
+from action.props import ActionProps
+from action.response import KResponse
+from action.templating import CustomJSONEncoder, ResultType, TplEngine
+from action.theme import apply_theme
+from dataclasses_json import DataClassJsonMixin
+from sanic import HTTPResponse, Sanic, response
+from sanic.request import Request
+from templating import Type2XML
 
 
 async def _output_result(
@@ -57,12 +58,10 @@ async def _output_result(
         try:
             if type(result) in (str, bytes):
                 return result
-            else:
-                return json.dumps(result, cls=CustomJSONEncoder)
+            return json.dumps(result, cls=CustomJSONEncoder)
         except Exception as e:
             return json.dumps(dict(messages=[('error', str(e))]))
     elif return_type == 'xml':
-        from templating import Type2XML
         return Type2XML.to_xml(result)
     elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
@@ -91,7 +90,7 @@ def create_mapped_args(tp: Type, req: Request):
         if mtype == str:
             if len(v) == 0:
                 raise UserActionException(f'Missing request argument {mk}')
-            elif len(v) > 1:
+            if len(v) > 1:
                 raise UserActionException(f'Argument {mk} is cannot be multi-valued')
             data[mk] = v[0]
         elif mtype == Union[str, None]:
@@ -159,7 +158,7 @@ def http_action(
         mutates_result: bool = False,
         apply_semi_persist_args: bool = False,
         return_type: str = 'template',
-        action_log_mapper: Callable[[Request], Any] = False):
+        action_log_mapper: Callable[[KRequest], Any] = False):
     """
     http_action decorator wraps Sanic view functions to provide more
     convenient arguments (including important action models). KonText
@@ -191,17 +190,6 @@ def http_action(
         async def wrapper(request: Request, *args, **kw):
             application = Sanic.get_app('kontext')
             app_url_prefix = application.config['action_path_prefix']
-            if request.path.startswith(app_url_prefix):
-                norm_path = request.path[len(app_url_prefix):]
-            else:
-                norm_path = request.path
-            path_elms = norm_path.split('/')
-            action_name = path_elms[-1]
-            action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
-            aprops = ActionProps(
-                action_name=action_name, action_prefix=action_prefix, access_level=access_level,
-                return_type=return_type, page_model=page_model, template=template,
-                mutates_result=mutates_result)
             if mapped_args:
                 marg = create_mapped_args(mapped_args, request)
             else:
@@ -212,6 +200,19 @@ def http_action(
                 redirect_safe_domains=application.config['redirect_safe_domains'],
                 cookies_same_site=application.config['cookies_same_site']
             )
+
+            if request.path.startswith(app_url_prefix):
+                norm_path = request.path[len(app_url_prefix):]
+            else:
+                norm_path = request.path
+            path_elms = norm_path.split('/')
+            action_name = path_elms[-1]
+            action_prefix = '/'.join(path_elms[:-1]) if len(path_elms) > 1 else ''
+            aprops = ActionProps(
+                action_name=action_name, action_prefix=action_prefix, access_level=access_level,
+                return_type=return_type, page_model=page_model, template=template,
+                mutates_result=mutates_result, action_log_mapper=action_log_mapper)
+
             if action_model:
                 amodel = action_model(req, resp, aprops, application.ctx.tt_cache)
             else:
@@ -225,14 +226,13 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
-                import traceback
-                traceback.print_stack()
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
                 ans = await resolve_error(amodel, aprops, req, resp, ex)
 
                 if settings.is_debug_mode():
+                    import traceback
                     resp.add_system_message('error', traceback.format_exc())
                 else:
                     resp.add_system_message('error', str(ex))

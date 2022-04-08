@@ -12,19 +12,18 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, List
 import importlib
-from sanic.blueprints import Blueprint
-from action.krequest import KRequest
-from action.response import KResponse
+from typing import Any, List
 
-from plugin_types.query_suggest import AbstractQuerySuggest
-import plugins
 import plugin_types.corparch
-from action.plugin.ctx import PluginCtx
-from action.model.corpus import CorpusActionModel
+import plugins
 from action.decorators import http_action
-
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
+from action.plugin.ctx import PluginCtx
+from action.response import KResponse
+from plugin_types.query_suggest import AbstractQuerySuggest
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('default_query_suggest')
 

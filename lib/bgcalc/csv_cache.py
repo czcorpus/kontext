@@ -14,7 +14,6 @@
 
 import aiocsv
 import aiofiles
-
 from util import aenumerate, anext
 
 

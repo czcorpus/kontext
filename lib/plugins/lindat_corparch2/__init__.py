@@ -106,36 +106,34 @@ element corpus {
 
 """
 
-from collections import OrderedDict
 import copy
-import re
 import logging
+import re
+from collections import OrderedDict
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
 from typing import List, Optional
-
-from sanic import Blueprint
 
 from action.decorators import http_action
 from action.krequest import KRequest
-from action.response import KResponse
 from action.model.user import UserActionModel
+from action.response import KResponse
+from dataclasses_json import dataclass_json
 from plugin_types.auth import AbstractAuth
 from plugin_types.user_items import AbstractUserItems
+from sanic import Blueprint
 
 try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
-from lxml import etree
-
-import plugins
-from plugin_types.corparch import AbstractSearchableCorporaArchive
-from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
-from plugin_types.corparch import CorplistProvider
-from plugins import inject
 import l10n
+import plugins
 from action.plugin.ctx import PluginCtx
+from lxml import etree
+from plugin_types.corparch import (AbstractSearchableCorporaArchive,
+                                   CorplistProvider)
+from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
+from plugins import inject
 from settings import import_bool
 
 bp = Blueprint('lindat_corparch2')

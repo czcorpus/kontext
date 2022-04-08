@@ -19,8 +19,10 @@
 # 02110-1301, USA.
 
 from io import BytesIO
+
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Side, Color, PatternFill, Font, Border, colors
+from openpyxl.styles import (Alignment, Border, Color, Font, PatternFill, Side,
+                             colors)
 from plugins.export_freq2d import AbstractExportFreq2d
 
 # define styles

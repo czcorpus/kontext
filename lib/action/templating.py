@@ -1,13 +1,13 @@
-import os
-import jinja2
 import json
+import os
 import re
-from typing import Union, Callable, Any, Dict
-from dataclasses_json import DataClassJsonMixin
-import l10n
-import strings
+from typing import Any, Callable, Dict, Union
 from xml.sax.saxutils import escape
 
+import jinja2
+import l10n
+import strings
+from dataclasses_json import DataClassJsonMixin
 
 ResultType = Union[
     Callable[[], Union[str, bytes, DataClassJsonMixin, Dict[str, Any]]],

@@ -13,9 +13,9 @@
 # GNU General Public License for more details.
 
 
-from typing import Dict, Any, Optional, ClassVar
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
+from typing import Any, ClassVar, Dict, Optional
 
 
 @dataclass

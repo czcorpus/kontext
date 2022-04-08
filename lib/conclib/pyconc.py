@@ -16,18 +16,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from typing import Callable, List, Dict, Any, Tuple
-import os
-from sys import stderr
-import re
 import logging
+import os
+import re
+from sys import stderr
+from typing import Any, Callable, Dict, List, Tuple
 
-import manatee
 import l10n
-from strings import escape_attr_val
-from kwiclib.common import lngrp_sortcrit
-from .errors import EmptyParallelCorporaIntersection, UnknownConcordanceAction, ConcordanceException
+import manatee
 from corplib.corpus import AbstractKCorpus
+from kwiclib.common import lngrp_sortcrit
+from strings import escape_attr_val
+
+from .errors import (ConcordanceException, EmptyParallelCorporaIntersection,
+                     UnknownConcordanceAction)
 
 
 def get_conc_labelmap(infopath):

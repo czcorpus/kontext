@@ -13,21 +13,21 @@
 # GNU General Public License for more details.
 
 
-from action.plugin.ctx import PluginCtx
+import logging
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
-import urllib.request
-import urllib.parse
-import urllib.error
-import logging
 
-import werkzeug.urls
-from plugins.mysql_integration_db import MySqlIntegrationDb
 import plugins
+import werkzeug.urls
+from action.plugin.ctx import PluginCtx
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcRestore, SubcRestoreRow
-from plugins.errors import PluginCompatibilityException
 from plugins import inject
+from plugins.errors import PluginCompatibilityException
+from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
 class MySQLSubcRestore(AbstractSubcRestore):

@@ -29,34 +29,35 @@ To validate your corplist.xml use:
 
 """
 
-from typing import List, Optional
-from collections import OrderedDict
 import copy
-import re
-from functools import reduce
 import logging
+import re
+from collections import OrderedDict
+from functools import reduce
+from typing import List, Optional
 
 try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
-from lxml import etree
 import aiofiles
 import aiofiles.os
-from sanic import Blueprint
-
-from action.decorators import http_action
-from action.model.user import UserActionModel
-from action.krequest import KRequest
-from action.response import KResponse
-import plugins
-from plugin_types.corparch import AbstractCorporaArchive, AbstractSearchableCorporaArchive
-from plugin_types.corparch.corpus import CorpusInfo, BrokenCorpusInfo, TagsetInfo, PosCategoryItem
-from plugin_types.corparch import CorplistProvider
-from plugin_types.auth import AbstractAuth
-from plugins import inject
 import l10n
+import plugins
+from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.user import UserActionModel
 from action.plugin.ctx import PluginCtx
+from action.response import KResponse
+from lxml import etree
+from plugin_types.auth import AbstractAuth
+from plugin_types.corparch import (AbstractCorporaArchive,
+                                   AbstractSearchableCorporaArchive,
+                                   CorplistProvider)
+from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
+                                          PosCategoryItem, TagsetInfo)
+from plugins import inject
+from sanic import Blueprint
 from settings import import_bool
 
 DEFAULT_LANG = 'en'

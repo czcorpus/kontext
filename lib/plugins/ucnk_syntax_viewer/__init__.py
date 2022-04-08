@@ -26,10 +26,11 @@ be: <js_module>syntaxViewer2</js_module>
 """
 
 import logging
-from plugin_types.auth import AbstractAuth
-from plugin_types.integration_db import IntegrationDatabase
+
 import plugins
 import plugins.default_syntax_viewer as dsv
+from plugin_types.auth import AbstractAuth
+from plugin_types.integration_db import IntegrationDatabase
 from plugins.syntax_viewer2.backend.manatee import ManateeBackend2
 
 

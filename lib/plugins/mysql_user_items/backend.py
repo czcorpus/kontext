@@ -23,7 +23,6 @@ A corparch database backend for MySQL/MariaDB.
 from plugin_types.user_items import FavoriteItem
 from plugins.common.mysql import MySQLOps
 
-
 DFLT_USER_TABLE = 'kontext_user'
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_GROUP_ACC_TABLE = 'kontext_group_access'

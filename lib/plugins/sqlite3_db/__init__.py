@@ -33,14 +33,13 @@ The sqlite3 plugin stores data in a single table called "data" with the followin
 CREATE TABLE data (key text PRIMARY KEY, value text, expires integer)
 """
 
-import ujson as json
-import time
-import aiosqlite
-import os
 import logging
+import os
+import time
 from contextlib import asynccontextmanager
 
-
+import aiosqlite
+import ujson as json
 from plugin_types.general_storage import KeyValueStorage
 
 

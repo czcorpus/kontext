@@ -15,17 +15,16 @@
 
 import collections
 from dataclasses import fields
-from sanic import Blueprint
 
+import settings
+from action.argmapping import GeneralOptionsArgs, WidectxArgsMapping
 from action.decorators import http_action
 from action.krequest import KRequest
-from action.response import KResponse
-from action.model.user import UserActionModel
-from action.model.corpus import CorpusActionModel
 from action.model.concordance import ConcActionModel
-from action.argmapping import WidectxArgsMapping, GeneralOptionsArgs
-import settings
-
+from action.model.corpus import CorpusActionModel
+from action.model.user import UserActionModel
+from action.response import KResponse
+from sanic import Blueprint
 
 bp = Blueprint('options', url_prefix='options')
 

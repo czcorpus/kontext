@@ -16,10 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import logging
 from contextlib import asynccontextmanager, contextmanager
+
 from plugin_types.integration_db import IntegrationDatabase
 from plugins.errors import PluginCompatibilityException
-import logging
 
 
 class DefaultIntegrationDb(IntegrationDatabase[None, None, None, None]):

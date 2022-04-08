@@ -17,11 +17,11 @@ import os.path
 import time
 from datetime import datetime
 from hashlib import sha1
-import ujson as json
 
 import aiofiles.os
-
+import ujson as json
 from plugin_types.general_storage import KeyValueStorage
+
 try:
     from elasticsearch import Elasticsearch
 except ImportError:

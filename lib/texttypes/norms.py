@@ -17,10 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from functools import partial
 import collections
-from .cache import TextTypesCache
+from functools import partial
+
 from corplib.corpus import AbstractKCorpus
+
+from .cache import TextTypesCache
 
 
 class StructNormsCalc(object):

@@ -18,8 +18,8 @@
 
 import re
 from functools import wraps
-from . import Attribute, PosAttribute, Struct, SimpleAttr, RegistryConf
 
+from . import Attribute, PosAttribute, RegistryConf, SimpleAttr, Struct
 
 DEBUG = 0
 

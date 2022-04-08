@@ -16,11 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from dataclasses import asdict, dataclass, field
-import aiomysql
 from contextlib import asynccontextmanager, contextmanager
-from typing import Generator, Optional, Dict, Any
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, Generator, Optional
 
+import aiomysql
 import pymysql
 
 

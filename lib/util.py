@@ -1,6 +1,6 @@
+import asyncio
 from functools import partial, wraps
 from typing import AsyncIterator, Tuple, TypeVar
-import asyncio
 
 T = TypeVar('T')
 

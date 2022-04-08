@@ -14,24 +14,23 @@
 # GNU General Public License for more details.
 
 
+import logging
+import urllib.parse
 # coding=utf-8
 from dataclasses import asdict, dataclass, field
 from typing import Any, List, Optional
-import urllib.parse
-import logging
+
 import aiofiles
-
-from sanic import Blueprint
-
-import l10n
 import conclib
-from action.model.fcs import FCSActionModel, Languages
+import l10n
+import plugins
+import settings
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
+from action.model.fcs import FCSActionModel, Languages
 from action.response import KResponse
-import plugins
-import settings
+from sanic import Blueprint
 
 bp_common = Blueprint('fcs-common', url_prefix='fcs')
 bp_v1 = bp_common.copy('fcs-v1')

@@ -13,28 +13,26 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Optional
-from dataclasses import dataclass
 import sys
 import time
+from dataclasses import dataclass
+from typing import Optional
 
-from sanic import Blueprint
-
-from action.decorators import http_action
-from action.krequest import KRequest
-from action.response import KResponse
-from action.argmapping.pquery import PqueryFormArgs
-from action.errors import NotFoundException
-from action.model.pquery import ParadigmaticQueryActionModel
 import bgcalc
-from bgcalc.pquery.storage import require_existing_pquery
+import plugins
+import settings
+from action.argmapping.pquery import PqueryFormArgs
+from action.decorators import http_action
+from action.errors import NotFoundException
+from action.krequest import KRequest
+from action.model.pquery import ParadigmaticQueryActionModel
+from action.response import KResponse
 from bgcalc.pquery.errors import PqueryResultNotFound
+from bgcalc.pquery.storage import require_existing_pquery
 from bgcalc.task import AsyncTaskStatus
 from main_menu import MainMenu
 from main_menu.model import MenuItemInternal
-import plugins
-import settings
-
+from sanic import Blueprint
 
 bp = Blueprint('pquery', url_prefix='pquery')
 

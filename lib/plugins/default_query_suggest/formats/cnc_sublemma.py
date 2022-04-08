@@ -12,8 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import List, Tuple, Dict
 from dataclasses import dataclass
+from typing import Dict, List, Tuple
+
 from dataclasses_json import dataclass_json
 
 

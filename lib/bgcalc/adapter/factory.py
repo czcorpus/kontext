@@ -14,8 +14,10 @@
 
 
 from importlib.machinery import SourceFileLoader
-from .errors import BgCalcAdapterError
+
 from bgcalc.adapter.abstract import AbstractBgClient
+
+from .errors import BgCalcAdapterError
 
 _backend_app = None
 
@@ -25,7 +27,7 @@ def init_backend(conf, fn_prefix) -> AbstractBgClient:
     worker_conf = conf.get('calc_backend', 'conf')
     if worker_type == 'celery':
         import celery
-        from bgcalc.adapter.celery import Config, CeleryClient
+        from bgcalc.adapter.celery import CeleryClient, Config
 
         if worker_conf:
             cconf = SourceFileLoader('celeryconfig', worker_conf).load_module()

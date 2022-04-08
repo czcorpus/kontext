@@ -32,20 +32,22 @@ backends (see especially HTTP backend which uses these attributes to construct a
 Required XML configuration: please see config.rng
 """
 
-import ujson as json
 import logging
 from typing import Any, Dict, List, Sequence, Tuple
-from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.general_storage import KeyValueStorage
-import manatee
-from sanic.blueprints import Blueprint
 
+import manatee
 import plugins
-from plugin_types.token_connect import AbstractBackend, AbstractFrontend, AbstractTokenConnect, find_implementation
-from corplib.corpus import KCorpus
+import ujson as json
 from action.decorators import http_action
 from action.model.concordance import ConcActionModel
+from corplib.corpus import KCorpus
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.general_storage import KeyValueStorage
+from plugin_types.token_connect import (AbstractBackend, AbstractFrontend,
+                                        AbstractTokenConnect,
+                                        find_implementation)
 from plugins.default_token_connect.frontends import ErrorFrontend
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('default_token_connect')
 

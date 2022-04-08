@@ -23,23 +23,22 @@ as a back-end.
 required config.xml entries: please see config.rng
 """
 
-from ctypes import Union
 import hashlib
-import re
-import uuid
-import os
 import logging
+import os
+import re
 import sqlite3
-import ujson as json
 import time
+import uuid
+from ctypes import Union
+
+import plugins
+import ujson as json
+from action.errors import ForbiddenException, UserActionException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
-
 from plugin_types.query_persistence import AbstractQueryPersistence
-import plugins
 from plugins import inject
-from action.errors import ForbiddenException, UserActionException
-
 
 KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
                ['%d' % i for i in range(10)]

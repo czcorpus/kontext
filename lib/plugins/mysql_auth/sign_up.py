@@ -12,12 +12,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import datetime
 import hashlib
 import uuid
-import datetime
 
 from aiomysql import Connection
-
 from plugin_types.auth.sign_up import AbstractSignUpToken
 
 

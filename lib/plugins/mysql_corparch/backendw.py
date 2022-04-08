@@ -18,20 +18,26 @@
 
 
 import datetime
-from collections import OrderedDict, defaultdict
-import pytz
 import logging
 import re
+from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
-from plugins.common.mysql import MySQLOps
+
+import pytz
 from aiomysql.cursors import Cursor
 from plugin_types.corparch.backend import DatabaseWriteBackend
-from plugins.mysql_corparch.backend import (
-    Backend,
-    DFLT_USER_TABLE, DFLT_CORP_TABLE, DFLT_GROUP_ACC_TABLE, DFLT_USER_ACC_TABLE, DFLT_USER_ACC_CORP_ATTR,
-    DFLT_GROUP_ACC_CORP_ATTR, DFLT_GROUP_ACC_GROUP_ATTR)
-from plugin_types.corparch.backend.regkeys import (
-    REG_COLS_MAP, REG_VAR_COLS_MAP, POS_COLS_MAP, STRUCT_COLS_MAP, SATTR_COLS_MAP)
+from plugin_types.corparch.backend.regkeys import (POS_COLS_MAP, REG_COLS_MAP,
+                                                   REG_VAR_COLS_MAP,
+                                                   SATTR_COLS_MAP,
+                                                   STRUCT_COLS_MAP)
+from plugins.common.mysql import MySQLOps
+from plugins.mysql_corparch.backend import (DFLT_CORP_TABLE,
+                                            DFLT_GROUP_ACC_CORP_ATTR,
+                                            DFLT_GROUP_ACC_GROUP_ATTR,
+                                            DFLT_GROUP_ACC_TABLE,
+                                            DFLT_USER_ACC_CORP_ATTR,
+                                            DFLT_USER_ACC_TABLE,
+                                            DFLT_USER_TABLE, Backend)
 
 
 class WriteBackend(DatabaseWriteBackend[Cursor]):

@@ -25,8 +25,8 @@ import logging
 
 import ujson as json
 from aiomysql import Cursor
-from plugins.common.mysql import MySQLOps
 from plugin_types.general_storage import KeyValueStorage
+from plugins.common.mysql import MySQLOps
 
 
 def get_iso_datetime():

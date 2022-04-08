@@ -14,12 +14,13 @@
 
 
 import logging
-from sanic import Sanic
-import settings
+
 import plugins
-import plugins.export_freq2d
 import plugins.export
+import plugins.export_freq2d
+import settings
 from plugins.errors import PluginException
+from sanic import Sanic
 
 
 def has_configured_plugin(name):

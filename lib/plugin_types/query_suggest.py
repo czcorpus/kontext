@@ -20,10 +20,11 @@
 """
 
 import abc
-from typing import List, Dict, Any, Generic, TypeVar
-from dataclasses_json import DataClassJsonMixin
-from corplib.corpus import KCorpus
+from typing import Any, Dict, Generic, List, TypeVar
+
 from action.plugin.ctx import PluginCtx
+from corplib.corpus import KCorpus
+from dataclasses_json import DataClassJsonMixin
 from plugin_types import CorpusDependentPlugin
 
 

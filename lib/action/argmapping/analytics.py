@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from action.argmapping import Args
 
 

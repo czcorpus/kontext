@@ -16,14 +16,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Dict, Any, Tuple, Union, List, Generic, TypeVar, Optional
-from sanic.request import Request, RequestParameters
-from sanic_session import Session
-from urllib.parse import quote
-from plugin_types.auth import UserInfo
 import time
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from urllib.parse import quote
+
 from babel import Locale
-from sanic_babel import gettext, get_locale
+from plugin_types.auth import UserInfo
+from sanic.request import Request, RequestParameters
+from sanic_babel import get_locale, gettext
+from sanic_session import Session
 
 M_args = TypeVar('M_args')
 
@@ -190,8 +191,8 @@ class KRequest(Generic[M_args]):
         returns:
         updated URL
         """
-        import urllib.parse
         import urllib.error
+        import urllib.parse
 
         parsed_url = list(urllib.parse.urlparse(self.get_current_url()))
         old_params = dict(urllib.parse.parse_qsl(parsed_url[4]))

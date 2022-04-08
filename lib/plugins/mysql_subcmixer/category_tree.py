@@ -18,8 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Iterator, List, NamedTuple, Optional, Union
 import copy
+from typing import Iterator, List, NamedTuple, Optional, Union
 
 import numpy as np
 from plugins.mysql_integration_db import MySqlIntegrationDb

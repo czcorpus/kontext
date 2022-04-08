@@ -17,24 +17,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Callable, List, Any, Optional, Tuple, Dict, Union
-from functools import cmp_to_key
-from array import array
+import glob
 import logging
 import os
-import glob
+from array import array
+from functools import cmp_to_key
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import aiofiles
 import aiofiles.os
-import manatee
-from manatee import SubCorpus, Concordance, StrVector
-
 import l10n
+import manatee
 import plugins
+from manatee import Concordance, StrVector, SubCorpus
 from plugin_types.corparch.corpus import DefaultManateeCorpusInfo
-from .corpus import AbstractKCorpus, KCorpus, KSubcorpus, _PublishedSubcMetadata
-from .fallback import EmptyCorpus
+
+from .corpus import (AbstractKCorpus, KCorpus, KSubcorpus,
+                     _PublishedSubcMetadata)
 from .errors import MissingSubCorpFreqFile
+from .fallback import EmptyCorpus
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
 TYPO_CACHE_TTL = 3600 * 24 * 7

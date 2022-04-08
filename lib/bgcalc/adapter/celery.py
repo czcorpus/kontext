@@ -12,9 +12,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from celery import Celery
 from typing import Type, TypeVar
+
 from bgcalc.adapter.abstract import AbstractBgClient
+from celery import Celery
 
 T = TypeVar('T')
 

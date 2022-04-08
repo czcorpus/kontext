@@ -18,18 +18,18 @@
 
 import logging
 import smtplib
-from email.mime.text import MIMEText
-import ujson as json
 from datetime import datetime
-from sanic.blueprints import Blueprint
-from plugin_types.auth import AbstractAuth
+from email.mime.text import MIMEText
 
-from plugins import inject
 import plugins
-from plugin_types.issue_reporting import AbstractIssueReporting, DynamicReportingAction
+import ujson as json
 from action.decorators import http_action
 from action.model.user import UserActionModel
-
+from plugin_types.auth import AbstractAuth
+from plugin_types.issue_reporting import (AbstractIssueReporting,
+                                          DynamicReportingAction)
+from plugins import inject
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('default_issue_reporting')
 

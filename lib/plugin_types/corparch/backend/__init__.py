@@ -16,14 +16,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from typing import Iterable, List, Any, Tuple, Dict, Optional, TypeVar, Generic, Generator
+import abc
+from contextlib import asynccontextmanager
+from typing import (Any, Dict, Generator, Generic, Iterable, List, Optional,
+                    Tuple, TypeVar)
+
 from plugin_types.auth import CorpusAccess
 from plugin_types.corparch.corpus import TagsetInfo
 from plugin_types.corparch.install import InstallJson
 from plugin_types.corparch.registry import RegistryConf
-import abc
-from contextlib import asynccontextmanager
-
 
 CursorType = TypeVar('CursorType')
 

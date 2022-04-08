@@ -12,21 +12,21 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Tuple, List
 import hashlib
 import os.path
 from functools import wraps
+from typing import List, Tuple
 
 import aiocsv
 import aiofiles
 import aiofiles.os
-
 import l10n
-from .errors import PqueryResultNotFound, PqueryArgumentError
-from action.argmapping.pquery import PqueryFormArgs
-from bgcalc.csv_cache import load_cached_partial, load_cached_full
-from bgcalc.adapter.abstract import AbstractBgClient
 import settings
+from action.argmapping.pquery import PqueryFormArgs
+from bgcalc.adapter.abstract import AbstractBgClient
+from bgcalc.csv_cache import load_cached_full, load_cached_partial
+
+from .errors import PqueryArgumentError, PqueryResultNotFound
 
 
 def _create_cache_path(pquery: PqueryFormArgs) -> str:

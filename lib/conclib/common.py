@@ -18,8 +18,8 @@
 # 02110-1301, USA.
 
 from typing import Union
+
 from conclib.empty import InitialConc
 from conclib.pyconc import PyConc
-
 
 KConc = Union[InitialConc, PyConc]

@@ -20,8 +20,8 @@
 The 'settings storage' plug-in works as a backend for storing and
 loading user settings.
 """
-from typing import Union, Dict, Any, Optional
 import abc
+from typing import Any, Dict, Optional, Union
 
 
 class AbstractSettingsStorage(abc.ABC):

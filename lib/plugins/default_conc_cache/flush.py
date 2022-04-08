@@ -25,11 +25,10 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../
 import autoconf
 import plugins
 from action.plugin import initializer
+
 initializer.init_plugin('db')
 initializer.init_plugin('conc_cache')
-from plugins.default_conc_cache import cleanup
-from plugins.default_conc_cache import DefaultCacheMapping
-
+from plugins.default_conc_cache import DefaultCacheMapping, cleanup
 
 if __name__ == '__main__':
     import argparse

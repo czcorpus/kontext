@@ -24,17 +24,18 @@ specified by attributes values).
 """
 
 import collections
-import re
 import logging
-from typing import Any, Dict, List, Tuple
+import re
 from functools import reduce
-from action.krequest import KRequest
+from typing import Any, Dict, List, Tuple
 
-from strings import escape_attr_val
-from corplib.corpus import AbstractKCorpus
-import settings
 import plugins
+import settings
+from action.krequest import KRequest
 from action.plugin.ctx import AbstractCorpusPluginCtx
+from corplib.corpus import AbstractKCorpus
+from strings import escape_attr_val
+
 from .cache import TextTypesCache
 from .norms import CachedStructNormsCalc
 

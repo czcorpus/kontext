@@ -30,9 +30,10 @@ a new version of 'taghelper'.
 """
 
 import abc
-from typing import Callable, TypeVar, Generic
-from action.plugin.ctx import AbstractCorpusPluginCtx
+from typing import Callable, Generic, TypeVar
+
 from action.krequest import KRequest
+from action.plugin.ctx import AbstractCorpusPluginCtx
 
 T = TypeVar('T')
 U = TypeVar('U')

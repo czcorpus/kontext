@@ -13,22 +13,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from collections import defaultdict
 import logging
-from typing import List, Union
+from collections import defaultdict
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json, LetterCase
-from action.errors import ForbiddenException
-from action.model.user import UserActionModel
-from action.model.corpus import CorpusActionModel
-from action.decorators import http_action
-from sanic import Blueprint
-from action.krequest import KRequest
-from action.response import KResponse
+from typing import List, Union
 
 import plugins
-from plugin_types.corparch import AbstractSearchableCorporaArchive, SimpleCorporaArchive
+from action.decorators import http_action
+from action.errors import ForbiddenException
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
+from action.model.user import UserActionModel
+from action.response import KResponse
+from dataclasses_json import LetterCase, dataclass_json
+from plugin_types.corparch import (AbstractSearchableCorporaArchive,
+                                   SimpleCorporaArchive)
 from plugin_types.corparch.corpus import CitationInfo
+from sanic import Blueprint
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

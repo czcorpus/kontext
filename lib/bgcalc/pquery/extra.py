@@ -12,18 +12,19 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Dict, List
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
+from typing import Dict, List
 
 from action.argmapping.pquery import PqueryFormArgs
-from bgcalc.freq_calc import calculate_freqs_bg_sync
 from bgcalc.adapter.abstract import AbstractBgClient
+from bgcalc.freq_calc import calculate_freqs_bg_sync
+from bgcalc.pquery import (SUBTASK_TIMEOUT_SECS, create_freq_calc_args,
+                           extract_freqs)
 from bgcalc.pquery.storage import stored_to_fs
-from bgcalc.pquery import create_freq_calc_args, SUBTASK_TIMEOUT_SECS, extract_freqs
-from corplib import CorpusManager
 from conclib.calc import require_existing_conc
+from corplib import CorpusManager
 
 
 @stored_to_fs
