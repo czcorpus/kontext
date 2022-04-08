@@ -26,10 +26,6 @@ class Persistence(Enum):
     # stored in user's settings (and not elsewhere)
     PERSISTENT = 0b0001
 
-    # stored in user's session (and not elsewhere), used to optionally set suitable initial values
-    # (action method must have 'apply_semi_persist_args' annotation set to True)
-    SEMI_PERSISTENT = 0b0010
-
 
 # This attribute set covers concordance options
 # specifying how to concordance is presented
@@ -70,10 +66,10 @@ def mk_metdata(persistent: Persistence = Persistence.NON_PERSISTENT, to_js: Opti
 
 @dataclass
 class MinArgs:
-    corpname: str = field(default='', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    corpname: str = field(default='', metadata=mk_metdata())
     usesubcorp: str = field(default='', metadata=mk_metdata())
     subcname: str = field(default='', metadata=mk_metdata())
-    align: List[str] = field(default_factory=list, metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    align: List[str] = field(default_factory=list, metadata=mk_metdata())
     maincorp: str = field(default='', metadata=mk_metdata())
 
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
@@ -148,8 +144,8 @@ class Args(UserActionArgs):
     numofpages: int = field(default=0, metadata=mk_metdata())
     pnfilter: str = field(default='p', metadata=mk_metdata())
     filfl: str = field(default='f', metadata=mk_metdata())
-    filfpos: str = field(default='-5', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
-    filtpos: str = field(default='5', metadata=mk_metdata(Persistence.SEMI_PERSISTENT))
+    filfpos: str = field(default='-5', metadata=mk_metdata())
+    filtpos: str = field(default='5', metadata=mk_metdata())
 
     # concordance sorting
     sattr: str = field(default='', metadata=mk_metdata())

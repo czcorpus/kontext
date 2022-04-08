@@ -156,7 +156,6 @@ def http_action(
         page_model: Optional[str] = None,
         mapped_args: Optional[Type] = None,
         mutates_result: bool = False,
-        apply_semi_persist_args: bool = False,
         return_type: str = 'template',
         action_log_mapper: Callable[[KRequest], Any] = False):
     """
@@ -179,7 +178,6 @@ def http_action(
                       it should store actual result data. This is particularly important for concordance
                       actions like filters, sorting etc. where the concordance changes based on the previous
                       state.
-    apply_semi_persist_args -- if True hen use session to initialize action args first
     return_type -- specifies how the result data should be interpreted for the client {plain, json, template, xml}.
                    In some cases, a single result type (typically a Dict) can be transformed into multiple formats
                    (html page, xml file, json file, plain text file) but in other cases the choice is limited
