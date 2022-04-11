@@ -108,3 +108,6 @@ class TestingKeyValueStorage(KeyValueStorage):
 
     def rename(self, key, new_key):
         pass
+
+    def keys(self, pattern):
+        pass

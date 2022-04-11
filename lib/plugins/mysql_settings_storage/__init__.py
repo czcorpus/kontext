@@ -21,7 +21,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
 import plugins
-import ujson
+import ujson as json
 from plugin_types.common import Serializable
 from plugin_types.settings_storage import AbstractSettingsStorage
 from plugins import inject
@@ -48,7 +48,7 @@ class SettingsStorage(AbstractSettingsStorage):
                     VALUES (%s, %s, %s)
                     ON DUPLICATE KEY UPDATE
                     data = VALUES(data)
-                ''', (user_id, corpus_id, ujson.dumps(data)))
+                ''', (user_id, corpus_id, json.dumps(data)))
                 await cursor.connection.commit()
 
         else:
@@ -58,7 +58,7 @@ class SettingsStorage(AbstractSettingsStorage):
                     VALUES (%s, %s)
                     ON DUPLICATE KEY UPDATE
                     data = VALUES(data)
-                ''', (user_id, ujson.dumps(data)))
+                ''', (user_id, json.dumps(data)))
                 await cursor.connection.commit()
 
     async def _upgrade_general_settings(self, data: Dict[str, Serializable], user_id: int) -> Dict[str, Serializable]:
@@ -91,7 +91,7 @@ class SettingsStorage(AbstractSettingsStorage):
                 row = await cursor.fetchone()
 
             if row is not None:
-                return ujson.loads(row['data'])
+                return json.loads(row['data'])
 
         else:
             async with self._db.cursor() as cursor:
@@ -102,7 +102,7 @@ class SettingsStorage(AbstractSettingsStorage):
                 row = await cursor.fetchone()
 
             if row is not None:
-                return await self._upgrade_general_settings(ujson.loads(row['data']), user_id)
+                return await self._upgrade_general_settings(json.loads(row['data']), user_id)
 
         return {}
 

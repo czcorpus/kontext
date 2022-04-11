@@ -1,7 +1,6 @@
-# Copyright (c) 2021 Charles University, Faculty of Arts,
+# Copyright (c) 2022 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
-# Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
-# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import asyncio
+import json
 import os
 import sys
 
@@ -25,56 +26,34 @@ sys.path.insert(0, os.path.realpath('%s/../' % os.path.dirname(os.path.realpath(
 sys.path.insert(0, os.path.realpath('%s/../../../../scripts/' %
                                     os.path.dirname(os.path.realpath(__file__))))
 
-import argparse
-import datetime
-import sqlite3
-
 import autoconf
 from action.plugin import initializer
 
 initializer.init_plugin('integration_db')
+initializer.init_plugin('db')
 import plugins
 
 
-def import_sqlite_db(db_path, chunk_size):
-    ucnk_db = sqlite3.connect(db_path)
+async def import_settings():
+    with plugins.runtime.INTEGRATION_DB as mysql_db, plugins.runtime.DB as kv_db:
+        settings_keys = await kv_db.keys('settings:user:*')
+        values = [(int(key.split(':')[-1]), json.dumps(await kv_db.get(key))) for key in settings_keys]
+        async with mysql_db.cursor() as cursor:
+            await cursor.executemany('INSERT INTO kontext_settings (user_id, data) VALUES (%s, %s)', values)
+            await cursor.connection.commit()
 
-    cursor = ucnk_db.cursor()
-    with plugins.runtime.INTEGRATION_DB as mysql_db:
-        cursor.execute('SELECT id, data, created, num_access, last_access FROM archive')
-        while True:
-            data = cursor.fetchmany(chunk_size)
-            if len(data):
-                with mysql_db.connection_sync() as conn:
-                    with conn.cursor() as cursor:
-                        cursor.executemany(
-                            'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access, last_access) '
-                            'VALUES (%s, %s, %s, %s, %s)',
-                            [(
-                                d[0],
-                                d[1],
-                                datetime.datetime.fromtimestamp(d[2]).isoformat(),
-                                d[3],
-                                datetime.datetime.fromtimestamp(d[4]).isoformat() if d[4] else None
-                            ) for d in data]
-                        )
-                    conn.commit()
-            else:
-                break
+        corpus_settings_keys = await kv_db.keys('corpus_settings:user:*')
+        values = []
+        for key in corpus_settings_keys:
+            user_id = int(key.split(':')[-1])
+            data = await kv_db.hash_get_all(key)
+            values = [(user_id, corpus_id, json.dumps(cs)) for corpus_id, cs in data.items()]
+            async with mysql_db.cursor() as cursor:
+                await cursor.executemany('INSERT INTO kontext_corpus_settings (user_id, corpus_name, data) VALUES (%s, %s, %s)', values)
+                await cursor.connection.commit()
 
-    cursor.close()
-    ucnk_db.close()
+    print('Data imported')
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Import conc persistence from sqlite3 to mysql')
-    parser.add_argument('path', metavar='PATH', type=str, help='Path to sqlite3 db')
-    parser.add_argument('-c', '--chunk_size', type=int, default=1000,
-                        help='Chunk size for import cycle. Default is 1000')
-    args = parser.parse_args()
-    try:
-        import_sqlite_db(args.path, args.chunk_size)
-        print('Data imported')
-    except Exception as ex:
-        print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
-        sys.exit(1)
+    asyncio.run(import_settings())

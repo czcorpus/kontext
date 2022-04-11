@@ -285,6 +285,13 @@ class DefaultDb(KeyValueStorage):
         await self.set(key, mapping)
         return True
 
+    async def keys(self, pattern: str = '*'):
+        # just simple pattern transformation from Redis to SQLite
+        pattern = pattern.replace('*', '%').replace('?', '_')
+        async with self.connection() as conn:
+            cursor = await conn.execute('SELECT key FROM data WHERE key LIKE ?', (pattern,))
+            return [row[0] async for row in cursor]
+
 
 def create_instance(conf):
     """

@@ -256,6 +256,12 @@ class KeyValueStorage(abc.ABC):
         Before setting, the values are json-serialized
         """
 
+    @abc.abstractmethod
+    async def keys(self, pattern: str = '*') -> List[str]:
+        """
+        Lists available keys by pattern
+        """
+
     async def get_instance(self, plugin_id):
         """
         Return the current instance of the plug-in
