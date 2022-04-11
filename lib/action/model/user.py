@@ -464,8 +464,6 @@ class UserActionModel(BaseActionModel):
         await self.attach_plugin_exports(result, direct=False)
         result['_version'] = (corplib.manatee_version(), settings.get('global', '__version__'))
 
-        if isinstance(result, dict):
-            result['messages'] = result.get('messages', []) + self._resp.system_messages
         if self.user_is_anonymous():
             disabled_set = set(self.disabled_menu_items)
             self.disabled_menu_items = tuple(disabled_set.union(

@@ -38,8 +38,7 @@ async def _output_result(
         tpl_engine: TplEngine,
         translate: Callable[[str], str],
         result: ResultType,
-        status: int,
-        return_type: str) -> Union[str, bytes]:
+        resp: KResponse) -> Union[str, bytes]:
     """
     Renders a response body out of a provided data (result). The concrete form of data transformation
     depends on the combination of the 'return_type' argument and a type of the 'result'.
@@ -50,28 +49,36 @@ async def _output_result(
     'plain' + str
     A callable 'result' can be used for lazy result evaluation or for JSON encoding with a custom encoder
     """
-    if 300 <= status < 400 or result is None:
+    if 300 <= resp.http_status_code < 400 or result is None:
         return ''
     if callable(result):
         result = result()
-    if return_type == 'json':
+    if action_props.return_type == 'json':
         try:
             if type(result) in (str, bytes):
                 return result
-            return json.dumps(result, cls=CustomJSONEncoder)
+            elif type(result) is dict:
+                result['messages'] = resp.system_messages
+                return json.dumps(result)
+            else:
+                if hasattr(result, 'messages'):
+                    setattr(result, 'messages', resp.system_messages)
+                return json.dumps(result, cls=CustomJSONEncoder)
         except Exception as e:
             return json.dumps(dict(messages=[('error', str(e))]))
-    elif return_type == 'xml':
+    elif action_props.return_type == 'xml':
         return Type2XML.to_xml(result)
-    elif return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
+    elif action_props.return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
     elif isinstance(result, dict):
         result = await action_model.add_globals(app, action_props, result)
+        if isinstance(result, dict):
+            result['messages'] = resp.system_messages
         apply_theme(result, app, translate)
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
     raise RuntimeError(
-        f'Unsupported result and result_type combination: {result.__class__.__name__},  {return_type}')
+        f'Unsupported result and result_type combination: {result.__class__.__name__},  {action_props.return_type}')
 
 
 def create_mapped_args(tp: Type, req: Request):
@@ -127,7 +134,7 @@ def create_mapped_args(tp: Type, req: Request):
 
 
 async def resolve_error(
-        amodel: BaseActionModel, action_props: ActionProps, req: KRequest, resp: KResponse, err: Exception):
+        amodel: BaseActionModel, req: KRequest, resp: KResponse, err: Exception):
     """
     resolve_error provides a way how to finish an action with some
     reasonable output in case the action has thrown an error.
@@ -135,18 +142,15 @@ async def resolve_error(
 
     ans = {
         'last_used_corp': dict(corpname=None, human_corpname=None),
-        'Q': []
+        'Q': [],
+        'messages': resp.system_messages[:]
     }
     await amodel.resolve_error_state(req, resp, ans, err)
     if isinstance(err, UserActionException):
         resp.set_http_status(err.code)
-
-    if action_props.return_type == 'template':
-        return ans
-    elif action_props.return_type == 'plain':
-        return str(err)
-    elif action_props.return_type == 'json':
-        return json.dumps(ans)
+    else:
+        resp.set_http_status(500)
+    return ans
 
 
 def http_action(
@@ -224,10 +228,11 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
+                resp.add_system_message('error', str(ex))
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
-                ans = await resolve_error(amodel, aprops, req, resp, ex)
+                ans = await resolve_error(amodel, req, resp, ex)
 
                 if settings.is_debug_mode():
                     import traceback
@@ -243,8 +248,7 @@ def http_action(
                     tpl_engine=application.ctx.templating,
                     translate=req.translate,
                     result=ans,
-                    status=resp.http_status_code,
-                    return_type=aprops.return_type),
+                    resp=resp),
                 status=resp.http_status_code,
                 headers=resp.output_headers(return_type))
 
