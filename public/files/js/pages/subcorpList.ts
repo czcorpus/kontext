@@ -54,15 +54,15 @@ class SubcorpListPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            this.subcorpListModel = new SubcorpListModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel,
-                this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
-                this.layoutModel.getConf<SortKey>('SortKey'),
-                this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
-                this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
-                this.layoutModel.getConf<SubcListFilter>('Filter')
-            );
+            this.subcorpListModel = new SubcorpListModel({
+                dispatcher: this.layoutModel.dispatcher,
+                layoutModel: this.layoutModel,
+                data: this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
+                sortKey: this.layoutModel.getConf<SortKey>('SortKey'),
+                relatedCorpora: this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
+                unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
+                initialFilter: this.layoutModel.getConf<SubcListFilter>('Filter')
+            });
             this.renderView();
         });
     }
