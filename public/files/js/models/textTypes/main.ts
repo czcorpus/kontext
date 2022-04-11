@@ -27,12 +27,13 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { importInitialData, TTInitialData, SelectionFilterMap, IntervalChar,
-    WidgetView } from './common';
+import { SelectionFilterMap, IntervalChar, WidgetView } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
+import { Actions as QueryActions } from '../query/actions';
+import { Actions as SubcActions } from '../subcorp/actions';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
@@ -103,14 +104,22 @@ interface TextTypesModelStatePreserve {
 }
 
 
+export interface TextTypesModelArgs {
+    dispatcher:IFullActionControl;
+    pluginApi:IPluginApi;
+    attributes:Array<TextTypes.AnyTTSelection>;
+    readonlyMode:boolean;
+    bibLabelAttr:string;
+    bibIdAttr:string;
+}
+
 
 /**
  * Provides essential general operations on available text types
  * (filtering values, updating status - checked/locked, ...).
  */
 export class TextTypesModel extends StatefulModel<TextTypesModelState>
-    implements TextTypes.IAdHocSubcorpusDetector, TextTypes.ITextTypesModel<TextTypesModelState>,
-        IUnregistrable {
+    implements IUnregistrable {
 
 
     /**
@@ -125,20 +134,20 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     private readonly notifySelectionChange:()=>void; // TODO this is an ungly antipattern;
 
 
-    constructor(
-        dispatcher:IFullActionControl,
-        pluginApi:IPluginApi,
-        data:TTInitialData,
-        readonlyMode:boolean,
-        selectedItems?:TextTypes.ExportedSelection
-    ) {
-        const attributes = importInitialData(data, selectedItems || {});
+    constructor({
+        dispatcher,
+        pluginApi,
+        attributes,
+        readonlyMode,
+        bibLabelAttr,
+        bibIdAttr
+    }:TextTypesModelArgs) {
         super(
             dispatcher,
             {
                 attributes,
-                bibLabelAttr: data.bib_attr,
-                bibIdAttr: data.id_attr,
+                bibLabelAttr,
+                bibIdAttr,
                 selectionHistory: [List.map(
                     x => TTSelOps.mapValues(x, x => x),
                     attributes
@@ -182,8 +191,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             dispatcher.dispatch(
                 Actions.SelectionChanged,
                 {
-                    attributes: this._getAttributes(this.state),
-                    hasSelectedItems: this.findHasSelectedItems(this.state)
+                    attributes,
+                    hasSelectedItems: TextTypesModel.findHasSelectedItems(this.state.attributes)
                 }
             );
         }
@@ -366,7 +375,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         Actions.AttributeTextInputAutocompleteReady,
                         {
                             ...action.payload,
-                            selections: this.exportSelections(false)
+                            selections: TextTypesModel.exportSelections(
+                                this.state.attributes,
+                                this.state.bibIdAttr,
+                                this.state.bibLabelAttr,
+                                false
+                            )
                         }
                     );
                 }
@@ -379,7 +393,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.dispatchSideEffect(
                     ConcActions.CalculateIpmForAdHocSubcReady,
                     {
-                        ttSelection: this.exportSelections(false)
+                        ttSelection: TextTypesModel.exportSelections(
+                            this.state.attributes,
+                            this.state.bibIdAttr,
+                            this.state.bibLabelAttr,
+                            false
+                        )
                     }
                 );
             }
@@ -394,7 +413,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 this.dispatchSideEffect(
                     PluginInterfaces.LiveAttributes.Actions.RefineReady,
                     {
-                        selections: this.exportSelections(false),
+                        selections: TextTypesModel.exportSelections(
+                            this.state.attributes,
+                            this.state.bibIdAttr,
+                            this.state.bibLabelAttr,
+                            false
+                        ),
                         newSelections: this.getUnlockedSelections(this.state)
                     }
                 );
@@ -598,6 +622,28 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 }
             }
         );
+
+        this.addActionHandler(
+            [
+                QueryActions.QuerySubmit,
+                QueryActions.BranchQuery,
+                SubcActions.FormSubmit,
+                SubcActions.QuickSubcorpSubmit
+            ],
+            action => {
+                this.dispatchSideEffect<typeof Actions.TextTypesQuerySubmitReady>({
+                    name: Actions.TextTypesQuerySubmitReady.name,
+                    payload: {
+                        selections: TextTypesModel.exportSelections(
+                            this.state.attributes,
+                            this.state.bibIdAttr,
+                            this.state.bibLabelAttr,
+                            false
+                        )
+                    }
+                })
+            }
+        );
     }
 
     private serialize(
@@ -617,7 +663,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
     ):void {
         if (corpora[0][0] === corpora[0][1]) { // main corp. is the same
             state.attributes = data.attributes;
-            state.hasSelectedItems = this.findHasSelectedItems(state);
+            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         }
     }
 
@@ -726,7 +772,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     }
                 }
             ));
-            state.hasSelectedItems = this.findHasSelectedItems(state);
+            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         });
     }
 
@@ -805,7 +851,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         } else {
             throw new Error('no such attribute value: ' + attrIdent);
         }
-        state.hasSelectedItems = this.findHasSelectedItems(state);
+        state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
 
     }
 
@@ -842,8 +888,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                     selected: newVal,
                 })
             );
-            state.hasSelectedItems = this.findHasSelectedItems(state);
-            this.emitChange();
+            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         }
     }
 
@@ -881,42 +926,31 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private _getAttributes(state:TextTypesModelState):Array<TextTypes.AnyTTSelection> {
-        return state.attributes;
-    }
-
-    getInitialAvailableValues():Array<TextTypes.AnyTTSelection> {
-        return List.head(this.state.selectionHistory);
-    }
-
-    /**
-     * @deprecated There is no guarantee that the state provided by
-     * this method is in sync with the actual action the method is used in.
-     * While this should work in most simple scenarios it can be also a source
-     * of problems in more complex ones and it should be considered as an antipattern.
-     * Please use actions along with model.suspend()
-     */
-    UNSAFE_exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
-        return this.exportSelections(lockedOnesOnly);
-    }
-
-    private exportSelections(lockedOnesOnly:boolean):TextTypes.ExportedSelection {
+    static exportSelections(
+        attributes:Array<TextTypes.AnyTTSelection>,
+        bibIdAttr:string,
+        bibLabelAttr: string,
+        lockedOnesOnly:boolean
+    ):TextTypes.ExportedSelection {
         const ans = {};
-        this.state.attributes.forEach((attrSel:TextTypes.AnyTTSelection) => {
-            const trueAttr = attrSel.name !== this.state.bibLabelAttr ?
-                    attrSel.name : this.state.bibIdAttr;
-            if (TTSelOps.hasUserChanges(attrSel)) {
-                if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
-                    ans[trueAttr] = attrSel.textFieldValue;
+        List.forEach(
+            (attrSel:TextTypes.AnyTTSelection) => {
+                const trueAttr = attrSel.name !== bibLabelAttr ?
+                        attrSel.name : bibIdAttr;
+                if (TTSelOps.hasUserChanges(attrSel)) {
+                    if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
+                        ans[trueAttr] = attrSel.textFieldValue;
 
-                } else if (attrSel.type === 'text') {
-                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                    } else if (attrSel.type === 'text') {
+                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
 
-                } else {
-                    ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                    } else {
+                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                    }
                 }
-            }
-        });
+            },
+            attributes
+        );
         return ans;
     }
 
@@ -1032,9 +1066,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         }
     }
 
-    private findHasSelectedItems(state:TextTypesModelState, attrName?:string):boolean {
+    static findHasSelectedItems(attributes:Array<TextTypes.AnyTTSelection>, attrName?:string):boolean {
         if (attrName !== undefined) {
-            const attr = state.attributes.find((val) => val.name === attrName);
+            const attr = List.find((val) => val.name === attrName, attributes);
             if (attr) {
                 return TTSelOps.hasUserChanges(attr);
 
@@ -1043,7 +1077,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             }
 
         } else {
-            return this._getAttributes(state).some(item => TTSelOps.hasUserChanges(item));
+            return List.some(item => TTSelOps.hasUserChanges(item), attributes);
         }
     }
 
@@ -1191,7 +1225,12 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             args['aligned'] = JSON.stringify(alignedCorpnames);
         }
 
-        const attrs = this.exportSelections(false);
+        const attrs = TextTypesModel.exportSelections(
+            this.state.attributes,
+            this.state.bibIdAttr,
+            this.state.bibLabelAttr,
+            false
+        );
         for (let p in attribArgs) {
             attrs[p] = attribArgs[p];
         }
@@ -1244,14 +1283,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 map(([,updatedSelection]) => updatedSelection)
             );
         }
-    }
-
-    hasSelectedItems(attrName?:string):boolean {
-        return this.findHasSelectedItems(this.state, attrName);
-    }
-
-    usesAdHocSubcorpus():boolean {
-        return this.findHasSelectedItems(this.state);
     }
 
     private getAttributesWithSelectedItems(state:TextTypesModelState, includeLocked:boolean):Array<string> {

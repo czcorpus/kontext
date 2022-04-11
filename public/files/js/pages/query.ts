@@ -43,8 +43,9 @@ import tagHelperPlugin from 'plugins/taghelper/init';
 import { QueryHelpModel } from '../models/help/queryHelp';
 import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
-import { TTInitialData } from '../models/textTypes/common';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
+import { AnyTTSelection } from '../types/textTypes';
 
 
 /**
@@ -106,14 +107,16 @@ export class QueryPage {
         );
     }
 
-    createTTViews(queryFormArgs:QueryFormArgs):QueryFormProps {
-        const textTypesData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        this.textTypesModel = new TextTypesModel(
-                this.layoutModel.dispatcher,
-                this.layoutModel.pluginApi(),
-                textTypesData,
-                false
-        );
+    createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData):[QueryFormProps, Array<AnyTTSelection>] {
+        const attributes = importInitialTTData(textTypesData, {});
+        this.textTypesModel = new TextTypesModel({
+                dispatcher: this.layoutModel.dispatcher,
+                pluginApi: this.layoutModel.pluginApi(),
+                attributes,
+                readonlyMode: false,
+                bibIdAttr: textTypesData.id_attr,
+                bibLabelAttr: textTypesData.bib_attr
+        });
         this.textTypesModel.applyCheckedItems(
             queryFormArgs.selected_text_types,
             queryFormArgs.bib_mapping
@@ -154,25 +157,37 @@ export class QueryPage {
             this.liveAttrsPlugin.isActive()
         );
 
-        return {
-            ...liveAttrsViews,
-            formType: Kontext.ConcFormTypes.QUERY,
-            tagHelperViews: {},
-            allowCorpusSelection: null
-        };
+        return tuple(
+            {
+                ...liveAttrsViews,
+                formType: Kontext.ConcFormTypes.QUERY,
+                tagHelperViews: {},
+                allowCorpusSelection: null
+            },
+            attributes
+        );
     }
 
-    private initQueryModel(queryFormArgs:QueryFormArgs):void {
+    private initQueryModel(
+        queryFormArgs:QueryFormArgs,
+        initialTTSelection:Array<AnyTTSelection>,
+        bibIdAttr:string,
+        bibLabelAttr:string
+    ):void {
         const corpora = [this.layoutModel.getCorpusIdent().id].concat(
             this.layoutModel.getConf<Array<string>>('alignedCorpora') || []);
-        this.queryModel = new FirstQueryFormModel(
-            this.layoutModel.dispatcher,
-            this.layoutModel,
-            this.textTypesModel,
-            this.quickSubcorpModel,
-            this.queryContextModel,
-            this.layoutModel.qsuggPlugin,
-            {
+        this.queryModel = new FirstQueryFormModel({
+            dispatcher: this.layoutModel.dispatcher,
+            pageModel: this.layoutModel,
+            quickSubcorpActive: Dict.size(TextTypesModel.exportSelections(
+                initialTTSelection,
+                bibIdAttr,
+                bibLabelAttr,
+                false
+            )) > 0,
+            queryContextModel: this.queryContextModel,
+            qsPlugin: this.layoutModel.qsuggPlugin,
+            props: {
                 corpora,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
                     'availableAlignedCorpora'
@@ -227,7 +242,7 @@ export class QueryPage {
                 concViewPosAttrs: this.getConf<ConcServerArgs>('currentArgs').attrs,
                 alignCommonPosAttrs: this.getConf<Array<string>>('AlignCommonPosAttrs')
             }
-        );
+        });
     }
 
 
@@ -323,7 +338,8 @@ export class QueryPage {
                 }
             );
 
-            const ttAns = this.createTTViews(queryFormArgs);
+            const textTypesData = this.layoutModel.getConf<TTInitialData>('textTypesData');
+            const [ttAns, ttSelection] = this.createTTViews(queryFormArgs, textTypesData);
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,
@@ -350,7 +366,12 @@ export class QueryPage {
 
             ttAns.allowCorpusSelection = true;
 
-            this.initQueryModel(queryFormArgs);
+            this.initQueryModel(
+                queryFormArgs,
+                ttSelection,
+                textTypesData.id_attr,
+                textTypesData.bib_attr
+            );
             const [corparchWidget, corparchPlg]  = this.initCorplistComponent();
             this.attachQueryForm(
                 ttAns,

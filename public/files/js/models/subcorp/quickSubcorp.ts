@@ -28,6 +28,9 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
+import { Action } from 'rxjs/internal/scheduler/Action';
+import { concatMap, map, throwError } from 'rxjs';
+import { tuple } from 'cnc-tskit';
 
 
 export interface QuickSubcorpModelState {
@@ -124,18 +127,45 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                     state => {
                         state.isBusy = true;
                     }
-                )
-                const args:CreateSubcorpusArgs = {
-                    corpname: pageModel.getNestedConf('corpusIdent', 'id'),
-                    subcname: this.state.subcname,
-                    publish: false,
-                    description: '',
-                    aligned_corpora: pageModel.getConf('alignedCorpora'),
-                    text_types: this.textTypesModel.UNSAFE_exportSelections(false),
-                    form_type: 'tt-sel'
-                };
-                this.submit(args, this.validate).subscribe({
-                    next: data => {
+                );
+
+                this.suspendWithTimeout(
+                    2000,
+                    {},
+                    (action, syncData) => {
+                        if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+
+                ).pipe(
+                    concatMap(
+                        action => {
+                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                                const args:CreateSubcorpusArgs = {
+                                    corpname: pageModel.getNestedConf('corpusIdent', 'id'),
+                                    subcname: this.state.subcname,
+                                    publish: false,
+                                    description: '',
+                                    aligned_corpora: pageModel.getConf('alignedCorpora'),
+                                    text_types: action.payload.selections,
+                                    form_type: 'tt-sel'
+                                };
+                                return this.submit(args, this.validate).pipe(
+                                    map(
+                                        resp => tuple(args, resp)
+                                    )
+                                )
+
+                            } else {
+                                throwError(() => new Error('Invalid action passed through suspend filter'));
+                            }
+                        }
+                    )
+
+                ).subscribe({
+                    next: ([args,]) => {
                         this.pageModel.showMessage('info', this.pageModel.translate('subc__quick_subcorpus_created'));
                         this.dispatchSideEffect<typeof QueryActions.QueryAddSubcorp>({
                             name: QueryActions.QueryAddSubcorp.name,

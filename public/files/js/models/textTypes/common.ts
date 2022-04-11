@@ -130,7 +130,7 @@ const typeIsSelected = (data:TextTypes.ExportedSelection, attr:string, v:string)
     return false;
 }
 
-export function importInitialData(data:TTInitialData,
+export function importInitialTTData(data:TTInitialData,
         selectedItems:TextTypes.ExportedSelection):Array<TextTypes.AnyTTSelection> {
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),

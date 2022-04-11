@@ -20,7 +20,7 @@
 
 import { Observable, of as rxOf } from 'rxjs';
 import { concatMap, tap, map, reduce } from 'rxjs/operators';
-import { SEDispatcher, IActionDispatcher } from 'kombo';
+import { SEDispatcher, IActionDispatcher, Action } from 'kombo';
 import { List, Dict, pipe, tuple, HTTP } from 'cnc-tskit';
 
 import * as Kontext from '../../../types/kontext';
@@ -35,6 +35,7 @@ import { QueryInfoModel } from './info';
 import { Actions } from '../actions';
 import { Actions as ConcActions } from '../../concordance/actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
+import { Actions as TTActions } from '../../textTypes/actions';
 import {
     ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse,
     QueryPipelineResponseItem } from './common';
@@ -47,6 +48,7 @@ import {
     QueryFormArgs, QueryFormArgsResponse, SampleFormArgs, SampleFormArgsResponse, SortFormArgs,
     SortFormArgsResponse, SwitchMainCorpArgs
 } from '../formArgs';
+import { ExportedSelection } from '../../../types/textTypes';
 
 
 /*
@@ -133,6 +135,7 @@ interface CreateOperationArgs {
     opIdx:number;
     changedOpIdx:number;
     numOps:number;
+    ttSelection:ExportedSelection;
     dispatch:SEDispatcher;
 }
 
@@ -325,16 +328,37 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = true;
             },
             (state, action, dispatch) => {
-                this.suspend({}, (action, syncData) => {
-                    return action.name === Actions.QueryContextFormPrepareArgsDone.name ?
-                        null : syncData;
+                this.suspendWithTimeout(
+                    2000,
+                    {ttSelections: false, contextData: false},
+                    (action, syncData) => {
+                        if (Actions.isQueryContextFormPrepareArgsDone(action)) {
+                            return syncData.ttSelections ? null : {...syncData, contextData: true};
 
-                }).pipe(
+                        } else if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                            return syncData.contextData ? null : {...syncData, ttSelections: true};
+                        }
+                        return syncData;
+                    }
+                ).pipe(
+                    reduce<Action<{}>, {contextData:QueryContextArgs, ttData:ExportedSelection}>(
+                        (acc, curr) => {
+                            if (Actions.isQueryContextFormPrepareArgsDone(curr)) {
+                                return {...acc, contextData: curr.payload.data};
+
+                            } else if (TTActions.isTextTypesQuerySubmitReady(curr)) {
+                                return {...acc, ttData: curr.payload.selections};
+                            }
+                            return acc;
+                        },
+                        {ttData: undefined, contextData: undefined}
+                    ),
                     concatMap(
-                        (wAction) => this.branchQuery(
+                        ({ ttData, contextData }) => this.branchQuery(
                             state,
-                            (wAction as typeof Actions.QueryContextFormPrepareArgsDone).payload.data,
+                            contextData,
                             action.payload.operationIdx,
+                            ttData,
                             dispatch
                         )
                     )
@@ -516,7 +540,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         changedOpIdx,
         numOps,
         op,
-        pipeOp
+        pipeOp,
+        ttSelection
     }:CreateOperationArgs):Observable<AjaxConcResponse|null> {
 
         const prepareFormData:Observable<[ConcFormArgs|null, string]> = changedOpIdx !== opIdx ?
@@ -544,7 +569,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     () => {
                         if (opIdx < numOps - 1) {
                             const args = this.queryModel.createSubmitArgs(
-                                queryContext, false, false);
+                                queryContext, false, ttSelection, false);
                             const url = this.pageModel.createActionUrl(
                                 'query_submit',
                                 {format: 'json'}
@@ -565,7 +590,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                             )
 
                         } else {
-                            return this.queryModel.submitQuery(queryContext, true);
+                            return this.queryModel.submitQuery(queryContext, false, ttSelection, true);
                         }
                     }
                 ),
@@ -745,6 +770,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         state:QueryReplayModelState,
         queryContext:QueryContextArgs,
         changedOpIdx:number,
+        ttSelection:ExportedSelection,
         dispatch:SEDispatcher
     ):Observable<AjaxConcResponse> {
         const args = {
@@ -797,6 +823,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                                 queryContext,
                                 op,
                                 pipeOp,
+                                ttSelection,
                                 dispatch
                             })
                         )

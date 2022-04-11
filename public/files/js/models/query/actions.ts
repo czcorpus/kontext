@@ -179,6 +179,10 @@ export class Actions {
         name: 'QUERY_CONTEXT_FORM_PREPARE_ARGS_DONE'
     };
 
+    static isQueryContextFormPrepareArgsDone(a:Action):a is typeof Actions.QueryContextFormPrepareArgsDone {
+        return a.name === Actions.QueryContextFormPrepareArgsDone.name;
+    }
+
     static QueryContextToggleForm: Action<{
     }> = {
         name: 'QUERY_CONTEXT_TOGGLE_FORM'

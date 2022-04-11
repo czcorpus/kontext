@@ -51,7 +51,7 @@ class SubcmixerPlugin implements PluginInterfaces.SubcMixer.IPlugin {
 }
 
 
-const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, corpusIdAttr) => {
+const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, ttSelections, corpusIdAttr) => {
 
     const WARNING_SIZE_ERROR_RATIO = 0.01;
 
@@ -60,7 +60,7 @@ const create:PluginInterfaces.SubcMixer.Factory = (pluginApi, textTypesModel, co
         pluginApi,
         {
             ttAttributes: [],
-            ttInitialAvailableValues: textTypesModel.getInitialAvailableValues(),
+            ttInitialAvailableValues: ttSelections,
             subcname: Kontext.newFormValue('', true),
             description: Kontext.newFormValue('', false),
             otherValidationError: null,

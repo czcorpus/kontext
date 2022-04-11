@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { ITextTypesModel } from '../textTypes';
+import { AnyTTSelection } from '../textTypes';
 import { BasePlugin, IPluginApi } from './common';
 
 // ------------------------------------------------------------------------
@@ -37,7 +37,7 @@ export type View = React.ComponentClass<Props>|React.FC<Props>;
 export interface Factory {
     (
         pluginApi:IPluginApi,
-        textTypesModel:ITextTypesModel<{}>,
+        ttSelections:Array<AnyTTSelection>,
         corpusIdAttr:string
     ):IPlugin;
 }

@@ -357,7 +357,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
     constructor(
             dispatcher:IFullActionControl,
             pageModel:PageModel,
-            textTypesModel:TextTypesModel,
             queryContextModel:QueryContextModel,
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
             attrHelper:AttrHelper,
@@ -368,7 +367,6 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             initState
         );
         this.pageModel = pageModel;
-        this.textTypesModel = textTypesModel;
         this.queryContextModel = queryContextModel;
         this.qsPlugin = qsPlugin;
         this.queryTracer = {trace:(_)=>undefined};
