@@ -500,7 +500,7 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
         corpora:Array<[string, string]>
     ):void {
         state.attrs = this.layoutModel.getConf('AttrList')
-        state.structAttrs = this.layoutModel.getConf('StructAttrList')
+        state.structAttrs = Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'))
         state.corpname = corpora[0][1]
         if (data) {
             state.queries = Dict.map(v => {

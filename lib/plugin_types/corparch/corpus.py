@@ -133,7 +133,8 @@ class QuerySuggest:
 class StructAttrInfo:
     structure_name: str
     name: str
-    label: Optional[str] = None
+    label: str
+    n: str
     dt_format: Optional[str] = None
 
 

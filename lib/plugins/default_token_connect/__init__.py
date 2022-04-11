@@ -205,7 +205,7 @@ def init_provider(conf: Dict[str, Any], ident: str, db: KeyValueStorage, ttl: in
     return backend_class(conf['conf'], ident, db, ttl), frontend_class(conf)
 
 
-def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage):
+def setup_providers(plg_conf: Dict[str, Any], db: KeyValueStorage) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
     with open(plg_conf['providers_conf'], 'rb') as fr:
         providers_conf = json.load(fr)
     providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]] = {

@@ -223,14 +223,14 @@ async def ajax_query_history(amodel: UserActionModel, req: KRequest, resp: KResp
 
 @bp.route('/ajax_get_toolbar')
 @http_action(return_type='template', action_model=UserActionModel)
-async def ajax_get_toolbar(amodel, req, resp):
+async def ajax_get_toolbar(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.APPLICATION_BAR as ab:
         return await ab.get_contents(plugin_ctx=amodel.plugin_ctx, return_url=amodel.return_url)
 
 
 @bp.route('/ajax_user_info')
 @http_action(return_type='json', action_model=UserActionModel)
-async def ajax_user_info(amodel, req, resp):
+async def ajax_user_info(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.AUTH as auth:
         user_info = await auth.get_user_info(amodel.plugin_ctx)
         if not amodel.user_is_anonymous():
@@ -243,7 +243,7 @@ async def ajax_user_info(amodel, req, resp):
 @http_action(
     return_type='template', template='user/administration.html', page_model='userProfile',
     access_level=1, action_model=UserActionModel)
-async def profile(amodel, req, resp):
+async def profile(amodel: UserActionModel, req: KRequest, resp: KResponse):
     if not amodel.uses_internal_user_pages():
         raise UserActionException(req.translate('This function is disabled.'))
     with plugins.runtime.AUTH as auth:
@@ -256,7 +256,7 @@ async def profile(amodel, req, resp):
 
 @bp.route('/switch_language', methods=['POST'])
 @http_action(access_level=0, return_type='plain', action_model=UserActionModel)
-async def switch_language(amodel, req, resp):
+async def switch_language(amodel: UserActionModel, req: KRequest, resp: KResponse):
     path_prefix = settings.get_str('global', 'action_path_prefix')
     resp.set_cookie(
         'kontext_ui_lang',

@@ -387,8 +387,8 @@ export class ViewPage {
             shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            structList: this.layoutModel.getConf<Array<string>>('StructList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
+            structList: Kontext.structsAndAttrsToStructList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             hasLemma: queryFormArgs.has_lemma,
             tagsets: queryFormArgs.tagsets,
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
@@ -480,8 +480,8 @@ export class ViewPage {
             withinArgValues: fetchArgs<boolean>(item => !!item.within),
             forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-            structList: this.layoutModel.getConf<Array<string>>('StructList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
+            structList: Kontext.structsAndAttrsToStructList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             hasLemma: fetchArgs<boolean>(item => item.has_lemma),
             wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
             inputLanguage: this.layoutModel.getConf<{[corpname:string]:string}>(
@@ -546,7 +546,7 @@ export class ViewPage {
         const availAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList');
         const sortModelProps:SortFormProperties = {
             attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             sattr: fetchArgs(item => item.sattr),
             sbward: fetchArgs(item => item.sbward),
             sicase: fetchArgs(item => item.sicase),
@@ -778,7 +778,7 @@ export class ViewPage {
             this.collFormModel
         );
         // ------------------ freq ------------
-        const structAttrs = this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList');
+        const structAttrs = Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'));
         const freqFormInputs = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
         const initFreqLevel = this.layoutModel.getConf<number>('InitialFreqLevel');
 
@@ -810,7 +810,7 @@ export class ViewPage {
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             ctattr1: ctFormInputs.ctattr1,
             ctattr2: ctFormInputs.ctattr2,
             ctfcrit1: ctFormInputs.ctfcrit1,

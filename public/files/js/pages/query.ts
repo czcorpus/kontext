@@ -196,8 +196,8 @@ export class QueryPage {
                 shuffleConcByDefault: this.layoutModel.getConf<boolean>('ShuffleConcByDefault'),
                 forcedAttr: this.layoutModel.getConf<string>('ForcedAttr'),
                 attrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('AttrList'),
-                structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
-                structList: this.layoutModel.getConf<Array<string>>('StructList'),
+                structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
+                structList: Kontext.structsAndAttrsToStructList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
                 wPoSList: this.layoutModel.getConf<Array<{v:string; n:string}>>('Wposlist'),
                 inputLanguages: this.layoutModel.getConf<{[corpname:string]:string}>(
                     'InputLanguages'

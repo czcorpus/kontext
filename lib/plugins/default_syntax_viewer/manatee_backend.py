@@ -370,7 +370,7 @@ class ManateeBackend(SearchBackend):
     understood by UFAL's js-treex-view library (see https://github.com/ufal/js-treex-view)
     """
 
-    def __init__(self, conf: ManateeBackendConf):
+    def __init__(self, conf: Dict[str, str]):
         """
         Args:
         conf (dict): configuration dictionary as obtained by reading

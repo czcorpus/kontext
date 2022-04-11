@@ -19,6 +19,7 @@ from typing import Tuple
 from action.decorators import http_action
 from action.errors import UserActionException
 from action.krequest import KRequest
+from action.model.base import BaseActionModel
 from action.response import KResponse
 from cairosvg import svg2pdf, svg2png, svg2svg
 from lxml import etree
@@ -76,7 +77,7 @@ def _normalize_wcloud_svg(src: bytes):
 
 @bp.route('/convert_chart_svg', ['POST'])
 @http_action(return_type='plain')
-async def convert_chart_svg(amodel, req: KRequest, resp: KResponse):
+async def convert_chart_svg(amodel: BaseActionModel, req: KRequest, resp: KResponse):
     vert_bar_chart_max_label = int(req.args.get('vertBarChartMaxLabel', '10'))
     chart_type = req.args.get('chartType')
     if chart_type in ('bar', 'time', 'timescatter'):

@@ -118,7 +118,7 @@ class FreqPage {
             alignType: freqFormInputs.alignType ||
                 List.repeat(() => AlignTypes.LEFT, initFreqLevel),
             attrList: attrs,
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList')
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'))
         };
 
         this.mlFreqModel = new MLFreqFormModel(
@@ -137,7 +137,7 @@ class FreqPage {
         const ctFormInputs = this.layoutModel.getConf<CTFormInputs>('CTFreqFormProps');
         const ctFormProps:CTFormProperties = {
             attrList: attrs,
-            structAttrList: this.layoutModel.getConf<Array<Kontext.AttrItem>>('StructAttrList'),
+            structAttrList: Kontext.structsAndAttrsToStructAttrList(this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')),
             ctattr1: ctFormInputs.ctattr1,
             ctattr2: ctFormInputs.ctattr2,
             ctfcrit1: ctFormInputs.ctfcrit1,
