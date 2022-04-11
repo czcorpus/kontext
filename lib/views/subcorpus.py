@@ -195,7 +195,7 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
 @bp.route('/subcorpus_info')
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    if not amodel.corp.is_subcorpus():
+    if not amodel.corp.is_subcorpus:
         raise UserActionException('Not a subcorpus')
     ans = dict(
         corpusId=amodel.corp.corpname,
@@ -209,11 +209,9 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         published=amodel.corp.is_published,
         extended_info={}
     )
-
     if plugins.runtime.SUBC_RESTORE.exists:
         with plugins.runtime.SUBC_RESTORE as sr:
-            tmp = await sr.get_info(amodel.session_get('user', 'id'),
-                                    amodel.args.corpname, amodel.corp.subcname)
+            tmp = await sr.get_info(amodel.session_get('user', 'id'), amodel.args.corpname, amodel.corp.subcname)
             if tmp:
                 ans['extended_info'].update(tmp.to_dict())
     return ans

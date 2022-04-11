@@ -21,7 +21,10 @@
 import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import * as Kontext from '../../types/kontext';
-import {SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem, SubcorpListModelState} from '../../models/subcorp/list';
+import {
+    SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
+    SubcorpListModelState
+} from '../../models/subcorp/list';
 import * as CoreViews from '../../types/coreViews';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
@@ -38,8 +41,11 @@ export interface ListViews {
     SubcorpList:React.ComponentClass<SubcorpListProps>;
 }
 
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
-            subcorpLinesModel:SubcorpListModel) {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    subcorpLinesModel:SubcorpListModel
+) {
 
     const layoutViews = he.getLayoutViews();
 

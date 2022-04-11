@@ -51,6 +51,7 @@ export interface SubcorpListItem {
     description:string;
 }
 
+
 export interface UnfinishedSubcorp {
     ident:string;
     name:string;
@@ -58,10 +59,12 @@ export interface UnfinishedSubcorp {
     failed:boolean;
 }
 
+
 export interface SortKey {
     name:string;
     reverse:boolean;
 }
+
 
 export interface SubcorpListModelState {
     lines:Array<SubcorpListItem>;
@@ -76,15 +79,30 @@ export interface SubcorpListModelState {
     finishedTasks:{[taskId:string]:boolean};
 }
 
+export interface SubcorpListModelArgs {
+    dispatcher:IFullActionControl;
+    layoutModel:PageModel;
+    data:Array<ServerSubcorpListItem>;
+    sortKey:SortKey;
+    relatedCorpora:Array<string>;
+    unfinished:Array<Kontext.AsyncTaskInfo>;
+    initialFilter:SubcListFilter;
+}
+
+
 export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     private layoutModel:PageModel;
 
-    constructor(dispatcher:IFullActionControl, layoutModel:PageModel,
-            data:Array<ServerSubcorpListItem>, sortKey:SortKey,
-            relatedCorpora:Array<string>,
-            unfinished:Array<Kontext.AsyncTaskInfo>,
-            initialFilter:SubcListFilter) {
+    constructor({
+        dispatcher,
+        layoutModel,
+        data,
+        sortKey,
+        relatedCorpora,
+        unfinished,
+        initialFilter
+    }:SubcorpListModelArgs) {
         super(
             dispatcher,
             {
@@ -134,20 +152,20 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     },
                     subcTasks
                 );
-                this.reloadItems().subscribe(
-                    (data) => {
+                this.reloadItems().subscribe({
+                    next: data => {
                         this.emitChange();
                     },
-                    (err) => {
+                    error: error => {
                         this.emitChange();
-                        this.layoutModel.showMessage('error', err);
+                        this.layoutModel.showMessage('error', error);
                     }
-                )
+                });
             }
         });
 
-        this.addActionHandler<typeof Actions.SortLines>(
-            Actions.SortLines.name,
+        this.addActionHandler(
+            Actions.SortLines,
             action => this.sortItems(action.payload.colName, action.payload.reverse).subscribe(
                 (data) => {
                     this.emitChange();
@@ -159,53 +177,53 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             )
         );
 
-        this.addActionHandler<typeof Actions.DeleteSubcorpus>(
-            Actions.DeleteSubcorpus.name,
-            action => this.deleteSubcorpus(action.payload.rowIdx).subscribe(
-                (data) => {
+        this.addActionHandler(
+            Actions.DeleteSubcorpus,
+            action => this.deleteSubcorpus(action.payload.rowIdx).subscribe({
+                next: data => {
                     this.emitChange();
                     this.layoutModel.showMessage(
                         'info',
                         this.layoutModel.translate('subclist__subc_deleted')
                     );
                 },
-                (err) => {
+                error: error => {
                     this.emitChange();
-                    this.layoutModel.showMessage('error', err);
+                    this.layoutModel.showMessage('error', error);
                 }
-            )
+            })
         );
 
-        this.addActionHandler<typeof Actions.UpdateFilter>(
-            Actions.UpdateFilter.name,
-            action => this.filterItems(action.payload).subscribe(
-                (data) => {
+        this.addActionHandler(
+            Actions.UpdateFilter,
+            action => this.filterItems(action.payload).subscribe({
+                next: _ => {
                     this.emitChange();
                 },
-                (err) => {
+                error: error => {
                     this.emitChange();
-                    this.layoutModel.showMessage('error', err);
+                    this.layoutModel.showMessage('error', error);
                 }
-            )
+            })
         );
 
-        this.addActionHandler<typeof Actions.ShowActionWindow>(
-            Actions.ShowActionWindow.name,
+        this.addActionHandler(
+            Actions.ShowActionWindow,
             action => this.changeState(state => {
                 state.actionBoxVisibleRow = action.payload.value;
                 state.actionBoxActionType = action.payload.action;
             })
         );
 
-        this.addActionHandler<typeof Actions.HideActionWindow>(
-            Actions.HideActionWindow.name,
+        this.addActionHandler(
+            Actions.HideActionWindow,
             action => this.changeState(state => {
                 state.actionBoxVisibleRow = -1;
             })
         );
 
-        this.addActionHandler<typeof Actions.SetActionBoxType>(
-            Actions.SetActionBoxType.name,
+        this.addActionHandler(
+            Actions.SetActionBoxType,
             action => {
                 this.changeState(state => {
                     state.actionBoxActionType = action.payload.value;
@@ -225,94 +243,102 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                                 'corpname': line.corpname,
                                 'usesubcorp': line.usesubcorp
                             }
-                        ).subscribe(
-                            data => {
+                        ).subscribe({
+                            next: data => {
                                 if (data.extended_info) {
                                     this.changeState(state => {
                                         state.lines[action.payload.row].cql = data.extended_info.cql;
                                         state.isBusy = false;
                                     })
                                 }
+                            },
+                            error: error => {
+                                this.changeState(
+                                    state => {
+                                        state.isBusy = false;
+                                    }
+                                );
+                                this.layoutModel.showMessage('error', error);
                             }
-                        );
+                        });
                     }
                 }
             }
         );
 
-        this.addActionHandler<typeof Actions.WipeSubcorpus>(
-            Actions.WipeSubcorpus.name,
-            action => this.wipeSubcorpus(action.payload.idx).subscribe(
-                (data) => {
+        this.addActionHandler(
+            Actions.WipeSubcorpus,
+            action => this.wipeSubcorpus(action.payload.idx).subscribe({
+                next: data => {
                     this.layoutModel.showMessage('info',
                     this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
-                (err) => {
-                    this.layoutModel.showMessage('error', err);
+                error: error => {
+                    this.layoutModel.showMessage('error', error);
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
                 }
-            )
+            })
         );
 
-        this.addActionHandler<typeof Actions.RestoreSubcorpus>(
-            Actions.RestoreSubcorpus.name,
-            action => this.createSubcorpus(action.payload.idx, true).subscribe(
-                (data) => {
+        this.addActionHandler(
+            Actions.RestoreSubcorpus,
+            action => this.createSubcorpus(action.payload.idx, true).subscribe({
+                next: data => {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
-                (err) => {
-                    this.layoutModel.showMessage('error', err);
+                error: error => {
+                    this.layoutModel.showMessage('error', error);
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
                 }
-            )
+            })
         );
 
-        this.addActionHandler<typeof Actions.ReuseQuery>(
-            Actions.ReuseQuery.name,
+        this.addActionHandler(
+            Actions.ReuseQuery,
             action => this.createSubcorpus(
                 action.payload.idx,
                 false,
                 action.payload.newName,
                 action.payload.newCql
-            ).subscribe(
-                (data) => {
+            ).subscribe({
+                next: data => {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
                 },
-                (err) => {
+                error: error => {
                     this.changeState(state => {state.actionBoxVisibleRow = -1});
-                    this.layoutModel.showMessage('error', err);
+                    this.layoutModel.showMessage('error', error);
                 }
-            )
+            })
         );
 
-        this.addActionHandler<typeof Actions.PublishSubcorpus>(
-            Actions.PublishSubcorpus.name,
+        this.addActionHandler(
+            Actions.PublishSubcorpus,
             action => {
                 this.changeState(state => {state.isBusy = true});
-                this.publishSubcorpus(action.payload.rowIdx, action.payload.description).subscribe(
-                    (_) => {
+                this.publishSubcorpus(action.payload.rowIdx, action.payload.description).subscribe({
+                    next: _ => {
                         this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_published'));
                         this.changeState(state => {
                             state.isBusy = false;
                             state.actionBoxVisibleRow = -1;
                         });
                     },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
+                    error: error => {
+                        this.layoutModel.showMessage('error', error);
                         this.changeState(state => {
                             state.isBusy = false;
                             state.actionBoxVisibleRow = -1;
                         });
                     }
-                );
+                });
             }
         );
 
-        this.addActionHandler<typeof Actions.UpdatePublicDescription>(
-            Actions.UpdatePublicDescription.name,
+        this.addActionHandler(
+            Actions.UpdatePublicDescription,
             action => {
                 try {
                     this.updateSubcDesc(action.payload.rowIdx, action.payload.description);
@@ -323,26 +349,26 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         );
 
-        this.addActionHandler<typeof Actions.SubmitPublicDescription>(
-            Actions.SubmitPublicDescription.name,
+        this.addActionHandler(
+            Actions.SubmitPublicDescription,
             action => {
                 this.changeState(state => {state.isBusy = true});
-                this.updateSubcorpusDescSubmit(action.payload.rowIdx).subscribe(
-                    (_) => {
+                this.updateSubcorpusDescSubmit(action.payload.rowIdx).subscribe({
+                    next: _ => {
                         this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
                         this.changeState(state => {
                             state.isBusy = false;
                             state.actionBoxVisibleRow = -1;
                         });
                     },
-                    (err) => {
-                        this.layoutModel.showMessage('error', err);
+                    error: error => {
+                        this.layoutModel.showMessage('error', error);
                         this.changeState(state => {
                             state.isBusy = false;
                             state.actionBoxVisibleRow = -1;
                         });
                     }
-                );
+                });
             }
         );
     }
