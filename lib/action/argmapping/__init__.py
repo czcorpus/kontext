@@ -95,7 +95,7 @@ class GeneralOptionsArgs:
 
     # frequency
     fmaxitems: int = field(default=50, metadata=mk_metdata())
-    fdefault_view: str = field(default='charts', metadata=mk_metdata(Persistence.PERSISTENT))
+    fdefault_view: str = field(default='tables', metadata=mk_metdata(Persistence.PERSISTENT))
 
     # pquery
     pqueryitemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
