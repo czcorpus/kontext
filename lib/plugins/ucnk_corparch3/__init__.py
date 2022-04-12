@@ -214,7 +214,10 @@ def create_instance(conf, user_items, auth, cnc_db):
     db_backend = Backend(
         cnc_db, user_table='user', corp_table='corpora', corp_id_attr='id',
         group_acc_table='relation', group_acc_corp_attr='corpora', group_acc_group_attr='corplist',
-        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id')
+        user_acc_table='user_corpus_relation', user_acc_corp_attr='corpus_id',
+        group_pc_acc_table='corplist_parallel_corpus', group_pc_acc_pc_attr='parallel_corpus_id',
+        group_pc_acc_group_attr='corplist_id', user_pc_acc_table='user_parallel_corpus',
+        user_pc_acc_pc_attr='parallel_corpus_id', enable_parallel_acc=True)
     logging.getLogger(__name__).info(f'ucnk_corparch3 uses integration_db[{cnc_db.info}]')
     return UcnkCorpArch3(
         db_backend=db_backend,
