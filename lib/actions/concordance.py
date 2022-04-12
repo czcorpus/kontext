@@ -1545,15 +1545,13 @@ class Actions(Querying):
                                           for c in aligned_corpora])
 
                     if heading:
-                        writer.writeheading({
-                            'corpus': self._human_readable_corpname(),
-                            'subcorpus': self.args.usesubcorp,
-                            'concordance_size': data['concsize'],
-                            'arf': data['result_arf'],
-                            'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
-                                      for x in self.concdesc_json().get('Desc', [])]
-                        })
-
+                        if saveformat != 'csv':
+                            writer.writeheading([
+                                'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
+                                    self._human_readable_corpname(), self.args.usesubcorp, data['concsize'],
+                                    data['result_arf'],
+                                    ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
+                                     for x in self.concdesc_json().get('Desc', [])]), '', '', ''])
                         doc_struct = self.corp.get_conf('DOCSTRUCTURE')
                         refs_args = [x.strip('=') for x in self.args.refs.split(',')]
                         used_refs = ([('#', translate('Token number')), (doc_struct, translate('Document number'))] +
