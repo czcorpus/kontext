@@ -60,9 +60,13 @@ class XLSXExport(AbstractExport):
         return output.getvalue()
 
     def writeheading(self, data):
-        if type(data) is dict:
-            data = [f'{k}: {v}' for k, v in data.items()]
-        self._sheet.append(data)
+        if len(data) > 1 and data[0] != '' and all(s == '' for s in data[1:]):
+            self._sheet.append([data[0]])
+            for _ in range(3):
+                self._sheet.append([])
+            self._sheet.merged_cells.ranges.append('A1:G4')  # this kind of a hack in "write-only" mode
+        else:
+            self._sheet.append(data)
         self._sheet.append([])
         self._written_lines += 2
 
@@ -73,7 +77,6 @@ class XLSXExport(AbstractExport):
             cell.font = cell.font.copy(bold=True)
             cells.append(cell)
         self._sheet.append(cells)
-        self._sheet.merged_cells.ranges.append('A1:G1')
         self._written_lines += 1
 
     def set_col_types(self, *types):
