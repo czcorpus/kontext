@@ -266,12 +266,11 @@ class Wordlist(Kontext):
             if form_args.colheaders:
                 writer.writeheading(('', self._curr_wlform_args.wlattr, 'freq'))
             elif form_args.heading:
-                writer.writeheading({
-                    'corpus': self._human_readable_corpname(),
-                    'subcorpus': self.args.usesubcorp,
-                    'pattern': self._curr_wlform_args.wlpat
-                })
-
+                writer.writeheading([
+                    'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                        self._human_readable_corpname(), self.args.usesubcorp, self._curr_wlform_args.wlpat),
+                    '', ''
+                ])
             i = 1
             for item in data:
                 writer.writerow(i, (item[0], str(item[1])))
