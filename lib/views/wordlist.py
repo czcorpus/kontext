@@ -76,7 +76,7 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     elif isinstance(bg_result, Exception):
         raise bg_result
     # TODO get rid of private variable
-    amodel._curr_wlform_args = form_args
+    amodel.set_curr_wlform_args(form_args)
 
     def on_query_store(query_ids, history_ts, result):
         result['wl_query_id'] = query_ids[0]
@@ -99,18 +99,18 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     page = int(req.args.get('wlpage', '1'))
     offset = (page - 1) * amodel.args.wlpagesize
     total, data = await require_existing_wordlist(
-        form=amodel._curr_wlform_args, reverse=rev, offset=offset,
+        form=amodel.curr_wlform_args, reverse=rev, offset=offset,
         limit=amodel.args.wlpagesize, wlsort=wlsort,
         collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
 
-    result = dict(data=data, total=total, form=amodel._curr_wlform_args.to_dict(),
-                  query_id=amodel._curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
+    result = dict(data=data, total=total, form=amodel.curr_wlform_args.to_dict(),
+                  query_id=amodel.curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
                   wlpagesize=amodel.args.wlpagesize)
     try:
-        result['wlattr_label'] = (amodel.corp.get_conf(amodel._curr_wlform_args.wlattr + '.LABEL') or
-                                  amodel._curr_wlform_args.wlattr)
+        result['wlattr_label'] = (amodel.corp.get_conf(amodel.curr_wlform_args.wlattr + '.LABEL') or
+                                  amodel.curr_wlform_args.wlattr)
     except Exception as e:
-        result['wlattr_label'] = amodel._curr_wlform_args.wlattr
+        result['wlattr_label'] = amodel.curr_wlform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
 
     result['freq_figure'] = req.translate(amodel.FREQ_FIGURES.get('frq', '?'))
@@ -142,7 +142,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
-    amodel._curr_wlform_args = form_args
+    amodel.set_curr_wlform_args(form_args)
 
     if amodel.args.fcrit:
         amodel.args.q = make_wl_query(
@@ -192,7 +192,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
         form_args.to_line = amodel.corp.size
     num_lines = form_args.to_line - form_args.from_line + 1
     total, data = await require_existing_wordlist(
-        form=amodel._curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
+        form=amodel.curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
         wlsort='', collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
     saved_filename = form_args.corpname
     if form_args.saveformat == 'text':
@@ -200,7 +200,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
         resp.set_header('Content-Disposition',
                         f'attachment; filename="{saved_filename}-word-list.txt"')
         return dict(Items=data,
-                    pattern=amodel._curr_wlform_args.wlpat,
+                    pattern=amodel.curr_wlform_args.wlpat,
                     from_line=form_args.from_line,
                     to_line=form_args.to_line,
                     usesubcorp=form_args.usesubcorp,
@@ -219,16 +219,16 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
             'Content-Disposition', f'attachment; filename="{mkfilename(form_args.saveformat)}"')
         # write the header first, if required
         if form_args.colheaders:
-            writer.writeheading(('', amodel._curr_wlform_args.wlattr, 'freq'))
+            writer.writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
         elif form_args.heading:
-            writer.writeheading({
-                'corpus': amodel.corp.human_readable_corpname,
-                'subcorpus': amodel.args.usesubcorp,
-                'pattern': amodel._curr_wlform_args.wlpat
-            })
+            writer.writeheading([
+                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                    amodel.corp.human_readable_corpname, amodel.args.usesubcorp, self.curr_wlform_args.wlpat),
+                '', ''
+            ])
 
         for i, item in enumerate(data, 1):
-            writer.writerow(i, (item[0], str(item[1])))
+            writer.writerow(i, [item[0], str(item[1])])
         return writer.raw_content()
     return None
 

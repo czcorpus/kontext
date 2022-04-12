@@ -1177,15 +1177,16 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                 writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
                                       for c in aligned_corpora])
                 if req.mapped_args.heading:
-                    writer.writeheading({
-                        'corpus': amodel.corp.human_readable_corpname,
-                        'subcorpus': amodel.args.usesubcorp,
-                        'concordance_size': data['concsize'],
-                        'arf': data['result_arf'],
-                        'query': ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
-                                  for x in (await amodel.concdesc_json()).get('Desc', [])]
-                    })
-
+                    if req.mapped_args.saveformat != 'csv':
+                        writer.writeheading([
+                            'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
+                                amodel.corp.human_readable_corpname,
+                                amodel.args.usesubcorp,
+                                data['concsize'],
+                                data['result_arf'],
+                                ',\n'.join(f"{x['op']}: {x['arg']} ({x['size']})"
+                                           for x in (await amodel.concdesc_json())),
+                                ), '', '', ''])
                     doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
                     refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
                     used_refs = ([('#', req.translate('Token number')), (doc_struct, req.translate('Document number'))] +
