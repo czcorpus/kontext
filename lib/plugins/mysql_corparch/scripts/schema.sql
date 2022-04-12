@@ -20,11 +20,13 @@ DROP TABLE IF EXISTS tagset;
 DROP TABLE IF EXISTS corpus_tagset;
 DROP TABLE IF EXISTS kontext_interval_attr;
 DROP TABLE IF EXISTS kontext_conc_persistence;
+DROP TABLE IF EXISTS parallel_corpus;
 
 -- ------------------------------- CORPUS ------------------------
 
 CREATE TABLE kontext_corpus (
   id int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  parallel_corpus_id int(11) DEFAULT NULL,
   name varchar(63),
   size bigint(20) NOT NULL DEFAULT '0',
   group_name varchar(255) NOT NULL,
@@ -67,9 +69,16 @@ CREATE TABLE kontext_corpus (
   CONSTRAINT corpora_speech_overlap_attr_fkey FOREIGN KEY (name, speech_overlap_struct, speech_overlap_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_speech_segment_structattr_fkey FOREIGN KEY (name, speech_segment_struct, speech_segment_attr) REFERENCES corpus_structattr (corpus_name, structure_name, name),
   CONSTRAINT corpora_ttdesc_id_fkey FOREIGN KEY (ttdesc_id) REFERENCES kontext_ttdesc (id),
-  CONSTRAINT corpora_default_tagset_fkey FOREIGN KEY (default_tagset) REFERENCES tagset (name)
+  CONSTRAINT corpora_default_tagset_fkey FOREIGN KEY (default_tagset) REFERENCES tagset (name),
+  CONSTRAINT corpora_fk_parallel_corpus_id FOREIGN KEY (parallel_corpus_id) REFERENCES kontext_parallel_corpus (id)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+CREATE TABLE kontext_parallel_corpus (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  name varchar(128) NOT NULL,
+  alignstruct varchar(63) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 -- ------------------------------- ARTICLE ------------------------
 

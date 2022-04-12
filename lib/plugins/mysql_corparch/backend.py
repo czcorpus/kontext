@@ -45,6 +45,9 @@ DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
 DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
 DFLT_USER_ACC_TABLE = 'kontext_user_access'
 DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
+DFLT_PARALLEL_CORP_TABLE = 'kontext_parallel_corpus'
+DFLT_GROUP_PC_ACC_TABLE = 'kontext_group_pc_access'
+DFLT_USER_PC_ACC_TABLE = 'kontext_user_pc_access'
 
 
 class Backend(DatabaseBackend):
@@ -69,6 +72,9 @@ class Backend(DatabaseBackend):
         self._user_acc_corp_attr = user_acc_corp_attr
         self._group_acc_corp_attr = group_acc_corp_attr
         self._group_acc_group_attr = group_acc_group_attr
+        self._parallel_corp_table = parallel_corp_table
+        self._group_pc_acc_table = group_pc_acc_table
+        self._user_pc_acc_table = user_pc_acc_table
 
     def contains_corpus(self, corpus_id: str) -> bool:
         cursor = self._db.cursor()
@@ -149,21 +155,15 @@ class Backend(DatabaseBackend):
             for substr in substrs:
                 where_cond1.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
-                values_cond1.append('%{0}%'.format(substr))
+                values_cond1.extend(4 * [f'%{substr}%'])
                 where_cond2.append(
                     '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
-                values_cond2.append('%{0}%'.format(substr))
+                values_cond2.extend(4 * [f'%{substr}%'])
         if keywords is not None and len(keywords) > 0:
-            where_cond1.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
-            where_cond2.append('({0})'.format(' OR '.join(
-                'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond1.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
+            where_cond2.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
             for keyword in keywords:
                 values_cond1.append(keyword)
                 values_cond2.append(keyword)
