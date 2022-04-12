@@ -217,7 +217,7 @@ export class CollPage {
         this.collResultSaveModel = new CollResultsSaveModel({
             dispatcher: this.layoutModel.dispatcher,
             layoutModel: this.layoutModel,
-            saveLinkFn: (format: string, url:string) => this.setDownloadLink(undefined, format, url),
+            saveLinkFn: this.setDownloadLink.bind(this),
             quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit')
         });
 
