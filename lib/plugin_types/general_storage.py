@@ -17,9 +17,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import abc
-from typing import Dict, List, Union
+from typing import Dict, List
 
-Serializable = Union[int, float, str, bool, list, dict, None]
+from plugin_types.common import Serializable
 
 
 class KeyValueStorage(abc.ABC):
@@ -254,6 +254,12 @@ class KeyValueStorage(abc.ABC):
         Set key to value within hash 'name' for each corresponding
         key and value from the 'mapping' dict.
         Before setting, the values are json-serialized
+        """
+
+    @abc.abstractmethod
+    async def keys(self, pattern: str = '*') -> List[str]:
+        """
+        Lists available keys by pattern
         """
 
     async def get_instance(self, plugin_id):

@@ -40,13 +40,7 @@ class LindatRedisDb(RedisDb):
         self._host = host
         self._port = port
         self._shard_id = shard_id
-        self._pool = aioredis.ConnectionPool(
-            max_connections=10, host=host, port=port, db=shard_id)
-
-    async def keys(self, pattern='*'):
-        """Returns a list fo keys matching ``pattern``"""
-        async with self.redis as conn:
-            return await conn.keys(pattern)
+        self._redis = aioredis.from_url(f'redis://{host}:{port}', db=shard_id)
 
 
 class RedisDbManager(LindatRedisDb):
