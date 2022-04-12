@@ -20,6 +20,9 @@ like data can be used) to XML format.
 """
 import logging
 
+from action.model.concordance import ConcActionModel
+from conclib.errors import ConcordanceQueryParamsError
+from kwiclib import KwicPageData
 from lxml import etree
 
 from . import AbstractExport, ExportPluginException
@@ -271,6 +274,39 @@ class XMLExport(AbstractExport):
             self._document.add_line(lang_rows[0], line_num)
         else:
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
+
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, heading: bool, numbering: bool, from_line: int):
+        aligned_corpora = [
+            amodel.corp,
+            *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
+        ]
+        self.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+        if heading:
+            doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
+            refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
+            used_refs = [
+                ('#', amodel.plugin_ctx.translate('Token number')),
+                (doc_struct, amodel.plugin_ctx.translate('Document number')),
+                *[(x, x) for x in amodel.corp.get_structattrs()],
+            ]
+            used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+            self.write_ref_headings(
+                [''] + used_refs if numbering else used_refs)
+
+        if 'Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Left', 'Kwic', 'Right'
+        elif 'Sen_Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Sen_Left', 'Kwic', 'Sen_Right'
+        else:
+            raise ConcordanceQueryParamsError(amodel.translate('Invalid data'))
+
+        for row_num, line in enumerate(data.Lines, from_line):
+            lang_rows = self._process_lang(
+                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+            if 'Align' in line:
+                lang_rows += self._process_lang(
+                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+            self.writerow(row_num if numbering else None, *lang_rows)
 
 
 def create_instance(subtype, translate):

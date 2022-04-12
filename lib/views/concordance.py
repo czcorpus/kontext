@@ -225,7 +225,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
-            out.update(kwic.kwicpage(kwic_args))
+            out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
     except UnknownConcordanceAction as ex:
         raise UserActionException(str(ex))
@@ -381,7 +381,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
-            out.update(kwic.kwicpage(kwic_args))
+            out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
             if req.args.get('next') == 'freqs':
                 out['next_action'] = 'freqs'
@@ -1053,11 +1053,11 @@ async def matching_structattr(amodel: CorpusActionModel, req: KRequest, resp: KR
 
 @dataclass
 class SaveConcArgs:
-    saveformat: Optional[str] = 'text'
-    from_line: Optional[int] = 0
-    to_line: Optional[int] = None
-    heading: Optional[int] = 0
-    numbering: Optional[int] = 0
+    saveformat: str = 'text'
+    heading: int = 0
+    numbering: int = 0
+    from_line: int = 0
+    to_line: int = None
 
 
 def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):
@@ -1082,39 +1082,6 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
     access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, template='txtexport/saveconc.html',
     return_type='plain')
 async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
-
-    def merge_conc_line_parts(items):
-        """
-        converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
-            {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
-        """
-        ans = []
-        for item in items:
-            if 'class' in item and item['class'] != 'attr':
-                ans.append(' {}'.format(item['str'].strip()))
-            else:
-                ans.append('{}'.format(item['str'].strip()))
-            for tp in item.get('tail_posattrs', []):
-                ans.append('/{}'.format(tp))
-        return ''.join(ans).strip()
-
-    def process_lang(root, left_key, kwic_key, right_key, add_linegroup):
-        if type(root) is dict:
-            root = (root,)
-
-        ans = []
-        for item in root:
-            ans_item = {}
-            if 'ref' in item:
-                ans_item['ref'] = item['ref']
-            if add_linegroup:
-                ans_item['linegroup'] = item.get('linegroup', '')
-            ans_item['left_context'] = merge_conc_line_parts(item[left_key])
-            ans_item['kwic'] = merge_conc_line_parts(item[kwic_key])
-            ans_item['right_context'] = merge_conc_line_parts(item[right_key])
-            ans.append(ans_item)
-        return ans
-
     try:
         corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
         amodel.apply_viewmode(corpus_info.sentence_struct)
@@ -1154,75 +1121,31 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             resp.set_header(
                 'Content-Disposition',
                 f"attachment; filename=\"{mkfilename('txt')}\"")
-            output.update(data)
-            for item in data['Lines']:
+            output.update(asdict(data))
+            for item in data.Lines:
                 item['ref'] = ', '.join(item['ref'])
             # we must set contains_within = False as it is impossible (in the current user interface)
             # to offer a custom i.p.m. calculation before the download starts
             output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
                 amodel, contains_within=False, translate=req.translate)
             output['Desc'] = (await amodel.concdesc_json())['Desc']
-        elif req.mapped_args.saveformat in ('csv', 'xlsx', 'xml'):
-            writer = plugins.runtime.EXPORT.instance.load_plugin(
-                req.mapped_args.saveformat, subtype='concordance')
-
-            resp.set_header('Content-Type', writer.content_type())
-            resp.set_header(
-                'Content-Disposition',
-                f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
-
-            if len(data['Lines']) > 0:
-                aligned_corpora = [amodel.corp] + \
-                    [(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c]
-                writer.set_corpnames([c.get_conf('NAME') or c.get_conffile()
-                                      for c in aligned_corpora])
-                if req.mapped_args.heading:
-                    if req.mapped_args.saveformat != 'csv':
-                        writer.writeheading([
-                            'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
-                                amodel.corp.human_readable_corpname,
-                                amodel.args.usesubcorp,
-                                data['concsize'],
-                                data['result_arf'],
-                                ',\n'.join(f"{x['op']}: {x['arg']} ({x['size']})"
-                                           for x in (await amodel.concdesc_json())),
-                                ), '', '', ''])
-                    doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
-                    refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
-                    used_refs = ([('#', req.translate('Token number')), (doc_struct, req.translate('Document number'))] +
-                                 [(x, x) for x in amodel.corp.get_structattrs()])
-                    used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-                    writer.write_ref_headings(
-                        [''] + used_refs if req.mapped_args.numbering else used_refs)
-
-                if 'Left' in data['Lines'][0]:
-                    left_key = 'Left'
-                    kwic_key = 'Kwic'
-                    right_key = 'Right'
-                elif 'Sen_Left' in data['Lines'][0]:
-                    left_key = 'Sen_Left'
-                    kwic_key = 'Kwic'
-                    right_key = 'Sen_Right'
-                else:
-                    raise ConcordanceQueryParamsError(req.translate('Invalid data'))
-
-                for i in range(len(data['Lines'])):
-                    line = data['Lines'][i]
-                    if req.mapped_args.numbering:
-                        row_num = str(i + from_line)
-                    else:
-                        row_num = None
-
-                    lang_rows = process_lang(
-                        line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
-                    if 'Align' in line:
-                        lang_rows += process_lang(
-                            line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
-                    writer.writerow(row_num, *lang_rows)
-            output = writer.raw_content()
         else:
-            raise UserActionException(req.translate('Unknown export data type'))
+            with plugins.runtime.EXPORT as export:
+                writer = export.load_plugin(req.mapped_args.saveformat, subtype='concordance')
+
+                resp.set_header('Content-Type', writer.content_type())
+                resp.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
+
+                if len(data.Lines) > 0:
+                    heading = bool(req.mapped_args.heading)
+                    numbering = bool(req.mapped_args.numbering)
+                    await writer.write_conc(amodel, data, heading, numbering, req.mapped_args.from_line)
+
+                output = writer.raw_content()
         return output
+
     except Exception as e:
         resp.set_header('Content-Type', 'text/html')
         if resp.contains_header('Content-Disposition'):

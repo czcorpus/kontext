@@ -207,29 +207,32 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                     saveformat=form_args.saveformat,
                     colheaders=form_args.colheaders,
                     heading=form_args.heading)
+
     elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
         def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
+
         with plugins.runtime.EXPORT as export:
             writer = export.load_plugin(
                 form_args.saveformat, subtype='wordlist', translate=req.translate)
-        writer.set_col_types(int, str, float)
+            writer.set_col_types(int, str, float)
 
-        resp.set_header('Content-Type', writer.content_type())
-        resp.set_header(
-            'Content-Disposition', f'attachment; filename="{mkfilename(form_args.saveformat)}"')
-        # write the header first, if required
-        if form_args.colheaders:
-            writer.writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
-        elif form_args.heading:
-            writer.writeheading([
-                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
-                    amodel.corp.human_readable_corpname, amodel.args.usesubcorp, self.curr_wlform_args.wlpat),
-                '', ''
-            ])
+            resp.set_header('Content-Type', writer.content_type())
+            resp.set_header(
+                'Content-Disposition', f'attachment; filename="{mkfilename(form_args.saveformat)}"')
+            # write the header first, if required
+            if form_args.colheaders:
+                writer.writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
+            elif form_args.heading:
+                writer.writeheading([
+                    'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                        amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
+                    '', ''
+                ])
 
-        for i, item in enumerate(data, 1):
-            writer.writerow(i, [item[0], str(item[1])])
-        return writer.raw_content()
+            for i, item in enumerate(data, 1):
+                writer.writerow(i, [item[0], str(item[1])])
+            return writer.raw_content()
+
     return None
 
 

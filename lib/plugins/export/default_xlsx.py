@@ -22,6 +22,9 @@ Plug-in requires openpyxl library.
 """
 from io import BytesIO
 
+from action.model.concordance import ConcActionModel
+from conclib.errors import ConcordanceQueryParamsError
+from kwiclib import KwicPageData
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 
@@ -64,7 +67,8 @@ class XLSXExport(AbstractExport):
             self._sheet.append([data[0]])
             for _ in range(3):
                 self._sheet.append([])
-            self._sheet.merged_cells.ranges.append('A1:G4')  # this kind of a hack in "write-only" mode
+            # this kind of a hack in "write-only" mode
+            self._sheet.merged_cells.ranges.append('A1:G4')
         else:
             self._sheet.append(data)
         self._sheet.append([])
@@ -117,6 +121,39 @@ class XLSXExport(AbstractExport):
         cell = WriteOnlyCell(self._sheet, value)
         cell.number_format = cell_format
         return cell
+
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, heading: bool, numbering: bool, from_line: int):
+        aligned_corpora = [
+            amodel.corp,
+            *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
+        ]
+        self.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+        if heading:
+            doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
+            refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
+            used_refs = [
+                ('#', amodel.plugin_ctx.translate('Token number')),
+                (doc_struct, amodel.plugin_ctx.translate('Document number')),
+                *[(x, x) for x in amodel.corp.get_structattrs()],
+            ]
+            used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+            self.write_ref_headings(
+                [''] + used_refs if numbering else used_refs)
+
+        if 'Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Left', 'Kwic', 'Right'
+        elif 'Sen_Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Sen_Left', 'Kwic', 'Sen_Right'
+        else:
+            raise ConcordanceQueryParamsError(amodel.translate('Invalid data'))
+
+        for row_num, line in enumerate(data.Lines, from_line):
+            lang_rows = self._process_lang(
+                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+            if 'Align' in line:
+                lang_rows += self._process_lang(
+                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+            self.writerow(row_num if numbering else None, *lang_rows)
 
 
 def create_instance(subtype, translate):

@@ -24,12 +24,60 @@ free to be replaced/changed.
 import abc
 from typing import Any, Callable, List
 
+from action.model.concordance import ConcActionModel
+from kwiclib import KwicPageData
+
 
 class ExportPluginException(Exception):
     pass
 
 
-class AbstractExport(object):
+class UnknownExporterException(Exception):
+    pass
+
+
+class AbstractConcExportMixin(object):
+
+    def _merge_conc_line_parts(self, items):
+        """
+        converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
+            {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+        """
+        ans = []
+        for item in items:
+            if 'class' in item and item['class'] != 'attr':
+                ans.append(' {}'.format(item['str'].strip()))
+            else:
+                ans.append('{}'.format(item['str'].strip()))
+            for tp in item.get('tail_posattrs', []):
+                ans.append('/{}'.format(tp))
+        return ''.join(ans).strip()
+
+    def _process_lang(self, root, left_key, kwic_key, right_key, add_linegroup):
+        if type(root) is dict:
+            root = (root,)
+
+        ans = []
+        for item in root:
+            ans_item = {}
+            if 'ref' in item:
+                ans_item['ref'] = item['ref']
+            if add_linegroup:
+                ans_item['linegroup'] = item.get('linegroup', '')
+            ans_item['left_context'] = self._merge_conc_line_parts(item[left_key])
+            ans_item['kwic'] = self._merge_conc_line_parts(item[kwic_key])
+            ans_item['right_context'] = self._merge_conc_line_parts(item[right_key])
+            ans.append(ans_item)
+        return ans
+
+    @abc.abstractmethod
+    def write_conc(self, amodel: ConcActionModel, data: KwicPageData, heading: bool, numbering: bool, from_line: int):
+        """
+        write concordance data
+        """
+
+
+class AbstractExport(AbstractConcExportMixin):
 
     def set_corpnames(self, corpnames: List[str]):
         pass
@@ -88,7 +136,7 @@ class Loader(object):
         required module or nothing if module is not found
         """
         if name not in self._module_map:
-            raise ValueError(translate(f'Export module [{name}] not configured'))
+            raise UnknownExporterException(translate(f'Export module [{name}] not configured'))
         module_name = self._module_map[name]
         module = __import__(f'plugins.export.{module_name}', fromlist=[module_name])
         plugin = module.create_instance(subtype=subtype, translate=translate)
