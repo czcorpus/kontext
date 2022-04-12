@@ -22,7 +22,7 @@ that the backend also covers operations required by mysql_auth plug-in.
 """
 
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from aiomysql.cursors import Cursor
 from plugin_types.auth import CorpusAccess
@@ -188,7 +188,8 @@ class Backend(DatabaseBackend):
 
     async def load_corpus(self, cursor: Cursor, corp_id: str) -> Dict[str, Any]:
         await cursor.execute(
-            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
+            'SELECT c.name as id, c.web, cs.name AS sentence_struct, '
+            'IF (rc.locale IS NOT NULL, rc.locale, c.collator_locale) as collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
             '  AS speaker_id_attr, '
             'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '
@@ -271,7 +272,9 @@ class Backend(DatabaseBackend):
         if requestable:
             where.extend(values_cond1)
             sql += (
-                '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, c.requestable, '
+                '(SELECT c.name as id, c.web, '
+                'IF (rc.locale IS NOT NULL, rc.locale, c.collator_locale) as collator_locale, '
+                'NULL as speech_segment, c.requestable, '
                 'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                 'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                 'NULL AS reference_other, NULL AS ttdesc_id, '
@@ -290,7 +293,9 @@ class Backend(DatabaseBackend):
                 'UNION ').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1))
         where.extend(values_cond2)
         sql += (
-            '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, 0 as requestable, '
+            '(SELECT c.name as id, c.web, '
+            'IF (rc.locale IS NOT NULL, rc.locale, c.collator_locale) as collator_locale, '
+            'NULL as speech_segment, 0 as requestable, '
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
             'NULL AS reference_other, NULL AS ttdesc_id, '
