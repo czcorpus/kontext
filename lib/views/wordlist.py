@@ -208,12 +208,11 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
                     colheaders=form_args.colheaders,
                     heading=form_args.heading)
 
-    elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
+    else:
         def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
 
         with plugins.runtime.EXPORT as export:
-            writer = export.load_plugin(
-                form_args.saveformat, subtype='wordlist', translate=req.translate)
+            writer = export.load_plugin(form_args.saveformat, req.translate)
 
             resp.set_header('Content-Type', writer.content_type())
             resp.set_header(

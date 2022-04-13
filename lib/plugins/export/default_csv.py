@@ -54,14 +54,11 @@ class CSVExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self, subtype, translate):
+    def __init__(self):
         self.csv_buff = Writeable()
         self.csv_writer = csv.writer(self.csv_buff, delimiter=';',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
-        if subtype == 'concordance':
-            self._import_row = lang_row_to_list
-        else:
-            self._import_row = lambda x: x
+        self._import_row = lambda x: x
 
     def content_type(self):
         return 'text/csv'
@@ -84,6 +81,8 @@ class CSVExport(AbstractExport):
         self.csv_writer.writerow(row)
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        self._import_row = lang_row_to_list
+
         if args.heading:
             self._writeheading([
                 'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
@@ -160,5 +159,5 @@ class CSVExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance(subtype, translate):
-    return CSVExport(subtype, translate)
+def create_instance():
+    return CSVExport()

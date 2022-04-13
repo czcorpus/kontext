@@ -42,26 +42,12 @@ from . import AbstractExport, ExportPluginException, lang_row_to_list
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self, subtype, translate):
+    def __init__(self):
         self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()
         self._col_types = ()
-        if subtype == 'concordance':
-            self._sheet.title = translate('concordance')
-            self._import_row = lang_row_to_list
-        elif subtype == 'freq':
-            self._sheet.title = translate('frequency distribution')
-            self._import_row = lambda x: x
-        elif subtype == 'wordlist':
-            self._sheet.title = translate('word list')
-            self._import_row = lambda x: x
-        elif subtype == 'coll':
-            self._sheet.title = translate('collocations')
-            self._import_row = lambda x: x
-        elif subtype == 'pquery':
-            self._sheet.title = translate('paradigmatic query')
-            self._import_row = lambda x: x
+        self._import_row = lambda x: x
 
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -132,6 +118,9 @@ class XLSXExport(AbstractExport):
         return cell
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('concordance')
+        self._import_row = lang_row_to_list
+
         if args.heading:
             doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
             refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
@@ -160,6 +149,7 @@ class XLSXExport(AbstractExport):
             self._writerow(row_num if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('collocations')
         self._set_col_types(int, str, *((float,) * 8))
         if args.colheaders or args.heading:
             self._writeheading([''] + [item['n'] for item in data.Head])
@@ -168,6 +158,8 @@ class XLSXExport(AbstractExport):
                 i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('frequency distribution')
+
         # Here we expect that when saving multi-block items, all the block have
         # the same number of columns which is quite bad. But currently there is
         # no better common 'denominator'.
@@ -186,6 +178,7 @@ class XLSXExport(AbstractExport):
                                                                     str(item.get('rel', ''))])
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('paradigmatic query')
         self._set_col_types(int, str, float)
 
         if args.colheaders or args.heading:
@@ -195,6 +188,7 @@ class XLSXExport(AbstractExport):
             self._writerow(i, row)
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('word list')
         self._set_col_types(int, str, float)
 
         if args.colheaders:
@@ -211,5 +205,5 @@ class XLSXExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance(subtype, translate):
-    return XLSXExport(subtype, translate)
+def create_instance():
+    return XLSXExport()

@@ -199,8 +199,7 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
         return f'{amodel.args.corpname}-pquery.{suffix}'
 
     with plugins.runtime.EXPORT as export:
-        writer = export.load_plugin(req.mapped_args.saveformat,
-                                    subtype='pquery', translate=req.translate)
+        writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
 
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header('Content-Disposition',

@@ -243,19 +243,9 @@ class XMLExport(AbstractExport):
     """
     The plug-in itself
     """
-    SUBTYPE_MAP = {
-        'concordance': ConcDocument,
-        'freq': FreqDocument,
-        'wordlist': WordlistDocument,
-        'coll': CollDocument,
-        'pquery': PqueryDocument
-    }
 
-    def __init__(self, subtype, translate):
-        subtype_class = self.SUBTYPE_MAP.get(subtype, None)
-        if subtype_class is None:
-            raise ExportPluginException(f'Unknown export subtype {subtype}')
-        self._document = subtype_class()
+    def __init__(self):
+        self._document = None
         self._corpnames = []
 
     def content_type(self):
@@ -285,6 +275,7 @@ class XMLExport(AbstractExport):
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        self._document = ConcDocument()
         aligned_corpora = [
             amodel.corp,
             *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
@@ -318,6 +309,7 @@ class XMLExport(AbstractExport):
             self._writerow(row_num if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        self._document = CollDocument()
         if args.colheaders or args.heading:
             self._writeheading([''] + [item['n'] for item in data.Head])
         for i, item in enumerate(data.Items, 1):
@@ -325,6 +317,7 @@ class XMLExport(AbstractExport):
                 i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        self._document = FreqDocument()
         for block in data['Blocks']:
             self._add_block('')  # TODO block name
             if args.colheaders or args.heading:
@@ -335,6 +328,7 @@ class XMLExport(AbstractExport):
                                                                     str(item.get('rel', ''))])
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        self._document = PqueryDocument()
         if args.colheaders or args.heading:
             self._writeheading(['', 'value', 'freq'])
 
@@ -342,6 +336,7 @@ class XMLExport(AbstractExport):
             self._writerow(i, row)
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
+        self._document = WordlistDocument()
         if args.colheaders:
             self._writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
 
@@ -356,5 +351,5 @@ class XMLExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance(subtype, translate):
-    return XMLExport(subtype, translate)
+def create_instance():
+    return XMLExport()

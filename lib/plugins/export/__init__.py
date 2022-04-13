@@ -152,7 +152,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name: str, subtype: str=None, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
+    def load_plugin(self, name: str, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
@@ -169,7 +169,7 @@ class Loader(object):
             raise UnknownExporterException(translate(f'Export module [{name}] not configured'))
         module_name = self._module_map[name]
         module = __import__(f'plugins.export.{module_name}', fromlist=[module_name])
-        plugin = module.create_instance(subtype=subtype, translate=translate)
+        plugin = module.create_instance()
         return plugin
 
 

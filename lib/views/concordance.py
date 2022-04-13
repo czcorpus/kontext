@@ -1131,7 +1131,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
             output['Desc'] = (await amodel.concdesc_json())['Desc']
         else:
             with plugins.runtime.EXPORT as export:
-                writer = export.load_plugin(req.mapped_args.saveformat, subtype='concordance')
+                writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
 
                 resp.set_header('Content-Type', writer.content_type())
                 resp.set_header(

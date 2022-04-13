@@ -447,8 +447,7 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
         def mkfilename(suffix): return '%s-freq-distrib.%s' % (amodel.args.corpname, suffix)
 
         with plugins.runtime.EXPORT as export:
-            writer = export.load_plugin(req.mapped_args.saveformat,
-                                        subtype='freq', translate=req.translate)
+            writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
 
             resp.set_header('Content-Type', writer.content_type())
             resp.set_header(
