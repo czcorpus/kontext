@@ -29,6 +29,7 @@ import settings
 from action.argmapping import UserActionArgs
 from action.errors import UserActionException
 from action.krequest import KRequest
+from action.model.abstract import AbstractUserModel
 from action.model.base import BaseActionModel, BasePluginCtx
 from action.plugin.ctx import AbstractUserPluginCtx
 from action.props import ActionProps
@@ -41,7 +42,7 @@ from sanic import Sanic
 from texttypes.cache import TextTypesCache
 
 
-class UserActionModel(BaseActionModel):
+class UserActionModel(BaseActionModel, AbstractUserModel):
     """
     UserActionModel represents a minimal model for any user action
     (i.e. an action where we distinguish between anonymous
@@ -426,18 +427,8 @@ class UserActionModel(BaseActionModel):
             result['footer_bar'] = await fb.get_contents(self.plugin_ctx, self.return_url)
             result['footer_bar_css'] = fb.get_css_url()
 
-        avail_languages = settings.get_full('global', 'translations')
-        ui_lang = self._req.ui_lang.replace('_', '-') if self._req.ui_lang else 'en-US'
-        # available languages; used just by UI language switch
-        result['avail_languages'] = avail_languages
-        result['uiLang'] = ui_lang
         with plugins.runtime.GETLANG as gl:
             result['lang_switch_ui'] = gl.allow_default_lang_switch_ui()
-        result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
-                                         for code, meta in avail_languages if code == ui_lang)
-
-        day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
-        result['first_day_of_week'] = day_map[self._req.locale.first_week_day]
 
         # util functions
         result['to_str'] = lambda s: str(s) if s is not None else ''

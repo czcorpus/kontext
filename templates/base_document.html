@@ -1,0 +1,207 @@
+{#-
+Copyright (c) 2003-2009  Pavel Rychly
+Copyright (c) 2013 Charles University in Prague, Faculty of Arts,
+                   Institute of the Czech National Corpus
+Copyright (c) 2013 Tomas Machalek <tomas.machalek@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; version 2
+dated June, 1991.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-#}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>{% block title %}KonText - an advanced corpus search interface{% endblock %}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% if theme.favicon -%}
+<link rel="icon" type="{{ theme.favicon_type }}" href="{{ theme.favicon }}" />
+{% endif %}
+{%- for font in theme.online_fonts -%}
+<link href='{{ font }}' rel='stylesheet' type='text/css'>
+{%- endfor -%}
+
+<link rel="stylesheet" type="text/css" href="{{ files_path }}/dist/{{ page_model }}.css{{ deployment_suff }}" />
+{% for item in app_bar_css %}
+<link rel="stylesheet" type="text/css" href="{{ item.url }}" />
+{% endfor %}
+{%- if footer_bar_css -%}
+<link rel="stylesheet" type="text/css" href="{{ footer_bar_css }}" />
+{%- endif -%}
+<noscript>
+    <link rel="stylesheet" type="text/css" href="{{ files_path }}/css/main-menu.css" />
+</noscript>
+{% block tpl_style %}
+{% endblock %}
+<script type="text/javascript">
+if(window.Intl===undefined){window.Intl={NumberFormat:function(){this.format=function(s){return''+s}},DateTimeFormat:function(){this.format=function(s){return s.toString()}},PluralRules:function(){this.select=function(s){return'one'}},Collator:function(){this.compare=function(a,b){return a.localeCompare(b)}}}}
+</script>
+<!-- plug-ins dependencies -->
+{% for abjs in app_bar_js %}
+<script type="text/javascript" src="{{ abjs }}"></script>
+{% endfor %}
+<!-- --------------------- -->
+{% if current_action != 'compatibility' %}
+<script type="text/javascript">
+if (((/*@cc_on!@*/false) || !!document['documentMode']) &&
+        (window.navigator.userAgent.indexOf('MSIE') > -1 || window.navigator.userAgent.indexOf('Trident/') > -1)) {
+    window.location.href = "{{ root_url }}compatibility";
+}
+</script>
+{% endif %}
+
+{%- block js_load -%}
+<script type="text/javascript" src="{{ files_path }}/dist/common.js{{ deployment_suff }}"></script>
+<script type="text/javascript" src="{{ files_path }}/dist/{{ page_model }}.js{{ deployment_suff }}"></script>
+{%- endblock -%}
+{%- block headers %}{% endblock -%}
+
+{%- block js_init -%}
+<script type="text/javascript">
+var __conf = {};
+__conf.page = {};
+__conf.activePlugins = {{ active_plugins|to_json }};
+__conf.messageAutoHideInterval = {{ message_auto_hide_interval|default(5000, true) }};
+__conf.userId = {{ user_id|to_json }};
+__conf.locale = {{ locale|to_json }};
+__conf.rootURL = {{ root_url|to_json }};
+__conf.rootPath = {{ root_url|to_json }};
+__conf.staticPath = {{ files_path|to_json }};
+__conf.currentAction = {{ current_action|to_json }};
+__conf.uiLang = {{ uiLang|to_json }};
+__conf.isLocalUiLang = {{ is_local_ui_lang|to_json }};
+__conf.firstDayOfWeek = {{ first_day_of_week|to_json }};
+__conf.isDebug = {%if debug %}true{% else %}false{% endif %};
+__conf.pluginData = {{ plugin_data|to_json  }};
+__conf.notifications = {{ messages|to_json }};
+__conf.popupServerMessages = {{ popup_server_messages|to_json }};
+__conf.menuData = {{ menu_data|to_json }};
+__conf.asyncTasks = {{ async_tasks|to_json }};
+__conf.issueReportingAction = {{ issue_reporting_action|to_json }};
+{% if integration_testing_env %}
+__conf.integrationTestingEnv = {{ integration_testing_env|to_json }};
+{% endif %}
+__conf.helpLinks = {{ help_links|to_json }};
+__conf.UsesAppBar = {%if app_bar %}true{% else %}false{% endif %};
+{% block BaseConf %}
+{% endblock %}
+</script>
+{% endblock %}
+</head>
+<body>
+<div id="viewport">
+{% block AppBar %}
+<div id="common-bar">
+{% if app_bar %} {{ app_bar }} {% endif %}
+<div id="user-pane-mount"></div>
+</div>
+{% endblock %}
+
+{% block Header %}
+<header id="topbar">
+    <div class="navig-wrapper">
+        <div id="menu-bar">
+            <a id="logo-wrapper" href="{{ theme.logo_href }}"><img id="logo-image" class="over-img"
+                src="{{ theme.logo_path  }}"
+                alt="Kontext logo"
+                title="{{ theme.logo_title }}"
+                style="{{ theme.logo_inline_css }}"
+                data-alt-img="{{ theme.logo_mouseover_path }}" /></a>
+            <div id="main-menu-mount">
+                <ul id="menu-level-1">
+                {% for menu_item in static_menu %}<li class="{% if menu_item.disabled %}disabled{% endif %}"><a class="trigger menu-link"
+                    {% if menu_item.action %}href={{root_url}}{{menu_item.action}}{% endif %}>{{menu_item.label}}</a></li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+        <section class="corpus-and-query">
+            <div id="query-overview-mount"></div>
+            <div id="general-overview-mount"></div>
+            <div id="view-options-mount"></div>
+            <div id="query-history-mount"></div>
+        </section>
+        <section class="analysis">
+            <div id="analysis-forms-mount"></div>
+        </section>
+    </div>
+</header>
+{% endblock %}
+
+<div id="global-style-mount"></div>
+
+<div id="content">
+    <div class="messages-mount"></div>
+    {% block concordance %}{% endblock %}
+    {% block main %}{% endblock %}
+</div>
+
+{% block Footer %}
+<footer {% if footer_bar %}class="custom-footer"{% endif %}>
+    {% if footer_bar %}
+        {{ footer_bar }}
+        {% if debug %}
+        <div class="debug-warning">
+        {{ 'debugging mode'|_ }}
+        </div>
+         {% endif %}
+    {% else %}
+        <div class="actions">
+            {% if issue_reporting_action %}
+            <div id="error-reporting-mount"></div>
+            {% endif %}
+            {% if issue_reporting_action %}<span class="separ">|</span>{% endif %}
+            <div>
+                <a href="https://www.github.com/czcorpus/kontext" target="_blank" rel="noopener">{{ "View on GitHub"|_ }}</a>
+            </div>
+            {% if lang_switch_ui and avail_languages|length > 0 %}
+            <span class="separ">|</span>
+            <div id="switch-language-box">{{ "user interface languages"|_ }}:
+                <form id="language-switch-form" action="{{ root_url }}user/switch_language" method="POST">
+                    {% for lang in avail_languages %}
+                        <button class="switch" type="submit" name="language" value="{{ lang[0] }}">{{ lang[1].get('label', lang[0]) }}</button>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="info">
+            <div id="copyright-info">
+            &copy; <a href="http://www.korpus.cz/" target="_blank" rel="noopener">Institute of the Czech National Corpus</a>
+            </div>
+            <span class="separ">|</span>
+            <div>
+                {{ "version"|_ }} <strong>{{ _version[1] }}</strong>
+            </div>
+            <span class="separ">|</span>
+            <div>
+                {{ "uses"|_ }} <a href="https://nlp.fi.muni.cz/trac/noske" target="_blank" rel="noopener">manatee-<span>{{ _version[0] }}</span></a>
+            </div>
+            {% if debug %}
+            <span class="separ">|</span>
+            <div class="debug-warning">
+            {{ 'debugging mode'|_ }}
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</footer>
+{% endblock %}
+</div>
+
+<script type="text/javascript">
+{%block bodyonload %}{% endblock %}
+</script>
+
+</body>
+</html>

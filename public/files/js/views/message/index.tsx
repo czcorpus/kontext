@@ -56,10 +56,15 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 <layoutViews.StatusIcon status={props.status} />
                 <div className="message-text">
                     {
-                        List.flatMap(
-                            v => {
+                        List.map(
+                            (v, i) => {
                                 const whitespaces = v.match(/^\s*/)[0].length
-                                return [<span style={{marginLeft: `${whitespaces}em`}}>{v.trimStart()}</span>, <br/>]
+                                return (
+                                    <React.Fragment key={`line:${i}`}>
+                                        <span style={{marginLeft: `${whitespaces}em`}}>{v.trimStart()}</span>
+                                        <br />
+                                    </React.Fragment>
+                                );
                             },
                             props.text.split('\n')
                         )

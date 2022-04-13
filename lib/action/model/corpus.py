@@ -295,10 +295,7 @@ class CorpusActionModel(UserActionModel):
         else:
             self.return_url = '{}query?{}'.format(self._req.get_root_url(),
                                                   '&'.join([f'{k}={v}' for k, v in list(args.items())]))
-        # by default, each action is public
-        access_level = self._action_props.access_level
-        if access_level and self.user_is_anonymous():
-            raise ForbiddenException(self._req.translate('Access forbidden - please log-in.'))
+
         self._curr_corpus = await self._load_corpus()
 
         # plugins setup
