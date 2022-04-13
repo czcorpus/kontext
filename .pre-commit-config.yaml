@@ -1,5 +1,6 @@
--   repo: git://github.com/pre-commit/mirrors-autopep8
-    sha: v1.3.2
+repos:
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.3.2
     hooks:
     -   id: autopep8
         args:
@@ -10,15 +11,15 @@
     hooks:
     -   id: isort
         name: isort (python)
--   repo: git://github.com/awebdeveloper/pre-commit-tslint/
-    sha: 0.0.2
+-   repo: https://github.com/awebdeveloper/pre-commit-tslint/
+    rev: 0.0.2
     hooks:
     -   id: tslint
         additional_dependencies:
         - tslint@6.1.0
         - typescript@3.7.3
--   repo: git://github.com/kosarko/pre-commit-lesshint/
-    sha: 2056fd7056d194aa7d21d0b189a6760c8053be9d
+-   repo: https://github.com/kosarko/pre-commit-lesshint/
+    rev: 2056fd7056d194aa7d21d0b189a6760c8053be9d
     hooks:
     -   id: lesshint
         additional_dependencies:
