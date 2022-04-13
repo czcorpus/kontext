@@ -23,8 +23,10 @@ Plug-in requires openpyxl library.
 from io import BytesIO
 from typing import Any, Dict, List, Tuple
 
+from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
+from action.model.wordlist import WordlistActionModel
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -191,6 +193,22 @@ class XLSXExport(AbstractExport):
 
         for i, row in enumerate(data, 1):
             self._writerow(i, row)
+
+    async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
+        self._set_col_types(int, str, float)
+
+        if args.colheaders:
+            self._writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
+
+        elif args.heading:
+            self._writeheading([
+                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                    amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
+                '', ''
+            ])
+
+        for i, item in enumerate(data, 1):
+            self._writerow(i, [item[0], str(item[1])])
 
 
 def create_instance(subtype, translate):

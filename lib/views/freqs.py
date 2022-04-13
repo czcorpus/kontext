@@ -425,7 +425,7 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     # following piece of sh.t has hidden parameter dependencies
     result = await _freqs(
         amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort, force_cache=False)
+        freq_sort=req.mapped_args.freq_sort, force_cache=False, fcrit_async=())
     saved_filename = amodel.args.corpname
     output = None
     if req.mapped_args.saveformat == 'text':

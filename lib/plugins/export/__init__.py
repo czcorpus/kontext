@@ -24,8 +24,10 @@ free to be replaced/changed.
 import abc
 from typing import Any, Callable, Dict, List, Tuple, Union
 
+from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
+from action.model.wordlist import WordlistActionModel
 from bgcalc.coll_calc import CalculateCollsResult
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
@@ -107,12 +109,21 @@ class AbstractPqueryExportMixin(object):
     @abc.abstractmethod
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
         """
-        write frequency data
+        write pquery data
         TODO make implement frequency data dataclass
         """
 
 
-class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin, AbstractPqueryExportMixin):
+class AbstractWordlistExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_wordlist(self, amodel: WordlistActionModel, data: Tuple[int, List[Tuple[str, int]]], args: WordlistSaveFormArgs):
+        """
+        write wordlist data
+        """
+
+
+class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin, AbstractPqueryExportMixin, AbstractWordlistExportMixin):
 
     @abc.abstractmethod
     def content_type(self) -> str:
