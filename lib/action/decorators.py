@@ -154,6 +154,15 @@ async def resolve_error(
     return ans
 
 
+def get_explicit_return_type(req: KRequest) -> Optional[str]:
+    f = req.args_getlist('format')
+    if len(f) == 0:
+        f = req.form_getlist('format')
+    if len(f) == 0:
+        f = [req.json.get('format')]
+    return f[0] if len(f) > 0 else None
+
+
 def http_action(
         access_level: int = 0,
         template: Optional[str] = None,
@@ -215,8 +224,12 @@ def http_action(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
                 return_type=return_type, page_model=page_model, template=template,
                 mutates_result=mutates_result, action_log_mapper=action_log_mapper)
-            if return_type is None and template:
+            expl_return_type = get_explicit_return_type(req)
+            if expl_return_type:
+                aprops.return_type = expl_return_type
+            elif not return_type and template:
                 aprops.return_type = 'template'
+
             if action_model:
                 amodel = action_model(req, resp, aprops, application.ctx.tt_cache)
             else:
@@ -259,7 +272,7 @@ def http_action(
             return HTTPResponse(
                 body=resp_body,
                 status=resp.http_status_code,
-                headers=resp.output_headers(return_type))
+                headers=resp.output_headers(aprops.return_type))
 
         return wrapper
     return decorator

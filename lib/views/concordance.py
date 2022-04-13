@@ -596,6 +596,10 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         if tagset.ident == corpus_info.default_tagset:
             poslist = tagset.pos_category
             break
+
+    struct_and_attrs_tmp = await amodel.get_structs_and_attrs()
+    struct_and_attrs = [(k, [x.to_dict() for x in item]) for k, item in struct_and_attrs_tmp.items()]
+
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcname if amodel.corp.is_subcorpus else None,
@@ -628,7 +632,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         SubcorpList=tmp_out['SubcorpList'],
         TextTypesNotes=corpus_info.metadata.desc,
         TextDirectionRTL=True if amodel.corp.get_conf('RIGHTTOLEFT') else False,
-        structsAndAttrs=await amodel.get_structs_and_attrs(),
+        structsAndAttrs=struct_and_attrs,
         DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
