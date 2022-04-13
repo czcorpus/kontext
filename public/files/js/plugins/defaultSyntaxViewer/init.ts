@@ -20,7 +20,6 @@
 
 /// <reference path="./js-treex-view.d.ts" />
 
-import { empty as rxEmpty } from 'rxjs';
 import { StatefulModel, IModel } from 'kombo';
 
 import * as PluginInterfaces from '../../types/plugins';
@@ -184,26 +183,28 @@ export class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> imple
             target.removeChild(target.firstChild);
         }
 
-        const corpusSwitch = window.document.createElement('select');
-        corpusSwitch.onchange = this.corpusSelectHandler;
-        List.forEach(
-            (sentenceToken, i) => {
-                const option = window.document.createElement('option');
-                option.value = sentenceToken.corpus;
-                option.label = sentenceToken.corpus;
-                option.selected = i === this.state.activeToken;
-                corpusSwitch.append(option);
-            },
-            this.state.sentenceTokens
-        );
-
+        if (this.state.sentenceTokens.length > 1) {
+            const corpusSwitch = window.document.createElement('select');
+            corpusSwitch.onchange = this.corpusSelectHandler;
+            List.forEach(
+                (sentenceToken, i) => {
+                    const option = window.document.createElement('option');
+                    option.value = sentenceToken.corpus;
+                    option.label = sentenceToken.corpus;
+                    option.selected = i === this.state.activeToken;
+                    corpusSwitch.append(option);
+                },
+                this.state.sentenceTokens
+            );
+            $(target).append(corpusSwitch);
+            $(target).append(window.document.createElement('hr'));
+        }
+        
         const treexFrame = window.document.createElement('div');
         treexFrame.style['width'] = `${(window.innerWidth - 55).toFixed(0)}px`;
         treexFrame.style['height'] = `${(window.innerHeight - 70).toFixed(0)}px`;
         treexFrame.style['overflow'] = 'auto';
-
-        $(target).append(corpusSwitch);
-        $(target).append(window.document.createElement('hr'));
+        
         $(target).append(treexFrame);
         $(treexFrame).treexView(this.state.data);
     }
