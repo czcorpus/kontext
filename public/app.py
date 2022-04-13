@@ -33,6 +33,11 @@ try:
     from queue import SimpleQueue as Queue
 except ImportError:
     from queue import Queue
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    def setproctitle(s):
+        pass
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))  # application libraries
 
@@ -156,6 +161,7 @@ async def sigusr1_handler():
 
 @application.listener('before_server_start')
 async def server_init(app, loop):
+    setproctitle(f'sanic-kontext [{CONF_PATH}][worker]')
     loop.add_signal_handler(signal.SIGUSR1, lambda: asyncio.create_task(sigusr1_handler()))
     db_conf = settings.get('plugins', 'sessions')
     # TODO we should probably use a custom configuration for this as the "db" can be non-Redis
@@ -239,6 +245,7 @@ if __name__ == '__main__':
             os.environ['_DEBUGPY_RUNNING'] = '1'
 
     try:
+        setproctitle(f'sanic-kontext [{CONF_PATH}][master]')
         if args.debugmode and not settings.is_debug_mode():
             settings.activate_debug()
         application.run(
