@@ -1,5 +1,7 @@
 # Copyright (c) 2003-2014  Pavel Rychly, Vojtech Kovar, Milos Jakubicek, Milos Husak, Vit Baisa
-# Copyright (c) 2014 Institute of the Czech National Corpus
+# Copyright (c) 2014 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2014 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -284,8 +286,7 @@ class PyConc(manatee.Concordance):
                 Word=word,
                 freq=f,
                 norm=nf,
-                rel=round(f / nf * 1e6, 2)))
-
+                rel=round(f / nf * 1e6, 3)))
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]

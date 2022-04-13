@@ -28,7 +28,7 @@ import {
     ResponsiveContainer, ScatterChart, Scatter,
     Label, ErrorBar, Line, Area, ComposedChart
 } from 'recharts';
-import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
+import { Dict, List, Maths, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
@@ -390,8 +390,8 @@ export function init(
                 if (props.payload[props.dataKey] === undefined) {  // scatter chart heading
                     return value
                 }
-                const ttLft = (props.payload[props.dataKey]-props.payload[confidenceKey][0]).toFixed(2);
-                const ttRgt = (props.payload[props.dataKey]+props.payload[confidenceKey][1]).toFixed(2);
+                const ttLft = Maths.roundToPos(props.payload[props.dataKey]-props.payload[confidenceKey][0], 3);
+                const ttRgt = Maths.roundToPos(props.payload[props.dataKey]+props.payload[confidenceKey][1], 3);
                 const msg = he.translate('freq__chart_p_filter_tooltip');
                 const ttStyle:CSSProperties = {
                     color: theme.colorLightText,

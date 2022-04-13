@@ -53,14 +53,6 @@ export function init(
 
     const SAMPLE_FLOATING_NUM = he.formatNumber(3.1, 1);
 
-    function prettifyNumber(v:number) {
-        const dec = ~~v;
-        const decNorm = he.formatNumber(dec);
-        const frac = v - dec;
-        const separ = SAMPLE_FLOATING_NUM.substring(1, SAMPLE_FLOATING_NUM.length - 1);
-        const fracNorm = Strings.overwriteStringFromRight('00', he.formatNumber(frac, 2).substring(2) || '0');
-        return <span>{decNorm}<span className="frac">{separ}{fracNorm}</span></span>;
-    }
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
 
@@ -132,22 +124,22 @@ export function init(
                 {props.displayConfidence ?
                     <td className="bci">
                         <span className="bracket">[</span>
-                        {prettifyNumber(props.data.freqConfidence[0])}
+                        {props.data.freqConfidence[0]}
                         <span className="separ">,{'\u00a0'}</span>
-                        {prettifyNumber(props.data.freqConfidence[1])}
+                        {props.data.freqConfidence[1]}
                         <span className="bracket">]</span>
                     </td> :
                     null }
                 <td className="num">
-                    {prettifyNumber(props.data.rel)}
+                    {props.data.rel}
                 </td>
                 {props.displayConfidence ?
                     <td className="bci">
                         <span className="bracket">[</span>
                         <span className="val">
-                            {prettifyNumber(props.data.relConfidence[0])}
+                            {props.data.relConfidence[0]}
                             <span className="separ">,{'\u00a0'}</span>
-                            {prettifyNumber(props.data.relConfidence[1])}
+                            {props.data.relConfidence[1]}
                         </span>
                         <span className="bracket">]</span>
                     </td> :
