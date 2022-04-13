@@ -25,7 +25,10 @@ import abc
 from typing import Any, Callable, Dict, List, Union
 
 from action.model.concordance import ConcActionModel
+from bgcalc.coll_calc import CalculateCollsResult
 from kwiclib import KwicPageData
+from views.colls import SavecollArgs
+from views.concordance import SaveConcArgs
 
 
 class ExportPluginException(Exception):
@@ -71,13 +74,22 @@ class AbstractConcExportMixin(object):
         return ans
 
     @abc.abstractmethod
-    def write_conc(self, amodel: ConcActionModel, data: KwicPageData, heading: bool, numbering: bool, from_line: int):
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
         """
         write concordance data
         """
 
 
-class AbstractExport(AbstractConcExportMixin):
+class AbstractCollExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        """
+        write collocation data
+        """
+
+
+class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin):
 
     def set_corpnames(self, corpnames: List[str]):
         pass

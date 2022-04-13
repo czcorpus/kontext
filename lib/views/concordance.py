@@ -1139,10 +1139,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
                     f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
                 if len(data.Lines) > 0:
-                    heading = bool(req.mapped_args.heading)
-                    numbering = bool(req.mapped_args.numbering)
-                    await writer.write_conc(amodel, data, heading, numbering, req.mapped_args.from_line)
-
+                    await writer.write_conc(amodel, data, req.mapped_args)
                 output = writer.raw_content()
         return output
 

@@ -22,8 +22,11 @@ like data can be used) to CSV format.
 import csv
 
 from action.model.concordance import ConcActionModel
+from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
+from views.colls import SavecollArgs
+from views.concordance import SaveConcArgs
 
 from . import AbstractExport, lang_row_to_list
 
@@ -74,13 +77,13 @@ class CSVExport(AbstractExport):
             row += self._import_row(lang_row)
         self.csv_writer.writerow(row)
 
-    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, heading: bool, numbering: bool, from_line: int):
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
         aligned_corpora = [
             amodel.corp,
             *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
         ]
         self.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
-        if heading:
+        if args.heading:
             self.writeheading([
                 'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
                     amodel.corp.human_readable_corpname,
@@ -101,7 +104,7 @@ class CSVExport(AbstractExport):
             ]
             used_refs = [x[1] for x in used_refs if x[0] in refs_args]
             self.write_ref_headings(
-                [''] + used_refs if numbering else used_refs)
+                [''] + used_refs if args.numbering else used_refs)
 
         if 'Left' in data.Lines[0]:
             left_key, kwic_key, right_key = 'Left', 'Kwic', 'Right'
@@ -110,13 +113,21 @@ class CSVExport(AbstractExport):
         else:
             raise ConcordanceQueryParamsError(amodel.translate('Invalid data'))
 
-        for row_num, line in enumerate(data.Lines, from_line):
+        for row_num, line in enumerate(data.Lines, args.from_line):
             lang_rows = self._process_lang(
                 line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
             if 'Align' in line:
                 lang_rows += self._process_lang(
                     line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
-            self.writerow(row_num if numbering else None, *lang_rows)
+            self.writerow(row_num if args.numbering else None, *lang_rows)
+
+    async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        self.set_col_types(int, str, *((float,) * 8))
+        if args.colheaders or args.heading:
+            self.writeheading([''] + [item['n'] for item in data.Head])
+        for i, item in enumerate(data.Items, 1):
+            self.writerow(
+                i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
 
 
 def create_instance(subtype, translate):
