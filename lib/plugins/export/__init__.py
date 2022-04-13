@@ -22,17 +22,108 @@ free to be replaced/changed.
 """
 
 import abc
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List, Tuple, Union
+
+from action.argmapping.wordlist import WordlistSaveFormArgs
+from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
+from action.model.wordlist import WordlistActionModel
+from bgcalc.coll_calc import CalculateCollsResult
+from kwiclib import KwicPageData
+from views.colls import SavecollArgs
+from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 
 class ExportPluginException(Exception):
     pass
 
 
-class AbstractExport(object):
+class UnknownExporterException(Exception):
+    pass
 
-    def set_corpnames(self, corpnames: List[str]):
-        pass
+
+class AbstractConcExportMixin(object):
+
+    def _merge_conc_line_parts(self, items: List[Dict[str, Any]]) -> str:
+        """
+        converts a list of dicts of the format [{'class': u'col0 coll', 'str': u' \\u0159ekl'},
+            {'class': u'attr', 'str': u'/j\xe1/PH-S3--1--------'},...] to a CSV compatible form
+        """
+        ans: List[str] = []
+        for item in items:
+            if 'class' in item and item['class'] != 'attr':
+                ans.append(str(item['str']).strip())
+            else:
+                ans.append(str(item['str']).strip())
+            for tp in item.get('tail_posattrs', []):
+                ans.append(f'/{tp}')
+        return ''.join(ans).strip()
+
+    def _process_lang(self, root: Union[List[Dict[str, Any]], Dict[str, Any]], left_key: str, kwic_key: str, right_key: str, add_linegroup: bool) -> List[Dict[str, str]]:
+        if isinstance(root, dict):
+            root = [root]
+
+        ans: List[Dict[str, str]] = []
+        for items in root:
+            ans_item: Dict[str, str] = {}
+            if 'ref' in items:
+                ans_item['ref'] = items['ref']
+            if add_linegroup:
+                ans_item['linegroup'] = items.get('linegroup', '')
+            ans_item['left_context'] = self._merge_conc_line_parts(items[left_key])
+            ans_item['kwic'] = self._merge_conc_line_parts(items[kwic_key])
+            ans_item['right_context'] = self._merge_conc_line_parts(items[right_key])
+            ans.append(ans_item)
+        return ans
+
+    @abc.abstractmethod
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        """
+        write concordance data
+        """
+
+
+class AbstractCollExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        """
+        write collocation data
+        """
+
+
+class AbstractFreqExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        """
+        write frequency data
+        TODO make implement frequency data dataclass
+        """
+
+
+class AbstractPqueryExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        """
+        write pquery data
+        TODO make implement frequency data dataclass
+        """
+
+
+class AbstractWordlistExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_wordlist(self, amodel: WordlistActionModel, data: Tuple[int, List[Tuple[str, int]]], args: WordlistSaveFormArgs):
+        """
+        write wordlist data
+        """
+
+
+class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin, AbstractPqueryExportMixin, AbstractWordlistExportMixin):
 
     @abc.abstractmethod
     def content_type(self) -> str:
@@ -41,19 +132,6 @@ class AbstractExport(object):
     @abc.abstractmethod
     def raw_content(self) -> str:
         pass
-
-    @abc.abstractmethod
-    def writerow(self, line_num: int, *lang_rows: List[Any]):
-        pass
-
-    def set_col_types(self, *types):
-        pass
-
-    def writeheading(self, data: List[Any]):
-        pass  # optional implementation
-
-    def write_ref_headings(self, data: List[Any]):
-        pass  # optional implementation
 
 
 def lang_row_to_list(row):
@@ -74,7 +152,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name: str, subtype: str=None, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
+    def load_plugin(self, name: str, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
@@ -88,10 +166,10 @@ class Loader(object):
         required module or nothing if module is not found
         """
         if name not in self._module_map:
-            raise ValueError(translate(f'Export module [{name}] not configured'))
+            raise UnknownExporterException(translate(f'Export module [{name}] not configured'))
         module_name = self._module_map[name]
         module = __import__(f'plugins.export.{module_name}', fromlist=[module_name])
-        plugin = module.create_instance(subtype=subtype, translate=translate)
+        plugin = module.create_instance()
         return plugin
 
 

@@ -112,6 +112,7 @@ class KwicLinesArgs:
             setattr(ans, k, v)
         return ans
 
+
 @dataclass
 class KwicPageArgs:
     # 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
@@ -221,7 +222,7 @@ class Kwic:
         self.corpus_fullname = corpus_fullname
         self.conc = conc
 
-    def kwicpage(self, args: KwicPageArgs):
+    def kwicpage(self, args: KwicPageArgs) -> KwicPageData:
         """
         Generates template data for page displaying provided concordance
 
@@ -281,7 +282,7 @@ class Kwic:
                 for item in line[part]:
                     item['str'] = item['str'].replace('===NONE===', '')
         out.pagination = pagination.export()
-        return asdict(out)
+        return out
 
     def add_aligns(self, result, args):
         """

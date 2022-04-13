@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import math
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import kwiclib
@@ -172,7 +172,7 @@ class FCSActionModel(UserActionModel):
         kwic_context = settings.get_int('fcs', 'kwic_context', 5)
         kwic_args.leftctx = f'-{kwic_context}'
         kwic_args.rightctx = f'{kwic_context}'
-        page = kwic.kwicpage(kwic_args)  # convert concordance
+        page = asdict(kwic.kwicpage(kwic_args))  # convert concordance
 
         local_offset = (start - 1) % max_rec
         if start - 1 > conc.size():

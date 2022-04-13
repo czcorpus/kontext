@@ -20,7 +20,6 @@
 import os
 import re
 import urllib.parse
-from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import conclib

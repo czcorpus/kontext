@@ -21,35 +21,33 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 from io import BytesIO
+from typing import Any, Dict, List, Tuple
 
+from action.argmapping.wordlist import WordlistSaveFormArgs
+from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
+from action.model.wordlist import WordlistActionModel
+from bgcalc.coll_calc import CalculateCollsResult
+from conclib.errors import ConcordanceQueryParamsError
+from kwiclib import KwicPageData
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
+from views.colls import SavecollArgs
+from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 from . import AbstractExport, ExportPluginException, lang_row_to_list
 
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self, subtype, translate):
+    def __init__(self):
         self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()
         self._col_types = ()
-        if subtype == 'concordance':
-            self._sheet.title = translate('concordance')
-            self._import_row = lang_row_to_list
-        elif subtype == 'freq':
-            self._sheet.title = translate('frequency distribution')
-            self._import_row = lambda x: x
-        elif subtype == 'wordlist':
-            self._sheet.title = translate('word list')
-            self._import_row = lambda x: x
-        elif subtype == 'coll':
-            self._sheet.title = translate('collocations')
-            self._import_row = lambda x: x
-        elif subtype == 'pquery':
-            self._sheet.title = translate('paradigmatic query')
-            self._import_row = lambda x: x
+        self._import_row = lambda x: x
 
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -59,18 +57,19 @@ class XLSXExport(AbstractExport):
         self._wb.save(filename=output)
         return output.getvalue()
 
-    def writeheading(self, data):
+    def _writeheading(self, data):
         if len(data) > 1 and data[0] != '' and all(s == '' for s in data[1:]):
             self._sheet.append([data[0]])
             for _ in range(3):
                 self._sheet.append([])
-            self._sheet.merged_cells.ranges.append('A1:G4')  # this kind of a hack in "write-only" mode
+            # this kind of a hack in "write-only" mode
+            self._sheet.merged_cells.ranges.append('A1:G4')
         else:
             self._sheet.append(data)
         self._sheet.append([])
         self._written_lines += 2
 
-    def write_ref_headings(self, data):
+    def _write_ref_headings(self, data):
         cells = []
         for d in data:
             cell = WriteOnlyCell(self._sheet, d)
@@ -79,7 +78,7 @@ class XLSXExport(AbstractExport):
         self._sheet.append(cells)
         self._written_lines += 1
 
-    def set_col_types(self, *types):
+    def _set_col_types(self, *types):
         self._col_types = types
 
     def _import_value(self, v, i):
@@ -99,7 +98,7 @@ class XLSXExport(AbstractExport):
             out_type = str
         return out_type(v), format_map[out_type]
 
-    def writerow(self, line_num, *lang_rows):
+    def _writerow(self, line_num, *lang_rows):
         row = []
         if line_num is not None:
             row.append(line_num)
@@ -108,7 +107,7 @@ class XLSXExport(AbstractExport):
         self._sheet.append([self._get_cell(*self._import_value(d, i)) for i, d in enumerate(row)])
         self._written_lines += 1
 
-    def new_sheet(self, name):
+    def _new_sheet(self, name):
         if self._written_lines > 1:
             self._sheet = self._wb.create_sheet()
         self._sheet.title = name
@@ -118,6 +117,93 @@ class XLSXExport(AbstractExport):
         cell.number_format = cell_format
         return cell
 
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('concordance')
+        self._import_row = lang_row_to_list
 
-def create_instance(subtype, translate):
-    return XLSXExport(subtype, translate)
+        if args.heading:
+            doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
+            refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
+            used_refs = [
+                ('#', amodel.plugin_ctx.translate('Token number')),
+                (doc_struct, amodel.plugin_ctx.translate('Document number')),
+                *[(x, x) for x in amodel.corp.get_structattrs()],
+            ]
+            used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+            self._write_ref_headings(
+                [''] + used_refs if args.numbering else used_refs)
+
+        if 'Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Left', 'Kwic', 'Right'
+        elif 'Sen_Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Sen_Left', 'Kwic', 'Sen_Right'
+        else:
+            raise ConcordanceQueryParamsError(amodel.translate('Invalid data'))
+
+        for row_num, line in enumerate(data.Lines, args.from_line):
+            lang_rows = self._process_lang(
+                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+            if 'Align' in line:
+                lang_rows += self._process_lang(
+                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+            self._writerow(row_num if args.numbering else None, *lang_rows)
+
+    async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('collocations')
+        self._set_col_types(int, str, *((float,) * 8))
+        if args.colheaders or args.heading:
+            self._writeheading([''] + [item['n'] for item in data.Head])
+        for i, item in enumerate(data.Items, 1):
+            self._writerow(
+                i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('frequency distribution')
+
+        # Here we expect that when saving multi-block items, all the block have
+        # the same number of columns which is quite bad. But currently there is
+        # no better common 'denominator'.
+        num_word_cols = len(data['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
+        self._set_col_types(*([int] + num_word_cols * [str] + [float, float]))
+
+        for block in data['Blocks']:
+            if args.mapped_args.multi_sheet_file:
+                self._new_sheet(block['Head'][0]['n'])
+
+            if args.colheaders or args.heading:
+                self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                   ['freq', 'freq [%]'])
+            for i, item in enumerate(block['Items'], 1):
+                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                    str(item.get('rel', ''))])
+
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('paradigmatic query')
+        self._set_col_types(int, str, float)
+
+        if args.colheaders or args.heading:
+            self._writeheading(['', 'value', 'freq'])
+
+        for i, row in enumerate(data, 1):
+            self._writerow(i, row)
+
+    async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
+        self._sheet.title = amodel.plugin_ctx.translate('word list')
+        self._set_col_types(int, str, float)
+
+        if args.colheaders:
+            self._writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
+
+        elif args.heading:
+            self._writeheading([
+                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                    amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
+                '', ''
+            ])
+
+        for i, item in enumerate(data, 1):
+            self._writerow(i, [item[0], str(item[1])])
+
+
+def create_instance():
+    return XLSXExport()

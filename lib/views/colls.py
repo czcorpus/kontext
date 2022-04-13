@@ -20,7 +20,6 @@ import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
 from action.decorators import http_action
-from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
@@ -128,6 +127,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
         result = await _collx(amodel, collpage=1, citemsperpage=to_line, user_id=req.session_get('user', 'id'))
         result.Items = result.Items[from_line - 1:]
         saved_filename = amodel.args.corpname
+
         if req.mapped_args.saveformat == 'text':
             resp.set_header('Content-Type', 'application/text')
             resp.set_header(
@@ -140,26 +140,23 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
             out_data['to_line'] = to_line
             out_data['heading'] = req.mapped_args.heading
             out_data['colheaders'] = req.mapped_args.colheaders
-        elif req.mapped_args.saveformat in ('csv', 'xml', 'xlsx'):
+
+        else:
             def mk_filename(suffix):
                 return f'{amodel.args.corpname}-collocations.{suffix}'
 
-            writer = plugins.runtime.EXPORT.instance.load_plugin(
-                req.mapped_args.saveformat, subtype='coll', translate=req.translate)
-            writer.set_col_types(int, str, *(8 * (float,)))
+            with plugins.runtime.EXPORT as export:
+                writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
 
-            resp.set_header('Content-Type', writer.content_type())
-            resp.set_header(
-                'Content-Disposition',
-                f'attachment; filename="{mk_filename(req.mapped_args.saveformat)}"')
-            if req.mapped_args.colheaders or req.mapped_args.heading:
-                writer.writeheading([''] + [item['n'] for item in result.Head])
-            for i, item in enumerate(result.Items, 1):
-                writer.writerow(
-                    i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
-            out_data = writer.raw_content()
-        else:
-            raise UserActionException(f'Unknown format: {req.mapped_args.saveformat}')
+                resp.set_header('Content-Type', writer.content_type())
+                resp.set_header(
+                    'Content-Disposition',
+                    f'attachment; filename="{mk_filename(req.mapped_args.saveformat)}"')
+
+                await writer.write_coll(amodel, result, req.mapped_args)
+                out_data = writer.raw_content()
+
         return out_data
+
     except ConcNotFoundException:
         amodel.go_to_restore_conc('collx')

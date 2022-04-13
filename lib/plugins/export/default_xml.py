@@ -19,8 +19,20 @@ A plug-in allowing export of a concordance (in fact, any row/cell
 like data can be used) to XML format.
 """
 import logging
+from typing import Any, Dict, List, Tuple
 
+from action.argmapping.wordlist import WordlistSaveFormArgs
+from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
+from action.model.wordlist import WordlistActionModel
+from bgcalc.coll_calc import CalculateCollsResult
+from conclib.errors import ConcordanceQueryParamsError
+from kwiclib import KwicPageData
 from lxml import etree
+from views.colls import SavecollArgs
+from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 from . import AbstractExport, ExportPluginException
 
@@ -231,23 +243,10 @@ class XMLExport(AbstractExport):
     """
     The plug-in itself
     """
-    SUBTYPE_MAP = {
-        'concordance': ConcDocument,
-        'freq': FreqDocument,
-        'wordlist': WordlistDocument,
-        'coll': CollDocument,
-        'pquery': PqueryDocument
-    }
 
-    def __init__(self, subtype, translate):
-        subtype_class = self.SUBTYPE_MAP.get(subtype, None)
-        if subtype_class is None:
-            raise ExportPluginException(f'Unknown export subtype {subtype}')
-        self._document = subtype_class()
+    def __init__(self):
+        self._document = None
         self._corpnames = []
-
-    def set_corpnames(self, corpnames):
-        self._corpnames = corpnames
 
     def content_type(self):
         return 'application/xml'
@@ -255,16 +254,19 @@ class XMLExport(AbstractExport):
     def raw_content(self):
         return self._document.tostring()
 
-    def add_block(self, name):
+    def _set_corpnames(self, corpnames):
+        self._corpnames = corpnames
+
+    def _add_block(self, name):
         self._document.add_block(name)
 
-    def writeheading(self, data):
+    def _writeheading(self, data):
         self._document.add_heading(data)
 
-    def write_ref_headings(self, data):
+    def _write_ref_headings(self, data):
         self._document.add_heading(dict(refs=data))
 
-    def writerow(self, line_num, *lang_rows):
+    def _writerow(self, line_num, *lang_rows):
         if len(lang_rows) == 0:
             raise ValueError('empty line')
         elif len(lang_rows) == 1:  # single language has a slightly different XML structure
@@ -272,6 +274,82 @@ class XMLExport(AbstractExport):
         else:
             self._document.add_multilang_line(lang_rows, self._corpnames, line_num)
 
+    async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
+        self._document = ConcDocument()
+        aligned_corpora = [
+            amodel.corp,
+            *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
+        ]
+        self._set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+        if args.heading:
+            doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
+            refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
+            used_refs = [
+                ('#', amodel.plugin_ctx.translate('Token number')),
+                (doc_struct, amodel.plugin_ctx.translate('Document number')),
+                *[(x, x) for x in amodel.corp.get_structattrs()],
+            ]
+            used_refs = [x[1] for x in used_refs if x[0] in refs_args]
+            self._write_ref_headings(
+                [''] + used_refs if args.numbering else used_refs)
 
-def create_instance(subtype, translate):
-    return XMLExport(subtype, translate)
+        if 'Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Left', 'Kwic', 'Right'
+        elif 'Sen_Left' in data.Lines[0]:
+            left_key, kwic_key, right_key = 'Sen_Left', 'Kwic', 'Sen_Right'
+        else:
+            raise ConcordanceQueryParamsError(amodel.translate('Invalid data'))
+
+        for row_num, line in enumerate(data.Lines, args.from_line):
+            lang_rows = self._process_lang(
+                line, left_key, kwic_key, right_key, add_linegroup=amodel.lines_groups.is_defined())
+            if 'Align' in line:
+                lang_rows += self._process_lang(
+                    line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
+            self._writerow(row_num if args.numbering else None, *lang_rows)
+
+    async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
+        self._document = CollDocument()
+        if args.colheaders or args.heading:
+            self._writeheading([''] + [item['n'] for item in data.Head])
+        for i, item in enumerate(data.Items, 1):
+            self._writerow(
+                i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        self._document = FreqDocument()
+        for block in data['Blocks']:
+            self._add_block('')  # TODO block name
+            if args.colheaders or args.heading:
+                self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                   ['freq', 'freq [%]'])
+            for i, item in enumerate(block['Items'], 1):
+                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                    str(item.get('rel', ''))])
+
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        self._document = PqueryDocument()
+        if args.colheaders or args.heading:
+            self._writeheading(['', 'value', 'freq'])
+
+        for i, row in enumerate(data, 1):
+            self._writerow(i, row)
+
+    async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
+        self._document = WordlistDocument()
+        if args.colheaders:
+            self._writeheading(['', amodel.curr_wlform_args.wlattr, 'freq'])
+
+        elif args.heading:
+            self._writeheading([
+                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                    amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
+                '', ''
+            ])
+
+        for i, item in enumerate(data, 1):
+            self._writerow(i, [item[0], str(item[1])])
+
+
+def create_instance():
+    return XMLExport()
