@@ -342,8 +342,9 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ctminfreq=int(req.args.get('ctminfreq', '1')),
         ctminfreq_type=req.args.get('ctminfreq_type'),
         fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}')
+
     try:
-        freq_data = freq_calc.calculate_freq2d(args)
+        freq_data = await freq_calc.calculate_freq2d(args)
     except UserActionException as ex:
         freq_data = dict(data=[], full_size=0)
         resp.add_system_message('error', str(ex))
@@ -371,7 +372,7 @@ async def freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     """
     try:
         await require_existing_conc(amodel.corp, amodel.args.q)
-        return _freqct(amodel, req, resp)
+        return await _freqct(amodel, req, resp)
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqct')
 

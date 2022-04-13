@@ -434,7 +434,7 @@ class Freq2DCalculation:
         """
         cm = corplib.CorpusManager(subcpath=self._args.subcpath)
         self._corp = await cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
-        self._conc = require_existing_conc(corp=self._corp, q=self._args.q)
+        self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(
             self._args.fcrit, limit=self._args.ctminfreq, limit_type=self._args.ctminfreq_type)
         return dict(data=[x[0] + x[1:] for x in result], full_size=full_size)
