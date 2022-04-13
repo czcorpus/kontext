@@ -29,6 +29,7 @@ from bgcalc.coll_calc import CalculateCollsResult
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
 
 
 class ExportPluginException(Exception):
@@ -89,10 +90,17 @@ class AbstractCollExportMixin(object):
         """
 
 
-class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin):
+class AbstractFreqExportMixin(object):
 
-    def set_corpnames(self, corpnames: List[str]):
-        pass
+    @abc.abstractmethod
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        """
+        write frequency data
+        TODO make implement frequency data dataclass
+        """
+
+
+class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin):
 
     @abc.abstractmethod
     def content_type(self) -> str:
@@ -101,19 +109,6 @@ class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin):
     @abc.abstractmethod
     def raw_content(self) -> str:
         pass
-
-    @abc.abstractmethod
-    def writerow(self, line_num: int, *lang_rows: List[Any]):
-        pass
-
-    def set_col_types(self, *types):
-        pass
-
-    def writeheading(self, data: List[Any]):
-        pass  # optional implementation
-
-    def write_ref_headings(self, data: List[Any]):
-        pass  # optional implementation
 
 
 def lang_row_to_list(row):

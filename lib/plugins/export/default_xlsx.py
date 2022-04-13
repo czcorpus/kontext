@@ -21,6 +21,7 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 from io import BytesIO
+from typing import Any, Dict
 
 from action.model.concordance import ConcActionModel
 from bgcalc.coll_calc import CalculateCollsResult
@@ -30,6 +31,7 @@ from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
 
 from . import AbstractExport, ExportPluginException, lang_row_to_list
 
@@ -65,7 +67,7 @@ class XLSXExport(AbstractExport):
         self._wb.save(filename=output)
         return output.getvalue()
 
-    def writeheading(self, data):
+    def _writeheading(self, data):
         if len(data) > 1 and data[0] != '' and all(s == '' for s in data[1:]):
             self._sheet.append([data[0]])
             for _ in range(3):
@@ -77,7 +79,7 @@ class XLSXExport(AbstractExport):
         self._sheet.append([])
         self._written_lines += 2
 
-    def write_ref_headings(self, data):
+    def _write_ref_headings(self, data):
         cells = []
         for d in data:
             cell = WriteOnlyCell(self._sheet, d)
@@ -86,7 +88,7 @@ class XLSXExport(AbstractExport):
         self._sheet.append(cells)
         self._written_lines += 1
 
-    def set_col_types(self, *types):
+    def _set_col_types(self, *types):
         self._col_types = types
 
     def _import_value(self, v, i):
@@ -106,7 +108,7 @@ class XLSXExport(AbstractExport):
             out_type = str
         return out_type(v), format_map[out_type]
 
-    def writerow(self, line_num, *lang_rows):
+    def _writerow(self, line_num, *lang_rows):
         row = []
         if line_num is not None:
             row.append(line_num)
@@ -115,7 +117,7 @@ class XLSXExport(AbstractExport):
         self._sheet.append([self._get_cell(*self._import_value(d, i)) for i, d in enumerate(row)])
         self._written_lines += 1
 
-    def new_sheet(self, name):
+    def _new_sheet(self, name):
         if self._written_lines > 1:
             self._sheet = self._wb.create_sheet()
         self._sheet.title = name
@@ -126,11 +128,6 @@ class XLSXExport(AbstractExport):
         return cell
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
-        aligned_corpora = [
-            amodel.corp,
-            *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
-        ]
-        self.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
         if args.heading:
             doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
             refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
@@ -140,7 +137,7 @@ class XLSXExport(AbstractExport):
                 *[(x, x) for x in amodel.corp.get_structattrs()],
             ]
             used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-            self.write_ref_headings(
+            self._write_ref_headings(
                 [''] + used_refs if args.numbering else used_refs)
 
         if 'Left' in data.Lines[0]:
@@ -156,15 +153,33 @@ class XLSXExport(AbstractExport):
             if 'Align' in line:
                 lang_rows += self._process_lang(
                     line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
-            self.writerow(row_num if args.numbering else None, *lang_rows)
+            self._writerow(row_num if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
-        self.set_col_types(int, str, *((float,) * 8))
+        self._set_col_types(int, str, *((float,) * 8))
         if args.colheaders or args.heading:
-            self.writeheading([''] + [item['n'] for item in data.Head])
+            self._writeheading([''] + [item['n'] for item in data.Head])
         for i, item in enumerate(data.Items, 1):
-            self.writerow(
+            self._writerow(
                 i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        # Here we expect that when saving multi-block items, all the block have
+        # the same number of columns which is quite bad. But currently there is
+        # no better common 'denominator'.
+        num_word_cols = len(data['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
+        self._set_col_types(*([int] + num_word_cols * [str] + [float, float]))
+
+        for block in data['Blocks']:
+            if args.mapped_args.multi_sheet_file:
+                self._new_sheet(block['Head'][0]['n'])
+
+            if args.colheaders or args.heading:
+                self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                   ['freq', 'freq [%]'])
+            for i, item in enumerate(block['Items'], 1):
+                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                    str(item.get('rel', ''))])
 
 
 def create_instance(subtype, translate):

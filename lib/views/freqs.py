@@ -450,32 +450,11 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
             writer = export.load_plugin(req.mapped_args.saveformat,
                                         subtype='freq', translate=req.translate)
 
-            # Here we expect that when saving multi-block items, all the block have
-            # the same number of columns which is quite bad. But currently there is
-            # no better common 'denominator'.
-            num_word_cols = len(result['Blocks'][0].get('Items', [{'Word': []}])[0].get('Word'))
-            writer.set_col_types(*([int] + num_word_cols * [str] + [float, float]))
-
             resp.set_header('Content-Type', writer.content_type())
             resp.set_header(
                 'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-            for block in result['Blocks']:
-                if hasattr(writer, 'new_sheet') and req.mapped_args.multi_sheet_file:
-                    writer.new_sheet(block['Head'][0]['n'])
-
-                col_names = [item['n'] for item in block['Head'][:-2]] + ['freq', 'freq [%]']
-                if req.mapped_args.saveformat == 'xml':
-                    col_names.insert(0, 'str')
-                if hasattr(writer, 'add_block'):
-                    writer.add_block('')  # TODO block name
-
-                if req.mapped_args.colheaders or req.mapped_args.heading:
-                    writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
-                                        ['freq', 'freq [%]'])
-                for i, item in enumerate(block['Items'], 1):
-                    writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
-                                                                         str(item.get('rel', ''))])
+            await writer.write_freq(amodel, result, req.mapped_args)
             output = writer.raw_content()
 
     return output

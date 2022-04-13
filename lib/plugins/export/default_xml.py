@@ -19,6 +19,7 @@ A plug-in allowing export of a concordance (in fact, any row/cell
 like data can be used) to XML format.
 """
 import logging
+from typing import Any, Dict
 
 from action.model.concordance import ConcActionModel
 from bgcalc.coll_calc import CalculateCollsResult
@@ -27,6 +28,7 @@ from kwiclib import KwicPageData
 from lxml import etree
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
+from views.freqs import SavefreqArgs
 
 from . import AbstractExport, ExportPluginException
 
@@ -252,25 +254,25 @@ class XMLExport(AbstractExport):
         self._document = subtype_class()
         self._corpnames = []
 
-    def set_corpnames(self, corpnames):
-        self._corpnames = corpnames
-
     def content_type(self):
         return 'application/xml'
 
     def raw_content(self):
         return self._document.tostring()
 
-    def add_block(self, name):
+    def _set_corpnames(self, corpnames):
+        self._corpnames = corpnames
+
+    def _add_block(self, name):
         self._document.add_block(name)
 
-    def writeheading(self, data):
+    def _writeheading(self, data):
         self._document.add_heading(data)
 
-    def write_ref_headings(self, data):
+    def _write_ref_headings(self, data):
         self._document.add_heading(dict(refs=data))
 
-    def writerow(self, line_num, *lang_rows):
+    def _writerow(self, line_num, *lang_rows):
         if len(lang_rows) == 0:
             raise ValueError('empty line')
         elif len(lang_rows) == 1:  # single language has a slightly different XML structure
@@ -283,7 +285,7 @@ class XMLExport(AbstractExport):
             amodel.corp,
             *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
         ]
-        self.set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
+        self._set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
         if args.heading:
             doc_struct = amodel.corp.get_conf('DOCSTRUCTURE')
             refs_args = [x.strip('=') for x in amodel.args.refs.split(',')]
@@ -293,7 +295,7 @@ class XMLExport(AbstractExport):
                 *[(x, x) for x in amodel.corp.get_structattrs()],
             ]
             used_refs = [x[1] for x in used_refs if x[0] in refs_args]
-            self.write_ref_headings(
+            self._write_ref_headings(
                 [''] + used_refs if args.numbering else used_refs)
 
         if 'Left' in data.Lines[0]:
@@ -309,15 +311,24 @@ class XMLExport(AbstractExport):
             if 'Align' in line:
                 lang_rows += self._process_lang(
                     line['Align'], left_key, kwic_key, right_key, add_linegroup=False)
-            self.writerow(row_num if args.numbering else None, *lang_rows)
+            self._writerow(row_num if args.numbering else None, *lang_rows)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
-        self.set_col_types(int, str, *((float,) * 8))
         if args.colheaders or args.heading:
-            self.writeheading([''] + [item['n'] for item in data.Head])
+            self._writeheading([''] + [item['n'] for item in data.Head])
         for i, item in enumerate(data.Items, 1):
-            self.writerow(
+            self._writerow(
                 i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+
+    async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
+        for block in data['Blocks']:
+            self._add_block('')  # TODO block name
+            if args.colheaders or args.heading:
+                self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
+                                   ['freq', 'freq [%]'])
+            for i, item in enumerate(block['Items'], 1):
+                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
+                                                                    str(item.get('rel', ''))])
 
 
 def create_instance(subtype, translate):
