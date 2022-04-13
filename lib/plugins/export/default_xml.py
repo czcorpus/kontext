@@ -19,9 +19,10 @@ A plug-in allowing export of a concordance (in fact, any row/cell
 like data can be used) to XML format.
 """
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -29,6 +30,7 @@ from lxml import etree
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 from . import AbstractExport, ExportPluginException
 
@@ -329,6 +331,13 @@ class XMLExport(AbstractExport):
             for i, item in enumerate(block['Items'], 1):
                 self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
                                                                     str(item.get('rel', ''))])
+
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        if args.colheaders or args.heading:
+            self._writeheading(['', 'value', 'freq'])
+
+        for i, row in enumerate(data, 1):
+            self._writerow(i, row)
 
 
 def create_instance(subtype, translate):

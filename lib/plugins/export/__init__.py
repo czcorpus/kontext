@@ -22,14 +22,16 @@ free to be replaced/changed.
 """
 
 import abc
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
 from bgcalc.coll_calc import CalculateCollsResult
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 
 class ExportPluginException(Exception):
@@ -100,7 +102,17 @@ class AbstractFreqExportMixin(object):
         """
 
 
-class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin):
+class AbstractPqueryExportMixin(object):
+
+    @abc.abstractmethod
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        """
+        write frequency data
+        TODO make implement frequency data dataclass
+        """
+
+
+class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin, AbstractPqueryExportMixin):
 
     @abc.abstractmethod
     def content_type(self) -> str:

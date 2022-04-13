@@ -201,18 +201,12 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
     with plugins.runtime.EXPORT as export:
         writer = export.load_plugin(req.mapped_args.saveformat,
                                     subtype='pquery', translate=req.translate)
-        writer.set_col_types(int, str, float)
 
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header('Content-Disposition',
                         f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-        if req.mapped_args.colheaders or req.mapped_args.heading:
-            writer.writeheading(['', 'value', 'freq'])
-
-        for (i, row) in enumerate(freqs):
-            writer.writerow(i + 1, row)
-
+        await writer.write_pquery(amodel, freqs, req.mapped_args)
         output = writer.raw_content()
 
     return output

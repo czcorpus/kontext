@@ -21,9 +21,10 @@ like data can be used) to XLSX (Office Open XML) format.
 Plug-in requires openpyxl library.
 """
 from io import BytesIO
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from action.model.concordance import ConcActionModel
+from action.model.pquery import ParadigmaticQueryActionModel
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -32,6 +33,7 @@ from openpyxl.cell import WriteOnlyCell
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
+from views.pquery import SavePQueryArgs
 
 from . import AbstractExport, ExportPluginException, lang_row_to_list
 
@@ -180,6 +182,15 @@ class XLSXExport(AbstractExport):
             for i, item in enumerate(block['Items'], 1):
                 self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
                                                                     str(item.get('rel', ''))])
+
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+        self._set_col_types(int, str, float)
+
+        if args.colheaders or args.heading:
+            self._writeheading(['', 'value', 'freq'])
+
+        for i, row in enumerate(data, 1):
+            self._writerow(i, row)
 
 
 def create_instance(subtype, translate):
