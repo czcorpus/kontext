@@ -18,9 +18,10 @@ from functools import wraps
 from typing import Any, Callable, Coroutine, List, Optional, Type, Union
 
 import settings
-from action.errors import ImmediateRedirectException, UserActionException
+from action.errors import ImmediateRedirectException, UserActionException, ForbiddenException
 from action.krequest import KRequest
-from action.model.base import BaseActionModel, PageConstructor
+from action.model.base import BaseActionModel
+from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
@@ -33,7 +34,7 @@ from templating import Type2XML
 
 async def _output_result(
         app: Sanic,
-        action_model: PageConstructor,
+        action_model: AbstractPageModel,
         action_props: ActionProps,
         tpl_engine: TplEngine,
         translate: Callable[[str], str],
@@ -70,7 +71,7 @@ async def _output_result(
         return Type2XML.to_xml(result)
     elif action_props.return_type == 'plain' and not isinstance(result, (dict, DataClassJsonMixin)):
         return result
-    elif isinstance(result, dict):
+    elif action_props.return_type == 'template' and (result is None or isinstance(result, dict)):
         result = await action_model.add_globals(app, action_props, result)
         if isinstance(result, dict):
             result['messages'] = resp.system_messages
@@ -78,7 +79,7 @@ async def _output_result(
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
     raise RuntimeError(
-        f'Unsupported result and result_type combination: {result.__class__.__name__},  {action_props.return_type}')
+        f'Unsupported result and return_type combination: {result.__class__.__name__},  {action_props.return_type}')
 
 
 def create_mapped_args(tp: Type, req: Request):
@@ -159,9 +160,9 @@ def http_action(
         action_model: Optional[Type[BaseActionModel]] = None,
         page_model: Optional[str] = None,
         mapped_args: Optional[Type] = None,
-        mutates_result: bool = False,
-        return_type: str = 'template',
-        action_log_mapper: Callable[[KRequest], Any] = False):
+        mutates_result: Optional[bool] = False,
+        return_type: Optional[str] = None,
+        action_log_mapper: Optional[Callable[[KRequest], Any]] = None):
     """
     http_action decorator wraps Sanic view functions to provide more
     convenient arguments (including important action models). KonText
@@ -187,7 +188,7 @@ def http_action(
                    (html page, xml file, json file, plain text file) but in other cases the choice is limited
                    (e.g. when returning some binary data, only 'plain' return_type makes sense)
     """
-    def decorator(func: Callable[[BaseActionModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
+    def decorator(func: Callable[[AbstractPageModel, KRequest, KResponse], Coroutine[Any, Any, Optional[ResultType]]]):
         @wraps(func)
         async def wrapper(request: Request, *args, **kw):
             application = Sanic.get_app('kontext')
@@ -214,14 +215,17 @@ def http_action(
                 action_name=action_name, action_prefix=action_prefix, access_level=access_level,
                 return_type=return_type, page_model=page_model, template=template,
                 mutates_result=mutates_result, action_log_mapper=action_log_mapper)
-
+            if return_type is None and template:
+                aprops.return_type = 'template'
             if action_model:
                 amodel = action_model(req, resp, aprops, application.ctx.tt_cache)
             else:
                 amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
-
             try:
                 await amodel.init_session()
+                if isinstance(amodel, AbstractUserModel) and aprops.access_level > 0 and amodel.user_is_anonymous():
+                    amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
+                    raise ForbiddenException(req.translate('Access forbidden - please log-in.'))
                 await amodel.pre_dispatch(None)
                 ans = await func(amodel, req, resp)
                 await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
@@ -232,23 +236,28 @@ def http_action(
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
+                if not aprops.return_type:
+                    aprops.return_type = 'template'
                 ans = await resolve_error(amodel, req, resp, ex)
-
                 if settings.is_debug_mode():
                     import traceback
                     resp.add_system_message('error', traceback.format_exc())
                 else:
                     resp.add_system_message('error', str(ex))
 
-            return HTTPResponse(
-                body=await _output_result(
+            if ans is None:
+                resp_body = None
+            else:
+                resp_body = await _output_result(
                     app=application,
                     action_model=amodel,
                     action_props=aprops,
                     tpl_engine=application.ctx.templating,
                     translate=req.translate,
                     result=ans,
-                    resp=resp),
+                    resp=resp)
+            return HTTPResponse(
+                body=resp_body,
                 status=resp.http_status_code,
                 headers=resp.output_headers(return_type))
 

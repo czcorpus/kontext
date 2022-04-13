@@ -97,8 +97,10 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
             dispatcher,
             {
                 isBusy: false,
-                prevCorpora: [...conf.getConf<Array<string>>('alignedCorpora'),
-                              conf.getConf<Kontext.FullCorpusIdent>('corpusIdent').id]
+                prevCorpora: [
+                    ...conf.getConf<Array<string>>('alignedCorpora') || [],
+                    (conf.getConf<Kontext.FullCorpusIdent>('corpusIdent') || {id: null}).id
+                ]
             }
         );
         this.appNavig = appNavig;

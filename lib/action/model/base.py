@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 
 import hashlib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import l10n
 import settings
@@ -23,29 +23,16 @@ from action.errors import UserActionException
 from action.krequest import KRequest
 from action.plugin.ctx import AbstractBasePluginCtx
 from action.props import ActionProps
-from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
-                             create_req_arg_proxy)
+from action.req_args import create_req_arg_proxy
 from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
 from sanic_session import Session
 from texttypes.cache import TextTypesCache
+from action.model.abstract import AbstractPageModel
 
 
-class PageConstructor:
-    """
-    PageConstructor is a minimal action model as seen from the "output result"
-    perspective.
-    """
-
-    async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
-        pass
-
-    def init_menu(self, result):
-        pass
-
-
-class BaseActionModel(PageConstructor):
+class BaseActionModel(AbstractPageModel):
     """
     BaseActionModel provides a bare minimum for what is needed from an action model.
     Please note that in most cases, you will need some extended implementation.
@@ -88,6 +75,9 @@ class BaseActionModel(PageConstructor):
         pass
 
     async def add_globals(self, app: Sanic, action_props: ActionProps, result: Dict[str, Any]):
+        result['active_plugins'] = []
+        result['plugin_data'] = {}
+        result['corpus_ident'] = None
         result['root_url'] = self._req.get_root_url()
         result['files_path'] = self._files_path
         result['debug'] = settings.is_debug_mode()
@@ -106,15 +96,27 @@ class BaseActionModel(PageConstructor):
         page_model = action_props.page_model if action_props.page_model else l10n.camelize(
             action_props.action_name)
         result['page_model'] = page_model
+        avail_languages = settings.get_full('global', 'translations')
+        ui_lang = self._req.ui_lang.replace('_', '-') if self._req.ui_lang else 'en-US'
+        # available languages; used just by UI language switch
+        result['avail_languages'] = avail_languages
+        result['uiLang'] = ui_lang
+        result['is_local_ui_lang'] = any(settings.import_bool(meta.get('local', '0'))
+                                         for code, meta in avail_languages if code == ui_lang)
+        day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
+        result['first_day_of_week'] = day_map[self._req.locale.first_week_day]
+        result['popup_server_messages'] = False
+        result['menu_data'] = {'submenuItems': []}
+        result['async_tasks'] = []
+        result['issue_reporting_action'] = None
+        result['help_links'] = {}
+        result['_version'] = None
         return result
 
     def init_menu(self, result):
         pass
 
-    async def pre_dispatch(
-            self,
-            args_proxy: Union[None, RequestArgsProxy, JSONRequestArgsProxy]
-    ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+    async def pre_dispatch(self, args_proxy):
         if 'format' in self._req.args:
             if self._is_valid_return_type(self._req.args.get('format')):
                 self._action_props.return_type = self._req.args.get('format')
@@ -124,7 +126,7 @@ class BaseActionModel(PageConstructor):
                     'Unknown output format: {0}'.format(self._req.args.get('format')))
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
-    async def post_dispatch(self, action_props: ActionProps, result, err_desc):
+    async def post_dispatch(self, action_props, result, err_desc):
         pass
 
     async def resolve_error_state(self, req: KRequest, resp: KResponse, result, err: Exception):

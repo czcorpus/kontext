@@ -107,6 +107,8 @@ def camelize(s):
     TODO - this function should be located in a more appropriate module
     """
     a = [x for x in s.split('_') if len(x) > 0]
+    if len(a) == 0:
+        return ''
     return a[0] + ''.join([x[0].upper() + x[1:] for x in a[1:]])
 
 
