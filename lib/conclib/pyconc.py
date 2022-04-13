@@ -291,7 +291,7 @@ class PyConc(manatee.Concordance):
                 Word=word,
                 freq=f,
                 norm=nf,
-                rel=round(f / nf * 1e6, 2)))
+                rel=round(f / nf * 1e6, 3)))
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]

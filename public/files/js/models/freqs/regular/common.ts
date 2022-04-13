@@ -201,17 +201,18 @@ export class FreqDataLoader {
 export function recalculateConfIntervals(block:ResultBlock, alphaLevel:Maths.AlphaLevel):ResultBlock {
     block.Items = List.map(
         item => {
+            console.log('item: ', item)
             const [normLeftConfidence, normRightConfidence] = Maths.wilsonConfInterval(
                 item.freq, item.norm, alphaLevel);
             return {
                 ...item,
                 relConfidence: tuple(
-                    Maths.roundToPos(normLeftConfidence * 1e6, 2),
-                    Maths.roundToPos(normRightConfidence * 1e6, 2)
+                    Maths.roundToPos(normLeftConfidence * 1e6, 3),
+                    Maths.roundToPos(normRightConfidence * 1e6, 3)
                 ),
                 freqConfidence: tuple(
-                    Maths.roundToPos(normLeftConfidence * item.norm, 2),
-                    Maths.roundToPos(normRightConfidence * item.norm, 2)
+                    Maths.roundToPos(normLeftConfidence * item.norm, 3),
+                    Maths.roundToPos(normRightConfidence * item.norm, 3)
                 ),
             }
         },
