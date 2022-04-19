@@ -117,29 +117,29 @@ export function init(
             <S.DataRowTR>
                 <td className="num">{props.data.idx + 1}</td>
                 <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-                {props.data.Word.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>)}
+                {List.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>, props.data.Word)}
                 <td className="num">
                     {he.formatNumber(props.data.freq)}
                 </td>
                 {props.displayConfidence ?
                     <td className="bci">
                         <span className="bracket">[</span>
-                        {props.data.freqConfidence[0]}
+                        {he.formatNumber(props.data.freqConfidence[0])}
                         <span className="separ">,{'\u00a0'}</span>
-                        {props.data.freqConfidence[1]}
+                        {he.formatNumber(props.data.freqConfidence[1])}
                         <span className="bracket">]</span>
                     </td> :
                     null }
                 <td className="num">
-                    {props.data.rel}
+                    {he.formatNumber(props.data.rel)}
                 </td>
                 {props.displayConfidence ?
                     <td className="bci">
                         <span className="bracket">[</span>
                         <span className="val">
-                            {props.data.relConfidence[0]}
+                            {he.formatNumber(props.data.relConfidence[0])}
                             <span className="separ">,{'\u00a0'}</span>
-                            {props.data.relConfidence[1]}
+                            {he.formatNumber(props.data.relConfidence[1])}
                         </span>
                         <span className="bracket">]</span>
                     </td> :
