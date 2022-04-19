@@ -77,24 +77,27 @@ export function init(
             this.contentEditable = new ContentEditable<HTMLSpanElement>(props.refObject);
             this.handlePaste = this.handlePaste.bind(this);
             this.handleSelect = this.handleSelect.bind(this);
+            this.handleCompositionStart = this.handleCompositionStart.bind(this);
+            this.handleCompositionEnd = this.handleCompositionEnd.bind(this);
         }
 
 
         private handleInputChange(evt:React.ChangeEvent<HTMLInputElement>) {
-            const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
-            const query = this.contentEditable.extractText();
-
-            dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
-                name: Actions.QueryInputSetQuery.name,
-                payload: {
-                    formType: this.props.formType,
-                    sourceId: this.props.sourceId,
-                    query,
-                    rawAnchorIdx,
-                    rawFocusIdx,
-                    insertRange: null
-                }
-            });
+            if (!this.props.compositionModeOn) {
+                const [rawAnchorIdx, rawFocusIdx] = this.contentEditable.getRawSelection();
+                const query = this.contentEditable.extractText();
+                dispatcher.dispatch<typeof Actions.QueryInputSetQuery>({
+                    name: Actions.QueryInputSetQuery.name,
+                    payload: {
+                        formType: this.props.formType,
+                        sourceId: this.props.sourceId,
+                        query,
+                        rawAnchorIdx,
+                        rawFocusIdx,
+                        insertRange: null
+                    }
+                });
+            }
         }
 
         private ffKeyDownHandler(evt:KeyboardEvent) {
@@ -211,14 +214,36 @@ export function init(
         }
 
         private handleSelect() {
-            const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
-            dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
-                name: Actions.QueryInputSelectText.name,
+            if (!this.props.compositionModeOn) {
+                const [anchorIdx, focusIdx] = this.contentEditable.getRawSelection();
+                dispatcher.dispatch<typeof Actions.QueryInputSelectText>({
+                    name: Actions.QueryInputSelectText.name,
+                    payload: {
+                        sourceId: this.props.sourceId,
+                        formType: this.props.formType,
+                        anchorIdx,
+                        focusIdx
+                    }
+                });
+            }
+        }
+
+        private handleCompositionStart() {
+            dispatcher.dispatch<typeof Actions.SetCompositionMode>({
+                name: Actions.SetCompositionMode.name,
                 payload: {
-                    sourceId: this.props.sourceId,
                     formType: this.props.formType,
-                    anchorIdx,
-                    focusIdx
+                    status: true
+                }
+            });
+        }
+
+        private handleCompositionEnd() {
+            dispatcher.dispatch<typeof Actions.SetCompositionMode>({
+                name: Actions.SetCompositionMode.name,
+                payload: {
+                    formType: this.props.formType,
+                    status: false
                 }
             });
         }
@@ -264,6 +289,8 @@ export function init(
                         onClick={this.handleClick}
                         onPaste={this.handlePaste}
                         onSelect={this.handleSelect}
+                        onCompositionStart={this.handleCompositionStart}
+                        onCompositionEnd={this.handleCompositionEnd}
                         dangerouslySetInnerHTML={{__html: this.props.queries[this.props.sourceId].queryHtml}} />
             );
         }

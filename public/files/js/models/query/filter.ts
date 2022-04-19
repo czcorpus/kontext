@@ -417,7 +417,8 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 simpleQueryDefaultAttrs: props.simpleQueryDefaultAttrs,
                 isLocalUiLang: props.isLocalUiLang,
                 changeMaincorp: undefined,
-                syncInitialArgs
+                syncInitialArgs,
+                compositionModeOn: false
         });
 
         this.addActionHandler<typeof MainMenuActions.ShowFilter>(
