@@ -92,60 +92,65 @@ class Backend(DatabaseBackend):
         self._user_pc_acc_table = user_pc_acc_table
         self._user_pc_acc_pc_attr = user_pc_acc_pc_attr
 
-    @property
-    def _corpus_access_query(self) -> str:
+    def _corpus_access_query(self, user_id) -> Tuple[str, List[int]]:
         """
         Query to get corpora user has access to. It accepts 2 `user_id` arguments
         """
-        return f'''
-            SELECT
-                acc.{self._user_acc_corp_attr} AS corpus_id,
-                acc.limited AS limited
-            FROM {self._user_acc_table} AS acc
-            WHERE acc.user_id = %s
-            UNION
-            SELECT
-                g_acc.{self._group_acc_corp_attr} AS corpus_id,
-                g_acc.limited AS limited
-            FROM {self._group_acc_table} AS g_acc
-            WHERE g_acc.{self._group_acc_group_attr} = (
-                SELECT {self._user_table}.{self._group_acc_group_attr}
-                FROM {self._user_table}
-                WHERE {self._user_table}.id = %s
-            )
-        '''
+        return (
+                f'''
+                SELECT
+                    acc.{self._user_acc_corp_attr} AS corpus_id,
+                    acc.limited AS limited
+                FROM {self._user_acc_table} AS acc
+                WHERE acc.user_id = %s
+                UNION
+                SELECT
+                    g_acc.{self._group_acc_corp_attr} AS corpus_id,
+                    g_acc.limited AS limited
+                FROM {self._group_acc_table} AS g_acc
+                WHERE g_acc.{self._group_acc_group_attr} = (
+                    SELECT {self._user_table}.{self._group_acc_group_attr}
+                    FROM {self._user_table}
+                    WHERE {self._user_table}.id = %s
+                )
+                ''',
+                [user_id, user_id]
+        )
 
-    @property
-    def _parallel_access_query(self) -> str:
+    def _parallel_access_query(self, user_id) -> Tuple[str, List[int]]:
         """
         Query to get parallel corpora user has access to. It accepts 2 `user_id` arguments.
         """
-        return f'''
-            SELECT
-                corp.{self._corp_id_attr} AS corpus_id,
-                pc_acc.limited AS limited
-            FROM {self._user_pc_acc_table} AS pc_acc
-            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = pc_acc.{self._user_pc_acc_pc_attr}
-            WHERE
-                pc_acc.user_id = %s
-            UNION
-            SELECT
-                corp.{self._corp_id_attr} AS corpus_id,
-                g_pc_acc.limited AS limited
-            FROM {self._group_pc_acc_table} AS g_pc_acc
-            JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.{self._group_pc_acc_pc_attr}
-            WHERE g_pc_acc.{self._group_pc_acc_group_attr} = (
-                SELECT user.{self._group_acc_group_attr}
-                FROM {self._user_table} AS user
-                WHERE user.id = %s
-            )
-        '''
+        return (
+                f'''
+                SELECT
+                    corp.{self._corp_id_attr} AS corpus_id,
+                    pc_acc.limited AS limited
+                FROM {self._user_pc_acc_table} AS pc_acc
+                JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = pc_acc.{self._user_pc_acc_pc_attr}
+                WHERE
+                    pc_acc.user_id = %s
+                UNION
+                SELECT
+                    corp.{self._corp_id_attr} AS corpus_id,
+                    g_pc_acc.limited AS limited
+                FROM {self._group_pc_acc_table} AS g_pc_acc
+                JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.{self._group_pc_acc_pc_attr}
+                WHERE g_pc_acc.{self._group_pc_acc_group_attr} = (
+                    SELECT user.{self._group_acc_group_attr}
+                    FROM {self._user_table} AS user
+                    WHERE user.id = %s
+                )
+                ''',
+                [user_id, user_id]
+        )
 
-    @property
-    def _total_access_query(self) -> str:
+    def _total_access_query(self, user_id) -> Tuple[str, List[int]]:
+        corp_acc_sql, corp_acc_args = self._corpus_access_query(user_id)
         if self._enable_parallel_acc:
-            return f'{self._corpus_access_query} UNION {self._parallel_access_query}'
-        return self._corpus_access_query
+            par_acc_sql, par_acc_args = self._parallel_access_query(user_id)
+            return f'{corp_acc_sql} UNION {par_acc_sql}', corp_acc_args + par_acc_args
+        return  corp_acc_sql, corp_acc_args
 
     def contains_corpus(self, corpus_id: str) -> bool:
         cursor = self._db.cursor()
@@ -220,11 +225,7 @@ class Backend(DatabaseBackend):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
-        # the first item belongs to setting a special @ variable
-        if self._enable_parallel_acc:
-            values_cond2 = [user_id, user_id, user_id, user_id, 1]
-        else:
-            values_cond2 = [user_id, user_id, 1]
+        values_cond2 = [1]
         if substrs is not None:
             for substr in substrs:
                 where_cond1.append(
@@ -290,6 +291,8 @@ class Backend(DatabaseBackend):
                 'HAVING num_match_keys >= %s ) '
                 'UNION ').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1))
         where.extend(values_cond2)
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
+        where.extend(total_acc_args)
         sql += (
             '(SELECT c.name as id, c.web, '
             'IF (rc.locale IS NOT NULL, rc.locale, c.collator_locale) as collator_locale, '
@@ -308,7 +311,7 @@ class Backend(DatabaseBackend):
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
             'JOIN ('
-            f' {self._total_access_query} '
+            f' {total_acc_sql} '
             f') AS kcu ON c.{self._corp_id_attr} = kcu.corpus_id '
             f'WHERE {" AND ".join("(" + wc + ")" for wc in where_cond2)} '
             'GROUP BY c.name '
@@ -420,28 +423,31 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def corpus_access(self, user_id: str, corpus_id: str) -> CorpusAccess:
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
+        args: List[Any] = [user_id] + total_acc_args + [corpus_id]
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
-            f' {self._total_access_query} '
+            f' {total_acc_sql} '
             ') as ucp '
             f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id AND c.name = %s '
             'ORDER BY ucp.limited LIMIT 1',
-            (user_id, user_id, user_id, corpus_id))
+            args)
         row = cursor.fetchone()
         if not row:
             return CorpusAccess(False, False, '')
         return CorpusAccess(False, True, row['variant'] if row['variant'] else '')
 
     def get_permitted_corpora(self, user_id: str) -> List[str]:
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
         cursor = self._db.cursor()
         cursor.execute(
             'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
             'FROM ( '
-            f' {self._total_access_query} '
+            f' {total_acc_sql} '
             ') as ucp '
-            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', (user_id, user_id, user_id))
+            f'JOIN {self._corp_table} AS c ON ucp.corpus_id = c.id', [user_id] + total_acc_args)
         return [r['corpus_id'] for r in cursor.fetchall()]
 
     def load_corpus_tagsets(self, corpus_id: str) -> List[TagsetInfo]:
