@@ -430,7 +430,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 quickSubcorpVisible: false,
                 quickSubcorpActive,
                 concViewPosAttrs: props.concViewPosAttrs,
-                alignCommonPosAttrs: props.alignCommonPosAttrs
+                alignCommonPosAttrs: props.alignCommonPosAttrs,
+                compositionModeOn: false
         });
 
         this.addActionHandler(
