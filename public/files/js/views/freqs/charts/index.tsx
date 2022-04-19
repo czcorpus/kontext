@@ -390,14 +390,15 @@ export function init(
                 if (props.payload[props.dataKey] === undefined) {  // scatter chart heading
                     return value
                 }
-                const ttLft = Maths.roundToPos(props.payload[props.dataKey]-props.payload[confidenceKey][0], 3);
-                const ttRgt = Maths.roundToPos(props.payload[props.dataKey]+props.payload[confidenceKey][1], 3);
+                const ttLft = he.formatNumber(props.payload[props.dataKey]-props.payload[confidenceKey][0], 3);
+                const ttRgt = he.formatNumber(props.payload[props.dataKey]+props.payload[confidenceKey][1], 3);
+                const rel = he.formatNumber(props.payload[props.dataKey]);
                 const msg = he.translate('freq__chart_p_filter_tooltip');
                 const ttStyle:CSSProperties = {
                     color: theme.colorLightText,
                     fontSize: '0.8em'
                 };
-                return [<div>{`${props.payload[props.dataKey] + '\u00a0'}[${ttLft}, ${ttRgt}]`}<br /><span style={ttStyle}>({msg})</span></div>, null];
+                return [<div>{`${rel + '\u00a0'}[${ttLft}, ${ttRgt}]`}<br /><span style={ttStyle}>({msg})</span></div>, null];
             }
 
             switch (props.type)  {
