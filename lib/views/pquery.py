@@ -195,9 +195,7 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
     except PqueryResultNotFound:
         raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
 
-    def mkfilename(suffix):
-        return f'{amodel.args.corpname}-pquery.{suffix}'
-
+    def mkfilename(suffix): return f'{amodel.args.corpname}-pquery.{suffix}'
     with plugins.runtime.EXPORT as export:
         writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
 

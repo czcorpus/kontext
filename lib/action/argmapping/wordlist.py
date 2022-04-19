@@ -74,7 +74,7 @@ class WordlistSaveFormArgs:
     usesubcorp: str = ''
     from_line: int = 1
     to_line: Optional[int] = None
-    saveformat: str = 'text'
+    saveformat: str = 'txt'
     colheaders: bool = False
     heading: bool = False
 

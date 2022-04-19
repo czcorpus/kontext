@@ -73,7 +73,7 @@ export function init(
                         <option value="csv">CSV</option>
                         <option value="xlsx">XLSX (Excel)</option>
                         <option value="xml">XML</option>
-                        <option value="text">Text</option>
+                        <option value="txt">Text</option>
                     </select>
                 </td>
             </tr>

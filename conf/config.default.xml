@@ -124,7 +124,9 @@
             unless you want to include your own integration database -->
         </integration_db>
         <export>
+            <txt>default_txt</txt>
             <csv>default_csv</csv>
+            <xml>default_xml</xml>
             <xlsx>default_xlsx</xlsx>
         </export>
         <export_freq2d>

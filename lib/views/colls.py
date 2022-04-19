@@ -55,7 +55,7 @@ async def collx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         hint=req.translate(
             'Saves at most {0} items. Use "Custom" for more options.'.format(amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
-        'TXT', save_format='text',
+        'TXT', save_format='txt',
         hint=req.translate(
             'Saves at most {0} items. Use "Custom" for more options.'.format(amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
@@ -106,15 +106,14 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
 class SavecollArgs:
     from_line: int = 1
     to_line: Optional[int] = None
-    saveformat: str = 'text'
+    saveformat: str = 'txt'
     heading: int = 0
     colheaders: int = 0
 
 
 @bp.route('/savecoll')
 @http_action(
-    action_model=ConcActionModel, mapped_args=SavecollArgs, access_level=1, template='txtexport/savecoll.html',
-    return_type='plain')
+    action_model=ConcActionModel, mapped_args=SavecollArgs, access_level=1, return_type='plain')
 async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: KResponse):
     """
     save collocations
@@ -126,35 +125,18 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
         to_line = amodel.corp.size if req.mapped_args.to_line is None else req.mapped_args.to_line
         result = await _collx(amodel, collpage=1, citemsperpage=to_line, user_id=req.session_get('user', 'id'))
         result.Items = result.Items[from_line - 1:]
-        saved_filename = amodel.args.corpname
 
-        if req.mapped_args.saveformat == 'text':
-            resp.set_header('Content-Type', 'application/text')
+        def mk_filename(suffix): return f'{amodel.args.corpname}-collocations.{suffix}'
+        with plugins.runtime.EXPORT as export:
+            writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
+
+            resp.set_header('Content-Type', writer.content_type())
             resp.set_header(
                 'Content-Disposition',
-                f'attachment; filename="{saved_filename}-collocations.txt"')
-            out_data = asdict(result)
-            out_data['Desc'] = (await amodel.concdesc_json())['Desc']
-            out_data['saveformat'] = req.mapped_args.saveformat
-            out_data['from_line'] = from_line
-            out_data['to_line'] = to_line
-            out_data['heading'] = req.mapped_args.heading
-            out_data['colheaders'] = req.mapped_args.colheaders
+                f'attachment; filename="{mk_filename(req.mapped_args.saveformat)}"')
 
-        else:
-            def mk_filename(suffix):
-                return f'{amodel.args.corpname}-collocations.{suffix}'
-
-            with plugins.runtime.EXPORT as export:
-                writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
-
-                resp.set_header('Content-Type', writer.content_type())
-                resp.set_header(
-                    'Content-Disposition',
-                    f'attachment; filename="{mk_filename(req.mapped_args.saveformat)}"')
-
-                await writer.write_coll(amodel, result, req.mapped_args)
-                out_data = writer.raw_content()
+            await writer.write_coll(amodel, result, req.mapped_args)
+            out_data = writer.raw_content()
 
         return out_data
 

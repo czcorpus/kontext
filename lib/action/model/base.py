@@ -21,6 +21,7 @@ import settings
 from action.cookie import KonTextCookie
 from action.errors import UserActionException
 from action.krequest import KRequest
+from action.model.abstract import AbstractPageModel
 from action.plugin.ctx import AbstractBasePluginCtx
 from action.props import ActionProps
 from action.req_args import create_req_arg_proxy
@@ -29,7 +30,6 @@ from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
 from sanic_session import Session
 from texttypes.cache import TextTypesCache
-from action.model.abstract import AbstractPageModel
 
 
 class BaseActionModel(AbstractPageModel):
@@ -121,9 +121,7 @@ class BaseActionModel(AbstractPageModel):
             if self._is_valid_return_type(self._req.args.get('format')):
                 self._action_props.return_type = self._req.args.get('format')
             else:
-                self._action_props.return_type = 'text'
-                raise UserActionException(
-                    'Unknown output format: {0}'.format(self._req.args.get('format')))
+                raise UserActionException(f'Unknown output format: {self._req.args.get("format")}')
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
     async def post_dispatch(self, action_props, result, err_desc):

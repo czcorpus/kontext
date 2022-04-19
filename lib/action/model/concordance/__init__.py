@@ -163,7 +163,11 @@ class ConcActionModel(CorpusActionModel):
                 use_history = not self._curr_conc_form_args.data.no_query_history
         return use_history, data
 
-    def _update_output_with_conc_params(self, op_id: str, tpl_data: Dict[str, Any]) -> None:
+    def update_output_with_group_info(self, tpl_data: Dict[str, Any]) -> None:
+        tpl_data['num_lines_in_groups'] = len(self._lines_groups)
+        tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
+
+    def _update_output_with_conc_params(self, op_id: Optional[str], tpl_data: Dict[str, Any]) -> None:
         """
         Updates template data dictionary tpl_data with stored operation values.
 
@@ -192,8 +196,7 @@ class ConcActionModel(CorpusActionModel):
                 tpl_data['conc_persistence_op_id'] = None
         else:
             tpl_data['Q'] = getattr(self.args, 'q')[:]
-        tpl_data['num_lines_in_groups'] = len(self._lines_groups)
-        tpl_data['lines_groups_numbers'] = tuple(set([v[2] for v in self._lines_groups]))
+        self.update_output_with_group_info(tpl_data)
 
         if len(self._lines_groups) > 0:
             self.disabled_menu_items += (MainMenu.FILTER, MainMenu.CONCORDANCE('sorting'),
@@ -344,7 +347,8 @@ class ConcActionModel(CorpusActionModel):
         """
         result = await super().add_globals(app, action_props, result)
         struct_and_attrs = await self.get_structs_and_attrs()
-        result['structs_and_attrs'] = [(k, [x.to_dict() for x in item]) for k, item in struct_and_attrs.items()]
+        result['structs_and_attrs'] = [(k, [x.to_dict() for x in item])
+                                       for k, item in struct_and_attrs.items()]
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]

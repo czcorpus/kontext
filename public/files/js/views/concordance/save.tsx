@@ -64,7 +64,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         <option value="csv">CSV</option>
                         <option value="xlsx">XLSX (Excel)</option>
                         <option value="xml">XML</option>
-                        <option value="text">Text</option>
+                        <option value="txt">Text</option>
                     </select>
                 </td>
             </tr>
@@ -229,7 +229,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
 
         _renderFormatDependentOptions() {
             switch (this.props.saveformat) {
-            case 'text':
+            case 'txt':
                 return <>
                         <TRAlignKwicCheckbox key="opt-ak" value={this.props.alignKwic} />
                         <TRIncludeHeadingCheckbox key="opt-ih" value={this.props.includeHeading} />

@@ -256,7 +256,7 @@ async def _freqs(
             hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                 amodel.CONC_QUICK_SAVE_MAX_LINES)))
         amodel.add_save_menu_item(
-            'TXT', save_format='text',
+            'TXT', save_format='txt',
             hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                 amodel.CONC_QUICK_SAVE_MAX_LINES)))
         amodel.add_save_menu_item(req.translate('Custom'))
@@ -404,7 +404,7 @@ class SavefreqArgs:
     fcrit: List[str]
     flimit: Optional[int] = 0
     freq_sort: Optional[str] = ''
-    saveformat: Optional[str] = 'text'
+    saveformat: Optional[str] = 'txt'
     from_line: Optional[int] = 1
     to_line: Optional[int] = field(default_factory=lambda: sys.maxsize)
     colheaders: Optional[int] = 0
@@ -414,8 +414,7 @@ class SavefreqArgs:
 
 @bp.route('/savefreq')
 @http_action(
-    access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, template='txtexport/savefreq.html',
-    return_type='plain')
+    access_level=1, action_model=ConcActionModel, mapped_args=SavefreqArgs, return_type='plain')
 async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: KResponse):
     """
     save a frequency list
@@ -427,34 +426,16 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     result = await _freqs(
         amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
         freq_sort=req.mapped_args.freq_sort, force_cache=False, fcrit_async=())
-    saved_filename = amodel.args.corpname
-    output = None
-    if req.mapped_args.saveformat == 'text':
-        resp.set_header('Content-Type', 'application/text')
+
+    def mkfilename(suffix): return f'{amodel.args.corpname}-freq-distrib.{suffix}'
+    with plugins.runtime.EXPORT as export:
+        writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
+
+        resp.set_header('Content-Type', writer.content_type())
         resp.set_header(
-            'Content-Disposition',
-            f'attachment; filename="{saved_filename}-frequencies.txt"')
-        output = result
-        output['Desc'] = await amodel.concdesc_json()['Desc']
-        output['fcrit'] = req.mapped_args.fcrit
-        output['flimit'] = req.mapped_args.flimit
-        output['freq_sort'] = req.mapped_args.freq_sort
-        output['saveformat'] = req.mapped_args.saveformat
-        output['from_line'] = req.mapped_args.from_line
-        output['to_line'] = req.mapped_args.to_line
-        output['colheaders'] = req.mapped_args.colheaders
-        output['heading'] = req.mapped_args.heading
-    else:
-        def mkfilename(suffix): return '%s-freq-distrib.%s' % (amodel.args.corpname, suffix)
+            'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-        with plugins.runtime.EXPORT as export:
-            writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
-
-            resp.set_header('Content-Type', writer.content_type())
-            resp.set_header(
-                'Content-Disposition', f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
-
-            await writer.write_freq(amodel, result, req.mapped_args)
-            output = writer.raw_content()
+        await writer.write_freq(amodel, result, req.mapped_args)
+        output = writer.raw_content()
 
     return output
