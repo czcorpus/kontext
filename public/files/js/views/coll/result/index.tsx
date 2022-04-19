@@ -22,7 +22,7 @@ import * as React from 'react';
 import { IActionDispatcher, BoundWithProps } from 'kombo';
 
 import * as Kontext from '../../../types/kontext';
-import { Keyboard } from 'cnc-tskit';import { init as initSaveViews } from '../save';
+import { Keyboard, List } from 'cnc-tskit';import { init as initSaveViews } from '../save';
 import { CollResultModel, CollResultModelState } from '../../../models/coll/result';
 import { CollResultsSaveModel } from '../../../models/coll/save';
 import { CollResultRow, CollResultHeadingCell } from '../../../models/coll/common';
@@ -100,9 +100,16 @@ export function init(
                     {props.data.str}
                 </td>
                 <td className="num">
-                    {props.data.freq}
+                    {utils.formatNumber(props.data.freq)}
                 </td>
-                {props.data.Stats.map((stat, si) => <td key={`stat_${si}`} className="num">{stat.s}</td>)}
+                {List.map(
+                    (stat, si) => (
+                        <td key={`stat_${si}`} className="num">
+                            {utils.formatNumber(parseFloat(stat.s))}
+                        </td>
+                    ),
+                    props.data.Stats
+                )}
             </tr>
         );
     }
@@ -178,7 +185,7 @@ export function init(
             <table className="data">
                 <tbody>
                     <TRDataHeading data={props.heading} sortFn={props.sortFn} cattr={props.cattr} />
-                    {props.rows.map((item, i) => <DataRow key={i} idx={props.lineOffset + i + 1} data={item} />)}
+                    {List.map((item, i) => <DataRow key={i} idx={props.lineOffset + i + 1} data={item} />, props.rows)}
                 </tbody>
             </table>
         );
