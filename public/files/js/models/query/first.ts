@@ -427,7 +427,8 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 quickSubcorpVisible: false,
                 quickSubcorpActive: Dict.size(textTypesModel.UNSAFE_exportSelections(false)) > 0,
                 concViewPosAttrs: props.concViewPosAttrs,
-                alignCommonPosAttrs: props.alignCommonPosAttrs
+                alignCommonPosAttrs: props.alignCommonPosAttrs,
+                compositionModeOn: false
         });
         this.quickSubcorpModel = quickSubcorpModel;
 

@@ -355,6 +355,13 @@ export class Actions {
         name: 'QUERY_INPUT_SELECT_TEXT'
     };
 
+    static SetCompositionMode:Action<{
+        formType:QueryFormType;
+        status:boolean;
+    }> = {
+        name: 'QUERY_INPUT_SET_COMPOSITION_MODE'
+    }
+
     static FilterInputSetFilfl: Action<{
         filterId:string;
         value: 'f' | 'l';
