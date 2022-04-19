@@ -260,6 +260,13 @@ export interface QueryFormModelState {
     isBusy:boolean;
 
     isLocalUiLang:boolean;
+
+    /**
+     * When true then character composition is enabled and we should not update rich editor.
+     * This issue affects different character compositions in different operating systems.
+     * E.g. for spec. Czech characters, the issue can be met only in macOS.
+     */
+    compositionModeOn:boolean;
 }
 
 /**
@@ -659,6 +666,18 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                             queryObj.focusedAttr = this.findFocusedAttr(queryObj);
                         }
                 });
+            }
+        );
+
+        this.addActionSubtypeHandler(
+            Actions.SetCompositionMode,
+            action => action.payload.formType === this.formType,
+            action => {
+                this.changeState(
+                    state => {
+                        state.compositionModeOn = action.payload.status;
+                    }
+                )
             }
         );
 
