@@ -70,22 +70,8 @@ class WordlistFormArgs(object):
 
 @dataclass
 class WordlistSaveFormArgs:
-    corpname: str = ''
-    usesubcorp: str = ''
     from_line: int = 1
     to_line: Optional[int] = None
     saveformat: str = 'txt'
-    colheaders: bool = False
-    heading: bool = False
-
-    def update_by_user_query(self, data):
-        self.corpname = data['corpname']
-        self.usesubcorp = data['usesubcorp']
-        self.from_line = data['from_line']
-        self.to_line = data['to_line']
-        self.saveformat = data['saveformat']
-        self.colheaders = data['colheaders']
-        self.heading = data['heading']
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {k: v for k, v in asdict(self).items() if not k.startswith('_')}
+    colheaders: int = 0
+    heading: int = 0

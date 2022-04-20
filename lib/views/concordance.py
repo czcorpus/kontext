@@ -1116,7 +1116,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
 
         def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
         with plugins.runtime.EXPORT as export:
-            writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
+            writer = export.load_plugin(req.mapped_args.saveformat, req.locale)
 
             resp.set_header('Content-Type', writer.content_type())
             resp.set_header(

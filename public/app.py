@@ -22,13 +22,15 @@ It can be run in two modes:
  2) within a WSGI-enabled web server (Gunicorn, uwsgi, Apache + mod_wsgi)
 """
 import asyncio
-import sys
-import os
-import logging
-from logging.handlers import QueueHandler, QueueListener
-from concurrent_log_handler import ConcurrentRotatingFileHandler
 import locale
+import logging
+import os
 import signal
+import sys
+from logging.handlers import QueueListener
+
+from concurrent_log_handler import ConcurrentRotatingFileHandler
+
 try:
     from queue import SimpleQueue as Queue
 except ImportError:
@@ -45,34 +47,35 @@ CONF_PATH = os.getenv(
     'KONTEXT_CONF', os.path.realpath(f'{os.path.dirname(os.path.realpath(__file__))}/../conf/config.xml'))
 LOCALE_PATH = os.path.realpath(f'{os.path.dirname(__file__)}/../locale')
 
+from typing import Optional
+
 import plugins
 import plugins.export
 import settings
-from action.plugin.initializer import setup_plugins, install_plugin_actions
-from texttypes.cache import TextTypesCache
-from sanic import Sanic, Request
-from sanic_babel import Babel
-from sanic_session import Session, AIORedisSessionInterface
+from action.context import ApplicationContext
+from action.cookie import KonTextCookie
+from action.plugin.initializer import install_plugin_actions, setup_plugins
+from action.templating import TplEngine
+from plugin_types.auth import UserInfo
 from redis import asyncio as aioredis
-from views.root import bp as root_bp
-from views.concordance import bp as conc_bp
-from views.user import bp as user_bp
-from views.corpora import bp as corpora_bp
-from views.wordlist import bp as wordlist_bp
-from views.freqs import bp as freqs_bp
-from views.dispersion import bp as dispersion_bp
+from sanic import Request, Sanic
+from sanic_babel import Babel
+from sanic_session import AIORedisSessionInterface, Session
+from texttypes.cache import TextTypesCache
 from views.colls import bp as colls_bp
+from views.concordance import bp as conc_bp
+from views.corpora import bp as corpora_bp
+from views.dispersion import bp as dispersion_bp
+from views.fcs import bp_common as fcs_common_bp
+from views.fcs import bp_v1 as fcs_v1_bp
+from views.freqs import bp as freqs_bp
 from views.options import bp as options_bp
 from views.pquery import bp as pquery_bp
-from views.tools import bp as tools_bp
+from views.root import bp as root_bp
 from views.subcorpus import bp as subcorpus_bp
-from views.fcs import bp_common as fcs_common_bp, bp_v1 as fcs_v1_bp
-from action.templating import TplEngine
-from action.context import ApplicationContext
-from plugin_types.auth import UserInfo
-from action.cookie import KonTextCookie
-from typing import Optional
-
+from views.tools import bp as tools_bp
+from views.user import bp as user_bp
+from views.wordlist import bp as wordlist_bp
 
 # we ensure that the application's locale is always the same
 locale.setlocale(locale.LC_ALL, 'en_US.utf-8')

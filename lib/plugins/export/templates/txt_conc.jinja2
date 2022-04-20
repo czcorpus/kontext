@@ -22,11 +22,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% if heading -%}
 # Corpus: {{ human_corpname }}
 {% if usesubcorp %}# Subcorpus: {{ usesubcorp }}{% endif -%}
-# Hits: {{ concsize }}
-# Relative frequency: {{ result_relative_freq }} ({{ result_relative_freq_rel_to }})
-{% if result_arf != '' %}# ARF: {{ result_arf }}{% endif -%}
+# Hits: {{ concsize | formatnumber }}
+# Relative frequency: {{ result_relative_freq | formatnumber }} ({{ result_relative_freq_rel_to }})
+{% if result_arf != '' %}# ARF: {{ result_arf | formatnumber }}{% endif -%}
 {% for desc in Desc %}
-# {{ desc.op }}: {{ desc.arg }} {{ desc.size }}
+# {{ desc.op }}: {{ desc.arg }} {{ desc.size | formatnumber }}
 {% endfor %}
 {% endif -%} {# END of heading -#}
 ## KWIC lines:
@@ -43,5 +43,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {% if align_kwic %}{{ al['leftspace'] }}{% endif -%}
 {% for left in al['Left'] %}{% if left['class'] != 'strc' %}{{ left['str'] }}{% endif %}{% endfor %} <{% for kw in al['Kwic'] %}{{ kw.str }}{% endfor %}> {% for right in al['Right'] %}{% if right['class'] != 'strc' %}{{ right['str'] }}{% endif %}{% endfor -%}
 {% if align_kwic %}{{ al['rightspace'] }}{% endif -%}
-{% endfor %}
+{% endfor -%}
 {% endfor %}

@@ -180,14 +180,13 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KRespo
     return dict(location=req.create_url('restore_conc', args))
 
 
-@bp.route('/savewl', ['POST'])
-@http_action(access_level=1, return_type='plain', action_model=WordlistActionModel)
-async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
+@bp.route('/savewl')
+@http_action(access_level=1, return_type='plain', action_model=WordlistActionModel, mapped_args=WordlistSaveFormArgs)
+async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs], resp: KResponse):
     """
     save word list
     """
-    args = WordlistSaveFormArgs()
-    args.update_by_user_query(req.json)
+    args = req.mapped_args
     if args.to_line is None:
         args.to_line = amodel.corp.size
     num_lines = args.to_line - args.from_line + 1
@@ -197,7 +196,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
     with plugins.runtime.EXPORT as export:
-        writer = export.load_plugin(args.saveformat, req.translate)
+        writer = export.load_plugin(args.saveformat, req.locale)
 
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header(

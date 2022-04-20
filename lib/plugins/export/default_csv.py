@@ -26,6 +26,8 @@ from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
+from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -54,11 +56,15 @@ class CSVExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self):
+    def __init__(self, locale: Locale):
+        super().__init__(locale)
         self.csv_buff = Writeable()
         self.csv_writer = csv.writer(self.csv_buff, delimiter=';',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
         self._import_row = lambda x: x
+
+    def _formatnumber(self, x):
+        return format_decimal(x, locale=self._locale, group_separator=False)
 
     def content_type(self):
         return 'text/csv'
@@ -85,13 +91,13 @@ class CSVExport(AbstractExport):
 
         if args.heading:
             self._writeheading([
-                'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
+                'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {}\nquery: {}'.format(
                     amodel.corp.human_readable_corpname,
                     amodel.args.usesubcorp,
-                    data.concsize,
-                    data.result_arf,
+                    self._formatnumber(data.concsize),
+                    self._formatnumber(data.result_arf),
                     ',\n'.join(
-                        f"{x['op']}: {x['arg']} ({x['size']})"
+                        f"{x['op']}: {x['arg']} ({self._formatnumber(x['size'])})"
                         for x in (await amodel.concdesc_json())
                     ),
                 ), '', '', ''])
@@ -126,7 +132,7 @@ class CSVExport(AbstractExport):
             self._writeheading([''] + [item['n'] for item in data.Head])
         for i, item in enumerate(data.Items, 1):
             self._writerow(
-                i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+                i, (item['str'], self._formatnumber(item['freq']), *(self._formatnumber(stat['s']) for stat in item['Stats'])))
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
         for block in data['Blocks']:
@@ -134,15 +140,15 @@ class CSVExport(AbstractExport):
                 self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
                                    ['freq', 'freq [%]'])
             for i, item in enumerate(block['Items'], 1):
-                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
-                                                                    str(item.get('rel', ''))])
+                self._writerow(i, [w['n'] for w in item['Word']] + [self._formatnumber(item['freq']),
+                                                                    self._formatnumber(item.get('rel', ''))])
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
         if args.colheaders or args.heading:
             self._writeheading(['', 'value', 'freq'])
 
-        for i, row in enumerate(data, 1):
-            self._writerow(i, row)
+        for i, (value, freq) in enumerate(data, 1):
+            self._writerow(i, (value, self._formatnumber(freq)))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         if args.colheaders:
@@ -150,14 +156,14 @@ class CSVExport(AbstractExport):
 
         elif args.heading:
             self._writeheading([
-                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                'corpus: {}\nsubcorpus: {}\npattern: {}'.format(
                     amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
                 '', ''
             ])
 
-        for i, item in enumerate(data, 1):
-            self._writerow(i, [item[0], str(item[1])])
+        for i, (wlattr, freq) in enumerate(data, 1):
+            self._writerow(i, (wlattr, self._formatnumber(freq)))
 
 
-def create_instance():
-    return CSVExport()
+def create_instance(locale: Locale):
+    return CSVExport(locale)

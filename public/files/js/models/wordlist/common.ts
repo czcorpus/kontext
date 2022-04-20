@@ -46,13 +46,11 @@ export interface WordlistSubmitArgs {
 
 export interface WordlistSaveArgs {
     q:string;
-    corpname:string;
-    usesubcorp:string;
     from_line:number;
     to_line:number;
     saveformat:DataSaveFormat;
-    colheaders:boolean;
-    heading:boolean;
+    colheaders:number;
+    heading:number;
 }
 
 export type ResultData = {

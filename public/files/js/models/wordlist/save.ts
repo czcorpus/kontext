@@ -210,27 +210,25 @@ export class WordlistSaveModel extends StatelessModel<WordlistSaveModelState> {
     private submit(state:WordlistSaveModelState, args:WordlistSubmitArgs, queryId:string):Observable<{}> {
         const submitArgs:WordlistSaveArgs = {
             q: `~${state.queryId}`,
-            corpname: args.corpname,
-            usesubcorp: args.usesubcorp,
             from_line: 1,
             to_line: state.toLine ? parseInt(state.toLine.value) : null,
             saveformat: state.saveFormat,
-            colheaders: state.includeColHeaders,
-            heading: state.includeColHeaders
+            colheaders: state.includeColHeaders ? 1 : 0,
+            heading: state.includeHeading ? 1 : 0
         };
-        if (state.saveFormat === 'csv' || 'xlsx') {
-            submitArgs.colheaders = state.includeColHeaders;
-            submitArgs.heading = false;
+        if (isNaN(submitArgs.to_line)) {submitArgs.to_line = null}
+        if (state.saveFormat === 'csv' || state.saveFormat === 'xlsx') {
+            submitArgs.colheaders = state.includeColHeaders ? 1 : 0;
+            submitArgs.heading = 0;
 
         } else {
-            submitArgs.heading = state.includeHeading;
-            submitArgs.colheaders = true;
+            submitArgs.heading = state.includeHeading ? 1 : 0;
+            submitArgs.colheaders = 1;
         }
         this.saveLinkFn(
             undefined,
             state.saveFormat,
-            this.layoutModel.createActionUrl('wordlist/savewl'),
-            submitArgs
+            this.layoutModel.createActionUrl('wordlist/savewl', submitArgs),
         );
         // TODO
         return rxOf({});
