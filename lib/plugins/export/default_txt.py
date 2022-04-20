@@ -94,18 +94,21 @@ class TXTExport(AbstractExport):
         self._data = await template.render_async(output)
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
-        data['Desc'] = await amodel.concdesc_json()
-        data['fcrit'] = args.fcrit
-        data['flimit'] = args.flimit
-        data['freq_sort'] = args.freq_sort
-        data['saveformat'] = args.saveformat
-        data['from_line'] = args.from_line
-        data['to_line'] = args.to_line
-        data['colheaders'] = args.colheaders
-        data['heading'] = args.heading
+        output = {**data}
+        output['Desc'] = await amodel.concdesc_json()
+        output['fcrit'] = args.fcrit
+        output['flimit'] = args.flimit
+        output['freq_sort'] = args.freq_sort
+        output['saveformat'] = args.saveformat
+        output['from_line'] = args.from_line
+        output['to_line'] = args.to_line
+        output['colheaders'] = args.colheaders
+        output['heading'] = args.heading
+        output['human_corpname'] = amodel.corp.corpname
+        output['usesubcorp'] = amodel.corp.subcname
 
         template = self._template_env.get_template('txt_freq.jinja2')
-        self._data = await template.render_async(data)
+        self._data = await template.render_async(output)
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
         # TODO perhaps
