@@ -19,54 +19,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 
-{% if heading %}
+{% if heading -%}
 # Corpus: {{ human_corpname }}
-{% if usesubcorp %}
-# Subcorpus: {{ usesubcorp }}
-{% endif %}
+{% if usesubcorp %}# Subcorpus: {{ usesubcorp }}{% endif -%}
 # Hits: {{ concsize }}
 # Relative frequency: {{ result_relative_freq }} ({{ result_relative_freq_rel_to }})
-{% if result_arf != '' %}
-# ARF: {{ result_arf }}
-{% endif %}
-{% for d in Desc %}
-# {{ d.op }}: {{ d.arg }} {{ d.size }}
+{% if result_arf != '' %}# ARF: {{ result_arf }}{% endif -%}
+{% for desc in Desc %}
+# {{ desc.op }}: {{ desc.arg }} {{ desc.size }}
 {% endfor %}
 {% endif -%} {# END of heading -#}
 ## KWIC lines:
 
-{% for l in Lines %}
-{% if numbering %}{{ loop.index }}) {% endif %}
-{% if num_lines_in_groups > 0 %}{{ l.linegroup }}{% endif %}
-{{ l.ref }} | {% if align_kwic %}{{ l.leftspace }}{% endif %}
-{% for ll in l.Left %}
-{% if ll.class != 'strc' %}
-{{ ll.str -}}
-{% endif %}
-{% endfor %} <{%- for kw in l.Kwic %}{{ kw.str }}{% endfor %}> {% for rr in l.Right %}
-{% if rr.class != 'strc' %}
-{{ rr.str -}}
-{% endif -%}
-{% endfor -%} {% if align_kwic %}
-{{ l.rightspace }}
-{%- endif -%} {% if align %} {% for ll in l.get('Align', []) -%}
-{%- if align_kwic -%}
-| {{ ll.ref[0] }} |
-{% else %}
-| {{ ll.ref[0] }} |  {# there is a tab character as a prefix -#}
-{% endif %} {% if align_kwic %}
-{{ ll.leftspace }}
-{% endif %} {% for lw in ll.Left %}
-{% if lw.class != 'strc' %}
-{{ lw.str -}}
-{% endif -%}
-{% endfor %} <{% for kw in ll.Kwic %}{{ kw.str }}{% endfor %}> {% for rr in ll.Right %}
-{% if rr.class != 'strc' %}
-{{ rr.str }}
-{%- endif %}
-{% endfor -%}
-{%- if align_kwic %}{{ ll.rightspace }}{% endif %}
-{%- endfor %}
-{%- endif %}
-
+{% for line in Lines -%}
+{# main concordances -#}
+{% if numbering %}{{ loop.index }}) {% endif %}{% if num_lines_in_groups > 0 %}{{ line.linegroup }}{% endif -%}
+{{ line.ref }} | {% if align_kwic %}{{ line.leftspace }}{% endif -%}
+{% for left in line.Left %}{% if left.class != 'strc' %}{{ left.str }}{% endif %}{% endfor %} <{% for kw in line.Kwic %}{{ kw.str }}{% endfor %}> {% for right in line.Right %}{% if right.class != 'strc' %}{{ right.str }}{% endif %}{% endfor -%}
+{% if align_kwic %}{{ line.rightspace }}{% endif %}
+{# aligned concordances -#}
+{% for al in line.get('Align', []) -%}
+{{ al['ref'] }} | {% if align_kwic %}{{ al['leftspace'] }}{% endif -%}
+{% if align_kwic %}{{ al['leftspace'] }}{% endif -%}
+{% for left in al['Left'] %}{% if left['class'] != 'strc' %}{{ left['str'] }}{% endif %}{% endfor %} <{% for kw in al['Kwic'] %}{{ kw.str }}{% endfor %}> {% for right in al['Right'] %}{% if right['class'] != 'strc' %}{{ right['str'] }}{% endif %}{% endfor -%}
+{% if align_kwic %}{{ al['rightspace'] }}{% endif -%}
+{% endfor %}
 {% endfor %}

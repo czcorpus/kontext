@@ -1061,8 +1061,9 @@ class SaveConcArgs:
     saveformat: str = 'txt'
     heading: int = 0
     numbering: int = 0
+    align_kwic: int = 0
     from_line: int = 0
-    to_line: int = None
+    to_line: Optional[int] = None
 
 
 def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):

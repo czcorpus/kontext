@@ -62,11 +62,11 @@ class TXTExport(AbstractExport):
             'to_line': min(args.to_line, data.concsize),
             'heading': args.heading,
             'numbering': args.numbering,
+            'align_kwic': args.align_kwic,
             **asdict(data),
         }
-
-        for item in data.Lines:
-            item['ref'] = ', '.join(item['ref'])
+        for line in data.Lines:
+            line['ref'] = ', '.join(line['ref'])
         # we must set contains_within = False as it is impossible (in the current user interface)
         # to offer a custom i.p.m. calculation before the download starts
         output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
