@@ -51,6 +51,9 @@ class XLSXExport(AbstractExport):
         self._col_types = ()
         self._import_row = lambda x: x
 
+    def _formatnumber(self, x):
+        return format_decimal(x, locale=self._locale, group_separator=False)
+
     def content_type(self):
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -169,7 +172,7 @@ class XLSXExport(AbstractExport):
         self._set_col_types(*([int] + num_word_cols * [str] + [float, float]))
 
         for block in data['Blocks']:
-            if args.mapped_args.multi_sheet_file:
+            if args.multi_sheet_file:
                 self._new_sheet(block['Head'][0]['n'])
 
             if args.colheaders or args.heading:
@@ -198,13 +201,13 @@ class XLSXExport(AbstractExport):
 
         elif args.heading:
             self._writeheading([
-                'corpus: {}\nsubcorpus: {},\npattern: {}'.format(
+                'corpus: {}\nsubcorpus: {}\npattern: {}'.format(
                     amodel.corp.human_readable_corpname, amodel.args.usesubcorp, amodel.curr_wlform_args.wlpat),
                 '', ''
             ])
 
-        for i, item in enumerate(data, 1):
-            self._writerow(i, [item[0], str(item[1])])
+        for i, (wlattr, freq) in enumerate(data, 1):
+            self._writerow(i, (wlattr, str(freq)))
 
 
 def create_instance(locale: Locale):
