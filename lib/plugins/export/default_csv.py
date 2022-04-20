@@ -26,6 +26,7 @@ from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -54,7 +55,8 @@ class CSVExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self):
+    def __init__(self, locale: Locale):
+        super().__init__(locale)
         self.csv_buff = Writeable()
         self.csv_writer = csv.writer(self.csv_buff, delimiter=';',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
@@ -159,5 +161,5 @@ class CSVExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance():
-    return CSVExport()
+def create_instance(locale: Locale):
+    return CSVExport(locale)

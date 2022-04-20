@@ -25,6 +25,7 @@ from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -34,7 +35,7 @@ from views.concordance import SaveConcArgs
 from views.freqs import SavefreqArgs
 from views.pquery import SavePQueryArgs
 
-from . import AbstractExport, ExportPluginException
+from . import AbstractExport
 
 
 class GeneralDocument(object):
@@ -244,7 +245,8 @@ class XMLExport(AbstractExport):
     The plug-in itself
     """
 
-    def __init__(self):
+    def __init__(self, locale: Locale):
+        super().__init__(locale)
         self._document = None
         self._corpnames = []
 
@@ -351,5 +353,5 @@ class XMLExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance():
-    return XMLExport()
+def create_instance(locale: Locale):
+    return XMLExport(locale)

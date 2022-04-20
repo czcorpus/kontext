@@ -27,6 +27,8 @@ from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
+from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
 from jinja2 import Environment, FileSystemLoader
 from kwiclib import KwicPageData
@@ -43,11 +45,14 @@ class TXTExport(AbstractExport):
     A plug-in itself
     """
 
-    def __init__(self):
+    def __init__(self, locale: Locale):
+        super().__init__(locale)
         self._template_dir: str = os.path.realpath(
             os.path.join(os.path.dirname(__file__), 'templates'))
         self._template_env = Environment(
             loader=FileSystemLoader(self._template_dir), enable_async=True)
+        self._template_env.filters['formatnumber'] = lambda x: format_decimal(
+            x, locale=self._locale, group_separator=False)
         self._data: str = ''
 
     def content_type(self):
@@ -125,5 +130,5 @@ class TXTExport(AbstractExport):
         self._data = await template.render_async(output)
 
 
-def create_instance():
-    return TXTExport()
+def create_instance(locale: Locale):
+    return TXTExport(locale)

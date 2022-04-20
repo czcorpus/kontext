@@ -196,7 +196,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
     with plugins.runtime.EXPORT as export:
-        writer = export.load_plugin(args.saveformat, req.translate)
+        writer = export.load_plugin(args.saveformat, req.locale)
 
         resp.set_header('Content-Type', writer.content_type())
         resp.set_header(

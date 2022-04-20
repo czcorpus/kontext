@@ -27,6 +27,7 @@ from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
@@ -42,7 +43,8 @@ from . import AbstractExport, ExportPluginException, lang_row_to_list
 
 class XLSXExport(AbstractExport):
 
-    def __init__(self):
+    def __init__(self, locale: Locale):
+        super().__init__(locale)
         self._written_lines = 0
         self._wb = Workbook(write_only=True)
         self._sheet = self._wb.create_sheet()
@@ -205,5 +207,5 @@ class XLSXExport(AbstractExport):
             self._writerow(i, [item[0], str(item[1])])
 
 
-def create_instance():
-    return XLSXExport()
+def create_instance(locale: Locale):
+    return XLSXExport(locale)

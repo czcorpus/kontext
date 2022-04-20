@@ -22,12 +22,13 @@ free to be replaced/changed.
 """
 
 import abc
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from action.argmapping.wordlist import WordlistSaveFormArgs
 from action.model.concordance import ConcActionModel
 from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
+from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
@@ -125,6 +126,9 @@ class AbstractWordlistExportMixin(object):
 
 class AbstractExport(AbstractConcExportMixin, AbstractCollExportMixin, AbstractFreqExportMixin, AbstractPqueryExportMixin, AbstractWordlistExportMixin):
 
+    def __init__(self, locale: Locale) -> None:
+        self._locale = locale
+
     @abc.abstractmethod
     def content_type(self) -> str:
         pass
@@ -152,7 +156,7 @@ class Loader(object):
     def __init__(self, module_map):
         self._module_map = module_map
 
-    def load_plugin(self, name: str, translate: Callable[[str], str]=lambda x: x) -> AbstractExport:
+    def load_plugin(self, name: str, locale: Locale) -> AbstractExport:
         """
         Loads an export module specified by passed name.
         In case you request non existing plug-in (= a plug-in
@@ -166,10 +170,10 @@ class Loader(object):
         required module or nothing if module is not found
         """
         if name not in self._module_map:
-            raise UnknownExporterException(translate(f'Export module [{name}] not configured'))
+            raise UnknownExporterException(f'Export module [{name}] not configured')
         module_name = self._module_map[name]
         module = __import__(f'plugins.export.{module_name}', fromlist=[module_name])
-        plugin = module.create_instance()
+        plugin = module.create_instance(locale)
         return plugin
 
 
