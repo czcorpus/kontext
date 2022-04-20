@@ -124,7 +124,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     amodel.add_save_menu_item('XML', save_format='xml',
                               hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                   amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item('TXT', save_format='text',
+    amodel.add_save_menu_item('TXT', save_format='txt',
                               hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
                                   amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
@@ -181,47 +181,31 @@ async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KRespo
 
 
 @bp.route('/savewl', ['POST'])
-@http_action(access_level=1, return_type='plain', template='txtexport/savewl.html', action_model=WordlistActionModel)
+@http_action(access_level=1, return_type='plain', action_model=WordlistActionModel)
 async def savewl(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     """
     save word list
     """
-    form_args = WordlistSaveFormArgs()
-    form_args.update_by_user_query(req.json)
-    if form_args.to_line is None:
-        form_args.to_line = amodel.corp.size
-    num_lines = form_args.to_line - form_args.from_line + 1
+    args = WordlistSaveFormArgs()
+    args.update_by_user_query(req.json)
+    if args.to_line is None:
+        args.to_line = amodel.corp.size
+    num_lines = args.to_line - args.from_line + 1
     total, data = await require_existing_wordlist(
-        form=amodel.curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
+        form=amodel.curr_wlform_args, reverse=False, offset=args.from_line, limit=num_lines,
         wlsort='', collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
-    saved_filename = form_args.corpname
-    if form_args.saveformat == 'text':
-        resp.set_header('Content-Type', 'application/text')
-        resp.set_header('Content-Disposition',
-                        f'attachment; filename="{saved_filename}-word-list.txt"')
-        return dict(Items=data,
-                    pattern=amodel.curr_wlform_args.wlpat,
-                    from_line=form_args.from_line,
-                    to_line=form_args.to_line,
-                    usesubcorp=form_args.usesubcorp,
-                    saveformat=form_args.saveformat,
-                    colheaders=form_args.colheaders,
-                    heading=form_args.heading)
 
-    else:
-        def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
+    def mkfilename(suffix): return f'{amodel.args.corpname}-word-list.{suffix}'
+    with plugins.runtime.EXPORT as export:
+        writer = export.load_plugin(args.saveformat, req.translate)
 
-        with plugins.runtime.EXPORT as export:
-            writer = export.load_plugin(form_args.saveformat, req.translate)
+        resp.set_header('Content-Type', writer.content_type())
+        resp.set_header(
+            'Content-Disposition', f'attachment; filename="{mkfilename(args.saveformat)}"')
 
-            resp.set_header('Content-Type', writer.content_type())
-            resp.set_header(
-                'Content-Disposition', f'attachment; filename="{mkfilename(form_args.saveformat)}"')
-
-            await writer.write_wordlist(amodel, data, form_args)
-            return writer.raw_content()
-
-    return None
+        await writer.write_wordlist(amodel, data, args)
+        output = writer.raw_content()
+    return output
 
 
 @bp.route('/process')

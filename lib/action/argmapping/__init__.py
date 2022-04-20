@@ -177,7 +177,7 @@ class Args(UserActionArgs):
 
     freq_sort: str = field(default='', metadata=mk_metdata())
     heading: int = field(default=0, metadata=mk_metdata())
-    saveformat: str = field(default='text', metadata=mk_metdata())
+    saveformat: str = field(default='txt', metadata=mk_metdata())
     simple_n: int = field(default=1, metadata=mk_metdata())
     usearf: int = field(default=0, metadata=mk_metdata())
     collpage: int = field(default=1, metadata=mk_metdata())

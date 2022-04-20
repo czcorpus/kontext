@@ -19,30 +19,36 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
 
-{% if saveformat == 'text' %}
 {% if heading %}
-# Collocations
+{% if keywords %}
+# Keywords
+{% else %}
+# Word List
+{% endif %}
 # Corpus: {{ human_corpname }}
 {% if usesubcorp %}
 # Subcorpus: {{ usesubcorp }}
 {% endif %}
-
-{% for d in Desc %}
-# {{ d.op }}:  $d.arg $d.size
-{% endfor %}
+{% if pattern %}
+# Pattern: {{ pattern }}
 {% endif %}
-{% for h in Head %}
-| {{ h.n -}}
-{% endfor %}
+{% if keywords %}
+{% endif %}
+{% endif %}
 
-------------------------------------------------------------
+{% if Items %}
+| {{ wlattr }} |	Freq
+------------------------------
 {% for i in Items %}
-{{ i.str }} {{ i.freq -}}
-{% for ss in i.Stats %}
-{{ ss.s -}}
+{{ i.str }} {{ i.freq }}
 {% endfor %}
+{% else %}
 
+{% if Keywords %}
+{{ wlattr }} Freq	ARF	ARF/mill	Freq_ref	ARF_ref	ARF/mil_ref	Score
+----------------------------------------------------------------------------------
+{% for k in Keywords %}
+{{ k.str }} {{ k.freq }} {{ k.arf }} {{ k.arf_mill }} {{ k['freq_ref']|default('0', true) }} {{ k.arf_ref }} {{ k.arf_mill_ref }} {{ k.score }}
 {% endfor %}
-
 {% endif %}
-
+{% endif %}

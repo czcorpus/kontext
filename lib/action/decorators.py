@@ -18,10 +18,11 @@ from functools import wraps
 from typing import Any, Callable, Coroutine, List, Optional, Type, Union
 
 import settings
-from action.errors import ImmediateRedirectException, UserActionException, ForbiddenException
+from action.errors import (ForbiddenException, ImmediateRedirectException,
+                           UserActionException)
 from action.krequest import KRequest
-from action.model.base import BaseActionModel
 from action.model.abstract import AbstractPageModel, AbstractUserModel
+from action.model.base import BaseActionModel
 from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
@@ -78,6 +79,9 @@ async def _output_result(
         apply_theme(result, app, translate)
         action_model.init_menu(result)
         return tpl_engine.render(action_props.template, result)
+
+    if isinstance(result, dict) and 'messages' in result and any(result['messages'], lambda x: x[0] == 'error'):
+        raise RuntimeError(f'Exceptions occured: {result["messages"]}')
     raise RuntimeError(
         f'Unsupported result and return_type combination: {result.__class__.__name__},  {action_props.return_type}')
 
@@ -245,6 +249,9 @@ def http_action(
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:
+                if aprops.return_type == 'plain':
+                    raise
+
                 resp.add_system_message('error', str(ex))
                 if aprops.template:
                     aprops.template = 'message.html'

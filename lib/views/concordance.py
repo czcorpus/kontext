@@ -264,7 +264,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(
-        'TXT', save_format='text',
+        'TXT', save_format='txt',
         hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
             amodel.CONC_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
@@ -598,7 +598,8 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             break
 
     struct_and_attrs_tmp = await amodel.get_structs_and_attrs()
-    struct_and_attrs = [(k, [x.to_dict() for x in item]) for k, item in struct_and_attrs_tmp.items()]
+    struct_and_attrs = [(k, [x.to_dict() for x in item])
+                        for k, item in struct_and_attrs_tmp.items()]
 
     ans = dict(
         corpname=amodel.args.corpname,
@@ -1057,11 +1058,12 @@ async def matching_structattr(amodel: CorpusActionModel, req: KRequest, resp: KR
 
 @dataclass
 class SaveConcArgs:
-    saveformat: str = 'text'
+    saveformat: str = 'txt'
     heading: int = 0
     numbering: int = 0
+    align_kwic: int = 0
     from_line: int = 0
-    to_line: int = None
+    to_line: Optional[int] = None
 
 
 def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):
@@ -1083,8 +1085,7 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
 
 @bp.route('/saveconc')
 @http_action(
-    access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, template='txtexport/saveconc.html',
-    return_type='plain')
+    access_level=1, action_model=ConcActionModel, mapped_args=SaveConcArgs, return_type='plain')
 async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: KResponse):
     try:
         corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
@@ -1098,12 +1099,6 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
         from_line = int(req.mapped_args.from_line)
         to_line = min(req.mapped_args.to_line, conc.size())
-        output = {
-            'from_line': from_line,
-            'to_line': to_line,
-            'heading': req.mapped_args.heading,
-            'numbering': req.mapped_args.numbering
-        }
 
         kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
         kwic_args.speech_attr = await amodel.get_speech_segment()
@@ -1120,31 +1115,17 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         data = kwic.kwicpage(kwic_args)
 
         def mkfilename(suffix): return f'{amodel.args.corpname}-concordance.{suffix}'
-        if req.mapped_args.saveformat == 'text':
-            resp.set_header('Content-Type', 'text/plain')
+        with plugins.runtime.EXPORT as export:
+            writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
+
+            resp.set_header('Content-Type', writer.content_type())
             resp.set_header(
                 'Content-Disposition',
-                f"attachment; filename=\"{mkfilename('txt')}\"")
-            output.update(asdict(data))
-            for item in data.Lines:
-                item['ref'] = ', '.join(item['ref'])
-            # we must set contains_within = False as it is impossible (in the current user interface)
-            # to offer a custom i.p.m. calculation before the download starts
-            output['result_relative_freq_rel_to'] = _get_ipm_base_set_desc(
-                amodel, contains_within=False, translate=req.translate)
-            output['Desc'] = (await amodel.concdesc_json())['Desc']
-        else:
-            with plugins.runtime.EXPORT as export:
-                writer = export.load_plugin(req.mapped_args.saveformat, req.translate)
+                f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
 
-                resp.set_header('Content-Type', writer.content_type())
-                resp.set_header(
-                    'Content-Disposition',
-                    f'attachment; filename="{mkfilename(req.mapped_args.saveformat)}"')
-
-                if len(data.Lines) > 0:
-                    await writer.write_conc(amodel, data, req.mapped_args)
-                output = writer.raw_content()
+            if len(data.Lines) > 0:
+                await writer.write_conc(amodel, data, req.mapped_args)
+            output = writer.raw_content()
         return output
 
     except Exception as e:
