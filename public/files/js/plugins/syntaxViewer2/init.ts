@@ -128,27 +128,28 @@ class SyntaxTreeViewer extends StatefulModel<SyntaxTreeViewerState> implements P
         while (target.firstChild) {
             target.removeChild(target.firstChild);
         }
-        const corpusSwitch = window.document.createElement('select');
-        corpusSwitch.classList.add('corpus-switch');
-        corpusSwitch.onchange = this.corpusSelectHandler;
-        target.append(corpusSwitch);
-        target.append(window.document.createElement('hr'));
 
+        if (this.state.sentenceTokens.length > 1) {
+            const corpusSwitch = window.document.createElement('select');
+            corpusSwitch.classList.add('corpus-switch');
+            corpusSwitch.onchange = this.corpusSelectHandler;
+            target.append(corpusSwitch);
+            target.append(window.document.createElement('hr'));
+            List.forEach(
+                (sentenceToken, i) => {
+                    const option = window.document.createElement('option');
+                    option.value = sentenceToken.corpus;
+                    option.label = sentenceToken.corpus;
+                    option.selected = i === this.state.activeToken;
+                    corpusSwitch.append(option);
+                },
+                this.state.sentenceTokens
+            );
+        }
         const treexFrame = window.document.createElement('div');
         treexFrame.id = 'treex-frame';
         treexFrame.style.width = '90%';
         target.appendChild(treexFrame);
-
-        List.forEach(
-            (sentenceToken, i) => {
-                const option = window.document.createElement('option');
-                option.value = sentenceToken.corpus;
-                option.label = sentenceToken.corpus;
-                option.selected = i === this.state.activeToken;
-                corpusSwitch.append(option);
-            },
-            this.state.sentenceTokens
-        );
 
         createGenerator(
             this.pluginApi.getComponentHelpers(),
