@@ -275,13 +275,6 @@ class FreqPage {
                 sortFormProps: {
                     formType: Kontext.ConcFormTypes.SORT,
                     sortId: null,
-                },
-                shuffleFormProps: {
-                    formType: Kontext.ConcFormTypes.SHUFFLE,
-                    shuffleMinResultWarning: null,
-                    lastOpSize: null,
-                    operationIdx: null,
-                    shuffleSubmitFn:()=>undefined
                 }
             }
         );
