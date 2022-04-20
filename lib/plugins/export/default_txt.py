@@ -63,6 +63,8 @@ class TXTExport(AbstractExport):
             'heading': args.heading,
             'numbering': args.numbering,
             'align_kwic': args.align_kwic,
+            'human_corpname': amodel.corp.corpname,
+            'usesubcorp': amodel.corp.subcname,
             **asdict(data),
         }
         for line in data.Lines:
@@ -78,16 +80,18 @@ class TXTExport(AbstractExport):
         self._data = await template.render_async(output)
 
     async def write_coll(self, amodel: ConcActionModel, data: CalculateCollsResult, args: SavecollArgs):
-        out_data = asdict(data)
-        out_data['Desc'] = await amodel.concdesc_json()
-        out_data['saveformat'] = args.saveformat
-        out_data['from_line'] = args.from_line
-        out_data['to_line'] = amodel.corp.size if args.to_line is None else args.to_line
-        out_data['heading'] = args.heading
-        out_data['colheaders'] = args.colheaders
+        output = asdict(data)
+        output['Desc'] = await amodel.concdesc_json()
+        output['saveformat'] = args.saveformat
+        output['from_line'] = args.from_line
+        output['to_line'] = amodel.corp.size if args.to_line is None else args.to_line
+        output['heading'] = args.heading
+        output['colheaders'] = args.colheaders
+        output['human_corpname'] = amodel.corp.corpname
+        output['usesubcorp'] = amodel.corp.subcname
 
         template = self._template_env.get_template('txt_coll.jinja2')
-        self._data = await template.render_async(out_data)
+        self._data = await template.render_async(output)
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
         data['Desc'] = await amodel.concdesc_json()
