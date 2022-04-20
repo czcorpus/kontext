@@ -34,7 +34,7 @@ export class Actions {
 
     static MessageAdd:Action<{
         messageType:Kontext.UserMessageTypes;
-        message:any; // any is here intentionally - we just try to convert anything to a message
+        message:unknown; // unknown is here intentionally - we just try to convert anything to a message
     }> = {
         name: 'MESSAGE_ADD'
     };

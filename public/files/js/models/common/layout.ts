@@ -117,7 +117,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     private importMessage(
         state:MessageModelState,
         msgType:Kontext.UserMessageTypes,
-        message:any
+        message:unknown
     ):string {
         const fetchJsonError = (message:XMLHttpRequest) => {
             const respObj = message.response || {};
@@ -192,7 +192,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
     private addMessage(
         state:MessageModelState,
         messageType:Kontext.UserMessageTypes,
-        message:any
+        message:unknown
     ):void {
         state.messages.push({
             messageType,
