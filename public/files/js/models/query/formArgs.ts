@@ -148,6 +148,9 @@ export interface FirstHitsFormArgs extends ConcFormArgs {
     doc_struct:string;
 }
 
+export interface ShuffleFormArgs extends ConcFormArgs {
+}
+
 export interface SampleFormArgsResponse extends SampleFormArgs, Kontext.AjaxResponse {}
 
 export interface ConcFormArgsResponse extends Kontext.AjaxResponse, ConcFormArgs {}
@@ -159,6 +162,7 @@ export interface ConcFormsInitialArgs {
     sample:SampleFormArgs;
     firsthits:FirstHitsFormArgs;
     switchmc:SwitchMainCorpArgs;
+    shuffle:ShuffleFormArgs;
 }
 
 

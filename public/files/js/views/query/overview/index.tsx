@@ -289,8 +289,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                             shuffleMinResultWarning={props.shuffleMinResultWarning}
                             lastOpSize={props.resultSize}
                             operationIdx={props.operationIdx}
-                            formType={Kontext.ConcFormTypes.SHUFFLE}
-                            shuffleSubmitFn={()=>undefined} />;
+                            opKey={props.opKey}
+                            formType={Kontext.ConcFormTypes.SHUFFLE} />;
 
                 case Kontext.ConcFormTypes.SWITCHMC:
                     return <viewDeps.SwitchMainCorpForm {...props.editorProps}
@@ -450,20 +450,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                 return props.sortFormProps;
 
             } else if (opId === 'f') {
-                return {
-                    formType: Kontext.ConcFormTypes.SHUFFLE,
-                    shuffleMinResultWarning: null,
-                    lastOpSize: null,
-                    operationIdx: opIdx,
-                    shuffleSubmitFn: () => {
-                        dispatcher.dispatch<typeof Actions.BranchQuery>({
-                            name: Actions.BranchQuery.name,
-                            payload: {
-                                operationIdx: opIdx
-                            }
-                        });
-                    }
-                }
+                return props.shuffleFormProps;
 
             } else if (opId === 'r') {
                 return {
