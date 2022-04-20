@@ -32,6 +32,7 @@ from werkzeug import Request
 from texttypes import TextTypesCache
 from argmapping import WordlistArgsMapping, ConcArgsMapping
 from controller.req_args import RequestArgsProxy, JSONRequestArgsProxy
+from babel.numbers import format_decimal
 
 
 class WordlistError(UserActionException):
@@ -115,7 +116,8 @@ class Wordlist(Kontext):
             args=(form_args.to_dict(), self.corp.size, self.session_get('user', 'id')))
         bg_result = async_res.get()
         if isinstance(bg_result, MissingSubCorpFreqFile):
-            data_calc = freq_calc.build_arf_db(self.session_get('user', 'id'), self.corp, form_args.wlattr)
+            data_calc = freq_calc.build_arf_db(self.session_get(
+                'user', 'id'), self.corp, form_args.wlattr)
             if type(data_calc) is list:
                 for subtask in data_calc:
                     self._store_async_task(subtask)
@@ -241,11 +243,15 @@ class Wordlist(Kontext):
         total, data = require_existing_wordlist(
             form=self._curr_wlform_args, reverse=False, offset=form_args.from_line, limit=num_lines,
             wlsort='', collator_locale=self.get_corpus_info(self.corp.corpname).collator_locale)
-        saved_filename = form_args.corpname
+
+        locale = self.get_locale()
+        def formatnumber(x): return x if form_args.saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+
         if form_args.saveformat == 'text':
             self._response.set_header('Content-Type', 'application/text')
-            self._response.set_header('Content-Disposition', f'attachment; filename="{saved_filename}-word-list.txt"')
-            return dict(Items=data,
+            self._response.set_header('Content-Disposition',
+                                      f'attachment; filename="{form_args.corpname}-word-list.txt"')
+            return dict(Items=[(wlattr, formatnumber(freq)) for wlattr, freq in data],
                         pattern=self._curr_wlform_args.wlpat,
                         from_line=form_args.from_line,
                         to_line=form_args.to_line,
@@ -256,7 +262,7 @@ class Wordlist(Kontext):
         elif form_args.saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return f'{self.args.corpname}-word-list.{suffix}'
             writer = plugins.runtime.EXPORT.instance.load_plugin(
-                form_args.saveformat, subtype='wordlist')
+                form_args.saveformat, 'wordlist')
             writer.set_col_types(int, str, float)
 
             self._response.set_header('Content-Type', writer.content_type())
@@ -271,10 +277,8 @@ class Wordlist(Kontext):
                         self._human_readable_corpname(), self.args.usesubcorp, self._curr_wlform_args.wlpat),
                     '', ''
                 ])
-            i = 1
-            for item in data:
-                writer.writerow(i, (item[0], str(item[1])))
-                i += 1
+            for i, (wlattr, freq) in enumerate(data, 1):
+                writer.writerow(i, (wlattr, formatnumber(freq)))
             return writer.raw_content()
         return None
 

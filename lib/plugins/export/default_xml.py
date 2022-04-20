@@ -219,8 +219,9 @@ class PqueryDocument(GeneralDocument):
             line_num_elm.text = str(line_num)
         str_elm = etree.SubElement(item_elm, 'str')
         str_elm.text = data[0]
-        freq_elm = etree.SubElement(item_elm, 'freq')
-        freq_elm.text = str(data[1])
+        for i, d in enumerate(data[1:], 1):
+            freq_elm = etree.SubElement(item_elm, f'freq{i}')
+            freq_elm.text = str(d)
 
     def add_heading(self, data):
         self._auto_add_heading(data)

@@ -37,6 +37,7 @@ from controller.plg import PluginCtx
 from translation import ugettext as translate
 from main_menu.model import MainMenu, EventTriggeringItem, MenuItemInternal
 import settings
+from babel.numbers import format_decimal
 
 
 """
@@ -190,7 +191,8 @@ class ParadigmaticQuery(Kontext):
         for i, conc_id in enumerate(self._curr_pquery_args.conc_ids):
             self._dynamic_menu_items.append(
                 MenuItemInternal(
-                    MainMenu.CONCORDANCE, translate('Go to the constituent concordance #{}').format(i+1), 'view'
+                    MainMenu.CONCORDANCE, translate(
+                        'Go to the constituent concordance #{}').format(i + 1), 'view'
                 ).add_args(('q', f'~{conc_id}'))
             )
         return ans
@@ -280,20 +282,24 @@ class ParadigmaticQuery(Kontext):
         except PqueryResultNotFound:
             raise NotFoundException('pquery__result_no_more_avail_for_download_pls_update')
 
-        def mkfilename(suffix):
-            return f'{self.args.corpname}-pquery.{suffix}'
+        locale = self.get_locale()
+        def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+        def mkfilename(suffix): return f'{self.args.corpname}-pquery.{suffix}'
 
-        writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='pquery')
-        writer.set_col_types(int, str, float)
+        writer = plugins.runtime.EXPORT.instance.load_plugin(
+            saveformat, 'pquery')
+        freq_colls = len(freqs[0])-1
+        writer.set_col_types(int, str, *(float for _ in range(freq_colls)))
 
         self._response.set_header('Content-Type', writer.content_type())
-        self._response.set_header('Content-Disposition', f'attachment; filename="{mkfilename(saveformat)}"')
+        self._response.set_header('Content-Disposition',
+                                  f'attachment; filename="{mkfilename(saveformat)}"')
 
         if colheaders or heading:
-            writer.writeheading(['', 'value', 'freq'])
+            writer.writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_colls))])
 
-        for (i, row) in enumerate(freqs):
-            writer.writerow(i + 1, row)
+        for i, (value, *freq) in enumerate(freqs, 1):
+            writer.writerow(i, (value, *(formatnumber(f) for f in freq)))
 
         output = writer.raw_content()
         return output
