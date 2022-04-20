@@ -48,8 +48,8 @@ export interface ShuffleFormProps {
     formType:Kontext.ConcFormTypes.SHUFFLE;
     shuffleMinResultWarning:number;
     lastOpSize:number;
+    opKey:string;
     operationIdx?:number;
-    shuffleSubmitFn:()=>void;
 }
 
 export interface ShuffleFormState {
@@ -90,8 +90,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             });
         }
 
-        _handleSubmitEvent(evt) {
-            if (evt.key === undefined || evt.key === Keyboard.Value.ENTER) {
+        _handleSubmitEvent(evt:React.MouseEvent<HTMLButtonElement>|React.KeyboardEvent<HTMLFormElement>) {
+            if (evt['key'] === undefined || evt['key'] === Keyboard.Value.ENTER) {
                 if (this.props.operationIdx !== undefined) {
                     dispatcher.dispatch<typeof Actions.BranchQuery>({
                         name: Actions.BranchQuery.name,
@@ -143,6 +143,33 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 isAutoSubmit: this.props.shuffleMinResultWarning > this.props.lastOpSize
                                 && this.props.operationIdx === undefined
             };
+
+            this.handleSubmit = this.handleSubmit.bind(this);
+        }
+
+        private handleSubmit(
+            evt:undefined|React.MouseEvent<HTMLButtonElement>|React.KeyboardEvent<HTMLFormElement>
+        ):void {
+            if (!evt || evt['key'] === undefined || evt['key'] === Keyboard.Value.ENTER) {
+                if (this.props.operationIdx !== undefined) {
+                    dispatcher.dispatch<typeof Actions.BranchQuery>({
+                        name: Actions.BranchQuery.name,
+                        payload: {operationIdx: this.props.operationIdx}
+                    });
+
+                } else {
+                    dispatcher.dispatch<typeof Actions.ShuffleFormSubmit>({
+                        name: Actions.ShuffleFormSubmit.name,
+                        payload: {
+                            opKey: this.props.opKey
+                        }
+                    });
+                }
+                if (evt) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                }
+            }
         }
 
         _renderWarningState() {
@@ -155,7 +182,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                         {he.translate('query__shuffle_large_data_warn')}
                     </p>
                     <button type="button" className="default-button"
-                            onClick={()=>this.props.shuffleSubmitFn()}>
+                            onClick={this.handleSubmit}>
                         {he.translate('global__submit_anyway')}
                     </button>
                 </div>
@@ -173,7 +200,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <p>{he.translate('query__the_form_no_params_to_change')}.</p>
                     <p>
                         <button type="button" className="default-button"
-                                    onClick={()=>this.props.shuffleSubmitFn()}>
+                                    onClick={this.handleSubmit}>
                             {he.translate('global__proceed')}
                         </button>
                     </p>
@@ -196,7 +223,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         componentDidMount() {
             if (this.state.isAutoSubmit) {
                 window.setTimeout(() => {
-                    this.props.shuffleSubmitFn();
+                    this.handleSubmit(undefined);
                 }, 0);
             }
         }

@@ -416,6 +416,12 @@ export class Actions {
         name: 'FILTER_FIRST_HITS_SUBMIT'
     };
 
+    static ShuffleFormSubmit:Action<{
+        opKey:string;
+    }> = {
+        name: 'SHUFFLE_FORM_SUBMIT'
+    }
+
     static ToggleQuerySuggestionWidget: Action<{
         formType:QueryFormType;
         sourceId:string;
