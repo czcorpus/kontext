@@ -89,6 +89,7 @@ import { ConcSummaryModel } from '../models/concordance/summary';
 import * as formArgs from '../models/query/formArgs';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { AnyTTSelection } from '../types/textTypes';
+import { ShuffleModel } from '../models/query/shuffle';
 
 
 export class QueryModels {
@@ -107,6 +108,7 @@ export class QueryModels {
     saveAsFormModel:QuerySaveAsFormModel;
     firstHitsModel:FirstHitsModel;
     queryHelpModel:QueryHelpModel;
+    shuffleModel:ShuffleModel;
 }
 
 interface RenderLinesDeps {
@@ -285,7 +287,8 @@ export class ViewPage {
             case 'quick_filter':
             case 'create_view':
             case 'filter_subhits':
-            case 'switch_main_corp': {
+            case 'switch_main_corp':
+            case 'shuffle': {
                 this.layoutModel.getHistory().replaceState(
                     'view',
                     this.layoutModel.getConcArgs(),
@@ -638,6 +641,14 @@ export class ViewPage {
         );
     }
 
+    private initShuffleForm():void {
+        this.queryModels.shuffleModel = new ShuffleModel(
+            this.layoutModel.dispatcher,
+            this.layoutModel,
+            this.concFormsInitialArgs.shuffle
+        );
+    }
+
     /**
      *
      */
@@ -733,15 +744,11 @@ export class ViewPage {
                 },
                 shuffleFormProps: {
                     formType: Kontext.ConcFormTypes.SHUFFLE,
+                    opKey: undefined,
                     lastOpSize: 0,
                     shuffleMinResultWarning: this.layoutModel.getConf<number>(
                         'ShuffleMinResultWarning'
-                    ),
-                    shuffleSubmitFn: () => {
-                        const args = this.layoutModel.getConcArgs();
-                        window.location.href = this.layoutModel.createActionUrl(
-                            'shuffle', args);
-                    }
+                    )
                 },
                 switchMcFormProps: {
                     formType: Kontext.ConcFormTypes.SWITCHMC,
@@ -1126,6 +1133,7 @@ export class ViewPage {
             this.setupHistoryOnPopState();
             this.initQueryForm(queryFormArgs, ttInitialData);
             this.initFirsthitsForm();
+            this.initShuffleForm();
             this.initFilterForm(this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
             this.initSortForm();
             this.initSwitchMainCorpForm();

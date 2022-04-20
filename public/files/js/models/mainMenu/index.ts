@@ -186,7 +186,7 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         // here we have to make a kind of correction as traditionally, server
         // sends "save" menu items but starting from v0.16 we display charts
         // by default which means only the "Custom..." item
-        const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data) || [undefined, {customSaveItem: {items: []}}];
+        const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data) || [undefined, {items: []}];
         const freqsPrevItems = List.empty(customSaveItem.items) ? [] : [List.last(customSaveItem.items)];
         super(
             dispatcher,
