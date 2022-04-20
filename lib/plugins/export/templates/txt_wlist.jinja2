@@ -18,37 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 -#}
-
-{% if heading %}
-{% if keywords %}
-# Keywords
-{% else %}
+{% if heading -%}
 # Word List
-{% endif %}
 # Corpus: {{ human_corpname }}
-{% if usesubcorp %}
-# Subcorpus: {{ usesubcorp }}
-{% endif %}
-{% if pattern %}
+{% if usesubcorp %}# Subcorpus: {{ usesubcorp }}{% endif %}
 # Pattern: {{ pattern }}
-{% endif %}
-{% if keywords %}
-{% endif %}
-{% endif %}
 
-{% if Items %}
-| {{ wlattr }} |	Freq
+{% endif -%}
+{{ wlattr }} |	Freq
 ------------------------------
-{% for i in Items %}
-{{ i.str }} {{ i.freq }}
-{% endfor %}
-{% else %}
-
-{% if Keywords %}
-{{ wlattr }} Freq	ARF	ARF/mill	Freq_ref	ARF_ref	ARF/mil_ref	Score
-----------------------------------------------------------------------------------
-{% for k in Keywords %}
-{{ k.str }} {{ k.freq }} {{ k.arf }} {{ k.arf_mill }} {{ k['freq_ref']|default('0', true) }} {{ k.arf_ref }} {{ k.arf_mill_ref }} {{ k.score }}
-{% endfor %}
-{% endif %}
-{% endif %}
+{% for item in Items -%}
+{{ item[0] }} {{ item[1] }}
+{% endfor -%}

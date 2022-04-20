@@ -313,7 +313,6 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
             if (
                 datasetType === DownloadType.FREQ2D ||
                 datasetType === DownloadType.LINE_SELECTION ||
-                datasetType === DownloadType.WORDLIST ||
                 datasetType === DownloadType.CHART) {
                 return HTTP.Method.POST;
             }

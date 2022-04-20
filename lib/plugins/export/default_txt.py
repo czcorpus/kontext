@@ -57,16 +57,15 @@ class TXTExport(AbstractExport):
         return self._data
 
     async def write_conc(self, amodel: ConcActionModel, data: KwicPageData, args: SaveConcArgs):
-        output = {
-            'from_line': int(args.from_line),
-            'to_line': min(args.to_line, data.concsize),
-            'heading': args.heading,
-            'numbering': args.numbering,
-            'align_kwic': args.align_kwic,
-            'human_corpname': amodel.corp.corpname,
-            'usesubcorp': amodel.corp.subcname,
-            **asdict(data),
-        }
+        output = asdict(data)
+        output['from_line'] = int(args.from_line)
+        output['to_line'] = min(args.to_line, data.concsize)
+        output['heading'] = args.heading
+        output['numbering'] = args.numbering
+        output['align_kwic'] = args.align_kwic
+        output['human_corpname'] = amodel.corp.human_readable_corpname
+        output['usesubcorp'] = amodel.args.usesubcorp
+
         for line in data.Lines:
             line['ref'] = ', '.join(line['ref'])
         # we must set contains_within = False as it is impossible (in the current user interface)
@@ -87,8 +86,8 @@ class TXTExport(AbstractExport):
         output['to_line'] = amodel.corp.size if args.to_line is None else args.to_line
         output['heading'] = args.heading
         output['colheaders'] = args.colheaders
-        output['human_corpname'] = amodel.corp.corpname
-        output['usesubcorp'] = amodel.corp.subcname
+        output['human_corpname'] = amodel.corp.human_readable_corpname
+        output['usesubcorp'] = amodel.args.usesubcorp
 
         template = self._template_env.get_template('txt_coll.jinja2')
         self._data = await template.render_async(output)
@@ -104,8 +103,8 @@ class TXTExport(AbstractExport):
         output['to_line'] = args.to_line
         output['colheaders'] = args.colheaders
         output['heading'] = args.heading
-        output['human_corpname'] = amodel.corp.corpname
-        output['usesubcorp'] = amodel.corp.subcname
+        output['human_corpname'] = amodel.corp.human_readable_corpname
+        output['usesubcorp'] = amodel.args.usesubcorp
 
         template = self._template_env.get_template('txt_freq.jinja2')
         self._data = await template.render_async(output)
@@ -115,14 +114,12 @@ class TXTExport(AbstractExport):
         raise NotImplementedError
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
-        output = dict(Items=data,
-                      pattern=amodel.curr_wlform_args.wlpat,
-                      from_line=args.from_line,
-                      to_line=args.to_line,
-                      usesubcorp=args.usesubcorp,
-                      saveformat=args.saveformat,
-                      colheaders=args.colheaders,
-                      heading=args.heading)
+        output = asdict(args)
+        output['Items'] = data
+        output['wlattr'] = amodel.curr_wlform_args.wlattr
+        output['pattern'] = amodel.curr_wlform_args.wlpat
+        output['human_corpname'] = amodel.corp.human_readable_corpname
+        output['usesubcorp'] = amodel.args.usesubcorp
 
         template = self._template_env.get_template('txt_wlist.jinja2')
         self._data = await template.render_async(output)

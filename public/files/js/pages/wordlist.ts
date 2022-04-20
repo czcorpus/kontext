@@ -79,7 +79,7 @@ export class WordlistPage {
             format,
             datasetType: DownloadType.WORDLIST,
             url,
-            contentType: 'application/json',
+            contentType: 'multipart/form-data',
             args,
         });
     }
