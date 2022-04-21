@@ -85,7 +85,10 @@ class BaseActionModel(AbstractPageModel):
         deployment_id = settings.get('global', 'deployment_id', None)
         result['deployment_suff'] = '?_v={0}'.format(hashlib.md5(deployment_id.encode('utf-8')).hexdigest()[
                                                      :6]) if deployment_id else ''
-        result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
+        if self._action_props.action_prefix:
+            result['current_action'] = f'{self._action_props.action_prefix}/{self._action_props.action_name}'
+        else:
+            result['current_action'] = self._action_props.action_name
         result['user_id'] = self._req.session_get('user', 'id')
         result['locale'] = self._req.ui_lang
         result['messages'] = []
