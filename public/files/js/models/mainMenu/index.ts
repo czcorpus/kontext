@@ -30,6 +30,7 @@ import { Actions as GlobalActions } from '../common/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as FreqActions } from '../freqs/regular/actions';
 import { ConcServerArgs } from '../concordance/common';
+import { FreqResultViews } from '../freqs/common';
 
 
 
@@ -170,24 +171,36 @@ export interface MainMenuModelState {
     foreignSubcorp?:boolean;
 }
 
+interface MainMenuModelArgs {
+    dispatcher:IActionDispatcher;
+    pageModel:PageModel;
+    initialData:InitialMenuData;
+    concArgs:ConcServerArgs;
+    freqDefaultView:FreqResultViews;
+}
+
 
 export class MainMenuModel extends StatelessModel<MainMenuModelState> {
 
     private readonly pageModel:PageModel;
 
 
-    constructor(
-        dispatcher:IActionDispatcher,
-        pageModel:PageModel,
-        initialData:InitialMenuData,
-        concArgs:ConcServerArgs
-    ) {
+    constructor({
+        dispatcher,
+        pageModel,
+        initialData,
+        concArgs,
+        freqDefaultView
+    }:MainMenuModelArgs) {
         const data = importMenuData(initialData.submenuItems);
         // here we have to make a kind of correction as traditionally, server
-        // sends "save" menu items but starting from v0.16 we display charts
-        // by default which means only the "Custom..." item
-        const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data) || [undefined, {items: []}];
-        const freqsPrevItems = List.empty(customSaveItem.items) ? [] : [List.last(customSaveItem.items)];
+        // sends "save" menu items but starting from v0.16, it is configurable
+        // whether we display tables (with different avail. formats for "quick save")
+        // or charts (with only "custom..." save action)
+        const [,customSaveItem] = List.find(([id,]) => id === 'menu-save', data);
+        const freqsPrevItems = freqDefaultView === 'charts' ? customSaveItem.items : [];
+        customSaveItem.items = freqDefaultView === 'charts' ?
+                [List.last(customSaveItem.items)] : customSaveItem.items;
         super(
             dispatcher,
             {

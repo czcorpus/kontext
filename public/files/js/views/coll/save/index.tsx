@@ -201,7 +201,7 @@ export function init({dispatcher, utils, collSaveModel}:SaveModuleArgs):SaveColl
                 case 'xlsx':
                     return <TRColHeadersCheckbox value={props.includeColHeaders} />
                 default:
-                return <span />;
+                return null;
             }
         }
 

@@ -59,6 +59,7 @@ import { PluginName } from './plugin';
 import { GlobalStyle } from '../views/theme/default/global';
 import { SearchHistoryModel } from '../models/searchHistory';
 import { IPluginApi } from '../types/plugins/common';
+import { FreqResultViews } from '../models/freqs/common';
 
 
 export enum DownloadType {
@@ -818,15 +819,16 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 this.qsuggPlugin.listCurrentProviders()
             );
 
-            this.mainMenuModel = new MainMenuModel(
-                this.dispatcher,
-                this,
-                disableMenuItems(
+            this.mainMenuModel = new MainMenuModel({
+                dispatcher: this.dispatcher,
+                pageModel: this,
+                initialData: disableMenuItems(
                     this.getConf<InitialMenuData>('menuData'),
                     ...disabledMenuItems
                 ),
-                this.getConcArgs()
-            );
+                concArgs: this.getConcArgs(),
+                freqDefaultView: this.getConf<FreqResultViews>('FreqDefaultView')
+            });
 
             this.generalViewOptionsModel = new GeneralViewOptionsModel(
                 this.dispatcher,
