@@ -89,7 +89,7 @@ class FilterFormArgs(ConcFormArgs[_FilterFormArgs]):
     def _add_corpus_metadata(self):
         with plugins.runtime.CORPARCH as ca, plugins.runtime.TAGHELPER as th:
             corp_info = ca.get_corpus_info(self._plugin_ctx, self.data.maincorp)
-            self.has_lemma = corp_info.manatee.has_lemma
+            self.data.has_lemma = corp_info.manatee.has_lemma
             self.data.tagsets = [d.to_dict() for d in corp_info.tagsets]
             for tagset in self.data.tagsets:
                 tagset['widgetEnabled'] = tagset['widgetEnabled'] and th.tags_available_for(
@@ -167,15 +167,15 @@ class ContextFilterArgsConv(object):
 
     def __call__(self, corpname: str, attrname: str, items: List[str], ctx: List[Any], fctxtype: str) -> FilterFormArgs:
         ff_args = FilterFormArgs(plugin_ctx=self.plugin_ctx, maincorp=corpname, persist=True)
-        ff_args.maincorp = corpname
-        ff_args.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
-        ff_args.filfpos = ctx[0]
-        ff_args.filtpos = ctx[1]
-        ff_args.filfl = 'f' if ctx[2] > 0 else 'l'
-        ff_args.inclkwic = False
-        ff_args.default_attr = self.args.data.curr_default_attr_values[corpname]
-        ff_args.query_type = 'advanced'
-        ff_args.query = self._convert_query(attrname, items, fctxtype)
+        ff_args.data.maincorp = corpname
+        ff_args.data.pnfilter = 'p' if fctxtype in ('any', 'all') else 'n'
+        ff_args.data.filfpos = ctx[0]
+        ff_args.data.filtpos = ctx[1]
+        ff_args.data.filfl = 'f' if ctx[2] > 0 else 'l'
+        ff_args.data.inclkwic = False
+        ff_args.data.default_attr = self.args.data.curr_default_attr_values[corpname]
+        ff_args.data.query_type = 'advanced'
+        ff_args.data.query = self._convert_query(attrname, items, fctxtype)
         return ff_args
 
 
