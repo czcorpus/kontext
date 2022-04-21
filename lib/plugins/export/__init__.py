@@ -30,6 +30,7 @@ from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.pquery.storage import PqueryDataLine
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
 from views.concordance import SaveConcArgs
@@ -108,7 +109,7 @@ class AbstractFreqExportMixin(object):
 class AbstractPqueryExportMixin(object):
 
     @abc.abstractmethod
-    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         """
         write pquery data
         TODO make implement frequency data dataclass
