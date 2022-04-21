@@ -23,6 +23,7 @@ import { StatelessModel, IActionDispatcher } from 'kombo';
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
+import { Actions as MainMenuActions } from '../mainMenu/actions';
 import { tuple, Dict, pipe, List } from 'cnc-tskit';
 import { CollServerArgs } from './common';
 
@@ -199,7 +200,8 @@ export class CollFormModel extends StatelessModel<CollFormModelState> {
             Actions.SaveFormSubmit.name,
             Actions.ResultSortByColumn.name,
             Actions.PopHistory.name,
-            Actions.ResultReload.name
+            Actions.ResultReload.name,
+            MainMenuActions.DirectSave.name,          
         );
     }
 

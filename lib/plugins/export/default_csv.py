@@ -147,10 +147,11 @@ class CSVExport(AbstractExport):
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         freq_cols = len(data[0].freqs)
         if args.colheaders or args.heading:
-            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols))])
+            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols)), 'freq'])
 
         for i, row in enumerate(data, 1):
-            self._writerow(i, (row.value, *(self._formatnumber(f) for f in row.freqs)))
+            self._writerow(i, (row.value, *(self._formatnumber(f)
+                                            for f in row.freqs), self._formatnumber(sum(row.freqs))))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         if args.colheaders:

@@ -161,7 +161,7 @@ class XLSXExport(AbstractExport):
             self._writeheading([''] + [item['n'] for item in data.Head])
         for i, item in enumerate(data.Items, 1):
             self._writerow(
-                i, (item['str'], str(item['freq']), *(str(stat['s']) for stat in item['Stats'])))
+                i, (item['str'], item['freq'], *(stat['s'] for stat in item['Stats'])))
 
     async def write_freq(self, amodel: ConcActionModel, data: Dict[str, Any], args: SavefreqArgs):
         self._sheet.title = amodel.plugin_ctx.translate('frequency distribution')
@@ -180,18 +180,18 @@ class XLSXExport(AbstractExport):
                 self._writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
                                    ['freq', 'freq [%]'])
             for i, item in enumerate(block['Items'], 1):
-                self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
-                                                                    str(item.get('rel', ''))])
+                self._writerow(i, [w['n'] for w in item['Word']] +
+                               [item['freq'], item.get('rel', '')])
 
     async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         self._sheet.title = amodel.plugin_ctx.translate('paradigmatic query')
         freq_cols = len(data[0].freqs)
         self._set_col_types(int, str, *(float for _ in range(freq_cols)))
         if args.colheaders or args.heading:
-            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols))])
+            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols)), 'freq'])
 
         for i, row in enumerate(data, 1):
-            self._writerow(i, (row.value, *(self._formatnumber(f) for f in row.freqs)))
+            self._writerow(i, (row.value, *row.freqs, sum(row.freqs)))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         self._sheet.title = amodel.plugin_ctx.translate('word list')
