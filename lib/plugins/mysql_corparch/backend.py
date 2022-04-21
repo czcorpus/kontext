@@ -40,6 +40,7 @@ class MySQLConfException(Exception):
 
 
 DFLT_USER_TABLE = 'kontext_user'
+DFLT_USER_CORPLIST_ATTR = 'corplist_id'
 DFLT_CORP_TABLE = 'kontext_corpus'
 DFLT_CORP_ID_ATTR = 'name'
 DFLT_CORP_PC_ID_ATTR = 'parallel_corpus_id'
@@ -61,6 +62,7 @@ class Backend(DatabaseBackend):
         self,
         db: MySQLOps,
         user_table: str = DFLT_USER_TABLE,
+        user_group_acc_attr: str = DFLT_USER_CORPLIST_ATTR,
         corp_table: str = DFLT_CORP_TABLE,
         corp_id_attr: str = DFLT_CORP_ID_ATTR,
         corp_pc_id_attr: str = DFLT_CORP_PC_ID_ATTR,
@@ -80,6 +82,7 @@ class Backend(DatabaseBackend):
         self._enable_parallel_acc = enable_parallel_acc
 
         self._user_table = user_table
+        self._user_group_acc_attr = user_group_acc_attr
         self._corp_table = corp_table
         self._corp_id_attr = corp_id_attr
         self._corp_pc_id_attr = corp_pc_id_attr
@@ -116,7 +119,7 @@ class Backend(DatabaseBackend):
                     g_acc.limited AS limited
                 FROM {self._group_acc_table} AS g_acc
                 WHERE g_acc.{self._group_acc_group_attr} = (
-                    SELECT {self._user_table}.{self._group_acc_group_attr}
+                    SELECT {self._user_table}.{self._user_group_acc_attr}
                     FROM {self._user_table}
                     WHERE {self._user_table}.id = %s
                 )
