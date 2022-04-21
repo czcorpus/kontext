@@ -296,10 +296,10 @@ class ParadigmaticQuery(Kontext):
                                   f'attachment; filename="{mkfilename(saveformat)}"')
 
         if colheaders or heading:
-            writer.writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_colls))])
+            writer.writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_colls)), 'freq'])
 
         for i, (value, *freq) in enumerate(freqs, 1):
-            writer.writerow(i, (value, *(formatnumber(f) for f in freq)))
+            writer.writerow(i, (value, *(formatnumber(f) for f in freq), formatnumber(sum(freq))))
 
         output = writer.raw_content()
         return output

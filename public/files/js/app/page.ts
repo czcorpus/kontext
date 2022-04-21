@@ -306,7 +306,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
 
         function generateFileIdentifier() {
             const dt = new Date().toISOString().split('T')[0];
-            return `kontext-${name ? name + '-' : ''}${datasetType}-${dt}.${format}`;
+            return `kontext-${name ? name + '-' : ''}${datasetType}-${dt}.${format === 'text' ? 'txt' : format}`;
         }
 
         const taskId = `${new Date().getTime()}:${url}`;
