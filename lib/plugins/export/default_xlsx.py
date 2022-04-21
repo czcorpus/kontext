@@ -63,7 +63,8 @@ class XLSXExport(AbstractExport):
             self._sheet.append([data[0]])
             for _ in range(3):
                 self._sheet.append([])
-            self._sheet.merged_cells.ranges.append('A1:G4')  # this kind of a hack in "write-only" mode
+            # this kind of a hack in "write-only" mode
+            self._sheet.merged_cells.ranges.append('A1:G4')
         else:
             self._sheet.append(data)
         self._sheet.append([])

@@ -174,6 +174,9 @@ class Kontext(Controller):
     def get_mapping_url_prefix(self) -> str:
         return super().get_mapping_url_prefix()
 
+    def get_locale(self):
+        return babel.Locale(self.ui_lang if self.ui_lang else 'en_US')
+
     @staticmethod
     def _init_default_settings(options):
         if 'shuffle' not in options:
@@ -941,7 +944,7 @@ class Kontext(Controller):
 
         day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
         result['first_day_of_week'] = day_map[
-            babel.Locale(self.ui_lang if self.ui_lang else 'en_US').first_week_day
+            self.get_locale().first_week_day
         ]
 
         # util functions

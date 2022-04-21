@@ -62,6 +62,7 @@ import mailing
 from conclib.freq import one_level_crit, multi_level_crit
 from strings import re_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
+from babel.numbers import format_decimal
 
 
 class Actions(Querying):
@@ -892,7 +893,8 @@ class Actions(Querying):
                         'fcrit': request.args.get('fcrit'),
                         'fcrit_async': request.args.getlist('fcrit_async'),
                         'flimit': request.args.get('flimit'),
-                        'freq_sort': request.args.get('freq_sort', 'freq'),  # client does not always fills this
+                        # client does not always fills this
+                        'freq_sort': request.args.get('freq_sort', 'freq'),
                         'freq_type': request.args.get('freq_type'),
                         'force_cache': request.args.get('force_cache', '0')}
                 elif request.args.get('next') == 'freqml':
@@ -1062,7 +1064,8 @@ class Actions(Querying):
                                 fquery = f'{begin} {end} 0 '
                                 fquery += ''.join([f'[{attr}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                             else:  # structure number
-                                fquery = '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])
+                                fquery = '0 0 1 [] within <{} #{}/>'.format(
+                                    attr, item['Word'][0]['n'].split('#')[1])
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
@@ -1142,6 +1145,9 @@ class Actions(Querying):
         self.args.fpage = 1
         self.args.fmaxitems = to_line - from_line + 1
 
+        locale = self.get_locale()
+        def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit=fcrit, flimit=flimit, freq_sort=freq_sort, format='json')
         saved_filename = self.args.corpname
@@ -1152,7 +1158,12 @@ class Actions(Querying):
                 'Content-Disposition',
                 f'attachment; filename="{saved_filename}-frequencies.txt"')
             output = result
-            output['Desc'] = self.concdesc_json()['Desc']
+            for block in output['Blocks']:
+                for item in block['Items']:
+                    item['freq'] = formatnumber(item['freq'])
+                    if 'rel' in item:
+                        item['rel'] = formatnumber(item['rel'])
+            output['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
             output['fcrit'] = fcrit
             output['flimit'] = flimit
             output['freq_sort'] = freq_sort
@@ -1163,7 +1174,8 @@ class Actions(Querying):
             output['heading'] = heading
         elif saveformat in ('csv', 'xml', 'xlsx'):
             def mkfilename(suffix): return '%s-freq-distrib.%s' % (self.args.corpname, suffix)
-            writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='freq')
+            writer = plugins.runtime.EXPORT.instance.load_plugin(
+                saveformat, 'freq')
 
             # Here we expect that when saving multi-block items, all the block have
             # the same number of columns which is quite bad. But currently there is
@@ -1185,11 +1197,9 @@ class Actions(Querying):
                 if colheaders or heading:
                     writer.writeheading([''] + [item['n'] for item in block['Head'][:-2]] +
                                         ['freq', 'freq [%]'])
-                i = 1
-                for item in block['Items']:
-                    writer.writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
-                                                                         str(item.get('rel', ''))])
-                    i += 1
+                for i, item in enumerate(block['Items'], 1):
+                    writer.writerow(i, [w['n'] for w in item['Word']] + [formatnumber(item['freq']),
+                                                                         formatnumber(item.get('rel', ''))])
             output = writer.raw_content()
         return output
 
@@ -1367,13 +1377,20 @@ class Actions(Querying):
             result = self._collx(collpage=1, citemsperpage=to_line)
             result.Items = result.Items[from_line - 1:]
             saved_filename = self.args.corpname
+
+            locale = self.get_locale()
+            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+
             if saveformat == 'text':
                 self._response.set_header('Content-Type', 'application/text')
                 self._response.set_header(
                     'Content-Disposition',
                     f'attachment; filename="{saved_filename}-collocations.txt"')
                 out_data = asdict(result)
-                out_data['Desc'] = self.concdesc_json()['Desc']
+                for item in out_data['Items']:
+                    item['freq'] = formatnumber(item['freq'])
+                    item['Stats'] = [{**s, 's': formatnumber(s['s'])} for s in item['Stats']]
+                out_data['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
                 out_data['saveformat'] = saveformat
                 out_data['from_line'] = from_line
                 out_data['to_line'] = to_line
@@ -1383,7 +1400,8 @@ class Actions(Querying):
                 def mk_filename(suffix):
                     return f'{self.args.corpname}-collocations.{suffix}'
 
-                writer = plugins.runtime.EXPORT.instance.load_plugin(saveformat, subtype='coll')
+                writer = plugins.runtime.EXPORT.instance.load_plugin(
+                    saveformat, 'coll')
                 writer.set_col_types(int, str, *(8 * (float,)))
 
                 self._response.set_header('Content-Type', writer.content_type())
@@ -1392,11 +1410,9 @@ class Actions(Querying):
                     f'attachment; filename="{mk_filename(saveformat)}"')
                 if colheaders or heading:
                     writer.writeheading([''] + [item['n'] for item in result.Head])
-                i = 1
-                for item in result.Items:
+                for i, item in enumerate(result.Items, 1):
                     writer.writerow(
-                        i, (item['str'], str(item['freq'])) + tuple([str(stat['s']) for stat in item['Stats']]))
-                    i += 1
+                        i, (item['str'], formatnumber(item['freq'])) + tuple([formatnumber(stat['s']) for stat in item['Stats']]))
                 out_data = writer.raw_content()
             else:
                 raise UserActionException(f'Unknown format: {saveformat}')
@@ -1515,23 +1531,29 @@ class Actions(Querying):
 
             data = kwic.kwicpage(kwic_args)
 
+            locale = self.get_locale()
+            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
             def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
+
             if saveformat == 'text':
                 self._response.set_header('Content-Type', 'text/plain')
                 self._response.set_header(
                     'Content-Disposition',
                     f"attachment; filename=\"{mkfilename('txt')}\"")
+                data['result_relative_freq'] = formatnumber(data['result_relative_freq'])
+                data['concsize'] = formatnumber(data['concsize'])
+                data['result_arf'] = formatnumber(data['result_arf'])
                 output.update(data)
-                for item in data['Lines']:
-                    item['ref'] = ', '.join(item['ref'])
+                for line in data['Lines']:
+                    line['ref'] = ', '.join(line['ref'])
                 # we must set contains_within = False as it is impossible (in the current user interface)
                 # to offer a custom i.p.m. calculation before the download starts
                 output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(
                     contains_within=False)
-                output['Desc'] = self.concdesc_json()['Desc']
+                output['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
             elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.runtime.EXPORT.instance.load_plugin(
-                    saveformat, subtype='concordance')
+                    saveformat, 'concordance')
 
                 self._response.set_header('Content-Type', writer.content_type())
                 self._response.set_header(
@@ -1548,9 +1570,11 @@ class Actions(Querying):
                         if saveformat != 'csv':
                             writer.writeheading([
                                 'corpus: {}\nsubcorpus: {}\nconcordance size: {}\nARF: {},\nquery: {}'.format(
-                                    self._human_readable_corpname(), self.args.usesubcorp, data['concsize'],
-                                    data['result_arf'],
-                                    ['%s: %s (%s)' % (x['op'], x['arg'], x['size'])
+                                    self._human_readable_corpname(),
+                                    self.args.usesubcorp,
+                                    formatnumber(data['concsize']),
+                                    formatnumber(data['result_arf']),
+                                    ['%s: %s (%s)' % (x['op'], x['arg'], formatnumber(x['size']))
                                      for x in self.concdesc_json().get('Desc', [])]), '', '', ''])
                         doc_struct = self.corp.get_conf('DOCSTRUCTURE')
                         refs_args = [x.strip('=') for x in self.args.refs.split(',')]
