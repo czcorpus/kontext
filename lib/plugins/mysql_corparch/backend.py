@@ -196,7 +196,7 @@ class Backend(DatabaseBackend):
 
     async def load_corpus(self, cursor: Cursor, corp_id: str) -> Dict[str, Any]:
         await cursor.execute(
-            'SELECT c.name as id, c.web, cs.name AS sentence_struct, '
+            'SELECT c.name as id, c.web, c.sentence_struct, '
             'IF (rc.locale IS NOT NULL, rc.locale, c.collator_locale) as collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
             '  AS speaker_id_attr, '
@@ -219,8 +219,6 @@ class Backend(DatabaseBackend):
             f'FROM {self._corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'LEFT JOIN corpus_structure AS cs ON cs.corpus_name = kc.corpus_name '
-            '  AND c.sentence_struct = cs.name '
             'WHERE c.active = 1 AND c.name = %s '
             'GROUP BY c.name ', (corp_id,))
         return await cursor.fetchone()
