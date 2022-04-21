@@ -14,6 +14,7 @@
 
 import hashlib
 import os.path
+from dataclasses import dataclass
 from functools import wraps
 from typing import List, Tuple
 
@@ -73,27 +74,59 @@ def stored_to_fs(f):
     return wrapper
 
 
+@dataclass
+class PqueryDataLine:
+    value: str
+    freqs: List[int]
+
+
+@dataclass
+class PqueryData:
+    total: int
+    rows: List[PqueryDataLine]
+
+
 async def require_existing_pquery(pquery: PqueryFormArgs, offset: int, limit: int,
-                                  collator_locale: str, sort: str, reverse: bool) -> Tuple[int, List[Tuple[str, int]]]:
+                                  collator_locale: str, sort: str, reverse: bool) -> PqueryData:
     path = _create_cache_path(pquery)
     if not await aiofiles.os.path.exists(path):
         raise PqueryResultNotFound('The result does not exist')
     else:
         if sort == 'freq':
             if reverse is True:
-                return await load_cached_partial(path, offset, limit)
+                total, rows = await load_cached_partial(path, offset, limit)
+                return PqueryData(
+                    total,
+                    [PqueryDataLine(row[0], row[1:]) for row in rows]
+                )
             else:
                 total, rows = await load_cached_full(path)
-                return total, list(reversed(rows))[offset:offset + limit]
+                return PqueryData(
+                    total,
+                    [
+                        PqueryDataLine(row[0], row[1:])
+                        for row in list(reversed(rows))[offset:offset + limit]
+                    ]
+                )
         elif sort == 'value':
             total, rows = await load_cached_full(path)
-            return (total,
-                    l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[offset:offset + limit])
+            return PqueryData(
+                total,
+                [
+                    PqueryDataLine(row[0], row[1:])
+                    for row in l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)[offset:offset + limit]
+                ]
+            )
+
         elif sort.startswith('freq-'):
             conc_idx = pquery.conc_ids.index(sort[len('freq-'):])
             total, rows = await load_cached_full(path)
-            return (total,
-                    sorted(rows, key=lambda x: x[conc_idx + 1], reverse=reverse)[offset:offset + limit])
+            return PqueryData(
+                total,
+                [
+                    PqueryDataLine(row[0], row[1:])
+                    for row in sorted(rows, key=lambda x: x[conc_idx + 1], reverse=reverse)[offset:offset + limit]
+                ]
+            )
         else:
             raise PqueryArgumentError(f'Invalid sort argument: {sort}')
-

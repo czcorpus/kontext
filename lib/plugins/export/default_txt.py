@@ -30,6 +30,7 @@ from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.pquery.storage import PqueryDataLine
 from jinja2 import Environment, FileSystemLoader
 from kwiclib import KwicPageData
 from views.colls import SavecollArgs
@@ -114,7 +115,7 @@ class TXTExport(AbstractExport):
         template = self._template_env.get_template('txt_freq.jinja2')
         self._data = await template.render_async(output)
 
-    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         # TODO perhaps
         raise NotImplementedError
 

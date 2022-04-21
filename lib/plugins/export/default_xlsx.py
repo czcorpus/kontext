@@ -29,6 +29,7 @@ from action.model.pquery import ParadigmaticQueryActionModel
 from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
 from openpyxl import Workbook
@@ -182,15 +183,15 @@ class XLSXExport(AbstractExport):
                 self._writerow(i, [w['n'] for w in item['Word']] + [str(item['freq']),
                                                                     str(item.get('rel', ''))])
 
-    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         self._sheet.title = amodel.plugin_ctx.translate('paradigmatic query')
-        self._set_col_types(int, str, float)
-
+        freq_cols = len(data[0].freqs)
+        self._set_col_types(int, str, *(float for _ in range(freq_cols)))
         if args.colheaders or args.heading:
-            self._writeheading(['', 'value', 'freq'])
+            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols))])
 
         for i, row in enumerate(data, 1):
-            self._writerow(i, row)
+            self._writerow(i, (row.value, *(self._formatnumber(f) for f in row.freqs)))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         self._sheet.title = amodel.plugin_ctx.translate('word list')

@@ -18,7 +18,7 @@ from typing import Dict, List, Optional
 
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
-from bgcalc.pquery.storage import require_existing_pquery, stored_to_fs
+from bgcalc.pquery.storage import stored_to_fs
 
 from .errors import PqueryArgumentError, PqueryResultNotFound
 

@@ -28,6 +28,7 @@ from action.model.wordlist import WordlistActionModel
 from babel import Locale
 from babel.numbers import format_decimal
 from bgcalc.coll_calc import CalculateCollsResult
+from bgcalc.pquery.storage import PqueryDataLine
 from conclib.errors import ConcordanceQueryParamsError
 from kwiclib import KwicPageData
 from lxml import etree
@@ -234,8 +235,9 @@ class PqueryDocument(GeneralDocument):
             line_num_elm.text = str(line_num)
         str_elm = etree.SubElement(item_elm, 'str')
         str_elm.text = data[0]
-        freq_elm = etree.SubElement(item_elm, 'freq')
-        freq_elm.text = str(data[1])
+        for i, d in enumerate(data[1:], 1):
+            freq_elm = etree.SubElement(item_elm, f'freq{i}')
+            freq_elm.text = str(d)
 
     def add_heading(self, data):
         self._auto_add_heading(data)
@@ -333,13 +335,14 @@ class XMLExport(AbstractExport):
                 self._writerow(i, [w['n'] for w in item['Word']] + [self._formatnumber(item['freq']),
                                                                     self._formatnumber(item.get('rel', ''))])
 
-    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: Tuple[int, List[Tuple[str, int]]], args: SavePQueryArgs):
+    async def write_pquery(self, amodel: ParadigmaticQueryActionModel, data: List[PqueryDataLine], args: SavePQueryArgs):
         self._document = PqueryDocument()
+        freq_cols = len(data[0].freqs)
         if args.colheaders or args.heading:
-            self._writeheading(['', 'value', 'freq'])
+            self._writeheading(['', 'value', *(f'freq{i+1}' for i in range(freq_cols))])
 
-        for i, (value, freq) in enumerate(data, 1):
-            self._writerow(i, (value, self._formatnumber(freq)))
+        for i, row in enumerate(data, 1):
+            self._writerow(i, (row.value, *(self._formatnumber(f) for f in row.freqs)))
 
     async def write_wordlist(self, amodel: WordlistActionModel, data: List[Tuple[str, int]], args: WordlistSaveFormArgs):
         self._document = WordlistDocument()
