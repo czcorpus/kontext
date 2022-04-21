@@ -140,7 +140,7 @@ class Backend(DatabaseBackend):
                 FROM {self._group_pc_acc_table} AS g_pc_acc
                 JOIN {self._corp_table} AS corp ON corp.{self._corp_pc_id_attr} = g_pc_acc.{self._group_pc_acc_pc_attr}
                 WHERE g_pc_acc.{self._group_pc_acc_group_attr} = (
-                    SELECT user.{self._group_acc_group_attr}
+                    SELECT user.{self._user_group_acc_attr}
                     FROM {self._user_table} AS user
                     WHERE user.id = %s
                 )
