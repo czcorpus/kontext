@@ -114,7 +114,7 @@ def calculate_colls_bg(coll_args: CollCalcArgs):
         return dict(data=collocs, processing=0, tasks=[])
     except MissingSubCorpFreqFile:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
-        out = freq_calc.build_arf_db(corp, coll_args.cattr)
+        out = freq_calc.build_arf_db(coll_args.user_id, corp, coll_args.cattr)
         if type(out) is list:
             processing = 1
             ans['tasks'].extend(out)
