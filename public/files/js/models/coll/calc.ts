@@ -64,7 +64,7 @@ export class CalcWatchdog {
         };
         this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('wordlist_process'),
+            this.layoutModel.createActionUrl('wordlist/process'),
             args
 
         ).subscribe({
