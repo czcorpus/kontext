@@ -20,7 +20,7 @@ import os
 import re
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Union, Optional, List
 
 import conclib
 import corplib
@@ -494,8 +494,12 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
 
 
 @bp.route('/ajax_fetch_conc_form_args')
-@http_action(return_type='json', action_model=ConcActionModel)
-async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+@http_action(return_type='json', action_model=CorpusActionModel)
+async def ajax_fetch_conc_form_args(
+        amodel: ConcActionModel,
+        req: KRequest,
+        resp: KResponse
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     try:
         # we must include only regular (i.e. the ones visible in the breadcrumb-like
         # navigation bar) operations - otherwise the indices would not match.
@@ -503,8 +507,11 @@ async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp
             stored_ops = await qp.load_pipeline_ops(
                 amodel.plugin_ctx, req.args.get('last_key'), build_conc_form_args)
         pipeline = [x for x in stored_ops if x.form_type != 'nop']
-        op_data = pipeline[int(req.args.get('idx'))]
-        return op_data.to_dict()
+        op_idx_arg = req.args.get('idx')
+        if op_idx_arg is not None:
+            op_data = pipeline[int(op_idx_arg)]
+            return op_data.to_dict()
+        return dict(operations=[item.to_dict() for item in pipeline])
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
         raise NotFoundException(req.translate('Query information not stored: {}').format(ex))
 
