@@ -439,8 +439,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['help_links'] = settings.get_help_links(self._req.ui_lang)
         result['integration_testing_env'] = settings.get_bool(
             'global', 'integration_testing_env', '0')
-        if 'popup_server_messages' not in result:
-            result['popup_server_messages'] = True
         result['job_status_service_url'] = os.environ.get(
             'STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
 

@@ -108,7 +108,8 @@ class BaseActionModel(AbstractPageModel):
                                          for code, meta in avail_languages if code == ui_lang)
         day_map = {0: 'mo', 1: 'tu', 2: 'we', 3: 'th', 4: 'fr', 5: 'sa', 6: 'su'}
         result['first_day_of_week'] = day_map[self._req.locale.first_week_day]
-        result['popup_server_messages'] = True
+        if 'popup_server_messages' not in result:
+            result['popup_server_messages'] = True
         result['menu_data'] = {'submenuItems': []}
         result['async_tasks'] = []
         result['issue_reporting_action'] = None

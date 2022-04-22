@@ -253,12 +253,13 @@ def http_action(
                     raise
 
                 resp.add_system_message('error', str(ex))
+                ans = await resolve_error(amodel, req, resp, ex)
                 if aprops.template:
                     aprops.template = 'message.html'
                     aprops.page_model = 'message'
+                    ans['popup_server_messages'] = False
                 if not aprops.return_type:
                     aprops.return_type = 'template'
-                ans = await resolve_error(amodel, req, resp, ex)
                 if settings.is_debug_mode():
                     import traceback
                     resp.add_system_message('error', traceback.format_exc())
