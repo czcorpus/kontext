@@ -24,7 +24,7 @@ import { ConcFormArgs } from '../formArgs';
 
 export interface QueryOverviewResponseRow {
     op:string;
-    opid:string;
+    opid:Kontext.ManateeOpCode;
     tourl:string;
     nicearg:string;
     size:number;
@@ -56,22 +56,8 @@ export interface QueryPipelineResponse extends Kontext.AjaxResponse {
 /**
  *
  */
-function mapOpIdToFormType(opId:string):string {
-    /*
-        query operation codes:
-        q: Query
-        a: Query
-        r: Random sample
-        s: Sort
-        f: Shuffle
-        D: Remove nested matches
-        F: First hits in documents
-        n: Negative filter
-        N: Negative filter (excluding KWIC)
-        p: Positive filter
-        P: Positive filter (excluding KWIC)
-        x: Switch KWIC
-    */
+function mapOpIdToFormType(opId:Kontext.ManateeOpCode):string {
+
     if (['q', 'a'].indexOf(opId) > -1) {
         return Kontext.ConcFormTypes.QUERY;
 
