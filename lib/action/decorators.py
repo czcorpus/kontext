@@ -15,7 +15,8 @@
 
 import json
 from functools import wraps
-from typing import Any, Callable, Coroutine, List, Optional, Type, Union
+from typing import (Any, Callable, Coroutine, List, NewType, Optional, Type,
+                    Union)
 
 import settings
 from action.errors import (ForbiddenException, ImmediateRedirectException,
@@ -86,6 +87,12 @@ async def _output_result(
         f'Unsupported result and return_type combination: {result.__class__.__name__},  {action_props.return_type}')
 
 
+StrOpt = NewType('StrOpt', str)
+ListStrOpt = NewType('ListStrOpt', List[str])
+IntOpt = NewType('IntOpt', int)
+ListIntOpt = NewType('ListIntOpt', List[int])
+
+
 def create_mapped_args(tp: Type, req: Request):
     """
     Create an instance of a (dataclass) Type based on req arguments.
@@ -105,7 +112,7 @@ def create_mapped_args(tp: Type, req: Request):
             if len(v) > 1:
                 raise UserActionException(f'Argument {mk} is cannot be multi-valued')
             data[mk] = v[0]
-        elif mtype == Union[str, None]:
+        elif mtype == StrOpt:
             if len(v) > 1:
                 raise UserActionException(f'Argument {mk} is cannot be multi-valued')
             elif len(v) == 1:
@@ -114,7 +121,7 @@ def create_mapped_args(tp: Type, req: Request):
             if len(v) == 0:
                 raise UserActionException(f'Missing request argument {mk}')
             data[mk] = v
-        elif mtype == Union[List[str], None]:
+        elif mtype == ListStrOpt:
             if len(v) > 0:
                 data[mk] = v
         elif mtype == int:
@@ -123,7 +130,7 @@ def create_mapped_args(tp: Type, req: Request):
             elif len(v) > 1:
                 raise UserActionException(f'Argument {mk} is cannot be multi-valued')
             data[mk] = int(v[0])
-        elif mtype == Union[int, None]:
+        elif mtype == IntOpt:
             if len(v) > 1:
                 raise UserActionException(f'Argument {mk} is cannot be multi-valued')
             elif len(v) == 1:
@@ -132,7 +139,7 @@ def create_mapped_args(tp: Type, req: Request):
             if len(v) == 0:
                 raise UserActionException(f'Missing request argument {mk}')
             data[mk] = [int(x) for x in v]
-        elif mtype == Union[List[int], None]:
+        elif mtype == ListIntOpt:
             if len(v) > 0:
                 data[mk] = [int(x) for x in v]
     return tp(**data)
@@ -173,7 +180,7 @@ def http_action(
         action_model: Optional[Type[BaseActionModel]] = None,
         page_model: Optional[str] = None,
         mapped_args: Optional[Type] = None,
-        mutates_result: Optional[bool] = False,
+        mutates_result: bool = False,
         return_type: Optional[str] = None,
         action_log_mapper: Optional[Callable[[KRequest], Any]] = None):
     """
