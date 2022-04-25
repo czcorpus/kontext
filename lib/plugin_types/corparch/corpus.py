@@ -193,7 +193,7 @@ class CorpusInfo:
     @property
     def collator_locale(self) -> str:
         if self._collator_locale is None:
-            raise CorpusInfoError('Corpus is missing collator locale config')
+            return 'en_US'
         else:
             return self._collator_locale
 
