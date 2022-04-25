@@ -54,7 +54,7 @@ class GeneralFreqArgs:
     fcrit: List[str]
     fcrit_async: ListStrOpt = field(default_factory=list)
     flimit: IntOpt = 0
-    alpha_level: StrOpt = ''
+    alpha_level: StrOpt = '0.05'
     freq_sort: StrOpt = ''
     force_cache: IntOpt = 0
     freq_type: StrOpt = ''
@@ -82,6 +82,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
         if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
             raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
+        ans['alpha_level'] = req.mapped_args.alpha_level
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqs')
@@ -90,11 +91,10 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
 @dataclass
 class SharedFreqArgs:
     fcrit: str
-    flimit: int
     freq_type: str
-
-    fdefault_view: str
+    flimit: int
     alpha_level: str
+    fdefault_view: str
 
     freq_sort: str
     fpage: int
@@ -122,6 +122,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
             fcrit=(req.mapped_args.fcrit,), fcrit_async=(), flimit=req.mapped_args.flimit,
             freq_sort=req.mapped_args.freq_sort, force_cache=0)
         ans['freq_type'] = req.mapped_args.freq_type
+        ans['alpha_level'] = req.mapped_args.alpha_level
 
         ans['fdefault_view'] = req.mapped_args.fdefault_view
         ans['alpha_level'] = req.mapped_args.alpha_level

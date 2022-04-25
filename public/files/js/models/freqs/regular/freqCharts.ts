@@ -51,6 +51,7 @@ export interface FreqChartsModelArgs {
     fmaxitems:number;
     freqLoader:FreqDataLoader;
     forcedParams:{[sourceId:string]:{[key:string]:any}};
+    alphaLevel:Maths.AlphaLevel;
 }
 
 export interface FreqChartsModelState extends BaseFreqModelState {
@@ -91,7 +92,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, fmaxitems, freqLoader, forcedParams
+        initialData, fmaxitems, freqLoader, forcedParams, alphaLevel
     }:FreqChartsModelArgs) {
         const allCrits = List.concat(freqCritAsync, freqCrit);
         super(
@@ -191,7 +192,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                alphaLevel: Maths.AlphaLevel.LEVEL_5,
+                alphaLevel: alphaLevel,
                 downloadFormat: pipe(
                     allCrits,
                     List.map(k => tuple<string, ChartExportFormat>(k.n, 'png')),
@@ -496,13 +497,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         return this.pageModel.createActionUrl(
             'shared_freqs',
             {
-                ...this.pageModel.getConcArgs(),
+                q: this.pageModel.getConcArgs().q,
 
                 fcrit: state.data[sourceId].fcrit,
-                flimit: parseInt(state.flimit.value),
                 freq_type: state.freqType,
                 ftt_include_empty: state.ftt_include_empty,
                 freqlevel: 1,
+
+                flimit: parseInt(state.flimit.value),
                 alpha_level: state.alphaLevel,
 
                 fpage: state.currentPage[sourceId],
@@ -529,7 +531,8 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: parseInt(state.fmaxitems[fcrit].value),
-            format: 'json'
+            format: 'json',
+            alpha_level: state.alphaLevel,
         };
     }
 }

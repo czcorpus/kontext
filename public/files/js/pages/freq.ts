@@ -318,13 +318,14 @@ class FreqPage {
                 this.freqLoader = new FreqDataLoader({
                     pageModel: this.layoutModel
                 });
+                const alphaLevel = Maths.AlphaLevel[this.layoutModel.getConf<string>('AlphaLevel')];
                 const initialData = List.map(
                     block => importFreqData(
                         this.layoutModel,
                         block,
                         this.layoutModel.getConf<number>('CurrentPage'),
                         this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                        Maths.AlphaLevel.LEVEL_5
+                        alphaLevel,
                     ),
                     this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                 );
@@ -341,7 +342,8 @@ class FreqPage {
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     initialData,
                     currentPage,
-                    freqLoader: this.freqLoader
+                    freqLoader: this.freqLoader,
+                    alphaLevel,
                 });
 
                 this.saveTablesModel = new FreqResultsSaveModel({
@@ -392,6 +394,7 @@ class FreqPage {
                     fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
                     forcedParams: this.layoutModel.getConf<{[sourceId:string]:{[key:string]:any}}>('ForcedParams'),
+                    alphaLevel,
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,

@@ -46,6 +46,7 @@ export interface FreqDataRowsModelArgs {
     initialData:Array<ResultBlock|EmptyResultBlock>;
     currentPage:number;
     freqLoader:FreqDataLoader;
+    alphaLevel:Maths.AlphaLevel;
 }
 
 export interface FreqDataRowsModelState extends BaseFreqModelState {
@@ -144,7 +145,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, currentPage, freqLoader
+        initialData, currentPage, freqLoader, alphaLevel
     }:FreqDataRowsModelArgs) {
         const allCrit = List.concat(freqCrit, freqCritAsync);
         super(
@@ -204,7 +205,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 ),
                 isActive: true,
                 saveFormActive: false,
-                alphaLevel: Maths.AlphaLevel.LEVEL_5,
+                alphaLevel: alphaLevel,
                 displayConfidence: false,
             }
         );
@@ -558,7 +559,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             fpage: parseInt(state.currentPage[fcrit]),
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
-            format: 'json'
+            format: 'json',
+            alpha_level: state.alphaLevel,
         };
     }
 
@@ -572,7 +574,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             fpage: 1,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
-            format: 'json'
+            format: 'json',
+            alpha_level: state.alphaLevel,
         };
     }
 

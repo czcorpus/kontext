@@ -114,6 +114,7 @@ export interface FreqServerArgs extends ConcServerArgs {
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
     fcrit?:string;
+    alpha_level?:string;
     force_cache?:0|1;
 }
 
@@ -127,6 +128,7 @@ export interface MulticritFreqServerArgs extends ConcServerArgs {
     freq_type:BasicFreqModuleType;
     ftt_include_empty:boolean;
     fcrit:Array<string>;
+    alpha_level:string;
 }
 
 export function validateNumber(v:string, minNum:number):boolean {
