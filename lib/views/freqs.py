@@ -54,6 +54,7 @@ class GeneralFreqArgs:
     fcrit: List[str]
     fcrit_async: ListStrOpt = field(default_factory=list)
     flimit: IntOpt = 0
+    alpha_level: StrOpt = ''
     freq_sort: StrOpt = ''
     force_cache: IntOpt = 0
     freq_type: StrOpt = ''
@@ -84,6 +85,58 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqs')
+
+
+@dataclass
+class SharedFreqArgs:
+    fcrit: str
+    flimit: int
+    freq_type: str
+
+    fdefault_view: str
+    alpha_level: str
+
+    freq_sort: str
+    fpage: int
+    fmaxitems: int
+    chart_type: str
+    data_key: str
+
+
+@bp.route('/shared_freqs')
+@http_action(
+    access_level=0, action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=SharedFreqArgs)
+async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], resp: KResponse):
+    """
+    Display a frequency list (tokens, text types) based on more low-level arguments. In case the
+    function runs in HTML return mode, 'freq_type' must be specified so the client part is able
+    to determine proper views.
+
+    Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
+    """
+    try:
+        await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+        ans = await _freqs(
+            amodel,
+            req,
+            fcrit=(req.mapped_args.fcrit,), fcrit_async=(), flimit=req.mapped_args.flimit,
+            freq_sort=req.mapped_args.freq_sort, force_cache=0)
+        ans['freq_type'] = req.mapped_args.freq_type
+
+        ans['fdefault_view'] = req.mapped_args.fdefault_view
+        ans['alpha_level'] = req.mapped_args.alpha_level
+        ans['forced_params'] = {
+            req.mapped_args.fcrit: {
+                'freq_sort': req.mapped_args.freq_sort,
+                'type': req.mapped_args.chart_type,
+                'fpage': req.mapped_args.fpage,
+                'fmaxitems': req.mapped_args.fmaxitems,
+                'data_key': req.mapped_args.data_key,
+            }
+        }
+        return ans
+    except ConcNotFoundException:
+        amodel.go_to_restore_conc('shared_freqs')
 
 
 async def _freqs(

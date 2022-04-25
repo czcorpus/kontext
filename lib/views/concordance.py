@@ -393,6 +393,15 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'freq_sort': req.args.get('freq_sort', 'freq'),
                     'freq_type': req.args.get('freq_type'),
                     'force_cache': req.args.get('force_cache', '0')}
+            elif req.args.get('next') == 'shared_freqs':
+                out['next_action'] = 'shared_freqs'
+                out['next_action_args'] = {
+                    'fcrit': req.args.get('fcrit'),
+                    'flimit': req.args.get('flimit'),
+                    # client does not always fills this
+                    'freq_sort': req.args.get('freq_sort'),
+                    'freq_type': req.args.get('freq_type'),
+                }
             elif req.args.get('next') == 'freqml':
                 out['next_action'] = 'freqml'
                 out['next_action_args'] = {

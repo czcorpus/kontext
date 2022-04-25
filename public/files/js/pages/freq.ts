@@ -391,6 +391,7 @@ class FreqPage {
                         ),
                     fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
+                    forcedParams: this.layoutModel.getConf<{[sourceId:string]:{[key:string]:any}}>('ForcedParams'),
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,

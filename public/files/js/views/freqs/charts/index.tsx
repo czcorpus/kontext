@@ -314,6 +314,7 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
+        shareLink:string;
     }> = (props) => {
 
         const ref = React.useRef(null);
@@ -364,6 +365,19 @@ export function init(
                     format: props.downloadFormat,
                     chartType: props.type
                 }
+            });
+        }
+
+        const showShare = () => {
+            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
+                name: Actions.ResultShowShareLink.name,
+                payload: {sourceId: props.sourceId}
+            });
+        }
+
+        const hideShare = () => {
+            dispatcher.dispatch<typeof Actions.ResultHideShareLink>({
+                name: Actions.ResultHideShareLink.name
             });
         }
 
@@ -468,6 +482,9 @@ export function init(
         return (
             <S.FreqChartSection>
                 <h3>{pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}</h3>
+                { props.shareLink ?
+                    <p style={{float: 'right'}} >{props.shareLink}</p> :
+                    <p style={{float: 'right'}} onClick={showShare}>Share</p> }
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}
@@ -559,7 +576,8 @@ export function init(
                                         isBusy={props.isBusy[sourceId]}
                                         dtFormat={props.dtFormat[sourceId]} fmaxitems={props.fmaxitems[sourceId]}
                                         sortColumn={props.sortColumn[sourceId]}
-                                        downloadFormat={props.downloadFormat[sourceId]} />
+                                        downloadFormat={props.downloadFormat[sourceId]}
+                                        shareLink={props.shareLink && sourceId === props.shareLink.sourceId ? props.shareLink.url : null} />
                         )
                     )
                 )}
