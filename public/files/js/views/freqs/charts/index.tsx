@@ -481,10 +481,20 @@ export function init(
 
         return (
             <S.FreqChartSection>
-                <h3>{pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}</h3>
+                <h3>
+                    {pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}
+                    <a onClick={showShare}>
+                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                                alt="generovat odkaz" title="generovat odkaz" />
+                    </a>
+                </h3>
                 { props.shareLink ?
-                    <p style={{float: 'right'}} >{props.shareLink}</p> :
-                    <p style={{float: 'right'}} onClick={showShare}>Share</p> }
+                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
+                        <globalComponents.CloseableFrame onCloseClick={hideShare} label="Share link">
+                            <a href={props.shareLink}>{props.shareLink}</a>
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
+                }
                 <FreqChartsParams sourceId={props.sourceId} data={props.data} type={props.type}
                         dataKey={props.dataKey} isBusy={props.isBusy} dtFormat={props.dtFormat}
                         fmaxitems={props.fmaxitems} sortColumn={props.sortColumn} handleDownload={handleDownload}

@@ -161,9 +161,17 @@ export function init(
                     ({he.translate('freq__avail_label')}:{'\u00a0'}
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
                 </div>
+                <a onClick={showShare}>
+                    <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                            alt="generovat odkaz" title="generovat odkaz" />
+                </a>
                 { props.shareLink ?
-                    <p style={{float: 'right'}} >{props.shareLink}</p> :
-                    <p style={{float: 'right'}} onClick={showShare}>Share</p> }
+                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
+                        <globalComponents.CloseableFrame onCloseClick={hideShare} label="Share link">
+                            <a href={props.shareLink}>{props.shareLink}</a>
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
+                }
             </S.Paginator>
         );
     };
