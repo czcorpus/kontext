@@ -263,7 +263,7 @@ class Backend(DatabaseBackend):
         c = self._db.cursor()
         # performance note: using UNION instead of 'WHERE user_id = x OR c.requestable = 1' increased
         # mysql performance significantly (more than 10x faster).
-        sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, locale AS collator_locale, '
+        sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, collator_locale, '
                'speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val, use_safe_font, featured, '
                '`database`, label_attr, id_attr, reference_default, reference_other, ttdesc_id, num_match_keys, size, '
                'name, encoding, language, g_name, version, keywords, description_cs, description_en FROM (')
