@@ -314,7 +314,7 @@ export function init(
         fmaxitems:Kontext.FormValue<string>;
         sortColumn:FreqChartsAvailableOrder;
         downloadFormat:Kontext.ChartExportFormat;
-        shareLink:string;
+        shareLink:string|null;
     }> = (props) => {
 
         const ref = React.useRef(null);

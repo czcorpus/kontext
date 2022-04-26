@@ -152,7 +152,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 currentPage: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k.n, forcedParams[k.n]?.page || '1')
+                        k => tuple(k.n, '1')
                     ),
                     Dict.fromEntries()
                 ),
@@ -507,7 +507,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 flimit: parseInt(state.flimit.value),
                 alpha_level: state.alphaLevel,
 
-                fpage: state.currentPage[sourceId],
                 fmaxitems: parseInt(state.fmaxitems[sourceId].value),
                 chart_type: state.type[sourceId],
                 data_key: state.dataKey[sourceId],
@@ -532,7 +531,6 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             freqlevel: 1,
             fmaxitems: parseInt(state.fmaxitems[fcrit].value),
             format: 'json',
-            alpha_level: state.alphaLevel,
         };
     }
 }

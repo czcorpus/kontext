@@ -97,10 +97,12 @@ class SharedFreqArgs:
     fdefault_view: str
 
     freq_sort: str
-    fpage: int
-    fmaxitems: int
-    chart_type: str
-    data_key: str
+    # required by chart view
+    fmaxitems: IntOpt = 10
+    chart_type: StrOpt = ''
+    data_key: StrOpt = ''
+    # required by table view
+    fpage: IntOpt = 1
 
 
 @bp.route('/shared_freqs')
@@ -124,17 +126,24 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
         ans['freq_type'] = req.mapped_args.freq_type
         ans['alpha_level'] = req.mapped_args.alpha_level
 
-        ans['fdefault_view'] = req.mapped_args.fdefault_view
         ans['alpha_level'] = req.mapped_args.alpha_level
-        ans['forced_params'] = {
-            req.mapped_args.fcrit: {
-                'freq_sort': req.mapped_args.freq_sort,
-                'type': req.mapped_args.chart_type,
-                'fpage': req.mapped_args.fpage,
-                'fmaxitems': req.mapped_args.fmaxitems,
-                'data_key': req.mapped_args.data_key,
+        ans['fdefault_view'] = req.mapped_args.fdefault_view
+        if req.mapped_args.fdefault_view == 'charts':
+            ans['forced_params'] = {
+                req.mapped_args.fcrit: {
+                    'freq_sort': req.mapped_args.freq_sort,
+                    'type': req.mapped_args.chart_type,
+                    'fmaxitems': req.mapped_args.fmaxitems,
+                    'data_key': req.mapped_args.data_key,
+                }
             }
-        }
+        elif req.mapped_args.fdefault_view == 'tables':
+            ans['forced_params'] = {
+                req.mapped_args.fcrit: {
+                    'freq_sort': req.mapped_args.freq_sort,
+                    'fpage': req.mapped_args.fpage,
+                }
+            }
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('shared_freqs')
