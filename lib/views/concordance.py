@@ -490,7 +490,20 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, List[Dict[str, Any]]]:
-    return {'Desc': await amodel.concdesc_json()}
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
+    conc_desc = await amodel.concdesc_json()
+    for i, cd_item in enumerate(conc_desc):
+        form = pipeline[i]
+        if isinstance(form, QueryFormArgs):
+            if len(form.data.curr_queries) == 1:
+                cd_item['nicearg'] = list(form.data.curr_queries.values())[0]
+            else:
+                cd_item['nicearg'] = ', '.join(f'{k}: {v}' for k, v in form.data.curr_queries.items())
+        elif isinstance(form, FilterFormArgs):
+            cd_item['nicearg'] = form.data.query
+        cd_item['conc_persistence_op_id'] = pipeline[i].op_key
+    return {'Desc': conc_desc}
 
 
 @bp.route('/ajax_fetch_conc_form_args')

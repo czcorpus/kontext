@@ -25,7 +25,6 @@ import { List, tuple } from 'cnc-tskit';
 import { init as saveViewInit } from '../save';
 import { init as basicOverviewInit } from '../basicOverview';
 import * as Kontext from '../../../types/kontext';
-import { ExtendedQueryOperation } from '../../../models/query/replay/common';
 import { QueryReplayModelState, QueryReplayModel } from '../../../models/query/replay';
 import { IndirectQueryReplayModel, IndirectQueryReplayModelState } from '../../../models/query/replay/indirect';
 import { QuerySaveAsFormModel, QuerySaveAsFormModelState } from '../../../models/query/save';
@@ -41,6 +40,7 @@ import * as S from './style';
 import { PersistentConcordanceForm as Style_PersistentConcordanceForm,
         SaveHintParagraph as Style_SaveHintParagraph } from '../style';
 import { QueryOverviewBarUL as Style_QueryOverviewBarUL } from '../basicOverview/style';
+import { PersistentQueryOperation } from '../../../models/query/replay/common';
 
 /*
 Important note regarding variable naming conventions:
@@ -342,7 +342,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         idx:number;
         corpname:string;
         numOps:number;
-        item:ExtendedQueryOperation;
+        item:PersistentQueryOperation;
         editorProps:AnyEditorProps;
         hasOpenEditor:boolean;
         groupsSelected:boolean;
@@ -372,9 +372,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         return (
             <li className="QueryOpInfo">
                 {renderLabel()}{':\u00a0'}
-                {props.item.nicearg ?
+                {props.item.userEntry ?
                     (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
-                        <layoutViews.Shortener text={props.item.nicearg} limit={40} />
+                        <layoutViews.Shortener text={props.item.userEntry} limit={40} />
                     </a>)
                     : (<a className="args" onClick={props.clickHandler} title={he.translate('query__click_to_edit_the_op')}>
                         {'\u2713'}</a>)
@@ -492,9 +492,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
 
         return (
             <div>
-                {props.currentQueryOverview ?
-                        <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
-                            onEditClick={handleEditClick(0)} /> :
+                {props.overviewVisible ?
+                        <basicOverviewViews.QueryOverviewTable data={props.operations} /> :
                         null}
                 {props.branchReplayIsRunning ? <QueryReplayView /> : null}
 
@@ -514,7 +513,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 key={`op_${i}`}
                                 idx={i}
                                 item={item}
-                                numOps={List.size(props.currEncodedOperations)}
+                                numOps={List.size(props.operations)}
                                 clickHandler={handleEditClick(i)}
                                 hasOpenEditor={props.editedOperationIdx === i && !props.branchReplayIsRunning}
                                 editorProps={props.editedOperationIdx === i ? getEditorProps(i, item.opid) : null}
@@ -524,7 +523,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                                 shuffleMinResultWarning={props.shuffleFormProps.shuffleMinResultWarning}
                                 groupsSelected={props.groupsSelected} />
                         ),
-                        props.currEncodedOperations
+                        props.operations
                     )}
                     {props.groupsSelected ? '\u00a0' : null}
                     {props.groupsSelected ?
@@ -554,7 +553,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
         usesubcorp:string;
         origSubcorpName:string;
         foreignSubcorp:boolean;
-        ops:Array<ExtendedQueryOperation>;
+        ops:Array<PersistentQueryOperation>;
 
     }> = (props) => {
 
@@ -616,7 +615,7 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
      * A component wrapping a new operation form to be
      * added to the query chain.
      */
-    const AppendOperationOverlay:React.FC<AppendOperationOverlayProps & {currEncodedOperations:Array<ExtendedQueryOperation>}
+    const AppendOperationOverlay:React.FC<AppendOperationOverlayProps & {operations:Array<PersistentQueryOperation>}
     > = (props) => {
         const handleCloseClick = () => {
             dispatcher.dispatch<typeof MainMenuActions.ClearActiveItem>({
@@ -634,8 +633,8 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
                     return <viewDeps.SampleForm sampleId="__new__" formType={Kontext.ConcFormTypes.SAMPLE} />;
                 case MainMenuActions.ApplyShuffle.name:
                     return <viewDeps.ShuffleForm {...props.shuffleFormProps}
-                                lastOpSize={props.currEncodedOperations.length > 0 ?
-                                    props.currEncodedOperations[props.currEncodedOperations.length - 1].size : 0}
+                                lastOpSize={props.operations.length > 0 ?
+                                    props.operations[props.operations.length - 1].size : 0}
                                 formType={Kontext.ConcFormTypes.SHUFFLE} />;
                 case MainMenuActions.FilterApplySubhitsRemove.name:
                     return <viewDeps.SubHitsForm {...props.filterSubHitsFormProps}
@@ -829,10 +828,9 @@ export function init({dispatcher, he, viewDeps, queryReplayModel,
     const NonViewPageQueryToolbar:React.FC<NonViewPageQueryToolbarProps & QueryReplayModelState> =
     (props) => (
         <div>
-            <RedirectingQueryOverview {...props} ops={props.currEncodedOperations} />
+            <RedirectingQueryOverview {...props} ops={props.operations} />
             {props.overviewVisible ?
-                <basicOverviewViews.QueryOverviewTable data={props.currentQueryOverview}
-                    onEditClick={()=>undefined} /> :
+                <basicOverviewViews.QueryOverviewTable data={props.operations} /> :
                 null
             }
         </div>

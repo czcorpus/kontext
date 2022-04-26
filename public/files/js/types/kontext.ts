@@ -436,12 +436,6 @@ export interface QueryOperation {
     nicearg:string;
 
     /**
-     * Contains URL-encoded query including all the previous
-     * query operations (see the difference with the 'arg' below).
-     */
-    tourl:string;
-
-    /**
      * contains
      */
     arg:string;

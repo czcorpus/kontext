@@ -57,6 +57,10 @@ export const QueryOverviewDiv = styled.div`
         text-align: left;
         border: 1px solid ${theme.colorDefaultGreen};
     }
+
+    table td.num {
+        text-align: right;
+    }
 `;
 
 // --------------------- <QueryOverviewBarUL /> ----------------------
