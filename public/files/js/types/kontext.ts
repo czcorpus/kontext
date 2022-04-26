@@ -427,19 +427,13 @@ export interface QueryOperation {
      * below). Do not confuse with opKey used within
      * QueryReplayModel.
      */
-    opid:string;
+    opid:ManateeOpCode;
 
     /**
      * Human-readable description of the current
      * operation.
      */
     nicearg:string;
-
-    /**
-     * Contains URL-encoded query including all the previous
-     * query operations (see the difference with the 'arg' below).
-     */
-    tourl:string;
 
     /**
      * contains
@@ -462,6 +456,24 @@ export interface VirtualKeyboardLayout {
     keys:VirtualKeys;
     deadKeys?:Array<string>;
 }
+
+/**
+ManateeOpCode defines query operation codes used by the Manatee engine:
+
+- q: Query
+- a: Query
+- r: Random sample
+- s: Sort
+- f: Shuffle
+- D: Remove nested matches
+- F: First hits in documents
+- n: Negative filter
+- N: Negative filter (excluding KWIC)
+- p: Positive filter
+- P: Positive filter (excluding KWIC)
+- x: Switch KWIC
+*/
+export type ManateeOpCode = 'q'|'a'|'n'|'N'|'p'|'P'|'s'|'r'|'f'|'x'|'D'|'F';
 
 export enum ConcFormTypes {
     QUERY = 'query',

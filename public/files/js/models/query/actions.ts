@@ -29,9 +29,9 @@ export type QueryFormType = Kontext.ConcFormTypes.QUERY | Kontext.ConcFormTypes.
 
 export class Actions {
 
-    static ClearQueryOverviewData: Action<{
+    static CloseQueryOverview: Action<{
     }> = {
-        name: 'CLEAR_QUERY_OVERVIEW_DATA'
+        name: 'CLOSE_QUERY_OVERVIEW'
     };
 
     static EditQueryOperation:Action<{

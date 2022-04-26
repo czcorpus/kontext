@@ -19,7 +19,7 @@
  */
 
 import { QueryInfoModel } from './info';
-import { ExtendedQueryOperation, importEncodedOperation } from './common';
+import { PersistentQueryOperation, importEncodedOperation } from './common';
 import * as Kontext from '../../../types/kontext';
 import { IActionDispatcher } from 'kombo';
 import { PageModel } from '../../../app/page';
@@ -29,8 +29,7 @@ import { List } from 'cnc-tskit';
 
 
 export interface IndirectQueryReplayModelState {
-    currentQueryOverview:Array<Kontext.QueryOperation>|null;
-    currEncodedOperations:Array<ExtendedQueryOperation>;
+    operations:Array<PersistentQueryOperation>;
     overviewVisible:boolean;
 }
 
@@ -47,8 +46,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
     constructor(dispatcher:IActionDispatcher, pageModel:PageModel,
             currentOperations:Array<Kontext.QueryOperation>) {
         super(dispatcher, pageModel, {
-            currEncodedOperations: List.map(importEncodedOperation, currentOperations),
-            currentQueryOverview: [...currentOperations],
+            operations: List.map(importEncodedOperation, currentOperations),
             overviewVisible: false
         });
 
@@ -69,7 +67,7 @@ export class IndirectQueryReplayModel extends QueryInfoModel<IndirectQueryReplay
         this.addActionHandler<typeof ConcActions.AsyncCalculationUpdated>(
             ConcActions.AsyncCalculationUpdated.name,
             (state, action) => {
-                List.last(state.currEncodedOperations).size = action.payload.concsize;
+                List.last(state.operations).size = action.payload.concsize;
             }
         );
     }

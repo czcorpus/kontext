@@ -24,28 +24,40 @@ import { ConcFormArgs } from '../formArgs';
 
 export interface QueryOverviewResponseRow {
     op:string;
-    opid:string;
-    tourl:string;
+    opid:Kontext.ManateeOpCode;
+    conc_persistence_op_id:string;
     nicearg:string;
+    arg:string;
     size:number;
 }
 
 /**
  *
  */
-export interface ExtendedQueryOperation extends Kontext.QueryOperation {
+export interface PersistentQueryOperation {
+
     formType:string;
 
     /**
      * note: if undefined then the operation is not synced yet
      */
     concPersistenceId:string|undefined;
+
+    op:string;
+
+    opid:Kontext.ManateeOpCode;
+
+    userEntry:string;
+
+    encodedArgs:string;
+
+    size:number;
 }
 
 
 export interface QueryPipelineResponseItem {
     form_args:ConcFormArgs;
-    id: string;
+    id:string;
 }
 
 export interface QueryPipelineResponse extends Kontext.AjaxResponse {
@@ -56,22 +68,8 @@ export interface QueryPipelineResponse extends Kontext.AjaxResponse {
 /**
  *
  */
-function mapOpIdToFormType(opId:string):string {
-    /*
-        query operation codes:
-        q: Query
-        a: Query
-        r: Random sample
-        s: Sort
-        f: Shuffle
-        D: Remove nested matches
-        F: First hits in documents
-        n: Negative filter
-        N: Negative filter (excluding KWIC)
-        p: Positive filter
-        P: Positive filter (excluding KWIC)
-        x: Switch KWIC
-    */
+export function mapOpIdToFormType(opId:Kontext.ManateeOpCode):string {
+
     if (['q', 'a'].indexOf(opId) > -1) {
         return Kontext.ConcFormTypes.QUERY;
 
@@ -98,16 +96,15 @@ function mapOpIdToFormType(opId:string):string {
     }
 }
 
-export function importEncodedOperation(operation:Kontext.QueryOperation):ExtendedQueryOperation {
+export function importEncodedOperation(operation:Kontext.QueryOperation):PersistentQueryOperation {
 
     return {
         op: operation.op,
         opid: operation.opid,
-        nicearg: operation.nicearg,
-        tourl: operation.tourl,
-        arg: operation.arg,
+        userEntry: operation.nicearg,
+        encodedArgs: operation.arg,
+        concPersistenceId: undefined,
         size: operation.size,
-        formType: mapOpIdToFormType(operation.opid),
-        concPersistenceId: undefined
+        formType: mapOpIdToFormType(operation.opid)
     };
 }

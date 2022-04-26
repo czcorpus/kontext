@@ -23,11 +23,10 @@ import { List, HTTP } from 'cnc-tskit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import * as Kontext from '../../../types/kontext';
 import { PageModel } from '../../../app/page';
 import { Actions } from '../actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
-import { QueryOverviewResponseRow } from './common';
+import { mapOpIdToFormType, PersistentQueryOperation, QueryOverviewResponseRow } from './common';
 import { AjaxConcResponse } from '../../concordance/common';
 
 
@@ -36,7 +35,8 @@ interface QueryOverviewResponse extends AjaxConcResponse {
 }
 
 export interface QueryInfoModelState {
-    currentQueryOverview:Array<Kontext.QueryOperation>|null;
+    operations:Array<PersistentQueryOperation>;
+    overviewVisible:boolean;
 }
 
 /**
@@ -58,44 +58,44 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         this.pageModel = pageModel;
 
 
-        this.addActionHandler<typeof Actions.ClearQueryOverviewData>(
-            Actions.ClearQueryOverviewData.name,
+        this.addActionHandler<typeof Actions.CloseQueryOverview>(
+            Actions.CloseQueryOverview.name,
             (state, action) => {
-                state.currentQueryOverview = null;
+                state.overviewVisible = false;
             }
         );
 
         this.addActionHandler<typeof MainMenuActions.OverviewShowQueryInfoDone>(
             MainMenuActions.OverviewShowQueryInfoDone.name,
             (state, action) => {
-                state.currentQueryOverview = action.payload.Desc
+                state.operations = action.payload.operations;
             }
-        )
+        );
 
         this.addActionHandler<typeof MainMenuActions.OverviewShowQueryInfo>(
             MainMenuActions.OverviewShowQueryInfo.name,
             (state, action) => {
-
+                state.overviewVisible = true;
             },
             (state, action, dispatch) => {
-                this.loadQueryOverview().subscribe(
-                    (data) => {
+                this.loadQueryOverview().subscribe({
+                    next: operations => {
                         dispatch<typeof MainMenuActions.OverviewShowQueryInfoDone>({
                             name: MainMenuActions.OverviewShowQueryInfoDone.name,
                             payload: {
-                                Desc: data
+                                operations
                             }
                         });
                     },
-                    (err) => {
-                        this.pageModel.showMessage('error', err);
+                    error: error => {
+                        this.pageModel.showMessage('error', error);
                     }
-                )
+                });
             }
         );
     }
 
-    private loadQueryOverview():Observable<Array<Kontext.QueryOperation>> {
+    private loadQueryOverview():Observable<Array<PersistentQueryOperation>> {
         return this.pageModel.ajax$<QueryOverviewResponse>(
             HTTP.Method.GET,
             this.pageModel.createActionUrl('concdesc_json'),
@@ -104,11 +104,19 @@ export class QueryInfoModel<T extends QueryInfoModelState> extends StatelessMode
         ).pipe(
             map(
                 data => List.map(
-                    v => ({arg: '', ...v}),
+                    v => ({
+                        formType: mapOpIdToFormType(v.opid),
+                        concPersistenceId: v.conc_persistence_op_id,
+                        op: v.op,
+                        opid: v.opid,
+                        userEntry: v.nicearg,
+                        encodedArgs: v.arg,
+                        size: v.size
+                    }),
                     data.Desc
                 )
             )
-        )
+        );
     }
 }
 

@@ -37,7 +37,7 @@ import { Actions as ConcActions } from '../../concordance/actions';
 import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { Actions as TTActions } from '../../textTypes/actions';
 import {
-    ExtendedQueryOperation, importEncodedOperation, QueryPipelineResponse,
+    PersistentQueryOperation, importEncodedOperation, QueryPipelineResponse,
     QueryPipelineResponseItem } from './common';
 import { AjaxConcResponse, ConcQueryResponse } from '../../concordance/common';
 import { QueryContextArgs } from '../common';
@@ -87,9 +87,7 @@ export interface ReplayModelDeps {
 
 export interface QueryReplayModelState {
 
-    currentQueryOverview:Array<Kontext.QueryOperation>|null;
-
-    currEncodedOperations:Array<ExtendedQueryOperation>;
+    operations:Array<PersistentQueryOperation>;
 
     lastOperationKey:string;
 
@@ -173,15 +171,19 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     private readonly firstHitsModel:FirstHitsModel;
 
 
-    constructor({dispatcher, pageModel, replayModelDeps, currentOperations,
-                concArgsCache}:QueryReplayModelArgs) {
+    constructor({
+        dispatcher,
+        pageModel,
+        replayModelDeps,
+        currentOperations,
+        concArgsCache
+    }:QueryReplayModelArgs) {
         super(
             dispatcher,
             pageModel,
             {
                 lastOperationKey: pageModel.getConf<string>('concPersistenceOpId'),
-                currentQueryOverview: null,
-                currEncodedOperations: List.map(importEncodedOperation, currentOperations),
+                operations: List.map(importEncodedOperation, currentOperations),
                 concArgsCache: {...concArgsCache},
                 branchReplayIsRunning: false,
                 editedOperationIdx: null,
@@ -205,7 +207,8 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                 state.branchReplayIsRunning = false;
                 if (!action.error) {
                     state.lastOperationKey = action.payload.data.conc_persistence_op_id;
-                    state.currEncodedOperations = List.map(importEncodedOperation, action.payload.data.query_overview);
+                    state.operations = List.map(
+                        importEncodedOperation, action.payload.data.query_overview);
                     state.concArgsCache = {};
                 }
             }
@@ -254,7 +257,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler(
             Actions.EditQueryOperation,
             (state, action) => {
-                state.editedOperationIdx = action.payload.operationIdx;
+                // here we just reset the edited op idx as any non-null value is interpreted
+                // by a respective component as "open the form with respective data"
+                // but we have no data yet
+                state.editedOperationIdx = null;
             },
             (state, action, dispatch) => {
                 this.syncFormData(state, action.payload.operationIdx).subscribe({
@@ -282,15 +288,17 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler(
             Actions.EditLastQueryOperation,
             (state, action) => {
-                state.editedOperationIdx = state.currEncodedOperations.length - 1;
+                // see EditQueryOperation and EditQueryOperationDone
+                // for an explanation why 'null' here
+                state.editedOperationIdx = null;
             },
             (state, action, dispatch) => {
-                this.syncFormData(state, state.currEncodedOperations.length - 1).subscribe({
+                this.syncFormData(state, state.operations.length - 1).subscribe({
                     next: ([data, sourceId]) => {
                         dispatch<typeof Actions.EditQueryOperationDone>({
                             name: Actions.EditQueryOperationDone.name,
                             payload: {
-                                operationIdx: state.currEncodedOperations.length - 1,
+                                operationIdx: state.operations.length - 1,
                                 sourceId,
                                 data
                             }
@@ -314,8 +322,9 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                     state.editedOperationIdx = null;
 
                 } else {
+                    state.editedOperationIdx = action.payload.operationIdx;
                     state.concArgsCache[action.payload.data.op_key] = action.payload.data;
-                    state.currEncodedOperations[action.payload.operationIdx].concPersistenceId =
+                    state.operations[action.payload.operationIdx].concPersistenceId =
                         action.payload.data.op_key;
                 }
             }
@@ -436,7 +445,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler(
             Actions.SliceQueryChain,
             (state, action) => {
-                state.currEncodedOperations = state.currEncodedOperations.slice(0, action.payload.operationIdx + 1);
+                state.operations = state.operations.slice(0, action.payload.operationIdx + 1);
                 state.lastOperationKey = action.payload.concId;
             }
         );
@@ -453,7 +462,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
             (state, action) => {
                 state.editedOperationIdx = null;
                 state.branchReplayIsRunning = false;
-                state.currentQueryOverview = null;
             }
         );
 
@@ -475,10 +483,10 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         if (action.payload.concId) {
                             const operationIdx = pipe(
                                 resp.ops,
-                                List.zip(state.currEncodedOperations),
+                                List.zip(state.operations),
                                 List.findIndex(([op,]) => op.id === action.payload.concId)
                             ); // TODO kind of a weak mapping here
-                            if (operationIdx < state.currEncodedOperations.length - 1) {
+                            if (operationIdx < state.operations.length - 1) {
                                 dispatch<typeof Actions.SliceQueryChain>({
                                     name: Actions.SliceQueryChain.name,
                                     payload: {
@@ -496,7 +504,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         this.addActionHandler(
             ConcActions.AsyncCalculationUpdated,
             (state, action) => {
-                List.last(state.currEncodedOperations).size = action.payload.concsize;
+                List.last(state.operations).size = action.payload.concsize;
             }
         );
     }
@@ -506,14 +514,19 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
     }
 
     /**
-     * Transform query operation idx (i.e. its position in a respective
-     * query pipeline) into a related key of stored form data (conc_persistence plug-in).
+     * Return cache key (= concID) of an operation indexed by its
+     * order in the pipeline. In case the index is off or the operation
+     * is not cached, undefined is returned.
      */
-    private opIdxToCachedQueryKey(
-        opList:Array<ExtendedQueryOperation>,
+    private getOpCacheKey(
+        state:QueryReplayModelState,
         idx:number
     ):string|undefined {
-        return opList[idx].concPersistenceId;
+        if (state.operations[idx]) {
+            const key = state.operations[idx].concPersistenceId;
+            return state.concArgsCache[key] ? key : undefined;
+        }
+        return undefined;
     }
 
     /**
@@ -850,7 +863,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         state:QueryReplayModelState,
         opIdx:number
     ):Observable<QueryFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return (queryKey !== undefined ?
             // cache hit
             this.queryModel.syncFrom(
@@ -883,7 +896,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         state:QueryReplayModelState,
         opIdx:number
     ):Observable<FilterFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return (queryKey !== undefined ?
             // cache hit
             this.filterModel.syncFrom(
@@ -905,7 +918,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private syncSortForm(state:QueryReplayModelState,
             opIdx:number):Observable<SortFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             this.sortModel.syncFrom(
                 rxOf(state.concArgsCache[queryKey] as SortFormArgs)).pipe(
@@ -931,7 +944,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private syncSampleForm(state:QueryReplayModelState,
             opIdx:number):Observable<ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             this.sampleModel.syncFrom(
                 rxOf(state.concArgsCache[queryKey] as SampleFormArgs)
@@ -951,7 +964,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private syncShuffleForm(state:QueryReplayModelState,
             opIdx:number):Observable<ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             rxOf(state.concArgsCache[queryKey]) :
             this.pageModel.ajax$<ConcFormArgsResponse>(
@@ -968,7 +981,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private syncSubhitsForm(state:QueryReplayModelState,
             opIdx:number):Observable<ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             rxOf(state.concArgsCache[queryKey]) :
             this.pageModel.ajax$<ConcFormArgsResponse>(
@@ -984,7 +997,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
 
     private syncFirstHitsForm(state:QueryReplayModelState,
             opIdx:number):Observable<ConcFormArgs> {
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             this.firstHitsModel.syncFrom(
                 rxOf(state.concArgsCache[queryKey] as FirstHitsFormArgs)
@@ -998,7 +1011,6 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
                         last_key: state.lastOperationKey,
                         idx: opIdx
                     }
-
                 )
             );
     }
@@ -1008,7 +1020,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         opIdx:number
     ):Observable<ConcFormArgs> {
 
-        const queryKey = this.opIdxToCachedQueryKey(state.currEncodedOperations, opIdx);
+        const queryKey = this.getOpCacheKey(state, opIdx);
         return queryKey !== undefined ?
             this.switchMcModel.syncFrom(
                 rxOf(state.concArgsCache[queryKey] as SwitchMainCorpArgs)
@@ -1030,8 +1042,7 @@ export class QueryReplayModel extends QueryInfoModel<QueryReplayModelState> {
         state:QueryReplayModelState,
         opIdx:number
     ):Observable<[ConcFormArgs|null, string]> {
-
-        const formType = state.currEncodedOperations[opIdx].formType;
+        const formType = state.operations[opIdx].formType;
         if (formType === Kontext.ConcFormTypes.QUERY) {
             return this.syncQueryForm(state, opIdx).pipe(
                 map(v => tuple(v, this.getActualCorpname()))

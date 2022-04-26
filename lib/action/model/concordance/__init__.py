@@ -591,7 +591,7 @@ class ConcActionModel(CorpusActionModel):
             if self.args.usesubcorp:
                 u2.append(('usesubcorp', self.args.usesubcorp))
             out_list.append(dict(
-                op=o,
+                op=self._req.translate(o),
                 opid=opid,
                 arg=a,
                 nicearg=nicearg(a),

@@ -20,7 +20,7 @@ import os
 import re
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Union, Optional, List
 
 import conclib
 import corplib
@@ -490,12 +490,29 @@ async def delete_query(amodel: UserActionModel, req: KRequest, resp: KResponse):
 @bp.route('/concdesc_json')
 @http_action(return_type='json', action_model=ConcActionModel)
 async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, List[Dict[str, Any]]]:
-    return {'Desc': await amodel.concdesc_json()}
+    with plugins.runtime.QUERY_PERSISTENCE as qp:
+        pipeline = await qp.load_pipeline_ops(amodel.plugin_ctx, amodel.q_code, build_conc_form_args)
+    conc_desc = await amodel.concdesc_json()
+    for i, cd_item in enumerate(conc_desc):
+        form = pipeline[i]
+        if isinstance(form, QueryFormArgs):
+            if len(form.data.curr_queries) == 1:
+                cd_item['nicearg'] = list(form.data.curr_queries.values())[0]
+            else:
+                cd_item['nicearg'] = ', '.join(f'{k}: {v}' for k, v in form.data.curr_queries.items())
+        elif isinstance(form, FilterFormArgs):
+            cd_item['nicearg'] = form.data.query
+        cd_item['conc_persistence_op_id'] = pipeline[i].op_key
+    return {'Desc': conc_desc}
 
 
 @bp.route('/ajax_fetch_conc_form_args')
-@http_action(return_type='json', action_model=ConcActionModel)
-async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+@http_action(return_type='json', action_model=CorpusActionModel)
+async def ajax_fetch_conc_form_args(
+        amodel: ConcActionModel,
+        req: KRequest,
+        resp: KResponse
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     try:
         # we must include only regular (i.e. the ones visible in the breadcrumb-like
         # navigation bar) operations - otherwise the indices would not match.
@@ -503,8 +520,11 @@ async def ajax_fetch_conc_form_args(amodel: ConcActionModel, req: KRequest, resp
             stored_ops = await qp.load_pipeline_ops(
                 amodel.plugin_ctx, req.args.get('last_key'), build_conc_form_args)
         pipeline = [x for x in stored_ops if x.form_type != 'nop']
-        op_data = pipeline[int(req.args.get('idx'))]
-        return op_data.to_dict()
+        op_idx_arg = req.args.get('idx')
+        if op_idx_arg is not None:
+            op_data = pipeline[int(op_idx_arg)]
+            return op_data.to_dict()
+        return dict(operations=[item.to_dict() for item in pipeline])
     except (IndexError, KeyError, QueryPersistenceRecNotFound) as ex:
         raise NotFoundException(req.translate('Query information not stored: {}').format(ex))
 

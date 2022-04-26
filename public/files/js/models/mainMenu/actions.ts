@@ -21,6 +21,7 @@
 import { Action } from 'kombo';
 import { DataSaveFormat } from '../../app/navigation/save';
 import * as Kontext from '../../types/kontext';
+import { PersistentQueryOperation } from '../query/replay/common';
 
 
 export class Actions {
@@ -62,7 +63,7 @@ export class Actions {
     }
 
     static OverviewShowQueryInfoDone:Action<{
-        Desc:Array<Kontext.QueryOperation>;
+        operations:Array<PersistentQueryOperation>;
     }> = {
         name: 'MAIN_MENU_OVERVIEW_SHOW_QUERY_INFO_DONE'
     }

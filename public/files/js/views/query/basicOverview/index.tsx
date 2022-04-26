@@ -25,11 +25,12 @@ import * as Kontext from '../../../types/kontext';
 import { Actions } from '../../../models/query/actions';
 import * as S from './style';
 import { MainMenuModelState } from '../../../models/mainMenu';
+import { List } from 'cnc-tskit';
+import { PersistentQueryOperation } from '../../../models/query/replay/common';
 
 
 export interface QueryOverviewTableProps {
-    data:Array<Kontext.QueryOperation>
-    onEditClick:(idx:number)=>void;
+    data:Array<PersistentQueryOperation>;
 }
 
 
@@ -43,11 +44,12 @@ export interface BasicOverviewViews {
  * This view lib contains core query overview components used by both
  * full-featured query overview toolbar and redirecting toolbar used
  * on non-"view" pages (freqs, colls).
- *
- * @param {*} dispatcher
- * @param {*} he
  */
-export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, mainMenuModel:IModel<MainMenuModelState>):BasicOverviewViews {
+export function init(
+    dispatcher:IActionDispatcher,
+    he:Kontext.ComponentHelpers,
+    mainMenuModel:IModel<MainMenuModelState>
+):BasicOverviewViews {
 
     const layoutViews = he.getLayoutViews();
 
@@ -72,48 +74,58 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const QueryOverviewTable:React.FC<QueryOverviewTableProps> = (props) => {
 
         const handleCloseClick = () => {
-            dispatcher.dispatch<typeof Actions.ClearQueryOverviewData>({
-                name: Actions.ClearQueryOverviewData.name
+            dispatcher.dispatch<typeof Actions.CloseQueryOverview>({
+                name: Actions.CloseQueryOverview.name
             });
         };
 
         const handleEditClickFn = (idx:number) => () => {
-            dispatcher.dispatch<typeof Actions.ClearQueryOverviewData>({
-                name: Actions.ClearQueryOverviewData.name
-            });
-            props.onEditClick(idx);
+            dispatcher.dispatch(Actions.CloseQueryOverview);
+            dispatcher.dispatch(
+                Actions.EditQueryOperation,
+                {
+                    operationIdx: idx
+                }
+            );
         };
 
         return (
-            <layoutViews.PopupBox customClass="centered" onCloseClick={handleCloseClick} takeFocus={true}>
+            <layoutViews.PopupBox customClass="centered" onCloseClick={handleCloseClick} takeFocus={true}
+                    customStyle={{left: '10%', right: '10%'}}>
                 <S.QueryOverviewDiv>
                     <h3>{he.translate('global__query_overview')}</h3>
                     <table>
                         <tbody>
                             <tr>
                                 <th>{he.translate('global__operation')}</th>
-                                <th>{he.translate('global__parameters')}</th>
+                                <th>{he.translate('global__user_entry')}</th>
+                                <th>{he.translate('global__search_engine_parameters')}</th>
                                 <th>{he.translate('global__num_of_hits')}</th>
                                 <th></th>
                                 <th></th>
+                                <th></th>
                             </tr>
-                            {props.data.map((item, i) => (
-                                <tr key={i}>
-                                    <td>{item.op}</td>
-                                    <td>{item.arg}</td>
-                                    <td>{item.size}</td>
-                                    <td>
-                                        <a href={he.createActionLink('view?' + item.tourl)}>
-                                            {he.translate('global__view_result')}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a onClick={handleEditClickFn(i)}>
-                                            {he.translate('query__overview_edit_query')}
-                                        </a>
-                                    </td>
-                                </tr>
-                            ))}
+                            {List.map(
+                                (item, i) => (
+                                    <tr key={i}>
+                                        <td>{item.op}</td>
+                                        <td>{item.userEntry}</td>
+                                        <td>{item.encodedArgs}</td>
+                                        <td className="num">{item.size}</td>
+                                        <td>
+                                            <a href={he.createActionLink(`view?q=~${item.concPersistenceId}`)}>
+                                                {he.translate('global__view_result')}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a onClick={handleEditClickFn(i)}>
+                                                {he.translate('query__overview_edit_query')}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                ),
+                                props.data
+                            )}
                         </tbody>
                     </table>
                 </S.QueryOverviewDiv>
