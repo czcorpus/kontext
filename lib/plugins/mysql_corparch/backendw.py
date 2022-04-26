@@ -174,7 +174,7 @@ class WriteBackend(DatabaseWriteBackend[Cursor]):
             corp_size)
         await cursor.execute(
             f'INSERT INTO {self._corp_table} (name, group_name, version, created, updated, active, web, '
-            'collator_locale, use_safe_font, size) '
+            'locale, use_safe_font, size) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
             vals1)
         # articles

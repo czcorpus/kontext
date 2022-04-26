@@ -37,7 +37,7 @@ CREATE TABLE kontext_corpus (
   web varchar(255),
   sentence_struct varchar(63),
   default_tagset varchar(63),
-  collator_locale varchar(255),
+  locale varchar(255),
   speech_segment_struct varchar(63),
   speech_segment_attr varchar(63),
   speaker_id_struct varchar(63),
