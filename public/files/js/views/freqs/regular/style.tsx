@@ -75,8 +75,8 @@ export const FreqResultLoaderView = styled.div`
     .util-button {
         margin-top: 0.5em;
     }
-    
-    
+
+
 `;
 
 // ----------------- <Paginator /> -------------------------------------
@@ -96,6 +96,20 @@ export const Paginator = styled.div`
 
     .desc {
         margin-left: 1em;
+        flex-grow: 1;
+    }
+
+    .share {
+        margin-right: 0.7em;
+        margin-left: 1.5em;
+        display: flex;
+        align-items: center;
+    }
+
+    .share-link {
+        width: 100%;
+        min-width: 30em;
+        font-size: 1.2em;
     }
 `;
 

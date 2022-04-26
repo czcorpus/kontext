@@ -277,29 +277,44 @@ export function init(
         downloadFormat:Kontext.ChartExportFormat;
         handleDownload:()=>void;
 
-    }> = (props) => (
-        <S.FreqChartsParamsFieldset>
-            <globalComponents.ExpandableArea initialExpanded={false} label={he.translate('freq__chart_options')}>
-                <div className="opts-line">
-                    <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
-                    <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
-                    <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
-                    {props.type === 'bar' || props.type === 'cloud' ?
-                        <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
-                        null
-                    }
-                </div>
-                <div className="opts-line">
-                    <label>{he.translate('freq__download_chart')}:</label>
-                    <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
-                    <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
-                    {props.isBusy ?
-                        <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
-                        null}
-                </div>
-            </globalComponents.ExpandableArea>
-        </S.FreqChartsParamsFieldset>
-    );
+    }> = (props) => {
+
+        const showShare = () => {
+            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
+                name: Actions.ResultShowShareLink.name,
+                payload: {sourceId: props.sourceId}
+            });
+        }
+
+        return (
+            <S.FreqChartsParamsFieldset>
+                <globalComponents.ExpandableArea initialExpanded={false} label={he.translate('freq__chart_options')}>
+                    <div className="opts-line">
+                        <ChartTypeSelector sourceId={props.sourceId} type={props.type} dtFormat={props.dtFormat} />
+                        <FreqUnitsSelector sourceId={props.sourceId} dataKey={props.dataKey} data={props.data} />
+                        <PageSizeInput sourceId={props.sourceId} data={props.data} fmaxitems={props.fmaxitems} type={props.type} />
+                        {props.type === 'bar' || props.type === 'cloud' ?
+                            <FreqSortBySelector sourceId={props.sourceId} sortColumn={props.sortColumn} data={props.data} /> :
+                            null
+                        }
+                    </div>
+                    <div className="opts-line">
+                        <label>{he.translate('freq__download_chart')}:</label>
+                        <DownloadFormatSelector sourceId={props.sourceId} format={props.downloadFormat} />
+                        <S.DownloadButton src={he.createStaticUrl('img/download-button.svg')} alt={he.translate('freq__download_chart')} onClick={props.handleDownload} />
+                        {props.isBusy ?
+                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')} alt={he.translate('global__loading')} /> :
+                            null}
+                        <label>{he.translate('freq__share_chart')}:</label>
+                        <a onClick={showShare}>
+                            <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                                    alt={he.translate('freq__share_chart')} title={he.translate('freq__share_chart')} />
+                        </a>
+                    </div>
+                </globalComponents.ExpandableArea>
+            </S.FreqChartsParamsFieldset>
+        );
+    }
 
 
     // ----------------------- <FreqChart /> -------------------------
@@ -368,19 +383,6 @@ export function init(
             });
         }
 
-        const showShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
-                name: Actions.ResultShowShareLink.name,
-                payload: {sourceId: props.sourceId}
-            });
-        }
-
-        const hideShare = () => {
-            dispatcher.dispatch<typeof Actions.ResultHideShareLink>({
-                name: Actions.ResultHideShareLink.name
-            });
-        }
-
         const _dispatchFilter = (url) => {
             dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
                 name: Actions.ResultApplyQuickFilter.name,
@@ -390,6 +392,11 @@ export function init(
                 }
             });
         }
+
+        const hideShare = () => {
+            dispatcher.dispatch(Actions.ResultHideShareLink);
+        }
+
         const handleBarChartFilter = (data) => _dispatchFilter(data['activePayload'][0]['payload']['pfilter']);
         const handleTimelineChartFilter = handleBarChartFilter;
         const handleScatterChartFilter = (data) => _dispatchFilter(data['pfilter']);
@@ -483,15 +490,13 @@ export function init(
             <S.FreqChartSection>
                 <h3>
                     {pipe(props.data.Head, List.filter(v => v.s !== 'freq' && v.s !== 'rel'), List.map(v => v.n)).join(' | ')}
-                    <a onClick={showShare}>
-                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                                alt="generovat odkaz" title="generovat odkaz" />
-                    </a>
                 </h3>
                 { props.shareLink ?
                     <globalComponents.ModalOverlay onCloseKey={hideShare}>
-                        <globalComponents.CloseableFrame onCloseClick={hideShare} label="Share link">
-                            <a href={props.shareLink}>{props.shareLink}</a>
+                        <globalComponents.CloseableFrame onCloseClick={hideShare} label={he.translate('freq__share_chart')}>
+                            <input className="share-link" type="text" readOnly={true}
+                                onClick={(e)=> (e.target as HTMLInputElement).select()}
+                                value={props.shareLink} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
