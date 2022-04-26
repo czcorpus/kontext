@@ -187,7 +187,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
     save word list
     """
     args = req.mapped_args
-    if args.to_line is None:
+    if args.to_line < 0:
         args.to_line = amodel.corp.size
     num_lines = args.to_line - args.from_line + 1
     total, data = await require_existing_wordlist(

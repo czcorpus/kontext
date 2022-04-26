@@ -19,7 +19,7 @@ from typing import Optional
 import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import http_action
+from action.decorators import IntOpt, http_action
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
@@ -105,7 +105,7 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
 @dataclass
 class SavecollArgs:
     from_line: int = 1
-    to_line: Optional[int] = None
+    to_line: IntOpt = -1
     saveformat: str = 'txt'
     heading: int = 0
     colheaders: int = 0
@@ -122,7 +122,7 @@ async def savecoll(amodel: ConcActionModel, req: KRequest[SavecollArgs], resp: K
         await require_existing_conc(amodel.corp, tuple(amodel.args.q))
         from_line = req.mapped_args.from_line
         # 'corp.size' below is just a safe max value for to_line
-        to_line = amodel.corp.size if req.mapped_args.to_line is None else req.mapped_args.to_line
+        to_line = amodel.corp.size if req.mapped_args.to_line < 0 else req.mapped_args.to_line
         result = await _collx(amodel, collpage=1, citemsperpage=to_line, user_id=req.session_get('user', 'id'))
         result.Items = result.Items[from_line - 1:]
 

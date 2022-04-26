@@ -22,7 +22,7 @@ import bgcalc
 import plugins
 import settings
 from action.argmapping.pquery import PqueryFormArgs
-from action.decorators import http_action
+from action.decorators import IntOpt, http_action
 from action.errors import NotFoundException
 from action.krequest import KRequest
 from action.model.pquery import ParadigmaticQueryActionModel
@@ -173,7 +173,7 @@ async def get_results(amodel: ParadigmaticQueryActionModel, req: KRequest, resp:
 @dataclass
 class SavePQueryArgs:
     from_line: int = 1
-    to_line: Optional[int] = None
+    to_line: IntOpt = -1
     saveformat: str = ''
     reverse: bool = False
     sort: str = 'value'
@@ -188,7 +188,7 @@ async def download(amodel: ParadigmaticQueryActionModel, req: KRequest[SavePQuer
     dawnload a paradigmatic query results
     """
     from_line = req.mapped_args.from_line - 1
-    to_line = req.mapped_args.to_line if req.mapped_args.to_line else sys.maxsize
+    to_line = sys.maxsize if req.mapped_args.to_line < 0 else req.mapped_args.to_line
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     try:
         pquery_data = await require_existing_pquery(

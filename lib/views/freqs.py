@@ -19,12 +19,12 @@ import re
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import http_action
+from action.decorators import IntOpt, ListStrOpt, StrOpt, http_action
 from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
@@ -44,20 +44,20 @@ bp = Blueprint('freqs')
 
 @dataclass
 class MLFreqRequestArgs(MLFreqArgs):
-    flimit: Optional[int] = 0
-    freqlevel: Optional[int] = 1
-    freq_sort: Optional[str] = ''
+    flimit: IntOpt = 0
+    freqlevel: IntOpt = 1
+    freq_sort: StrOpt = ''
 
 
 @dataclass
 class GeneralFreqArgs:
     fcrit: List[str]
-    fcrit_async: Optional[List[str]] = field(default_factory=list)
-    flimit: Optional[int] = 0
-    freq_sort: Optional[str] = ''
-    force_cache: Optional[int] = 0
-    freq_type: Optional[str] = ''
-    format: Optional[str] = ''
+    fcrit_async: ListStrOpt = field(default_factory=list)
+    flimit: IntOpt = 0
+    freq_sort: StrOpt = ''
+    force_cache: IntOpt = 0
+    freq_type: StrOpt = ''
+    format: StrOpt = ''
 
 
 @bp.route('/freqs')
@@ -310,9 +310,9 @@ async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp
 
 @dataclass
 class FreqttActionArgs:
-    flimit: Optional[int] = 0
-    fttattr: Optional[List[str]] = field(default_factory=list)
-    fttattr_async: Optional[List[str]] = field(default_factory=list)
+    flimit: IntOpt = 0
+    fttattr: ListStrOpt = field(default_factory=list)
+    fttattr_async: ListStrOpt = field(default_factory=list)
 
 
 @bp.route('/freqtt')
@@ -402,14 +402,14 @@ def export_freqct(self, request):
 @dataclass
 class SavefreqArgs:
     fcrit: List[str]
-    flimit: Optional[int] = 0
-    freq_sort: Optional[str] = ''
-    saveformat: Optional[str] = 'txt'
-    from_line: Optional[int] = 1
-    to_line: Optional[int] = field(default_factory=lambda: sys.maxsize)
-    colheaders: Optional[int] = 0
-    heading: Optional[int] = 0
-    multi_sheet_file: Optional[int] = 0
+    flimit: IntOpt = 0
+    freq_sort: StrOpt = ''
+    saveformat: StrOpt = 'txt'
+    from_line: IntOpt = 1
+    to_line: IntOpt = field(default_factory=lambda: sys.maxsize)
+    colheaders: IntOpt = 0
+    heading: IntOpt = 0
+    multi_sheet_file: IntOpt = 0
 
 
 @bp.route('/savefreq')

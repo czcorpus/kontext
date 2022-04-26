@@ -40,7 +40,7 @@ from action.argmapping.conc.filter import (FilterFormArgs,
 from action.argmapping.conc.other import (KwicSwitchArgs, LgroupOpArgs,
                                           LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
-from action.decorators import http_action
+from action.decorators import IntOpt, StrOpt, http_action
 from action.errors import NotFoundException, UserActionException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
@@ -1063,7 +1063,7 @@ class SaveConcArgs:
     numbering: int = 0
     align_kwic: int = 0
     from_line: int = 0
-    to_line: Optional[int] = None
+    to_line: IntOpt = -1
 
 
 def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Callable[[str], str]):
@@ -1098,7 +1098,7 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
         conc.switch_aligned(os.path.basename(amodel.args.corpname))
         from_line = int(req.mapped_args.from_line)
-        to_line = min(req.mapped_args.to_line, conc.size())
+        to_line = conc.size() if req.mapped_args.to_line < 0 else min(req.mapped_args.to_line, conc.size())
 
         kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
         kwic_args.speech_attr = await amodel.get_speech_segment()
@@ -1154,10 +1154,10 @@ async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
 @dataclass
 class StructctxArgs:
-    pos: Optional[int] = 0
-    struct: Optional[str] = 'doc'
-    left_ctx: Optional[int] = -5
-    right_ctx: Optional[int] = 5
+    pos: IntOpt = 0
+    struct: StrOpt = 'doc'
+    left_ctx: IntOpt = -5
+    right_ctx: IntOpt = 5
 
 
 @bp.route('/structctx')

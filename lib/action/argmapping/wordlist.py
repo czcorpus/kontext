@@ -13,7 +13,9 @@
 # GNU General Public License for more details.
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
+
+from action.decorators import IntOpt
 
 
 @dataclass
@@ -71,7 +73,7 @@ class WordlistFormArgs(object):
 @dataclass
 class WordlistSaveFormArgs:
     from_line: int = 1
-    to_line: Optional[int] = None
+    to_line: IntOpt = -1
     saveformat: str = 'txt'
     colheaders: int = 0
     heading: int = 0
