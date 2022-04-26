@@ -65,6 +65,7 @@ export function init(
         totalPages:number;
         totalItems:number;
         sourceId:string;
+        shareLink:string|null;
     }
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
@@ -98,6 +99,19 @@ export function init(
                 evt.stopPropagation();
             }
         };
+
+        const showShare = () => {
+            dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
+                name: Actions.ResultShowShareLink.name,
+                payload: {sourceId: props.sourceId}
+            });
+        }
+
+        const hideShare = () => {
+            dispatcher.dispatch<typeof Actions.ResultHideShareLink>({
+                name: Actions.ResultHideShareLink.name
+            });
+        }
 
         const renderPageNum = () => {
             if (props.isLoading) {
@@ -147,6 +161,17 @@ export function init(
                     ({he.translate('freq__avail_label')}:{'\u00a0'}
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
                 </div>
+                <a onClick={showShare}>
+                    <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                            alt="generovat odkaz" title="generovat odkaz" />
+                </a>
+                { props.shareLink ?
+                    <globalComponents.ModalOverlay onCloseKey={hideShare}>
+                        <globalComponents.CloseableFrame onCloseClick={hideShare} label="Share link">
+                            <a href={props.shareLink}>{props.shareLink}</a>
+                        </globalComponents.CloseableFrame>
+                    </globalComponents.ModalOverlay> : null
+                }
             </S.Paginator>
         );
     };
@@ -347,7 +372,8 @@ export function init(
                                                     hasPrevPage={hasPrevPage(props, sourceId)}
                                                     totalPages={block.TotalPages}
                                                     isLoading={props.isBusy[sourceId]}
-                                                    totalItems={block.Total} />
+                                                    totalItems={block.Total}
+                                                    shareLink={props.shareLink && sourceId === props.shareLink.sourceId ? props.shareLink.url : null}/>
                                             <div>
                                                 <drViews.DataTable head={block.Head}
                                                         sortColumn={props.sortColumn[sourceId]}

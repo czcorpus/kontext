@@ -318,13 +318,22 @@ class FreqPage {
                 this.freqLoader = new FreqDataLoader({
                     pageModel: this.layoutModel
                 });
+
+                const alphaLevelValue = this.layoutModel.getConf<string>('AlphaLevel');
+                const alphaLevel = {
+                    "0.1": Maths.AlphaLevel.LEVEL_10,
+                    "0.05": Maths.AlphaLevel.LEVEL_5,
+                    "0.01": Maths.AlphaLevel.LEVEL_1,
+                }[alphaLevelValue];
+                const forcedParams = this.layoutModel.getConf<{[sourceId:string]:{[key:string]:any}}>('ForcedParams');
+
                 const initialData = List.map(
                     block => importFreqData(
                         this.layoutModel,
                         block,
-                        this.layoutModel.getConf<number>('CurrentPage'),
+                        forcedParams[block.fcrit]?.fpage || this.layoutModel.getConf<number>('CurrentPage'),
                         this.layoutModel.getConf<number>('FreqItemsPerPage'),
-                        Maths.AlphaLevel.LEVEL_5
+                        alphaLevel,
                     ),
                     this.layoutModel.getConf<Array<Block>>('FreqResultData'),
                 );
@@ -341,7 +350,9 @@ class FreqPage {
                     formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
                     initialData,
                     currentPage,
-                    freqLoader: this.freqLoader
+                    freqLoader: this.freqLoader,
+                    forcedParams,
+                    alphaLevel,
                 });
 
                 this.saveTablesModel = new FreqResultsSaveModel({
@@ -391,6 +402,8 @@ class FreqPage {
                         ),
                     fmaxitems: this.layoutModel.getConf<number>('FreqItemsPerPage'),
                     freqLoader: this.freqLoader,
+                    forcedParams,
+                    alphaLevel,
                 });
                 const freqResultView = resultViewFactory(
                     this.layoutModel.dispatcher,
@@ -487,6 +500,9 @@ class FreqPage {
             break;
             case 'text-types':
             case 'tokens': {
+                // if ForceParams defined => sharing freqs, don't alter history
+                if (this.layoutModel.getConf('ForcedParams')) break;
+
                 const state = this.freqResultModel.getState(); // no antipattern here
                 const firstCrit = List.head(state.freqCrit);
                 const args = {

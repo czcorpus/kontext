@@ -54,6 +54,7 @@ class GeneralFreqArgs:
     fcrit: List[str]
     fcrit_async: ListStrOpt = field(default_factory=list)
     flimit: IntOpt = 0
+    alpha_level: StrOpt = '0.05'
     freq_sort: StrOpt = ''
     force_cache: IntOpt = 0
     freq_type: StrOpt = ''
@@ -81,9 +82,71 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
         if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
             raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
+        ans['alpha_level'] = req.mapped_args.alpha_level
         return ans
     except ConcNotFoundException:
         amodel.go_to_restore_conc('freqs')
+
+
+@dataclass
+class SharedFreqArgs:
+    fcrit: str
+    freq_type: str
+    flimit: int
+    alpha_level: str
+    fdefault_view: str
+
+    freq_sort: str
+    # required by chart view
+    fmaxitems: IntOpt = 10
+    chart_type: StrOpt = ''
+    data_key: StrOpt = ''
+    # required by table view
+    fpage: IntOpt = 1
+
+
+@bp.route('/shared_freqs')
+@http_action(
+    access_level=0, action_model=ConcActionModel, page_model='freq', template='freqs.html', mapped_args=SharedFreqArgs)
+async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], resp: KResponse):
+    """
+    Display a frequency list (tokens, text types) based on more low-level arguments. In case the
+    function runs in HTML return mode, 'freq_type' must be specified so the client part is able
+    to determine proper views.
+
+    Alternatively, 'freqml', 'freqtt' actions can be used for more high-level access.
+    """
+    try:
+        await require_existing_conc(amodel.corp, amodel.args.q, req.translate)
+        ans = await _freqs(
+            amodel,
+            req,
+            fcrit=(req.mapped_args.fcrit,), fcrit_async=(), flimit=req.mapped_args.flimit,
+            freq_sort=req.mapped_args.freq_sort, force_cache=0)
+        ans['freq_type'] = req.mapped_args.freq_type
+        ans['alpha_level'] = req.mapped_args.alpha_level
+
+        ans['alpha_level'] = req.mapped_args.alpha_level
+        ans['fdefault_view'] = req.mapped_args.fdefault_view
+        if req.mapped_args.fdefault_view == 'charts':
+            ans['forced_params'] = {
+                req.mapped_args.fcrit: {
+                    'freq_sort': req.mapped_args.freq_sort,
+                    'type': req.mapped_args.chart_type,
+                    'fmaxitems': req.mapped_args.fmaxitems,
+                    'data_key': req.mapped_args.data_key,
+                }
+            }
+        elif req.mapped_args.fdefault_view == 'tables':
+            ans['forced_params'] = {
+                req.mapped_args.fcrit: {
+                    'freq_sort': req.mapped_args.freq_sort,
+                    'fpage': req.mapped_args.fpage,
+                }
+            }
+        return ans
+    except ConcNotFoundException:
+        amodel.go_to_restore_conc('shared_freqs')
 
 
 async def _freqs(

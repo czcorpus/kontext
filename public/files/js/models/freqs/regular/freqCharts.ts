@@ -50,6 +50,8 @@ export interface FreqChartsModelArgs {
     initialData:Array<ResultBlock|EmptyResultBlock>|undefined;
     fmaxitems:number;
     freqLoader:FreqDataLoader;
+    forcedParams:{[sourceId:string]:{[key:string]:any}};
+    alphaLevel:Maths.AlphaLevel;
 }
 
 export interface FreqChartsModelState extends BaseFreqModelState {
@@ -58,6 +60,7 @@ export interface FreqChartsModelState extends BaseFreqModelState {
     fmaxitems:{[sourceId:string]:FormValue<string>};
     dtFormat:{[sourceId:string]:string};
     downloadFormat:{[sourceId:string]:ChartExportFormat};
+    shareLink:{sourceId:string, url:string} | null;
 }
 
 
@@ -89,7 +92,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
-        initialData, fmaxitems, freqLoader
+        initialData, fmaxitems, freqLoader, forcedParams, alphaLevel
     }:FreqChartsModelArgs) {
         const allCrits = List.concat(freqCritAsync, freqCrit);
         super(
@@ -133,7 +136,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 sortColumn: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k.n, formProps.freq_sort || 'freq')
+                        k => tuple(k.n, forcedParams[k.n]?.freq_sort || formProps.freq_sort || 'freq')
                     ),
                     Dict.fromEntries()
                 ),
@@ -142,7 +145,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 type: pipe(
                     allCrits,
                     List.map(
-                        k => tuple<string, FreqChartsAvailableTypes>(k.n, 'bar')
+                        k => tuple<string, FreqChartsAvailableTypes>(k.n, forcedParams[k.n]?.type || 'bar')
                     ),
                     Dict.fromEntries()
                 ),
@@ -156,14 +159,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                 dataKey: pipe(
                     allCrits,
                     List.map(
-                        k => tuple<string, FreqChartsAvailableData>(k.n, 'rel')
+                        k => tuple<string, FreqChartsAvailableData>(k.n, forcedParams[k.n]?.data_key || 'rel')
                     ),
                     Dict.fromEntries()
                 ),
                 fmaxitems: pipe(
                     allCrits,
                     List.map(
-                        k => tuple(k.n, newFormValue(fmaxitems + '', true))
+                        k => tuple(k.n, newFormValue((forcedParams[k.n]?.fmaxitems || fmaxitems) + '', true))
                     ),
                     Dict.fromEntries()
                 ),
@@ -189,13 +192,14 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
                     ),
                     Dict.fromEntries()
                 ),
-                alphaLevel: Maths.AlphaLevel.LEVEL_5,
+                alphaLevel: alphaLevel,
                 downloadFormat: pipe(
                     allCrits,
                     List.map(k => tuple<string, ChartExportFormat>(k.n, 'png')),
                     Dict.fromEntries()
                 ),
-                saveFormActive: false
+                saveFormActive: false,
+                shareLink: null,
             }
         );
 
@@ -219,6 +223,23 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             Actions.ResultSetActiveTab,
             (state, action) => {
                 state.isActive = action.payload.value === 'charts';
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultShowShareLink,
+            (state, action) => {
+                state.shareLink = {
+                    sourceId: action.payload.sourceId,
+                    url: this.getShareLink(state, action.payload.sourceId),
+                }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ResultHideShareLink,
+            (state, action) => {
+                state.shareLink = null;
             }
         );
 
@@ -472,6 +493,30 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         });
     }
 
+    private getShareLink(state:FreqChartsModelState, sourceId:string) {
+        return this.pageModel.createActionUrl(
+            'shared_freqs',
+            {
+                q: this.pageModel.getConcArgs().q,
+
+                fcrit: state.data[sourceId].fcrit,
+                freq_type: state.freqType,
+                ftt_include_empty: state.ftt_include_empty,
+                freqlevel: 1,
+
+                flimit: parseInt(state.flimit.value),
+                alpha_level: state.alphaLevel,
+
+                fmaxitems: parseInt(state.fmaxitems[sourceId].value),
+                chart_type: state.type[sourceId],
+                data_key: state.dataKey[sourceId],
+                freq_sort: state.sortColumn[sourceId],
+
+                fdefault_view: 'charts',
+            }
+        )
+    }
+
     getSubmitArgs(state:FreqChartsModelState, fcrit:string):FreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
@@ -485,7 +530,7 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             fmaxitems: parseInt(state.fmaxitems[fcrit].value),
-            format: 'json'
+            format: 'json',
         };
     }
 }
