@@ -161,14 +161,19 @@ export function init(
                     ({he.translate('freq__avail_label')}:{'\u00a0'}
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
                 </div>
-                <a onClick={showShare}>
-                    <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
-                            alt="generovat odkaz" title="generovat odkaz" />
-                </a>
+                <div className="share">
+                    <label>{he.translate('freq__share_table')}: </label>
+                    <a onClick={showShare}>
+                        <img className="over-img" style={{width: '1em', verticalAlign: 'middle'}} src={he.createStaticUrl('img/share.svg')}
+                                alt={he.translate('freq__share_table')} title={he.translate('freq__share_table')} />
+                    </a>
+                </div>
                 { props.shareLink ?
                     <globalComponents.ModalOverlay onCloseKey={hideShare}>
-                        <globalComponents.CloseableFrame onCloseClick={hideShare} label="Share link">
-                            <a href={props.shareLink}>{props.shareLink}</a>
+                        <globalComponents.CloseableFrame onCloseClick={hideShare} label={he.translate('freq__share_table')}>
+                            <input className="share-link" type="text" readOnly={true}
+                                onClick={(e)=> (e.target as HTMLInputElement).select()}
+                                value={props.shareLink} />
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }

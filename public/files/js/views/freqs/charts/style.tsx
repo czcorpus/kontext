@@ -130,6 +130,12 @@ export const FreqChartSection = styled.section`
         margin: 0 auto;
     }
 
+    .share-link {
+        width: 100%;
+        min-width: 30em;
+        font-size: 1.2em;
+    }
+
 `;
 
 // --------------- <DownloadButton /> ------------------------------------

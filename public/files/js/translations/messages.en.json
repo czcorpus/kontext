@@ -794,6 +794,8 @@
         "freq__chart_date_%Y": "Year",
         "freq__sel_form_type_dp": "Dispersion",
         "freq__chart_p_filter_tooltip": "Click to see the matching concordance",
+        "freq__share_chart": "Share the chart",
+        "freq__share_table": "Share the table",
         "user__password_change": "Password change",
         "user__new_password": "New password",
         "user__new_password_again": "New password (again)",
