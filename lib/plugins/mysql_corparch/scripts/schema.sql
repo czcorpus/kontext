@@ -314,7 +314,6 @@ CREATE TABLE registry_conf (
   path varchar(255) DEFAULT NULL,
   vertical varchar(255) DEFAULT NULL,
   language varchar(255) DEFAULT NULL,
-  locale varchar(255) DEFAULT NULL,
   rencoding varchar(255) NOT NULL,
   info text,
   shortref varchar(255) DEFAULT NULL,
