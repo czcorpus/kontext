@@ -111,6 +111,8 @@ class StaticAuth(AbstractRemoteAuth):
         }
 
     def _hash_key(self, k):
+        if not k:
+            return None
         return hashlib.sha256(k.encode()).hexdigest()
 
     def _get_api_key(self, plugin_ctx):
