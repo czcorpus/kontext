@@ -85,8 +85,8 @@ class MetaAbstractAuth(abc.ABCMeta):
     def __init__(cls, name, bases, clsdict):
         super().__init__(name, bases, clsdict)
         if 'permitted_corpora' in clsdict:
-            def wrapped_perm_corp(self, user_dict):
-                corpora = clsdict['permitted_corpora'](self, user_dict)
+            async def wrapped_perm_corp(self, user_dict):
+                corpora = await clsdict['permitted_corpora'](self, user_dict)
                 if self.ignores_corpora_names_case():
                     return [c.lower() for c in corpora]
                 else:
