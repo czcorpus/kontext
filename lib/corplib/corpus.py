@@ -28,7 +28,6 @@ import aiofiles.os
 import ujson as json
 from corplib.abstract import AbstractKCorpus
 from manatee import Corpus, SubCorpus
-from util import aenumerate
 
 try:
     from markdown import markdown
@@ -77,7 +76,8 @@ async def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Opt
     if await aiofiles.os.path.isfile(namepath):
         async with aiofiles.open(namepath, 'r') as nf:
             desc = ''
-            for i, line in aenumerate(nf):
+            i = 0
+            async for line in nf:
                 if i == 0:
                     try:
                         metadata = _PublishedSubcMetadata.from_json(line)
@@ -86,6 +86,7 @@ async def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Opt
                             f'Failed to read published subcorpus data. File {namepath}, error: {ex}')
                 elif i > 1:
                     desc += line
+                i += 1
     return metadata, desc
 
 

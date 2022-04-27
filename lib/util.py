@@ -28,9 +28,3 @@ def as_sync(func):
 async def anext(ait: AsyncIterator):
     return await ait.__anext__()
 
-
-async def aenumerate(asequence: AsyncIterator[T], start=0) -> Tuple[int, T]:
-    n = start
-    async for elem in asequence:
-        yield n, elem
-        n += 1
