@@ -295,7 +295,7 @@ class DefaultCorplistProvider(CorplistProvider):
         else:
             limit = int(limit)
 
-        user_items = self._corparch.user_items.get_user_items(plugin_ctx)
+        user_items = await self._corparch.user_items.get_user_items(plugin_ctx)
 
         def fav_id(corpus_id):
             for item in user_items:
@@ -780,7 +780,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             initial_keywords.extend(mapped_external_keywords)
 
         return dict(
-            favorite=self.export_favorite(plugin_ctx, self._user_items.get_user_items(plugin_ctx)),
+            favorite=self.export_favorite(plugin_ctx, await self._user_items.get_user_items(plugin_ctx)),
             featured=await self._export_featured(plugin_ctx),
             corpora_labels=[(k, lab, self.get_label_color(k))
                             for k, lab in await self.all_keywords(plugin_ctx)],
