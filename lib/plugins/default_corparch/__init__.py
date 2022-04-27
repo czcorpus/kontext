@@ -247,7 +247,7 @@ class DefaultCorplistProvider(CorplistProvider):
 @http_action(return_type='json', access_level=1, action_model=UserActionModel)
 async def get_favorite_corpora(amodel: UserActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.CORPARCH as ca, plugins.runtime.USER_ITEMS as ui:
-        return await ca.export_favorite(amodel.plugin_ctx, ui.get_user_items(amodel.plugin_ctx))
+        return await ca.export_favorite(amodel.plugin_ctx, await ui.get_user_items(amodel.plugin_ctx))
 
 
 def process_pos_categories(tagset_node: etree.Element) -> List[PosCategoryItem]:
