@@ -102,7 +102,7 @@ class _ID(Generic[T]):
         return None
 
     def __call__(self, required_type: Union[U, Sequence[U]] = T) -> '_ID[U]':
-        if not _has_plugin(self._ident):
+        if not _has_plugin(self._ident) and not self.is_optional:
             raise PluginNotInstalled(f'Plugin {self._ident} was not installed!')
         if not isinstance(self.instance, required_type):
             raise InvalidPluginInstalled(
@@ -112,10 +112,12 @@ class _ID(Generic[T]):
     def __enter__(self) -> T:
         if _has_plugin(self._ident):
             return self.instance
+        elif self.is_optional:
+            return None
         raise PluginNotInstalled(f'Plugin {self._ident} was not installed!')
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> bool:
-        return False
+        return self.instance is None and exc_type is AttributeError
 
     @property
     def is_optional(self) -> bool:
