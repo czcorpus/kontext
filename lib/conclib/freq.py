@@ -14,41 +14,41 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from typing import Optional
+from action.argmapping.action import StrOpt, IntOpt
 
 
 @dataclass
 class MLFreqArgs:
 
-    ml1attr: Optional[str] = 'word'
-    ml1ctx: Optional[int] = 0
-    ml1pos: Optional[int] = 1
-    ml1fcode: Optional[str] = 'rc'
-    ml1icase: Optional[str] = ''
+    ml1attr: StrOpt = 'word'
+    ml1ctx: StrOpt = '0'
+    ml1pos: IntOpt = 1
+    ml1fcode: StrOpt = 'rc'
+    ml1icase: StrOpt = ''
 
-    ml2attr: Optional[str] = 'word'
-    ml2ctx: Optional[int] = 0
-    ml2pos: Optional[int] = 1
-    ml2fcode: Optional[str] = 'rc'
-    ml2icase: Optional[str] = ''
+    ml2attr: StrOpt = 'word'
+    ml2ctx: StrOpt = '0'
+    ml2pos: IntOpt = 1
+    ml2fcode: StrOpt = 'rc'
+    ml2icase: StrOpt = ''
 
-    ml3attr: Optional[str] = 'word'
-    ml3ctx: Optional[int] = 0
-    ml3pos: Optional[int] = 1
-    ml3fcode: Optional[str] = 'rc'
-    ml3icase: Optional[str] = ''
+    ml3attr: StrOpt = 'word'
+    ml3ctx: StrOpt = '0'
+    ml3pos: IntOpt = 1
+    ml3fcode: StrOpt = 'rc'
+    ml3icase: StrOpt = ''
 
-    ml4attr: Optional[str] = 'word'
-    ml4ctx: Optional[int] = 0
-    ml4pos: Optional[int] = 1
-    ml4fcode: Optional[str] = 'rc'
-    ml4icase: Optional[str] = ''
+    ml4attr: StrOpt = 'word'
+    ml4ctx: StrOpt = '0'
+    ml4pos: IntOpt = 1
+    ml4fcode: StrOpt = 'rc'
+    ml4icase: StrOpt = ''
 
-    ml5attr: Optional[str] = 'word'
-    ml5ctx: Optional[int] = 0
-    ml5pos: Optional[int] = 1
-    ml5fcode: Optional[str] = 'rc'
-    ml5icase: Optional[str] = ''
+    ml5attr: StrOpt = 'word'
+    ml5ctx: StrOpt = '0'
+    ml5pos: IntOpt = 1
+    ml5fcode: StrOpt = 'rc'
+    ml5icase: StrOpt = ''
 
 
 def one_level_crit(prefix: str, attr: str, ctx: str, pos: int, fcode: str, icase: str, bward: str = '',

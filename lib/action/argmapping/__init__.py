@@ -13,10 +13,16 @@
 import logging
 from dataclasses import Field, dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, NewType
 
 from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
                              create_req_arg_proxy, is_req_args_proxy)
+
+
+StrOpt = NewType('StrOpt', str)
+ListStrOpt = NewType('ListStrOpt', List[str])
+IntOpt = NewType('IntOpt', int)
+ListIntOpt = NewType('ListIntOpt', List[int])
 
 
 class Persistence(Enum):

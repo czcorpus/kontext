@@ -14,12 +14,12 @@
 # GNU General Public License for more details.
 
 from dataclasses import asdict, dataclass
-from typing import Optional
 
 import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import IntOpt, http_action
+from action.decorators import http_action
+from action.argmapping.action import IntOpt
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
