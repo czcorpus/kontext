@@ -31,8 +31,8 @@ from typing import Dict, List, Optional
 
 import plugins
 from action.plugin.ctx import PluginCtx
-from plugin_types.auth import (AbstractRemoteAuth, CorpusAccess, GetUserInfo,
-                               UserInfo)
+from plugin_types.auth import (
+    AbstractRemoteAuth, CorpusAccess, GetUserInfo, UserInfo)
 
 
 @dataclass
@@ -47,10 +47,12 @@ class StaticAuth(AbstractRemoteAuth):
 
     _zones: Dict[str, ApiTokenZone]
 
-    def __init__(self, anonymous_id, api_key_cookie_name, api_key_http_header, zones):
+    def __init__(self, anonymous_id, api_key_cookie_name, api_key_http_header, zones, login_url, logout_url):
         super(StaticAuth, self).__init__(anonymous_id)
         self._api_key_cookie_name = api_key_cookie_name
         self._api_key_http_header = api_key_http_header
+        self._login_url = login_url
+        self._logout_url = logout_url
 
         self._zones = {}
         for zone in zones:
@@ -90,10 +92,10 @@ class StaticAuth(AbstractRemoteAuth):
     async def corpus_access(self, user_dict: UserInfo, corpus_id: str) -> CorpusAccess:
         zone = self._find_user(user_dict['id'])
         if zone is None:
-            return False, False, []
+            return CorpusAccess(False, False, '')
         if corpus_id not in zone.corpora:
-            return False, False, ''
-        return False, True, zone.corpora[corpus_id]
+            return CorpusAccess(False, False, '')
+        return CorpusAccess(False, True, zone.corpora[corpus_id])
 
     async def permitted_corpora(self, user_dict: UserInfo) -> List[str]:
         if self.is_anonymous(user_dict['id']):
@@ -134,6 +136,12 @@ class StaticAuth(AbstractRemoteAuth):
                 plugin_ctx.session.clear()
             plugin_ctx.session['user'] = self.anonymous_user(plugin_ctx)
 
+    def get_login_url(self, return_url=None):
+        return self._login_url
+
+    def get_logout_url(self, return_url=None):
+        return self._logout_url
+
 
 def create_instance(conf):
     """
@@ -146,4 +154,6 @@ def create_instance(conf):
         anonymous_id=int(plugin_conf['anonymous_user_id']),
         api_key_cookie_name=custom_conf.get('api_key_cookie_name', None),
         api_key_http_header=custom_conf['api_key_http_header'],
-        zones=custom_conf['zones'])
+        zones=custom_conf['zones'],
+        login_url=plugin_conf['login_url'],
+        logout_url=plugin_conf['login_url'])
