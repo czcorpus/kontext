@@ -118,7 +118,7 @@ class StaticAuth(AbstractRemoteAuth):
             api_key_cookie = plugin_ctx.cookies.get(self._api_key_cookie_name)
             return api_key_cookie.value if api_key_cookie else None
         elif self._api_key_http_header:
-            return plugin_ctx.get_from_environ(self._api_key_http_header)
+            return plugin_ctx.request.headers.get(self._api_key_http_header)
 
     async def revalidate(self, plugin_ctx):
         curr_user_id = plugin_ctx.session.get('user', {'id': None})['id']
