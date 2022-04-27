@@ -110,22 +110,21 @@ class Tracker(AbstractDispatchHook):
         if not self.is_tracking_allowed(methodname):
             return
 
-        server_names = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_HOST', '').split(', ')
+        server_names = plugin_ctx.headers.get('x-forwarded-host', '').split(', ')
         server_name = server_names[0] if server_names else ''
-        https = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_PROTOCOL', '') == 'https'
-        remote_addrs = plugin_ctx.get_from_environ('HTTP_X_FORWARDED_FOR',
-                                                   plugin_ctx.get_from_environ('REMOTE_ADDR', '')).split(', ')
+        https = plugin_ctx.headers.get('x-forwarded-protocol', '') == 'https'
+        remote_addrs = plugin_ctx.client_ip.split(', ')
         remote_addr = remote_addrs[0] if remote_addrs else ''
-        path_info = self.context_path.rstrip('/') + plugin_ctx.get_from_environ('PATH_INFO', '')
+        path_info = self.context_path.rstrip('/') + plugin_ctx.request.path_info
 
         headers = {
-            'HTTP_USER_AGENT': plugin_ctx.get_from_environ('HTTP_USER_AGENT', ''),
+            'HTTP_USER_AGENT': plugin_ctx.headers.get('user-agent', ''),
             'REMOTE_ADDR': remote_addr,
-            'HTTP_REFERER': plugin_ctx.get_from_environ('HTTP_REFERER', ''),
-            'HTTP_ACCEPT_LANGUAGE': plugin_ctx.get_from_environ('HTTP_ACCEPT_LANGUAGE', ''),
+            'HTTP_REFERER': plugin_ctx.headers.get('referer', ''),
+            'HTTP_ACCEPT_LANGUAGE': plugin_ctx.headers.get('accept-language', ''),
             'SERVER_NAME': server_name,
             'PATH_INFO': path_info,
-            'QUERY_STRING': plugin_ctx.get_from_environ('QUERY_STRING', ''),
+            'QUERY_STRING': plugin_ctx.request.path_info,
             'HTTPS': https,
         }
 

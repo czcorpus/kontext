@@ -136,6 +136,14 @@ class KRequest(Generic[M_args]):
     def remote_addr(self):
         return self._request.remote_addr
 
+    @property
+    def query_string(self):
+        return self._request.query_string
+
+    @property
+    def path_info(self):
+        return self._request.server_path
+
     def get_current_url(self) -> str:
         """
         Returns an URL representing current application state
