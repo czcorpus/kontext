@@ -200,7 +200,8 @@ class UcnkCorpArch3(MySQLCorparch):
     def create_corpus_info(self):
         return UcnkCorpusInfo()
 
-    def export_actions(self):
+    @staticmethod
+    def export_actions():
         return bp
 
     async def on_soft_reset(self):

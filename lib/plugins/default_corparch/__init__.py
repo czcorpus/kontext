@@ -677,7 +677,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         }
 
     @staticmethod
-    def export_actions(self):
+    def export_actions():
         return bp
 
 

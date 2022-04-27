@@ -233,7 +233,8 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             'local_action': self._conf['local_action'],
         }
 
-    def export_actions(self):
+    @staticmethod
+    def export_actions():
         return bp
 
     def get_groups_for(self, user_dict):
