@@ -24,7 +24,8 @@ from typing import List, Tuple
 import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import IntOpt, ListStrOpt, StrOpt, http_action
+from action.decorators import http_action
+from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
@@ -356,6 +357,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
         tmp['freq_sort'] = args.freq_sort
     result['freq_form_args'] = tmp
     result['freq_type'] = 'tokens'
+    result['alpha_level'] = None
     return result
 
 

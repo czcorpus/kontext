@@ -15,8 +15,7 @@
 
 import json
 from functools import wraps
-from typing import (Any, Callable, Coroutine, List, NewType, Optional, Type,
-                    Union)
+from typing import Any, Callable, Coroutine, Optional, Type, Union
 
 import settings
 from action.errors import (ForbiddenException, ImmediateRedirectException,
@@ -28,6 +27,7 @@ from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
 from action.theme import apply_theme
+from action.argmapping.action import create_mapped_args
 from dataclasses_json import DataClassJsonMixin
 from sanic import HTTPResponse, Sanic, response
 from sanic.request import Request
@@ -85,64 +85,6 @@ async def _output_result(
         raise RuntimeError(f'Exceptions occured: {result["messages"]}')
     raise RuntimeError(
         f'Unsupported result and return_type combination: {result.__class__.__name__},  {action_props.return_type}')
-
-
-StrOpt = NewType('StrOpt', str)
-ListStrOpt = NewType('ListStrOpt', List[str])
-IntOpt = NewType('IntOpt', int)
-ListIntOpt = NewType('ListIntOpt', List[int])
-
-
-def create_mapped_args(tp: Type, req: Request):
-    """
-    Create an instance of a (dataclass) Type based on req arguments.
-    Please note that the Type should contain only str/List[str] and int/List[int] values.
-
-    TODO handle Optional vs. default_factory etc.
-    """
-    props = tp.__annotations__
-    data = {}
-    for mk, mtype in props.items():
-        v = req.args.getlist(mk, [])
-        if len(v) == 0:
-            v = req.form.get(mk, [])
-        if mtype == str:
-            if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
-            if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
-            data[mk] = v[0]
-        elif mtype == StrOpt:
-            if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
-            elif len(v) == 1:
-                data[mk] = v[0]
-        elif mtype == List[str]:
-            if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
-            data[mk] = v
-        elif mtype == ListStrOpt:
-            if len(v) > 0:
-                data[mk] = v
-        elif mtype == int:
-            if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
-            elif len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
-            data[mk] = int(v[0])
-        elif mtype == IntOpt:
-            if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
-            elif len(v) == 1:
-                data[mk] = int(v[0])
-        elif mtype == List[int]:
-            if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
-            data[mk] = [int(x) for x in v]
-        elif mtype == ListIntOpt:
-            if len(v) > 0:
-                data[mk] = [int(x) for x in v]
-    return tp(**data)
 
 
 async def resolve_error(

@@ -15,7 +15,7 @@
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List
 
-from action.decorators import IntOpt
+from action.argmapping.action import IntOpt
 
 
 @dataclass
