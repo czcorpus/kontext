@@ -73,7 +73,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         used only in exceptional cases because no high security
         measures have been applied (as opposed to federated login).
     """
-    ID_KEYS = ('HTTP_EPPN', 'HTTP_PERSISTENT_ID', 'HTTP_MAIL')
+    ID_KEYS = ('eppn', 'persistent-id', 'mail')
     RESERVED_USER = '__user_count'
 
     async def get_user_info(self, plugin_ctx):
@@ -174,16 +174,16 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             Inspect HTTP headers and try to find a shibboleth user.
         """
         username = _get_non_empty_header(
-            plugin_ctx.get_from_environ, *FederatedAuthWithFailover.ID_KEYS)
+            plugin_ctx.request.headers.get, *FederatedAuthWithFailover.ID_KEYS)
         if username is None or username == FederatedAuthWithFailover.RESERVED_USER:
             return None
 
         firstname = uni(_get_non_empty_header(
-            plugin_ctx.get_from_environ, 'HTTP_GIVENNAME') or "")
+            plugin_ctx.request.headers.get, 'givenname') or "")
         surname = uni(_get_non_empty_header(
-            plugin_ctx.get_from_environ, 'HTTP_SN') or "")
+            plugin_ctx.request.headers.get, 'sn') or "")
         displayname = uni(_get_non_empty_header(
-            plugin_ctx.get_from_environ, 'HTTP_DISPLAYNAME', 'HTTP_CN') or "")
+            plugin_ctx.request.headers.get, 'displayname', 'cn') or "")
 
         # this will work most of the times but very likely not
         # always (no unification in what IdPs are sending)
@@ -194,7 +194,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
                 surname = names[-1]
 
         idp = uni(_get_non_empty_header(
-            plugin_ctx.get_from_environ, "HTTP_SHIB_IDENTITY_PROVIDER") or "")
+            plugin_ctx.request.headers.get, 'shib-identity-provider') or "")
 
         db_user_d = await self._db.hash_get_all(username)
         if 0 == len(db_user_d):
@@ -217,7 +217,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
         else:
             groups = []
         shib_groups = self._get_shibboleth_groups_from_entitlement_vals(uni(_get_non_empty_header(
-            plugin_ctx.get_from_environ, "HTTP_ENTITLEMENT") or ""))
+            plugin_ctx.request.headers.get, 'entitlement') or ""))
         groups = groups + shib_groups
         user_d['groups'] = groups
 
