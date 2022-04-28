@@ -30,7 +30,7 @@ import re
 import sqlite3
 import time
 import uuid
-from ctypes import Union
+from typing import Union
 
 import plugins
 import ujson as json
