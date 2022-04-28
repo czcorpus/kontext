@@ -21,6 +21,7 @@
 import logging
 import os
 from typing import Callable, List, Optional, Tuple, Union
+import asyncio
 
 import aiofiles.os
 import bgcalc
@@ -147,8 +148,14 @@ def _should_be_bg_query(corp: AbstractKCorpus, query: Tuple[str, ...], asnc: int
 
 
 async def get_conc(
-        corp: AbstractKCorpus, user_id: int, q: Optional[Union[List[str], Tuple[str, ...]]] = None, fromp: int=0, pagesize: int=0, asnc: int=0,
-        samplesize: int=0, translate: Callable[[str], str] = lambda x: x) -> KConc:
+        corp: AbstractKCorpus,
+        user_id: int,
+        q: Optional[Union[List[str], Tuple[str, ...]]] = None,
+        fromp: int = 0,
+        pagesize: int = 0,
+        asnc: int = 0,
+        samplesize: int = 0,
+        translate: Callable[[str], str] = lambda x: x) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -179,7 +186,13 @@ async def get_conc(
         minsize = fromp * pagesize  # happy case for a user
     subchash = getattr(corp, 'subchash', None)
     # try to locate concordance in cache
-    calc_from, conc = await find_cached_conc_base(corp, subchash, q, minsize, translate)
+    lock = asyncio.Lock()
+    async with lock:
+        # 1st coroutine goes through (there is no conc cache yet)
+        # 2nd goes through but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
+        # >= 3 cannot enter but once it can the concordance is already avail. so there is no unnecessary lag here
+        # (it doesn't matter whether a coroutine waits here or in 'wait_for_conc()')
+        calc_from, conc = await find_cached_conc_base(corp, subchash, q, minsize, translate)
     if not conc and q[0][0] == 'R':  # online sample
         q_copy = list(q)
         q_copy[0] = q[0][1:]
@@ -190,8 +203,9 @@ async def get_conc(
     # move mid-sized aligned corpora or large non-aligned corpora to background
     if _should_be_bg_query(corp, q, asnc):
         minsize = fromp * pagesize
-        conc = await _get_bg_conc(corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
-                                  calc_from=calc_from, minsize=minsize, translate=translate)
+        conc = await _get_bg_conc(
+            corp=corp, user_id=user_id, q=q, subchash=subchash, samplesize=samplesize,
+            calc_from=calc_from, minsize=minsize, translate=translate)
     else:
         worker = GeneralWorker()
         if isinstance(conc, InitialConc):
