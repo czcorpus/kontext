@@ -287,6 +287,10 @@ class PyConc(manatee.Concordance):
             if test_word_empty(word):
                 has_empty_item = True
                 continue
+            if nf == 0:
+                logging.getLogger(__name__).warning(
+                    f'ipm calculation problem: zero base set size (corpus: {self.corpname}, word: {w}, f: {f})')
+                continue
             lines.append(dict(
                 Word=word,
                 freq=f,
