@@ -61,7 +61,7 @@ import plugins
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
 from dataclasses_json import dataclass_json
 from lxml import etree
@@ -179,7 +179,7 @@ class TreeCorparch(AbstractCorporaArchive):
                 return item
         return None
 
-    async def _localize_corpus_info(self, plugin_ctx: PluginCtx, data: Union[CorpusInfo, BrokenCorpusInfo]):
+    async def _localize_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, data: Union[CorpusInfo, BrokenCorpusInfo]):
         """
         Updates localized values from data (please note that not all
         the data are localized - e.g. paths to files) by a single variant

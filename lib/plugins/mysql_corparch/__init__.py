@@ -27,7 +27,7 @@ import ujson as json
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
-from action.plugin.ctx import PluginCtx
+from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
 from action.response import KResponse
 from aiomysql.cursors import Cursor
 from plugin_types.corparch import (AbstractSearchableCorporaArchive,
@@ -291,7 +291,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     cursor, corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
-    async def get_corpus_info(self, plugin_ctx, corp_name):
+    async def get_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, corp_name: str):
         """
         Obtain full corpus info
         """
