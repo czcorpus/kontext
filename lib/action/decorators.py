@@ -212,8 +212,6 @@ def http_action(
                 if settings.is_debug_mode():
                     import traceback
                     resp.add_system_message('error', traceback.format_exc())
-                else:
-                    resp.add_system_message('error', str(ex))
 
             if ans is None:
                 resp_body = None
