@@ -158,16 +158,13 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     elif filter_args['corpname'] is None:
         filter_args['corpname'] = ''  # JS code requires non-null value
 
-    try:
-        with plugins.runtime.SUBC_RESTORE as sr:
-            try:
-                full_list = await sr.extend_subc_list(amodel.plugin_ctx, data, filter_args, 0)
-            except Exception as e:
-                logging.getLogger(__name__).error(
-                    'subc_restore plug-in failed to list queries: %s' % e)
-                full_list = data
-    except plugins.PluginNotInstalled:
-        full_list = data
+    full_list = data
+    with plugins.runtime.SUBC_RESTORE as sr:
+        try:
+            full_list = await sr.extend_subc_list(amodel.plugin_ctx, data, filter_args, 0)
+        except Exception as e:
+            logging.getLogger(__name__).error(
+                'subc_restore plug-in failed to list queries: %s' % e)
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)

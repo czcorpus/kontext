@@ -7,8 +7,8 @@ RUN nvm install 16
 RUN apt-get install -y sox libsox-fmt-mp3
 
 COPY ./requirements.txt ./
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt gunicorn
-RUN mkdir /var/log/gunicorn && mkdir /var/log/gunicorn/kontext && mkdir /var/local/corpora/query_persistence
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN mkdir /var/local/corpora/query_persistence
 
 COPY ./pack*.json ./
 RUN npm install
@@ -17,4 +17,4 @@ COPY . .
 RUN python3 scripts/install/steps.py SetupKontext
 RUN npm start build:production && npm prune --production
 
-CMD [ "gunicorn", "-c", "./scripts/install/conf/docker/gunicorn-conf.py", "public.app:application" ]
+CMD [ "python3", "./public/app.py", "--address", "0.0.0.0", "--port", "8080", "--workers", "2" ]

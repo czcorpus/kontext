@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import argparse
+import asyncio
 import os
 import re
 import sys
@@ -28,52 +29,52 @@ from plugins.default_auth import (DefaultAuthHandler, get_user_id_from_key,
 initializer.init_plugin('db')
 
 
-def get_user_key(user_id):
+async def get_user_key(user_id):
     with plugins.runtime.DB as db:
         try:
             user_id = int(user_id)
             return mk_user_key(user_id)
         except ValueError:
-            user_key = db.hash_get(DefaultAuthHandler.USER_INDEX_KEY, user_id)
+            user_key = await db.hash_get(DefaultAuthHandler.USER_INDEX_KEY, user_id)
             if user_key is None:
                 return None
-            return user_key if db.get(user_key) is not None else None
+            return user_key if await db.get(user_key) is not None else None
 
 
-def add_corpora(user_id, corpora):
+async def add_corpora(user_id, corpora):
     with plugins.runtime.DB as db:
-        curr_list = db.get(mk_list_key(user_id))
+        curr_list = await db.get(mk_list_key(user_id))
         for corp in corpora:
             if corp not in curr_list:
                 curr_list.append(corp)
             else:
                 print(('Corpus {0} already present, skipping.'.format(corp)))
-        db.set(mk_list_key(user_id), curr_list)
+        await db.set(mk_list_key(user_id), curr_list)
 
 
-def remove_corpora(user_id, corpora):
+async def remove_corpora(user_id, corpora):
     with plugins.runtime.DB as db:
-        curr_list = db.get(mk_list_key(user_id))
+        curr_list = await db.get(mk_list_key(user_id))
         print(('Current corpora for the user:\n\t{0}'.format(', '.join(curr_list))))
         new_list = []
         for corp in curr_list:
             if corp not in corpora:
                 new_list.append(corp)
-        db.set(mk_list_key(user_id), new_list)
+        await db.set(mk_list_key(user_id), new_list)
         print(('New corpora for the user:\n\t{0}'.format(', '.join(new_list))))
 
 
-def remove_all_corpora(user_id):
+async def remove_all_corpora(user_id):
     with plugins.runtime.DB as db:
-        curr_items = db.get(mk_list_key(user_id))
-        db.set(mk_list_key(user_id), [])
+        curr_items = await db.get(mk_list_key(user_id))
+        await db.set(mk_list_key(user_id), [])
         print('Removed access to any corpus for the user.')
         print(('Removed values:\n\t{0}'.format(', '.join(curr_items))))
 
 
-def list_corpora(user_id):
+async def list_corpora(user_id):
     with plugins.runtime.DB as db:
-        items = db.get(mk_list_key(user_id))
+        items = await db.get(mk_list_key(user_id))
         print(('Current corpora for the user:\n\t{0}'.format(', '.join(items))))
 
 
@@ -91,20 +92,20 @@ if __name__ == '__main__':
                         help='Comma-separated list of values (avoid spaces or use quotes)')
     args = parser.parse_args()
 
-    user_key = get_user_key(args.user_ident)
+    user_key = asyncio.run(get_user_key(args.user_ident))
     if user_key is None:
         print(('user [{0}] not found'.format(args.user_ident)))
         sys.exit(1)
 
     user_id = get_user_id_from_key(user_key)
     if args.action == 'add':
-        add_corpora(user_id, import_corplist(args.corpora))
+        asyncio.run(add_corpora(user_id, import_corplist(args.corpora)))
     elif args.action == 'remove':
-        remove_corpora(user_id, import_corplist(args.corpora))
+        asyncio.run(remove_corpora(user_id, import_corplist(args.corpora)))
     elif args.action == 'remove_all':
-        remove_all_corpora(user_id)
+        asyncio.run(remove_all_corpora(user_id))
     elif args.action == 'list':
-        list_corpora(user_id)
+        asyncio.run(list_corpora(user_id))
     else:
         print(('Unknown action {0}'.format(args.action)))
         sys.exit(1)

@@ -37,7 +37,6 @@ from plugin_types.auth.hash import (mk_pwd_hash, mk_pwd_hash_default,
                                     split_pwd_hash)
 from plugin_types.general_storage import KeyValueStorage
 from plugins import inject
-from sanic_session import Session
 
 from .sign_up import SignUpToken
 
