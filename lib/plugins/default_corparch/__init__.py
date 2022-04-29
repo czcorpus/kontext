@@ -156,7 +156,7 @@ class DefaultCorplistProvider(CorplistProvider):
         ans = {'rows': []}
         permitted_corpora = await self._auth.permitted_corpora(plugin_ctx.user_dict)
         used_keywords = set()
-        all_keywords_map = dict(self._corparch.all_keywords(plugin_ctx))
+        all_keywords_map = dict(await self._corparch.all_keywords(plugin_ctx))
         if plugin_ctx.request.args.get('minSize'):
             min_size = l10n.desimplify_num(plugin_ctx.request.args.get('minSize'), strict=False)
         else:
