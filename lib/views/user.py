@@ -185,18 +185,17 @@ async def set_user_password(amodel: UserActionModel, req: KRequest, resp: KRespo
 
 async def _load_query_history(
         amodel: UserActionModel, user_id: int, offset: int, limit: int, from_date: str, to_date: str, q_supertype: str, corpname: str, archived_only: bool):
-    try:
-        with plugins.runtime.QUERY_HISTORY as qh:
-            rows = await qh.get_user_queries(
-                user_id,
-                amodel.cm,
-                offset=offset, limit=limit,
-                q_supertype=q_supertype, corpname=corpname,
-                from_date=from_date, to_date=to_date,
-                archived_only=archived_only,
-                translate=amodel.plugin_ctx.translate)
-    except plugins.PluginNotInstalled:
-        rows = ()
+
+    rows = ()
+    with plugins.runtime.QUERY_HISTORY as qh:
+        rows = await qh.get_user_queries(
+            user_id,
+            amodel.cm,
+            offset=offset, limit=limit,
+            q_supertype=q_supertype, corpname=corpname,
+            from_date=from_date, to_date=to_date,
+            archived_only=archived_only,
+            translate=amodel.plugin_ctx.translate)
     return rows
 
 

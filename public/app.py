@@ -193,26 +193,26 @@ def get_locale(request: Request) -> str:
     """
     cookies = KonTextCookie(request.headers.get('cookie', ''))
 
-    try:
-        with plugins.runtime.GETLANG as getlang:
+    with plugins.runtime.GETLANG as getlang:
+        if getlang is not None:
             lgs_string = getlang.fetch_current_language(cookies)
-    except plugins.PluginNotInstalled:
-        lang_cookie = cookies.get('kontext_ui_lang')
-        if not lang_cookie:
-            langs = request.headers.get('accept-language')
-            if langs:
-                lgs_string = langs.split(';')[0].split(',')[0].replace('-', '_')
+        else:
+            lang_cookie = cookies.get('kontext_ui_lang')
+            if not lang_cookie:
+                langs = request.headers.get('accept-language')
+                if langs:
+                    lgs_string = langs.split(';')[0].split(',')[0].replace('-', '_')
+                else:
+                    lgs_string = None
             else:
-                lgs_string = None
-        else:
-            lgs_string = lang_cookie.value
-        if lgs_string is None:
-            lgs_string = 'en_US'
-        if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
-            lgs_string = request.ctx.installed_langs.get(
-                lgs_string)  # TODO replace by application ctx?
-        else:
-            lgs_string = lgs_string.replace('-', '_')
+                lgs_string = lang_cookie.value
+            if lgs_string is None:
+                lgs_string = 'en_US'
+            if len(lgs_string) == 2:  # in case we obtain just an ISO 639 language code
+                lgs_string = request.ctx.installed_langs.get(
+                    lgs_string)  # TODO replace by application ctx?
+            else:
+                lgs_string = lgs_string.replace('-', '_')
 
     if lgs_string is None:
         lgs_string = 'en_US'

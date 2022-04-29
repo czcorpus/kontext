@@ -333,7 +333,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         """
         cl = []
         for item in list((await self._raw_list(plugin_ctx)).values()):
-            corp_id, path, web = item['id'], item['path'], item['sentence_struct']
+            corp_id, path, web = item.id, item.path, item.sentence_struct
             if corp_id in user_allowed_corpora:
                 try:
                     corp_info = await plugin_ctx.corpus_manager.get_info(corp_id, plugin_ctx.translate)

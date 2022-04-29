@@ -88,11 +88,8 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         and the CorpusManager.
         """
         req_args = await super().pre_dispatch(req_args)
-        try:
-            with plugins.runtime.DISPATCH_HOOK as dhook:
-                await dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
-        except plugins.PluginNotInstalled:
-            pass
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            await dhook.pre_dispatch(self.plugin_ctx, self._action_props, self._req)
 
         options = {}
         await self._scheduled_actions(options)
@@ -119,11 +116,9 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                 self._req, self.args, action_props.action_log_mapper,
                 f'{action_props.action_prefix}{action_props.action_name}',
                 err_desc=err_desc)
-        try:
-            with plugins.runtime.DISPATCH_HOOK as dhook:
-                await dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
-        except plugins.PluginNotInstalled:
-            pass
+
+        with plugins.runtime.DISPATCH_HOOK as dhook:
+            await dhook.post_dispatch(self.plugin_ctx, action_props.action_name, action_props)
 
     @staticmethod
     def _init_default_settings(options):
@@ -410,16 +405,14 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['supports_password_change'] = self._uses_internal_user_pages()
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
-        try:
-            with plugins.runtime.APPLICATION_BAR as application_bar:
-                result['app_bar'] = await application_bar.get_contents(plugin_ctx=self.plugin_ctx,
-                                                                       return_url=self.return_url)
-                result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self.plugin_ctx)
-                result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self.plugin_ctx)
-        except plugins.PluginNotInstalled:
-            result['app_bar'] = None
-            result['app_bar_css'] = []
-            result['app_bar_js'] = []
+        result['app_bar'] = None
+        result['app_bar_css'] = []
+        result['app_bar_js'] = []
+        with plugins.runtime.APPLICATION_BAR as application_bar:
+            result['app_bar'] = await application_bar.get_contents(plugin_ctx=self.plugin_ctx,
+                                                                   return_url=self.return_url)
+            result['app_bar_css'] = application_bar.get_styles(plugin_ctx=self.plugin_ctx)
+            result['app_bar_js'] = application_bar.get_scripts(plugin_ctx=self.plugin_ctx)
 
         result['footer_bar'] = None
         result['footer_bar_css'] = None
@@ -442,12 +435,9 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['job_status_service_url'] = os.environ.get(
             'STATUS_SERVICE_URL', settings.get('calc_backend', 'status_service_url', None))
 
-        try:
-            with plugins.runtime.ISSUE_REPORTING as irp:
-                result['issue_reporting_action'] = irp.export_report_action(
-                    self.plugin_ctx).to_dict()
-        except plugins.PluginNotInstalled:
-            result['issue_reporting_action'] = None
+        result['issue_reporting_action'] = None
+        with plugins.runtime.ISSUE_REPORTING as irp:
+            result['issue_reporting_action'] = irp.export_report_action(self.plugin_ctx).to_dict()
 
         result['can_send_mail'] = bool(settings.get('mailing'))
         await self.attach_plugin_exports(result, direct=False)
