@@ -12,11 +12,9 @@ services:
     # also we give anonymous user permission to access
     # example corpus susanne when using `default_auth` plugin
     command: >
-      bash -c "
-        cp -r /opt/kontext/public/files/* /opt/kontext/public/share
-        && python3 lib/plugins/default_auth/scripts/usercorp.py 1 add susanne
-        && python3 public/app.py --address 0.0.0.0 --port 8080 --workers 2
-      "
+      bash -c "cp -r /opt/kontext/public/files/* /opt/kontext/public/share &&
+               python3 lib/plugins/default_auth/scripts/usercorp.py 1 add susanne &&
+               python3 public/app.py --address 0.0.0.0 --port 8080 --workers 2"
     environment:
       - STATUS_SERVICE_URL=
     volumes:
