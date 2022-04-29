@@ -10,11 +10,11 @@
   },
   {
     "id": 1,
-    "username": "your_user",
-    "pwd": "yourpwd",
-    "firstname": "Your",
-    "lastname": "Name",
-    "email": "your.email@your.domain",
+    "username": "username",
+    "pwd": "password",
+    "firstname": "Karel",
+    "lastname": "Kontext",
+    "email": null,
     "permitted_corpora": ["susanne", "your_corpus", "your_other_corpus"]
   }
 ]

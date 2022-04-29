@@ -24,13 +24,17 @@ def import_user_redis(data):
     import redis
     db = redis.StrictRedis(host=db_conf['host'],
                            port=db_conf['port'], db=db_conf['id'])
-    data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
-    del data['pwd']
-    db.set('corplist:user:{0}'.format(data['id']), json.dumps(data.get('permitted_corpora', [])))
-    del data['permitted_corpora']
-    db.set('user:{0}'.format(data['id']), json.dumps(data))
-    db.hset('user_index', data['username'], json.dumps('user:{0}'.format(data['id'])))
-    print(('Installed user {}'.format(data['username'])))
+    if not db.exists('user:{0}'.format(data['id'])):
+        data['pwd_hash'] = mk_pwd_hash_default(data['pwd']) if data['pwd'] else None
+        del data['pwd']
+        db.set('corplist:user:{0}'.format(data['id']),
+               json.dumps(data.get('permitted_corpora', [])))
+        del data['permitted_corpora']
+        db.set('user:{0}'.format(data['id']), json.dumps(data))
+        db.hset('user_index', data['username'], json.dumps('user:{0}'.format(data['id'])))
+        print(('Installed user {}'.format(data['username'])))
+    else:
+        print(('User `{}` already exists! Skipping.'.format(data['username'])))
 
 
 def import_user_sqlite3(data):
