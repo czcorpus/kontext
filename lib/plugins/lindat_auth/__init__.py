@@ -138,7 +138,7 @@ class FederatedAuthWithFailover(AbstractSemiInternalAuth):
             return False, True, ''
         return False, False, ''
 
-    def permitted_corpora(self, user_dict) -> List[str]:
+    async def permitted_corpora(self, user_dict) -> List[str]:
         """
         Returns a dictionary containing corpora IDs user can access.
 
