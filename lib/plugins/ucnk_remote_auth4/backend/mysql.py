@@ -152,6 +152,75 @@ class Backend(DatabaseBackend):
     def __init__(self, conf):
         self._db = MySQL(conf)
 
+    def _corpus_access_query(self, user_id):
+        """
+        Query to get corpora user has access to. It accepts 2 `user_id` arguments
+        """
+        return (
+                '''
+                SELECT
+                    acc.{} AS corpus_id,
+                    acc.limited AS limited
+                FROM {} AS acc
+                WHERE acc.user_id = %s
+                UNION
+                SELECT
+                    g_acc.{} AS corpus_id,
+                    g_acc.limited AS limited
+                FROM {} AS g_acc
+                WHERE g_acc.{} = (
+                    SELECT {}.{}
+                    FROM {}
+                    WHERE {}.id = %s
+                )
+                '''.format(
+                    self._user_acc_corp_attr, self._user_acc_table, self._group_acc_corp_attr,
+                    self._group_acc_table, self._group_acc_group_attr, self._user_table, self._user_group_acc_attr,
+                    self._user_table, self._user_table),
+                [user_id, user_id]
+        )
+
+    def _parallel_access_query(self, user_id):
+        """
+        Query to get parallel corpora user has access to. It accepts 2 `user_id` arguments.
+        """
+        return (
+                '''
+                SELECT
+                    corp.{} AS corpus_id,
+                    pc_acc.limited AS limited
+                FROM {} AS pc_acc
+                JOIN {} AS corp ON corp.{} = pc_acc.{}
+                WHERE
+                    pc_acc.user_id = %s
+                UNION
+                SELECT
+                    corp.{} AS corpus_id,
+                    g_pc_acc.limited AS limited
+                FROM {} AS g_pc_acc
+                JOIN {} AS corp ON corp.{} = g_pc_acc.{}
+                WHERE g_pc_acc.{} = (
+                    SELECT user.{}
+                    FROM {} AS user
+                    WHERE user.id = %s
+                )
+                '''.format(
+                    self._corp_id_attr, self._user_pc_acc_table, self._corp_table, self._corp_pc_id_attr,
+                    self._user_pc_acc_pc_attr, self._corp_id_attr, self._group_pc_acc_table, self._corp_table,
+                    self._corp_pc_id_attr, self._group_pc_acc_pc_attr, self._group_pc_acc_group_attr,
+                    self._user_group_acc_attr, self._user_table),
+                [user_id, user_id]
+        )
+
+    def _total_access_query(self, user_id):
+        corp_acc_sql, corp_acc_args = self._corpus_access_query(user_id)
+        if self._enable_parallel_acc:
+            par_acc_sql, par_acc_args = self._parallel_access_query(user_id)
+            return (
+                '{} UNION {}'.format(corp_acc_sql, par_acc_sql),
+                corp_acc_args + par_acc_args)
+        return corp_acc_sql, corp_acc_args
+
     def contains_corpus(self, corpus_id):
         cursor = self._db.cursor()
         cursor.execute('SELECT name FROM kontext_corpus WHERE name = %s', (corpus_id,))
@@ -220,22 +289,20 @@ class Backend(DatabaseBackend):
         where_cond1 = ['c.active = %s', 'c.requestable = %s']
         values_cond1 = [1, 1]
         where_cond2 = ['c.active = %s']
-        values_cond2 = [user_id, 1]  # the first item belongs to setting a special @ variable
+        values_cond2 = [1]
         if substrs is not None:
             for substr in substrs:
-                where_cond1.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
-                values_cond1.append(u'%{0}%'.format(substr))
-                values_cond1.append(u'%{0}%'.format(substr))
-                values_cond1.append(u'%{0}%'.format(substr))
-                where_cond2.append(u'(rc.name LIKE %s OR c.name LIKE %s OR rc.info LIKE %s)')
-                values_cond2.append(u'%{0}%'.format(substr))
-                values_cond2.append(u'%{0}%'.format(substr))
-                values_cond2.append(u'%{0}%'.format(substr))
+                where_cond1.append(
+                    '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
+                values_cond1.extend(4 * ['%{}%'.format(substr)])
+                where_cond2.append(
+                    '(rc.name LIKE %s OR c.name LIKE %s OR c.description_cs LIKE %s OR c.description_en LIKE %s)')
+                values_cond2.extend(4 * ['%{}%'.format(substr)])
         if keywords is not None and len(keywords) > 0:
-            where_cond1.append(u'({0})'.format(' OR '.join(
-                u'kc.keyword_id = %s' for _ in range(len(keywords)))))
-            where_cond2.append(u'({0})'.format(' OR '.join(
-                u'kc.keyword_id = %s' for _ in range(len(keywords)))))
+            where_cond1.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
+            where_cond2.append(
+                '({0})'.format(' OR '.join('kc.keyword_id = %s' for _ in keywords)))
             for keyword in keywords:
                 values_cond1.append(keyword)
                 values_cond2.append(keyword)
@@ -263,52 +330,61 @@ class Backend(DatabaseBackend):
         sql = ('SELECT IF(count(*) = MAX(requestable), 1, 0) AS requestable, id, web, collator_locale, '
                'speech_segment, speaker_id_attr, speech_overlap_attr, speech_overlap_val, use_safe_font, featured, '
                '`database`, label_attr, id_attr, reference_default, reference_other, ttdesc_id, num_match_keys, size, '
-               'info, name, encoding, language, g_name, version, keywords FROM (')
+               'name, encoding, language, g_name, version, keywords, description_cs, description_en FROM (')
         where = []
         if requestable:
             where.extend(values_cond1)
             sql += (
-                '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, c.requestable, '
+                '(SELECT c.name as id, c.web, c.locale AS collator_locale, '
+                'NULL as speech_segment, c.requestable, '
                 'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
                 'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
                 'NULL AS reference_other, NULL AS ttdesc_id, '
+                'c.description_cs, c.description_en, '
                 'COUNT(kc.keyword_id) AS num_match_keys, '
-                'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+                'c.size, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
                 'c.group_name AS g_name, c.version AS version, '
                 '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
                 'WHERE kcx.corpus_name = c.name) AS keywords '
-                'FROM corpora AS c '
+                'FROM {corp_table} AS c '
                 'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
                 'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
                 'WHERE {where1} '
                 'GROUP BY c.name '
                 'HAVING num_match_keys >= %s ) '
-                'UNION ').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1))
+                'UNION ').format(where1=' AND '.join('(' + wc + ')' for wc in where_cond1), corp_table=self._corp_table)
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
+        where.extend(total_acc_args)
         where.extend(values_cond2)
         sql += (
-            '(SELECT c.name as id, c.web, c.collator_locale, NULL as speech_segment, 0 as requestable, '
+            '(SELECT c.name as id, c.web, c.locale AS collator_locale, '
+            'NULL as speech_segment, 0 as requestable, '
             'c.speaker_id_attr,  c.speech_overlap_attr,  c.speech_overlap_val, c.use_safe_font, '
             'c.featured, NULL AS `database`, NULL AS label_attr, NULL AS id_attr, NULL AS reference_default, '
             'NULL AS reference_other, NULL AS ttdesc_id, '
+            'c.description_cs, c.description_en, '
             'COUNT(kc.keyword_id) AS num_match_keys, '
-            'c.size, rc.info, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
+            'c.size, ifnull(rc.name, c.name) AS name, rc.rencoding AS encoding, rc.language, '
             'c.group_name AS g_name, c.version AS version, '
             '(SELECT GROUP_CONCAT(kcx.keyword_id, \',\') FROM kontext_keyword_corpus AS kcx '
             'WHERE kcx.corpus_name = c.name) AS keywords '
             'FROM '
-            '(SELECT @user_id_global := %s AS p) AS param '
-            'JOIN corpora AS c '
+            '{corp_table} AS c '
             'LEFT JOIN kontext_keyword_corpus AS kc ON kc.corpus_name = c.name '
             'LEFT JOIN registry_conf AS rc ON rc.corpus_name = c.name '
-            'JOIN user_corpus_parametrized AS kcu ON c.id = kcu.corpus_id '
-            'WHERE {where2} '
+            'JOIN ('
+            ' {total_acc_sql} '
+            ') AS kcu ON c.{corp_id_attr} = kcu.corpus_id '
+            'WHERE {where_cond2} '
             'GROUP BY c.name '
             'HAVING num_match_keys >= %s ) '
             ') AS ans '
             'GROUP BY id '
             'ORDER BY g_name, version DESC, id '
             'LIMIT %s '
-            'OFFSET %s').format(where2=' AND '.join('(' + wc + ')' for wc in where_cond2))
+            'OFFSET %s').format(
+            corp_table=self._corp_table, total_acc_sql=total_acc_sql, corp_id_attr=self._corp_id_attr,
+            where_cond2=" AND ".join("(" + wc + ")" for wc in where_cond2))
         c.execute(sql, where + [limit, offset])
         return c.fetchall()
 
@@ -403,12 +479,17 @@ class Backend(DatabaseBackend):
         return cursor.fetchall()
 
     def get_permitted_corpora(self, user_id):
+        total_acc_sql, total_acc_args = self._total_access_query(user_id)
         cursor = self._db.cursor()
-        cursor.execute('SELECT ucp.user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
-                       'FROM (SELECT @user_id_global := %s p) AS param '
-                       'JOIN user_corpus_parametrized AS ucp '
-                       'JOIN corpora AS c ON ucp.corpus_id = c.id', (user_id, ))
-        return [(r['corpus_id'], r['variant']) for r in cursor.fetchall()]
+        cursor.execute((
+            'SELECT %s AS user_id, c.name AS corpus_id, IF (ucp.limited = 1, \'omezeni\', NULL) AS variant '
+            'FROM ( '
+            ' {total_acc_sql} '
+            ') as ucp '
+            'JOIN {corp_table} AS c ON ucp.corpus_id = c.id').format(
+                total_acc_sql=total_acc_sql, corp_table=self._corp_table),
+            [user_id] + total_acc_args)
+        return [r['corpus_id'] for r in cursor.fetchall()]
 
     def load_interval_attrs(self, corpus_id):
         cursor = self._db.cursor()
