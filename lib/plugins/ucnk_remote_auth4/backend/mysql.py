@@ -182,6 +182,7 @@ class Backend(DatabaseBackend):
         self._user_pc_acc_table = 'user_parallel_corpus'
         self._user_pc_acc_pc_attr = 'parallel_corpus_id'
         self._enable_parallel_acc = True
+        self._corp_pc_id_attr = 'parallel_corpus_id'
 
     def _corpus_access_query(self, user_id):
         """
@@ -290,7 +291,7 @@ class Backend(DatabaseBackend):
     def load_corpus(self, corp_id):
         cursor = self._db.cursor()
         cursor.execute(
-            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.collator_locale, '
+            'SELECT c.name as id, c.web, cs.name AS sentence_struct, c.locale AS collator_locale, '
             'IF (c.speaker_id_struct IS NOT NULL, CONCAT(c.speaker_id_struct, \'.\', c.speaker_id_attr), NULL) '
             '  AS speaker_id_attr, '
             'IF (c.speech_overlap_struct IS NOT NULL AND c.speech_overlap_attr IS NOT NULL, '

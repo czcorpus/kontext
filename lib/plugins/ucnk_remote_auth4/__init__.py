@@ -182,7 +182,7 @@ class CentralAuth(AbstractRemoteAuth):
         corpora = self._db.get_permitted_corpora(user_dict['id'])
         if (IMPLICIT_CORPUS, None) not in corpora:
             corpora.append((IMPLICIT_CORPUS, None))
-        return dict((c, pref) for c, pref in corpora)
+        return list(c for c in corpora)
 
     def get_user_info(self, plugin_api):
         ans = {}
