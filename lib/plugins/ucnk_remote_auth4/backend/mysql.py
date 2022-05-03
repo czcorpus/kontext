@@ -47,6 +47,22 @@ from types import ModuleType
 
 from plugins.rdbms_corparch.backend import DatabaseBackend
 
+DFLT_USER_TABLE = 'kontext_user'
+DFLT_USER_CORPLIST_ATTR = 'corplist_id'
+DFLT_CORP_TABLE = 'kontext_corpus'
+DFLT_CORP_ID_ATTR = 'name'
+DFLT_CORP_PC_ID_ATTR = 'parallel_corpus_id'
+DFLT_GROUP_ACC_TABLE = 'kontext_group_access'
+DFLT_GROUP_ACC_CORP_ATTR = 'corpus_name'
+DFLT_GROUP_ACC_GROUP_ATTR = 'group_access'
+DFLT_USER_ACC_TABLE = 'kontext_user_access'
+DFLT_USER_ACC_CORP_ATTR = 'corpus_name'
+DFLT_GROUP_PC_ACC_TABLE = 'kontext_group_pc_access'
+DFLT_GROUP_PC_ACC_PC_ATTR = 'parallel_corpus_id'
+DFLT_GROUP_PC_ACC_GROUP_ATTR = 'group_access'
+DFLT_USER_PC_ACC_TABLE = 'kontext_user_pc_access'
+DFLT_USER_PC_ACC_PC_ATTR = 'parallel_corpus_id'
+
 
 class MySQLConfException(Exception):
     pass
@@ -151,6 +167,21 @@ class Backend(DatabaseBackend):
 
     def __init__(self, conf):
         self._db = MySQL(conf)
+        self._user_table = 'user'
+        self._user_group_acc_attr = 'corplist'
+        self._corp_table = 'corpora'
+        self._corp_id_attr = 'id'
+        self._group_acc_table = 'corplist_corpus'
+        self._group_acc_group_attr = 'corplist_id'
+        self._group_acc_corp_attr = 'corpus_id'
+        self._user_acc_table = 'user_corpus'
+        self._user_acc_corp_attr = 'corpus_id'
+        self._group_pc_acc_table = 'corplist_parallel_corpus'
+        self._group_pc_acc_pc_attr = 'parallel_corpus_id'
+        self._group_pc_acc_group_attr = 'corplist_id'
+        self._user_pc_acc_table = 'user_parallel_corpus'
+        self._user_pc_acc_pc_attr = 'parallel_corpus_id'
+        self._enable_parallel_acc = True
 
     def _corpus_access_query(self, user_id):
         """
