@@ -133,7 +133,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.id = row['id']
             ans.web = row['web']
             ans.sentence_struct = row['sentence_struct']
-            ans.collator_locale = row['collator_locale']
+            ans.collator_locale = row['collator_locale'] if row['collator_locale'] else 'en_US'
             ans.speech_segment = row['speech_segment']
             ans.speaker_id_attr = row['speaker_id_attr']
             ans.speech_overlap_attr = row['speech_overlap_attr']
