@@ -64,10 +64,6 @@ _formats: Dict[str, Any] = {}  # contains lang_code -> Formatter() pairs
 _current = local()  # thread-local variable stores per-request formatter
 
 
-class LocalizationError(Exception):
-    pass
-
-
 def sort(iterable, loc, key=None, reverse=False):
     """
     Creates new sorted list from passed list (or any iterable data) according to the passed locale.
@@ -79,8 +75,7 @@ def sort(iterable, loc, key=None, reverse=False):
     reverse -- whether the result should be in reversed order (default is False)
     """
     if not loc:
-        raise LocalizationError(
-            'cannot sort string due to missing locale information (probably a configuration issue)')
+        loc = 'en_US'
     collator = Collator.createInstance(Locale(loc))
     if key is None:
         kf = cmp_to_key(collator.compare)
