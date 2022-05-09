@@ -1,1 +1,2 @@
 debugpy
+pre-commit
