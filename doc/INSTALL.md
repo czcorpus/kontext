@@ -32,7 +32,7 @@ as a standalone server application.
 
 ```
 sudo apt-get install lxc
-sudo lxc-create -t download -n kontext-container -- -d ubuntu -r bionic -a amd64
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r focal -a amd64
 sudo lxc-start -n kontext-container
 ```
 
