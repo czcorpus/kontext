@@ -1,17 +1,13 @@
 # Notes on using KonText with uWSGI on Ubuntu
 
-Please note that *uWSGI* provides quite an amount of features, plug-ins and 
-deployment options. For a complete overview please refer to 
+Please note that *uWSGI* provides quite an amount of features, plug-ins and
+deployment options. For a complete overview please refer to
 [uWSGI homepage](https://uwsgi-docs.readthedocs.io/en/latest/).
-
-If you have a choice what WSGI server to install we recommend using 
-[Gunicorn](http://gunicorn.org/) (see [./INSTALL.md](INSTALL.md) for more
-info).
 
 ## Install uWSGI and Python support
 
 ```
-sudo apt install uwsgi uwsgi-plugin-python 
+sudo apt install uwsgi uwsgi-plugin-python
 ```
 
 ## Configure KonText as a service
@@ -55,7 +51,7 @@ SocketGroup=www-data
 SocketMode=0660
 
 [Install]
-WantedBy=sockets.target 
+WantedBy=sockets.target
 ```
 
 Create a service file `uwsgi-kontext.service`:

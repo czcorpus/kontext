@@ -12,6 +12,5 @@ libltdl-dev
 build-essential
 tcl
 libxml2-utils
-gunicorn
 python-pyicu
 language-pack-en
