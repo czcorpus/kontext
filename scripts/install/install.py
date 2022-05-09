@@ -89,7 +89,7 @@ if __name__ == "__main__":
         subprocess.check_call(['pip3 install simplejson \'celery==4.4.*\' signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
         subprocess.check_call(
-            'curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -', shell=True)
+            'curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -', shell=True)
         subprocess.check_call('sudo apt-get install -y nodejs', shell=True)
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         {steps.bcolors.BOLD}{steps.bcolors.OKGREEN}
         KonText installation successfully completed.
         To start KonText, enter the following command in the KonText install root directory (i.e. {KONTEXT_PATH}):
-        
+
             sudo -u {steps.WEBSERVER_USER} python3 public/app.py --address 127.0.0.1 --port 8080
 
         (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
