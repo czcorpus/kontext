@@ -32,7 +32,7 @@ as a standalone server application.
 
 ```
 sudo apt-get install lxc
-sudo lxc-create -t download -n kontext-container -- -d ubuntu -r bionic -a amd64
+sudo lxc-create -t download -n kontext-container -- -d ubuntu -r focal -a amd64
 sudo lxc-start -n kontext-container
 ```
 
@@ -68,19 +68,12 @@ use the `install.py --patch /path/to/patch` option.
 (for more details about Manatee installation, see
 <a href="https://nlp.fi.muni.cz/trac/noske/wiki/Downloads">https://nlp.fi.muni.cz/trac/noske/wiki/Downloads</a>)
 
-For production use, you should use `--gunicorn` option with the `install.py` script
-which installs Gunicorn WSGI server.
-
 **[5]** Once the installation is complete, start KonText by entering the following
 command in the installation directory you specified above (*/opt/kontext*):
 
 ```
 python3 public/app.py --address 127.0.0.1 --port 8080
 ```
-
-Alternatively, in case you've used `--gunicorn` option, the installation script
-automatically started all the necessary services for you and you don't need
-the embedded WSGI server.
 
 **[6] Open `[container_IP_address]`  in your browser on the host. You should see
 KonText's home page and be able to enter a query to search in the sample Susanne corpus.
@@ -133,9 +126,6 @@ In general the following parameters should be in harmony:
 
 * HTTP proxy
   * read timeout (*proxy_read_timeout* in Nginx)
-* Gunicorn/uWSGI
-  * timeout (should be less or equal to proxy read timeout)
-  * number of workers (`workers = 10` in `conf/gunicorn-conf.py`)
 * Celery
   * timeout
     * hard timeout `CELERYD_OPTS="--time-limit=1800 --concurrency=64"`
@@ -279,8 +269,7 @@ Note: The script also allows removing access rights.
 ### Apply changes
 
 To force KonText to recognize your new corpus you can either send a `SIGUSR1`
-signal to a respective master Gunicorn process: `sudo -u www-data kill -s SIGUSR1 [proc num]` or you can restart your KonText
-application `systemctl restart gunicorn-kontext`.
+signal to a respective master process: `sudo -u www-data kill -s SIGUSR1 [proc num]`.
 
 
 ## Troubleshooting
@@ -307,5 +296,4 @@ journalctl -xe
 There are several logs which may be quite helpful when debugging different issues:
 
 1. KonText application log (configured in `conf/config.xml`)
-1. Gunicorn error log (configured in `conf/gunicorn-conf.py`)
-1. Celery log (configured in `/etc/conf.d/celery`)
+2. Celery log (configured in `/etc/conf.d/celery`)

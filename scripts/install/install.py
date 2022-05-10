@@ -18,10 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import argparse
+import inspect
 import os
 import subprocess
-import inspect
-import argparse
 
 KONTEXT_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 KONTEXT_INSTALL_CONF = os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml')
@@ -50,7 +50,8 @@ REQUIREMENTS = [
     # required by manatee packages
     'm4',
     'parallel',
-    'locales-all'
+    'locales-all',
+    'sox'
 ]
 
 
@@ -58,8 +59,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser('Kontext instalation script')
     argparser.add_argument('--celery', dest='install_celery', action='store_true',
                            default=False, help='Install celery instead of rq')
-    argparser.add_argument('--gunicorn', dest='install_gunicorn', action='store_true',
-                           default=False, help='Install gunicorn to run web server')
     argparser.add_argument('--patch', dest='patch_path', action='store',
                            default=None, help='Path to UCNK Manatee patch')
     argparser.add_argument('--manatee-version', dest='manatee_version',
@@ -76,7 +75,6 @@ if __name__ == "__main__":
     subprocess.call(['systemctl', 'stop', 'rq-all.target'])
     subprocess.call(['systemctl', 'stop', 'rqscheduler'])
     subprocess.call(['systemctl', 'stop', 'celery'])
-    subprocess.call(['systemctl', 'stop', 'gunicorn'])
 
     # install prerequisites
     print('Installing requirements...')
@@ -89,13 +87,14 @@ if __name__ == "__main__":
         subprocess.check_call(['pip3 install simplejson \'celery==4.4.*\' signalfd -r requirements.txt'],
                               cwd=KONTEXT_PATH, stdout=stdout, shell=True)
         subprocess.check_call(
-            'curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -', shell=True)
+            'curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -', shell=True)
         subprocess.check_call('sudo apt-get install -y nodejs', shell=True)
     except Exception as ex:
         print(f'failed to install dependencies: {ex}')
 
     # import steps here, because some depend on packages installed by this script
     import steps
+
     # run installation steps
     steps.SetupBgCalc(KONTEXT_PATH, stdout, stderr).run(args.install_celery)
     steps.SetupNginx(KONTEXT_PATH, stdout, stderr).run()
@@ -105,8 +104,6 @@ if __name__ == "__main__":
         kontext_path=KONTEXT_PATH, kontext_conf=KONTEXT_INSTALL_CONF,
         scheduler_conf=SCHEDULER_INSTALL_CONF,  stdout=stdout, stderr=stderr).run(args.install_celery)
     steps.SetupDefaultUsers(KONTEXT_PATH, stdout, stderr).run()
-    if args.install_gunicorn:
-        steps.SetupGunicorn(KONTEXT_PATH, stdout, stderr).run()
 
     # finalize instalation
     if args.install_celery:
@@ -119,20 +116,16 @@ if __name__ == "__main__":
 
     print('Initializing Nginx...')
     subprocess.check_call(['systemctl', 'restart', 'nginx'], stdout=stdout)
-    if args.install_gunicorn:
-        print('Initializing gunicorn...')
-        subprocess.check_call(['systemctl', 'start', 'gunicorn'], stdout=stdout)
 
     # print final messages
     print(inspect.cleandoc(f'''
         {steps.bcolors.BOLD}{steps.bcolors.OKGREEN}
         KonText installation successfully completed.
         To start KonText, enter the following command in the KonText install root directory (i.e. {KONTEXT_PATH}):
-        
+
             sudo -u {steps.WEBSERVER_USER} python3 public/app.py --address 127.0.0.1 --port 8080
 
         (--address and --port parameters are optional; default serving address is 127.0.0.1:5000)
-        or you can use Gunicorn instead.
         {steps.bcolors.ENDC}{steps.bcolors.ENDC}
     '''))
 

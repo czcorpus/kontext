@@ -18,19 +18,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-from typing import Tuple, List
-from abc import ABC, abstractmethod
-
-import sys
-import os
-import subprocess
-import pathlib
-import shutil
 import json
-
+import os
+import pathlib
 import random
-import string
 import re
+import shutil
+import string
+import subprocess
+import sys
+from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 WEBSERVER_USER = "www-data"
 
@@ -326,28 +324,6 @@ class SetupKontext(InstallationStep):
             self.cmd(['npm', 'start', 'build:production'], cwd=self.kontext_path)
 
 
-class SetupGunicorn(InstallationStep):
-    def is_done(self):
-        pass
-
-    def abort(self):
-        pass
-
-    def run(self):
-        print('Installing gunicorn...')
-        subprocess.check_call(['pip3', 'install', 'gunicorn'], stdout=self.stdout)
-
-        subprocess.check_call(['cp', 'gunicorn-conf.sample.py', 'gunicorn-conf.py'],
-                              cwd=os.path.join(self.kontext_path, 'conf'), stdout=self.stdout)
-        subprocess.check_call(['cp', os.path.join(
-            self.kontext_path, 'scripts/install/conf/gunicorn.service'), '/etc/systemd/system'], stdout=self.stdout)
-        replace_string_in_file('/etc/systemd/system/gunicorn.service',
-                               '/opt/kontext', self.kontext_path)
-        create_directory('/var/log/gunicorn/kontext', WEBSERVER_USER, None)
-
-        subprocess.check_call(['systemctl', 'enable', 'gunicorn'], stdout=self.stdout)
-
-
 class SetupDefaultUsers(InstallationStep):
     def __init__(self, kontext_path: str, stdout: str, stderr: str, redis_host: str = 'localhost', redis_port=6379):
         super().__init__(kontext_path, stdout, stderr)
@@ -401,7 +377,8 @@ if __name__ == '__main__':
 
     if args.step_name == 'SetupKontext':
         obj = SetupKontext(
-            kontext_path=kontext_path, kontext_conf=os.environ.get('KONTEXT_INSTALL_CONF', 'config.default.xml'),
+            kontext_path=kontext_path, kontext_conf=os.environ.get(
+                'KONTEXT_INSTALL_CONF', 'config.default.xml'),
             scheduler_conf=os.environ.get('SCHEDULER_INSTALL_CONF', 'rq-schedule-conf.sample.json'),
             stdout=None, stderr=None)
         obj.run(False, False)
