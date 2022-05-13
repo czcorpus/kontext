@@ -40,8 +40,7 @@ try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
-import aiofiles
-import aiofiles.os
+from manatee import FileAccessError
 import l10n
 import plugins
 from action.decorators import http_action
@@ -448,7 +447,11 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = (await plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate)).name
+        try:
+            ans.name = (await plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate)).name
+        except FileAccessError as ex:
+            ans.name = ans.id
+            logging.getLogger(__name__).error(f'failed to fetch corpus full name (missing corpus?): {ex}')
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
