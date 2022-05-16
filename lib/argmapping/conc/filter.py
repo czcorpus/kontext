@@ -202,13 +202,13 @@ class QuickFilterArgsConv:
         ff_args = FilterFormArgs(plugin_ctx=self.plugin_ctx,
                                  maincorp=self.args.maincorp if self.args.maincorp else self.args.corpname,
                                  persist=True)
-        ff_args.query_type = 'advanced'
-        ff_args.query = elms[-1]
-        ff_args.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
-        ff_args.pnfilter = elms[0].lower()
-        ff_args.filfl = elms[5]
-        ff_args.filfpos = elms[1]
-        ff_args.filtpos = elms[3]
-        ff_args.inclkwic = self._incl_kwic(elms[0])
-        ff_args.qmcase = True
+        ff_args.data.query_type = 'advanced'
+        ff_args.data.query = elms[-1]
+        ff_args.data.maincorp = self.args.maincorp if self.args.maincorp else self.args.corpname
+        ff_args.data.pnfilter = elms[0].lower()
+        ff_args.data.filfl = elms[5]
+        ff_args.data.filfpos = elms[1]
+        ff_args.data.filtpos = elms[3]
+        ff_args.data.inclkwic = self._incl_kwic(elms[0])
+        ff_args.data.qmcase = True
         return ff_args
