@@ -176,12 +176,15 @@ def get_detail_context(corp: KCorpus, pos, hitlen=1, detail_left_ctx=40, detail_
         seg['str'] = seg['str'].replace('===NONE===', '')
 
     # here we subtract kwic region from left and right regions...
-    left_kwic_part = tokens2strclass(cr.region(pos, pos + 1))[0]['str']
-    if region_left[-1]['str'].endswith(left_kwic_part):
-        region_left[-1]['str'] = region_left[-1]['str'].rsplit(left_kwic_part, 1)[0]
-    right_kwic_part = tokens2strclass(cr.region(pos + hitlen - 1, pos + hitlen))[0]['str']
-    if region_right[0]['str'].startswith(right_kwic_part):
-        region_right[0]['str'] = region_right[0]['str'].split(right_kwic_part, 1)[1]
+    left_kwic_parts = tokens2strclass(cr.region(pos, pos + 1))
+    for index, lkp in enumerate(reversed(left_kwic_parts)):
+        if region_left[-1 - index]['str'].endswith(lkp['str']):
+            region_left[-1 - index]['str'] = region_left[-1 - index]['str'].rsplit(lkp['str'], 1)[0]
+
+    right_kwic_parts = tokens2strclass(cr.region(pos + hitlen - 1, pos + hitlen))
+    for index, rkp in enumerate(right_kwic_parts):
+        if region_right[index]['str'].startswith(rkp['str']):
+            region_right[index]['str'] = region_right[index]['str'].split(rkp['str'], 1)[-1]
 
     # ...and remove empty strings
     region_left = [v for v in region_left if v['str']]
