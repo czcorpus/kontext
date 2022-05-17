@@ -1048,35 +1048,40 @@ class Actions(Querying):
                 curr_fcrit = fcrit[b_index]
                 attrs, ranges = parse_fcrit(curr_fcrit)
                 for level, (attr, range) in enumerate(zip(attrs, ranges)):
-                    try:
-                        begin, end = range.split('~')
-                    except ValueError:
-                        begin = end = range
-                    attr = attr.split('/')
-                    icase = '(?i)' if len(attr) > 1 and "i" in attr[1] else ''
-                    attr = attr[0]
+                    attr = attr.split('/')[0]
                     for ii, item in enumerate(block['Items']):
                         if not item['freq']:
                             continue
                         if '.' not in attr:
                             if attr in self.corp.get_posattrs():
-                                wwords = item['Word'][level]['n'].split('  ')  # two spaces
-                                fquery = f'{begin} {end} 0 '
-                                fquery += ''.join([f'[{attr}="{icase}{escape_attr_val(w)}"]' for w in wwords])
+                                fquery = []
+                                # for each freq. level item, we generate
+                                # the same conjunction of all freq levels as p/n filter
+                                for level2, (attr2, range2) in enumerate(zip(attrs, ranges)):
+                                    try:
+                                        begin, end = range2.split('~')
+                                    except ValueError:
+                                        begin = end = range
+                                    attr2 = attr2.split('/')
+                                    icase = '(?i)' if len(attr2) > 1 and "i" in attr2[1] else ''
+                                    attr2 = attr2[0]
+                                    wwords = item['Word'][level2]['n'].split('  ')  # two spaces
+                                    fquery_item = f'{begin} {end} 0 '
+                                    fquery_item += ''.join([f'[{attr2}="{icase}{escape_attr_val(w)}"]' for w in wwords])
+                                    fquery.append(fquery_item)
                             else:  # structure number
-                                fquery = '0 0 1 [] within <{} #{}/>'.format(
-                                    attr, item['Word'][0]['n'].split('#')[1])
+                                fquery = ['0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])]
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
                                 block['unprecise'] = True
-                            fquery = '0 0 1 [] within <{} {}="{}" />'.format(
-                                structname, attrname, escape_attr_val(item['Word'][0]['n']))
+                            fquery = ['0 0 1 [] within <{} {}="{}" />'.format(
+                                structname, attrname, escape_attr_val(item['Word'][0]['n']))]
                         if not item['freq']:
                             continue
-                        item['pfilter']['q2'] = f'p{fquery}'
+                        item['pfilter']['q2'] = [f'p{fq}' for fq in fquery]
                         if len(attrs) == 1 and item['freq'] <= calc_result['conc_size']:
-                            item['nfilter']['q2'] = f'n{fquery}'
+                            item['nfilter']['q2'] = [f'n{fq}' for fq in fquery]
                             # adding no error, no correction (originally for CUP)
             errs, corrs, err_block, corr_block = 0, 0, -1, -1
             for b_index, block in enumerate(result['Blocks']):
