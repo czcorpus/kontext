@@ -30,7 +30,7 @@ import l10n
 import manatee
 import plugins
 from manatee import Concordance, StrVector, SubCorpus
-from plugin_types.corparch.corpus import DefaultManateeCorpusInfo
+from plugin_types.corparch.corpus import ManateeCorpusInfo, DefaultManateeCorpusInfo
 
 from .corpus import (AbstractKCorpus, KCorpus, KSubcorpus,
                      _PublishedSubcMetadata)
@@ -207,13 +207,18 @@ class CorpusManager:
             self._cache[cache_key] = kcorp
         return kcorp
 
-    async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> DefaultManateeCorpusInfo:
+    async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> ManateeCorpusInfo:
         try:
             corp = await self.get_corpus(corpus_id, '', '', True, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)
-        return DefaultManateeCorpusInfo(corp, corpus_id)
+        try:
+            info = DefaultManateeCorpusInfo(corp, corpus_id)
+        except Exception as ex:
+            logging.getLogger(__name__).error(f'Manatee failed to fetch info about {corpus_id}: {ex}')
+            info = ManateeCorpusInfo(name=corpus_id, encoding='utf-8')
+        return info
 
     @staticmethod
     async def _ensure_reg_file(corpname: str, variant: Optional[str]) -> str:
