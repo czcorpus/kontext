@@ -347,8 +347,8 @@ class ConcActionModel(CorpusActionModel):
         """
         result = await super().add_globals(app, action_props, result)
         struct_and_attrs = await self.get_structs_and_attrs()
-        result['structs_and_attrs'] = [(k, [x.to_dict() for x in item])
-                                       for k, item in struct_and_attrs.items()]
+        result['structs_and_attrs'] = {k: [x.to_dict() for x in item]
+                                       for k, item in struct_and_attrs.items()}
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]

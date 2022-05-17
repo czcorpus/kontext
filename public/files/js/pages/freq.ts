@@ -518,9 +518,9 @@ class FreqPage {
                         onPopStateAction: {
                             name: Actions.PopHistory.name,
                             payload: {
-                                currentPage: state.currentPage,
-                                flimit: state.flimit,
-                                sortColumn: state.sortColumn
+                                currentPage: {...state.currentPage},
+                                flimit: state.flimit.value,
+                                sortColumn: {...state.sortColumn},
                             }
                         }
                     }
