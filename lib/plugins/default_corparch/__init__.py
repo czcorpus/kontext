@@ -40,7 +40,6 @@ try:
     from markdown import markdown
 except ImportError:
     def markdown(s): return s
-from manatee import FileAccessError
 import l10n
 import plugins
 from action.decorators import http_action
@@ -449,9 +448,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.id = corpus_id
         try:
             ans.name = (await plugin_ctx.corpus_manager.get_info(ans.id, plugin_ctx.translate)).name
-        except FileAccessError as ex:
+        except Exception as ex:
             ans.name = ans.id
-            logging.getLogger(__name__).error(f'failed to fetch corpus full name (missing corpus?): {ex}')
+            logging.getLogger(__name__).error(f'Manatee failed to fetch a full name of {corpus_id}: {ex}')
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
