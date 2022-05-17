@@ -560,7 +560,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     name: Actions.PopHistory.name,
                     payload: {
                         currentPage: {...state.currentPage},
-                        flimit: {...state.flimit},
+                        flimit: state.flimit.value,
                         sortColumn: {...state.sortColumn}
                     }
                 }
