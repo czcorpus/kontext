@@ -241,7 +241,7 @@ export interface ConcServerArgs {
  * from a collocation/frequency page to a concrete concordance).
  */
 export interface ConcQuickFilterServerArgs extends ConcServerArgs {
-    q2:string;
+    q2:Array<string>;
 }
 
 /**
