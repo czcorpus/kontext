@@ -31,7 +31,7 @@ import l10n
 import manatee
 from translation import ugettext as _
 import plugins
-from plugins.abstract.corparch.corpus import DefaultManateeCorpusInfo
+from plugins.abstract.corparch.corpus import DefaultManateeCorpusInfo, ManateeCorpusInfo
 from functools import cmp_to_key
 from .corpus import _PublishedSubcMetadata
 from .errors import MissingSubCorpFreqFile
@@ -206,13 +206,17 @@ class CorpusManager:
             self._cache[cache_key] = kcorp
         return kcorp
 
-    def get_info(self, corpus_id: str) -> DefaultManateeCorpusInfo:
+    def get_info(self, corpus_id: str) -> ManateeCorpusInfo:
         try:
             corp = self.get_corpus(corpus_id, '', '', True)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)
-        return DefaultManateeCorpusInfo(corp, corpus_id)
+        try:
+            info = DefaultManateeCorpusInfo(corp, corpus_id)
+        except manatee.FileAccessError:
+            info = ManateeCorpusInfo(name=corpus_id, encoding='utf-8')
+        return info
 
     @staticmethod
     def _ensure_reg_file(corpname: str, variant: Optional[str]) -> str:
