@@ -480,7 +480,8 @@ class FreqPage {
                             payload: {
                                 currentPage: {...state.currentPage},
                                 flimit: state.flimit.value,
-                                sortColumn: {...state.sortColumn}
+                                sortColumn: {...state.sortColumn},
+                                fdefault_view: this.layoutModel.getConf<FreqResultViews>('FreqDefaultView'),
                             }
                         }
                     }

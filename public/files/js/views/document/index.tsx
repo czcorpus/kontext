@@ -700,11 +700,15 @@ export function init(
             return <div>{props.children[0]}</div>
         } else {
             const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
+            let forcedIndex;
+            if (!!props.forceTab) {
+                forcedIndex = props.items.findIndex(item => item.id===props.forceTab)
+            }
             const tabs = props.items.map((value, index) =>
                 <li key={value.id}>
                     <TabButton
                         label={value.label}
-                        isActive={index === activeIndex}
+                        isActive={index === (forcedIndex ? forcedIndex : activeIndex)}
                         onClick={() => {
                             if (props.callback) {
                                 props.callback(value.id);
@@ -716,7 +720,7 @@ export function init(
             return <div>
                 <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
                 {props.noButtonSeparator ? null : <hr />}
-                {props.children[activeIndex]}
+                {props.children[forcedIndex ? forcedIndex : activeIndex]}
             </div>;
         }
     };

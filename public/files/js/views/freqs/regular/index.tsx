@@ -309,6 +309,7 @@ export function init(
                             {id: 'charts', label: he.translate('freq__tab_charts_button')},
                             {id: 'tables', label: he.translate('freq__tab_tables_button')}
                         ]}
+                        forceTab={props.isActive ? 'tables' : 'charts'}
                         defaultId={defaultView}
                         noButtonSeparator={true} >
                     <div>

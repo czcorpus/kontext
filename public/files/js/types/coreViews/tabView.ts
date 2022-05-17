@@ -23,6 +23,7 @@ export interface Props {
     defaultId?:string;
     className?:string;
     noButtonSeparator?:boolean;
+    forceTab?:string;
     callback?:(id:string) => void;
 }
 

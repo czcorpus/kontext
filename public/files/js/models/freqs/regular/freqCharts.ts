@@ -223,6 +223,31 @@ export class FreqChartsModel extends StatelessModel<FreqChartsModelState> {
         );
 
         this.addActionHandler(
+            Actions.PopHistory,
+            (state, action) => {
+                state.currentPage = action.payload.currentPage;
+                state.flimit = updateFormValue(state.flimit, {value: action.payload.flimit});
+                state.sortColumn = action.payload.sortColumn;
+                state.isActive = action.payload.fdefault_view === 'charts';
+            },
+            (state, action, dispatch) => {
+                if (state.isActive) {
+                    Dict.forEach(
+                        (_, fcrit) => {
+                            this.dispatchLoad(
+                                this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                state,
+                                dispatch,
+                                fcrit,
+                            );
+                        },
+                        state.currentPage
+                    )
+                }
+            }
+        );
+
+        this.addActionHandler(
             Actions.FreqChartsDataLoaded,
             (state, action) => {
                 state.isBusy[action.payload.sourceId] = false;

@@ -27,6 +27,7 @@ export interface HistoryState {
     currentPage:{[sourceId:string]:string};
     flimit:string;
     sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
+    fdefault_view:FreqResultViews;
 }
 
 export interface Item {

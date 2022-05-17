@@ -370,20 +370,23 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.currentPage = action.payload.currentPage;
                 state.flimit = updateFormValue(state.flimit, {value: action.payload.flimit});
                 state.sortColumn = action.payload.sortColumn;
+                state.isActive = action.payload.fdefault_view === 'tables';
             },
             (state, action, dispatch) => {
-                Dict.forEach(
-                    (_, fcrit) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
-                            state,
-                            dispatch,
-                            false,
-                            fcrit,
-                        );
-                    },
-                    state.currentPage
-                )
+                if (state.isActive) {
+                    Dict.forEach(
+                        (_, fcrit) => {
+                            this.dispatchLoad(
+                                this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                state,
+                                dispatch,
+                                false,
+                                fcrit,
+                            );
+                        },
+                        state.currentPage
+                    )
+                }
             }
         );
 
@@ -541,7 +544,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     payload: {
                         currentPage: {...state.currentPage},
                         flimit: state.flimit.value,
-                        sortColumn: {...state.sortColumn}
+                        sortColumn: {...state.sortColumn},
+                        fdefault_view: state.isActive ? 'tables' : 'charts',
                     }
                 }
             },
