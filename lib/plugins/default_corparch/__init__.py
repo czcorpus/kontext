@@ -53,7 +53,6 @@ import actions.user
 from controller.plg import PluginCtx
 from translation import ugettext as _
 from settings import import_bool
-from manatee import FileAccessError
 
 DEFAULT_LANG = 'en'
 
@@ -441,9 +440,9 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         ans.id = corpus_id
         try:
             ans.name = plugin_ctx.corpus_manager.get_info(ans.id).name
-        except FileAccessError as ex:
+        except Exception as ex:
             ans.name = ans.id
-            logging.getLogger(__name__).error(f'failed to fetch corpus full name (missing corpus?): {ex}')
+            logging.getLogger(__name__).error(f'Manatee failed to fetch a full name of {corpus_id}: {ex}')
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
