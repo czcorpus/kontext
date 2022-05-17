@@ -214,7 +214,8 @@ class CorpusManager:
             logging.getLogger(__name__).warning(ex)
         try:
             info = DefaultManateeCorpusInfo(corp, corpus_id)
-        except manatee.FileAccessError:
+        except Exception as ex:
+            logging.getLogger(__name__).error(f'Manatee failed to fetch info about {corpus_id}: {ex}')
             info = ManateeCorpusInfo(name=corpus_id, encoding='utf-8')
         return info
 
