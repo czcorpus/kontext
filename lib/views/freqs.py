@@ -22,10 +22,10 @@ from dataclasses import dataclass, field
 from typing import List, Tuple
 
 import plugins
+from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
 from action.decorators import http_action
-from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
@@ -376,6 +376,8 @@ async def freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], resp
 @dataclass
 class FreqttActionArgs:
     flimit: IntOpt = 0
+    alpha_level: StrOpt = '0.05'
+    freq_sort: StrOpt = ''
     fttattr: ListStrOpt = field(default_factory=list)
     fttattr_async: ListStrOpt = field(default_factory=list)
 
@@ -388,12 +390,14 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
     if not req.mapped_args.fttattr:
         raise ConcordanceQueryParamsError(req.translate('No text type selected'))
     ans = await _freqs(
-        amodel, req, resp,
+        amodel, req,
         fcrit=tuple(f'{a} 0' for a in req.mapped_args.fttattr),
         fcrit_async=[f'{a} 0' for a in req.mapped_args.fttattr_async],
         flimit=req.mapped_args.flimit,
-        freq_type='text-types')
+        freq_sort=req.mapped_args.freq_sort,
+        force_cache=True)  # TODO is it correct?
     ans['freq_type'] = 'text-types'
+    ans['alpha_level'] = req.mapped_args.alpha_level
     return ans
 
 
