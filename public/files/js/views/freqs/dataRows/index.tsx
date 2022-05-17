@@ -23,7 +23,7 @@ import * as React from 'react';
 import { ResultHeader, ResultItem } from '../../../models/freqs/regular/common';
 import { IActionDispatcher } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
-import { List, Maths, Strings } from 'cnc-tskit';
+import { List, Maths } from 'cnc-tskit';
 import * as S from './style';
 import { alphaToCoeffFormatter } from '../../../models/freqs/common';
 
@@ -56,14 +56,12 @@ export function init(
 
     // ----------------------- <DataRowPNFilter /> --------------------------------
 
-    interface DataRowPNFilterProps {
-        pfilter:string;
-        nfilter:string;
-    }
-
     const layoutViews = he.getLayoutViews();
 
-    const DataRowPNFilter:React.FC<DataRowPNFilterProps> = (props) => {
+    const DataRowPNFilter:React.FC<{
+        pfilter:string;
+        nfilter:string;
+    }> = (props) => {
 
         const handlePFilter = (e) => {
             dispatcher.dispatch<typeof Actions.ResultApplyQuickFilter>({
@@ -105,48 +103,43 @@ export function init(
 
     // ----------------------- <DataRow /> --------------------------------
 
-    interface DataRowProps {
+    const DataRow:React.FC<{
         data: ResultItem;
         monospaceCols: Array<boolean>;
         displayConfidence: boolean;
-    }
-
-    const DataRow: React.FC<DataRowProps> = (props) => {
-
-        return (
-            <S.DataRowTR>
-                <td className="num">{props.data.idx + 1}</td>
-                <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
-                {List.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>, props.data.Word)}
-                <td className="num">
-                    {he.formatNumber(props.data.freq)}
-                </td>
-                {props.displayConfidence ?
-                    <td className="bci">
-                        <span className="bracket">[</span>
-                        {he.formatNumber(props.data.freqConfidence[0])}
+    }> = (props) => (
+        <S.DataRowTR>
+            <td className="num">{props.data.idx + 1}</td>
+            <DataRowPNFilter pfilter={props.data.pfilter} nfilter={props.data.nfilter} />
+            {List.map((w, i) => <S.ValueTD key={i} monospace={props.monospaceCols[i]}>{w}</S.ValueTD>, props.data.Word)}
+            <td className="num">
+                {he.formatNumber(props.data.freq)}
+            </td>
+            {props.displayConfidence ?
+                <td className="bci">
+                    <span className="bracket">[</span>
+                    {he.formatNumber(props.data.freqConfidence[0])}
+                    <span className="separ">,{'\u00a0'}</span>
+                    {he.formatNumber(props.data.freqConfidence[1])}
+                    <span className="bracket">]</span>
+                </td> :
+                null }
+            <td className="num">
+                {he.formatNumber(props.data.rel)}
+            </td>
+            {props.displayConfidence ?
+                <td className="bci">
+                    <span className="bracket">[</span>
+                    <span className="val">
+                        {he.formatNumber(props.data.relConfidence[0])}
                         <span className="separ">,{'\u00a0'}</span>
-                        {he.formatNumber(props.data.freqConfidence[1])}
-                        <span className="bracket">]</span>
-                    </td> :
-                    null }
-                <td className="num">
-                    {he.formatNumber(props.data.rel)}
-                </td>
-                {props.displayConfidence ?
-                    <td className="bci">
-                        <span className="bracket">[</span>
-                        <span className="val">
-                            {he.formatNumber(props.data.relConfidence[0])}
-                            <span className="separ">,{'\u00a0'}</span>
-                            {he.formatNumber(props.data.relConfidence[1])}
-                        </span>
-                        <span className="bracket">]</span>
-                    </td> :
-                    null }
-            </S.DataRowTR>
-        );
-    };
+                        {he.formatNumber(props.data.relConfidence[1])}
+                    </span>
+                    <span className="bracket">]</span>
+                </td> :
+                null }
+        </S.DataRowTR>
+    );
 
     /**
      *  ----------------------- <TableColHead /> --------------------------------
