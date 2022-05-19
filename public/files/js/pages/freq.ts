@@ -35,8 +35,7 @@ import { init as analysisFrameInit } from '../views/analysis';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { init as resultViewFactory } from '../views/freqs/regular';
 import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
-import { FreqDataRowsModel, importData as importFreqData,
-    FreqDataRowsModelState } from '../models/freqs/regular/table';
+import { FreqDataRowsModel, importData as importFreqData } from '../models/freqs/regular/table';
 import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
 import { TextTypesModel } from '../models/textTypes/main';
 import { NonQueryCorpusSelectionModel } from '../models/corpsel';
@@ -50,13 +49,14 @@ import { Actions } from '../models/freqs/regular/actions';
 import { Block, FreqResultViews } from '../models/freqs/common';
 import { ConcFormArgs } from '../models/query/formArgs';
 import { FreqChartsModel } from '../models/freqs/regular/freqCharts';
-import { FreqDataLoader } from '../models/freqs/regular/common';
+import { FreqDataLoader, FreqDataRowsModelState } from '../models/freqs/regular/common';
 import { init as viewFreqCommonInit } from '../views/freqs/common';
 import { ImageConversionModel } from '../models/common/imgConv';
 import { DispersionResultModel } from '../models/dispersion/result';
 import { FreqResultsSaveModel } from '../models/freqs/regular/save';
 import { FreqChartsSaveFormModel } from '../models/freqs/regular/saveChart';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
+import { TabWrapperModel } from '../models/freqs/regular/tabs';
 
 /**
  *
@@ -74,6 +74,8 @@ class FreqPage {
     private freqResultModel:FreqDataRowsModel;
 
     private freqChartsModel:FreqChartsModel;
+
+    private regularfreqTabSwitchModel:TabWrapperModel;
 
     private ctFreqModel:Freq2DTableModel;
 
@@ -341,13 +343,15 @@ class FreqPage {
 
                 const saveLinkFn = this.setDownloadLink.bind(this);
 
+                const formProps = this.layoutModel.getConf<FreqFormInputs>('FreqFormProps');
+
                 this.freqResultModel = new FreqDataRowsModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pageModel: this.layoutModel,
                     freqType: this.layoutModel.getConf<Kontext.BasicFreqModuleType>('FreqType'),
                     freqCrit: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCrit'),
                     freqCritAsync: this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
-                    formProps: this.layoutModel.getConf<FreqFormInputs>('FreqFormProps'),
+                    formProps,
                     initialData,
                     currentPage,
                     freqLoader: this.freqLoader,
@@ -361,6 +365,13 @@ class FreqPage {
                     saveLinkFn,
                     quickSaveRowLimit: this.layoutModel.getConf<number>('QuickSaveRowLimit'),
                 });
+
+                this.regularfreqTabSwitchModel = new TabWrapperModel(
+                    this.layoutModel.dispatcher,
+                    formProps,
+                    alphaLevel,
+                    this.layoutModel.getConf<FreqResultViews>('FreqDefaultView')
+                );
 
                 const allCrit = List.concat(
                     this.layoutModel.getConf<Array<Kontext.AttrItem>>('FreqCritAsync'),
@@ -412,7 +423,7 @@ class FreqPage {
                     this.saveChartFormModel,
                     this.freqResultModel,
                     this.saveTablesModel,
-                    this.layoutModel.getConf<FreqResultViews>('FreqDefaultView'),
+                    this.regularfreqTabSwitchModel
                 );
                 this.layoutModel.renderReactComponent(
                     freqResultView.FreqResultView,
@@ -479,12 +490,13 @@ class FreqPage {
     }
 
     private setupBackButtonListening():void {
-        this.layoutModel.getHistory().setOnPopState((event) => {
-            if (event.state['onPopStateAction']) {
-                this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
+        this.layoutModel.getHistory().setOnPopState(
+            (event) => {
+                if (event.state['onPopStateAction']) {
+                    this.layoutModel.dispatcher.dispatch(event.state['onPopStateAction']);
+                }
             }
-        });
-
+        );
         switch (this.layoutModel.getConf<Kontext.FreqModuleType>('FreqType')) {
             case '2-attribute': {
                 const args = {
@@ -501,16 +513,35 @@ class FreqPage {
             case 'text-types':
             case 'tokens': {
                 // if ForceParams defined => sharing freqs, don't alter history
-                if (this.layoutModel.getConf('ForcedParams')) break;
+                if (!Dict.empty(this.layoutModel.getConf('ForcedParams'))) {
+                    break;
+                }
 
-                const state = this.freqResultModel.getState(); // no antipattern here
-                const firstCrit = List.head(state.freqCrit);
-                const args = {
-                    ...this.freqResultModel.getSubmitArgs(state, firstCrit.n),
-                    fcrit_async: List.map(v => v.n, state.freqCritAsync),
-                    freq_type: state.freqType,
-                    format: undefined
-                };
+                const [args, state, activeView] = (() => {
+                    if (this.layoutModel.getConf<FreqResultViews>('FreqDefaultView') === 'tables') {
+                        const state = this.freqResultModel.getState(); // no antipattern here
+                        const firstCrit = List.head(state.freqCrit);
+                        const args = {
+                            ...this.freqResultModel.getSubmitArgs(
+                                state, firstCrit.n, state.flimit, parseInt(state.currentPage[firstCrit.n])),
+                            fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                            freq_type: state.freqType,
+                            format: undefined
+                        };
+                        return tuple(args, state, 'tables');
+
+                    } else {
+                        const state = this.freqChartsModel.getState(); // no antipattern here
+                        const firstCrit = List.head(state.freqCrit);
+                        const args = {
+                            ...this.freqChartsModel.getSubmitArgs(state, firstCrit.n, state.flimit),
+                            fcrit_async: List.map(v => v.n, state.freqCritAsync),
+                            freq_type: state.freqType,
+                            format: undefined
+                        };
+                        return tuple(args, state, 'tables');
+                    }
+                })();
                 this.layoutModel.getHistory().replaceState(
                     'freqs',
                     args,
@@ -518,15 +549,14 @@ class FreqPage {
                         onPopStateAction: {
                             name: Actions.PopHistory.name,
                             payload: {
-                                currentPage: {...state.currentPage},
-                                flimit: state.flimit.value,
-                                sortColumn: {...state.sortColumn},
+                                activeView,
+                                state
                             }
                         }
                     }
                 );
+                break;
             }
-            break;
         }
     }
 
