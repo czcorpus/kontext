@@ -39,7 +39,9 @@ class ConcordanceDefault:
 
     curr_conc: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.CONCORDANCE('current-concordance'), te('Current concordance'), 'view'))
+            MainMenu.CONCORDANCE('current-concordance'), te('Current concordance'), 'view')
+        .enable_if(lambda d: d.get('current_action', None) != 'view')
+    )
 
     sorting: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
@@ -59,8 +61,9 @@ class ConcordanceDefault:
 
     query_save_as: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.CONCORDANCE('query-save-as'), te('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
-                ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
+            MainMenu.CONCORDANCE(
+                'query-save-as'), te('Archive query'), 'MAIN_MENU_SHOW_SAVE_QUERY_AS_FORM'
+        ).mark_indirect().enable_if(lambda d: d.get('user_owns_conc', False))
     )
 
     # we need lazy evaluation for archive_conc (all the result args must be ready)
@@ -70,7 +73,7 @@ class ConcordanceDefault:
     query_undo: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
             MainMenu.CONCORDANCE('undo'), te('Undo'), 'MAIN_MENU_UNDO_LAST_QUERY_OP'
-                ).enable_if(lambda d: len(d.get('undo_q', [])) > 0))
+        ).enable_if(lambda d: len(d.get('undo_q', [])) > 0))
 
 
 @dataclass
@@ -157,7 +160,8 @@ class Filter:
 
     filter_pos: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('positive'), te('Positive'), 'MAIN_MENU_SHOW_FILTER', key_code=70  # key = 'f'
+            # key = 'f'
+            MainMenu.FILTER('positive'), te('Positive'), 'MAIN_MENU_SHOW_FILTER', key_code=70
         ).add_args(('pnfilter', 'p'))
         .mark_indirect()
     )
@@ -176,7 +180,8 @@ class Filter:
 
     filter_each_first: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
-            MainMenu.FILTER('each-first'), te('First hits in documents'), 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
+            MainMenu.FILTER(
+                'each-first'), te('First hits in documents'), 'MAIN_MENU_FILTER_APPLY_FIRST_OCCURRENCES'
         ).enable_if(lambda d: len(d.get('aligned_corpora', [])) == 0)
     )
 

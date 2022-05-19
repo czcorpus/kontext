@@ -236,14 +236,14 @@ class Actions(Querying):
         except TypeError as ex:
             self.add_system_message('error', str(ex))
             logging.getLogger(__name__).error(ex)
+        except UnknownConcordanceAction as ex:
+            raise UserActionException(str(ex))
         except (ConcordanceException, RuntimeError) as ex:
             manatee_error = extract_manatee_error(ex)
             if isinstance(manatee_error, ConcordanceSpecificationError):
                 raise UserActionException(manatee_error, code=422)
             else:
                 raise ex
-        except UnknownConcordanceAction as ex:
-            raise UserActionException(str(ex))
 
         if self.corp.get_conf('ALIGNED'):
             out['Aligned'] = [{'n': w,
@@ -1067,10 +1067,12 @@ class Actions(Querying):
                                     attr2 = attr2[0]
                                     wwords = item['Word'][level2]['n'].split('  ')  # two spaces
                                     fquery_item = f'{begin} {end} 0 '
-                                    fquery_item += ''.join([f'[{attr2}="{icase}{escape_attr_val(w)}"]' for w in wwords])
+                                    fquery_item += ''.join(
+                                        [f'[{attr2}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                                     fquery.append(fquery_item)
                             else:  # structure number
-                                fquery = ['0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])]
+                                fquery = [
+                                    '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])]
                         else:  # text types
                             structname, attrname = attr.split('.')
                             if self.corp.get_conf(structname + '.NESTED'):
@@ -1151,7 +1153,9 @@ class Actions(Querying):
         self.args.fmaxitems = to_line - from_line + 1
 
         locale = self.get_locale()
-        def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+
+        def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(
+            x, locale=locale, decimal_quantization=False)
 
         # following piece of sh.t has hidden parameter dependencies
         result = self.freqs(fcrit=fcrit, flimit=flimit, freq_sort=freq_sort, format='json')
@@ -1168,7 +1172,8 @@ class Actions(Querying):
                     item['freq'] = formatnumber(item['freq'])
                     if 'rel' in item:
                         item['rel'] = formatnumber(item['rel'])
-            output['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
+            output['Desc'] = [
+                {**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
             output['fcrit'] = fcrit
             output['flimit'] = flimit
             output['freq_sort'] = freq_sort
@@ -1384,7 +1389,9 @@ class Actions(Querying):
             saved_filename = self.args.corpname
 
             locale = self.get_locale()
-            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+
+            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(
+                x, locale=locale, decimal_quantization=False)
 
             if saveformat == 'text':
                 self._response.set_header('Content-Type', 'application/text')
@@ -1395,7 +1402,8 @@ class Actions(Querying):
                 for item in out_data['Items']:
                     item['freq'] = formatnumber(item['freq'])
                     item['Stats'] = [{**s, 's': formatnumber(s['s'])} for s in item['Stats']]
-                out_data['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
+                out_data['Desc'] = [
+                    {**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
                 out_data['saveformat'] = saveformat
                 out_data['from_line'] = from_line
                 out_data['to_line'] = to_line
@@ -1537,7 +1545,9 @@ class Actions(Querying):
             data = kwic.kwicpage(kwic_args)
 
             locale = self.get_locale()
-            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(x, locale=locale, decimal_quantization=False)
+            def formatnumber(x): return x if saveformat == 'xlsx' else format_decimal(
+                x, locale=locale, decimal_quantization=False)
+
             def mkfilename(suffix): return f'{self.args.corpname}-concordance.{suffix}'
 
             if saveformat == 'text':
@@ -1555,7 +1565,8 @@ class Actions(Querying):
                 # to offer a custom i.p.m. calculation before the download starts
                 output['result_relative_freq_rel_to'] = self._get_ipm_base_set_desc(
                     contains_within=False)
-                output['Desc'] = [{**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
+                output['Desc'] = [
+                    {**item, 'size': formatnumber(item['size'])} for item in self.concdesc_json()['Desc']]
             elif saveformat in ('csv', 'xlsx', 'xml'):
                 writer = plugins.runtime.EXPORT.instance.load_plugin(
                     saveformat, 'concordance')

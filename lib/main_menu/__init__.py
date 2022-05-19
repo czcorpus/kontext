@@ -23,9 +23,7 @@ from translation import ugettext as te
 from argmapping import Args
 import plugins
 from controller.plg import PluginCtx
-from .model import (
-    OutData, MenuItemInternal, MainMenu, EventTriggeringItem, HideOnCustomCondItem, ConcMenuItem,
-    MainMenuItemId, AbstractMenuItem)
+from .model import OutData, MainMenu, MainMenuItemId, AbstractMenuItem
 from .submenus import (
     NewQuery, Corpora, Save, ConcordanceDefault, ConcordancePquery, Filter, Frequency, Collocations, View, Help)
 
