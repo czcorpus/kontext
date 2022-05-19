@@ -22,13 +22,6 @@ import { Maths } from 'cnc-tskit';
 import { ComponentHelpers } from '../../types/kontext';
 import { AjaxConcResponse, ConcQuickFilterServerArgs } from '../concordance/common';
 
-
-export interface HistoryState {
-    currentPage:{[sourceId:string]:string};
-    flimit:string;
-    sortColumn:{[sourceId:string]:FreqChartsAvailableOrder};
-}
-
 export interface Item {
     Word:Array<{n:string}>;
     pfilter:ConcQuickFilterServerArgs;

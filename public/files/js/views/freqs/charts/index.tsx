@@ -22,13 +22,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as Kontext from '../../../types/kontext';
 import { Bound, IActionDispatcher } from "kombo";
-import { FreqChartsModel, FreqChartsModelState } from '../../../models/freqs/regular/freqCharts';
+import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
     ResponsiveContainer, ScatterChart, Scatter,
     Label, ErrorBar, Line, Area, ComposedChart
 } from 'recharts';
-import { Dict, List, Maths, pipe, Strings, tuple } from 'cnc-tskit';
+import { Dict, List, pipe, Strings, tuple } from 'cnc-tskit';
 import { Actions } from '../../../models/freqs/regular/actions';
 import { Actions as GlobalActions } from '../../../models/common/actions';
 import * as theme from '../../theme/default';
@@ -36,6 +36,7 @@ import { init as initSaveViews } from './save';
 import { init as initWordCloud } from './wordCloud/index';
 import * as S from './style';
 import {
+    FreqChartsModelState,
     isEmptyResultBlock, ResultBlock, ResultItem
 } from '../../../models/freqs/regular/common';
 import { WordCloudItemCalc } from './wordCloud/calc';
