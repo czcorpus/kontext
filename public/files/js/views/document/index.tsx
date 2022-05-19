@@ -696,28 +696,47 @@ export function init(
     // ----------------- <TabView /> ---------------------------------------------
 
     const TabView:CoreViews.TabView.Component = (props) => {
-        if (props.items.length === 1) {
-            return <div>{props.children[0]}</div>
-        } else {
-            const [activeIndex, setActiveIndex] = React.useState(props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
-            const tabs = props.items.map((value, index) =>
-                <li key={value.id}>
-                    <TabButton
-                        label={value.label}
-                        isActive={index === activeIndex}
-                        onClick={() => {
-                            if (props.callback) {
-                                props.callback(value.id);
-                            }
-                            setActiveIndex(index);
-                        }}/>
-                </li>
+
+        const render = (activeIndex:number, setActiveIndex:(i:number)=>void) => {
+            const tabs = List.map(
+                (value, index) => (
+                    <li key={value.id}>
+                        <TabButton
+                            label={value.label}
+                            isActive={index === activeIndex}
+                            onClick={() => setActiveIndex(index)}/>
+                    </li>
+                ),
+                props.items
             );
             return <div>
                 <ul className={[props.className, 'tabs'].join(' ')}>{tabs}</ul>
                 {props.noButtonSeparator ? null : <hr />}
                 {props.children[activeIndex]}
             </div>;
+        }
+
+        if (props.items.length === 1) {
+            return <div>{props.children[0]}</div>
+
+        } else if (props.noInternalState) {
+            return render(
+                props.items.findIndex(item => item.id===props.defaultId) || 0,
+                (idx:number) => props.callback(props.items[idx].id)
+            );
+
+        } else {
+            const [activeIndex, setActiveIndex] = React.useState(
+                props.defaultId ? props.items.findIndex(item => item.id===props.defaultId) : 0);
+            return render(
+                activeIndex,
+                (idx:number) => {
+                    if (props.callback) {
+                        props.callback(props.items[idx].id);
+                    }
+                    setActiveIndex(idx);
+                }
+            );
         }
     };
 

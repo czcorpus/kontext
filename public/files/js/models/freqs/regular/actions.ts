@@ -19,9 +19,9 @@
  */
 
 import { Action } from 'kombo';
-import { MulticritFreqServerArgs, ResultBlock } from './common';
+import { HistoryState, MulticritFreqServerArgs, ResultBlock } from './common';
 import { AlignTypes } from '../twoDimension/common';
-import { FreqResultViews, HistoryState } from '../common';
+import { FreqResultViews } from '../common';
 import { DataSaveFormat } from '../../../app/navigation/save';
 import { FreqChartsAvailableTypes, FreqChartsAvailableData, FreqChartsAvailableOrder } from '../common';
 import { Maths } from 'cnc-tskit';
@@ -38,13 +38,24 @@ export class Actions {
 
     static ResultSetMinFreqVal:Action<{
         value:string;
-        debouncedFor?:FreqResultViews;
+        isDebounced?:boolean;
     }> = {
         name: 'FREQ_RESULT_SET_MIN_FREQ_VAL'
     };
 
     static isResultSetMinFreqVal(a:Action):a is typeof Actions.ResultSetMinFreqVal {
         return a.name === Actions.ResultSetMinFreqVal.name;
+    }
+
+    // The "tabs" model confirms validated (and type casted) value for other models
+    static ResultSetMinFreqValConfirm:Action<{
+        value:number;
+    }> = {
+        name: 'FREQ_RESULT_SET_MIN_FREQ_VAL_CONFIRM'
+    }
+
+    static isResultSetMinFreqValConfirm(a:Action):a is typeof Actions.ResultSetMinFreqValConfirm {
+        return a.name === Actions.ResultSetMinFreqValConfirm.name;
     }
 
     static ResultSetAlphaLevel:Action<{
@@ -68,6 +79,7 @@ export class Actions {
     };
 
     static StatePushToHistory:Action<{
+        origin:FreqResultViews;
     }> = {
         name: 'FREQ_STATE_PUSH_TO_HISTORY'
     };

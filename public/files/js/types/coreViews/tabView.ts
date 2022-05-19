@@ -24,6 +24,7 @@ export interface Props {
     className?:string;
     noButtonSeparator?:boolean;
     callback?:(id:string) => void;
+    noInternalState?:boolean;
 }
 
 export type Component = React.FC<Props>;

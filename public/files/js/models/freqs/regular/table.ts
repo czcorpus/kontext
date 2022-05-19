@@ -21,11 +21,11 @@
 import { PageModel } from '../../../app/page';
 import { FreqFormInputs } from './freqForms';
 import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
-import { debounceTime, Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import {
-    BaseFreqModelState, clearResultBlock, EmptyResultBlock, FreqDataLoader,
-    FreqServerArgs, isEmptyResultBlock, MulticritFreqServerArgs, PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS,
-    recalculateConfIntervals, ResultBlock, validateNumber } from './common';
+    EmptyResultBlock, FreqDataLoader, FreqDataRowsModelState, FreqServerArgs, isEmptyResultBlock,
+    isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock,
+    validateNumber } from './common';
 import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
@@ -33,7 +33,7 @@ import { Actions as MainMenuActions } from '../../mainMenu/actions';
 import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
-import { AttrItem, BasicFreqModuleType, newFormValue, updateFormValue } from '../../../types/kontext';
+import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 
 
 export interface FreqDataRowsModelArgs {
@@ -46,10 +46,6 @@ export interface FreqDataRowsModelArgs {
     initialData:Array<ResultBlock|EmptyResultBlock>;
     currentPage:number;
     freqLoader:FreqDataLoader;
-}
-
-export interface FreqDataRowsModelState extends BaseFreqModelState {
-    displayConfidence:boolean;
 }
 
 function getPositionalTagAttrs(pageModel:PageModel): Array<string> {
@@ -127,9 +123,6 @@ function createQuickFilterUrl(pageModel:PageModel, args:ConcQuickFilterServerArg
     }
 }
 
-type DebouncedActions =
-    typeof Actions.ResultSetCurrentPage | typeof Actions.ResultSetMinFreqVal;
-
 
 /**
  * FreqDataRowsModel handles traditional 'table' representation of frequencies
@@ -139,8 +132,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
     private pageModel:PageModel;
 
     private freqLoader:FreqDataLoader;
-
-    private readonly debouncedAction$:Subject<DebouncedActions>;
 
     constructor({
         dispatcher, pageModel, freqType, freqCrit, freqCritAsync, formProps,
@@ -187,7 +178,6 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     Dict.fromEntries()
                 ),
                 ftt_include_empty: formProps.ftt_include_empty,
-                flimit: newFormValue(formProps.flimit || '0', true),
                 isBusy: pipe(
                     allCrit,
                     List.map(
@@ -206,22 +196,11 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 saveFormActive: false,
                 alphaLevel: Maths.AlphaLevel.LEVEL_5,
                 displayConfidence: false,
+                flimit: parseInt(formProps.flimit) || 0
             }
         );
         this.pageModel = pageModel;
         this.freqLoader = freqLoader;
-        this.debouncedAction$ = new Subject<DebouncedActions>();
-        this.debouncedAction$.pipe(
-            debounceTime(PAGE_SIZE_INPUT_WRITE_THROTTLE_INTERVAL_MS)
-
-        ).subscribe({
-            next: value => {
-                dispatcher.dispatch({
-                    ...value,
-                    payload: {...value.payload, debouncedFor: 'tables'}
-                });
-            }
-        });
 
         this.addActionHandler(
             Actions.ResultSetActiveTab,
@@ -229,7 +208,9 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 state.isActive = action.payload.value === 'tables';
             },
             (state, action, dispatch) => {
-                this.pushStateToHistory(state);
+                if (state.isActive) {
+                    this.pushStateToHistory(state);
+                }
             }
         );
 
@@ -253,36 +234,34 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         );
 
         this.addActionHandler(
-            Actions.ResultSetMinFreqVal,
+            Actions.ResultSetMinFreqValConfirm,
             (state, action) => {
-                if (action.payload.debouncedFor) {
-                    if (validateNumber(action.payload.value, 0)) {
-                        state.isBusy = Dict.map(v => true, state.isBusy);
-                        state.isError = Dict.map(v => null, state.isError);
-                        state.flimit = updateFormValue(state.flimit, {isInvalid: false});
-                        state.currentPage = Dict.map(_ => '1', state.currentPage);
-                        if (!state.isActive) {
-                            state.data = Dict.map(block => clearResultBlock(block), state.data);
-                        }
+                state.flimit = action.payload.value;
+            }
+        );
 
-                    } else {
-                        state.flimit = updateFormValue(state.flimit, {isInvalid: true});
-                    }
-
-                } else {
-                    state.flimit = updateFormValue(state.flimit, {value: action.payload.value});
-                    this.debouncedAction$.next(action);
-                }
-
-            },
+        this.addActionHandler(
+            Actions.ResultSetMinFreqVal,
+            null,
             (state, action, dispatch) => {
-                if (action.payload.debouncedFor === 'tables') {
-                    if (validateNumber(action.payload.value, 0)) {
-                        if (state.isActive) {
+                this.suspendWithTimeout(
+                    5000,
+                    {},
+                    (action, syncData) => {
+                        if (Actions.isResultSetMinFreqValConfirm(action)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+                ).subscribe(
+                    action => {
+                        if (state.isActive && Actions.isResultSetMinFreqValConfirm(action)) {
                             Dict.forEach(
                                 (block, fcrit) => {
                                     this.dispatchLoad(
-                                        this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                                        this.freqLoader.loadPage(
+                                            this.getSubmitArgs(
+                                                state, fcrit, action.payload.value, 1)),
                                         state,
                                         dispatch,
                                         true,
@@ -292,12 +271,8 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                                 state.data
                             );
                         }
-
-                    } else if (state.isActive) {
-                        this.pageModel.showMessage(
-                            'error', this.pageModel.translate('freq__limit_invalid_val'));
-                    }
-                }
+                    },
+                );
             }
         );
 
@@ -309,7 +284,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
-                    this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                    this.freqLoader.loadPage(
+                        this.getSubmitArgs(
+                            state,
+                            action.payload.sourceId,
+                            state.flimit,
+                            parseInt(state.currentPage[action.payload.sourceId])
+                        )
+                    ),
                     state,
                     dispatch,
                     false,
@@ -328,7 +310,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                 Dict.forEach(
                     (block, fcrit) => {
                         this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
+                            this.freqLoader.loadPage(
+                                this.getSubmitArgs(
+                                    state,
+                                    fcrit,
+                                    state.flimit,
+                                    parseInt(state.currentPage[fcrit])
+                                    )
+                                ),
                             state,
                             dispatch,
                             true,
@@ -367,23 +356,45 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.PopHistory,
             (state, action) => {
-                state.currentPage = action.payload.currentPage;
-                state.flimit = updateFormValue(state.flimit, {value: action.payload.flimit});
-                state.sortColumn = action.payload.sortColumn;
+                const storedState = action.payload.state;
+                if (!isFreqChartsModelState(storedState)) {
+                    state.freqType = storedState.freqType;
+                    state.data = storedState.data;
+                    state.currentPage = storedState.currentPage;
+                    state.sortColumn = storedState.sortColumn;
+                    state.freqCrit = storedState.freqCrit;
+                    state.freqCritAsync = storedState.freqCritAsync;
+                    state.ftt_include_empty = storedState.ftt_include_empty;
+                    state.isActive = storedState.isActive;
+                    state.isBusy = storedState.isBusy;
+                    state.isError = storedState.isError;
+                    state.alphaLevel = storedState.alphaLevel;
+                    state.saveFormActive = storedState.saveFormActive;
+                    state.displayConfidence = storedState.displayConfidence;
+                }
             },
             (state, action, dispatch) => {
-                Dict.forEach(
-                    (_, fcrit) => {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(this.getSubmitArgs(state, fcrit)),
-                            state,
-                            dispatch,
-                            false,
-                            fcrit,
-                        );
-                    },
-                    state.currentPage
-                )
+                if (action.payload.activeView === 'tables') {
+                    Dict.forEach(
+                        (_, fcrit) => {
+                            this.dispatchLoad(
+                                this.freqLoader.loadPage(
+                                    this.getSubmitArgs(
+                                        state,
+                                        fcrit,
+                                        state.flimit,
+                                        parseInt(state.currentPage[fcrit])
+                                    )
+                                ),
+                                state,
+                                dispatch,
+                                false,
+                                fcrit,
+                            );
+                        },
+                        state.currentPage
+                    );
+                }
             }
         );
 
@@ -396,7 +407,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
             },
             (state, action, dispatch) => {
                 this.dispatchLoad(
-                    this.freqLoader.loadPage(this.getSubmitArgs(state, action.payload.sourceId)),
+                    this.freqLoader.loadPage(
+                        this.getSubmitArgs(
+                            state,
+                            action.payload.sourceId,
+                            state.flimit,
+                            parseInt(state.currentPage[action.payload.sourceId])
+                        )
+                    ),
                     state,
                     dispatch,
                     true,
@@ -425,7 +443,12 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
                     if (action.payload.confirmed) {
                         this.dispatchLoad(
                             this.freqLoader.loadPage(
-                                this.getSubmitArgs(state, action.payload.sourceId)
+                                this.getSubmitArgs(
+                                    state,
+                                    action.payload.sourceId,
+                                    state.flimit,
+                                    parseInt(action.payload.value)
+                                )
                             ),
                             state,
                             dispatch,
@@ -480,6 +503,35 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
 
     }
 
+    private pushStateToHistory(state:FreqDataRowsModelState):void {
+        const firstCrit = List.head(state.freqCrit);
+        const args = {
+            ...this.getSubmitArgs(
+                state,
+                firstCrit.n,
+                state.flimit,
+                parseInt(state.currentPage[firstCrit.n])),
+            fcrit_async: List.map(v => v.n, state.freqCritAsync),
+            fdefault_view: 'tables',
+            freq_type: state.freqType,
+            format: undefined
+        };
+        this.pageModel.getHistory().pushState(
+            'freqs',
+            args,
+            {
+                onPopStateAction: {
+                    name: Actions.PopHistory.name,
+                    payload: {
+                        activeView: 'tables',
+                        state: JSON.parse(JSON.stringify(state))
+                    }
+                }
+            },
+            window.document.title
+        );
+    }
+
     private dispatchLoad(
         load:Observable<FreqResultResponse>,
         state:FreqDataRowsModelState,
@@ -523,40 +575,14 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         });
     }
 
-    private pushStateToHistory(state:FreqDataRowsModelState):void {
-        const firstCrit = List.head(state.freqCrit);
-        const args = {
-            ...this.getSubmitArgs(state, firstCrit.n),
-            fcrit_async: List.map(v => v.n, state.freqCritAsync),
-            fdefault_view: state.isActive ? 'tables' : 'charts',
-            freq_type: state.freqType,
-            format: undefined
-        };
-        this.pageModel.getHistory().pushState(
-            'freqs',
-            args, // TODO do we use these?
-            {
-                onPopStateAction: {
-                    name: Actions.PopHistory.name,
-                    payload: {
-                        currentPage: {...state.currentPage},
-                        flimit: state.flimit.value,
-                        sortColumn: {...state.sortColumn}
-                    }
-                }
-            },
-            window.document.title
-        );
-    }
-
-    getSubmitArgs(state:FreqDataRowsModelState, fcrit:string):FreqServerArgs {
+    getSubmitArgs(state:FreqDataRowsModelState, fcrit:string, flimit:number, fpage:number):FreqServerArgs {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit,
-            flimit: parseInt(state.flimit.value),
+            flimit,
             freq_sort: state.sortColumn[fcrit],
             freq_type: state.freqType,
-            fpage: parseInt(state.currentPage[fcrit]),
+            fpage,
             ftt_include_empty: state.ftt_include_empty,
             freqlevel: 1,
             format: 'json'
@@ -567,7 +593,7 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         return {
             ...this.pageModel.getConcArgs(),
             fcrit: Dict.keys(state.data),
-            flimit: parseInt(state.flimit.value),
+            flimit: state.flimit,
             freq_sort: 'freq',
             freq_type: state.freqType,
             fpage: 1,
