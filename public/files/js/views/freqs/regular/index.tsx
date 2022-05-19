@@ -24,15 +24,16 @@ import { Dict, Keyboard, List, Maths, pipe } from 'cnc-tskit';
 import { init as dataRowsInit } from '../dataRows';
 import { init as initSaveViews } from './save';
 import { init as initChartViews } from '../charts';
-import { FreqDataRowsModel, FreqDataRowsModelState } from '../../../models/freqs/regular/table';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { FreqDataRowsModel } from '../../../models/freqs/regular/table';
+import { IActionDispatcher, BoundWithProps, Bound } from 'kombo';
 import { Actions } from '../../../models/freqs/regular/actions';
 import * as S from './style';
 import { FreqChartsModel } from '../../../models/freqs/regular/freqCharts';
-import { isEmptyResultBlock } from '../../../models/freqs/regular/common';
+import { FreqDataRowsModelState, isEmptyResultBlock } from '../../../models/freqs/regular/common';
 import { alphaToCoeffFormatter, FreqResultViews } from '../../../models/freqs/common';
 import { FreqChartsSaveFormModel } from '../../../models/freqs/regular/saveChart';
 import { FreqResultsSaveModel } from '../../../models/freqs/regular/save';
+import { TabWrapperModel, TabWrapperModelState } from '../../../models/freqs/regular/tabs';
 
 // --------------------------- exported types --------------------------------------
 
@@ -46,7 +47,7 @@ export function init(
         freqChartsSaveModel:FreqChartsSaveFormModel,
         freqDataRowsModel:FreqDataRowsModel,
         freqTableSaveModel:FreqResultsSaveModel,
-        defaultView: FreqResultViews,
+        tabSwitchModel:TabWrapperModel
 ) {
     const globalComponents = he.getLayoutViews();
     const drViews = dataRowsInit(dispatcher, he);
@@ -262,9 +263,9 @@ export function init(
         );
     }
 
-    // ----------------------- <FreqResultView /> -------------------------
+    // ----------------------- <FreqTablesView /> ------------------------
 
-    const FreqResultView:React.FC<FreqDataRowsModelState> = (props) => {
+    const _FreqTablesView:React.FC<FreqDataRowsModelState> = (props) => {
 
         const handleSaveFormClose = () => {
             dispatcher.dispatch(
@@ -280,15 +281,6 @@ export function init(
             return parseInt(state.currentPage[sourceId]) > 1 && state.data[sourceId].TotalPages > 1;
         }
 
-        const handleTabSelection = (value:string) => {
-            dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
-                name: Actions.ResultSetActiveTab.name,
-                payload: {
-                    value: value as FreqResultViews
-                }
-            });
-        }
-
         const handleConfidenceToggle = (checked:boolean) => {
             dispatcher.dispatch<typeof Actions.ToggleDisplayConfidence>({
                 name: Actions.ToggleDisplayConfidence.name,
@@ -299,76 +291,96 @@ export function init(
         }
 
         return (
+            <div className="FreqResultView">
+                <S.TableViewToolbar>
+                    <span>
+                        <label htmlFor="display-confidence">{he.translate('freq__confidence_toggle')}</label>
+                        <globalComponents.ToggleSwitch
+                            id="display-confidence"
+                            checked={props.displayConfidence}
+                            onChange={handleConfidenceToggle} />
+                    </span>
+                    {props.displayConfidence ?
+                        null :
+                        <globalComponents.InlineHelp noSuperscript={true}
+                                    isWarning={true} customStyle={{width: '15em'}}
+                                    url="https://wiki.korpus.cz/doku.php/pojmy:konfidencni_intervaly">
+                            {he.translate('freq__hidden_ci_warning')}
+                        </globalComponents.InlineHelp>
+                    }
+                </S.TableViewToolbar>
+                {pipe(
+                    props.data,
+                    Dict.toEntries(),
+                    List.map(([sourceId, block], i) => (
+                        <S.FreqBlock key={`block:${sourceId}`}>
+                            <div className={isEmptyResultBlock(block) ? 'loading' : null}>
+                            {isEmptyResultBlock(block) ?
+                                <FreqResultLoaderView sourceId={sourceId} label={block.heading} error={props.isError[sourceId]} /> :
+                                <>
+                                    <Paginator currentPage={props.currentPage[sourceId]}
+                                            sourceId={sourceId}
+                                            hasNextPage={hasNextPage(props, sourceId)}
+                                            hasPrevPage={hasPrevPage(props, sourceId)}
+                                            totalPages={block.TotalPages}
+                                            isLoading={props.isBusy[sourceId]}
+                                            totalItems={block.Total} />
+                                    <div>
+                                        <drViews.DataTable head={block.Head}
+                                                sortColumn={props.sortColumn[sourceId]}
+                                                rows={block.Items}
+                                                hasSkippedEmpty={block.SkippedEmpty}
+                                                sourceId={sourceId}
+                                                alphaLevel={props.alphaLevel}
+                                                displayConfidence={props.displayConfidence} />
+                                    </div>
+                                </>
+                            }
+                            </div>
+                        </S.FreqBlock>
+                        )
+                    )
+                )}
+                {props.saveFormActive ?
+                    <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
+                    null
+                }
+            </div>
+        );
+    }
+
+    const FreqTablesView = BoundWithProps(_FreqTablesView, freqDataRowsModel)
+
+    // ----------------------- <FreqResultView /> -------------------------
+
+    const FreqResultView:React.FC<TabWrapperModelState> = (props) => {
+
+        const handleTabSelection = (value:string) => {
+            dispatcher.dispatch<typeof Actions.ResultSetActiveTab>({
+                name: Actions.ResultSetActiveTab.name,
+                payload: {
+                    value: value as FreqResultViews
+                }
+            });
+        }
+        return (
             <S.FreqResultView>
                 <FilterForm minFreqVal={props.flimit} alphaLevel={props.alphaLevel} />
                 <hr />
                 <globalComponents.TabView
+                        noInternalState={true}
                         className="FreqViewSelector"
                         callback={handleTabSelection}
                         items={[
                             {id: 'charts', label: he.translate('freq__tab_charts_button')},
                             {id: 'tables', label: he.translate('freq__tab_tables_button')}
                         ]}
-                        defaultId={defaultView}
+                        defaultId={props.activeTab}
                         noButtonSeparator={true} >
                     <div>
                         <chartViews.FreqChartsView />
                     </div>
-                    <div className="FreqResultView">
-                        <S.TableViewToolbar>
-                            <span>
-                                <label htmlFor="display-confidence">{he.translate('freq__confidence_toggle')}</label>
-                                <globalComponents.ToggleSwitch
-                                    id="display-confidence"
-                                    checked={props.displayConfidence}
-                                    onChange={handleConfidenceToggle} />
-                            </span>
-                            {props.displayConfidence ?
-                                null :
-                                <globalComponents.InlineHelp noSuperscript={true}
-                                            isWarning={true} customStyle={{width: '15em'}}
-                                            url="https://wiki.korpus.cz/doku.php/pojmy:konfidencni_intervaly">
-                                    {he.translate('freq__hidden_ci_warning')}
-                                </globalComponents.InlineHelp>
-                            }
-                        </S.TableViewToolbar>
-                        {pipe(
-                            props.data,
-                            Dict.toEntries(),
-                            List.map(([sourceId, block], i) => (
-                                <S.FreqBlock key={`block:${sourceId}`}>
-                                    <div className={isEmptyResultBlock(block) ? 'loading' : null}>
-                                    {isEmptyResultBlock(block) ?
-                                        <FreqResultLoaderView sourceId={sourceId} label={block.heading} error={props.isError[sourceId]} /> :
-                                        <>
-                                            <Paginator currentPage={props.currentPage[sourceId]}
-                                                    sourceId={sourceId}
-                                                    hasNextPage={hasNextPage(props, sourceId)}
-                                                    hasPrevPage={hasPrevPage(props, sourceId)}
-                                                    totalPages={block.TotalPages}
-                                                    isLoading={props.isBusy[sourceId]}
-                                                    totalItems={block.Total} />
-                                            <div>
-                                                <drViews.DataTable head={block.Head}
-                                                        sortColumn={props.sortColumn[sourceId]}
-                                                        rows={block.Items}
-                                                        hasSkippedEmpty={block.SkippedEmpty}
-                                                        sourceId={sourceId}
-                                                        alphaLevel={props.alphaLevel}
-                                                        displayConfidence={props.displayConfidence} />
-                                            </div>
-                                        </>
-                                    }
-                                    </div>
-                                </S.FreqBlock>
-                                )
-                            )
-                        )}
-                        {props.saveFormActive ?
-                            <saveViews.SaveFreqForm onClose={handleSaveFormClose} /> :
-                            null
-                        }
-                    </div>
+                    <FreqTablesView />
                 </globalComponents.TabView>
             </S.FreqResultView>
         );
@@ -376,6 +388,6 @@ export function init(
 
 
     return {
-        FreqResultView: BoundWithProps(FreqResultView, freqDataRowsModel)
+        FreqResultView: Bound(FreqResultView, tabSwitchModel)
     };
 }

@@ -23,7 +23,7 @@ import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
-import { FreqChartsAvailableOrder, FreqResultResponse } from '../common';
+import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes, FreqResultResponse, FreqResultViews } from '../common';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import * as Kontext from '../../../types/kontext';
 
@@ -90,12 +90,38 @@ export interface BaseFreqModelState {
     freqCrit:Array<AttrItem>;
     freqCritAsync:Array<AttrItem>;
     ftt_include_empty:boolean;
-    flimit:Kontext.FormValue<string>;
     isActive:boolean;
     isBusy:{[sourceId:string]:boolean};
     isError:{[sourceId:string]:Error};
     alphaLevel:Maths.AlphaLevel;
     saveFormActive:boolean;
+    /**
+     * flimit is a derived value from TabWrapperModel
+     */
+    flimit:number;
+}
+
+export interface FreqDataRowsModelState extends BaseFreqModelState {
+    displayConfidence:boolean;
+}
+
+export interface FreqChartsModelState extends BaseFreqModelState {
+    type:{[sourceId:string]:FreqChartsAvailableTypes};
+    dataKey:{[sourceId:string]:FreqChartsAvailableData};
+    fmaxitems:{[sourceId:string]:Kontext.FormValue<string>};
+    dtFormat:{[sourceId:string]:string};
+    downloadFormat:{[sourceId:string]:Kontext.ChartExportFormat};
+}
+
+export function isFreqChartsModelState(s:BaseFreqModelState):s is FreqChartsModelState {
+    return s['type'] != undefined && s['dataKey'] != undefined &&
+        s['fmaxitems'] != undefined && s['dtFormat'] != undefined &&
+        s['downloadFormat'] != undefined;
+}
+
+export interface HistoryState {
+    activeView:FreqResultViews;
+    state:FreqDataRowsModelState|FreqChartsModelState;
 }
 
 /**
