@@ -37,7 +37,9 @@ class ConcordanceDefault:
 
     curr_conc: ConcMenuItem = field(
         default_factory=lambda: ConcMenuItem(
-            MainMenu.CONCORDANCE('current-concordance'), 'Current concordance', 'view'))
+            MainMenu.CONCORDANCE('current-concordance'), 'Current concordance', 'view')
+        .enable_if(lambda d: d.get('current_action', None) != 'view')
+    )
 
     sorting: EventTriggeringItem = field(
         default_factory=lambda: EventTriggeringItem(
