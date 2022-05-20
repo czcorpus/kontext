@@ -178,12 +178,12 @@ export class PqueryResultModel extends StatefulModel<PqueryResultModelState> {
                 ).subscribe({
                     next: action2 => {
                         if (Actions.isResultApplyQuickFilterArgsReady(action2)) {
-                            const alignIdx = action2.payload.posAlign === AlignTypes.LEFT ? '-1' : '1';
+                            const alignIdx = action2.payload.posAlign === AlignTypes.LEFT ? '1' : '-1';
                             const cqlList = pipe(
                                 action.payload.value.split(' '),
                                 List.filter(v => v.length > 0),
                                 List.map(s => `[${action2.payload.attr}="${s}"]`)
-                            )
+                            );
                             const posRight = action2.payload.posLeft + List.size(cqlList) - 1
                             const url = this.layoutModel.createActionUrl(
                                 'quick_filter',
