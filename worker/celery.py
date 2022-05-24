@@ -30,22 +30,24 @@ complete and properly configured KonText package.
 """
 
 import os
-import sys
 import pickle
+import sys
+
 import uvloop
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, f'{APP_PATH}/lib')
-import settings
 import plugins
+import settings
 from util import as_sync
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
-from worker import general
 from bgcalc.adapter.factory import init_backend
+
+from worker import general
 
 uvloop.install()
 
@@ -110,19 +112,7 @@ async def clean_colls_cache():
 # ----------------------------- FREQUENCY DISTRIBUTION ------------------------
 
 
-class FreqsTask(worker.Task):
-
-    cache_data = None
-    cache_path = None
-
-    def after_return(self, *args, **kw):
-        if self.cache_data:
-            with open(self.cache_path, 'wb') as f:
-                pickle.dump(self.cache_data, f)
-                self.cache_data = None
-
-
-@worker.task(base=FreqsTask, name='calculate_freqs')
+@worker.task(name='calculate_freqs')
 @as_sync
 async def calculate_freqs(args):
     return await general.calculate_freqs(args)

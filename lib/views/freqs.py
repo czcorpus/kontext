@@ -21,6 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
+import bgcalc.freqs
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
@@ -31,7 +32,6 @@ from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
-from bgcalc import freq_calc
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import MLFreqArgs, multi_level_crit
@@ -57,7 +57,6 @@ class GeneralFreqArgs:
     flimit: IntOpt = 0
     alpha_level: StrOpt = '0.05'
     freq_sort: StrOpt = ''
-    force_cache: IntOpt = 0
     freq_type: StrOpt = ''
     format: StrOpt = ''
 
@@ -79,7 +78,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
             amodel,
             req,
             fcrit=req.mapped_args.fcrit, fcrit_async=req.mapped_args.fcrit_async, flimit=req.mapped_args.flimit,
-            freq_sort=req.mapped_args.freq_sort, force_cache=req.mapped_args.force_cache)
+            freq_sort=req.mapped_args.freq_sort)
         if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
             raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
@@ -123,7 +122,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
             amodel,
             req,
             fcrit=(req.mapped_args.fcrit,), fcrit_async=(), flimit=req.mapped_args.flimit,
-            freq_sort=req.mapped_args.freq_sort, force_cache=0)
+            freq_sort=req.mapped_args.freq_sort)
         ans['freq_type'] = req.mapped_args.freq_type
         ans['alpha_level'] = req.mapped_args.alpha_level
 
@@ -156,8 +155,7 @@ async def _freqs(
         fcrit: Tuple[str, ...],
         fcrit_async: Tuple[str, ...],
         flimit: int,
-        freq_sort: str,
-        force_cache: int):
+        freq_sort: str):
 
     amodel.disabled_menu_items = (
         MainMenu.CONCORDANCE('query-save-as'),
@@ -190,7 +188,7 @@ async def _freqs(
         rel_mode = 0
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
 
-    args = freq_calc.FreqCalcArgs(
+    args = bgcalc.freqs.FreqCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=amodel.corp.subcname,
         subcpath=amodel.subcpath,
@@ -205,10 +203,9 @@ async def _freqs(
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,
-        fpage=amodel.args.fpage,
-        force_cache=True if force_cache else False)
+        fpage=amodel.args.fpage)
 
-    calc_result = await freq_calc.calculate_freqs(args)
+    calc_result = await bgcalc.freqs.calculate_freqs(args)
     result.update(
         fcrit=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit],
         fcrit_async=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit_async],
@@ -264,10 +261,12 @@ async def _freqs(
                                 attr2 = attr2[0]
                                 wwords = item['Word'][level2]['n'].split('  ')  # two spaces
                                 fquery_item = f'{begin} {end} 0 '
-                                fquery_item += ''.join([f'[{attr2}="{icase}{escape_attr_val(w)}"]' for w in wwords])
+                                fquery_item += ''.join(
+                                    [f'[{attr2}="{icase}{escape_attr_val(w)}"]' for w in wwords])
                                 fquery.append(fquery_item)
                         else:  # structure number
-                            fquery = ['0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])]
+                            fquery = [
+                                '0 0 1 [] within <{} #{}/>'.format(attr, item['Word'][0]['n'].split('#')[1])]
                     else:  # text types
                         structname, attrname = attr.split('.')
                         if amodel.corp.get_conf(structname + '.NESTED'):
@@ -349,7 +348,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
     result = await _freqs(
         amodel,
         req,
-        fcrit=(fcrit,), fcrit_async=(), flimit=args.flimit, freq_sort='', force_cache=1)
+        fcrit=(fcrit,), fcrit_async=(), flimit=args.flimit, freq_sort='')
     result['ml'] = 1
     req.session['last_freq_level'] = args.freqlevel
     tmp = defaultdict(lambda: [])
@@ -399,15 +398,14 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
         fcrit=tuple(f'{a} 0' for a in req.mapped_args.fttattr),
         fcrit_async=[f'{a} 0' for a in req.mapped_args.fttattr_async],
         flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort,
-        force_cache=True)  # TODO is it correct?
+        freq_sort=req.mapped_args.freq_sort)
     ans['freq_type'] = 'text-types'
     ans['alpha_level'] = req.mapped_args.alpha_level
     return ans
 
 
 async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    args = freq_calc.Freq2DCalcArgs(
+    args = freqs.Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=getattr(amodel.corp, 'subcname', None),
         subcpath=amodel.subcpath,
@@ -418,7 +416,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}')
 
     try:
-        freq_data = await freq_calc.calculate_freq2d(args)
+        freq_data = await bgcalc.freqs.calculate_freq2d(args)
     except UserActionException as ex:
         freq_data = dict(data=[], full_size=0)
         resp.add_system_message('error', str(ex))
@@ -499,7 +497,7 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     # following piece of sh.t has hidden parameter dependencies
     result = await _freqs(
         amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort, force_cache=False, fcrit_async=())
+        freq_sort=req.mapped_args.freq_sort, fcrit_async=())
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-freq-distrib.{suffix}'
     with plugins.runtime.EXPORT as export:

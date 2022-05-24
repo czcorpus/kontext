@@ -17,10 +17,8 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 
 from action.argmapping.pquery import PqueryFormArgs
-from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
+from bgcalc.freqs import FreqCalcArgs, calculate_freqs_bg
 from bgcalc.pquery.storage import stored_to_fs
-
-from .errors import PqueryArgumentError, PqueryResultNotFound
 
 """
 This module contains function for calculating Paradigmatic queries

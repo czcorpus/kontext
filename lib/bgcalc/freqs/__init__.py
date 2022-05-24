@@ -36,7 +36,7 @@ from conclib.calc import require_existing_conc
 from conclib.pyconc import PyConc
 from corplib.corpus import KCorpus
 
-from .errors import CalcArgsAssertionError
+from ..errors import CalcArgsAssertionError
 
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
@@ -59,8 +59,6 @@ class FreqCalcArgs:
     ftt_include_empty: int  # 0, 1  # TODO should be bool
     rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
-    cache_path: Optional[str] = None
-    force_cache: Optional[bool] = False
     subcname: Optional[str] = None
     subcpath: Optional[List[str]] = field(default_factory=list)
     fpage: Optional[int] = 1  # ??
@@ -207,39 +205,6 @@ async def build_arf_db_status(corp, attrname):
     return await _get_total_calc_status(await corp_freqs_cache_path(corp, attrname))
 
 
-class FreqCalcCache(object):
-
-    def __init__(self, corpname, subcname, user_id, subcpath, q=None, pagesize=0,
-                 samplesize=0):
-        """
-        Creates a new freq calculator with fixed concordance parameters.
-        """
-        self._corpname = corpname
-        self._subcname = subcname
-        self._user_id = user_id
-        self._q = q
-        self._pagesize = pagesize
-        self._samplesize = samplesize
-        self._subcpath = subcpath
-
-    def _cache_file_path(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
-        v = (str(self._corpname) + str(self._subcname) + str(self._user_id) +
-             ''.join(self._q) + str(fcrit) + str(flimit) + str(freq_sort) +
-             str(ftt_include_empty) + str(rel_mode) + str(collator_locale))
-        filename = '%s.pkl' % hashlib.sha1(v.encode('utf-8')).hexdigest()
-        return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
-
-    async def get(self, fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale):
-        cache_path = self._cache_file_path(
-            fcrit, flimit, freq_sort, ftt_include_empty, rel_mode, collator_locale)
-        if await aiofiles.os.path.isfile(cache_path):
-            async with aiofiles.open(cache_path, 'rb') as f:
-                data = pickle.loads(await f.read())
-        else:
-            data = None
-        return data, cache_path
-
-
 def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc):
     """
     This is a blocking variant of calculate_freqs_bg which requires a concordance
@@ -280,26 +245,18 @@ async def calculate_freqs(args: FreqCalcArgs):
     if args.fcrit and len(args.fcrit) > 1 and args.fpage > 1:
         raise CalcArgsAssertionError(
             'multi-block frequency calculation does not support pagination')
-    cache = FreqCalcCache(
-        corpname=args.corpname, subcname=args.subcname, user_id=args.user_id, subcpath=args.subcpath,
-        q=args.q, pagesize=args.pagesize, samplesize=args.samplesize)
-    calc_result, cache_path = await cache.get(
-        fcrit=args.fcrit, flimit=args.flimit, freq_sort=args.freq_sort,
-        ftt_include_empty=args.ftt_include_empty, rel_mode=args.rel_mode,
-        collator_locale=args.collator_locale)
 
-    if calc_result is None:
-        args.cache_path = cache_path
-        worker = bgcalc.calc_backend_client(settings)
-        res = await worker.send_task(
-            'calculate_freqs', object.__class__, args=(asdict(args),), time_limit=TASK_TIME_LIMIT)
-        # worker task caches the value AFTER the result is returned (see worker.py)
-        calc_result = res.get()
+    worker = bgcalc.calc_backend_client(settings)
+    res = await worker.send_task(
+        'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
+    # worker task caches the value AFTER the result is returned (see worker.py)
+    calc_result = res.get()
 
     if calc_result is None:
         raise BgCalcError('Failed to get result')
     elif isinstance(calc_result, Exception):
         raise calc_result
+
     data = calc_result['freqs']
     conc_size = calc_result['conc_size']
     lastpage = None

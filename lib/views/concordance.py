@@ -20,7 +20,7 @@ import os
 import re
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, Union, Optional, List
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import conclib
 import corplib
@@ -29,6 +29,7 @@ import plugins
 import settings
 import ujson as json
 from action.argmapping import ConcArgsMapping, WidectxArgsMapping, log_mapping
+from action.argmapping.action import IntOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
 from action.argmapping.conc import (QueryFormArgs, ShuffleFormArgs,
@@ -40,7 +41,6 @@ from action.argmapping.conc.filter import (FilterFormArgs,
 from action.argmapping.conc.other import (KwicSwitchArgs, LgroupOpArgs,
                                           LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
-from action.argmapping.action import IntOpt, StrOpt
 from action.decorators import http_action
 from action.errors import NotFoundException, UserActionException
 from action.krequest import KRequest
@@ -392,8 +392,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
                     'flimit': req.args.get('flimit'),
                     # client does not always fills this
                     'freq_sort': req.args.get('freq_sort', 'freq'),
-                    'freq_type': req.args.get('freq_type'),
-                    'force_cache': req.args.get('force_cache', '0')}
+                    'freq_type': req.args.get('freq_type')}
             elif req.args.get('next') == 'shared_freqs':
                 out['next_action'] = 'shared_freqs'
                 out['next_action_args'] = {
@@ -510,7 +509,8 @@ async def concdesc_json(amodel: ConcActionModel, req: KRequest, resp: KResponse)
             if len(form.data.curr_queries) == 1:
                 cd_item['nicearg'] = list(form.data.curr_queries.values())[0]
             else:
-                cd_item['nicearg'] = ', '.join(f'{k}: {v}' for k, v in form.data.curr_queries.items())
+                cd_item['nicearg'] = ', '.join(
+                    f'{k}: {v}' for k, v in form.data.curr_queries.items())
         elif isinstance(form, FilterFormArgs):
             cd_item['nicearg'] = form.data.query
         cd_item['conc_persistence_op_id'] = pipeline[i].op_key

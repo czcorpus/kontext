@@ -22,7 +22,44 @@ def process_document(xml_doc, single_upd=None):
 
 
 def update_1(doc):
-    srch = doc.find('/corpora/freqs_cache_min_lines')
+    qh = doc.find('/plugins/query_storage')
+    if qh is not None:
+        qh.tag = 'query_history'
+
+        srch = qh.find('module')
+        if srch is not None and srch.text == 'default_query_storage':
+            srch.text = 'default_query_history'
+
+        srch = qh.find('js_module')
+        if srch is not None:
+            srch.getparent().remove(srch)
+
+
+def update_2(doc):
+    qh = doc.find('/plugins/conc_persistence')
+    if qh is not None:
+        qh.tag = 'query_persistence'
+
+        srch = qh.find('module')
+        if srch is not None:
+            if srch.text == 'stable_conc_persistence':
+                srch.text = 'stable_query_persistence'
+            elif srch.text == 'mysql_conc_persistence':
+                srch.text = 'mysql_query_persistence'
+            elif srch.text == 'ucnk_conc_perstistence2':
+                srch.text = 'ucnk_query_persistence'
+
+
+def update_3(doc):
+    plugins = doc.find('/plugins')
+    for plugin in plugins:
+        for element in plugin:
+            if 'extension-by' in element.attrib:
+                del element.attrib['extension-by']
+
+
+def update_4(doc):
+    srch = doc.find('/corpora/colls_cache_min_lines')
     if srch is not None:
         srch.getparent().remove(srch)
 

@@ -25,8 +25,9 @@ from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
 from action.response import KResponse
-from bgcalc import calc_backend_client, freq_calc
+from bgcalc import calc_backend_client
 from bgcalc.errors import BgCalcError
+from bgcalc.freqs import build_arf_db, build_arf_db_status
 from bgcalc.wordlist import make_wl_query, require_existing_wordlist
 from corplib.errors import MissingSubCorpFreqFile
 from main_menu import MainMenu
@@ -62,7 +63,7 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
         args=(form_args.to_dict(), amodel.corp.size, amodel.session_get('user', 'id')))
     bg_result = async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
-        data_calc = freq_calc.build_arf_db(amodel.session_get(
+        data_calc = build_arf_db(amodel.session_get(
             'user', 'id'), amodel.corp, form_args.wlattr)
         if type(data_calc) is list:
             for subtask in data_calc:
@@ -219,4 +220,4 @@ async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
             tr = worker.AsyncResult(t)
             if tr.status == 'FAILURE':
                 raise BgCalcError(f'Task {t} failed')
-    return {'status': await freq_calc.build_arf_db_status(amodel.corp, req.args.get('attrname', ''))}
+    return {'status': await build_arf_db_status(amodel.corp, req.args.get('attrname', ''))}

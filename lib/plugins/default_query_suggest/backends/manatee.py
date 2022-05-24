@@ -17,8 +17,8 @@ import logging
 from collections import defaultdict
 from typing import Callable, Tuple
 
+import bgcalc.freqs
 import l10n
-from bgcalc import freq_calc
 from conclib.freq import multi_level_crit
 from conclib.pyconc import PyConc
 from conclib.search import get_conc
@@ -44,7 +44,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         self._preset_corp = _load_corp_sync(fixed_corp, translate)
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
-        args = freq_calc.FreqCalcArgs(
+        args = bgcalc.freqs.FreqCalcArgs(
             corpname=corp.corpname,
             subcname=corp.subcname,
             subcpath=[],
@@ -58,8 +58,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             freq_sort='freq',
             collator_locale='en_US',  # TODO use data provided by corparch plg
             fmaxitems=1,
-            fpage=1,
-            force_cache=False)
+            fpage=1)
         freqs = [conc.xfreq_dist(
             cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
             for cr in args.fcrit]

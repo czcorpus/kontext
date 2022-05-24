@@ -22,9 +22,9 @@ from typing import Any, List, Optional
 import aiofiles
 import aiofiles.os
 import bgcalc
+import bgcalc.freqs
 import corplib
 import settings
-from bgcalc import freq_calc
 from bgcalc.errors import UnfinishedConcordanceError
 from conclib.calc import require_existing_conc
 from corplib.errors import MissingSubCorpFreqFile
@@ -115,7 +115,7 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
         return dict(data=collocs, processing=0, tasks=[])
     except MissingSubCorpFreqFile:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
-        out = freq_calc.build_arf_db(coll_args.user_id, corp, coll_args.cattr)
+        out = bgcalc.freqs.build_arf_db(coll_args.user_id, corp, coll_args.cattr)
         if type(out) is list:
             processing = 1
             ans['tasks'].extend(out)
