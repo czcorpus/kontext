@@ -12,16 +12,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import hashlib
 import logging
 import math
 import os
-import pickle
 import re
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import aiofiles
 import aiofiles.os
@@ -31,8 +29,11 @@ import manatee
 import settings
 from action.errors import UserActionException
 from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
+from bgcalc.freqs.storage import stored_to_fs
+from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
+from conclib.freq import FreqData
 from conclib.pyconc import PyConc
 from corplib.corpus import KCorpus
 
@@ -41,29 +42,6 @@ from ..errors import CalcArgsAssertionError
 MAX_LOG_FILE_AGE = 1800  # in seconds
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
-
-
-@dataclass
-class FreqCalcArgs:
-    """
-    Collects all the required arguments passed around when
-    calculating frequency distribution
-    """
-    user_id: int
-    corpname: str
-    collator_locale: str
-    pagesize: int
-    flimit: int
-    fcrit: Union[List[str], Tuple[str, ...]]
-    freq_sort: str
-    ftt_include_empty: int  # 0, 1  # TODO should be bool
-    rel_mode: int  # 0, 1 # TODO should be bool
-    fmaxitems: int
-    subcname: Optional[str] = None
-    subcpath: Optional[List[str]] = field(default_factory=list)
-    fpage: Optional[int] = 1  # ??
-    samplesize: Optional[int] = 0
-    q: Optional[List[str]] = field(default_factory=list)
 
 
 async def corp_freqs_cache_path(corp: KCorpus, attrname):
@@ -205,7 +183,7 @@ async def build_arf_db_status(corp, attrname):
     return await _get_total_calc_status(await corp_freqs_cache_path(corp, attrname))
 
 
-def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc):
+def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc) -> FreqCalcResult:
     """
     This is a blocking variant of calculate_freqs_bg which requires a concordance
     instance to be already available. This is mostly intended for passing sub-calculations
@@ -217,10 +195,11 @@ def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc):
     freqs = [conc.xfreq_dist(
         cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
         for cr in args.fcrit]
-    return dict(freqs=freqs, conc_size=conc.size())
+    return FreqCalcResult(freqs=freqs, conc_size=conc.size())
 
 
-async def calculate_freqs_bg(args: FreqCalcArgs):
+@stored_to_fs
+async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     """
     Calculate actual frequency data.
 
@@ -250,35 +229,30 @@ async def calculate_freqs(args: FreqCalcArgs):
     res = await worker.send_task(
         'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
     # worker task caches the value AFTER the result is returned (see worker.py)
-    calc_result = res.get()
+    calc_result: Union[None, Exception, FreqCalcResult] = res.get()
 
     if calc_result is None:
         raise BgCalcError('Failed to get result')
     elif isinstance(calc_result, Exception):
         raise calc_result
 
-    data = calc_result['freqs']
-    conc_size = calc_result['conc_size']
     lastpage = None
     fstart = (args.fpage - 1) * args.fmaxitems
     ans = []
-
-    for i, freq_block in enumerate(data):
-        if 'Items' not in freq_block:
-            freq_block['Items'] = []
-        total_length = len(freq_block['Items'])
+    for i, freq_block in enumerate(calc_result.freqs):
+        total_length = len(freq_block.Items)
         items_per_page = args.fmaxitems
-        fmaxitems = args.fmaxitems * args.fpage + 1
-        lastpage = 1 if total_length < fmaxitems else 0
+        fend = args.fmaxitems * args.fpage + 1
+        lastpage = 1 if total_length < fend else 0
         ans.append(dict(
             Total=total_length,
             TotalPages=int(math.ceil(total_length / float(items_per_page))),
-            Items=freq_block['Items'][fstart:fmaxitems - 1],
-            Head=freq_block.get('Head', []),
-            SkippedEmpty=freq_block.get('SkippedEmpty', False),
-            NoRelSorting=freq_block['NoRelSorting'],
+            Items=[asdict(item) for item in freq_block.Items[fstart:fend - 1]],
+            Head=freq_block.Head,
+            SkippedEmpty=freq_block.SkippedEmpty,
+            NoRelSorting=freq_block.NoRelSorting,
             fcrit=args.fcrit[i]))
-    return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=conc_size)
+    return dict(lastpage=lastpage, data=ans, fstart=fstart, fmaxitems=args.fmaxitems, conc_size=calc_result.conc_size)
 
 
 def clean_freqs_cache():
@@ -300,22 +274,6 @@ def clean_freqs_cache():
 
 
 # ------------------ 2-attribute freq. distribution --------------
-
-@dataclass
-class Freq2DCalcArgs:
-    q: List[str]
-    user_id: int
-    corpname: str
-    ctminfreq: int
-    ctminfreq_type: str
-    fcrit: str
-    cache_path: Optional[str] = None
-    subcpath: List[str] = field(default_factory=list)
-    subcname: Optional[str] = None
-    collator_locale: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
 
 
 class Freq2DCalculationError(Exception):

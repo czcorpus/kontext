@@ -21,7 +21,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-import bgcalc.freqs
 import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
@@ -32,6 +31,8 @@ from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
 from action.response import KResponse
+from bgcalc.freqs import calculate_freq2d, calculate_freqs
+from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs
 from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException, ConcordanceQueryParamsError
 from conclib.freq import MLFreqArgs, multi_level_crit
@@ -188,7 +189,7 @@ async def _freqs(
         rel_mode = 0
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
 
-    args = bgcalc.freqs.FreqCalcArgs(
+    args = FreqCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=amodel.corp.subcname,
         subcpath=amodel.subcpath,
@@ -205,7 +206,7 @@ async def _freqs(
         fmaxitems=amodel.args.fmaxitems,
         fpage=amodel.args.fpage)
 
-    calc_result = await bgcalc.freqs.calculate_freqs(args)
+    calc_result = await calculate_freqs(args)
     result.update(
         fcrit=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit],
         fcrit_async=[dict(n=f, label=f.split(' ', 1)[0]) for f in fcrit_async],
@@ -405,7 +406,7 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
 
 
 async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
-    args = freqs.Freq2DCalcArgs(
+    args = Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
         subcname=getattr(amodel.corp, 'subcname', None),
         subcpath=amodel.subcpath,
@@ -416,7 +417,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         fcrit=f'{amodel.args.ctattr1} {amodel.args.ctfcrit1} {amodel.args.ctattr2} {amodel.args.ctfcrit2}')
 
     try:
-        freq_data = await bgcalc.freqs.calculate_freq2d(args)
+        freq_data = await calculate_freq2d(args)
     except UserActionException as ex:
         freq_data = dict(data=[], full_size=0)
         resp.add_system_message('error', str(ex))

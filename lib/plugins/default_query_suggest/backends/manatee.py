@@ -62,7 +62,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         freqs = [conc.xfreq_dist(
             cr, args.flimit, args.freq_sort, args.ftt_include_empty, args.rel_mode, args.collator_locale)
             for cr in args.fcrit]
-        return freqs[0].get('Items', [])
+        return freqs[0].Items
 
     def _normalize_multivalues(self, corp: KCorpus, srch_val: str, attr1: str, attr2: str) -> Tuple[str, str]:
         multisep1 = corp.get_conf(self._conf["attr1"] + '.MULTISEP')
@@ -97,7 +97,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             data = self._freq_dist(corp=used_corp, conc=conc, fcrit=fcrit, user_id=user_id)
             for item in data:
                 attr1, attr2 = self._normalize_multivalues(
-                    used_corp, value_norm, *(tuple([w['n'] for w in item['Word']])[:2]))
+                    used_corp, value_norm, *(tuple([w['n'] for w in item.Word])[:2]))
                 rels[attr1].add(attr2)
         except RuntimeError as ex:
             msg = str(ex).lower()
