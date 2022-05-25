@@ -13,11 +13,10 @@
 import logging
 from dataclasses import Field, dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union, NewType
+from typing import Any, Callable, Dict, List, NewType, Optional, Union
 
 from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
                              create_req_arg_proxy, is_req_args_proxy)
-
 
 StrOpt = NewType('StrOpt', str)
 ListStrOpt = NewType('ListStrOpt', List[str])
@@ -189,6 +188,7 @@ class Args(UserActionArgs):
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
     ftt_include_empty: int = field(default=0, metadata=mk_metdata())
+    remove_empty_items: int = field(default=1, metadata=mk_metdata())
     subcsize: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
     wlsort: str = field(default='', metadata=mk_metdata())
