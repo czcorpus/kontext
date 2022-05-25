@@ -33,7 +33,6 @@ from bgcalc.freqs.storage import stored_to_fs
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
-from conclib.freq import FreqData
 from conclib.pyconc import PyConc
 from corplib.corpus import KCorpus
 
