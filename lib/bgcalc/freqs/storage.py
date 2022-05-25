@@ -31,40 +31,23 @@ def _cache_file_path(args: FreqCalcArgs):
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
 
 
-def stored_to_fs(f):
+def stored_to_fs(func):
     """
     A decorator for storing freq merge results (as CSV files). Please note that this is not just
     caching but rather an essential part of the query processing. Without this decorator, KonText
     cannot return the result - i.e. the result data must be stored to disk to be readable by a client.
     """
-    @wraps(f)
+    @wraps(func)
     async def wrapper(args: FreqCalcArgs) -> FreqCalcResult:
         cache_path = _cache_file_path(args)
         if await aiofiles.os.path.exists(cache_path):
-            logging.error('loading from cache')
             async with aiofiles.open(cache_path, 'rb') as f:
                 data = pickle.loads(await f.read())
         else:
-            data = await f(args)
-            logging.error('saving to cache')
+            data = await func(args)
             async with aiofiles.open(cache_path, 'wb') as f:
                 await f.write(pickle.dumps(data))
 
         return data
-
-        #path = _create_cache_path(pquery)
-
-        # if await aiofiles.os.path.exists(path):
-#            async with aiofiles.open(path, 'r') as fr:
- #               csv_reader = aiocsv.AsyncReader(fr)
-  #              return [item async for item in csv_reader]
-   #     else:
-    #        ans = await f(worker, pquery, raw_queries, subcpath, user_id, collator_locale)
-     #       num_lines = ans[0][1]
-      #      async with aiofiles.open(path, 'w') as fw:
-       #         csv_writer = aiocsv.AsyncWriter(fw)
-        #        await csv_writer.writerow(('__total__', num_lines))
-        #       await csv_writer.writerows(ans[1:])
-        #  return ans[1:]
 
     return wrapper
