@@ -1055,6 +1055,13 @@ export function init(
                 name: Actions.SetCtSaveMode.name,
                 payload: {value: TableViewMode.TABLE}
             });
+            dispatcher.dispatch<typeof Actions.FreqctSortByDimension>({
+                name: Actions.FreqctSortByDimension.name,
+                payload: {
+                    dim: Dimensions.SECOND,
+                    attr: 'abs'
+                }
+            });
         }
 
         render() {
