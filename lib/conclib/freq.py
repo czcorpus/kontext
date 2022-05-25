@@ -14,7 +14,25 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
-from action.argmapping.action import StrOpt, IntOpt
+from typing import Any, Dict, List
+
+from action.argmapping.action import IntOpt, StrOpt
+
+
+@dataclass
+class FreqItem:
+    Word: List[Dict[str, Any]]
+    freq: int
+    norm: int
+    rel: float
+
+
+@dataclass
+class FreqData:
+    Head: List[Dict[str, Any]]
+    Items: List[FreqItem]
+    SkippedEmpty: bool
+    NoRelSorting: bool
 
 
 @dataclass

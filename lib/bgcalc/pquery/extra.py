@@ -19,7 +19,7 @@ from typing import Dict, List
 
 from action.argmapping.pquery import PqueryFormArgs
 from bgcalc.adapter.abstract import AbstractBgClient
-from bgcalc.freq_calc import calculate_freqs_bg_sync
+from bgcalc.freqs import calculate_freqs_bg_sync
 from bgcalc.pquery import (SUBTASK_TIMEOUT_SECS, create_freq_calc_args,
                            extract_freqs)
 from bgcalc.pquery.storage import stored_to_fs

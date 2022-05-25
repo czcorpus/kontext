@@ -24,6 +24,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 import l10n
 import manatee
+from conclib.freq import FreqData, FreqItem
 from corplib.corpus import AbstractKCorpus
 from kwiclib.common import lngrp_sortcrit
 from strings import escape_attr_val
@@ -226,8 +227,8 @@ class PyConc(manatee.Concordance):
         return ans
 
     def xfreq_dist(
-            self, crit, limit=1, sortkey='f', ftt_include_empty: int = 0, rel_mode=0,
-            collator_locale='en_US'):
+            self, crit: str, limit: int = 1, sortkey: str = 'f', ftt_include_empty: int = 0, rel_mode: int = 0,
+            collator_locale: str = 'en_US') -> FreqData:
         """
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
@@ -281,7 +282,7 @@ class PyConc(manatee.Concordance):
                 'instances per million positions (refers to the respective category)'),
             s='rel'))
 
-        lines = []
+        lines: List[FreqItem] = []
         for w, f, nf in zip(words, freqs, norms):
             word = export_word(w)
             if test_word_empty(word):
@@ -291,7 +292,7 @@ class PyConc(manatee.Concordance):
                 logging.getLogger(__name__).warning(
                     f'ipm calculation problem: zero base set size (corpus: {self.corpname}, word: {w}, f: {f})')
                 continue
-            lines.append(dict(
+            lines.append(FreqItem(
                 Word=word,
                 freq=f,
                 norm=nf,
@@ -299,24 +300,24 @@ class PyConc(manatee.Concordance):
         if ftt_include_empty and limit == 0 and '.' in attrs[0]:
             attr = self.pycorp.get_attr(attrs[0])
             all_vals = [attr.id2str(i) for i in range(attr.id_range())]
-            used_vals = [line['Word'][0]['n'] for line in lines]
+            used_vals = [line.Word[0]['n'] for line in lines]
             for v in all_vals:
                 if v in used_vals:
                     continue
-                lines.append(dict(
+                lines.append(FreqItem(
                     Word=[{'n': v}],
                     freq=0,
                     rel=0,
                     norm=0
                 ))
-        if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
+        if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0].Word)):
             sortkey = int(sortkey)
-            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v['Word'][sortkey]['n'])
+            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
-            lines = sorted(lines, key=lambda v: v[sortkey], reverse=True)
-        return dict(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
+            lines = sorted(lines, key=lambda v: getattr(v, sortkey), reverse=True)
+        return FreqData(Head=head, Items=lines, SkippedEmpty=has_empty_item, NoRelSorting=bool(rel_mode))
 
     def xdistribution(self, xrange: List[int], amplitude: int) -> Tuple[List[int], List[int]]:
         begs = manatee.IntVector(xrange)

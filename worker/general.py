@@ -29,11 +29,11 @@ It can be run on a different machine than KonText but it still requires
 complete and properly configured KonText package.
 """
 
-import os
 import importlib.util
+import os
+import pickle
 import sys
 import time
-import pickle
 
 import aiofiles
 import aiofiles.os
@@ -66,10 +66,10 @@ initializer.init_plugin('dispatch_hook', optional=True)
 
 import conclib.calc
 import conclib.calc.base
+from action.argmapping.wordlist import WordlistFormArgs
+from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
-from bgcalc import (freq_calc, subc_calc, coll_calc, pquery, wordlist)
-from action.argmapping.wordlist import WordlistFormArgs
 
 stderr_redirector = get_stderr_redirector(settings)
 
@@ -144,7 +144,7 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
         corp.compile_frq(attr)
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')
-    return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
 
 
 # ----------------------------- CONCORDANCE -----------------------------------
@@ -231,23 +231,15 @@ async def clean_colls_cache():
 
 
 async def calculate_freqs(args):
-    args = freq_calc.FreqCalcArgs(**args)
-    calculate_freqs.cache_path = args.cache_path
-    ans = await freq_calc.calculate_freqs_bg(args)
-    trigger_cache_limit = settings.get_int('corpora', 'freqs_cache_min_lines', 10)
-    if args.force_cache or max(len(d.get('Items', ())) for d in ans['freqs']) >= trigger_cache_limit:
-        calculate_freqs.cache_data = ans
-    else:
-        calculate_freqs.cache_data = None
-    return ans
+    return await freqs.calculate_freqs_bg(args)
 
 
-async def calculate_freq2d(args: freq_calc.Freq2DCalcArgs):
-    return await freq_calc.Freq2DCalculation(args).run()
+async def calculate_freq2d(args: freqs.Freq2DCalcArgs):
+    return await freqs.Freq2DCalculation(args).run()
 
 
 async def clean_freqs_cache():
-    return freq_calc.clean_freqs_cache()
+    return freqs.clean_freqs_cache()
 
 
 async def calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id, collator_locale):
@@ -267,7 +259,7 @@ async def calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id
 async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
-    (see freq_calc.build_arf_db)worker.py
+    (see freqs.build_arf_db)worker.py
     """
     corp = await _load_corp(corp_id, subcorp, user_id)
     return await _compile_frq(corp, attr, logfile)
@@ -276,14 +268,14 @@ async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
 async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
-    (see freq_calc.build_arf_db)
+    (see freqs.build_arf_db)
     """
     corp = await _load_corp(corp_id, subcorp, user_id)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
-        base_path = await freq_calc.corp_freqs_cache_path(corp, attr)
+        base_path = await freqs.corp_freqs_cache_path(corp, attr)
         frq_data_file = f'{base_path}.frq'
-        while num_wait > 0 and await freq_calc.calc_is_running(base_path, 'frq'):
+        while num_wait > 0 and await freqs.calc_is_running(base_path, 'frq'):
             if await aiofiles.os.path.isfile(frq_data_file):
                 break
             time.sleep(1)
@@ -300,13 +292,13 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
             corp.compile_arf(attr)
             async with aiofiles.open(logfile, 'a') as f:
                 await f.write('\n100 %\n')
-    return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
+    return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
 
 
 async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
-    (see freq_calc.build_arf_db)
+    (see freqs.build_arf_db)
     """
     corp = await _load_corp(corp_id, subcorp, user_id)
     if is_compiled(corp, attr, 'docf'):
@@ -320,7 +312,7 @@ async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
             corp.compile_docf(attr, doc.name)
             async with aiofiles.open(logfile, 'a') as f:
                 await f.write('\n100 %\n')
-        return {'message': 'OK', 'last_log_record': await freq_calc.get_log_last_line(logfile)}
+        return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
         raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))

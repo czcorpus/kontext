@@ -62,7 +62,6 @@
         <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <freqs_cache_ttl>3600</freqs_cache_ttl>
-        <freqs_cache_min_lines>100</freqs_cache_min_lines>
         <colls_cache_dir>/var/local/corpora/colls-cache</colls_cache_dir>
         <colls_cache_ttl>3600</colls_cache_ttl>
         <conc_dir>/var/local/corpora/conc</conc_dir>

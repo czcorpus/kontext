@@ -233,7 +233,6 @@ export class TextTypesDistModel extends StatefulModel<TextTypesDistModelState> {
                 ([reduceAns, args, fcrit, idx]) => {
                     args.fcrit = fcrit;
                     args.flimit = flimit;
-                    args.force_cache = 1;
                     args.format = 'json';
                     if (reduceAns.conc_persistence_op_id) {
                         args.q = [`~${reduceAns.conc_persistence_op_id}`];

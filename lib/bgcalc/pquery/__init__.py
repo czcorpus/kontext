@@ -17,10 +17,9 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 
 from action.argmapping.pquery import PqueryFormArgs
-from bgcalc.freq_calc import FreqCalcArgs, calculate_freqs_bg
+from bgcalc.freqs import FreqCalcArgs, calculate_freqs_bg
+from bgcalc.freqs.types import FreqCalcResult
 from bgcalc.pquery.storage import stored_to_fs
-
-from .errors import PqueryArgumentError, PqueryResultNotFound
 
 """
 This module contains function for calculating Paradigmatic queries
@@ -30,13 +29,13 @@ out of existing concordances.
 SUBTASK_TIMEOUT_SECS = 120  # please note that this may collide with config.xml's calc_backend.task_time_limit
 
 
-def extract_freqs(freqs):
+def extract_freqs(data: FreqCalcResult):
     """
     Extract value and freq information out of complex freq. response data type
     """
     ans = []
-    for item in freqs.get('freqs', [{'Items': []}])[0].get('Items'):
-        ans.append((item['Word'][0]['n'], item['freq']))
+    for item in data.freqs[0].Items:
+        ans.append((item.Word[0]['n'], item.freq))
     return ans
 
 

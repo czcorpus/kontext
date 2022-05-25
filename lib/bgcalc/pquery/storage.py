@@ -16,7 +16,7 @@ import hashlib
 import os.path
 from dataclasses import dataclass
 from functools import wraps
-from typing import List, Tuple
+from typing import List
 
 import aiocsv
 import aiofiles
