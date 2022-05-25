@@ -54,7 +54,7 @@ export interface FreqFormProps extends FreqFormInputs {
  *
  */
 function validateGzNumber(s:string):boolean {
-    return !!/^([1-9]\d*)?$/.exec(s);
+    return !!/^([1-9]\d*|0)?$/.exec(s);
 }
 
 /**
