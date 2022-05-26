@@ -14,11 +14,13 @@
 # GNU General Public License for more details.
 
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from typing import Any, Dict, List
 
 from action.argmapping.action import IntOpt, StrOpt
 
 
+@dataclass_json
 @dataclass
 class FreqItem:
     Word: List[Dict[str, Any]]
@@ -27,6 +29,7 @@ class FreqItem:
     rel: float
 
 
+@dataclass_json
 @dataclass
 class FreqData:
     Head: List[Dict[str, Any]]

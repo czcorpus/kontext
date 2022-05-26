@@ -16,6 +16,9 @@ import hashlib
 import json
 import os
 from functools import wraps
+from typing import Dict, TypedDict, List
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 
 import aiocsv
 import aiofiles.os
@@ -38,8 +41,34 @@ def _cache_file_path(args: FreqCalcArgs):
         str(args.rel_mode),
         str(args.collator_locale),
     ])
-    filename = '{}.csv'.format(hashlib.sha1(v.encode('utf-8')).hexdigest())
+    filename = '{}.jsonl'.format(hashlib.sha1(v.encode('utf-8')).hexdigest())
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)
+
+
+class _Head(TypedDict):
+    n: str
+    s: str
+    title: str
+
+
+@dataclass_json
+@dataclass
+class _BlockMetadata:
+    head: List[_Head]
+    skipped_empty: bool
+    no_rel_sorting: bool
+    size: int
+
+
+@dataclass_json
+@dataclass
+class _CommonMetadata:
+    num_blocks: int
+    conc_size: int
+
+
+def wrap_cache_metadata(data: FreqData) -> Dict:
+    return json.dumps()
 
 
 def stored_to_fs(func):
@@ -54,35 +83,33 @@ def stored_to_fs(func):
 
         if await aiofiles.os.path.exists(cache_path):
             async with aiofiles.open(cache_path, 'r') as fr:
-                csv_reader = aiocsv.AsyncReader(fr)
-                data = FreqCalcResult(freqs=[], conc_size=int((await anext(csv_reader))[0]))
-                blocks = int((await anext(csv_reader))[0])
+                common_md = _CommonMetadata.from_json(await fr.readline())
+                data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
+                blocks = common_md.num_blocks
 
                 for _ in range(blocks):
-                    head = json.loads((await anext(csv_reader))[0])
-                    skipped_empty = bool(int((await anext(csv_reader))[0]))
-                    no_rel_sorting = bool(int((await anext(csv_reader))[0]))
-                    freq = FreqData(Head=head, Items=[], SkippedEmpty=skipped_empty,
-                                    NoRelSorting=no_rel_sorting)
-                    total = int((await anext(csv_reader))[0])
-                    for _ in range(total):
-                        row = await anext(csv_reader)
-                        freq.Items.append(FreqItem(json.loads(row[0]), int(
-                            row[1]), int(row[2]), float(row[3])))
+                    block_md = _BlockMetadata.from_json(await fr.readline())
+                    freq = FreqData(
+                        Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
+                        NoRelSorting=block_md.no_rel_sorting)
+                    for _ in range(block_md.size):
+                        freq.Items.append(FreqItem.from_json(await fr.readline()))
                     data.freqs.append(freq)
 
         else:
             data: FreqCalcResult = await func(args)
             async with aiofiles.open(cache_path, 'w') as fw:
-                csv_writer = aiocsv.AsyncWriter(fw)
-                await csv_writer.writerow((data.conc_size,))
-                await csv_writer.writerow((len(data.freqs),))
+                common_md = _CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
+                await fw.write(common_md.to_json() + '\n')
                 for freq in data.freqs:
-                    await csv_writer.writerow((json.dumps(freq.Head),))
-                    await csv_writer.writerow((1 if freq.SkippedEmpty else 0,))
-                    await csv_writer.writerow((1 if freq.NoRelSorting else 0,))
-                    await csv_writer.writerow((len(freq.Items),))
-                    await csv_writer.writerows((json.dumps(item.Word), item.freq, item.norm, item.rel) for item in freq.Items)
+                    block_md = _BlockMetadata(
+                        head=[_Head(**x) for x in freq.Head],
+                        skipped_empty=freq.SkippedEmpty,
+                        no_rel_sorting=freq.NoRelSorting,
+                        size=len(freq.Items))
+                    await fw.write(block_md.to_json() + '\n')
+                    for item in freq.Items:
+                        await fw.write(item.to_json() + '\n')
 
         return data
 
