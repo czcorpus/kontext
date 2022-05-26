@@ -29,7 +29,7 @@ import manatee
 import settings
 from action.errors import UserActionException
 from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
-from bgcalc.freqs.storage import stored_to_fs
+from bgcalc.freqs.storage import stored_to_fs, find_cached_result
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
@@ -224,17 +224,19 @@ async def calculate_freqs(args: FreqCalcArgs):
         raise CalcArgsAssertionError(
             'multi-block frequency calculation does not support pagination')
 
-    worker = bgcalc.calc_backend_client(settings)
-    res = await worker.send_task(
-        'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
-    # worker task caches the value AFTER the result is returned (see worker.py)
-    calc_result: Union[None, Exception, FreqCalcResult] = res.get()
-
+    calc_result, p = await find_cached_result(args)
     if calc_result is None:
-        raise BgCalcError('Failed to get result')
-    elif isinstance(calc_result, Exception):
-        raise calc_result
+        worker = bgcalc.calc_backend_client(settings)
+        res = await worker.send_task(
+            'calculate_freqs', object.__class__, args=(args,), time_limit=TASK_TIME_LIMIT)
+        # worker task caches the value AFTER the result is returned (see worker.py)
+        tmp_result: Union[None, Exception, FreqCalcResult] = res.get()
 
+        if tmp_result is None:
+            raise BgCalcError('Failed to get result')
+        elif isinstance(tmp_result, Exception):
+            raise calc_result
+        calc_result = tmp_result
     lastpage = None
     fstart = (args.fpage - 1) * args.fmaxitems
     ans = []

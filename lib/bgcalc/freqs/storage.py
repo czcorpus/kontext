@@ -15,7 +15,7 @@
 import hashlib
 import os
 from functools import wraps
-from typing import TypedDict, List
+from typing import TypedDict, List, Optional, Tuple
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 import ujson
@@ -65,6 +65,26 @@ class _CommonMetadata:
     conc_size: int
 
 
+async def find_cached_result(args: FreqCalcArgs) -> Tuple[Optional[FreqCalcResult], str]:
+    cache_path = _cache_file_path(args)
+    if await aiofiles.os.path.exists(cache_path):
+        async with aiofiles.open(cache_path, 'r') as fr:
+            common_md = _CommonMetadata.from_dict(ujson.loads(await fr.readline()))
+            data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
+            blocks = common_md.num_blocks
+
+            for _ in range(blocks):
+                block_md = _BlockMetadata.from_dict(ujson.loads(await fr.readline()))
+                freq = FreqData(
+                    Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
+                    NoRelSorting=block_md.no_rel_sorting)
+                for _ in range(block_md.size):
+                    freq.Items.append(FreqItem.from_dict(ujson.loads(await fr.readline())))
+                data.freqs.append(freq)
+        return data, cache_path
+    return None, cache_path
+
+
 def stored_to_fs(func):
     """
     A decorator for storing freq merge results (as CSV files). Please note that this is not just
@@ -73,24 +93,8 @@ def stored_to_fs(func):
     """
     @wraps(func)
     async def wrapper(args: FreqCalcArgs) -> FreqCalcResult:
-        cache_path = _cache_file_path(args)
-
-        if await aiofiles.os.path.exists(cache_path):
-            async with aiofiles.open(cache_path, 'r') as fr:
-                common_md = _CommonMetadata.from_dict(ujson.loads(await fr.readline()))
-                data = FreqCalcResult(freqs=[], conc_size=common_md.conc_size)
-                blocks = common_md.num_blocks
-
-                for _ in range(blocks):
-                    block_md = _BlockMetadata.from_dict(ujson.loads(await fr.readline()))
-                    freq = FreqData(
-                        Head=block_md.head, Items=[], SkippedEmpty=block_md.skipped_empty,
-                        NoRelSorting=block_md.no_rel_sorting)
-                    for _ in range(block_md.size):
-                        freq.Items.append(FreqItem.from_dict(ujson.loads(await fr.readline())))
-                    data.freqs.append(freq)
-
-        else:
+        data, cache_path = await find_cached_result(args)
+        if data is None:
             data: FreqCalcResult = await func(args)
             async with aiofiles.open(cache_path, 'w') as fw:
                 common_md = _CommonMetadata(num_blocks=len(data.freqs), conc_size=data.conc_size)
@@ -104,7 +108,5 @@ def stored_to_fs(func):
                     await fw.write(ujson.dumps(block_md.to_dict()) + '\n')
                     for item in freq.Items:
                         await fw.write(ujson.dumps(item.to_dict()) + '\n')
-
         return data
-
     return wrapper
