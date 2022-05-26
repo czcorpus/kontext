@@ -67,10 +67,6 @@ class _CommonMetadata:
     conc_size: int
 
 
-def wrap_cache_metadata(data: FreqData) -> Dict:
-    return json.dumps()
-
-
 def stored_to_fs(func):
     """
     A decorator for storing freq merge results (as CSV files). Please note that this is not just
