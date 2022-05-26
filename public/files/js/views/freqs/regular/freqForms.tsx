@@ -153,6 +153,25 @@ export function init(
                     onChange={handleCheckboxChange} />;
     };
 
+    // ---------------------- <RemoveEmptyItemsCheckbox /> --------------------------------------------
+
+    interface RemoveEmptyItemsCheckboxProps {
+        removeEmptyItems:boolean;
+    }
+
+    const RemoveEmptyItemsCheckbox:React.FC<RemoveEmptyItemsCheckboxProps> = (props) => {
+
+        const handleCheckboxChange = (e) => {
+            dispatcher.dispatch<typeof Actions.MLSetRemoveEmptyItems>({
+                name: Actions.MLSetRemoveEmptyItems.name,
+                payload: {checked: e.target.checked}
+            });
+        };
+
+        return <input id="remove-empty-items-checkbox" type="checkbox" checked={props.removeEmptyItems}
+                    onChange={handleCheckboxChange} />;
+    };
+
     // ---------------------- <TTFreqForm /> --------------------------------------------
 
     interface TTFreqFormProps {
@@ -472,7 +491,12 @@ export function init(
                                     <FreqLimitInput flimit={this.props.flimit} actionName={Actions.MLSetFLimit.name} />
                                 </label>
                             </td>
-                            <td />
+                            <td>
+                                <label style={{fontWeight: 'bold'}}>
+                                    {he.translate('freq__remove_empty_items')}:{'\u00a0'}
+                                    <RemoveEmptyItemsCheckbox removeEmptyItems={this.props.removeEmptyItems} />
+                                </label>
+                            </td>
                         </tr>
                         <tr>
                             <td colSpan={2}>

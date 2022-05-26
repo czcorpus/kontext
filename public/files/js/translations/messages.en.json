@@ -683,6 +683,7 @@
         "freq__sel_form_type_ct": "Two-attribute interrelationship",
         "freq__make_freq_list_btn": "Make frequency list",
         "freq__freq_limit_label": "Frequency limit",
+        "freq__remove_empty_items": "Remove empty items",
         "freq__incl_no_hits_cats_label": "Include categories with no hits",
         "freq__add_level_btn": "Add level",
         "freq__remove_level_btn": "Remove this level",

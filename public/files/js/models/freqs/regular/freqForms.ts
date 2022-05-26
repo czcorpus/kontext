@@ -69,6 +69,7 @@ export interface MLFreqFormModelState {
     mlxctxIndices:Array<number>;
     alignType:Array<AlignTypes>;
     maxNumLevels:number;
+    removeEmptyItems:boolean;
 }
 
 function importMlxctxValue(v:string, positionLa:string[], positionRa:string[]):number {
@@ -105,6 +106,7 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
                 mlxctxIndices: List.map(item => importMlxctxValue(item, MLFreqFormModel.POSITION_LA, MLFreqFormModel.POSITION_RA), props.mlxctx),
                 alignType: props.alignType,
                 maxNumLevels: maxNumLevels,
+                removeEmptyItems: true,
             }
         );
         this.pageModel = pageModel;
@@ -154,6 +156,11 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
         this.addActionHandler<typeof Actions.MLSetAlignType>(
             Actions.MLSetAlignType.name,
             (state, action) => {state.alignType[action.payload.levelIdx] = action.payload.value}
+        );
+
+        this.addActionHandler<typeof Actions.MLSetRemoveEmptyItems>(
+            Actions.MLSetRemoveEmptyItems.name,
+            (state, action) => {state.removeEmptyItems = action.payload.checked}
         );
 
         this.addActionHandler<typeof Actions.MLSubmit>(
@@ -230,7 +237,8 @@ export class MLFreqFormModel extends StatelessModel<MLFreqFormModelState> {
                 Dict.fromEntries()
             ),
             freqlevel: state.mlxattr.length,
-            freq_sort: state.freqSort
+            freq_sort: state.freqSort,
+            remove_empty_items: state.removeEmptyItems ? 1 : 0,
         };
         window.location.href = this.pageModel.createActionUrl('freqml', args);
     }

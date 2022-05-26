@@ -239,6 +239,12 @@ export class Actions {
         name: 'FREQ_ML_SUBMIT'
     };
 
+    static MLSetRemoveEmptyItems:Action<{
+        checked: boolean
+    }> = {
+        name: 'FREQ_ML_SET_REMOVE_EMPTY_ITEMS'
+    };
+
     static TTSetFttAttr:Action<{
         value:string;
     }> = {

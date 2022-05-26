@@ -141,6 +141,7 @@ export interface FreqServerArgs extends ConcServerArgs {
     fttattr?:string|Array<string>;
     fttattr_async?:string|Array<string>;
     fcrit?:string;
+    remove_empty_items?:number;
 }
 
 

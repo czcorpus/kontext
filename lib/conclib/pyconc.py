@@ -228,7 +228,7 @@ class PyConc(manatee.Concordance):
 
     def xfreq_dist(
             self, crit: str, limit: int = 1, sortkey: str = 'f', ftt_include_empty: int = 0, rel_mode: int = 0,
-            collator_locale: str = 'en_US') -> FreqData:
+            collator_locale: str = 'en_US', remove_empty_items: int = 1) -> FreqData:
         """
         Calculates data (including data for visual output) of a frequency distribution
         specified by the 'crit' parameter
@@ -287,7 +287,8 @@ class PyConc(manatee.Concordance):
             word = export_word(w)
             if test_word_empty(word):
                 has_empty_item = True
-                continue
+                if remove_empty_items:
+                    continue
             if nf == 0:
                 logging.getLogger(__name__).warning(
                     f'ipm calculation problem: zero base set size (corpus: {self.corpname}, word: {w}, f: {f})')

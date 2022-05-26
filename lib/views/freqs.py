@@ -49,6 +49,7 @@ class MLFreqRequestArgs(MLFreqArgs):
     flimit: IntOpt = 0
     freqlevel: IntOpt = 1
     freq_sort: StrOpt = ''
+    remove_empty_items: IntOpt = 1
 
 
 @dataclass
@@ -60,6 +61,7 @@ class GeneralFreqArgs:
     freq_sort: StrOpt = ''
     freq_type: StrOpt = ''
     format: StrOpt = ''
+    remove_empty_items: IntOpt = 1
 
 
 @bp.route('/freqs')
@@ -79,7 +81,8 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
             amodel,
             req,
             fcrit=req.mapped_args.fcrit, fcrit_async=req.mapped_args.fcrit_async, flimit=req.mapped_args.flimit,
-            freq_sort=req.mapped_args.freq_sort)
+            freq_sort=req.mapped_args.freq_sort,
+            remove_empty_items=req.mapped_args.remove_empty_items)
         if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
             raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
@@ -98,6 +101,7 @@ class SharedFreqArgs:
     fdefault_view: str
 
     freq_sort: str
+    remove_empty_items: IntOpt = 1
     # required by chart view
     fmaxitems: IntOpt = 10
     chart_type: StrOpt = ''
@@ -123,7 +127,7 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
             amodel,
             req,
             fcrit=(req.mapped_args.fcrit,), fcrit_async=(), flimit=req.mapped_args.flimit,
-            freq_sort=req.mapped_args.freq_sort)
+            freq_sort=req.mapped_args.freq_sort, remove_empty_items=req.mapped_args.remove_empty_items)
         ans['freq_type'] = req.mapped_args.freq_type
         ans['alpha_level'] = req.mapped_args.alpha_level
 
@@ -156,7 +160,8 @@ async def _freqs(
         fcrit: Tuple[str, ...],
         fcrit_async: Tuple[str, ...],
         flimit: int,
-        freq_sort: str):
+        freq_sort: str,
+        remove_empty_items: int):
 
     amodel.disabled_menu_items = (
         MainMenu.CONCORDANCE('query-save-as'),
@@ -204,7 +209,8 @@ async def _freqs(
         rel_mode=rel_mode,
         collator_locale=corp_info.collator_locale,
         fmaxitems=amodel.args.fmaxitems,
-        fpage=amodel.args.fpage)
+        fpage=amodel.args.fpage,
+        remove_empty_items=remove_empty_items)
 
     calc_result = await calculate_freqs(args)
     result.update(
@@ -349,7 +355,7 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
     result = await _freqs(
         amodel,
         req,
-        fcrit=(fcrit,), fcrit_async=(), flimit=args.flimit, freq_sort='')
+        fcrit=(fcrit,), fcrit_async=(), flimit=args.flimit, freq_sort='', remove_empty_items=args.remove_empty_items)
     result['ml'] = 1
     req.session['last_freq_level'] = args.freqlevel
     tmp = defaultdict(lambda: [])
@@ -385,6 +391,7 @@ class FreqttActionArgs:
     freq_sort: StrOpt = ''
     fttattr: ListStrOpt = field(default_factory=list)
     fttattr_async: ListStrOpt = field(default_factory=list)
+    remove_empty_items: IntOpt = 1
 
 
 @bp.route('/freqtt')
@@ -399,7 +406,8 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
         fcrit=tuple(f'{a} 0' for a in req.mapped_args.fttattr),
         fcrit_async=[f'{a} 0' for a in req.mapped_args.fttattr_async],
         flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort)
+        freq_sort=req.mapped_args.freq_sort,
+        remove_empty_items=req.mapped_args.remove_empty_items)
     ans['freq_type'] = 'text-types'
     ans['alpha_level'] = req.mapped_args.alpha_level
     return ans
@@ -483,6 +491,7 @@ class SavefreqArgs:
     colheaders: IntOpt = 0
     heading: IntOpt = 0
     multi_sheet_file: IntOpt = 0
+    remove_empty_items: IntOpt = 1
 
 
 @bp.route('/savefreq')
@@ -498,7 +507,7 @@ async def savefreq(amodel: ConcActionModel, req: KRequest[SavefreqArgs], resp: K
     # following piece of sh.t has hidden parameter dependencies
     result = await _freqs(
         amodel, req, fcrit=req.mapped_args.fcrit, flimit=req.mapped_args.flimit,
-        freq_sort=req.mapped_args.freq_sort, fcrit_async=())
+        freq_sort=req.mapped_args.freq_sort, fcrit_async=(), remove_empty_items=req.mapped_args.remove_empty_items)
 
     def mkfilename(suffix): return f'{amodel.args.corpname}-freq-distrib.{suffix}'
     with plugins.runtime.EXPORT as export:

@@ -17,13 +17,14 @@ import os
 from functools import wraps
 from typing import TypedDict, List, Optional, Tuple
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
-import ujson
+from functools import wraps
 
 import aiofiles.os
 import settings
+import ujson
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
+from dataclasses_json import dataclass_json
 
 
 def _cache_file_path(args: FreqCalcArgs):
@@ -38,6 +39,7 @@ def _cache_file_path(args: FreqCalcArgs):
         str(args.ftt_include_empty),
         str(args.rel_mode),
         str(args.collator_locale),
+        str(args.remove_empty_items),
     ])
     filename = '{}.jsonl'.format(hashlib.sha1(v.encode('utf-8')).hexdigest())
     return os.path.join(settings.get('corpora', 'freqs_cache_dir'), filename)

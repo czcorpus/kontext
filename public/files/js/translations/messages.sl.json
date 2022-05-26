@@ -688,6 +688,7 @@
         "freq__sel_form_type_ct": "Medsebojna povezanost dveh atributov",
         "freq__make_freq_list_btn": "Ustvari frekvenčni seznam",
         "freq__freq_limit_label": "Omejitev frekvence",
+        "freq__remove_empty_items": "Remove empty items UNTRANSLATED",
         "freq__incl_no_hits_cats_label": "Vključi kategorije brez zadetkov",
         "freq__add_level_btn": "Dodaj stopnjo",
         "freq__remove_level_btn": "Odstrani to stopnjo",
