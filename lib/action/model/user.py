@@ -382,6 +382,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                     at.error = 'task time limit exceeded'
 
     def store_async_task(self, async_task_status) -> List[AsyncTaskStatus]:
+        logging.getLogger(__name__).warning('FUCK >############### store task {}'.format(async_task_status))
         at_list = [t for t in self.get_async_tasks() if t.status != 'FAILURE']
         self.mark_timeouted_tasks(*at_list)
         at_list.append(async_task_status)

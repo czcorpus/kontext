@@ -18,39 +18,42 @@ import sys
 from functools import wraps
 from typing import Dict, List, Tuple
 
-import aiocsv
+import ujson
 import aiofiles
 import aiofiles.os
 import l10n
 import settings
 from action.argmapping.wordlist import WordlistFormArgs
-from bgcalc.csv_cache import load_cached_full
+from bgcalc.jsonl_cache import load_cached_full, load_cached_partial
 from bgcalc.wordlist.errors import WordlistResultNotFound
 from corplib import frq_db
 from corplib.corpus import KCorpus
 from manatee import Structure  # TODO wrap this out
-from util import anext
 
 
 def _create_cache_path(form: WordlistFormArgs) -> str:
     key = (f'{form.corpname}:{form.usesubcorp}:{form.wlattr}:{form.wlpat}:{form.pfilter_words}:{form.nfilter_words}:'
            f'{form.include_nonwords}:{form.wltype}:{form.wlnums}:{form.wlminfreq}')
     result_id = hashlib.sha1(key.encode('utf-8')).hexdigest()
-    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.csv')
+    return os.path.join(settings.get('corpora', 'freqs_cache_dir'), f'wlist_{result_id}.jsonl')
 
 
-async def require_existing_wordlist(form: WordlistFormArgs, wlsort: str, reverse: bool, offset: int, limit: int,
-                                    collator_locale: str) -> Tuple[int, List[Tuple[str, int]]]:
+async def require_existing_wordlist(
+        form: WordlistFormArgs, wlsort: str, reverse: bool, offset: int, limit: int,
+        collator_locale: str) -> Tuple[int, List[Tuple[str, int]]]:
     path = _create_cache_path(form)
     if not await aiofiles.os.path.exists(path):
         raise WordlistResultNotFound('The result does not exist')
     else:
         if wlsort == 'f':
-            total, rows = await load_cached_full(path)
-            return (
-                total,
-                sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
-            )
+            if reverse:
+                return await load_cached_partial(path, offset, limit)
+            else:
+                total, rows = await load_cached_full(path)
+                return (
+                    total,
+                    sorted(rows, key=lambda x: x[1], reverse=reverse)[offset:offset + limit]
+                )
         else:
             total, rows = await load_cached_full(path)
             rows = l10n.sort(rows, key=lambda x: x[0], loc=collator_locale, reverse=reverse)
@@ -65,18 +68,18 @@ def cached(f):
     async def wrapper(corp: KCorpus, args: WordlistFormArgs, max_items: int):
         path = _create_cache_path(args)
 
-        if await aiofiles.os.path.exists(path):  # TODO we do not use this branch
+        if await aiofiles.os.path.exists(path):
             async with aiofiles.open(path, 'r') as fr:
-                csv_reader = aiocsv.AsyncReader(fr)
-                await anext(csv_reader)  # skip __total__ info
-                return [item async for item in csv_reader]
+                await fr.readline()
+                return [ujson.loads(item) async for item in fr]
         else:
             ans = await f(corp, args, sys.maxsize)
+            ans = sorted(ans, key=lambda x: x[1], reverse=True)
             num_lines = len(ans)
             async with aiofiles.open(path, 'w') as fw:
-                csv_writer = aiocsv.AsyncWriter(fw)
-                await csv_writer.writerow(('__total__', num_lines))
-                await csv_writer.writerows(ans)
+                await fw.write(ujson.dumps(dict(total=num_lines)) + '\n')
+                for item in ans:
+                    await fw.write(ujson.dumps(item) + '\n')
             return ans[:max_items]
 
     return wrapper

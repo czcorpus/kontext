@@ -33,6 +33,7 @@ class AsyncTaskStatus:
     CATEGORY_SUBCORPUS: ClassVar[str] = 'subcorpus'
     CATEGORY_PQUERY: ClassVar[str] = 'pquery'
     CATEGORY_FREQ_PRECALC: ClassVar[str] = 'freqPrecalc'
+    CATEGORY_WORDLIST: ClassVar[str] = 'wordlist'
 
     ident: str
     "task identifier (unique per specific task instance)"
@@ -48,6 +49,7 @@ class AsyncTaskStatus:
     created: float = field(default_factory=lambda: time.time())
     error: Optional[str] = None
     url: Optional[str] = None
+    auto_redirect: Optional[bool] = None
 
     def is_finished(self) -> bool:
         return self.status in ('FAILURE', 'SUCCESS')

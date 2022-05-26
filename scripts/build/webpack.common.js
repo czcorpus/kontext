@@ -57,6 +57,7 @@ module.exports = {
             restoreConc: mkpath('js/pages/restoreConc.ts'),
             wordlist: mkpath('js/pages/wordlist.ts'),
             wordlistForm: mkpath('js/pages/wordlistForm.ts'),
+            restoreWordlist: mkpath('js/pages/restoreWordlist.ts'),
             login: mkpath('js/pages/login.ts'),
             userProfile: mkpath('js/pages/userProfile.ts'),
             userSignUp: mkpath('js/pages/userSignUp.ts'),

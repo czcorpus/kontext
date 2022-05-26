@@ -48,6 +48,7 @@ export class Actions {
         args?:unknown;
         error?:string;
         url?:string;
+        auto_redirect?:boolean;
     }> = {
         name: 'INBOX_ADD_ASYNC_TASK'
     };
@@ -69,5 +70,9 @@ export class Actions {
     }> = {
         name: 'ASYNC_TASKS_CHECKED'
     };
+
+    static isAsyncTasksChecked(a:Action):a is typeof Actions.AsyncTasksChecked {
+        return a.name === Actions.AsyncTasksChecked.name;
+    }
 
 }
