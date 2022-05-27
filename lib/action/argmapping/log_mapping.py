@@ -13,18 +13,17 @@
 # GNU General Public License for more details.
 
 """
-The module contains functions matching a signature required by the 'action_log_mapper' attribute in @exposed
-methods. The functions map request arguments to a more compact/readable form as required by action logging.
+The module contains action logging functions for miscellaneous @http_action functions.
 """
 
-from sanic.request import Request
+from action.krequest import KRequest
 
 
-def query(request: Request):
+def query(request: KRequest):
     return dict(corpname=request.args.get('corpname'), align=request.args.getlist('align', []))
 
 
-def query_submit(request: Request):
+def query_submit(request: KRequest):
     if request.json and len(request.json.get('queries', [])) > 0:
         queries = request.json.get('queries', [])
         corpora = []
@@ -43,28 +42,32 @@ def query_submit(request: Request):
     return {}
 
 
-def view(request: Request):
-    return dict(corpname=request.args.get('corpname'), maincorp=request.args.get('maincorp'),
-                viewmode=request.args.get('viewmode'), pagesize=request.args.get('pagesize'),
-                attrs=request.args.get('attrs'), attr_vmode=request.args.get('attrs_vmode'),
-                q=request.args.get('q'))
+def view(request: KRequest):
+    return dict(
+        corpname=request.args.get('corpname'), maincorp=request.args.get('maincorp'),
+        viewmode=request.args.get('viewmode'), pagesize=request.args.get('pagesize'),
+        attrs=request.args.get('attrs'), attr_vmode=request.args.get('attrs_vmode'),
+        q=request.args.get('q'))
 
 
-def wordlist(request: Request):
-    return dict(corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
-                wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))
+def wordlist(request: KRequest):
+    return dict(
+        corpname=request.form.get('corpname'), wlsort=request.form.get('wlsort'),
+        wlnums=request.form.get('wlnums'), wltype=request.form.get('wltype'))
 
 
-def widectx(request: Request):
+def widectx(request: KRequest):
     attrs = request.args.get('attrs', '').split(',')
     structs = list(set(x.split('.')[0] for x in request.args.get('structs', '').split(',')))
     expand_left = request.args.get('detail_left_ctx')
     expand_right = request.args.get('detail_right_ctx')
-    expand = (None if expand_left is None else int(expand_left),
-              None if expand_right is None else int(expand_right))
+    expand = (
+        None if expand_left is None else int(expand_left),
+        None if expand_right is None else int(expand_right))
     return dict(corpname=request.args.get('corpname'), attrs=attrs, structs=structs, expand=expand)
 
 
-def new_subcorpus(request: Request):
-    return dict(corpname=request.json.get('corpname'), form_type=request.json.get('form_type'),
-                publish=request.json.get('publish', False))
+def new_subcorpus(request: KRequest):
+    return dict(
+        corpname=request.json.get('corpname'), form_type=request.json.get('form_type'),
+        publish=request.json.get('publish', False))

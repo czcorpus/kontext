@@ -457,6 +457,12 @@ msgstr "unspecified"
 msgid "Concordance regeneration"
 msgstr "Concordance regeneration"
 
+msgid "Word list regeneration"
+msgstr "Word list regeneration UNRANSLATED"
+
+msgid "Word list regeneration"
+msgstr "Word list regeneration UNRANSLATED"
+
 msgid "Paradigmatic query calculation"
 msgstr "Paradigmatic query calculation UNTRANSLATED"
 

@@ -495,6 +495,9 @@ msgstr "Potrditveni ključ ni bil najden"
 msgid "Concordance regeneration"
 msgstr "Ponovno ustvarjanje konkordanc"
 
+msgid "Word list regeneration"
+msgstr "Word list regeneration UNRANSLATED"
+
 msgid "Frequency"
 msgstr "Frekvenca"
 

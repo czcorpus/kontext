@@ -16,6 +16,7 @@
 
 import logging
 from typing import List
+import time
 
 import plugins
 import settings
@@ -24,11 +25,14 @@ from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
+from action.errors import ImmediateRedirectException
 from action.response import KResponse
 from bgcalc import calc_backend_client
 from bgcalc.errors import BgCalcError
 from bgcalc.freqs import build_arf_db, build_arf_db_status
 from bgcalc.wordlist import make_wl_query, require_existing_wordlist
+from bgcalc.wordlist.errors import WordlistResultNotFound
+from bgcalc.task import AsyncTaskStatus
 from corplib.errors import MissingSubCorpFreqFile
 from main_menu import MainMenu
 from sanic import Blueprint
@@ -38,7 +42,7 @@ bp = Blueprint('wordlist', url_prefix='wordlist')
 
 @bp.route('/form')
 @http_action(access_level=1, template='wordlist/form.html', page_model='wordlistForm', action_model=WordlistActionModel)
-async def form(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
+async def form(amodel: WordlistActionModel, _: KRequest, __: KResponse):
     """
     Word List Form
     """
@@ -51,8 +55,10 @@ async def form(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 
 
 @bp.route('/submit', ['POST'])
-@http_action(access_level=1, return_type='json', page_model='wordlist', mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
-async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
+@http_action(
+    access_level=1, return_type='json', page_model='wordlist', mutates_result=True,
+    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
+async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
     worker = calc_backend_client(settings)
@@ -88,46 +94,94 @@ async def submit(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
     return ans
 
 
+@bp.route('/restore')
+@http_action(
+    access_level=1, template='wordlist/restore.html', page_model='restoreWordlist',
+    mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
+async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+    worker = calc_backend_client(settings)
+    q_id = req.args_getlist('q')[0]
+    async_res = await worker.send_task(
+        'get_wordlist', object.__class__,
+        args=(amodel.curr_wlform_args.to_dict(), amodel.corp.size, amodel.session_get('user', 'id')))
+
+    def on_query_store(query_ids, history_ts, result):
+        async_task = AsyncTaskStatus(
+            status=async_res.status, ident=async_res.id,
+            category=AsyncTaskStatus.CATEGORY_WORDLIST,
+            label=query_ids[0],
+            args=dict(query_id=query_ids[0], last_update=time.time()),
+            url=req.create_url('wordlist/result', dict(q=f'~{query_ids[0]}')),
+            auto_redirect=True)
+        amodel.store_async_task(async_task)
+        result['task'] = async_task.to_dict()
+
+    amodel.on_query_store(on_query_store)
+
+    return {
+        'finished': False,
+        'next_action': '',
+        'next_action_args': {}}
+
+
 @bp.route('/result')
-@http_action(access_level=1, template='wordlist/result.html', page_model='wordlist', action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
-async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
-    amodel.disabled_menu_items = (MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
-                                  MainMenu.FILTER, MainMenu.FREQUENCY,
-                                  MainMenu.COLLOCATIONS, MainMenu.CONCORDANCE)
+@http_action(
+    access_level=1, template='wordlist/result.html', page_model='wordlist',
+    action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
+async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
+    amodel.disabled_menu_items = (
+        MainMenu.VIEW('kwic-sent-switch', 'structs-attrs'),
+        MainMenu.FILTER,
+        MainMenu.FREQUENCY,
+        MainMenu.COLLOCATIONS,
+        MainMenu.CONCORDANCE)
 
     wlsort = req.args.get('wlsort', 'f')
     rev = bool(int(req.args.get('reverse', '1')))
     page = int(req.args.get('wlpage', '1'))
     offset = (page - 1) * amodel.args.wlpagesize
-    total, data = await require_existing_wordlist(
-        form=amodel.curr_wlform_args, reverse=rev, offset=offset,
-        limit=amodel.args.wlpagesize, wlsort=wlsort,
-        collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
 
-    result = dict(data=data, total=total, form=amodel.curr_wlform_args.to_dict(),
-                  query_id=amodel.curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
-                  wlpagesize=amodel.args.wlpagesize)
     try:
-        result['wlattr_label'] = (amodel.corp.get_conf(amodel.curr_wlform_args.wlattr + '.LABEL') or
-                                  amodel.curr_wlform_args.wlattr)
+        total, data = await require_existing_wordlist(
+            form=amodel.curr_wlform_args, reverse=rev, offset=offset,
+            limit=amodel.args.wlpagesize, wlsort=wlsort,
+            collator_locale=(await amodel.get_corpus_info(amodel.corp.corpname)).collator_locale)
+    except WordlistResultNotFound:
+        raise ImmediateRedirectException(req.create_url('wordlist/restore', dict(q=req.args_getlist('q')[0])))
+
+    result = dict(
+        data=data, total=total, form=amodel.curr_wlform_args.to_dict(),
+        query_id=amodel.curr_wlform_args.id, reverse=rev, wlsort=wlsort, wlpage=page,
+        wlpagesize=amodel.args.wlpagesize)
+    try:
+        result['wlattr_label'] = (
+                amodel.corp.get_conf(amodel.curr_wlform_args.wlattr + '.LABEL') or amodel.curr_wlform_args.wlattr)
     except Exception as e:
         result['wlattr_label'] = amodel.curr_wlform_args.wlattr
         logging.getLogger(__name__).warning(f'wlattr_label set failed: {e}')
 
     result['freq_figure'] = req.translate(amodel.FREQ_FIGURES.get('frq', '?'))
 
-    amodel.add_save_menu_item('CSV', save_format='csv',
-                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item('XLSX', save_format='xlsx',
-                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item('XML', save_format='xml',
-                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
-    amodel.add_save_menu_item('TXT', save_format='txt',
-                              hint=req.translate('Saves at most {0} items. Use "Custom" for more options.'.format(
-                                  amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+    amodel.add_save_menu_item(
+        'CSV', save_format='csv',
+        hint=req.translate(
+            'Saves at most {0} items. Use "Custom" for more options.'.format(
+                amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+    amodel.add_save_menu_item(
+        'XLSX', save_format='xlsx',
+        hint=req.translate(
+            'Saves at most {0} items. Use "Custom" for more options.'.format(
+                amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+    amodel.add_save_menu_item(
+        'XML', save_format='xml',
+        hint=req.translate(
+            'Saves at most {0} items. Use "Custom" for more options.'.format(
+                amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
+    amodel.add_save_menu_item(
+        'TXT', save_format='txt',
+        hint=req.translate(
+            'Saves at most {0} items. Use "Custom" for more options.'.format(
+                amodel.WORDLIST_QUICK_SAVE_MAX_LINES)))
     amodel.add_save_menu_item(req.translate('Custom'))
     # custom save is solved in templates because of compatibility issues
     result['tasks'] = []
@@ -140,7 +194,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/struct_result', ['POST'])
 @http_action(return_type='json', mutates_result=True, action_model=WordlistActionModel)
-async def struct_result(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
+async def struct_result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
     amodel.set_curr_wlform_args(form_args)
@@ -210,7 +264,7 @@ async def savewl(amodel: WordlistActionModel, req: KRequest[WordlistSaveFormArgs
 
 @bp.route('/process')
 @http_action(return_type='json', action_model=WordlistActionModel)
-async def process(amodel: WordlistActionModel, req: KRequest, resp: KResponse):
+async def process(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     worker_tasks: List[str] = req.args.get('worker_tasks')
     backend = settings.get('calc_backend', 'type')
     if worker_tasks and backend in ('celery', 'rq'):

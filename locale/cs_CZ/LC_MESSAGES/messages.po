@@ -540,6 +540,9 @@ msgstr "Prohlédnout na GitHubu"
 msgid "Concordance regeneration"
 msgstr "Obnovení konkordance"
 
+msgid "Word list regeneration"
+msgstr "Obnovení seznamu slov"
+
 msgid "Paradigmatic query"
 msgstr "Paradigmatický dotaz"
 
