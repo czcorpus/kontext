@@ -18,9 +18,19 @@
 
 
 import re
-from typing import List, Tuple, Union
+from typing import Generator, Iterable, Iterator, List, Tuple, TypeVar, Union
 
 SortCritType = List[Tuple[str, Union[str, int]]]
+T = TypeVar('T')
+
+
+def pair(data: Union[Iterable[T], Iterator[T]]) -> Generator[Tuple[T, T], None, None]:
+    iterator = data if isinstance(data, Iterator) else iter(data)
+    while True:
+        try:
+            yield next(iterator), next(iterator)
+        except StopIteration:
+            break
 
 
 def tokens2strclass(tokens):
@@ -34,8 +44,8 @@ def tokens2strclass(tokens):
     returns:
     a list of dicts {'str': '[token]', 'class': '[classes]'}
     """
-    return [{'str': tokens[i], 'class': tokens[i + 1].strip('{}')}
-            for i in range(0, len(tokens), 2)]
+    return [{'str': str_token, 'class': class_token.strip('{}')}
+            for str_token, class_token in pair(tokens)]
 
 
 def lngrp_sortcrit(lab: str, separator: str = '.') -> SortCritType:

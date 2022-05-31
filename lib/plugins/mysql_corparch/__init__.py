@@ -20,7 +20,7 @@ import copy
 import logging
 import re
 from collections import OrderedDict, defaultdict
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import plugins
 import ujson as json
@@ -34,8 +34,9 @@ from plugin_types.corparch import (AbstractSearchableCorporaArchive,
                                    CorpusListItem)
 from plugin_types.corparch.backend import DatabaseBackend
 from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
-                                          KwicConnect, QuerySuggest,
-                                          StructAttrInfo, TokenConnect)
+                                          KwicConnect, MLPositionFilter,
+                                          QuerySuggest, StructAttrInfo,
+                                          TokenConnect)
 from plugin_types.user_items import AbstractUserItems
 from plugins import inject
 from plugins.common.mysql import MySQLConf, MySQLOps
@@ -111,23 +112,23 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
     def backend(self):
         return self._backend
 
-    def _parse_color(self, code):
+    def _parse_color(self, code: str) -> str:
         code = code.lower()
         transparency = self.LABEL_OVERLAY_TRANSPARENCY
         if code[0] == '#':
             code = code[1:]
-            r, g, b = [int('0x%s' % code[i:i + 2], 0) for i in range(0, len(code), 2)]
-            return 'rgba(%d, %s, %d, %01.2f)' % (r, g, b, transparency)
+            r, g, b = [int(f'0x{code[i:i + 2]}', 0) for i in range(0, len(code), 2)]
+            return f'rgba({r}, {g}, {b}, {transparency:1.2f})'
         elif code.find('rgb') == 0:
             m = re.match(r'rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)', code, re.IGNORECASE)
             if m:
-                return 'rgba(%s, %s, %s, %01.2f)' % (m.group(1), m.group(2), m.group(3), transparency)
-        raise ValueError('Invalid color code: %s' % code)
+                return f'rgba({m.group(1)}, {m.group(2)}, {m.group(3)}, {transparency:1.2f})'
+        raise ValueError(f'Invalid color code: {code}')
 
     def get_label_color(self, label_id):
         return self._colors.get(label_id, None)
 
-    def _corp_info_from_row(self, row, lang):
+    def _corp_info_from_row(self, row: Dict[str, Any], lang: str) -> Optional[CorpusInfo]:
         if row:
             ans = self.create_corpus_info()
             ans.id = row['id']
@@ -161,6 +162,8 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
             ans.manatee.size = row['size']
             ans.manatee.lang = row['language']
             ans.manatee.name = row['name']
+            ans.part_of_ml_corpus = row['part_of_ml_corpus']
+            ans.ml_position_filter = MLPositionFilter[row['ml_position_filter']]
             return ans
         return None
 
@@ -273,7 +276,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
         if corpus_id not in self._corpus_info_cache:
             row = await self._backend.load_corpus(cursor, corpus_id)
             corp = self._corp_info_from_row(row, user_lang)
-            if corp:
+            if corp is not None:
                 corp.tagsets = await self._backend.load_corpus_tagsets(cursor, corpus_id)
                 self._corpus_info_cache[corpus_id] = corp
                 for art in await self._backend.load_corpus_articles(cursor, corpus_id):
@@ -291,7 +294,7 @@ class MySQLCorparch(AbstractSearchableCorporaArchive):
                     cursor, corpus_id)
         return self._corpus_info_cache.get(corpus_id, None)
 
-    async def get_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, corp_name: str):
+    async def get_corpus_info(self, plugin_ctx: AbstractCorpusPluginCtx, corp_name: str) -> CorpusInfo:
         """
         Obtain full corpus info
         """

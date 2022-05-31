@@ -27,7 +27,8 @@ import manatee
 from conclib.common import KConc
 from conclib.empty import InitialConc
 from corplib.corpus import AbstractKCorpus
-from kwiclib.common import SortCritType, lngrp_sortcrit, tokens2strclass
+from kwiclib.common import SortCritType, lngrp_sortcrit, pair, tokens2strclass
+from plugin_types.corparch.corpus import MLPositionFilter
 
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
 
@@ -103,6 +104,9 @@ class KwicLinesArgs:
     alignlist: List[Any] = field(default_factory=list)
     attr_vmode: str = 'visible-kwic'
     base_attr: str = 'word'
+    structs: str = 'p'
+    part_of_ml_corpus: bool = False
+    ml_position_filter: MLPositionFilter = MLPositionFilter.none
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
@@ -160,6 +164,10 @@ class KwicPageArgs:
     # determine whether the non-word attributes should be rendered directly or as a meta-data
     attr_vmode:  str = 'visible-kwic'
 
+    # multilayer align corpora
+    part_of_ml_corpus: bool = False
+    ml_position_filter: MLPositionFilter = MLPositionFilter.none
+
     def __init__(self, argmapping: Dict[str, Any], base_attr: str):
         for k, v in argmapping.items():
             if hasattr(self, k):
@@ -187,7 +195,7 @@ class KwicPageArgs:
     def calc_toline(self):
         return self.fromp * self.pagesize + self.line_offset
 
-    def create_kwicline_args(self, **kw):
+    def create_kwicline_args(self, **kw) -> KwicLinesArgs:
         ans = KwicLinesArgs()
         ans.speech_segment = self.speech_attr
         ans.fromline = self.calc_fromline()
@@ -202,6 +210,8 @@ class KwicPageArgs:
         ans.righttoleft = self.righttoleft
         ans.alignlist = self.alignlist
         ans.attr_vmode = self.attr_vmode
+        ans.part_of_ml_corpus = self.part_of_ml_corpus
+        ans.ml_position_filter = self.ml_position_filter
         for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
@@ -489,7 +499,7 @@ class Kwic:
             prev = item
         return ans
 
-    def kwiclines(self, args):
+    def kwiclines(self, args: KwicLinesArgs):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
         the provided Concordance object and additional parameters (like
@@ -560,6 +570,18 @@ class Kwic:
             rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
+            ml_positions = []
+            if args.part_of_ml_corpus:
+                index = 0
+                for str_token, _ in pair(itertools.chain(kl.get_left(), kl.get_kwic(), kl.get_right())):
+                    for word in str_token.strip().split():
+                        if args.ml_position_filter == MLPositionFilter.none:
+                            ml_positions.append(index)
+                        elif args.ml_position_filter == MLPositionFilter.alphanum:
+                            if re.match(r'\w+', word):
+                                ml_positions.append(index)
+                        index += 1
+
             leftwords = self.postproc_text_chunk(leftwords)
             kwicwords = self.postproc_text_chunk(kwicwords)
             rightwords = self.postproc_text_chunk(rightwords)
@@ -591,6 +613,7 @@ class Kwic:
                              linenum=i)
             line_data[leftlabel] = leftwords
             line_data[rightlabel] = rightwords
+            line_data['ml_positions'] = ml_positions
             lines.append(line_data)
             i += 1
         for line in lines:

@@ -60,6 +60,8 @@ CREATE TABLE kontext_corpus (
   default_virt_keyboard varchar(255),
   default_view_opts text,
   syntax_viewer_conf_json text,
+  part_of_ml_corpus int(11) DEFAULT '0',
+  ml_position_filter enum('none', 'alphanum') NOT NULL DEFAULT 'none',
   UNIQUE KEY corpora_name_uniq (name),
   KEY corpora_requestable_idx (requestable),
   CONSTRAINT corpora_parallel_corpus_id_fkey FOREIGN KEY (parallel_corpus_id) REFERENCES kontext_parallel_corpus (id),

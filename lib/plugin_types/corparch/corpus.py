@@ -17,13 +17,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import enum
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
 from dataclasses_json.api import LetterCase
-from plugin_types.corparch.error import CorpusInfoError
 
 
 @dataclass_json
@@ -138,6 +138,11 @@ class StructAttrInfo:
     dt_format: Optional[str] = None
 
 
+class MLPositionFilter(enum.Enum):
+    none = 0
+    alphanum = 1
+
+
 @dataclass_json
 @dataclass
 class CorpusInfo:
@@ -183,6 +188,8 @@ class CorpusInfo:
     default_view_opts: Dict[str, Any] = field(default_factory=dict)
     query_suggest: QuerySuggest = field(default_factory=lambda: QuerySuggest())
     simple_query_default_attrs: List[str] = field(default_factory=list)
+    part_of_ml_corpus: bool = False
+    ml_position_filter: MLPositionFilter = MLPositionFilter.none
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

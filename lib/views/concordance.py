@@ -223,6 +223,8 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.alignlist = [(await amodel.cm.get_corpus(
                 c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
+            kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
+            kwic_args.ml_position_filter = corpus_info.ml_position_filter
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
@@ -378,6 +380,8 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.alignlist = [(await amodel.cm.get_corpus(
                 c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
+            kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
+            kwic_args.ml_position_filter = corpus_info.ml_position_filter
 
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
@@ -1142,6 +1146,8 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic_args.leftctx = amodel.args.leftctx
         kwic_args.rightctx = amodel.args.rightctx
         kwic_args.structs = amodel.get_struct_opts()
+        kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
+        kwic_args.ml_position_filter = corpus_info.ml_position_filter
 
         data = kwic.kwicpage(kwic_args)
 

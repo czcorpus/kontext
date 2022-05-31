@@ -189,6 +189,7 @@ export interface SingleCorpServerLineData {
     leftspace:string;
     kwiclen:number;
     toknum:number;
+    ml_positions:Array<number>;
 }
 
 /**
