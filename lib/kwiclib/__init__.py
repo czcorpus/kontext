@@ -101,12 +101,11 @@ class KwicLinesArgs:
     user_structs: str = 'p'
     labelmap: Dict[str, str] = field(default_factory=dict)
     righttoleft: bool = False
-    alignlist: List[Any] = field(default_factory=list)
+    alignlist: List[AbstractKCorpus] = field(default_factory=list)
     attr_vmode: str = 'visible-kwic'
     base_attr: str = 'word'
     structs: str = 'p'
-    part_of_ml_corpus: bool = False
-    ml_position_filter: MLPositionFilter = MLPositionFilter.none
+    ml_position_filters: Dict[str, MLPositionFilter] = field(default_factory=dict)
 
     def copy(self, **kw):
         ans = KwicLinesArgs()
@@ -155,8 +154,8 @@ class KwicPageArgs:
     # whether the text flows from right to left
     righttoleft: bool = False
 
-    # ???
-    alignlist: List[Any] = field(default_factory=list)  # TODO better type
+    # list of aligned corpora
+    alignlist: List[AbstractKCorpus] = field(default_factory=list)
 
     # whether display ===EMPTY=== or '' in case a value is empty
     hidenone: int = 0
@@ -165,8 +164,7 @@ class KwicPageArgs:
     attr_vmode:  str = 'visible-kwic'
 
     # multilayer align corpora
-    part_of_ml_corpus: bool = False
-    ml_position_filter: MLPositionFilter = MLPositionFilter.none
+    ml_position_filters: Dict[str, MLPositionFilter] = field(default_factory=dict)
 
     def __init__(self, argmapping: Dict[str, Any], base_attr: str):
         for k, v in argmapping.items():
@@ -210,8 +208,7 @@ class KwicPageArgs:
         ans.righttoleft = self.righttoleft
         ans.alignlist = self.alignlist
         ans.attr_vmode = self.attr_vmode
-        ans.part_of_ml_corpus = self.part_of_ml_corpus
-        ans.ml_position_filter = self.ml_position_filter
+        ans.ml_position_filters = self.ml_position_filters
         for k, v in list(kw.items()):
             setattr(ans, k, v)
         return ans
@@ -253,7 +250,7 @@ class Kwic:
         out = KwicPageData()
         pagination = Pagination()
         pagination.first_page = 1
-        out.Lines = self.kwiclines(args.create_kwicline_args())
+        out.Lines = self.kwiclines(args.create_kwicline_args(), self.corpus.corpname)
         self.add_aligns(out, args.create_kwicline_args(speech_segment=None))
 
         if len(out.CorporaColumns) == 0:
@@ -294,7 +291,7 @@ class Kwic:
         out.pagination = pagination.export()
         return out
 
-    def add_aligns(self, result, args):
+    def add_aligns(self, result: KwicPageData, args: KwicLinesArgs):
         """
         Adds lines from aligned corpora. Method modifies passed KwicPageData instance by setting
         respective attributes.
@@ -324,13 +321,13 @@ class Kwic:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:
                 self.conc.switch_aligned(al_corp.get_conffile())
-                al_lines.append(self.kwiclines(args))
+                al_lines.append(self.kwiclines(args), al_corpname)
             else:
                 self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
                 self.conc.add_aligned(al_corp.get_conffile())
                 self.conc.switch_aligned(al_corp.get_conffile())
                 al_lines.append(
-                    self.kwiclines(args.copy(leftctx='0', rightctx='0', attrs='word', ctxattrs=''))
+                    self.kwiclines(args.copy(leftctx='0', rightctx='0', attrs='word', ctxattrs=''), al_corpname)
                 )
 
         # It appears that Manatee returns lists of different lengths in case some translations
@@ -499,7 +496,7 @@ class Kwic:
             prev = item
         return ans
 
-    def kwiclines(self, args: KwicLinesArgs):
+    def kwiclines(self, args: KwicLinesArgs, corpname: str):
         """
         Generates list of 'kwic' (= keyword in context) lines according to
         the provided Concordance object and additional parameters (like
@@ -570,17 +567,24 @@ class Kwic:
             rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
                                                        filter_out_speech_tag, last_left_speech_id)[0]
 
-            ml_positions = []
-            if args.part_of_ml_corpus:
-                index = 0
-                for str_token, _ in pair(itertools.chain(kl.get_left(), kl.get_kwic(), kl.get_right())):
-                    for word in str_token.strip().split():
-                        if args.ml_position_filter == MLPositionFilter.none:
-                            ml_positions.append(index)
-                        elif args.ml_position_filter == MLPositionFilter.alphanum:
-                            if re.match(r'\w+', word):
-                                ml_positions.append(index)
-                        index += 1
+            ml_positions = {'left': [], 'kwic': [], 'right': []}
+            try:
+                position_filter = args.ml_position_filters[corpname]
+            except KeyError:
+                pass
+            else:
+                for side, data in [('left', kl.get_left()), ('kwic', kl.get_kwic()), ('right', kl.get_right())]:
+                    pos_list = []
+                    index = 0
+                    for str_token, _ in pair(data):
+                        for word in str_token.strip().split():
+                            if position_filter == MLPositionFilter.none:
+                                pos_list.append(index)
+                            elif position_filter == MLPositionFilter.alphanum:
+                                if re.match(r'\w+', word):
+                                    pos_list.append(index)
+                            index += 1
+                    ml_positions[side] = pos_list
 
             leftwords = self.postproc_text_chunk(leftwords)
             kwicwords = self.postproc_text_chunk(kwicwords)

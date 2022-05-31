@@ -343,7 +343,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                 prevBlockClosed={List.get(-1, props.output.left)}
                                 hasKwic={hasKwic} lineIdx={props.lineIdx} attrViewMode={props.attrViewMode}
                                 supportsTokenConnect={props.supportsTokenConnect}
-                                kwicTokenNum={props.output.tokenNumber} audioPlayerStatus={props.audioPlayerStatus} />,
+                                kwicTokenNum={props.output.tokenNumber} audioPlayerStatus={props.audioPlayerStatus}
+                                highlightPositions={props.output.highlightPositions} />,
                         ' '
                     ],
                     props.output.kwic
@@ -412,6 +413,7 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
         attrViewMode:ViewOptions.AttrViewMode;
         supportsTokenConnect:boolean;
         audioPlayerStatus:PlayerStatus;
+        highlightPositions:Array<number>;
 
     }> = (props) => {
         const prevClosed = props.i > 0 ? props.itemList[props.i - 1] : props.prevBlockClosed;
@@ -444,7 +446,20 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                 return <span>&lt;--not translated--&gt;</span>
 
             } else {
-                return <span className={props.item.className === 'strc' ? 'strc' : null}>{props.item.text.join(' ')} </span>;
+                return <span className={props.item.className === 'strc' ? 'strc' : null}>
+                    {List.flatMap((v, i) => {
+                        let element;
+                        if (props.highlightPositions.includes(i)) {
+                            element = [<strong className={getViewModeClass(props.attrViewMode)}>{v}</strong>];
+                        } else {
+                            element = [v];
+                        }
+                        if (i < props.item.text.length - 1) {
+                            element.push(' ');
+                        }
+                        return element
+                    }, props.item.text)}
+                </span>;
             }
         }
 
@@ -599,7 +614,8 @@ export function init({dispatcher, he, lineModel, lineSelectionModel}:LinesModule
                                         lineIdx={this.props.lineIdx}
                                         attrViewMode={this.props.attrViewMode}
                                         supportsTokenConnect={this.props.supportsTokenConnect}
-                                        kwicTokenNum={corpusOutput.tokenNumber} audioPlayerStatus={this.props.audioPlayerStatus}/>,
+                                        kwicTokenNum={corpusOutput.tokenNumber} audioPlayerStatus={this.props.audioPlayerStatus}
+                                        highlightPositions={corpusOutput.highlightPositions} />,
                                 ' '
                             ],
                             corpusOutput.kwic

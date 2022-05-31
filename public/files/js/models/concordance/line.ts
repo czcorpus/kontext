@@ -19,7 +19,7 @@
  */
 
 import { List, pipe } from 'cnc-tskit';
-import { KWICSection, SentSection, TextChunk } from './common';
+import { KWICSection, MLPositionsData, SentSection, TextChunk } from './common';
 
 
 export class ConclineSectionOps {
@@ -34,7 +34,9 @@ export class ConclineSectionOps {
         ref:Array<string>,
         left:Array<TextChunk>,
         kwic:Array<TextChunk>,
-        right:Array<TextChunk>
+        right:Array<TextChunk>,
+        mlPositions:MLPositionsData,
+        refMlPositions?:MLPositionsData,
     ) {
         const ans:KWICSection = {
             tokenNumber,
@@ -54,7 +56,8 @@ export class ConclineSectionOps {
                 List.foldr(
                     (r, v) => r.concat((v.className ? 0 : v.text.length) + (r.length > 0 ? r[r.length - 1] : 0)), [1]),
                 List.slice(0, -1)
-            )
+            ),
+            highlightPositions: refMlPositions ? List.slice(refMlPositions.left.length, refMlPositions.left.length + refMlPositions.kwic.length, mlPositions.kwic) : []
         };
         return ans;
     }

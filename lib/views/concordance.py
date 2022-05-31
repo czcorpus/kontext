@@ -187,6 +187,14 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
 
 async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
+    ml_position_filters = {}
+    if corpus_info.part_of_ml_corpus:
+        ml_position_filters = {amodel.args.corpname: corpus_info.ml_position_filter}
+        for align in amodel.args.align:
+            align_info = await amodel.get_corpus_info(align)
+            if align_info.part_of_ml_corpus:
+                ml_position_filters[align] = corpus_info.ml_position_filter
+
     if amodel.args.refs is None:  # user did not set this at all (!= user explicitly set '')
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
 
@@ -223,8 +231,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.alignlist = [(await amodel.cm.get_corpus(
                 c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
-            kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
-            kwic_args.ml_position_filter = corpus_info.ml_position_filter
+            kwic_args.ml_position_filters = ml_position_filters
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
             out['Sort_idx'] = kwic.get_sort_idx(q=amodel.args.q, pagesize=amodel.args.pagesize)
@@ -380,8 +387,6 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args.alignlist = [(await amodel.cm.get_corpus(
                 c, translate=req.translate)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
-            kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
-            kwic_args.ml_position_filter = corpus_info.ml_position_filter
 
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
 
@@ -1141,13 +1146,10 @@ async def saveconc(amodel: ConcActionModel, req: KRequest[SaveConcArgs], resp: K
         kwic_args.pagesize = to_line - (from_line - 1)
         kwic_args.line_offset = (from_line - 1)
         kwic_args.labelmap = {}
-        kwic_args.align = ()
         kwic_args.alignlist = [(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c]
         kwic_args.leftctx = amodel.args.leftctx
         kwic_args.rightctx = amodel.args.rightctx
         kwic_args.structs = amodel.get_struct_opts()
-        kwic_args.part_of_ml_corpus = corpus_info.part_of_ml_corpus
-        kwic_args.ml_position_filter = corpus_info.ml_position_filter
 
         data = kwic.kwicpage(kwic_args)
 

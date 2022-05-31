@@ -55,6 +55,8 @@ export interface KWICSection {
      * which is the only one we know from the server.
      */
     rightOffsets:Array<number>;
+
+    highlightPositions:Array<number>;
 }
 
 
@@ -170,6 +172,12 @@ export interface ServerTextChunk {
     tail_posattrs?:Array<string>;
 }
 
+export interface MLPositionsData {
+    left:Array<number>;
+    kwic:Array<number>;
+    right:Array<number>;
+}
+
 /**
  * SingleCorpServerLineData defines a single
  * concordance line for a single (or unaligned)
@@ -189,7 +197,7 @@ export interface SingleCorpServerLineData {
     leftspace:string;
     kwiclen:number;
     toknum:number;
-    ml_positions:Array<number>;
+    ml_positions:MLPositionsData;
 }
 
 /**
