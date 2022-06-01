@@ -29,7 +29,7 @@ class AbstractKwicConnect(CorpusDependentPlugin):
         pass
 
     @abc.abstractmethod
-    def fetch_data(self, provider_ids, corpora, lemma, lang) -> List[Dict[str, Any]]:
+    async def fetch_data(self, provider_ids, corpora, lemma, lang) -> List[Dict[str, Any]]:
         pass
 
     def gives_kwic_hints(self, corpora):

@@ -47,11 +47,13 @@ class HTTPBackend(AbstractBackend):
     @cached
     async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
         args = dict(
-            ui_lang=self.enc_val(lang), corpus=self.enc_val(corpora[0]),
-            corpus2=self.enc_val(corpora[1] if len(corpora) > 1 else ''),
+            ui_lang=self._client.enc_val(lang), corpus=self._client.enc_val(corpora[0]),
+            corpus2=self._client.enc_val(corpora[1] if len(corpora) > 1 else ''),
             token_id=token_id, num_tokens=num_tokens,
-            **dict((k, dict((k2, self.enc_val(v2)) for k2, v2 in list(v.items())) if type(v) is dict else self.enc_val(v)
-                    ) for k, v in list(query_args.items())))
+            **dict(
+                (k, dict((k2, self._client.enc_val(v2))
+                         for k2, v2 in list(v.items())) if type(v) is dict else self._client.enc_val(v))
+                for k, v in list(query_args.items())))
         logging.getLogger(__name__).debug('HTTP Backend args: {0}'.format(args))
 
         try:
@@ -59,4 +61,4 @@ class HTTPBackend(AbstractBackend):
         except KeyError as ex:
             raise BackendException('Failed to build query - value {0} not found'.format(ex))
 
-        return await self._client.request('GET', query_string)
+        return await self._client.request('GET', query_string, {})
