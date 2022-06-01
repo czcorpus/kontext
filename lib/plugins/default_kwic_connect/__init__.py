@@ -21,7 +21,7 @@ Required XML configuration: please see ./config.rng
 """
 
 import logging
-from multiprocessing.pool import ThreadPool
+import asyncio
 from typing import Dict, List, Tuple
 
 import plugins
@@ -50,10 +50,10 @@ def merge_results(curr, new, word: str):
         return curr
 
 
-def handle_word_req(args):
+async def handle_word_req(args):
     word, corpora, providers, ui_lang = args
     with plugins.runtime.KWIC_CONNECT as kc:
-        return word, kc.fetch_data(providers, corpora, word, ui_lang)
+        return word, await kc.fetch_data(providers, corpora, word, ui_lang)
 
 
 @bp.route('/fetch_external_kwic_info')
@@ -64,9 +64,9 @@ async def fetch_external_kwic_info(amodel: ConcActionModel, req: KRequest, resp:
         corpus_info = await ca.get_corpus_info(amodel.plugin_ctx, amodel.corp.corpname)
         args = [(w, [amodel.corp.corpname] + amodel.args.align, corpus_info.kwic_connect.providers, req.ui_lang)
                 for w in words]
-        results = ThreadPool(len(words)).imap_unordered(handle_word_req, args)
         provider_all = []
-        for word, res in results:
+        for f in asyncio.as_completed([handle_word_req(*args) for _ in range(len(words))]):
+            word, res = await f
             provider_all = merge_results(provider_all, res, word)
         ans = []
         for provider in provider_all:
@@ -116,12 +116,12 @@ class DefaultKwicConnect(AbstractKwicConnect):
     def export_actions():
         return bp
 
-    def fetch_data(self, provider_ids: List[str], corpora: List[str], lemma: str, lang: str) -> List[Dict]:
+    async def fetch_data(self, provider_ids: List[str], corpora: List[str], lemma: str, lang: str) -> List[Dict]:
         ans = []
         for backend, frontend in self.map_providers(provider_ids):
             try:
                 if backend.enabled_for_corpora(corpora):
-                    data, status = backend.fetch(
+                    data, status = await backend.fetch(
                         corpora, None, None, 1, dict(lemma=lemma), lang, (-1, 1))
                     ans.append(frontend.export_data(
                         data, status, lang, is_kwic_view=False).to_dict())

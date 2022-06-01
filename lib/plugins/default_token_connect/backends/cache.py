@@ -63,7 +63,7 @@ def cached(fn):
         cached_data = await cache_db.get(key)
         # if no result is found in the cache, call the backend function
         if cached_data is None:
-            res = fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
+            res = await fn(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context)
             # if a result is returned by the backend function, encode and zip its data part and store it in
             # the cache along with the "found" parameter
             await cache_db.set(key, {'data': res[0], 'found': res[1]})

@@ -77,5 +77,6 @@ class HTTPClient:
     async def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None,
                       headers=None):
         async with self.create_connection() as session:
-            async with session.request(method, path + '?' + self._process_args(args), body=body, headers=headers if headers is not None else {}) as response:
+            url = self._server + (path + '?' + self._process_args(args) if args else path)
+            async with session.request(method, url, body=body, headers=headers if headers is not None else {}) as response:
                 return await self.process_response(response)
