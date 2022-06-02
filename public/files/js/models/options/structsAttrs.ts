@@ -313,7 +313,7 @@ export class CorpusViewOptionsModel extends StatelessModel<CorpusViewOptionsMode
                 return 1;
 
             } else {
-                return a1.n.localeCompare(a2.n);
+                return 0;
             }
         };
 
