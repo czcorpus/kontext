@@ -1063,7 +1063,7 @@ class Actions(Querying):
                                     try:
                                         begin, end = range2.split('~')
                                     except ValueError:
-                                        begin = end = range
+                                        begin = end = range2
                                     attr2 = attr2.split('/')
                                     icase = '(?i)' if len(attr2) > 1 and "i" in attr2[1] else ''
                                     attr2 = attr2[0]
