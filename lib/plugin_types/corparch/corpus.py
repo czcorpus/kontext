@@ -1,6 +1,7 @@
 # Copyright (c) 2015 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Martin Zimandl <martin.zimandlk@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,13 +18,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import enum
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 from corplib.abstract import AbstractKCorpus
 from dataclasses_json import dataclass_json
 from dataclasses_json.api import LetterCase
-from plugin_types.corparch.error import CorpusInfoError
 
 
 @dataclass_json
@@ -138,6 +139,28 @@ class StructAttrInfo:
     dt_format: Optional[str] = None
 
 
+class MLPositionFilter(enum.Enum):
+    """
+    MLPositionFilter specifies position filters used to create 1:1 position-matching aligned
+    sentences (or other structures). Using such a filter in specific cases, a simulation of
+    a multi-layer corpus can be achieved via aligned corpora.
+
+    For now only "none" and "alphanum" filters are available.
+
+    """
+
+    none = 0
+    """
+    The 'none' filter is the default and basically means that the corpora cannot be layered
+    """
+
+    alphanum = 1
+    """
+    The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters 
+    (with the exception for the underscore char.), the positions from different corpora become 1:1.
+    """
+
+
 @dataclass_json
 @dataclass
 class CorpusInfo:
@@ -183,6 +206,8 @@ class CorpusInfo:
     default_view_opts: Dict[str, Any] = field(default_factory=dict)
     query_suggest: QuerySuggest = field(default_factory=lambda: QuerySuggest())
     simple_query_default_attrs: List[str] = field(default_factory=list)
+    part_of_ml_corpus: bool = False
+    ml_position_filter: MLPositionFilter = MLPositionFilter.none
 
     def localized_desc(self, lang) -> str:
         if lang.split('_')[0] == 'cs':

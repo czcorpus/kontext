@@ -75,23 +75,28 @@ function importLines(data:Array<ServerLineData>, mainAttrIdx:number):Array<Line>
 
     data.forEach((item:ServerLineData, i:number) => {
         let line:Array<KWICSection> = [];
-        line.push(ConclineSectionOps.newKWICSection(
+        const main_line = ConclineSectionOps.newKWICSection(
             item.toknum,
             item.linenum,
             item.ref,
             List.map((v, j) => importTextChunk(v, `C${i}:L${j}`), item.Left),
             List.map((v, j) => importTextChunk(v, `C${i}:K${j}`), item.Kwic),
-            List.map((v, j) => importTextChunk(v, `C${i}:R${j}`), item.Right)
-        ));
+            List.map((v, j) => importTextChunk(v, `C${i}:R${j}`), item.Right),
+            item.ml_positions,
+            undefined,
+        );
+        line.push(main_line);
 
-        line = line.concat((item.Align || []).map((item, k) => {
+        line = line.concat((item.Align || []).map((align_item, k) => {
             return ConclineSectionOps.newKWICSection(
-                item.toknum,
-                item.linenum,
-                item.ref,
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`), item.Left),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`), item.Kwic),
-                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), item.Right)
+                align_item.toknum,
+                align_item.linenum,
+                align_item.ref,
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:L${j}`), align_item.Left),
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:K${j}`), align_item.Kwic),
+                List.map((v, j) => importTextChunk(v, `C${i}:A${k}:R${j}`), align_item.Right),
+                align_item.ml_positions,
+                item.ml_positions,
             );
         }));
         ans.push({
