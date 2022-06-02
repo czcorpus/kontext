@@ -28,6 +28,7 @@ from conclib.common import KConc
 from conclib.empty import InitialConc
 from corplib.corpus import AbstractKCorpus
 from kwiclib.common import SortCritType, lngrp_sortcrit, pair, tokens2strclass
+from kwiclib.mlfilter import ml_filter_test
 from plugin_types.corparch.corpus import MLPositionFilter
 
 LabelMapType = List[Dict[str, List[Dict[str, Union[str, int]]]]]
@@ -534,15 +535,16 @@ class Kwic:
         if isinstance(self.conc, InitialConc):
             kl = EmptyKWiclines()
         else:
-            kl = manatee.KWICLines(self.conc.corp(), self.conc.RS(True, args.fromline, args.toline),
-                                   args.leftctx, args.rightctx,
-                                   args.attrs, args.ctxattrs, all_structs, args.refs)
+            kl = manatee.KWICLines(
+                self.conc.corp(), self.conc.RS(True, args.fromline, args.toline), args.leftctx, args.rightctx,
+                args.attrs, args.ctxattrs, all_structs, args.refs)
         labelmap = args.labelmap.copy()
         labelmap['_'] = '_'
         maxleftsize = 0
         maxrightsize = 0
-        filter_out_speech_tag = args.speech_segment and args.speech_segment[0] not in args.structs \
-            and speech_struct_attr_name in all_structs
+        filter_out_speech_tag = (
+                args.speech_segment and args.speech_segment[0] not in args.structs and
+                speech_struct_attr_name in all_structs)
 
         i = args.fromline
         while kl.nextline():
@@ -553,19 +555,13 @@ class Kwic:
                 leftmost_speech_id = speech_struct_attr.pos2str(kl.get_ctxbeg())
             else:
                 leftmost_speech_id = None
-            leftwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
-                                                                           tokens2strclass(
-                                                                               kl.get_left()),
-                                                                           'left', filter_out_speech_tag,
-                                                                           leftmost_speech_id)
-            kwicwords, last_left_speech_id = self.update_speech_boundaries(args.speech_segment,
-                                                                           tokens2strclass(
-                                                                               kl.get_kwic()),
-                                                                           'kwic',
-                                                                           filter_out_speech_tag,
-                                                                           last_left_speech_id)
-            rightwords = self.update_speech_boundaries(args.speech_segment, tokens2strclass(kl.get_right()), 'right',
-                                                       filter_out_speech_tag, last_left_speech_id)[0]
+            leftwords, last_left_speech_id = self.update_speech_boundaries(
+                args.speech_segment, tokens2strclass(kl.get_left()), 'left', filter_out_speech_tag, leftmost_speech_id)
+            kwicwords, last_left_speech_id = self.update_speech_boundaries(
+                args.speech_segment, tokens2strclass(kl.get_kwic()), 'kwic', filter_out_speech_tag, last_left_speech_id)
+            rightwords = self.update_speech_boundaries(
+                args.speech_segment, tokens2strclass(kl.get_right()), 'right', filter_out_speech_tag,
+                last_left_speech_id)[0]
 
             ml_positions = {'left': [], 'kwic': [], 'right': []}
             try:
@@ -578,11 +574,8 @@ class Kwic:
                     index = 0
                     for str_token, _ in pair(data):
                         for word in str_token.strip().split():
-                            if position_filter == MLPositionFilter.none:
+                            if ml_filter_test(word, position_filter):
                                 pos_list.append(index)
-                            elif position_filter == MLPositionFilter.alphanum:
-                                if re.match(r'\w+', word):
-                                    pos_list.append(index)
                             index += 1
                     ml_positions[side] = pos_list
 
@@ -606,15 +599,16 @@ class Kwic:
                     rightsize += len(w['str']) + 1
             if rightsize > maxrightsize:
                 maxrightsize = rightsize
-            line_data = dict(toknum=kl.get_pos(),
-                             hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
-                             kwiclen=kl.get_kwiclen(),
-                             ref=[s for s in kl.get_ref_list()],
-                             Kwic=kwicwords,
-                             linegroup=linegroup,
-                             leftsize=leftsize,
-                             rightsize=rightsize,
-                             linenum=i)
+            line_data = dict(
+                toknum=kl.get_pos(),
+                hitlen=Kwic.non1hitlen(kl.get_kwiclen()),
+                kwiclen=kl.get_kwiclen(),
+                ref=[s for s in kl.get_ref_list()],
+                Kwic=kwicwords,
+                linegroup=linegroup,
+                leftsize=leftsize,
+                rightsize=rightsize,
+                linenum=i)
             line_data[leftlabel] = leftwords
             line_data[rightlabel] = rightwords
             line_data['ml_positions'] = ml_positions

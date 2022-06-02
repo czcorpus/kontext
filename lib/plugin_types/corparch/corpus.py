@@ -1,6 +1,7 @@
 # Copyright (c) 2015 Charles University, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2015 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright (c) 2022 Martin Zimandl <martin.zimandlk@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -139,8 +140,25 @@ class StructAttrInfo:
 
 
 class MLPositionFilter(enum.Enum):
+    """
+    MLPositionFilter specifies position filters used to create 1:1 position-matching aligned
+    sentences (or other structures). Using such a filter in specific cases, a simulation of
+    a multi-layer corpus can be achieved via aligned corpora.
+
+    For now only "none" and "alphanum" filters are available.
+
+    """
+
     none = 0
+    """
+    The 'none' filter is the default and basically means that the corpora cannot be layered
+    """
+
     alphanum = 1
+    """
+    The 'alphanum' filter can be used for aligned corpora where by removing any non-alphanumeric characters 
+    (with the exception for the underscore char.), the positions from different corpora become 1:1.
+    """
 
 
 @dataclass_json
