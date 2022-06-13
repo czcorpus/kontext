@@ -16,10 +16,13 @@
 import json
 from functools import wraps
 from typing import Any, Callable, Coroutine, Optional, Type, Union
+import logging
+import hashlib
+import uuid
 
 import settings
-from action.errors import (ForbiddenException, ImmediateRedirectException,
-                           UserActionException)
+from action.errors import (
+    ForbiddenException, ImmediateRedirectException, UserActionException, get_traceback)
 from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
@@ -211,6 +214,9 @@ def http_action(
                     aprops.return_type = 'template'
                 if settings.is_debug_mode():
                     import traceback
+                    err_id = hashlib.sha1(str(uuid.uuid1()).encode('ascii')).hexdigest()
+                    logging.getLogger(__name__).error(
+                        '{0}\n@{1}\n{2}'.format(ex, err_id, ''.join(get_traceback())))
                     resp.add_system_message('error', traceback.format_exc())
 
             if ans is None:
