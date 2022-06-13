@@ -114,11 +114,11 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         );
     }
 
-    private importMessage(
+    private importMessages(
         state:MessageModelState,
         msgType:Kontext.UserMessageTypes,
         message:unknown
-    ):string {
+    ):Array<string> {
         const fetchJsonError = (message:XMLHttpRequest) => {
             const respObj = message.response || {};
             if (respObj['error_code']) {
@@ -132,7 +132,7 @@ export class MessageModel extends StatelessModel<MessageModelState> {
             }
         };
 
-        let outMsg:string;
+        const outMsg:Array<string> = [];
         if (msgType === 'error') {
             if (state.isDebug) {
                 console.error(message);
@@ -141,36 +141,41 @@ export class MessageModel extends StatelessModel<MessageModelState> {
             if (message instanceof XMLHttpRequest) {
                 switch (message.responseType) {
                     case 'json': {
-                        outMsg = fetchJsonError(message);
+                        outMsg.push(fetchJsonError(message));
                     }
                     break;
                     case 'text':
                     case '':
-                        outMsg = `${message.status}: ${message.statusText} (${(
-                            message.responseText).substr(0, 100)}...)`;
+                        outMsg.push(`${message.status}: ${message.statusText} (${(
+                            message.responseText).substr(0, 100)}...)`);
                     break;
                     default:
-                        outMsg = `${message.status}: ${message.statusText}`
+                        outMsg.push(`${message.status}: ${message.statusText}`);
                     break;
                 }
 
             } else if (message instanceof AjaxError) {
                 if (message.response && Array.isArray(message.response['messages'])) {
-                    outMsg = message.response['messages'][0][1];
+                    List.forEach(
+                        msg => {
+                            outMsg.push(msg[1])
+                        },
+                        message.response['messages']
+                    );
 
                 } else {
-                    outMsg = message.message;
+                    outMsg.push(message.message);
                 }
 
             } else if (message instanceof Error) {
-                outMsg = message.message || this.pluginApi.translate('global__unknown_error');
+                outMsg.push(message.message || this.pluginApi.translate('global__unknown_error'));
 
             } else {
-                outMsg = `${message}`;
+                outMsg.push(`${message}`);
             }
 
         } else {
-            outMsg = `${message}`;
+            outMsg.push(`${message}`);
         }
         return outMsg;
     }
@@ -194,13 +199,19 @@ export class MessageModel extends StatelessModel<MessageModelState> {
         messageType:Kontext.UserMessageTypes,
         message:unknown
     ):void {
-        state.messages.push({
-            messageType,
-            messageText: this.importMessage(state, messageType, message),
-            messageId: Ident.puid(),
-            ttl: this.calcMessageTTL(messageType),
-            timeFadeout: MessageModel.TIME_FADEOUT
-        });
+        state.messages = pipe(
+            this.importMessages(state, messageType, message),
+            List.map(
+                messageText => ({
+                    messageType,
+                    messageText,
+                    messageId: Ident.puid(),
+                    ttl: this.calcMessageTTL(messageType),
+                    timeFadeout: MessageModel.TIME_FADEOUT
+                })
+            ),
+            List.concatr(state.messages)
+        )
     }
 
     private removeMessage(state:MessageModelState, messageId:string):void {
