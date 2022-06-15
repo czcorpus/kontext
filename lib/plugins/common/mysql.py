@@ -96,24 +96,8 @@ class MySQLOps:
         self._pool = None
 
     async def _init_pool(self):
-        logging.getLogger(__name__).warning('##### INIT_POOL, current: {}'.format(self._pool))
-        logging.getLogger(__name__).warning('     PID IS: {}, PPID: {}'.format(os.getpid(), os.getppid()))
-        logging.getLogger(__name__).warning('     SELF ADDR IS {}'.format(id(self)))
-        logging.getLogger(__name__).warning('     POOL args: {}'.format(self._pool_args))
         if self._pool is None:
             self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
-
-    @asynccontextmanager
-    async def new_pool(self):
-        pool = None
-        try:
-            pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
-            yield pool
-        finally:
-            if pool:
-                logging.getLogger(__name__).warning('@@@@@@@@@@@@@@@ CLOSING POOL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
-                pool.close()
-                await pool.wait_closed()
 
     @asynccontextmanager
     async def connection(self) -> Generator[aiomysql.Connection, None, None]:
