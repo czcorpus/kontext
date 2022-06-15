@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import os
+
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Generator, Optional
-import logging
 
 import aiomysql
 import pymysql
