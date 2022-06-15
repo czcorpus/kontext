@@ -303,7 +303,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             return False
         waiting_items = await self.db.list_get(self._archive_queue_key)
         ident_prefix = 'concordance:'
-        for rec in waiting_items:
+        for rec in reversed(waiting_items):
             ident = rec.get('key')
             if ident and ident.startswith(ident_prefix):
                 id = ident[len(ident_prefix):]
