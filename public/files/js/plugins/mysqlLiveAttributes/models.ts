@@ -76,7 +76,7 @@ export function isAlignedSelectionStep(v:TTSelectionStep|AlignedLangSelectionSte
 }
 
 export interface LiveAttrsModelState {
-    initialCorpusSize:number|undefined; // if undefined then we need to load the info
+    initialCorpusSize:number|null; // if null then we need to load the info
     selectionSteps:Array<TTSelectionStep|AlignedLangSelectionStep>;
     lastRemovedStep:TTSelectionStep|AlignedLangSelectionStep|null;
     firstCorpus:string;
@@ -459,9 +459,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
-        if (List.empty(state.alignedCorpora)) {
-            return; // in such case, server is able to provide full text type value sizes
-        }
         rxOf(null).pipe(
             tap(
                 _ => {

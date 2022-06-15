@@ -38,6 +38,7 @@ class ConnectionArgs:
 class PoolArgs:
     minsize: int = field(default=1)
     maxsize: int = field(default=10)
+    pool_recycle: float = field(default=-1.0)
 
 
 @dataclass
@@ -70,7 +71,7 @@ class MySQLConf:
         return asdict(self)
 
 
-class MySQLOps(object):
+class MySQLOps:
     """
     A simple wrapper for pymysql/aiomysql
     """

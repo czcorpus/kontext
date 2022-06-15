@@ -23,7 +23,8 @@ import * as Kontext from '../../types/kontext';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { map, Observable } from 'rxjs';
 import { Actions } from './actions';
-import { HTTP, tuple } from 'cnc-tskit';
+import { Actions as ConcActions } from '../concordance/actions';
+import { HTTP } from 'cnc-tskit';
 import { SaveItemResponse } from '../searchHistory/common';
 
 
@@ -131,6 +132,15 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     this.layoutModel.showMessage('info',
                         this.layoutModel.translate('query__save_as_item_saved'));
                 }
+            }
+        );
+
+        this.addActionHandler(
+            ConcActions.AddedNewOperation,
+            (state, action) => {
+                state.concIsArchived = false;
+                state.willBeArchived = false;
+                state.queryId = action.payload?.concId;
             }
         );
 
