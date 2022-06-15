@@ -6,27 +6,27 @@ PyICU >= 1.5
 babel >= 2.9.1
 jinja2 >= 2.11.3
 secure-cookie >= 0.1.0
-sanic >= 21.12.1
+sanic >= 22.3.2
 sanic-babel >= 0.3.0
 sanic-jinja2 >= 2022.1.13
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev
 lxml >= 3.4
 Markdown >= 3.3.6
-openpyxl >= 3.0.5
+openpyxl >= 3.0.10
 # aioredis will be part of redis in the future
 aioredis >= 2.0.1
-redis >= 4.2.0rc1
+redis >= 4.3.3
 uvloop >= 0.16.0
-aiomysql >= 0.0.22
+aiomysql >= 0.1.1
 aiofiles >= 0.8.0
-aiocsv >= 1.2.1
+aiocsv >= 1.2.2
 aiohttp >= 3.8.1
-dataclasses-json >= 0.5.6
+dataclasses-json >= 0.5.7
 couchdb >= 1.2
 cairosvg >= 2.5.2
 aiosqlite >= 0.17.0  # just for development purposes
-ujson >= 5.1.0
+ujson >= 5.3.0
 setproctitle >= 1.2.2
 
 rq-scheduler >= 0.11.0
