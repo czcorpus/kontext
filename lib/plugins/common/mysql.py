@@ -89,7 +89,7 @@ class MySQLOps:
     def __init__(self, host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts):
         self._conn_args = ConnectionArgs(
             host=host, db=database, user=user, password=password, autocommit=autocommit)
-        self._pool_args = PoolArgs(maxsize=pool_size, pool_recycle=130)
+        self._pool_args = PoolArgs(maxsize=pool_size)
         self._retry_delay = retry_delay  # TODO has no effect now
         self._retry_attempts = retry_attempts  # TODO has no effect now
         self._pool = None
