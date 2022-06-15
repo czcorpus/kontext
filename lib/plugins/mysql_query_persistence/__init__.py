@@ -306,8 +306,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         for rec in waiting_items:
             ident = rec.get('key')
             if ident and ident.startswith(ident_prefix):
-                id = ident[len(ident_prefix)]
-                if id == conc_id:
+                id = ident[len(ident_prefix):]
+                if id == conc_id and not rec.get('revoke'):
                     return True
         return False
 
