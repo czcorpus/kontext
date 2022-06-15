@@ -307,8 +307,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             ident = rec.get('key')
             if ident and ident.startswith(ident_prefix):
                 id = ident[len(ident_prefix):]
-                if id == conc_id and not rec.get('revoke'):
-                    return True
+                if id == conc_id:
+                    return not rec.get('revoke')
         return False
 
     def export_tasks(self):
