@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
+import os
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Generator, Optional
+import logging
 
 import aiomysql
 import pymysql
@@ -38,6 +39,7 @@ class ConnectionArgs:
 class PoolArgs:
     minsize: int = field(default=1)
     maxsize: int = field(default=10)
+    pool_recycle: float = field(default=-1.0)
 
 
 @dataclass
@@ -70,7 +72,7 @@ class MySQLConf:
         return asdict(self)
 
 
-class MySQLOps(object):
+class MySQLOps:
     """
     A simple wrapper for pymysql/aiomysql
     """
@@ -88,14 +90,30 @@ class MySQLOps(object):
     def __init__(self, host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts):
         self._conn_args = ConnectionArgs(
             host=host, db=database, user=user, password=password, autocommit=autocommit)
-        self._pool_args = PoolArgs(maxsize=pool_size)
+        self._pool_args = PoolArgs(maxsize=pool_size, pool_recycle=130)
         self._retry_delay = retry_delay  # TODO has no effect now
         self._retry_attempts = retry_attempts  # TODO has no effect now
         self._pool = None
 
     async def _init_pool(self):
+        logging.getLogger(__name__).warning('##### INIT_POOL, current: {}'.format(self._pool))
+        logging.getLogger(__name__).warning('     PID IS: {}, PPID: {}'.format(os.getpid(), os.getppid()))
+        logging.getLogger(__name__).warning('     SELF ADDR IS {}'.format(id(self)))
+        logging.getLogger(__name__).warning('     POOL args: {}'.format(self._pool_args))
         if self._pool is None:
             self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
+
+    @asynccontextmanager
+    async def new_pool(self):
+        pool = None
+        try:
+            pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
+            yield pool
+        finally:
+            if pool:
+                logging.getLogger(__name__).warning('@@@@@@@@@@@@@@@ CLOSING POOL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+                pool.close()
+                await pool.wait_closed()
 
     @asynccontextmanager
     async def connection(self) -> Generator[aiomysql.Connection, None, None]:

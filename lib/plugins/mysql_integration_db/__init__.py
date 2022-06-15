@@ -42,12 +42,10 @@ class MySqlIntegrationDb(MySQLOps, IntegrationDatabase[aiomysql.Connection, aiom
 
     def __init__(self, host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts,
                  environment_wait_sec: int):
+        import logging
+        logging.getLogger(__name__).warning('#### MySqlIntegrationDb CONSTRUCT>>>>>')
         super().__init__(host, database, user, password, pool_size, autocommit, retry_delay, retry_attempts)
         self._environment_wait_sec = environment_wait_sec
-
-    async def _init_pool(self):
-        if self._pool is None:
-            self._pool = await aiomysql.create_pool(**asdict(self._conn_args), **asdict(self._pool_args))
 
     @property
     def is_active(self):

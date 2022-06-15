@@ -259,9 +259,12 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                 if archived_rec:
                     await cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                     ans = 1
-                else:
-                    raise NotFoundException(
-                        'Archive revoke error - concordance {0} not archived'.format(conc_id))
+                if self.will_be_archived(None, conc_id):
+                    data_key = mk_key(conc_id)
+                    await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=True))
+                    ans = 1
+                if ans == 0:
+                    raise NotFoundException('Archive revoke error - concordance {0} not archived'.format(conc_id))
             else:
                 data = await self.db.get(mk_key(conc_id))
                 if data is None and archived_rec is None:
@@ -269,6 +272,10 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                         'Archive store error - concordance {0} not found'.format(conc_id))
                 elif archived_rec:
                     ans = 0
+                elif self.will_be_archived(None, conc_id):
+                    data_key = mk_key(conc_id)
+                    await self.db.list_append(self._archive_queue_key, dict(key=data_key))
+                    ans = 1
                 else:
                     stored_user_id = data.get('user_id', None)
                     if user_id != stored_user_id:
@@ -288,9 +295,21 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             return await is_archived(cursor, conc_id)
 
     async def will_be_archived(self, plugin_ctx, conc_id: str):
-        return not (await self.is_archived(conc_id))\
-            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
-            and not self._auth.is_anonymous(plugin_ctx.user_id)
+        """
+        Please note that this operation is a bit costly due to need for
+        searching in items to be archived
+        """
+        if await self.is_archived(conc_id):
+            return False
+        waiting_items = await self.db.list_get(self._archive_queue_key)
+        ident_prefix = 'concordance:'
+        for rec in waiting_items:
+            ident = rec.get('key')
+            if ident and ident.startswith(ident_prefix):
+                id = ident[len(ident_prefix)]
+                if id == conc_id:
+                    return True
+        return False
 
     def export_tasks(self):
         """
