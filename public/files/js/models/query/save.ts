@@ -20,10 +20,11 @@
 
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
-import { StatelessModel, IActionDispatcher } from 'kombo';
-import { map, Observable } from 'rxjs';
+import { StatelessModel, IActionDispatcher, SEDispatcher } from 'kombo';
+import { concatMap, map, Observable } from 'rxjs';
 import { Actions } from './actions';
-import { HTTP, tuple } from 'cnc-tskit';
+import { Actions as ConcActions } from '../concordance/actions';
+import { HTTP } from 'cnc-tskit';
 import { SaveItemResponse } from '../searchHistory/common';
 
 
@@ -140,13 +141,8 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$<IsArchivedResponse>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
-                    {code: state.queryId}
-
-                ).subscribe(
-                    (data) => {
+                this.loadStatus(state.queryId, dispatch).subscribe({
+                    next: data => {
                         dispatch<typeof Actions.GetConcArchivedStatusDone>({
                             name: Actions.GetConcArchivedStatusDone.name,
                             payload: {
@@ -156,13 +152,13 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                         });
 
                     },
-                    (err) => {
+                    error: error => {
                         dispatch<typeof Actions.GetConcArchivedStatusDone>({
                             name: Actions.GetConcArchivedStatusDone.name,
-                            error: err
+                            error
                         });
                     }
-                );
+                })
             }
         );
 
@@ -192,11 +188,17 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     ),
                     {}
 
+                ).pipe(
+                    concatMap(_ => this.loadStatus(state.queryId, dispatch))
+
                 ).subscribe({
                     next: data => {
                         dispatch<typeof Actions.MakeConcordancePermanentDone>({
                             name: Actions.MakeConcordancePermanentDone.name,
-                            payload: {revoked: data.revoked}
+                            payload: {
+                                willBeArchived: data.will_be_archived,
+                                isArchived: data.is_archived
+                            }
                         });
 
                     },
@@ -218,8 +220,9 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     this.layoutModel.showMessage('error', action.error);
 
                 } else {
-                    state.concIsArchived = !action.payload.revoked;
-                    if (action.payload.revoked) {
+                    state.concIsArchived = action.payload.isArchived;
+                    state.willBeArchived = action.payload.willBeArchived;
+                    if (!action.payload.isArchived && !action.payload.willBeArchived) {
                         this.layoutModel.showMessage(
                             'info',
                             this.layoutModel.translate('concview__make_conc_link_permanent_revoked')
@@ -233,6 +236,24 @@ export class QuerySaveAsFormModel extends StatelessModel<QuerySaveAsFormModelSta
                     }
                 }
             }
+        );
+
+        this.addActionHandler(
+            ConcActions.AddedNewOperation,
+            (state, action) => {
+                state.concIsArchived = false;
+                state.willBeArchived = false;
+                state.queryId = action.payload?.concId;
+            }
+        );
+    }
+
+    private loadStatus(queryId:string, dispatch:SEDispatcher):Observable<IsArchivedResponse> {
+        return this.layoutModel.ajax$<IsArchivedResponse>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('get_stored_conc_archived_status'),
+            {code: queryId}
+
         );
     }
 
