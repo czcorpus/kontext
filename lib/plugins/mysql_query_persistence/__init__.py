@@ -272,21 +272,23 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                         'Archive store error - concordance {0} not found'.format(conc_id))
                 elif archived_rec:
                     ans = 0
-                elif self.will_be_archived(None, conc_id):
-                    data_key = mk_key(conc_id)
-                    await self.db.list_append(self._archive_queue_key, dict(key=data_key))
-                    ans = 1
                 else:
-                    stored_user_id = data.get('user_id', None)
-                    if user_id != stored_user_id:
-                        raise ForbiddenException(
-                            'Cannot change status of a concordance belonging to another user')
-                    await cursor.execute(
-                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                        'VALUES (%s, %s, %s, %s)',
-                        (conc_id, json.dumps(data), get_iso_datetime(), 0))
-                    archived_rec = data
-                    ans = 1
+                    will_be_archived = self.will_be_archived(None, conc_id)
+                    if will_be_archived:
+                        data_key = mk_key(conc_id)
+                        await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
+                        ans = 1
+                    else:
+                        stored_user_id = data.get('user_id', None)
+                        if user_id != stored_user_id:
+                            raise ForbiddenException(
+                                'Cannot change status of a concordance belonging to another user')
+                        await cursor.execute(
+                            'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                            'VALUES (%s, %s, %s, %s)',
+                            (conc_id, json.dumps(data), get_iso_datetime(), 0))
+                        archived_rec = data
+                        ans = 1
             await cursor.connection.commit()
         return ans, archived_rec
 
@@ -299,8 +301,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         Please note that this operation is a bit costly due to need for
         searching in items to be archived
         """
-        if await self.is_archived(conc_id):
-            return False
         waiting_items = await self.db.list_get(self._archive_queue_key)
         ident_prefix = 'concordance:'
         for rec in reversed(waiting_items):
@@ -309,7 +309,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                 id = ident[len(ident_prefix):]
                 if id == conc_id:
                     return not rec.get('revoke')
-        return False
+        return None
 
     def export_tasks(self):
         """

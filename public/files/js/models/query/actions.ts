@@ -609,7 +609,9 @@ export class Actions {
     };
 
     static MakeConcordancePermanentDone: Action<{
-        revoked:boolean;
+        willBeArchived:boolean;
+        isArchived:boolean;
+
     }> = {
         name: 'QUERY_MAKE_CONCORDANCE_PERMANENT_DONE'
     };
