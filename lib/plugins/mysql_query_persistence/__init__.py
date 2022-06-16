@@ -259,7 +259,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                 if archived_rec:
                     await cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                     ans = 1
-                if self.will_be_archived(None, conc_id):
+                if await self.will_be_archived(None, conc_id):
                     data_key = mk_key(conc_id)
                     await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=True))
                     ans = 1
@@ -273,7 +273,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                 elif archived_rec:
                     ans = 0
                 else:
-                    will_be_archived = self.will_be_archived(None, conc_id)
+                    will_be_archived = await self.will_be_archived(None, conc_id)
                     if will_be_archived:
                         data_key = mk_key(conc_id)
                         await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
