@@ -1,0 +1,18 @@
+FROM czcorpus/kontext-manatee:2.208-jammy
+
+SHELL ["/bin/bash", "--login", "-c"]
+
+RUN apt-get update
+RUN apt-get install -y sox libsox-fmt-mp3 nodejs npm python3-pip python3-icu
+
+COPY ./pack*.json ./
+RUN npm install
+
+COPY requirements.txt dev-requirements.txt ./
+RUN pip3 install --upgrade pip && pip3 install -r requirements.txt -r dev-requirements.txt
+
+COPY ./conf ./conf
+RUN python3 scripts/install/steps.py SetupKontext
+RUN mkdir /var/log/rq && mkdir /var/local/corpora/query_persistence
+
+COPY launcher-config.json launcher-menu.json tsconfig.json webpack.dev.js ./

@@ -209,11 +209,14 @@ class SetupManatee(InstallationStep):
 
     def run(self, manatee_version: str, patch_path: str = None, make_symlinks: bool = True):
         # install manatee with ucnk patch
-        print('Installing manatee...')
+        print('Installing Manatee-Open...')
 
+        if manatee_version == '2.208':
+            url = 'https://corpora.fi.muni.cz/noske/current/src/manatee-open-2.208.tar.gz'
+        else:
+            url = f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz'
         # build manatee from source using patch
-        subprocess.check_call(wget_cmd(
-            f'http://corpora.fi.muni.cz/noske/src/manatee-open/manatee-open-{manatee_version}.tar.gz', self._ncc), cwd='/usr/local/src', stdout=self.stdout)
+        subprocess.check_call(wget_cmd(url, self._ncc), cwd='/usr/local/src', stdout=self.stdout)
         subprocess.check_call(
             ['tar', 'xzvf', f'manatee-open-{manatee_version}.tar.gz'], cwd='/usr/local/src', stdout=self.stdout)
 
