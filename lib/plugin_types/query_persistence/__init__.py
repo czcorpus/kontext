@@ -132,10 +132,12 @@ class AbstractQueryPersistence(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> bool:
+    async def will_be_archived(self, plugin_ctx: Any, conc_id: str) -> Optional[bool]:
         """
         returns:
-            True if the concordance will be archived else False
+            True if the concordance will be archived
+            False if it is scheduled to be revoked
+            None in other cases (i.e. if it's not queued at all)
         """
 
     @staticmethod
