@@ -88,33 +88,52 @@ class Archiver(object):
         curr_time = get_iso_datetime()
         conc_prefix = 'concordance:'
         inserts = []
+        deletes = []
+        already_archived = False
         i = 0
+        cursor = None
         try:
             cursor = self._to_db.cursor()
-            proc_keys = set()
+            proc_keys = {}
             while i < num_proc:
                 qitem = self._from_db.list_pop(self._archive_queue_key)
                 if qitem is None:
                     break
                 key = qitem['key']
-                if key in proc_keys:  # there are possible duplicates in the queue
+                already_archived = is_archived(cursor, key)
+                latest_proc = proc_keys.get(key)
+                # there are possible duplicates in the queue
+                if latest_proc and latest_proc.get('revoke') == qitem.get('revoke'):
                     continue
-                data = self._from_db.get(key)
-                if not is_archived(cursor, key):
+                proc_keys[key] = qitem
+            for key, qitem in proc_keys.items():
+                if qitem.get('revoke', False):
+                    deletes.append(key[len(conc_prefix):])
+                    i += 1
+                elif not already_archived:
+                    data = self._from_db.get(key)
                     inserts.append((key[len(conc_prefix):], json.dumps(data), curr_time, 0))
                     i += 1
-                proc_keys.add(key)
-            cursor.close()
             if not dry_run:
-                self._to_db.executemany(
-                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                    'VALUES (%s, %s, %s, %s)',
-                    inserts
-                )
+                if len(deletes) > 0:
+                    cursor.executemany(
+                        'DELETE FROM kontext_conc_persistence WHERE id = %s',
+                        deletes
+                    )
+                if len(inserts) > 0:
+                    cursor.executemany(
+                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                        'VALUES (%s, %s, %s, %s)',
+                        inserts
+                    )
                 self._to_db.commit()
             else:
                 for ins in reversed(inserts):
-                    self._from_db.list_append(self._archive_queue_key, dict(key=conc_prefix + ins[0]))
+                    self._from_db.list_append(
+                        self._archive_queue_key, dict(key=conc_prefix + ins[0]))
+                for rm in reversed(deletes):
+                    self._from_db.list_append(
+                        self._archive_queue_key, dict(key=conc_prefix + rm, revoke=True))
         except Exception as ex:
             logging.getLogger(__name__).error('Failed to archive items: {}'.format(ex))
             for item in inserts:
@@ -124,6 +143,9 @@ class Archiver(object):
                 error=str(ex),
                 dry_run=dry_run,
                 queue_size=self._get_queue_size())
+        finally:
+            if cursor:
+                cursor.close()
         return dict(
             num_processed=i,
             error=None,

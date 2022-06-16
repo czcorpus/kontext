@@ -224,6 +224,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         returns:
         new operation ID if a new record is created or current ID if no new operation is defined
         """
+
         def records_differ(r1, r2):
             return (r1[QUERY_KEY] != r2[QUERY_KEY] or
                     r1.get('lines_groups') != r2.get('lines_groups'))
@@ -254,16 +255,19 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         )
         row = cursor.fetchone()
         archived_rec = json.loads(row['data']) if row is not None else None
+        ans = 0
 
         if revoke:
             if archived_rec:
                 cursor.execute('DELETE FROM kontext_conc_persistence WHERE id = %s', (conc_id,))
                 ans = 1
-            else:
-                raise NotFoundException(
-                    'Archive revoke error - concordance {0} not archived'.format(conc_id))
+            if self.will_be_archived(None, conc_id):
+                data_key = mk_key(conc_id)
+                self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=True))
+                ans = 1
+            if ans == 0:
+                raise NotFoundException('Archive revoke error - concordance {0} not archived'.format(conc_id))
         else:
-            cursor = self._archive.cursor()
             data = self.db.get(mk_key(conc_id))
             if data is None and archived_rec is None:
                 raise NotFoundException(
@@ -271,16 +275,22 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
             elif archived_rec:
                 ans = 0
             else:
-                stored_user_id = data.get('user_id', None)
-                if user_id != stored_user_id:
-                    raise ForbiddenException(
-                        'Cannot change status of a concordance belonging to another user')
-                cursor.execute(
-                    'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
-                    'VALUES (%s, %s, %s, %s)',
-                    (conc_id, json.dumps(data), get_iso_datetime(), 0))
-                archived_rec = data
-                ans = 1
+                will_be_archived = self.will_be_archived(None, conc_id)
+                if will_be_archived is not None:
+                    data_key = mk_key(conc_id)
+                    self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
+                    ans = 1
+                else:
+                    stored_user_id = data.get('user_id', None)
+                    if user_id != stored_user_id:
+                        raise ForbiddenException(
+                            'Cannot change status of a concordance belonging to another user')
+                    cursor.execute(
+                        'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
+                        'VALUES (%s, %s, %s, %s)',
+                        (conc_id, json.dumps(data), get_iso_datetime(), 0))
+                    archived_rec = data
+                    ans = 1
         self._archive.commit()
         return ans, archived_rec
 
@@ -288,9 +298,15 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
         return is_archived(self._archive.cursor(), conc_id)
 
     def will_be_archived(self, plugin_ctx, conc_id: str):
-        return not self.is_archived(conc_id)\
-            and self._settings.get('plugins', 'query_persistence').get('implicit_archiving', None) in ('true', '1', 1)\
-            and not self._auth.is_anonymous(plugin_ctx.user_id)
+        waiting_items = self.db.list_get(self._archive_queue_key)
+        ident_prefix = 'concordance:'
+        for rec in reversed(waiting_items):
+            ident = rec.get('key')
+            if ident and ident.startswith(ident_prefix):
+                id = ident[len(ident_prefix):]
+                if id == conc_id:
+                    return not rec.get('revoke')
+        return None
 
     def export_tasks(self):
         """

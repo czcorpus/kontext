@@ -96,7 +96,6 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
 
     const currAligned = pluginApi.getConf<Array<string>>('alignedCorpora') || [];
     const firstCorpus = pluginApi.getCorpusIdent().id;
-    const initialCorpusSize = List.empty(currAligned) ? pluginApi.getCorpusIdent().size : undefined;
     // note: for aligned corpora, we have to recalculate individual attr sizes (=> undefined above)
     const alignedCorpora = List.map(
         item => ({
@@ -115,7 +114,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             selectionSteps: [],
             selectionTypes: {},
             lastRemovedStep: null,
-            initialCorpusSize,
+            initialCorpusSize: null,
             firstCorpus,
             alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
