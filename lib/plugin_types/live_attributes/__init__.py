@@ -67,7 +67,7 @@ class AbstractLiveAttributes(CorpusDependentPlugin):
 
     @abc.abstractmethod
     async def get_attr_values(
-            self, plugin_ctx: AbstractCorpusPluginCtx, corpus: AbstractKCorpus, attr_map: Dict[str, str],
+            self, plugin_ctx: AbstractCorpusPluginCtx, corpus: AbstractKCorpus, attr_map: Dict[str, Union[str, List[str]]],
             aligned_corpora: Optional[List[str]] = None, autocomplete_attr: Optional[str] = None,
             limit_lists: bool = True) -> AttrValuesResponse:
         """

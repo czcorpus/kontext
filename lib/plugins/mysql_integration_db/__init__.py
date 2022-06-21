@@ -18,7 +18,6 @@
 
 import logging
 import time
-from dataclasses import asdict
 
 import aiomysql
 import pymysql.cursors
