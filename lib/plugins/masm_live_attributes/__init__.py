@@ -19,10 +19,12 @@
 
 from sanic.blueprints import Blueprint
 import ujson
+import logging
 
 from plugin_types.live_attributes import AbstractLiveAttributes, AttrValuesResponse
 from plugin_types.corparch import AbstractCorporaArchive
 import plugins
+from plugins.common.http import HTTPClient
 from action.model.corpus import CorpusActionModel
 from action.krequest import KRequest
 from action.response import KResponse
@@ -72,15 +74,28 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def export_actions():
         return bp
 
-    def __init__(self, corparch: AbstractCorporaArchive):
+    def __init__(self, corparch: AbstractCorporaArchive, service_url: str):
         self.corparch = corparch
+        self._service_url = service_url
 
     async def is_enabled_for(self, plugin_ctx, corpora):
         return True  # TODO
 
     async def get_attr_values(
                 self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        return AttrValuesResponse(attr_values={}, aligned=aligned_corpora, poscount=0)
+        client = HTTPClient(self._service_url)
+        resp, _ = await client.json_request(
+            'POST',
+            f'/liveAttributes/{corpus.corpname}/search',
+            {},
+            {
+                'corpname': corpus.corpname,
+                'aligned': aligned_corpora,
+                'attrs': attr_map
+            }
+        )
+        resp = ujson.loads(resp)
+        return AttrValuesResponse(attr_values=resp['attr_values'], aligned=aligned_corpora, poscount=resp['poscount'])
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
         return 1  # TODO
@@ -100,4 +115,5 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
-    return MasmLiveAttributes(corparch)
+    plg_conf = settings.get('plugins')['live_attributes']
+    return MasmLiveAttributes(corparch, plg_conf['service_url'])
