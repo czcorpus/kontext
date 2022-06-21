@@ -17,18 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from sanic.blueprints import Blueprint
-import ujson
-import logging
-
-from plugin_types.live_attributes import AbstractLiveAttributes, AttrValuesResponse
-from plugin_types.corparch import AbstractCorporaArchive
+import aiohttp
 import plugins
-from plugins.common.http import HTTPClient
-from action.model.corpus import CorpusActionModel
-from action.krequest import KRequest
-from action.response import KResponse
+import ujson
 from action.decorators import http_action
+from action.krequest import KRequest
+from action.model.corpus import CorpusActionModel
+from action.response import KResponse
+from plugin_types.corparch import AbstractCorporaArchive
+from plugin_types.live_attributes import (AbstractLiveAttributes,
+                                          AttrValuesResponse)
+from sanic.blueprints import Blueprint
 
 bp = Blueprint('masm_live_attributes')
 
@@ -77,28 +76,42 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def __init__(self, corparch: AbstractCorporaArchive, service_url: str):
         self.corparch = corparch
         self._service_url = service_url
+        self._session = None
+
+    async def _get_session(self):
+        if self._session is None:
+            self._session = aiohttp.ClientSession(base_url=self._service_url)
+        return self._session
 
     async def is_enabled_for(self, plugin_ctx, corpora):
-        return True  # TODO
+        # TODO now enabled if database path is defined
+        return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
     async def get_attr_values(
-                self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
-        client = HTTPClient(self._service_url)
-        resp, _ = await client.json_request(
-            'POST',
-            f'/liveAttributes/{corpus.corpname}/search',
-            {},
-            {
-                'corpname': corpus.corpname,
-                'aligned': aligned_corpora,
-                'attrs': attr_map
-            }
-        )
-        resp = ujson.loads(resp)
-        return AttrValuesResponse(attr_values=resp['attr_values'], aligned=aligned_corpora, poscount=resp['poscount'])
+            self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
+
+        json_body = {'attrs': attr_map}
+        if aligned_corpora:
+            json_body['aligned'] = aligned_corpora
+        if autocomplete_attr:
+            json_body['autocompleteAttr'] = autocomplete_attr
+
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpus.corpname}/fill-attrs', json=json_body) as resp:
+            data = await resp.json()
+
+        return AttrValuesResponse(**data)
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
-        return 1  # TODO
+        json_body = {'attrs': attr_map}
+        if len(corpora) > 1:
+            json_body['aligned'] = corpora[1:]
+
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpora[0]}/selection-subc-size', json=json_body) as resp:
+            data = await resp.json()
+
+        return data['Total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
         return []  # TODO
@@ -110,7 +123,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return []  # TODO
 
     async def fill_attrs(self, corpus_id, search, values, fill):
-        return {}  # TODO
+        return {}
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
