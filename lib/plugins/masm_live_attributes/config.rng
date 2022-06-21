@@ -10,14 +10,11 @@
             <element name="js_module">
                 <value>mysqlLiveAttributes</value>
             </element>
-            <element name="masm_url">
-                <text />
-            </element>
-            <element name="max_attr_visible_chars">
+            <element name="serviceUrl">
                 <a:documentation>
-                    Cut longer attribute values to a specified size
+                    A URL of a CNC-MASM server
                 </a:documentation>
-                <data type="positiveInteger" />
+                <data type="anyURI" />
             </element>
         </element>
     </start>

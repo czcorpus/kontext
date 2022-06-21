@@ -30,9 +30,8 @@ class HTTPClientException(Exception):
 
 class HTTPClient:
 
-    def __init__(self, server: str, port: int = 80, enable_ssl: bool = False):
+    def __init__(self, server: str, enable_ssl: bool = False):
         self._server = server
-        self._port = port
         self._ssl_context = ssl.create_default_context() if enable_ssl else None
 
     @staticmethod
@@ -74,9 +73,18 @@ class HTTPClient:
                 ans.append(f'{key}={self.enc_val(val)}')
         return '&'.join(ans)
 
-    async def request(self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], body: Any = None,
-                      headers=None):
+    async def request(
+            self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
+            headers=None):
         async with self.create_connection() as session:
             url = self._server + (path + '?' + self._process_args(args) if args else path)
-            async with session.request(method, url, body=body, headers=headers if headers is not None else {}) as response:
+            async with session.request(method, url, data=data, headers=headers if headers is not None else {}) as response:
+                return await self.process_response(response)
+
+    async def json_request(
+            self, method: str, path: str, args: Union[Dict[str, Any], List[Tuple[str, Any]]], data: Any = None,
+            headers=None):
+        async with self.create_connection() as session:
+            url = self._server + (path + '?' + self._process_args(args) if args else path)
+            async with session.request(method, url, json=data, headers=headers if headers is not None else {}) as response:
                 return await self.process_response(response)

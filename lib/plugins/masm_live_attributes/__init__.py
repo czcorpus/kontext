@@ -17,11 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
-
 import aiohttp
 import plugins
 import ujson
@@ -36,13 +31,6 @@ from plugin_types.live_attributes import (AbstractLiveAttributes,
 from sanic.blueprints import Blueprint
 
 bp = Blueprint('masm_live_attributes')
-
-
-class MasmLiveAttrsConf(TypedDict):
-    module: str
-    js_module: str
-    masm_url: str
-    max_attr_visible_chars: int
 
 
 @bp.route('/filter_attributes', methods=['POST'])
@@ -86,15 +74,15 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def export_actions():
         return bp
 
-    def __init__(self, corparch: AbstractCorporaArchive, plugin_conf: MasmLiveAttrsConf):
+    def __init__(self, corparch: AbstractCorporaArchive, service_url: str):
         self.corparch = corparch
-        self.plugin_conf = plugin_conf
-        self.session = None
+        self._service_url = service_url
+        self._session = None
 
     async def _get_session(self):
-        if self.session is None:
-            self.session = aiohttp.ClientSession(base_url=self.plugin_conf['masm_url'])
-        return self.session
+        if self._session is None:
+            self._session = aiohttp.ClientSession(base_url=self._service_url)
+        return self._session
 
     async def is_enabled_for(self, plugin_ctx, corpora):
         return True  # TODO
@@ -130,10 +118,10 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return {}
 
     async def export(self, plugin_ctx: PluginCtx):
-        return {'masmUrl': self.plugin_conf['masm_url']}
+        return {'masmUrl': self._service_url}
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
-    live_attr_conf = settings.get('plugins', 'live_attributes')
-    return MasmLiveAttributes(corparch, live_attr_conf)
+    plg_conf = settings.get('plugins')['live_attributes']
+    return MasmLiveAttributes(corparch, plg_conf['service_url'])
