@@ -15,15 +15,21 @@
 import hashlib
 import os
 from functools import wraps
-from typing import TypedDict, List, Optional, Tuple
+
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
+
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
-import ujson
+from typing import List, Optional, Tuple
 
 import aiofiles.os
 import settings
+import ujson
 from bgcalc.freqs.types import FreqCalcArgs, FreqCalcResult
 from conclib.freq import FreqData, FreqItem
+from dataclasses_json import dataclass_json
 
 
 def _cache_file_path(args: FreqCalcArgs):
