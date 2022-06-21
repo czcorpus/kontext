@@ -42,7 +42,11 @@ class HTTPBackend(AbstractBackend):
     def __init__(self, conf, ident, db, ttl):
         super(HTTPBackend, self).__init__(ident, db, ttl)
         self._conf = conf
-        self._client = HTTPClient(self._conf['server'], self._conf['port'], self._conf['ssl'])
+        port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
+        if self._conf['ssl']:
+            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+        else:
+            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
     @cached
     async def fetch(self, corpora, maincorp, token_id, num_tokens, query_args, lang, context=None):
