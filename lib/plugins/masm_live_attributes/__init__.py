@@ -23,7 +23,6 @@ import ujson
 from action.decorators import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
-from action.plugin.ctx import PluginCtx
 from action.response import KResponse
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.live_attributes import (AbstractLiveAttributes,
@@ -85,12 +84,13 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return self._session
 
     async def is_enabled_for(self, plugin_ctx, corpora):
-        return True  # TODO
+        # TODO now enabled if database path is defined
+        return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
     async def get_attr_values(
             self, plugin_ctx, corpus, attr_map, aligned_corpora=None, autocomplete_attr=None, limit_lists=True):
 
-        json_body = {"attrs": attr_map}
+        json_body = {'attrs': attr_map}
         if aligned_corpora:
             json_body['aligned'] = aligned_corpora
         if autocomplete_attr:
@@ -103,7 +103,15 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return AttrValuesResponse(**data)
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
-        return 1  # TODO
+        json_body = {'attrs': attr_map}
+        if len(corpora) > 1:
+            json_body['aligned'] = corpora[1:]
+
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpora[0]}/selection-subc-size', json=json_body) as resp:
+            data = await resp.json()
+
+        return data['Total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
         return []  # TODO
@@ -116,9 +124,6 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
     async def fill_attrs(self, corpus_id, search, values, fill):
         return {}
-
-    async def export(self, plugin_ctx: PluginCtx):
-        return {'masmUrl': self._service_url}
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
