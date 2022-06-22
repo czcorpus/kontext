@@ -10,7 +10,7 @@
             <element name="js_module">
                 <value>mysqlLiveAttributes</value>
             </element>
-            <element name="serviceUrl">
+            <element name="service_url">
                 <a:documentation>
                     A URL of a CNC-MASM server
                 </a:documentation>
