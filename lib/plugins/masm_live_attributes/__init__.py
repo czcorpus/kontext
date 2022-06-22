@@ -99,7 +99,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             json_body['autocompleteAttr'] = autocomplete_attr
 
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpus.corpname}/fill-attrs', json=json_body) as resp:
+        async with session.post(f'/liveAttributes/{corpus.corpname}/query', json=json_body) as resp:
             data = await resp.json()
 
         return AttrValuesResponse(**data)
@@ -116,7 +116,9 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return data['Total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
-        return []  # TODO
+        corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpname)
+        id_attr = corpus_info.metadata.id_attr
+        return [id_attr.split('.')[0]] if id_attr else []
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
         session = await self._get_session()
@@ -133,7 +135,10 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return [data[item_id] for item_id in id_list]
 
     async def fill_attrs(self, corpus_id, search, values, fill):
-        return {}
+        json_body = {'search': search, 'values': values, 'fill': fill}
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpus_id}/fill-attrs', json=json_body) as resp:
+            return await resp.json()
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
