@@ -84,6 +84,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return self._session
 
     async def is_enabled_for(self, plugin_ctx, corpora):
+        if len(corpora) == 0:
+            return False
         # TODO now enabled if database path is defined
         return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
