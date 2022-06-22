@@ -84,6 +84,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return self._session
 
     async def is_enabled_for(self, plugin_ctx, corpora):
+        if len(corpora) == 0:
+            return False
         # TODO now enabled if database path is defined
         return bool((await self.corparch.get_corpus_info(plugin_ctx, corpora[0])).metadata.database)
 
@@ -117,10 +119,18 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         return []  # TODO
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
-        return []  # TODO
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpus.corpname}/get-bibliography', json={'itemId': item_id}) as resp:
+            data = await resp.json()
+
+        return list(data.items())
 
     async def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
-        return []  # TODO
+        session = await self._get_session()
+        async with session.post(f'/liveAttributes/{corpus_id}/find-bib-titles', json={'itemIds': id_list}) as resp:
+            data = await resp.json()
+
+        return [data[item_id] for item_id in id_list]
 
     async def fill_attrs(self, corpus_id, search, values, fill):
         return {}
