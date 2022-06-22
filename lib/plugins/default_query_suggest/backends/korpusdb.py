@@ -24,7 +24,11 @@ class KorpusDBBackend(AbstractBackend):
     def __init__(self, conf, ident):
         super().__init__(ident)
         self._conf = conf
-        self._client = HTTPClient(conf['server'], conf['port'], conf['ssl'])
+        port_str = '' if self._conf.get('port', 80) else ':{}'.format(self._conf.get('port'))
+        if self._conf['ssl']:
+            self._client = HTTPClient('https://{}{}'.format(self._conf['server'], port_str))
+        else:
+            self._client = HTTPClient('http://{}{}'.format(self._conf['server'], port_str))
 
     async def find_suggestion(
             self, ui_lang, user_id, maincorp, corpora, subcorpus, value, value_type, value_subformat,
