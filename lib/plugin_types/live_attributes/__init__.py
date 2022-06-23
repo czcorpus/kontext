@@ -50,11 +50,11 @@ class AttrValue(NamedTuple):
 @dataclass_json
 @dataclass
 class AttrValuesResponse:
-    attr_values: Optional[Dict[str, Union[AttrValue, Dict[str, int], int]]]
-    aligned: Optional[List[str]]
-    poscount: Optional[int]
-    error: Optional[str]
-    details: Optional[List[str]]
+    attr_values: Optional[Dict[str, Union[AttrValue, Dict[str, int], int]]] = None
+    aligned: Optional[List[str]] = None
+    poscount: Optional[int] = None
+    error: Optional[str] = None
+    details: Optional[List[str]] = None
 
 
 class AbstractLiveAttributes(CorpusDependentPlugin):
