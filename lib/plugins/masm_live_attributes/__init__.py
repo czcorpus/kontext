@@ -113,7 +113,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             json_body['aligned'] = corpora[1:]
 
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpora[0]}/selection-subc-size', json=json_body) as resp:
+        async with session.post(f'/liveAttributes/{corpora[0]}/selectionSubcSize', json=json_body) as resp:
             data = await resp.json()
 
         return data['Total']
@@ -125,14 +125,14 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpus.corpname}/get-bibliography', json={'itemId': item_id}) as resp:
+        async with session.post(f'/liveAttributes/{corpus.corpname}/getBibliography', json={'itemId': item_id}) as resp:
             data = await resp.json()
 
         return list(data.items())
 
     async def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpus_id}/find-bib-titles', json={'itemIds': id_list}) as resp:
+        async with session.post(f'/liveAttributes/{corpus_id}/findBibTitles', json={'itemIds': id_list}) as resp:
             data = await resp.json()
 
         return [data[item_id] for item_id in id_list]
@@ -140,7 +140,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     async def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpus_id}/fill-attrs', json=json_body) as resp:
+        async with session.post(f'/liveAttributes/{corpus_id}/fillAttrs', json=json_body) as resp:
             return await resp.json()
 
 
