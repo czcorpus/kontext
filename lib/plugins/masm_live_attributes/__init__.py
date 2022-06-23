@@ -102,7 +102,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         json_body['maxAttrListSize'] = self._max_attr_list_size
 
         session = await self._get_session()
-        async with session.post(f'/liveAttributes/{corpus.corpname}/query', json=json_body) as resp:
+        async with session.post(f'/liveAttributes/{corpus.corpname}/search', json=json_body) as resp:
             data = await resp.json()
 
         return AttrValuesResponse(**data)
