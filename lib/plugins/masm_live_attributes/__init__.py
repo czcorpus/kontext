@@ -38,8 +38,9 @@ async def filter_attributes(amodel: CorpusActionModel, req: KRequest, resp: KRes
     attrs = ujson.loads(req.form.get('attrs', '{}'))
     aligned = ujson.loads(req.form.get('aligned', '[]'))
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
-        return await lattr.get_attr_values(amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
-                                           aligned_corpora=aligned)
+        return await lattr.get_attr_values(
+            amodel.plugin_ctx, corpus=amodel.corp, attr_map=attrs,
+            aligned_corpora=aligned)
 
 
 @bp.route('/attr_val_autocomplete', methods=['POST'])
@@ -73,10 +74,11 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def export_actions():
         return bp
 
-    def __init__(self, corparch: AbstractCorporaArchive, service_url: str):
+    def __init__(self, corparch: AbstractCorporaArchive, service_url: str, max_attr_list_size: int):
         self.corparch = corparch
         self._service_url = service_url
         self._session = None
+        self._max_attr_list_size = max_attr_list_size
 
     async def _get_session(self):
         if self._session is None:
@@ -97,6 +99,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             json_body['aligned'] = aligned_corpora
         if autocomplete_attr:
             json_body['autocompleteAttr'] = autocomplete_attr
+        json_body['maxAttrListSize'] = self._max_attr_list_size
 
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus.corpname}/query', json=json_body) as resp:
@@ -144,4 +147,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 @plugins.inject(plugins.runtime.CORPARCH)
 def create_instance(settings, corparch: AbstractCorporaArchive) -> MasmLiveAttributes:
     plg_conf = settings.get('plugins')['live_attributes']
-    return MasmLiveAttributes(corparch, plg_conf['service_url'])
+    return MasmLiveAttributes(
+        corparch,
+        plg_conf['service_url'],
+        max_attr_list_size=settings.get_int('global', 'max_attr_list_size')
+    )
