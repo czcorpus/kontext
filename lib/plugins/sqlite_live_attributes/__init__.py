@@ -128,13 +128,13 @@ class LiveAttributes(CachedLiveAttributes):
                 self.databases[corpname] = None
         return self.databases[corpname]
 
-    def is_enabled_for(self, plugin_ctx, corpora):
+    async def is_enabled_for(self, plugin_ctx, corpora):
         """
         Returns True if live attributes are enabled for selected corpus else returns False
         """
         if len(corpora) == 0:
             return False
-        return self.db(plugin_ctx, corpora[0]) is not None
+        return (await self.db(plugin_ctx, corpora[0])) is not None
 
     def execute_sql(self, db, sql, args=()):
         cursor = db.cursor()
@@ -205,7 +205,7 @@ class LiveAttributes(CachedLiveAttributes):
         return [id_attr.split('.')[0]] if id_attr else []
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
-        db = self.db(plugin_ctx, corpora[0])
+        db = await self.db(plugin_ctx, corpora[0])
         join_sql = []
         where_sql = ['t1.corpus_id = ?']
         where_values = [corpora[0]]
@@ -270,7 +270,7 @@ class LiveAttributes(CachedLiveAttributes):
                                            autocomplete_attr=self.import_key(autocomplete_attr),
                                            empty_val_placeholder=self.empty_val_placeholder)
         data_iterator = query.DataIterator(
-            self.db(plugin_ctx, corpus.corpname), query_builder)
+            await self.db(plugin_ctx, corpus.corpname), query_builder)
 
         # initialize result dictionary
         ans = dict((attr, set()) for attr in srch_attrs)
@@ -321,7 +321,7 @@ class LiveAttributes(CachedLiveAttributes):
         return AttrValuesResponse(attr_values=values, aligned=aligned_corpora, poscount=values['poscount'])
 
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
-        db = self.db(plugin_ctx, corpus.corpname)
+        db = await self.db(plugin_ctx, corpus.corpname)
         col_rows = self.execute_sql(db, 'PRAGMA table_info(\'bibliography\')').fetchall()
 
         corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpus.corpname)
@@ -341,7 +341,7 @@ class LiveAttributes(CachedLiveAttributes):
         with plugins.runtime.CORPARCH as ca:
             corpus_info = await ca.get_corpus_info(plugin_ctx.user_lang, corpus_id)
         label_attr = self.import_key(corpus_info.metadata.label_attr)
-        db = self.db(plugin_ctx, corpus_id)
+        db = await self.db(plugin_ctx, corpus_id)
         pch = ', '.join(['?'] * len(id_list))
         ans = self.execute_sql(
             db, 'SELECT id, %s FROM bibliography WHERE id IN (%s)' % (label_attr, pch), id_list)
