@@ -268,13 +268,14 @@ class PyConc(manatee.Concordance):
             norms = [self.pycorp.search_size for _ in words]
 
         attrs = crit.split()
-        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2) for x in range(0, len(attrs), 2)]
+        head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2)
+                                      for x in range(0, len(attrs), 2)]
         head.append(dict(n=translate('Freq'), s='freq', title=translate('Frequency')))
         has_empty_item = False
         head.append(dict(
-                n='i.p.m.',
-                title=translate('instances per million positions (refers to the respective category)'),
-                s='rel'))
+            n='i.p.m.',
+            title=translate('instances per million positions (refers to the respective category)'),
+            s='rel'))
 
         lines = []
         for w, f, nf in zip(words, freqs, norms):
@@ -300,9 +301,14 @@ class PyConc(manatee.Concordance):
                     rel=0,
                     norm=0
                 ))
-        if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0]['Word'])):
-            sortkey = int(sortkey)
-            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v['Word'][sortkey]['n'])
+
+        try:
+            int_sortkey = int(sortkey)
+        except ValueError:
+            int_sortkey = None
+
+        if int_sortkey is not None and int_sortkey >= 0 and int_sortkey < len(lines[0].Word):
+            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[int_sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
