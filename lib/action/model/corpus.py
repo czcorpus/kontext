@@ -229,7 +229,7 @@ class CorpusActionModel(UserActionModel):
             corpname, redirect = await self._determine_curr_corpus(req_args, is_api)
             has_access, variant = await auth.validate_access(corpname, self.session_get('user'))
             if has_access and redirect:
-                url_pref = action_props.action_prefix
+                url_pref = action_props.action_prefix + '/' if action_props.action_prefix else ''
                 if len(url_pref) > 0:
                     url_pref = url_pref[1:]
                 raise ImmediateRedirectException(self._req.create_url(
