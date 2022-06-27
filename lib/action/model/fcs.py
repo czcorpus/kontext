@@ -25,6 +25,7 @@ import kwiclib
 import plugins
 import settings
 from action.krequest import KRequest
+from action.model.corpus import CorpusPluginCtx
 from action.model.user import UserActionModel
 from action.props import ActionProps
 from action.response import KResponse
@@ -159,7 +160,7 @@ class FCSActionModel(UserActionModel):
         # try to get concordance
         try:
             with plugins.runtime.AUTH as auth:
-                anon_id = auth.anonymous_user()['id']
+                anon_id = auth.anonymous_user(self.plugin_ctx)['id']
             q = ['q' + rq]
             conc = await get_conc(corp, anon_id, q=q, fromp=fromp, pagesize=max_rec, asnc=0)
         except Exception as e:
@@ -172,6 +173,9 @@ class FCSActionModel(UserActionModel):
         kwic_context = settings.get_int('fcs', 'kwic_context', 5)
         kwic_args.leftctx = f'-{kwic_context}'
         kwic_args.rightctx = f'{kwic_context}'
+        kwic_args.labelmap = {}
+        kwic_args.alignlist = []
+        kwic_args.ml_position_filters = {}
         page = asdict(kwic.kwicpage(kwic_args))  # convert concordance
 
         local_offset = (start - 1) % max_rec
@@ -187,6 +191,12 @@ class FCSActionModel(UserActionModel):
             for kwicline in page['Lines']
         ][local_offset:local_offset + max_rec]
         return FCSSearchResult(rows, conc.size())
+
+    @property
+    def plugin_ctx(self):
+        if self._plugin_ctx is None:
+            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp)
+        return self._plugin_ctx
 
 
 class Languages:

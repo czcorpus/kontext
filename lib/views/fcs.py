@@ -212,8 +212,10 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
             corpus = await amodel.cm.get_corpus(corpname, translate=req.translate)
             if 0 == len(query):
                 raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
-            common_data.result, common_data.numberOfRecords = await amodel.fcs_search(
+            result = await amodel.fcs_search(
                 corpus, corpname, query, common_data.maximumRecords, common_data.startRecord)
+            common_data.result = result.rows
+            common_data.numberOfRecords = result.size
 
         # unsupported operation
         else:
