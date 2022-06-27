@@ -27,6 +27,7 @@ import abc
 import datetime
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
+from action.model.subcorpus.listing import ListingItem
 
 from action.plugin.ctx import PluginCtx
 
@@ -116,5 +117,7 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: int, include_cql: bool=False) -> List[Dict[str, Any]]:
+    async def extend_subc_list(
+            self, plugin_ctx: PluginCtx, subc_list: List[ListingItem], filter_args: Dict[str, Any],
+            from_idx: int, to_idx: int, include_cql: bool = False) -> List[ListingItem]:
         pass

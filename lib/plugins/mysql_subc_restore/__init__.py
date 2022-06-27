@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import plugins
 import werkzeug.urls
-from action.plugin.ctx import PluginCtx
+from action.model.subcorpus.listing import ListingItem
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcRestore, SubcRestoreRow
 from plugins import inject
@@ -103,27 +103,27 @@ class MySQLSubcRestore(AbstractSubcRestore):
             row = await cursor.fetchone()
             return None if row is None else SubcRestoreRow(**row)
 
-    async def extend_subc_list(self, plugin_ctx: PluginCtx, subc_list: List[Dict[str, Any]], filter_args: Dict[str, Any], from_idx: int, to_idx: Optional[int]=None, include_cql: bool=False) -> List[Dict[str, Any]]:
+    async def extend_subc_list(
+            self, plugin_ctx, subc_list, filter_args, from_idx, to_idx=None, include_cql=False):
         """
         Enriches KonText's original subcorpora list by the information about queries which
         produced these subcorpora. It it also able to insert an information about deleted
         subcorpora.
 
         Args:
-            plugin_ctx (kontext.PluginCtx): a Plugin API instance
-            subc_list (list of dict): an original subcorpora list as produced by KonText's respective action
-                (= list of dict(n=str, v=???, size=int, created=str, corpname=str, usesubcorp=str))
-            filter_args (dict): support for 'show_deleted': 0/1 and 'corpname': str
-            from_idx (int): 0..(num_items-1) list offset
-            to_idx (int): last item index (None by default)
-            include_cql (boolean): total amount of cqls can be quite large, include it into data,
+            plugin_ctx: a Plugin API instance
+            subc_list: an original subcorpora list as produced by KonText's respective action
+            filter_args: support for 'show_deleted': 0/1 and 'corpname': str
+            from_idx: 0..(num_items-1) list offset
+            to_idx: last item index (None by default)
+            include_cql: total amount of cqls can be quite large, include it into data,
                 otherwise leave it empty (False by default)
 
         Returns:
-            list of dict: a new list containing both the original subc_list and also the extended part
+            a new list containing both the original subc_list and also the extended part
         """
-        def get_user_subcname(rec: Dict[str, Any]) -> str:
-            return rec.get('orig_subcname') if rec.get('orig_subcname') else rec.get('usesubcorp')
+        def get_user_subcname(rec: ListingItem) -> str:
+            return rec.orig_subcname if rec.orig_subcname else rec.usesubcorp
 
         subc_queries = await self.list_queries(plugin_ctx.user_id, from_idx, to_idx)
         subc_queries_map: Dict[Tuple[str, str], SubcRestoreRow] = {}
@@ -132,7 +132,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
 
         if filter_args.get('show_deleted', False):
             deleted_keys = set(subc_queries_map.keys()) - \
-                (set((x['corpname'], get_user_subcname(x)) for x in subc_list))
+                (set((x.corpname, get_user_subcname(x)) for x in subc_list))
         else:
             deleted_keys = []
 
@@ -150,30 +150,29 @@ class MySQLSubcRestore(AbstractSubcRestore):
                 corpus_name = subc_query.corpname
                 if corpname_matches(corpus_name):
                     corpus_info = await self._corparch.get_corpus_info(plugin_ctx, corpus_name)
-                    deleted_items.append({
-                        'name': '{0} / {1}'.format(corpus_info.id, subc_query.subcname),
-                        'size': None,
-                        'created': int(subc_query.timestamp.timestamp()),
-                        'human_corpname': corpus_info.name,
-                        'corpname': corpus_name,
-                        'usesubcorp': escape_subcname(subc_query.subcname),
-                        'cql': urllib.parse.quote(subc_query.cql).encode('utf-8') if include_cql else None,
-                        'cqlAvailable': bool(urllib.parse.quote(subc_query.cql)),
-                        'deleted': True,
-                        'published': False
-                    })
+                    deleted_items.append(ListingItem(
+                        name=f'{corpus_info.id} / {subc_query.subcname}',
+                        size=None,
+                        created=int(subc_query.timestamp.timestamp()),
+                        human_corpname=corpus_info.name,
+                        corpname=corpus_name,
+                        usesubcorp=escape_subcname(subc_query.subcname),
+                        cql=urllib.parse.quote(subc_query.cql).encode('utf-8') if include_cql else None,
+                        cqlAvailable=bool(urllib.parse.quote(subc_query.cql)),
+                        deleted=True,
+                        published=False))
             except Exception as ex:
                 logging.getLogger(__name__).warning(ex)
         for subc in subc_list:
-            key = (subc['corpname'], get_user_subcname(subc))
+            key = (subc.corpname, get_user_subcname(subc))
             if key in subc_queries_map:
                 cql_quoted = urllib.parse.quote(subc_queries_map[key].cql)
-                subc['cqlAvailable'] = bool(cql_quoted)
-                subc['cql'] = cql_quoted.encode('utf-8') if include_cql else None
+                subc.cqlAvailable = bool(cql_quoted)
+                subc.cql = cql_quoted.encode('utf-8') if include_cql else None
             else:
-                subc['cqlAvailable'] = False
-                subc['cql'] = None
-            subc['usesubcorp'] = escape_subcname(subc['usesubcorp'])
+                subc.cqlAvailable = False
+                subc.cql = None
+            subc.usesubcorp = escape_subcname(subc.usesubcorp)
         return subc_list + deleted_items
 
 

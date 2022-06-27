@@ -29,6 +29,7 @@ from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
+from action.model.subcorpus.listing import ListingItem
 from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
@@ -121,40 +122,39 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
     installed then the list is enriched by additional re-use/undelete information.
     """
-    amodel.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
-                                  MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+    amodel.disabled_menu_items = (
+        MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
     filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
                        corpname=req.args.get('corpname'))
     data = []
-    related_corpora = set()
-    user_corpora = await plugins.runtime.AUTH.instance.permitted_corpora(
-        amodel.session_get('user'))
-    for corp in user_corpora:
+    involved_corpora = os.listdir(amodel.subcpath[0])  # by a convention, the first item is user's subc. dir.
+    for corp in involved_corpora:
+        _, has_acc, _ = await plugins.runtime.AUTH.instance.corpus_access(amodel.session_get('user'), corp)
+        if not has_acc:
+            continue
         for item in amodel.user_subc_names(corp):
             try:
                 sc = await amodel.cm.get_corpus(
                     corp, subcname=item['n'], decode_desc=False, translate=req.translate)
-                data.append({
-                    'name': '%s / %s' % (corp, item['n']),
-                    'size': sc.search_size,
-                    'created': time.mktime(sc.created.timetuple()),
-                    'corpname': corp,
-                    'human_corpname': sc.get_conf('NAME'),
-                    'usesubcorp': sc.subcname,
-                    'orig_subcname': sc.orig_subcname,
-                    'deleted': False,
-                    'description': sc.description,
-                    'published': sc.is_published
-                })
-                related_corpora.add(corp)
+                data.append(ListingItem(
+                    name='%s / %s' % (corp, item['n']),
+                    size=sc.search_size,
+                    created=time.mktime(sc.created.timetuple()),
+                    corpname=corp,
+                    human_corpname=sc.get_conf('NAME'),
+                    usesubcorp=sc.subcname,
+                    orig_subcname=sc.orig_subcname,
+                    deleted=False,
+                    description=sc.description,
+                    published=sc.is_published))
             except RuntimeError as e:
                 logging.getLogger(__name__).warning(
                     'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
 
     if filter_args['corpname']:
         data = [item for item in data if not filter_args['corpname']
-                or item['corpname'] == filter_args['corpname']]
+                or item.corpname == filter_args['corpname']]
     elif filter_args['corpname'] is None:
         filter_args['corpname'] = ''  # JS code requires non-null value
 
@@ -169,21 +169,21 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
     if sort_key in ('size', 'created'):
-        full_list = sorted(full_list, key=lambda x: x[sort_key], reverse=rev)
+        full_list = sorted(full_list, key=lambda x: getattr(x, sort_key), reverse=rev)
     else:
         full_list = l10n.sort(full_list, loc=req.ui_lang,
-                              key=lambda x: x[sort_key], reverse=rev)
+                              key=lambda x: getattr(x, sort_key), reverse=rev)
 
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
-        subcorp_list=full_list,
+        subcorp_list=[x.to_dict() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
         filter=filter_args,
         processed_subc=[
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
-        related_corpora=sorted(related_corpora),
+        related_corpora=sorted(involved_corpora),
         uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
     )
     return ans
