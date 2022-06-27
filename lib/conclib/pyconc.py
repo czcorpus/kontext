@@ -310,9 +310,14 @@ class PyConc(manatee.Concordance):
                     rel=0,
                     norm=0
                 ))
-        if (sortkey in ('0', '1', '2')) and (int(sortkey) < len(lines[0].Word)):
-            sortkey = int(sortkey)
-            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[sortkey]['n'])
+
+        try:
+            int_sortkey = int(sortkey)
+        except ValueError:
+            int_sortkey = None
+
+        if int_sortkey is not None and int_sortkey >= 0 and int_sortkey < len(lines[0].Word):
+            lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[int_sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
                 sortkey = 'freq'
