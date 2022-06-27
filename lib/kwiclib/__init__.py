@@ -20,7 +20,7 @@ import itertools
 import math
 import re
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, InitVar
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import manatee
@@ -119,6 +119,10 @@ class KwicLinesArgs:
 
 @dataclass
 class KwicPageArgs:
+    argmapping: InitVar[Dict[str, Any]]
+
+    base_attr: str
+
     # 2-tuple sets a name of a speech attribute and structure (struct, attr) or None if speech is not present
     speech_attr: Optional[Tuple[str, str]] = None
 
@@ -167,11 +171,10 @@ class KwicPageArgs:
     # multilayer align corpora
     ml_position_filters: Dict[str, MLPositionFilter] = field(default_factory=dict)
 
-    def __init__(self, argmapping: Dict[str, Any], base_attr: str):
+    def __post_init__(self, argmapping: Dict[str, Any]):
         for k, v in argmapping.items():
             if hasattr(self, k):
                 setattr(self, k, self._import_val(k, v))
-        self.base_attr = base_attr
         self.ctxattrs = self.attrs
 
     def _import_val(self, k, v):
