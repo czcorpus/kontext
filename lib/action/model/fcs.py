@@ -173,9 +173,6 @@ class FCSActionModel(UserActionModel):
         kwic_context = settings.get_int('fcs', 'kwic_context', 5)
         kwic_args.leftctx = f'-{kwic_context}'
         kwic_args.rightctx = f'{kwic_context}'
-        kwic_args.labelmap = {}
-        kwic_args.alignlist = []
-        kwic_args.ml_position_filters = {}
         page = asdict(kwic.kwicpage(kwic_args))  # convert concordance
 
         local_offset = (start - 1) % max_rec
