@@ -455,6 +455,7 @@
         "query__structattr_does_not_exist": "strukturni atribut ne obstaja",
         "query__click_to_edit_tag": "Kliknite in držite CTRL, da uredite oznako z interaktivnim orodjem",
         "query__query_must_be_entered": "Poizvedba ni vnesena",
+        "query__confirm_unspecified_query": "Query was not specified, submit anyway? UNTRANSLATED",
         "query__unrecognized_input_{wrongChar}{position}": "Napaka v sintaksi - nepričakovan znak \"{wrongChar}\" na položaju {position}.",
         "query__tip_01": "Uporabite lahko tipko \"puščica navzdol\" za ogled nedavnih iskanj",
         "query__tip_02": "V načinu CQL lahko uporabite Shift+ENTER, da vstavite novo vrstico",

@@ -397,6 +397,7 @@
         "query__structattr_does_not_exist": "niy ma takigo atrybutu strukturalnego",
         "query__click_to_edit_tag": "Trzim Ctrl i kliknij, żeby edytować tag we interaktywnym nŏczyniu",
         "query__query_must_be_entered": "Żŏdne zapytanie niy było wkludzōne",
+        "query__confirm_unspecified_query": "Query was not specified, submit anyway? UNTRANSLATED",
         "query__unrecognized_input_{wrongChar}{position}": "Feler składnie - niyôczekowany znak \"{wrongChar}\" we placu {position}.",
         "query__tip_01": "Możesz użyć knefla \u0022strzałki w dōł\u0022, żeby ôbejzdrzeć ôstatnie zapytania",
         "query__tip_02": "We trybie CQL Możesz użyć knefli Shift+ENTER, żeby wkludzić nowõ linijõ",
