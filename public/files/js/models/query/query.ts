@@ -112,6 +112,10 @@ export interface SimpleQuery {
 
 export type AnyQuery = SimpleQuery|AdvancedQuery;
 
+export function isAdvancedQuery(anyQuery: AnyQuery): anyQuery is AdvancedQuery {
+    return anyQuery.qtype === 'advanced';
+}
+
 
 /**
  * SimpleQuerySubmit is a form of SimpleQuery as submitted to server

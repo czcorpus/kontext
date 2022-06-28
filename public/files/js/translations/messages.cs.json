@@ -397,6 +397,7 @@
         "query__structattr_does_not_exist": "strukturní atribut neexistuje",
         "query__click_to_edit_tag": "Klikněte s přidržením CTRL pro editaci tagu pomocí interaktivního nástroje",
         "query__query_must_be_entered": "Nebyl zadán dotaz.",
+        "query__confirm_unspecified_query": "Dotaz nebyl specifikován, přesto odeslat?",
         "query__unrecognized_input_{wrongChar}{position}": "Syntaktická chyba - neočekávaný znak \"{wrongChar}\" na pozici {position}.",
         "query__tip_01": "Předchozí dotazy lze zobrazit také pomocí šipky dolů",
         "query__tip_02": "V dotazu CQL můžete vložit další řádek stisknutím klávesy Shift+ENTER",

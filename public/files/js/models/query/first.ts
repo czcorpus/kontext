@@ -38,7 +38,7 @@ import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
 import * as PluginInterfaces from '../../types/plugins';
 import { ConcQueryResponse, ConcServerArgs } from '../concordance/common';
-import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery,
+import { AdvancedQuery, advancedToSimpleQuery, AnyQuery, AnyQuerySubmit, parseSimpleQuery, isAdvancedQuery,
     QueryType, SimpleQuery, simpleToAdvancedQuery} from './query';
 import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from '../cqleditor/attrs';
@@ -493,9 +493,20 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         this.addActionHandler(
             Actions.QuerySubmit,
             action => {
-                this.changeState(state => {
-                    state.isBusy = true;
-                });
+                if (this.testPrimaryQueryNonEmpty()) {
+                    if (!confirm(pageModel.translate('query__confirm_unspecified_query'))) {
+                        return
+                    } else {
+                        this.changeState(state => {
+                            this.setUnspecifiedQuery(state);
+                            state.isBusy = true;
+                        });
+                    }
+                } else {
+                    this.changeState(state => {
+                        state.isBusy = true;
+                    });
+                }
 
                 this.suspendWithTimeout(
                     2000,
@@ -525,10 +536,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     concatMap(
                         ({ttSelections, contextData}) => {
                             let err:Error;
-                            err = this.testPrimaryQueryNonEmpty();
-                            if (err !== null) {
-                                throw err;
-                            }
                             err = this.testQueryTypeMismatch();
                             if (err !== null) {
                                 throw err;
@@ -707,11 +714,22 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         });
     }
 
-    private testPrimaryQueryNonEmpty():Error|null {
+    private testPrimaryQueryNonEmpty():boolean {
         if (this.state.queries[List.head(this.state.corpora)].query.length === 0) {
-            return new Error(this.pageModel.translate('query__query_must_be_entered'));
+            return true;
         }
-        return null;
+        return false;
+    }
+
+    private setUnspecifiedQuery(state: QueryFormModelState) {
+        let query = state.queries[List.head(this.state.corpora)];
+        if (isAdvancedQuery(query)) {
+            query.query = '[]';
+        } else {
+            query.query = '.*';
+            query.use_regexp = true;
+            query.queryParsed = parseSimpleQuery(query);
+        }
     }
 
     getRegistrationId():string {
