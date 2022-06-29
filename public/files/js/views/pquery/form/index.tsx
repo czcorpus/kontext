@@ -596,7 +596,7 @@ export function init({dispatcher, he, model, helpModel}:PqueryFormViewsArgs):Pqu
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('pquery__help')}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('pquery__help')} scrollable={true}>
                             <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                         </layoutViews.CloseableFrame>
                     </layoutViews.ModalOverlay> :
