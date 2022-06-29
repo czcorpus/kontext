@@ -153,7 +153,7 @@ async def ajax_get_structattrs_details(amodel: UserActionModel, req: KRequest, r
 
 
 @bp.route('/bibliography')
-@http_action(action_model=UserActionModel, return_type='json')
-def bibliography(amodel: UserActionModel, req: KRequest, resp: KResponse):
+@http_action(action_model=CorpusActionModel, return_type='json')
+async def bibliography(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     with plugins.runtime.LIVE_ATTRIBUTES as liveatt:
-        return dict(bib_data=liveatt.get_bibliography(amodel.plugin_ctx, amodel.corp, item_id=req.args.get('id')))
+        return dict(bib_data=await liveatt.get_bibliography(amodel.plugin_ctx, amodel.corp, item_id=req.args.get('id')))
