@@ -539,7 +539,7 @@ export function init({
                 </a>
                 {visible ?
                     <layoutViews.ModalOverlay onCloseKey={toggleHelp}>
-                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('query__help')}>
+                        <layoutViews.CloseableFrame onCloseClick={toggleHelp} label={he.translate('query__help')} scrollable={true}>
                             <div>
                                 <div dangerouslySetInnerHTML={{__html: props.rawHtml}}/>
                                 <p><a target="_blank" href={he.getHelpLink('term_cql')}>{he.getHelpLink('term_cql')}</a></p>
