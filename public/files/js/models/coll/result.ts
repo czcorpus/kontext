@@ -358,7 +358,7 @@ export class CollResultModel extends StatelessModel<CollResultModelState> {
     private pushStateToHistory(state:CollResultModelState, formArgs:CollServerArgs):void {
         this.layoutModel.getHistory().pushState(
             'collx',
-            {...formArgs, format: undefined},
+            {...formArgs, format: undefined, csortfn: state.sortFn, collpage: state.currPage},
             {
                 onPopStateAction: {
                     name: Actions.PopHistory.name,
