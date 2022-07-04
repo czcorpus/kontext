@@ -66,6 +66,13 @@ async def fill_attrs(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         return await lattr.fill_attrs(corpus_id=amodel.corp.corpname, search=search, values=values, fill=fill)
 
 
+async def proc_masm_response(resp):
+    data = await resp.json()
+    if 400 <= resp.status <= 500:
+        raise LiveAttrsException(data.get('error', 'unspecified error'))
+    return data
+
+
 class MasmLiveAttributes(AbstractLiveAttributes):
 
     corparch: AbstractCorporaArchive
@@ -103,9 +110,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus.corpname}/query', json=json_body) as resp:
-            data = await resp.json()
-            if 400 <= resp.status <= 500:
-                raise LiveAttrsException(data.get('error', 'unspecified error'))
+            data = await proc_masm_response(resp)
         return AttrValuesResponse(**data)
 
     async def get_subc_size(self, plugin_ctx, corpora, attr_map):
@@ -115,9 +120,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpora[0]}/selectionSubcSize', json=json_body) as resp:
-            data = await resp.json()
-            if 400 <= resp.status <= 500:
-                raise LiveAttrsException(data.get('error', 'unspecified error'))
+            data = await proc_masm_response(resp)
         return data['Total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
@@ -128,30 +131,20 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     async def get_bibliography(self, plugin_ctx, corpus, item_id):
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus.corpname}/getBibliography', json={'itemId': item_id}) as resp:
-            data = await resp.json()
-            if 400 <= resp.status <= 500:
-                raise LiveAttrsException(data.get('error', 'unspecified error'))
-
+            data = await proc_masm_response(resp)
         return list(data.items())
 
     async def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus_id}/findBibTitles', json={'itemIds': id_list}) as resp:
-            data = await resp.json()
-            if 400 <= resp.status <= 500:
-                raise LiveAttrsException(data.get('error', 'unspecified error'))
-
+            data = await proc_masm_response(resp)
         return [data[item_id] for item_id in id_list]
 
     async def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpus_id}/fillAttrs', json=json_body) as resp:
-            data = await resp.json()
-            if 400 <= resp.status <= 500:
-                raise LiveAttrsException(data.get('error', 'unspecified error'))
-            return data
-
+            return await proc_masm_response(resp)
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
