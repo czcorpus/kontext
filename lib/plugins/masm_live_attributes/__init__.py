@@ -23,7 +23,7 @@ import urllib.parse
 
 import plugins
 from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.live_attributes import (AbstractLiveAttributes, AttrValuesResponse)
+from plugins.abstract.live_attributes import (AbstractLiveAttributes, AttrValuesResponse, LiveAttrsException)
 from controller import exposed
 from actions import concordance
 
@@ -93,7 +93,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             f'/liveAttributes/{corpus.corpname}/query', json_body)
         with urllib.request.urlopen(request) as response:
             data = json.loads(response.read().decode())
-
+            if 400 <= response.status <= 500:
+                raise LiveAttrsException(data.get('error', 'unspecified error'))
         return AttrValuesResponse(**data)
 
     def get_subc_size(self, plugin_ctx, corpora, attr_map):
@@ -105,7 +106,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             f'/liveAttributes/{corpora[0]}/selectionSubcSize', json_body)
         with urllib.request.urlopen(request) as response:
             data = json.loads(response.read().decode())
-
+            if 400 <= response.status <= 500:
+                raise LiveAttrsException(data.get('error', 'unspecified error'))
         return data['Total']
 
     def get_supported_structures(self, plugin_ctx, corpname):
@@ -118,7 +120,8 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             f'/liveAttributes/{corpus.corpname}/getBibliography', {'itemId': item_id})
         with urllib.request.urlopen(request) as response:
             data = json.loads(response.read().decode())
-
+            if 400 <= response.status <= 500:
+                raise LiveAttrsException(data.get('error', 'unspecified error'))
         return list(data.items())
 
     def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
@@ -126,14 +129,18 @@ class MasmLiveAttributes(AbstractLiveAttributes):
             f'/liveAttributes/{corpus_id}/findBibTitles', {'itemIds': id_list})
         with urllib.request.urlopen(request) as response:
             data = json.loads(response.read().decode())
-
+            if 400 <= response.status <= 500:
+                raise LiveAttrsException(data.get('error', 'unspecified error'))
         return [data[item_id] for item_id in id_list]
 
     def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
         request = self._get_request(f'/liveAttributes/{corpus_id}/fillAttrs', json_body)
         with urllib.request.urlopen(request) as response:
-            return json.loads(response.read().decode())
+            data = json.loads(response.read().decode())
+            if 400 <= response.status <= 500:
+                raise LiveAttrsException(data.get('error', 'unspecified error'))
+            return data
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
