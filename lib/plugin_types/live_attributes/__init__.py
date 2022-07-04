@@ -29,6 +29,10 @@ from plugin_types import CorpusDependentPlugin
 from plugin_types.general_storage import KeyValueStorage
 
 
+class LiveAttrsException(Exception):
+    pass
+
+
 class BibTitle(NamedTuple):
     id: str
     label: str
