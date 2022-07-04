@@ -29,6 +29,10 @@ from dataclasses_json import dataclass_json
 from plugins.abstract.general_storage import KeyValueStorage
 
 
+class LiveAttrsException(Exception):
+    pass
+
+
 class BibTitle(NamedTuple):
     id: str
     label: str

@@ -20,10 +20,11 @@
 import json
 import urllib.request
 import urllib.parse
+from urllib.error import HTTPError
 
 import plugins
 from plugins.abstract.corparch import AbstractCorporaArchive
-from plugins.abstract.live_attributes import (AbstractLiveAttributes, AttrValuesResponse)
+from plugins.abstract.live_attributes import (AbstractLiveAttributes, AttrValuesResponse, LiveAttrsException)
 from controller import exposed
 from actions import concordance
 
@@ -56,6 +57,12 @@ def fill_attrs(self, request):
 
     with plugins.runtime.LIVE_ATTRIBUTES as lattr:
         return lattr.fill_attrs(corpus_id=self.corp.corpname, search=search, values=values, fill=fill)
+
+
+def handle_http_error(err: HTTPError):
+    if 400 <= err.status <= 500:
+        data = json.loads(err.read().decode())
+        raise LiveAttrsException(data.get('error', 'unspecified error'))
 
 
 class MasmLiveAttributes(AbstractLiveAttributes):
@@ -91,10 +98,12 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
         request = self._get_request(
             f'/liveAttributes/{corpus.corpname}/query', json_body)
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
-
-        return AttrValuesResponse(**data)
+            return AttrValuesResponse(**data)
+        except HTTPError as ex:
+            handle_http_error(ex)
 
     def get_subc_size(self, plugin_ctx, corpora, attr_map):
         json_body = {'attrs': attr_map}
@@ -103,10 +112,13 @@ class MasmLiveAttributes(AbstractLiveAttributes):
 
         request = self._get_request(
             f'/liveAttributes/{corpora[0]}/selectionSubcSize', json_body)
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
+            return data['Total']
+        except HTTPError as ex:
+            handle_http_error(ex)
 
-        return data['Total']
 
     def get_supported_structures(self, plugin_ctx, corpname):
         corpus_info = self.corparch.get_corpus_info(plugin_ctx, corpname)
@@ -116,24 +128,34 @@ class MasmLiveAttributes(AbstractLiveAttributes):
     def get_bibliography(self, plugin_ctx, corpus, item_id):
         request = self._get_request(
             f'/liveAttributes/{corpus.corpname}/getBibliography', {'itemId': item_id})
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
+            return list(data.items())
+        except HTTPError as ex:
+            handle_http_error(ex)
 
-        return list(data.items())
 
     def find_bib_titles(self, plugin_ctx, corpus_id, id_list):
         request = self._get_request(
             f'/liveAttributes/{corpus_id}/findBibTitles', {'itemIds': id_list})
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
+            return [data[item_id] for item_id in id_list]
+        except HTTPError as ex:
+            handle_http_error(ex)
 
-        return [data[item_id] for item_id in id_list]
 
     def fill_attrs(self, corpus_id, search, values, fill):
         json_body = {'search': search, 'values': values, 'fill': fill}
         request = self._get_request(f'/liveAttributes/{corpus_id}/fillAttrs', json_body)
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
             return json.loads(response.read().decode())
+        except HTTPError as ex:
+            handle_http_error(ex)
+
 
 
 @plugins.inject(plugins.runtime.CORPARCH)
