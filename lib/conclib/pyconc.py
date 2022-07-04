@@ -307,7 +307,7 @@ class PyConc(manatee.Concordance):
         except ValueError:
             int_sortkey = None
 
-        if int_sortkey is not None and int_sortkey >= 0 and int_sortkey < len(lines[0].Word):
+        if int_sortkey is not None and int_sortkey >= 0 and int_sortkey < len(lines[0]['Word']):
             lines = l10n.sort(lines, loc=collator_locale, key=lambda v: v.Word[int_sortkey]['n'])
         else:
             if sortkey not in ('freq', 'rel'):
