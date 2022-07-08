@@ -723,7 +723,7 @@
         "freq__ct_uses_ad_hoc_subcorpus_warn": "Izračunane relativne frekvence (p.n.m.) se nanašajo na celotni korpus in ne na trenutni izbor vrst besedil.",
         "freq__ct_uses_ad_hoc_subcorpus_future_warn": "Izračunane relativne frekvence (p.n.m.) se bodo nanašale na celotni korpus in ne na trenutni izbor vrst besedil. Če želite to preprečiti, ustvarite poimenovan podkorpus.",
         "freq__ct_min_freq_label": "Min.",
-        "freq__ct_min_freq_val_error": "Neveljavna vrednost - uporabite \\{0, 1, 2 …\\} za abs/pnm in \\{1, …, 100\\} za percentile.",
+        "freq__ct_min_freq_val_error": "Neveljavna vrednost - uporabite \\{0, 1, 2 …\\} za abs./p.n.m. in \\{0, …, 100\\} za percentile.",
         "freq__ct_quantity_label": "Prikazana velikost",
         "freq__ct_data_parameters_legend": "Parametri podatkov",
         "freq__ct_view_parameters_legend": "Možnosti prikaza",

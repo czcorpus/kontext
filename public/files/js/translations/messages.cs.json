@@ -719,7 +719,7 @@
         "freq__ct_uses_ad_hoc_subcorpus_warn": "Berte prosím na vědomí, že výsledné relativní frekvence (i.p.m.) se počítají vůči celému korpusu a nikoliv vůči aktuálně vybraným typům textů.",
         "freq__ct_uses_ad_hoc_subcorpus_future_warn": "Berte prosím na vědomí, že výsledné relativní frekvence (i.p.m.) se budou počítat vůči celému korpusu a nikoliv vůči aktuálně vybraným typům textů. Pokud se chcete tomuto problému vyhnout, vytvořte si pojmenovaný korpus.",
         "freq__ct_min_freq_label": "Min.",
-        "freq__ct_min_freq_val_error": "Neplatná hodnota - použijte \\{0, 1, 2, \u2026\\} pro abs/ipm a \\{1, \u2026,100\\} pro percentily.",
+        "freq__ct_min_freq_val_error": "Neplatná hodnota - použijte \\{0, 1, 2, \u2026\\} pro abs./i.p.m. a \\{0, \u2026,100\\} pro percentily.",
         "freq__ct_quantity_label": "Zobrazená veličina",
         "freq__ct_data_parameters_legend": "Parametry dat",
         "freq__ct_view_parameters_legend": "Volby zobrazení",

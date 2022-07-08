@@ -719,7 +719,7 @@
         "freq__ct_uses_ad_hoc_subcorpus_warn": "Please note that calculated relative frequencies (i.p.m.) are based on the whole corpus and not on the current text types selection.",
         "freq__ct_uses_ad_hoc_subcorpus_future_warn": "Please note that calculated relative frequencies (i.p.m.) will be based on the whole corpus and not on the current text types selection. To avoid this, create a named subcorpus.",
         "freq__ct_min_freq_label": "Min.",
-        "freq__ct_min_freq_val_error": "Invalid value - use \\{0, 1, 2, \u2026\\} for abs/ipm and \\{1, \u2026,100\\} for percentiles.",
+        "freq__ct_min_freq_val_error": "Invalid value - use \\{0, 1, 2, \u2026\\} for abs./i.p.m. and \\{0, \u2026,100\\} for percentiles.",
         "freq__ct_quantity_label": "Displayed quantity",
         "freq__ct_data_parameters_legend": "Data parameters",
         "freq__ct_view_parameters_legend": "View options",
