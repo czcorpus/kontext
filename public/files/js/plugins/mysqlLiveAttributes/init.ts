@@ -114,7 +114,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             selectionSteps: [],
             selectionTypes: {},
             lastRemovedStep: null,
-            initialCorpusSize: null,
+            initialCorpusSize: isEnabled ? null : pluginApi.getCorpusIdent().size,
             firstCorpus,
             alignedCorpora,
             initialAlignedCorpora: alignedCorpora,
