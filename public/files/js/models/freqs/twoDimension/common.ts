@@ -66,10 +66,10 @@ export const validateMinAbsFreqAttr = (v:string):boolean => {
 };
 
 /**
- * Test for values 0 < x <= 100
+ * Test for values 0 <= x <= 100
  */
 export const validatePercentile = (v:string):boolean => {
-    return validateMinAbsFreqAttr(v) && parseFloat(v) > 0 && parseFloat(v) <= 100;
+    return validateMinAbsFreqAttr(v) && parseFloat(v) >= 0 && parseFloat(v) <= 100;
 };
 
 /**

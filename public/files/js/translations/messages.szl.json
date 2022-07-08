@@ -717,7 +717,7 @@
         "freq__ct_uses_ad_hoc_subcorpus_warn": "Pamiyntej, iże rachowane relatywne frekwyncyje (i.p.m.) bazujōm na cołkim korpusie, a niy na terŏźnym zaznaczyniu typōw tekstōw.",
         "freq__ct_uses_ad_hoc_subcorpus_future_warn": "Pamiyntej, iże rachowane relatywne frekwyncyje (i.p.m.) bydōm bazować na cołkim korpusie, a niy na terŏźnym zaznaczyniu typōw tekstōw. Żeby to zmiynić, stwōrz nazwany podkorpus.",
         "freq__ct_min_freq_label": "Min.",
-        "freq__ct_min_freq_val_error": "Niynŏleżnŏ werta - użyj \\{0, 1, 2, \u2026\\} dlŏ abs/ipm i \\{1, \u2026,100\\} dlŏ procyntowych.",
+        "freq__ct_min_freq_val_error": "Niynŏleżnŏ werta - użyj \\{0, 1, 2, \u2026\\} dlŏ abs./i.p.m. i \\{0, \u2026,100\\} dlŏ procyntowych.",
         "freq__ct_quantity_label": "Pokŏzanŏ wielość",
         "freq__ct_data_parameters_legend": "Parametry danych",
         "freq__ct_view_parameters_legend": "Ôpcyje widoku",
