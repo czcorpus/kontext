@@ -107,7 +107,8 @@ class SubcorpusActionModel(CorpusActionModel):
                     for k, vals in sel_match.attr_values.items():
                         if k == corpus_info.metadata.label_attr:
                             k = corpus_info.metadata.id_attr
-                        if '.' in k:
+                        # now we take only attribute entries with full data listing
+                        if '.' in k and type(vals) is list:
                             sel_attrs[k] = [v[1] for v in vals]
                     tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
                     tmp = ['<%s %s />' % item for item in tt_query]
