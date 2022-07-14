@@ -146,7 +146,7 @@ class Subcorpus(Querying):
                 full_cql = 'aword,[] within %s' % full_cql
                 imp_cql = (full_cql,)
         elif form_type == 'within':
-            data = CreateSubcorpusWithinArgs(**request.json)
+            data = CreateSubcorpusWithinArgs(aligned_corpora=[], **request.json)
             tt_query = ()
             within_cql = self._deserialize_custom_within(data.within)
             full_cql = 'aword,[] %s' % within_cql
