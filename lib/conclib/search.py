@@ -27,8 +27,8 @@ import aiofiles.os
 import bgcalc
 import plugins
 import settings
-from conclib.calc import (del_silent, extract_manatee_error,
-                          find_cached_conc_base, wait_for_conc)
+from conclib.calc import (
+    del_silent, extract_manatee_error, find_cached_conc_base, wait_for_conc)
 from conclib.calc.base import GeneralWorker
 from conclib.common import KConc
 from conclib.empty import InitialConc
@@ -57,7 +57,7 @@ async def _get_async_conc(corp, user_id, q, subchash, samplesize, minsize, trans
              subchash, q, samplesize, TASK_TIME_LIMIT),
             time_limit=CONC_REGISTER_TASK_LIMIT)
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
-    conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
+    conc_avail = await wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
         return PyConc(corp, 'l', await cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
@@ -92,7 +92,7 @@ async def _get_bg_conc(
             time_limit=TASK_TIME_LIMIT)
     # for smaller concordances/corpora there is a chance the data
     # is ready in a few seconds - let's try this:
-    conc_avail = wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
+    conc_avail = await wait_for_conc(cache_map=cache_map, subchash=subchash, q=q, minsize=minsize)
     if conc_avail:
         return PyConc(corp, 'l', await cache_map.readable_cache_path(subchash, q), translate=translate)
     else:
@@ -227,8 +227,8 @@ async def get_conc(
             cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
             curr_status = await cache_map.get_calc_status(subchash, q[:act + 1])
             if curr_status and not curr_status.finished:
-                ready = wait_for_conc(cache_map=cache_map,
-                                      subchash=subchash, q=q[:act + 1], minsize=-1)
+                ready = await wait_for_conc(
+                    cache_map=cache_map, subchash=subchash, q=q[:act + 1], minsize=-1)
                 if not ready:
                     raise ConcCalculationStatusException(
                         'Wait for concordance operation failed')
