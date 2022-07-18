@@ -45,7 +45,7 @@ class SubcRestoreRow:
     subcname: str
     timestamp: datetime.datetime
     cql: Optional[str] = None
-    within: Optional[str] = None
+    within_cond: Optional[str] = None
     text_types: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:

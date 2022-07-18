@@ -55,7 +55,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             if isinstance(data, CreateSubcorpusRawCQLArgs):
                 column, value = 'cql', data.cql
             elif isinstance(data, CreateSubcorpusWithinArgs):
-                column, value = 'within', json.dumps(data.within)
+                column, value = 'within_cond', json.dumps(data.within)
             elif isinstance(data, CreateSubcorpusArgs):
                 column, value = 'text_types', json.dumps(data.text_types)
 
