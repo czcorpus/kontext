@@ -26,9 +26,14 @@ Expected factory method signature: create_instance(config, db)
 import abc
 import datetime
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
-from action.model.subcorpus.listing import ListingItem
+from typing import Any, Dict, List, Optional, Union
 
+import ujson as json
+from action.model.subcorpus import (CreateSubcorpusArgs,
+                                    CreateSubcorpusRawCQLArgs,
+                                    CreateSubcorpusWithinArgs, TextTypesType,
+                                    WithinType)
+from action.model.subcorpus.listing import ListingItem
 from action.plugin.ctx import PluginCtx
 
 
@@ -38,8 +43,10 @@ class SubcRestoreRow:
     user_id: int
     corpname: str
     subcname: str
-    cql: str
     timestamp: datetime.datetime
+    cql: Optional[str] = None
+    within: Optional[str] = None
+    text_types: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -53,7 +60,7 @@ class SubcRestoreRow:
 class AbstractSubcRestore(abc.ABC):
 
     @abc.abstractmethod
-    async def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
+    async def store_query(self, user_id: int, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         """
         Store user's subcorpus query. Please note that the method should
         also:
@@ -62,9 +69,7 @@ class AbstractSubcRestore(abc.ABC):
 
         arguments:
         user_id -- int, ID of a user
-        corpname -- a name of a corpus
-        subcname -- a name of a subcorpus
-        cql -- a query used to define the subcorpus
+        data -- subcorpus create arguments
         returns:
         None
         """
