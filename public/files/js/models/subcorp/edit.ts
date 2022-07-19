@@ -110,7 +110,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         '/subcorpus/properties',
                         {
                             corpname: action.payload?.corpname,
-                            usesubcorp: action.payload?.subcname
+                            usesubcorp: action.payload?.subcname,
                         }
                     ),
                     {}

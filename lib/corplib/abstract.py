@@ -18,7 +18,8 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Any, Awaitable, List
+from datetime import datetime
+from typing import Any, Awaitable, List, Union
 
 from manatee import Corpus
 
@@ -52,7 +53,7 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
-    def created(self):
+    def created(self) -> Union[datetime, None]:
         pass
 
     @property
