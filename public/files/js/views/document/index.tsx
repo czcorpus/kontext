@@ -683,9 +683,10 @@ export function init(
      * panels.
      */
     const TabButton:CoreViews.TabButton.Component = (props) => {
-        const cls = props.htmlClass ? 'util-button ' + props.htmlClass : 'util-button';
+        const btnCls = props.isDisabled ? 'util-button disabled' : 'util-button';
+        const cls = props.htmlClass ? `${btnCls} ${props.htmlClass}` : btnCls;
         return <S.TabButton>
-                <button type="button" className={cls} onClick={props.onClick}>
+                <button type="button" className={cls} onClick={props.onClick} disabled={props.isDisabled}>
                     {props.label}
                 </button>
                 <br />
@@ -704,7 +705,8 @@ export function init(
                         <TabButton
                             label={value.label}
                             isActive={index === activeIndex}
-                            onClick={() => setActiveIndex(index)}/>
+                            onClick={() => setActiveIndex(index)}
+                            isDisabled={value.isDisabled} />
                     </li>
                 ),
                 props.items
