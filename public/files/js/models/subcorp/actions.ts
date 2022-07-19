@@ -45,54 +45,65 @@ export class Actions {
         name: 'SUBCORP_LIST_UPDATE_FILTER'
     };
 
-    static ShowActionWindow:Action<{
-        value:number;
-        action:string;
+    static ShowSubcEditWindow:Action<{
+        corpname:string;
+        subcname:string;
     }> = {
-        name: 'SUBCORP_LIST_SHOW_ACTION_WINDOW'
+        name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
 
-    static HideActionWindow:Action<{
+    static HideSubcEditWindow:Action<{
     }> = {
-        name: 'SUBCORP_LIST_HIDE_ACTION_WINDOW'
-    };
-
-    static SetActionBoxType:Action<{
-        value:string;
-        row:number;
-    }> = {
-        name: 'SUBCORP_LIST_SET_ACTION_BOX_TYPE'
+        name: 'SUBCORP_HIDE_SUBC_EDIT_WINDOW'
     };
 
     static WipeSubcorpus:Action<{
-        idx:number;
     }> = {
         name: 'SUBCORP_LIST_WIPE_SUBCORPUS'
     };
 
+    static WipeSubcorpusDone:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_WIPE_SUBCORPUS_DONE'
+    };
+
     static RestoreSubcorpus:Action<{
-        idx:number;
     }> = {
         name: 'SUBCORP_LIST_RESTORE_SUBCORPUS'
     };
 
+    static RestoreSubcorpusDone:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_RESTORE_SUBCORPUS_DONE'
+    };
+
     static ReuseQuery:Action<{
-        idx:number;
         newName:string;
         newCql:string;
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY'
     };
 
+    static ReuseQueryDone:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
+    };
+
     static PublishSubcorpus:Action<{
-        rowIdx:number;
         description:string;
     }> = {
         name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS'
     };
 
+    static PublishSubcorpusDone:Action<{
+        pubSubcname:string;
+        published:boolean;
+        description:string;
+    }> = {
+        name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS_DONE'
+    };
+
     static UpdatePublicDescription:Action<{
-        rowIdx:number;
         description:string;
     }> = {
         name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION'
@@ -102,6 +113,12 @@ export class Actions {
         rowIdx:number;
     }> = {
         name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT'
+    };
+
+    static SubmitPublicDescriptionDone:Action<{
+        rowIdx:number;
+    }> = {
+        name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT_DONE'
     };
 
     static PublishItem:Action<{

@@ -173,61 +173,7 @@ export const SubcorpList = styled.div`
         }
     }
 
-    .subcorp-actions {
 
-        > div {
-            padding-top: 0.7em;
-        }
-
-        .loader-wrapper {
-            display: inline-block;
-        }
-
-
-        form.subc-action {
-            margin-top: 1em;
-
-            fieldset legend img {
-                margin-left: 0.4em;
-                margin-right: 0.4em;
-            }
-
-            > fieldset > div {
-                margin-top: 1em;
-            }
-
-            label {
-                color: ${theme.colorLightText};
-                display: block;
-                padding-bottom: 0.3em;
-            }
-
-            textarea.desc, textarea.cql {
-                width: 30em;
-            }
-
-            p.note {
-                margin-top: 0;
-            }
-
-            dl.public-code {
-
-                dt, dd {
-                    display: inline-block;
-                    margin: 0;
-                }
-
-                dd {
-                    margin-left: 1em;
-                }
-
-                input[type="text"] {
-                    font-size: 1.5em;
-                    width: 7em;
-                }
-            }
-        }
-    }
 `;
 
 // ---------------- <ListPublic /> --------------------------------------

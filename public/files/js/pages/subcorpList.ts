@@ -24,6 +24,7 @@ import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/lis
 import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
 import { ServerSubcorpListItem } from '../models/subcorp/common';
+import { SubcorpusEditModel } from '../models/subcorp/edit';
 
 /**
  *
@@ -33,6 +34,8 @@ class SubcorpListPage {
     private layoutModel:PageModel;
 
     private subcorpListModel:SubcorpListModel;
+
+    private subcorpEditModel:SubcorpusEditModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -53,18 +56,30 @@ class SubcorpListPage {
     }
 
     init():void {
-        this.layoutModel.init(true, [], () => {
-            this.subcorpListModel = new SubcorpListModel({
-                dispatcher: this.layoutModel.dispatcher,
-                layoutModel: this.layoutModel,
-                data: this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
-                sortKey: this.layoutModel.getConf<SortKey>('SortKey'),
-                relatedCorpora: this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
-                unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
-                initialFilter: this.layoutModel.getConf<SubcListFilter>('Filter')
-            });
-            this.renderView();
-        });
+        this.layoutModel.init(
+            true,
+            [],
+            () => {
+                this.subcorpListModel = new SubcorpListModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    layoutModel: this.layoutModel,
+                    data: this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
+                    sortKey: this.layoutModel.getConf<SortKey>('SortKey'),
+                    relatedCorpora: this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
+                    unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
+                    initialFilter: this.layoutModel.getConf<SubcListFilter>('Filter')
+                });
+                this.subcorpEditModel = new SubcorpusEditModel(
+                    this.layoutModel.dispatcher,
+                    {
+                        isBusy: false,
+                        data: undefined
+                    },
+                    this.layoutModel
+                );
+                this.renderView();
+            }
+        );
     }
 }
 

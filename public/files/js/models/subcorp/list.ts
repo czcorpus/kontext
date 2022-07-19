@@ -19,15 +19,14 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, throwError, of as rxOf } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { tap, concatMap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { SubcorpusInfoResponse } from '../common/layout';
-import { CreateSubcorpus, ServerSubcorpListItem, SubcorpList } from './common';
+import { ServerSubcorpListItem, SubcorpList } from './common';
 
 
 
@@ -73,8 +72,7 @@ export interface SubcorpListModelState {
     sortKey:SortKey;
     filter:SubcListFilter;
     isBusy:boolean;
-    actionBoxVisibleRow:number;
-    actionBoxActionType:string;
+    editWindowSubcorpus:[string,string]|null;
     usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
 }
@@ -111,8 +109,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 relatedCorpora,
                 sortKey,
                 filter: initialFilter || {show_deleted: false, corpname: ''},
-                actionBoxVisibleRow: -1,
-                actionBoxActionType: 'pub',
+                editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
                 finishedTasks: {}
@@ -208,315 +205,21 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
-            Actions.ShowActionWindow,
+            Actions.ShowSubcEditWindow,
             action => this.changeState(state => {
-                state.actionBoxVisibleRow = action.payload.value;
-                state.actionBoxActionType = action.payload.action;
+                state.editWindowSubcorpus = [action.payload.corpname, action.payload.subcname];
             })
         );
 
         this.addActionHandler(
-            Actions.HideActionWindow,
+            Actions.HideSubcEditWindow,
             action => this.changeState(state => {
-                state.actionBoxVisibleRow = -1;
+                state.editWindowSubcorpus = null;
             })
         );
 
-        this.addActionHandler(
-            Actions.SetActionBoxType,
-            action => {
-                this.changeState(state => {
-                    state.actionBoxActionType = action.payload.value;
-                });
-
-                if (action.payload.value === 'reuse') {
-                    const line = this.state.lines[action.payload.row];
-                    if (line.cql === undefined && line.cqlAvailable) {
-                        this.changeState(state => {
-                            state.isBusy = true;
-                        });
-
-                        this.layoutModel.ajax$<SubcorpusInfoResponse>(
-                            HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('subcorpus/subcorpus_info'),
-                            {
-                                'corpname': line.corpname,
-                                'usesubcorp': line.usesubcorp
-                            }
-                        ).subscribe({
-                            next: data => {
-                                if (data.extended_info) {
-                                    this.changeState(state => {
-                                        state.lines[action.payload.row].cql = data.extended_info.cql;
-                                        state.isBusy = false;
-                                    })
-                                }
-                            },
-                            error: error => {
-                                this.changeState(
-                                    state => {
-                                        state.isBusy = false;
-                                    }
-                                );
-                                this.layoutModel.showMessage('error', error);
-                            }
-                        });
-                    }
-                }
-            }
-        );
-
-        this.addActionHandler(
-            Actions.WipeSubcorpus,
-            action => this.wipeSubcorpus(action.payload.idx).subscribe({
-                next: data => {
-                    this.layoutModel.showMessage('info',
-                    this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                },
-                error: error => {
-                    this.layoutModel.showMessage('error', error);
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                }
-            })
-        );
-
-        this.addActionHandler(
-            Actions.RestoreSubcorpus,
-            action => this.createSubcorpus(action.payload.idx, true).subscribe({
-                next: data => {
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                },
-                error: error => {
-                    this.layoutModel.showMessage('error', error);
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                }
-            })
-        );
-
-        this.addActionHandler(
-            Actions.ReuseQuery,
-            action => this.createSubcorpus(
-                action.payload.idx,
-                false,
-                action.payload.newName,
-                action.payload.newCql
-            ).subscribe({
-                next: data => {
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                },
-                error: error => {
-                    this.changeState(state => {state.actionBoxVisibleRow = -1});
-                    this.layoutModel.showMessage('error', error);
-                }
-            })
-        );
-
-        this.addActionHandler(
-            Actions.PublishSubcorpus,
-            action => {
-                this.changeState(state => {state.isBusy = true});
-                this.publishSubcorpus(action.payload.rowIdx, action.payload.description).subscribe({
-                    next: _ => {
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_published'));
-                        this.changeState(state => {
-                            state.isBusy = false;
-                            state.actionBoxVisibleRow = -1;
-                        });
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                        this.changeState(state => {
-                            state.isBusy = false;
-                            state.actionBoxVisibleRow = -1;
-                        });
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.UpdatePublicDescription,
-            action => {
-                try {
-                    this.updateSubcDesc(action.payload.rowIdx, action.payload.description);
-
-                } catch (e) {
-                    this.layoutModel.showMessage('error', e);
-                }
-            }
-        );
-
-        this.addActionHandler(
-            Actions.SubmitPublicDescription,
-            action => {
-                this.changeState(state => {state.isBusy = true});
-                this.updateSubcorpusDescSubmit(action.payload.rowIdx).subscribe({
-                    next: _ => {
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
-                        this.changeState(state => {
-                            state.isBusy = false;
-                            state.actionBoxVisibleRow = -1;
-                        });
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                        this.changeState(state => {
-                            state.isBusy = false;
-                            state.actionBoxVisibleRow = -1;
-                        });
-                    }
-                });
-            }
-        );
     }
 
-    private updateSubcorpusDescSubmit(rowIdx:number):Observable<any> {
-        const data = this.state.lines[rowIdx];
-
-        return this.layoutModel.ajax$(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
-            {
-                corpname: data.corpname,
-                usesubcorp: data.usesubcorp,
-                description: data.description
-            }
-        );
-    }
-
-    private updateSubcDesc(idx:number, desc:string):void {
-        const data = this.state.lines[idx];
-        if (data.deleted) {
-            throw new Error('Cannot change public description of a deleted subcorpus');
-        }
-        this.changeState(state => {
-            state.lines[idx] = {
-                name: data.name,
-                corpname: data.corpname,
-                usesubcorp: data.usesubcorp,
-                origSubcName: data.origSubcName,
-                deleted: data.deleted,
-                created: data.created,
-                cqlAvailable: data.cqlAvailable,
-                cql: data.cql,
-                size: data.size,
-                published: data.published,
-                description: desc
-            }
-        })
-    }
-
-    private publishSubcorpus(rowIdx:number, description:string):Observable<any> {
-        const srchIdx = List.findIndex(
-            (_, i) => i === this.state.actionBoxVisibleRow,
-            this.state.lines
-        );
-        if (srchIdx === -1) {
-            throw new Error('Row not found');
-        }
-        const data = this.state.lines[srchIdx];
-        if (data.deleted) {
-            return throwError(new Error('Cannot publish deleted subcorpus'));
-        }
-
-        return this.layoutModel.ajax$(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
-            {
-                corpname: data.corpname,
-                subcname: data.usesubcorp,
-                description: description
-            }
-
-        ).pipe(
-            tap((_) => {
-                this.changeState(state => {
-                    state.lines[srchIdx] = {
-                        name: data.name,
-                        corpname: data.corpname,
-                        usesubcorp: data.usesubcorp,
-                        origSubcName: data.origSubcName,
-                        deleted: data.deleted,
-                        created: data.created,
-                        cqlAvailable: data.cqlAvailable,
-                        cql: data.cql,
-                        size: data.size,
-                        published: true,
-                        description
-                    }
-                })
-            })
-        );
-    }
-
-    private createSubcorpus(
-        idx:number, removeOrig:boolean, subcname?:string, cql?:string
-    ):Observable<any> {
-
-        const srcRow = this.state.lines[idx];
-        return this.layoutModel.ajax$<CreateSubcorpus>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
-            {
-                corpname: srcRow.corpname,
-                subcname: subcname !== undefined ? subcname : srcRow.usesubcorp,
-                publish: false,
-                cql: cql !== undefined ? cql : srcRow.cql
-            }
-
-        ).pipe(
-            tap((data) => {
-                data.processed_subc.forEach(item => {
-                    this.layoutModel.registerTask({
-                        ident: item.ident,
-                        label: item.label,
-                        category: item.category,
-                        status: item.status,
-                        created: item.created,
-                        error: item.error,
-                        args: item.args,
-                        url: undefined
-                    });
-                    this.changeState(state => {
-                        state.unfinished.push({
-                            ident: item.ident,
-                            name: item.label,
-                            created: new Date(item.created * 1000),
-                            failed: false
-                        });
-                        if (removeOrig) {
-                            state.lines = List.filter((v, i) => i !== idx, state.lines);
-                        }
-                    });
-                });
-            }),
-            concatMap((data) => data.processed_subc.length > 0 ?
-                    rxOf(null) : this.reloadItems()
-            )
-        );
-    }
-
-    private wipeSubcorpus(lineIdx:number):Observable<any> {
-        const delRow = this.state.lines[lineIdx];
-        return this.layoutModel.ajax$(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/ajax_wipe_subcorpus'),
-            {
-                corpname: delRow.corpname,
-                subcname: delRow.usesubcorp
-            }
-
-        ).pipe(
-            tap((_) => {
-                this.changeState(state => {
-                    state.lines = List.filter((v, i) => i !== lineIdx, state.lines)
-                });
-            })
-        );
-    }
 
     private importLines(data:Array<ServerSubcorpListItem>):Array<SubcorpListItem> {
         return List.map(item => ({
