@@ -25,6 +25,7 @@ import * as S from './style';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
+import { isCQLSelection, isTTSelection, isWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
 
 
 export function init(
@@ -53,23 +54,29 @@ export function init(
         );
     };
 
-    // ------------------------ <FormActionReuse /> --------------------------
+    // ------------------------ <FormActionReuseCQL /> --------------------------
 
-    const FormActionReuse:React.FC<{}> = (props) => {
+    const FormActionReuseCQL:React.FC<{data: SubcorpusRecord}> = (props) => {
+
+        let [state, setState] = React.useState({
+            newName: props.data.origSubcName + ' (copy)',
+            newCql: props.data.selections as string,
+        });
 
         return (
-            <FormActionTemplate>
+            <div>
                 <div>
                     <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
                     <input id="inp_0sAoz" type="text" style={{width: '20em'}}
-                            defaultValue={this.state.newName}
-                            onChange={this._handleNameChange} />
+                        onChange={e => setState({...state, newName: e.target.value})}
+                        defaultValue={state.newName} />
 
                 </div>
                 <div>
                     <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                    <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
-                            onChange={this._handleCqlChange} rows={4} />
+                    <textarea id="inp_zBuJi" className="cql" defaultValue={JSON.stringify(state.newCql)}
+                            onChange={e => setState({...state, newCql: e.target.value})}
+                            rows={4} />
                 </div>
                 <p>
                     <img src={he.createStaticUrl('img/warning-icon.svg')}
@@ -78,8 +85,22 @@ export function init(
                 </p>
                 <div>
                     <button type="button" className="default-button"
-                        onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
+                        //onClick={this._handleSubmit} TODO
+                    >{he.translate('subcform__create_subcorpus')}</button>
                 </div>
+            </div>
+        );
+    }
+
+    // ------------------------ <FormActionReuse /> --------------------------
+
+    const FormActionReuse:React.FC<{data: SubcorpusRecord}> = (props) => {
+
+        return (
+            <FormActionTemplate>
+                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
+                {isWithinSelection(props.data.selections) ? <p>TODO within selection</p> : null}
+                {isTTSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
             </FormActionTemplate>
         );
     }
@@ -230,9 +251,9 @@ export function init(
         // subclist__action_reuse
         // subclist__subc_actions_{subc}
 
-        const items:Array<{id:string, label:string}> = [
+        const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
             {id: 'pub', label: he.translate('subclist__public_access_btn')},
-            {id: 'reuse', label: he.translate('subclist__action_reuse')},
+            {id: 'reuse', label: he.translate('subclist__action_reuse'), isDisabled: props.data?.selections === undefined},
             {id: 'restore', label: he.translate('subclist__action_restore')},
             {id: 'wipe', label: he.translate('subclist__action_wipe')}
         ];
@@ -258,7 +279,7 @@ export function init(
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
-                            <FormActionReuse key="action-reuse" />
+                            <FormActionReuse key="action-reuse" data={props.data} />
                             <FormActionRestore key="restore" />
                             <FormActionWipe key="wipe" />
                         </layoutViews.TabView>
