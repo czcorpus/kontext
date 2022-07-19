@@ -208,7 +208,6 @@ export function init(
     // ------------------------ <PublishingTab /> --------------------------
 
     class PublishingTab extends React.PureComponent<{
-        rowIdx:number;
         description:string;
         published:boolean;
         publicCode:string;
@@ -280,43 +279,45 @@ export function init(
     };
 
 
-// ------------------------ <SubcorpusEdit /> --------------------------
+    // ------------------------ <SubcorpusEdit /> --------------------------
 
-const SubcorpusEdit:React.FC<SubcorpusEditModelState> = (props) => {
+    const SubcorpusEdit:React.FC<SubcorpusEditModelState> = (props) => {
 
-    // TODO avail translations:
-    // subclist__public_access_btn
-    // subclist__action_reuse
-    // subclist__subc_actions_{subc}
+        // TODO avail translations:
+        // subclist__public_access_btn
+        // subclist__action_reuse
+        // subclist__subc_actions_{subc}
 
-    let items: Array<{id:string, label:string}> = [
-        {id: 'pub', label: he.translate('subclist__public_access_btn')},
-        {id: 'reuse', label: he.translate('subclist__action_reuse')},
-        {id: 'restore', label: he.translate('subclist__action_restore')},
-        {id: 'wipe', label: he.translate('subclist__action_wipe')}
-    ];
-    return (
-        <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-            <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
-                    customClass="subcorp-actions"
-                    autoWidth={CoreViews.AutoWidth.WIDE}
-                    label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
-                <div>
-                    <layoutViews.TabView
-                            className="ActionMenu"
-                            callback={this.handleActionSelect}
-                            items={items} >
-                        <PublishingTab key="publish" published={props.data.published}
-                            description={props.data.description} rowIdx={props.idx}
-                            publicCode={props.data.published ? props.data.usesubcorp : null} />
-                        <FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />
-                        <FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />
-                    </layoutViews.TabView>
-                    <div className="loader-wrapper">
-                        {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
+        let items: Array<{id:string, label:string}> = [
+            {id: 'pub', label: he.translate('subclist__public_access_btn')},
+            {id: 'reuse', label: he.translate('subclist__action_reuse')},
+            {id: 'restore', label: he.translate('subclist__action_restore')},
+            {id: 'wipe', label: he.translate('subclist__action_wipe')}
+        ];
+        return (
+            <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
+                <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
+                        customClass="subcorp-actions"
+                        autoWidth={CoreViews.AutoWidth.WIDE}
+                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
+                    <div>
+                        <layoutViews.TabView
+                                className="ActionMenu"
+                                callback={this.handleActionSelect}
+                                items={items} >
+                            <PublishingTab key="publish" published={props.data.published}
+                                description={props.data.description}
+                                publicCode={props.data.published ? props.data.usesubcorp : null} />
+                            <FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />
+                            <FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />
+                        </layoutViews.TabView>
+                        <div className="loader-wrapper">
+                            {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
+                        </div>
                     </div>
-                </div>
-            </layoutViews.CloseableFrame>
-        </layoutViews.ModalOverlay>
-    )
+                </layoutViews.CloseableFrame>
+            </layoutViews.ModalOverlay>
+        )
+    }
+
 }
