@@ -49,14 +49,26 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
         'corpname': amodel.corp.corpname,
         'subcname': amodel.corp.subcname,
         'origSubcname': amodel.corp.orig_subcname,
-        'size': amodel.corp.size,  # is this subcorp size?
+        'size': amodel.corp.size,
         'published': amodel.corp.is_published,
     }
-    if amodel.corp.created:
+
+    with plugins.runtime.SUBC_RESTORE as sr:
+        info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcname)
+        if info:
+            data['created'] = info.timestamp.isoformat()
+            if info.text_types is not None:
+                data['selections'] = info.text_types
+            elif info.within_cond is not None:
+                data['selections'] = info.within_cond
+            elif info.cql is not None:
+                data['selections'] = info.cql
+
+    if 'created' not in data and amodel.corp.created:
         data['created'] = amodel.corp.created.isoformat()
     if amodel.corp.description:
         data['description'] = amodel.corp.description
-    # TODO data['selections'], data['deleted'] = 'blablabla'
+
     return {'data': data}
 
 

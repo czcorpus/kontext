@@ -33,6 +33,7 @@ export interface WithinSelection {
     attributeCql:string;
 }
 
+export type SelectionsType = string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
 
 export interface SubcorpusRecord {
 
@@ -41,10 +42,22 @@ export interface SubcorpusRecord {
     origSubcName:string;
     deleted:string|undefined;
     created:string|undefined;
-    selections:string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
+    selections:SelectionsType;
     size:number;
     published:boolean;
     description:string|undefined;
+}
+
+export function isCQLSelection(selections:SelectionsType): selections is string {
+    return typeof selections === "string";
+}
+
+export function isWithinSelection(selections:SelectionsType): selections is Array<WithinSelection> {
+    return selections instanceof Array;
+}
+
+export function isTTSelection(selections:SelectionsType): selections is TextTypes.ExportedSelection {
+    return !isWithinSelection(selections) && selections instanceof Object;
 }
 
 

@@ -45,8 +45,14 @@ class SubcRestoreRow:
     subcname: str
     timestamp: datetime.datetime
     cql: Optional[str] = None
-    within_cond: Optional[str] = None
-    text_types: Optional[str] = None
+    within_cond: Optional[WithinType] = None
+    text_types: Optional[TextTypesType] = None
+
+    def __post_init__(self):
+        if isinstance(self.within_cond, str):
+            self.within_cond = json.loads(self.within_cond)
+        if isinstance(self.text_types, str):
+            self.text_types = json.loads(self.text_types)
 
     def to_dict(self) -> Dict[str, Any]:
         """
