@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
-import { FormWithinSubmitCommonArgs, InputMode } from './common';
+import { FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
@@ -60,7 +60,7 @@ export class Actions {
     }
 
     static LoadSubcorpusDone:Action<{
-
+        data:SubcorpusRecord;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }

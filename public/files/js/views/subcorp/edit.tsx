@@ -19,15 +19,12 @@
  */
 
 import * as React from 'react';
-import { SubcorpListItem } from '../../models/subcorp/list';
-import * as CoreViews from '../../types/coreViews';
-import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 
 import * as S from './style';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
-import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
 
 
 export function init(

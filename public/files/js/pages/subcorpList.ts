@@ -74,7 +74,8 @@ class SubcorpListPage {
                     this.layoutModel.dispatcher,
                     {
                         isBusy: false,
-                        data: undefined
+                        data: undefined,
+                        derivedSubc: undefined,
                     },
                     this.layoutModel
                 );

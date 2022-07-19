@@ -27,6 +27,27 @@ import * as TextTypes from '../../types/textTypes';
 import { TextTypesModel } from '../textTypes/main';
 
 
+export interface WithinSelection {
+    negated:boolean;
+    structureName:string;
+    attributeCql:string;
+}
+
+
+export interface SubcorpusRecord {
+
+    corpname:string;
+    usesubcorp:string;
+    origSubcName:string;
+    deleted:string;
+    created:string;
+    selections:string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
+    size:number;
+    published:boolean;
+    description:string|undefined;
+}
+
+
 export type InputMode = 'gui'|'within';
 
 

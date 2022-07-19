@@ -24,29 +24,10 @@ import { IActionQueue, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
-import { CreateSubcorpus } from './common';
+import { CreateSubcorpus, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
+import * as Kontext from '../../types/kontext';
 
-
-export interface WithinSelection {
-    negated:boolean;
-    structureName:string;
-    attributeCql:string;
-}
-
-
-export interface SubcorpusRecord {
-
-    corpname:string;
-    usesubcorp:string;
-    origSubcName:string;
-    deleted:string;
-    created:string;
-    selections:string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
-    size:number;
-    published:boolean;
-    description:string|undefined;
-}
 
 
 export interface DerivedSubcorp {
@@ -60,6 +41,10 @@ export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
     derivedSubc:DerivedSubcorp|undefined;
+}
+
+interface LoadPropertiesResponse extends Kontext.AjaxResponse {
+    data:SubcorpusRecord;
 }
 
 /*
@@ -119,7 +104,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$(
+                this.layoutModel.ajax$<LoadPropertiesResponse>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl(
                         '/subcorpus/properties',
@@ -134,11 +119,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     next: (data) => {
                         dispatch(
                             Actions.LoadSubcorpusDone,
-                        )
-                        console.log("data: ", data)
+                            {
+                                data: data.data
+                            }
+                        );
                     },
                     error: (error) => {
-                        console.log("error: ", error)
+                        dispatch(
+                            Actions.LoadSubcorpusDone,
+                            error
+                        );
                     }
                 })
             }
@@ -148,6 +138,14 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.LoadSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
+                console.log("DONE")
+                if (action.error) {
+                    // TODO
+                    console.log('err: ', action.error)
+
+                } else {
+                    state.data = action.payload?.data;
+                }
             }
         );
 
@@ -380,7 +378,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 corpname: state.data.corpname,
                 subcname: subcname !== undefined ? subcname : state.data.usesubcorp,
                 publish: false,
-                cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
+                //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
             }
 
         ).pipe(
