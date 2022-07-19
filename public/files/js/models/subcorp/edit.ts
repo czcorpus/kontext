@@ -120,6 +120,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         dispatch(
                             Actions.LoadSubcorpusDone,
                             {
+                                corpname: action.payload?.corpname,
+                                subcname: action.payload?.subcname,
                                 data: data.data
                             }
                         );

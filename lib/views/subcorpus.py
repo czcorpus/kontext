@@ -238,6 +238,9 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         published=amodel.corp.is_published,
         extended_info={}
     )
+
+    ans['tt'] = await amodel.tt.export_with_norms()
+
     if plugins.runtime.SUBC_RESTORE.exists:
         with plugins.runtime.SUBC_RESTORE as sr:
             tmp = await sr.get_info(amodel.session_get('user', 'id'), amodel.args.corpname, amodel.corp.subcname)

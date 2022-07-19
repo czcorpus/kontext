@@ -25,6 +25,8 @@ import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
 import { ServerSubcorpListItem } from '../models/subcorp/common';
 import { SubcorpusEditModel } from '../models/subcorp/edit';
+import { TextTypesModel } from '../models/textTypes/main';
+import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 
 /**
  *
@@ -36,6 +38,8 @@ class SubcorpListPage {
     private subcorpListModel:SubcorpListModel;
 
     private subcorpEditModel:SubcorpusEditModel;
+
+    private textTypesModel:TextTypesModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -79,6 +83,14 @@ class SubcorpListPage {
                     },
                     this.layoutModel
                 );
+                this.textTypesModel = new TextTypesModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    pluginApi: this.layoutModel.pluginApi(),
+                    attributes: [],
+                    bibIdAttr: undefined,
+                    bibLabelAttr: undefined,
+                    readonlyMode: false,
+                })
                 this.renderView();
             }
         );

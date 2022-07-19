@@ -27,7 +27,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectionFilterMap, IntervalChar, WidgetView } from './common';
+import { SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
@@ -37,6 +37,8 @@ import { Actions as SubcActions } from '../subcorp/actions';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
+import { isTTSelection } from '../subcorp/common';
+import { SubcorpusInfoResponse } from '../common/layout';
 
 
 
@@ -642,6 +644,16 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         )
                     }
                 })
+            }
+        );
+
+        this.addActionHandler(
+            SubcActions.LoadSubcorpusDone,
+            action => {
+                if (isTTSelection(action.payload.data.selections)) {
+                    this.loadSubcorpusTextTypes(action.payload.corpname, action.payload.subcname, action.payload.data.selections)
+                }
+                console.log(this.state.attributes);
             }
         );
     }
@@ -1399,5 +1411,25 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 return [];
             })
         )
+    }
+
+    private loadSubcorpusTextTypes(corpname: string, usesubcorp: string, selection: TextTypes.ExportedSelection) {
+        this.pluginApi.ajax$<SubcorpusInfoResponse>(
+            HTTP.Method.GET,
+            this.pluginApi.createActionUrl('subcorpus/subcorpus_info'),
+            {
+                'corpname': corpname,
+                'usesubcorp': usesubcorp,
+            }
+        ).subscribe({
+            next: data => {
+                this.changeState(state => {
+                    state.attributes = importInitialTTData(data.tt, selection);
+                });
+            },
+            error: error => {
+                this.pluginApi.showMessage('error', error);
+            }
+        });
     }
 }

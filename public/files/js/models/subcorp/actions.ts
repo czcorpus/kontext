@@ -60,6 +60,8 @@ export class Actions {
     }
 
     static LoadSubcorpusDone:Action<{
+        corpname:string;
+        subcname:string;
         data:SubcorpusRecord;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'

@@ -27,6 +27,7 @@ import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { TTInitialData } from '../textTypes/common';
 
 
 export interface MessageModelState {
@@ -269,6 +270,7 @@ export interface SubcorpusInfoResponse {
     subCorpusSize:string; // formatted num
     description:string; // a desc. for public corpora
     published:boolean;
+    tt:TTInitialData;
 }
 
 export interface SubcorpusInfo extends SubcorpusInfoResponse {
