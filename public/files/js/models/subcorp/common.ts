@@ -39,8 +39,8 @@ export interface SubcorpusRecord {
     corpname:string;
     usesubcorp:string;
     origSubcName:string;
-    deleted:string;
-    created:string;
+    deleted:string|undefined;
+    created:string|undefined;
     selections:string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
     size:number;
     published:boolean;

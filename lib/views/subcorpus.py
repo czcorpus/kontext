@@ -45,11 +45,19 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 @http_action(
     access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
 async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
-    return {
+    data = {
         'corpname': amodel.corp.corpname,
         'subcname': amodel.corp.subcname,
-        'orig_subcname': amodel.corp.orig_subcname
+        'origSubcname': amodel.corp.orig_subcname,
+        'size': amodel.corp.size,  # is this subcorp size?
+        'published': amodel.corp.is_published,
     }
+    if amodel.corp.created:
+        data['created'] = amodel.corp.created.isoformat()
+    if amodel.corp.description:
+        data['description'] = amodel.corp.description
+    # TODO data['selections'], data['deleted'] = 'blablabla'
+    return {'data': data}
 
 
 @bp.route('/create', ['POST'])
@@ -139,7 +147,8 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
                        corpname=req.args.get('corpname'))
     data = []
-    involved_corpora = os.listdir(amodel.subcpath[0])  # by a convention, the first item is user's subc. dir.
+    # by a convention, the first item is user's subc. dir.
+    involved_corpora = os.listdir(amodel.subcpath[0])
     for corp in involved_corpora:
         _, has_acc, _ = await plugins.runtime.AUTH.instance.corpus_access(amodel.session_get('user'), corp)
         if not has_acc:
