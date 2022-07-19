@@ -332,322 +332,7 @@ export function init(
         );
     };
 
-    // ------------------------ <FormActionTemplate /> --------------------------
 
-    const FormActionTemplate:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => {
-
-        return (
-            <form className="subc-action">
-                {props.auxInfoElm ? props.auxInfoElm : null}
-                <fieldset>
-                    <legend>
-                        <img src={he.createStaticUrl('img/collapse.svg')} alt="action form" />
-                    </legend>
-                    {props.children}
-                </fieldset>
-            </form>
-        );
-    };
-
-    // ------------------------ <FormActionReuse /> --------------------------
-
-    class FormActionReuse extends React.Component<{
-        idx:number;
-        data:SubcorpListItem;
-    },
-    {
-        newName:string;
-        newCql:string;
-    }> {
-
-        constructor(props) {
-            super(props);
-            this._handleSubmit = this._handleSubmit.bind(this);
-            this._handleNameChange = this._handleNameChange.bind(this);
-            this._handleCqlChange = this._handleCqlChange.bind(this);
-            const subcorpusName = this.props.data.origSubcName ? this.props.data.origSubcName : this.props.data.usesubcorp;
-            this.state = {
-                newName: `${subcorpusName} (${he.translate('global__copy')})`,
-                newCql: this.props.data.cql
-            };
-        }
-
-        _handleSubmit() {
-            dispatcher.dispatch<typeof Actions.ReuseQuery>({
-                name: Actions.ReuseQuery.name,
-                payload: {
-                    idx: this.props.idx,
-                    newName: this.state.newName,
-                    newCql: this.state.newCql
-                }
-            });
-        }
-
-        _handleNameChange(evt) {
-            this.setState({
-                ...this.state,
-                newName: evt.target.value
-            });
-        }
-
-        _handleCqlChange(evt) {
-            this.setState({
-                ...this.state,
-                newCql: evt.target.value
-            });
-        }
-
-        render() {
-            return (
-                <FormActionTemplate>
-                    <div>
-                        <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
-                        <input id="inp_0sAoz" type="text" style={{width: '20em'}}
-                                defaultValue={this.state.newName}
-                                onChange={this._handleNameChange} />
-
-                    </div>
-                    <div>
-                        <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                        <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
-                                onChange={this._handleCqlChange} rows={4} />
-                    </div>
-                    <p>
-                        <img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')}
-                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
-                        {he.translate('subclist__reuse_query_warn')}
-                    </p>
-                    <div>
-                        <button type="button" className="default-button"
-                            onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
-                    </div>
-                </FormActionTemplate>
-            );
-        }
-    }
-
-    // ------------------------ <FormActionWipe /> --------------------------
-
-    const FormActionWipe:React.FC<{
-        idx:number;
-
-    }> = (props) => {
-
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
-                name: Actions.WipeSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
-            });
-        };
-
-        return (
-            <FormActionTemplate>
-                <p>{he.translate('subclist__info_subc_will_be_wiped')}</p>
-                <button type="button" className="default-button"
-                        onClick={handleSubmit}>
-                    {he.translate('global__confirm')}
-                </button>
-            </FormActionTemplate>
-        );
-    };
-
-
-    // ------------------------ <FormActionRestore /> --------------------------
-
-    const FormActionRestore:React.FC<{
-        idx:number;
-
-    }> = (props) => {
-
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
-                name: Actions.RestoreSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
-            });
-        };
-
-        return (
-            <FormActionTemplate>
-                <p>{he.translate('subclist__info_subc_will_be_restored')}</p>
-                <button type="button" className="default-button"
-                        onClick={handleSubmit}>
-                    {he.translate('global__confirm')}
-                </button>
-            </FormActionTemplate>
-        );
-    };
-
-    // ------------------------ <PublishSubmitButton /> --------------------------
-
-    const PublishSubmitButton:React.FC<{
-        published:boolean;
-        onSubmit:()=>void;
-
-    }> = (props) => {
-        return <button type="button" className="default-button"
-                onClick={props.onSubmit}>
-            {props.published ?
-                he.translate('subclist__update_public_desc_btn') :
-                he.translate('subclist__publish_now_btn')
-            }
-        </button>;
-    };
-
-
-    // ------------------------ <PublishingTab /> --------------------------
-
-    class PublishingTab extends React.PureComponent<{
-        rowIdx:number;
-        description:string;
-        published:boolean;
-        publicCode:string;
-
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.handleSubmitPublish = this.handleSubmitPublish.bind(this);
-            this.handleTextAreaChange = this.handleTextAreaChange.bind(this);
-            this.handleSubmitUpdateDesc = this.handleSubmitUpdateDesc.bind(this);
-        }
-
-        private handleSubmitPublish() {
-            dispatcher.dispatch<typeof Actions.PublishSubcorpus>({
-                name: Actions.PublishSubcorpus.name,
-                payload: {
-                    rowIdx: this.props.rowIdx,
-                    description: this.props.description
-                }
-            });
-        }
-
-        private handleSubmitUpdateDesc() {
-            dispatcher.dispatch<typeof Actions.SubmitPublicDescription>({
-                name: Actions.SubmitPublicDescription.name,
-                payload: {
-                    rowIdx: this.props.rowIdx
-                }
-            });
-        }
-
-        private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
-            dispatcher.dispatch<typeof Actions.UpdatePublicDescription>({
-                name: Actions.UpdatePublicDescription.name,
-                payload: {
-                    rowIdx: this.props.rowIdx,
-                    description: evt.target.value
-                }
-            });
-        }
-
-        private renderPublicCodeInfo() {
-            if (this.props.publicCode) {
-                return (
-                    <dl className="public-code">
-                        <dt>{he.translate('subclist__public_code')}:</dt>
-                        <dd><input type="text" value={this.props.publicCode} readOnly={true} /></dd>
-                    </dl>
-                );
-            }
-            return null;
-        }
-
-        render() {
-            return <FormActionTemplate auxInfoElm={this.renderPublicCodeInfo()}>
-                <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
-                <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
-                        onChange={this.handleTextAreaChange}
-                        value={this.props.description || ''} />
-                <p className="note">({he.translate('global__markdown_supported')})</p>
-                <p style={{width: '40em'}}>
-                    <img src={he.createStaticUrl('img/warning-icon.svg')}
-                        alt="warning-icon.svg" style={{width: '1.3em', verticalAlign: 'middle', marginRight: '0.3em'}} />
-                    {
-                        this.props.published ?
-                            he.translate('subclist__ex_post_desc_update_warning') :
-                            he.translate('subclist__ex_post_publish_warning')
-                    }
-                </p>
-                <div>
-                    <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
-                                            this.handleSubmitPublish} published={this.props.published} />
-                </div>
-            </FormActionTemplate>
-        }
-    };
-
-
-    // ------------------------ <ActionBox /> --------------------------
-
-    class ActionBox extends React.PureComponent<{
-        idx:number;
-        action:string;
-        data:SubcorpListItem;
-        modelIsBusy:boolean;
-        onCloseClick:()=>void;
-
-    }> {
-
-        constructor(props) {
-            super(props);
-            this.handleActionSelect = this.handleActionSelect.bind(this);
-        }
-
-        handleActionSelect(action) {
-            dispatcher.dispatch<typeof Actions.SetActionBoxType>({
-                name: Actions.SetActionBoxType.name,
-                payload: {value: action, row: this.props.idx}
-            });
-        }
-
-        render() {
-            let items: Array<{id:string, label:string}> = [];
-            let children = [];
-            if (!this.props.data.deleted) {
-                items.push({id: 'pub', label: he.translate('subclist__public_access_btn')});
-                children.push(<PublishingTab key="publish" published={this.props.data.published}
-                    description={this.props.data.description} rowIdx={this.props.idx}
-                    publicCode={this.props.data.published ? this.props.data.usesubcorp : null} />)
-            }
-            if (!!this.props.data.cqlAvailable) {
-                items.push({id: 'reuse', label: he.translate('subclist__action_reuse')})
-                children.push(<FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />);
-            }
-            if (!!this.props.data.cql && this.props.data.deleted) {
-                items.push(
-                    {id: 'restore', label: he.translate('subclist__action_restore')},
-                    {id: 'wipe', label: he.translate('subclist__action_wipe')}
-                )
-                children.push(<FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />);
-            }
-
-            return (
-                <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                    <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
-                            customClass="subcorp-actions"
-                            autoWidth={CoreViews.AutoWidth.WIDE}
-                            label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
-                        <div>
-                            <layoutViews.TabView
-                                    className="ActionMenu"
-                                    callback={this.handleActionSelect}
-                                    items={items} >
-                                {children}
-                            </layoutViews.TabView>
-                            <div className="loader-wrapper">
-                                {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
-                            </div>
-                        </div>
-                    </layoutViews.CloseableFrame>
-                </layoutViews.ModalOverlay>
-            )
-        }
-    }
 
 
     // ------------------------ <SubcorpList /> --------------------------
@@ -661,18 +346,19 @@ export function init(
         }
 
         _handleActionButton(action:string, idx:number) {
-            dispatcher.dispatch<typeof Actions.ShowActionWindow>({
-                name: Actions.ShowActionWindow.name,
+            const item = this.props.lines[idx];
+            dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
+                name: Actions.ShowSubcEditWindow.name,
                 payload: {
-                    value: idx,
-                    action: action
+                    corpname: item.corpname,
+                    subcname: item.usesubcorp
                 }
             });
         }
 
         _handleActionsClose() {
-            dispatcher.dispatch<typeof Actions.HideActionWindow>({
-                name: Actions.HideActionWindow.name,
+            dispatcher.dispatch<typeof Actions.HideSubcEditWindow>({
+                name: Actions.HideSubcEditWindow.name,
                 payload: {}
             });
         }
@@ -684,13 +370,15 @@ export function init(
                         <FilterForm filter={this.props.filter} relatedCorpora={this.props.relatedCorpora}
                                 usesSubcRestore={this.props.usesSubcRestore} />
                     </section>
-                    {this.props.actionBoxVisibleRow > -1
-                        ? <ActionBox onCloseClick={this._handleActionsClose}
-                                idx={this.props.actionBoxVisibleRow}
-                                data={this.props.actionBoxVisibleRow > -1 ? this.props.lines[this.props.actionBoxVisibleRow] : null}
-                                action={this.props.actionBoxActionType}
-                                modelIsBusy={this.props.isBusy} />
-                        : null}
+                    {this.props.editWindowSubcorpus !== null
+                        ? (
+                            <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
+                                <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
+                                    label="subc. properties (TODO msg)" scrollable={true}>
+
+                                </layoutViews.CloseableFrame>
+                            </layoutViews.ModalOverlay>
+                        ) : null}
                     <DataTable actionButtonHandle={this._handleActionButton}
                         lines={this.props.lines}
                         sortKey={this.props.sortKey}
