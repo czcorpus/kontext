@@ -19,7 +19,7 @@
  */
 
 export interface Props {
-    items:Array<{id:string, label:string}>;
+    items:Array<{id:string, label:string, isDisabled?:boolean}>;
     defaultId?:string;
     className?:string;
     noButtonSeparator?:boolean;
