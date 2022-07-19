@@ -45,7 +45,8 @@ class SubcorpListPage {
         const views = listViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.subcorpListModel
+            this.subcorpListModel,
+            this.subcorpEditModel
         );
         const props = {};
         this.layoutModel.renderReactComponent(

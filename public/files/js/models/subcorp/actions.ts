@@ -52,6 +52,19 @@ export class Actions {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
 
+    static LoadSubcorpus:Action<{
+        corpname:string;
+        subcname:string;
+    }> = {
+        name: 'SUBCORP_LOAD_SUBCORPUS'
+    }
+
+    static LoadSubcorpusDone:Action<{
+
+    }> = {
+        name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
+    }
+
     static HideSubcEditWindow:Action<{
     }> = {
         name: 'SUBCORP_HIDE_SUBC_EDIT_WINDOW'

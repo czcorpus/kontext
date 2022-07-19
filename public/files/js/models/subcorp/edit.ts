@@ -18,13 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { concatMap, Observable, of as rxOf, tap, throwError } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 import { IActionQueue, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { HTTP, List } from 'cnc-tskit';
+import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus } from './common';
+import * as TextTypes from '../../types/textTypes';
+
+
+export interface WithinSelection {
+    negated:boolean;
+    structureName:string;
+    attributeCql:string;
+}
 
 
 export interface SubcorpusRecord {
@@ -34,8 +42,15 @@ export interface SubcorpusRecord {
     origSubcName:string;
     deleted:string;
     created:string;
-    cql:string|undefined;
+    selections:string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
     size:number;
+    published:boolean;
+    description:string|undefined;
+}
+
+
+export interface DerivedSubcorp {
+    cql:string|undefined;
     published:boolean;
     description:string|undefined;
 }
@@ -44,6 +59,7 @@ export interface SubcorpusRecord {
 export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
+    derivedSubc:DerivedSubcorp|undefined;
 }
 
 /*
@@ -97,6 +113,43 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
+        this.addActionHandler(
+            Actions.LoadSubcorpus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.ajax$(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl(
+                        '/subcorpus/properties',
+                        {
+                            corpname: action.payload?.corpname,
+                            usesubcorp: action.payload?.subcname
+                        }
+                    ),
+                    {}
+
+                ).subscribe({
+                    next: (data) => {
+                        dispatch(
+                            Actions.LoadSubcorpusDone,
+                        )
+                        console.log("data: ", data)
+                    },
+                    error: (error) => {
+                        console.log("error: ", error)
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            (state, action) => {
+                state.isBusy = false;
+            }
+        );
 
         this.addActionHandler(
             Actions.WipeSubcorpus,

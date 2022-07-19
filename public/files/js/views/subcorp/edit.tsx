@@ -27,7 +27,7 @@ import { Actions } from '../../models/subcorp/actions';
 import * as S from './style';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
-import { IActionDispatcher } from 'kombo';
+import { Bound, BoundWithProps, IActionDispatcher } from 'kombo';
 
 
 export function init(
@@ -58,94 +58,43 @@ export function init(
 
     // ------------------------ <FormActionReuse /> --------------------------
 
-    class FormActionReuse extends React.Component<{
-        idx:number;
-        data:SubcorpListItem;
-    },
-    {
-        newName:string;
-        newCql:string;
-    }> {
+    const FormActionReuse:React.FC<{}> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSubmit = this._handleSubmit.bind(this);
-            this._handleNameChange = this._handleNameChange.bind(this);
-            this._handleCqlChange = this._handleCqlChange.bind(this);
-            const subcorpusName = this.props.data.origSubcName ? this.props.data.origSubcName : this.props.data.usesubcorp;
-            this.state = {
-                newName: `${subcorpusName} (${he.translate('global__copy')})`,
-                newCql: this.props.data.cql
-            };
-        }
+        return (
+            <FormActionTemplate>
+                <div>
+                    <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
+                    <input id="inp_0sAoz" type="text" style={{width: '20em'}}
+                            defaultValue={this.state.newName}
+                            onChange={this._handleNameChange} />
 
-        _handleSubmit() {
-            dispatcher.dispatch<typeof Actions.ReuseQuery>({
-                name: Actions.ReuseQuery.name,
-                payload: {
-                    newName: this.state.newName,
-                    newCql: this.state.newCql
-                }
-            });
-        }
-
-        _handleNameChange(evt) {
-            this.setState({
-                ...this.state,
-                newName: evt.target.value
-            });
-        }
-
-        _handleCqlChange(evt) {
-            this.setState({
-                ...this.state,
-                newCql: evt.target.value
-            });
-        }
-
-        render() {
-            return (
-                <FormActionTemplate>
-                    <div>
-                        <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
-                        <input id="inp_0sAoz" type="text" style={{width: '20em'}}
-                                defaultValue={this.state.newName}
-                                onChange={this._handleNameChange} />
-
-                    </div>
-                    <div>
-                        <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                        <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
-                                onChange={this._handleCqlChange} rows={4} />
-                    </div>
-                    <p>
-                        <img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')}
-                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
-                        {he.translate('subclist__reuse_query_warn')}
-                    </p>
-                    <div>
-                        <button type="button" className="default-button"
-                            onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
-                    </div>
-                </FormActionTemplate>
-            );
-        }
+                </div>
+                <div>
+                    <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
+                    <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
+                            onChange={this._handleCqlChange} rows={4} />
+                </div>
+                <p>
+                    <img src={he.createStaticUrl('img/warning-icon.svg')}
+                            alt={he.translate('global__warning')}
+                            style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
+                </p>
+                <div>
+                    <button type="button" className="default-button"
+                        onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
+                </div>
+            </FormActionTemplate>
+        );
     }
 
     // ------------------------ <FormActionWipe /> --------------------------
 
     const FormActionWipe:React.FC<{
-        idx:number;
-
     }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
                 name: Actions.WipeSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
             });
         };
 
@@ -164,16 +113,12 @@ export function init(
     // ------------------------ <FormActionRestore /> --------------------------
 
     const FormActionRestore:React.FC<{
-        idx:number;
 
     }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
-                name: Actions.RestoreSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
+                name: Actions.RestoreSubcorpus.name
             });
         };
 
@@ -281,43 +226,54 @@ export function init(
 
     // ------------------------ <SubcorpusEdit /> --------------------------
 
-    const SubcorpusEdit:React.FC<SubcorpusEditModelState> = (props) => {
+    const _SubcorpusEdit:React.FC<SubcorpusEditModelState & {corpname:string; subcname: string}> = (props) => {
 
         // TODO avail translations:
         // subclist__public_access_btn
         // subclist__action_reuse
         // subclist__subc_actions_{subc}
 
-        let items: Array<{id:string, label:string}> = [
+        const items:Array<{id:string, label:string}> = [
             {id: 'pub', label: he.translate('subclist__public_access_btn')},
             {id: 'reuse', label: he.translate('subclist__action_reuse')},
             {id: 'restore', label: he.translate('subclist__action_restore')},
             {id: 'wipe', label: he.translate('subclist__action_wipe')}
         ];
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch(
+                    Actions.LoadSubcorpus,
+                    {corpname: props.corpname, subcname: props.subcname}
+                );
+            },
+            []
+        );
+
         return (
-            <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
-                        customClass="subcorp-actions"
-                        autoWidth={CoreViews.AutoWidth.WIDE}
-                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
-                    <div>
+            <div>
+                {!props.data ?
+                    <layoutViews.AjaxLoaderImage /> :
+                    <>
                         <layoutViews.TabView
                                 className="ActionMenu"
-                                callback={this.handleActionSelect}
                                 items={items} >
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
-                            <FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />
-                            <FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />
+                            <FormActionReuse key="action-reuse" />
+                            <FormActionRestore key="restore" />
+                            <FormActionWipe key="wipe" />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
-                            {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
+                            {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                         </div>
-                    </div>
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
+                    </>
+            }
+            </div>
         )
     }
+
+    return BoundWithProps<{corpname:string; subcname:string}, SubcorpusEditModelState>(_SubcorpusEdit, subcorpEditModel);
 
 }

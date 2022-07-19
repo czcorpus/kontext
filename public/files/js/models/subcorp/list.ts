@@ -43,7 +43,6 @@ export interface SubcorpListItem {
     origSubcName:string;
     deleted:boolean;
     created:Date;
-    cqlAvailable:boolean;
     cql:string;
     size:number;
     published:boolean;
@@ -229,7 +228,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             origSubcName: item.orig_subcname ? decodeURIComponent(item.orig_subcname) : null,
             deleted: item.deleted,
             size: item.size,
-            cqlAvailable: item.cqlAvailable,
             cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
             created: new Date(item.created * 1000),
             selected: false,

@@ -41,6 +41,17 @@ from texttypes.model import TextTypeCollector
 bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 
+@bp.route('/properties')
+@http_action(
+    access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
+async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    return {
+        'corpname': amodel.corp.corpname,
+        'subcname': amodel.corp.subcname,
+        'orig_subcname': amodel.corp.orig_subcname
+    }
+
+
 @bp.route('/create', ['POST'])
 @http_action(
     access_level=1, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)

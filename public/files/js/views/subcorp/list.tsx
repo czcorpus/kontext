@@ -28,8 +28,10 @@ import {
 import * as CoreViews from '../../types/coreViews';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
+import { init as editViewInit } from './edit';
 
 import * as S from './style';
+import { SubcorpusEditModel } from '../../models/subcorp/edit';
 
 
 
@@ -44,10 +46,12 @@ export interface ListViews {
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    subcorpLinesModel:SubcorpListModel
+    subcorpLinesModel:SubcorpListModel,
+    subcorpEditModel:SubcorpusEditModel
 ) {
 
     const layoutViews = he.getLayoutViews();
+    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel);
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 
@@ -156,11 +160,9 @@ export function init(
                     }
                 </td>
                 <td className="action-link">
-                    {props.item.cqlAvailable ?
-                        <a onClick={()=>props.actionButtonHandle(props.idx)}
-                                title={he.translate('subclist__click_to_access_the_backup')}>{'\u2713'}</a> :
-                        null
-                    }
+                        <a onClick={()=>props.actionButtonHandle(props.idx)}>
+                            {he.translate('subclist__subc_properties')}
+                        </a>
                 </td>
                 <td>
                     {!props.item.deleted ?
@@ -264,7 +266,7 @@ export function init(
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
-                            <th>{he.translate('subclist__col_backed_up')}</th>
+                            <th />
                             <th />
                         </tr>
                         {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
@@ -374,8 +376,8 @@ export function init(
                         ? (
                             <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
                                 <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                    label="subc. properties (TODO msg)" scrollable={true}>
-
+                                        label="subc. properties (TODO msg)" scrollable={true}>
+                                    <SubcorpEdit corpname={this.props.editWindowSubcorpus[0]} subcname={this.props.editWindowSubcorpus[1]} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}
