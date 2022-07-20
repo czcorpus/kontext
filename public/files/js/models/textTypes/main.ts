@@ -38,7 +38,6 @@ import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
 import { isTTSelection } from '../subcorp/common';
-import { SubcorpusInfoResponse } from '../common/layout';
 
 
 

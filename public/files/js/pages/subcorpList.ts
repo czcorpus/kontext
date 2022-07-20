@@ -50,7 +50,8 @@ class SubcorpListPage {
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.subcorpListModel,
-            this.subcorpEditModel
+            this.subcorpEditModel,
+            this.textTypesModel,
         );
         const props = {};
         this.layoutModel.renderReactComponent(
