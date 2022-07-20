@@ -28,7 +28,6 @@ import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 /**
  *
@@ -72,14 +71,11 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     private pageModel:PageModel;
 
-    private subcFormModel:SubcorpFormModel;
-
     constructor(
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
         inputMode:InputMode,
-        structsAndAttrs:Kontext.StructsAndAttrs,
-        subcFormModel:SubcorpFormModel
+        structsAndAttrs:Kontext.StructsAndAttrs
     ) {
         super(
             dispatcher,
@@ -106,7 +102,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             }
         );
         this.pageModel = pageModel;
-        this.subcFormModel = subcFormModel;
 
         this.addActionHandler(
             Actions.FormSetInputMode,

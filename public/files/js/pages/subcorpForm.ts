@@ -204,13 +204,11 @@ export class SubcorpForm {
                 this.layoutModel.getCorpusIdent().id,
                 'gui'
             );
-
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
                 'gui',
-                this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs'),
-                this.subcorpFormModel
+                this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
             );
 
             this.corparchPlugin = corplistComponent(this.layoutModel.pluginApi());
