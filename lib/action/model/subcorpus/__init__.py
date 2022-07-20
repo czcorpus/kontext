@@ -131,10 +131,10 @@ class SubcorpusActionModel(CorpusActionModel):
                 full_cql = f'aword,[] within {full_cql}'
                 imp_cql = (full_cql,)
         elif form_type == 'within':
-            data = CreateSubcorpusWithinArgs(**self._req.json)
+            data = CreateSubcorpusWithinArgs(aligned_corpora=[], **self._req.json)
             tt_query = ()
             within_cql = data.deserialize()
-            full_cql = f'aword,[] within {full_cql}'
+            full_cql = f'aword,[] {within_cql}'
             imp_cql = (full_cql,)
         elif form_type == 'cql':
             data = CreateSubcorpusRawCQLArgs(**self._req.json)
@@ -144,7 +144,8 @@ class SubcorpusActionModel(CorpusActionModel):
             imp_cql = (full_cql,)
         else:
             raise UserActionException(f'Invalid form type provided - "{form_type}"')
-
+        logging.getLogger(__name__).warning('>>>>>> data: {}'.format(data))
+        logging.getLogger(__name__).warning('>>>>>> full_cql: {}'.format(full_cql))
         if not data.subcname:
             raise UserActionException(self._req.translate('No subcorpus name specified!'))
 

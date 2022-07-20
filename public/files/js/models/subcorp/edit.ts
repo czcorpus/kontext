@@ -48,6 +48,7 @@ export interface SubcorpusEditModelState {
 interface LoadPropertiesResponse extends Kontext.AjaxResponse {
     data:SubcorpusRecord;
     textTypes:TTInitialData;
+    structsAndAttrs:Kontext.StructsAndAttrs;
 }
 
 /*
@@ -127,6 +128,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 subcname: action.payload?.subcname,
                                 data: data.data,
                                 textTypes: data.textTypes,
+                                structsAndAttrs: data.structsAndAttrs
                             }
                         );
                     },
@@ -144,7 +146,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.LoadSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                console.log("DONE")
                 if (action.error) {
                     // TODO
                     console.log('err: ', action.error)

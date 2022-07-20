@@ -20,7 +20,7 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode } from './common';
+import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode, isServerWithinSelection } from './common';
 import { SubcorpFormModel } from './form';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap, throwError } from 'rxjs';
@@ -214,6 +214,33 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            (state, action) => {
+                state.structsAndAttrs = action.payload?.structsAndAttrs;
+                if (!action.error && isServerWithinSelection(action.payload?.data.selections)) {
+                    state.lines = List.map(
+                        (item, rowIdx) => ({
+                            rowIdx,
+                            attributeCql: Kontext.newFormValue(item.attribute_cql, true),
+                            negated: item.negated,
+                            structureName: item.structure_name
+                        }),
+                        action.payload?.data.selections
+                    )
+                }
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
+
+                } else if (!isServerWithinSelection(action.payload?.data.selections)) {
+                    // no need to translate this - this should happen only in case of a bug in the code
+                    this.pageModel.showMessage('error', 'Invalid data type provided for subcorpus within form');
+                }
+            }
+        )
 
         this.addActionHandler(
             GlobalActions.SwitchCorpus,

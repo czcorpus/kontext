@@ -110,12 +110,17 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
 
         this.addActionHandler(
             Actions.FormSetInputMode,
-            action => this.changeState(state => {state.inputMode = action.payload.value})
+            action => {
+                this.changeState(state => {state.inputMode = action.payload.value});
+                console.log('this input mode: ', this.state.inputMode)
+            }
         );
 
         this.addActionHandler(
             Actions.FormSetSubcAsPublic,
-            action => this.changeState(state => {state.isPublic = action.payload.value})
+            action => {
+                this.changeState(state => {state.isPublic = action.payload.value});
+            }
         );
 
         this.addActionHandler(
@@ -125,6 +130,8 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                     this.state.description, {value: action.payload.value})
             })
         );
+
+        this.DEBUG_logActions({});
 
         this.addActionHandler(
             Actions.FormWithinSubmit,
@@ -142,7 +149,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                         ...Actions.FormWithinSubmitArgsReady,
                         payload: {
                             corpname: this.state.corpname,
-                            subcname: this.state.subcname,
+                            subcname: this.state.subcname.value,
                             publish:  this.state.isPublic,
                             description: this.state.description.value,
                         }
