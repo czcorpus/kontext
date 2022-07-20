@@ -86,7 +86,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             sql.append('LIMIT %s, %s')
             args += (from_idx, to_idx - from_idx)
         else:
-            sql.append('OFFSET %s ROWS')
+            sql.append('LIMIT 100000000 OFFSET %s')
             args += (from_idx,)
 
         async with self._db.cursor() as cursor:

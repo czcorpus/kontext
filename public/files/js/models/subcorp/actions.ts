@@ -36,7 +36,7 @@ export class Actions {
         name: 'SUBCORP_LIST_SORT_LINES'
     };
 
-    static DeleteSubcorpus:Action<{
+    static ArchiveSubcorpus:Action<{
         rowIdx:number;
     }> = {
         name: 'SUBCORP_LIST_DELETE_SUBCORPUS'

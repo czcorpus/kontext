@@ -91,27 +91,25 @@ export function init(
         return <input type="checkbox" checked={props.value} onChange={props.onChange} />;
     };
 
-    // ------------------------ <DeleteButton /> -----------------------------
+    // ------------------------ <ArchiveButton /> -----------------------------
 
-    const DeleteButton:React.FC<{
+    const ArchiveButton:React.FC<{
         rowIdx:number;
         subcname:string;
 
     }> = (props) => {
 
         const handleSubmit = () => {
-            if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
-                dispatcher.dispatch<typeof Actions.DeleteSubcorpus>({
-                    name: Actions.DeleteSubcorpus.name,
-                    payload: {
-                        rowIdx: props.rowIdx
-                    }
-                });
-            }
+            dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
+                name: Actions.ArchiveSubcorpus.name,
+                payload: {
+                    rowIdx: props.rowIdx
+                }
+            });
         };
 
-        return <layoutViews.DelItemIcon className="delete-subc"
-                    title={he.translate('subclist__delete_subcorp')}
+        return <layoutViews.DelItemIcon className="archive-subc"
+                    title={he.translate('subclist__archive_subcorp')}
                     onClick={handleSubmit} />;
     }
 
@@ -168,7 +166,7 @@ export function init(
                 </td>
                 <td>
                     {!props.item.deleted ?
-                        <DeleteButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
+                        <ArchiveButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
                         null
                     }
                 </td>
@@ -292,12 +290,12 @@ export function init(
 
     }> = (props) => {
 
-        const handleShowDeleted = () => {
+        const handleShowArchived = () => {
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: props.filter.corpname,
-                    show_deleted: !props.filter.show_deleted
+                    show_archived: !props.filter.show_archived
                 }
             });
         };
@@ -307,7 +305,7 @@ export function init(
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: evt.target.value,
-                    show_deleted: props.filter.show_deleted
+                    show_archived: props.filter.show_archived
                 }
             });
         };
@@ -326,8 +324,8 @@ export function init(
                     </div>
                     {props.usesSubcRestore ?
                         <div>
-                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_deleted')}:</label>
-                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
+                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
+                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter['show_archived']} />
                         </div> :
                         null
                     }

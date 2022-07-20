@@ -100,37 +100,27 @@ export function init(
 
     const FormActionReuse:React.FC<{data: SubcorpusRecord}> = (props) => {
 
+        const handleSubmit = () => {
+            if (window.confirm(he.translate('subclist__info_subc_will_be_wiped'))) {
+                dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
+                    name: Actions.WipeSubcorpus.name,
+                });
+            }
+        };
+
         return (
             <FormActionTemplate>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
                 {isWithinSelection(props.data.selections) ? <p>TODO within selection: {JSON.stringify(props.data)}</p> : null}
                 {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={null} LiveAttrsView={null} /> : null}
-            </FormActionTemplate>
-        );
-    }
 
-    // ------------------------ <FormActionWipe /> --------------------------
-
-    const FormActionWipe:React.FC<{
-    }> = (props) => {
-
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
-                name: Actions.WipeSubcorpus.name,
-            });
-        };
-
-        return (
-            <FormActionTemplate>
-                <p>{he.translate('subclist__info_subc_will_be_wiped')}</p>
                 <button type="button" className="default-button"
                         onClick={handleSubmit}>
-                    {he.translate('global__confirm')}
+                    {he.translate('subclist__action_wipe')}
                 </button>
             </FormActionTemplate>
         );
-    };
-
+    }
 
     // ------------------------ <FormActionRestore /> --------------------------
 
@@ -256,10 +246,9 @@ export function init(
         // subclist__subc_actions_{subc}
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
+            {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
             {id: 'pub', label: he.translate('subclist__public_access_btn')},
-            {id: 'reuse', label: he.translate('subclist__action_reuse'), isDisabled: props.data?.selections === undefined},
-            {id: 'restore', label: he.translate('subclist__action_restore')},
-            {id: 'wipe', label: he.translate('subclist__action_wipe')}
+            {id: 'restore', label: he.translate('subclist__action_restore')}
         ];
 
         React.useEffect(
@@ -280,12 +269,11 @@ export function init(
                         <layoutViews.TabView
                                 className="ActionMenu"
                                 items={items} >
+                            <FormActionReuse key="action-reuse" data={props.data} />
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
-                            <FormActionReuse key="action-reuse" data={props.data} />
                             <FormActionRestore key="restore" />
-                            <FormActionWipe key="wipe" />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
                             {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null}

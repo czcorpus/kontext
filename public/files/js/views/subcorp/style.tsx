@@ -154,7 +154,7 @@ export const SubcorpList = styled.div`
         color: ${theme.colorLogoPink};
     }
 
-    .delete-subc {
+    .archive-subc {
         font-size: 1.7em;
     }
 
