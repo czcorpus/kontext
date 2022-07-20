@@ -69,7 +69,10 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
     if amodel.corp.description:
         data['description'] = amodel.corp.description
 
-    return {'data': data}
+    return {
+        'data': data,
+        'textTypes': await amodel.tt.export_with_norms()
+    }
 
 
 @bp.route('/create', ['POST'])
@@ -238,8 +241,6 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         published=amodel.corp.is_published,
         extended_info={}
     )
-
-    ans['tt'] = await amodel.tt.export_with_norms()
 
     if plugins.runtime.SUBC_RESTORE.exists:
         with plugins.runtime.SUBC_RESTORE as sr:

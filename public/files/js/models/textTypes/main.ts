@@ -650,8 +650,11 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             SubcActions.LoadSubcorpusDone,
             action => {
-                if (isTTSelection(action.payload.data.selections)) {
-                    this.loadSubcorpusTextTypes(action.payload.corpname, action.payload.subcname, action.payload.data.selections)
+                const selection = action.payload.data.selections;
+                if (isTTSelection(selection)) {
+                    this.changeState(state => {
+                        state.attributes = importInitialTTData(action.payload.textTypes, selection);
+                    });
                 }
                 console.log(this.state.attributes);
             }
@@ -1411,25 +1414,5 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 return [];
             })
         )
-    }
-
-    private loadSubcorpusTextTypes(corpname: string, usesubcorp: string, selection: TextTypes.ExportedSelection) {
-        this.pluginApi.ajax$<SubcorpusInfoResponse>(
-            HTTP.Method.GET,
-            this.pluginApi.createActionUrl('subcorpus/subcorpus_info'),
-            {
-                'corpname': corpname,
-                'usesubcorp': usesubcorp,
-            }
-        ).subscribe({
-            next: data => {
-                this.changeState(state => {
-                    state.attributes = importInitialTTData(data.tt, selection);
-                });
-            },
-            error: error => {
-                this.pluginApi.showMessage('error', error);
-            }
-        });
     }
 }
