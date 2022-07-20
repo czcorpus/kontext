@@ -651,8 +651,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             action => {
                 const selection = action.payload.data.selections;
                 if (isTTSelection(selection)) {
+                    const attributes = importInitialTTData(action.payload.textTypes, selection);
                     this.changeState(state => {
-                        state.attributes = importInitialTTData(action.payload.textTypes, selection);
+                        state.attributes = attributes;
+                        state.attributeWidgets = pipe(
+                            attributes,
+                            List.map(item => tuple(item.name, {widget: item.widget, active: false})),
+                            Dict.fromEntries(),
+                        );
                     });
                 }
             }
