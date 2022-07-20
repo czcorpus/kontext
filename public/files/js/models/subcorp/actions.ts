@@ -24,6 +24,7 @@ import { FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
+import { TTInitialData } from '../textTypes/common';
 
 
 export class Actions {
@@ -60,7 +61,10 @@ export class Actions {
     }
 
     static LoadSubcorpusDone:Action<{
+        corpname:string;
+        subcname:string;
         data:SubcorpusRecord;
+        textTypes:TTInitialData;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }

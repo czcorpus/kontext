@@ -26,16 +26,20 @@ import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
 import { isCQLSelection, isTTSelection, isWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
+import { TextTypesModel } from '../../models/textTypes/main';
+import { init as ttInit } from '../../views/textTypes/index';
 
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    subcorpEditModel:SubcorpusEditModel
+    subcorpEditModel:SubcorpusEditModel,
+    textTypesModel:TextTypesModel,
 ) {
 
     const layoutViews = he.getLayoutViews();
 
+    const ttViews = ttInit(dispatcher, he, textTypesModel);
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
@@ -99,8 +103,8 @@ export function init(
         return (
             <FormActionTemplate>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
-                {isWithinSelection(props.data.selections) ? <p>TODO within selection</p> : null}
-                {isTTSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
+                {isWithinSelection(props.data.selections) ? <p>TODO within selection: {JSON.stringify(props.data)}</p> : null}
+                {isTTSelection(props.data.selections) ? <p>TODO text types selection: {JSON.stringify(props.data)}</p> : null}
             </FormActionTemplate>
         );
     }

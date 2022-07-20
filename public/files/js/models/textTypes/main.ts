@@ -27,7 +27,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import * as PluginInterfaces from '../../types/plugins';
 import { TTSelOps } from './selectionOps';
-import { SelectionFilterMap, IntervalChar, WidgetView } from './common';
+import { SelectionFilterMap, IntervalChar, WidgetView, importInitialTTData } from './common';
 import { Actions } from './actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
@@ -37,6 +37,8 @@ import { Actions as SubcActions } from '../subcorp/actions';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
+import { isTTSelection } from '../subcorp/common';
+import { SubcorpusInfoResponse } from '../common/layout';
 
 
 
@@ -642,6 +644,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         )
                     }
                 })
+            }
+        );
+
+        this.addActionHandler(
+            SubcActions.LoadSubcorpusDone,
+            action => {
+                const selection = action.payload.data.selections;
+                if (isTTSelection(selection)) {
+                    this.changeState(state => {
+                        state.attributes = importInitialTTData(action.payload.textTypes, selection);
+                    });
+                }
             }
         );
     }

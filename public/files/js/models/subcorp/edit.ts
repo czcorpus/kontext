@@ -27,6 +27,8 @@ import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
 import * as Kontext from '../../types/kontext';
+import { TTInitialData } from '../textTypes/common';
+import { TextTypesModel } from '../textTypes/main';
 
 
 
@@ -45,6 +47,7 @@ export interface SubcorpusEditModelState {
 
 interface LoadPropertiesResponse extends Kontext.AjaxResponse {
     data:SubcorpusRecord;
+    textTypes:TTInitialData;
 }
 
 /*
@@ -120,7 +123,10 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         dispatch(
                             Actions.LoadSubcorpusDone,
                             {
-                                data: data.data
+                                corpname: action.payload?.corpname,
+                                subcname: action.payload?.subcname,
+                                data: data.data,
+                                textTypes: data.textTypes,
                             }
                         );
                     },
