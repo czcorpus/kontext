@@ -327,20 +327,6 @@ class ConcActionModel(CorpusActionModel):
             firsthits=firsthits.to_dict() if firsthits is not None else FirstHitsFilterFormArgs(
                 persist=False, doc_struct=self.corp.get_conf('DOCSTRUCTURE')).to_dict())
 
-    async def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
-        structs_and_attrs: Dict[str, List[StructAttrInfo]] = {
-            attr: []
-            for attr in self.corp.get_structs()
-        }
-        attrs = [
-            {'label': self.corp.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
-            for n in self.corp.get_structattrs() if n
-        ]
-        with plugins.runtime.CORPARCH as ca:
-            for attr in await ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
-                structs_and_attrs[attr.structure_name].append(attr)
-        return structs_and_attrs
-
     async def add_globals(self, app, action_props, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -348,9 +334,6 @@ class ConcActionModel(CorpusActionModel):
         It is called after an action is processed but before any output starts
         """
         result = await super().add_globals(app, action_props, result)
-        struct_and_attrs = await self.get_structs_and_attrs()
-        result['structs_and_attrs'] = {k: [x.to_dict() for x in item]
-                                       for k, item in struct_and_attrs.items()}
         result['conc_dashboard_modules'] = settings.get_list('global', 'conc_dashboard_modules')
         conc_args = self.get_mapped_attrs(ConcArgsMapping)
         conc_args['q'] = [q for q in result.get('Q')]

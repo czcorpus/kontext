@@ -21,8 +21,8 @@
 import urllib.parse
 from dataclasses import asdict
 from functools import partial
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
-                    TypeVar, Union)
+from typing import (
+    Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
 
 import corplib
 import l10n
@@ -30,9 +30,8 @@ import plugins
 import settings
 from action.argmapping import Args, ConcArgsMapping
 from action.argmapping.conc.query import ConcFormArgs
-from action.errors import (AlignedCorpusForbiddenException, ForbiddenException,
-                           ImmediateRedirectException, NotFoundException,
-                           UserActionException)
+from action.errors import (
+    AlignedCorpusForbiddenException, ImmediateRedirectException, NotFoundException, UserActionException)
 from action.krequest import KRequest
 from action.model.user import UserActionModel, UserPluginCtx
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -43,9 +42,8 @@ from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
-from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo
+from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, StructAttrInfo
 from texttypes.model import TextTypes, TextTypesCache
-from util import as_sync
 
 T = TypeVar('T')
 
@@ -511,6 +509,20 @@ class CorpusActionModel(UserActionModel):
     async def attach_plugin_exports(self, result, direct):
         await self._attach_plugin_exports(result, [self.args.corpname] + self.args.align, direct)
 
+    async def get_structs_and_attrs(self) -> Dict[str, List[StructAttrInfo]]:
+        structs_and_attrs: Dict[str, List[StructAttrInfo]] = {
+            attr: []
+            for attr in self.corp.get_structs()
+        }
+        attrs = [
+            {'label': self.corp.get_conf(f'{n}.LABEL') or n, 'n': n}
+            for n in self.corp.get_structattrs() if n
+        ]
+        with plugins.runtime.CORPARCH as ca:
+            for attr in await ca.get_structattrs_info(self._plugin_ctx, self.corp.corpname, attrs):
+                structs_and_attrs[attr.structure_name].append(attr)
+        return structs_and_attrs
+
     async def add_globals(self, app, action_props, result):
         """
         Fills-in the 'result' parameter (dict or compatible type expected) with parameters need to render
@@ -525,6 +537,10 @@ class CorpusActionModel(UserActionModel):
         result['last_freq_level'] = self.session_get('last_freq_level')  # TODO enable this
         if result['last_freq_level'] is None:
             result['last_freq_level'] = 1
+
+        struct_and_attrs = await self.get_structs_and_attrs()
+        result['structs_and_attrs'] = {k: [x.to_dict() for x in item]
+                                       for k, item in struct_and_attrs.items()}
 
         if self.args.maincorp and self.args.maincorp != self.args.corpname:
             try:
