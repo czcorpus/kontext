@@ -656,7 +656,6 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         state.attributes = importInitialTTData(action.payload.textTypes, selection);
                     });
                 }
-                console.log(this.state.attributes);
             }
         );
     }

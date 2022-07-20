@@ -28,6 +28,7 @@ import { CreateSubcorpus, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
 import * as Kontext from '../../types/kontext';
 import { TTInitialData } from '../textTypes/common';
+import { TextTypesModel } from '../textTypes/main';
 
 
 

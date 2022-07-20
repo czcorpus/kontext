@@ -74,15 +74,6 @@ class SubcorpListPage {
                     unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
                     initialFilter: this.layoutModel.getConf<SubcListFilter>('Filter')
                 });
-                this.subcorpEditModel = new SubcorpusEditModel(
-                    this.layoutModel.dispatcher,
-                    {
-                        isBusy: false,
-                        data: undefined,
-                        derivedSubc: undefined,
-                    },
-                    this.layoutModel
-                );
                 this.textTypesModel = new TextTypesModel({
                     dispatcher: this.layoutModel.dispatcher,
                     pluginApi: this.layoutModel.pluginApi(),
@@ -90,7 +81,16 @@ class SubcorpListPage {
                     bibIdAttr: undefined,
                     bibLabelAttr: undefined,
                     readonlyMode: false,
-                })
+                });
+                this.subcorpEditModel = new SubcorpusEditModel(
+                    this.layoutModel.dispatcher,
+                    {
+                        isBusy: false,
+                        data: undefined,
+                        derivedSubc: undefined,
+                    },
+                    this.layoutModel,
+                );
                 this.renderView();
             }
         );
