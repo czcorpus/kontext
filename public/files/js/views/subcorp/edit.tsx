@@ -104,7 +104,7 @@ export function init(
             <FormActionTemplate>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
                 {isWithinSelection(props.data.selections) ? <p>TODO within selection: {JSON.stringify(props.data)}</p> : null}
-                {isTTSelection(props.data.selections) ? <p>TODO text types selection: {JSON.stringify(props.data)}</p> : null}
+                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={null} LiveAttrsView={null} /> : null}
             </FormActionTemplate>
         );
     }

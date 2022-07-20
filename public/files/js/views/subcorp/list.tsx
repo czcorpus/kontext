@@ -32,6 +32,7 @@ import { init as editViewInit } from './edit';
 
 import * as S from './style';
 import { SubcorpusEditModel } from '../../models/subcorp/edit';
+import { TextTypesModel } from '../../models/textTypes/main';
 
 
 
@@ -47,11 +48,12 @@ export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
     subcorpLinesModel:SubcorpListModel,
-    subcorpEditModel:SubcorpusEditModel
+    subcorpEditModel:SubcorpusEditModel,
+    textTypesModel:TextTypesModel,
 ) {
 
     const layoutViews = he.getLayoutViews();
-    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel);
+    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel);
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 
