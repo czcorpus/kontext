@@ -45,12 +45,13 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 @http_action(
     access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
 async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    struct_and_attrs = await amodel.get_structs_and_attrs()
     data = {
         'corpname': amodel.corp.corpname,
         'subcname': amodel.corp.subcname,
         'origSubcname': amodel.corp.orig_subcname,
         'size': amodel.corp.size,
-        'published': amodel.corp.is_published,
+        'published': amodel.corp.is_published
     }
 
     with plugins.runtime.SUBC_RESTORE as sr:
@@ -71,7 +72,8 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
 
     return {
         'data': data,
-        'textTypes': await amodel.tt.export_with_norms()
+        'textTypes': await amodel.tt.export_with_norms(),
+        'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()}
     }
 
 

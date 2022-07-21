@@ -33,7 +33,7 @@ export interface WithinSelection {
     attributeCql:string;
 }
 
-export type SelectionsType = string|TextTypes.ExportedSelection|Array<WithinSelection>|undefined;
+export type SelectionsType = string|TextTypes.ExportedSelection|Array<ServerWithinSelection>|undefined;
 
 export interface SubcorpusRecord {
 
@@ -52,12 +52,12 @@ export function isCQLSelection(selections:SelectionsType): selections is string 
     return typeof selections === "string";
 }
 
-export function isWithinSelection(selections:SelectionsType): selections is Array<WithinSelection> {
+export function isServerWithinSelection(selections:SelectionsType): selections is Array<ServerWithinSelection> {
     return selections instanceof Array;
 }
 
 export function isTTSelection(selections:SelectionsType): selections is TextTypes.ExportedSelection {
-    return !isWithinSelection(selections) && selections instanceof Object;
+    return !isServerWithinSelection(selections) && selections instanceof Object;
 }
 
 
@@ -85,13 +85,14 @@ export interface CreateSubcorpusArgs extends SubmitBase {
     form_type:'tt-sel';
 }
 
+export interface ServerWithinSelection {
+    negated:boolean;
+    structure_name:string;
+    attribute_cql:string;
+}
 
 export interface CreateSubcorpusWithinArgs extends SubmitBase {
-    within:Array<{
-        negated:boolean;
-        structure_name:string;
-        attribute_cql:string;
-    }>;
+    within:Array<ServerWithinSelection>;
     form_type:'within';
 }
 

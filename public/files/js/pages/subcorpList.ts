@@ -26,7 +26,8 @@ import { KontextPage } from '../app/main';
 import { ServerSubcorpListItem } from '../models/subcorp/common';
 import { SubcorpusEditModel } from '../models/subcorp/edit';
 import { TextTypesModel } from '../models/textTypes/main';
-import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
+import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 
 /**
  *
@@ -41,6 +42,8 @@ class SubcorpListPage {
 
     private textTypesModel:TextTypesModel;
 
+    private subcorpWithinFormModel:SubcorpWithinFormModel;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
@@ -52,6 +55,7 @@ class SubcorpListPage {
             this.subcorpListModel,
             this.subcorpEditModel,
             this.textTypesModel,
+            this.subcorpWithinFormModel
         );
         const props = {};
         this.layoutModel.renderReactComponent(
@@ -92,6 +96,12 @@ class SubcorpListPage {
                     },
                     this.layoutModel,
                 );
+                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    'within',
+                    this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
+                )
                 this.renderView();
             }
         );

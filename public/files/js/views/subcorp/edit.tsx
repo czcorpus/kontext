@@ -21,13 +21,14 @@
 import * as React from 'react';
 import { Actions } from '../../models/subcorp/actions';
 
-import * as S from './style';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
-import { isCQLSelection, isTTSelection, isWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
+import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { init as ttInit } from '../../views/textTypes/index';
+import { init as withinViewInit } from './withinForm';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 
 
 export function init(
@@ -35,11 +36,12 @@ export function init(
     he:Kontext.ComponentHelpers,
     subcorpEditModel:SubcorpusEditModel,
     textTypesModel:TextTypesModel,
+    subcorpWithinFormModel:SubcorpWithinFormModel
 ) {
 
     const layoutViews = he.getLayoutViews();
-
     const ttViews = ttInit(dispatcher, he, textTypesModel);
+    const WithinForm = withinViewInit(dispatcher, he, subcorpWithinFormModel);
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
@@ -111,7 +113,7 @@ export function init(
         return (
             <FormActionTemplate>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
-                {isWithinSelection(props.data.selections) ? <p>TODO within selection: {JSON.stringify(props.data)}</p> : null}
+                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
                 {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={null} LiveAttrsView={null} /> : null}
 
                 <button type="button" className="default-button"
