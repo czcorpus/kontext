@@ -28,7 +28,7 @@ from action.response import KResponse
 from dataclasses_json import LetterCase, dataclass_json
 from plugin_types.corparch import (AbstractSearchableCorporaArchive,
                                    SimpleCorporaArchive)
-from plugin_types.corparch.corpus import CitationInfo
+from plugin_types.corparch.corpus import CitationInfo, TagsetInfo
 from sanic import Blueprint
 
 
@@ -63,6 +63,7 @@ class CorpusDetail:
     web_url: str
     citation_info: CitationInfo
     keywords: List[KeyWord]
+    tagsets: List[TagsetInfo]
 
 
 bp = Blueprint('corpora', url_prefix='corpora')
@@ -114,7 +115,9 @@ async def ajax_get_corp_details(amodel: CorpusActionModel, req: KRequest, resp: 
             structlist=[],
             web_url=corp_conf_info.web if corp_conf_info is not None else '',
             citation_info=corp_conf_info.citation_info,
-            keywords=[])
+            keywords=[],
+            tagsets=corp_conf_info.tagsets,
+        )
 
         with plugins.runtime.CORPARCH as cp:
             ans.keywords = [

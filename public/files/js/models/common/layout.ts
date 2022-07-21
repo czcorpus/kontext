@@ -27,6 +27,7 @@ import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { TagsetInfo } from '../../types/plugins/tagHelper';
 
 
 export interface MessageModelState {
@@ -252,6 +253,7 @@ export interface CorpusInfoResponse {
     webUrl:string;
     citationInfo:CitationInfo;
     keywords:Array<{name:string; color:string}>;
+    tagsets:Array<TagsetInfo>;
 }
 
 export interface CorpusInfo extends CorpusInfoResponse {

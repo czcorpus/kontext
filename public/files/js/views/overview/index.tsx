@@ -27,6 +27,7 @@ import { Subscription } from 'rxjs';
 import { Actions } from '../../models/common/actions';
 import * as S from './style';
 import * as S2 from '../style';
+import { List } from 'cnc-tskit';
 
 
 interface OverviewAreaState {
@@ -35,14 +36,20 @@ interface OverviewAreaState {
 }
 
 
+export interface OverviewAreaProps {
+    isLocalUiLang:boolean;
+}
+
+
 export interface CorpusInfoBoxProps {
     data:CorpusInfo;
     isWaiting:boolean;
+    isLocalUiLang:boolean;
 }
 
 
 export interface OverviewViews {
-    OverviewArea:React.ComponentClass<{}>;
+    OverviewArea:React.ComponentClass<OverviewAreaProps>;
     CorpusInfoBox:React.FC<CorpusInfoBoxProps>;
 }
 
@@ -193,6 +200,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             <strong>{he.translate('global__corp_info_attrs_remark_label')}: </strong>
                             {he.translate('global__corp_info_attrs_remark_text')}
                             </p>
+                        </dd>
+                        <dt>{he.translate('global__tagsets')}:</dt>
+                        <dd>
+                            <ul>
+                                {List.map(v => {
+                                    const url = props.isLocalUiLang ? v.docUrlLocal : v.docUrlEn;
+                                    return <li key={`tagset:${v.ident}`}>
+                                        <span>{v.ident}</span>{'\u00a0'}
+                                        <span>({v.type})</span>{'\u00a0'}
+                                        {he.translate('global__on_attr').toLocaleLowerCase()}{'\u00a0'}
+                                        <span>"{v.featAttr}"</span>{'\u00a0'}
+                                        {url ? <span> - <a target="_blank" href={url}>{url}</a></span> : null}
+                                    </li>
+                                }, props.data.tagsets)}
+                            </ul>
                         </dd>
                         <dt>{he.translate('global__citation_info')}:</dt>
                         <dd className="references">
@@ -413,7 +435,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<{}, OverviewAreaState> {
+    class OverviewArea extends React.Component<OverviewAreaProps, OverviewAreaState> {
 
         private modelSubscription:Subscription;
 
@@ -453,7 +475,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             if (this.state.data) {
                 switch (this.state.data.type) {
                     case CorpusInfoType.CORPUS:
-                        return <CorpusInfoBox data={this.state.data} isWaiting={this.state.isLoading} />;
+                        return <CorpusInfoBox data={this.state.data} isWaiting={this.state.isLoading} isLocalUiLang={this.props.isLocalUiLang}/>;
                     case CorpusInfoType.CITATION:
                         return <CorpusReference data={this.state.data} />;
                     case CorpusInfoType.SUBCORPUS:
