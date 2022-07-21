@@ -66,6 +66,7 @@ export class Actions {
         data:SubcorpusRecord;
         textTypes:TTInitialData;
         structsAndAttrs:Kontext.StructsAndAttrs;
+        liveAttrsEnabled:boolean;
     }> = {
         name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
     }

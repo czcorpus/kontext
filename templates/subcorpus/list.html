@@ -26,6 +26,7 @@ __conf.SortKey = {{ sort_key|to_json }};
 __conf.RelatedCorpora = {{ related_corpora|to_json }};
 __conf.Filter = {{ filter|to_json }};
 __conf.UsesSubcRestore = {{ uses_subc_restore|to_json }};
+__conf.UsesLiveAttrs = {{ uses_live_attrs|to_json }};
 subcorpListPage.init(__conf);
 {% endblock %}
 

@@ -649,17 +649,21 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         this.addActionHandler(
             SubcActions.LoadSubcorpusDone,
             action => {
-                const selection = action.payload.data.selections;
-                if (isTTSelection(selection)) {
-                    const attributes = importInitialTTData(action.payload.textTypes, selection);
-                    this.changeState(state => {
-                        state.attributes = attributes;
-                        state.attributeWidgets = pipe(
-                            attributes,
-                            List.map(item => tuple(item.name, {widget: item.widget, active: false})),
-                            Dict.fromEntries(),
-                        );
-                    });
+                if (!action.error) {
+                    const selection = action.payload.data.selections;
+                    if (isTTSelection(selection)) {
+                        const attributes = importInitialTTData(action.payload.textTypes, selection);
+                        this.changeState(state => {
+                            state.attributes = attributes;
+                            state.attributeWidgets = pipe(
+                                attributes,
+                                List.map(item => tuple(item.name, {widget: item.widget, active: false})),
+                                Dict.fromEntries(),
+                            );
+                            state.autoCompleteSupport = action.payload.liveAttrsEnabled;
+                            state.selectionHistory = [attributes];
+                        });
+                    }
                 }
             }
         );

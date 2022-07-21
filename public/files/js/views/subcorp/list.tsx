@@ -25,6 +25,7 @@ import {
     SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
     SubcorpListModelState
 } from '../../models/subcorp/list';
+import * as PluginInterfaces from '../../types/plugins';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 import { init as editViewInit } from './edit';
@@ -50,11 +51,12 @@ export function init(
     subcorpLinesModel:SubcorpListModel,
     subcorpEditModel:SubcorpusEditModel,
     textTypesModel:TextTypesModel,
-    subcorpWithinFormModel:SubcorpWithinFormModel
+    subcorpWithinFormModel:SubcorpWithinFormModel,
+    liveAttrsViews:PluginInterfaces.LiveAttributes.Views,
 ) {
 
     const layoutViews = he.getLayoutViews();
-    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel, subcorpWithinFormModel);
+    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel, subcorpWithinFormModel, liveAttrsViews);
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 

@@ -28,6 +28,9 @@ import { SubcorpusEditModel } from '../models/subcorp/edit';
 import { TextTypesModel } from '../models/textTypes/main';
 import { SubcorpFormModel } from '../models/subcorp/form';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
+import * as PluginInterfaces from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import liveAttributes from 'plugins/liveAttributes/init';
 
 /**
  *
@@ -44,18 +47,30 @@ class SubcorpListPage {
 
     private subcorpWithinFormModel:SubcorpWithinFormModel;
 
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
 
     private renderView():void {
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.liveAttrsPlugin !== undefined) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
+        } else {
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null,
+            };
+        }
         const views = listViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
             this.subcorpListModel,
             this.subcorpEditModel,
             this.textTypesModel,
-            this.subcorpWithinFormModel
+            this.subcorpWithinFormModel,
+            liveAttrsViews,
         );
         const props = {};
         this.layoutModel.renderReactComponent(
@@ -93,6 +108,7 @@ class SubcorpListPage {
                         isBusy: false,
                         data: undefined,
                         derivedSubc: undefined,
+                        liveAttrsEnabled: false,
                     },
                     this.layoutModel,
                 );
@@ -102,6 +118,21 @@ class SubcorpListPage {
                     'within',
                     this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
                 )
+
+                if (this.layoutModel.getConf<boolean>('UsesLiveAttrs')) {
+                    this.liveAttrsPlugin = liveAttributes(
+                        this.layoutModel.pluginApi(),
+                        this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
+                        false,
+                        {
+                            bibAttr: null,
+                            availableAlignedCorpora: [],
+                            refineEnabled: false,
+                            manualAlignCorporaMode: false
+                        }
+                    );
+                }
+
                 this.renderView();
             }
         );

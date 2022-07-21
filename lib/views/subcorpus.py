@@ -65,6 +65,10 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
             elif info.cql is not None:
                 data['selections'] = info.cql
 
+    liveAttrsEnabled = False
+    with plugins.runtime.LIVE_ATTRIBUTES as la:
+        liveAttrsEnabled = 'selections' in data and info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
+
     if 'created' not in data and amodel.corp.created:
         data['created'] = amodel.corp.created.isoformat()
     if amodel.corp.description:
@@ -73,7 +77,8 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
     return {
         'data': data,
         'textTypes': await amodel.tt.export_with_norms(),
-        'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()}
+        'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
+        'liveAttrsEnabled': liveAttrsEnabled,
     }
 
 
@@ -221,7 +226,8 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
         related_corpora=sorted(involved_corpora),
-        uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
+        uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists,
+        uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
     )
     return ans
 

@@ -29,6 +29,7 @@ import { TextTypesModel } from '../../models/textTypes/main';
 import { init as ttInit } from '../../views/textTypes/index';
 import { init as withinViewInit } from './withinForm';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
+import * as PluginInterfaces from '../../types/plugins';
 
 
 export function init(
@@ -36,7 +37,8 @@ export function init(
     he:Kontext.ComponentHelpers,
     subcorpEditModel:SubcorpusEditModel,
     textTypesModel:TextTypesModel,
-    subcorpWithinFormModel:SubcorpWithinFormModel
+    subcorpWithinFormModel:SubcorpWithinFormModel,
+    liveAttrsViews:PluginInterfaces.LiveAttributes.Views,
 ) {
 
     const layoutViews = he.getLayoutViews();
@@ -100,7 +102,7 @@ export function init(
 
     // ------------------------ <FormActionReuse /> --------------------------
 
-    const FormActionReuse:React.FC<{data: SubcorpusRecord}> = (props) => {
+    const FormActionReuse:React.FC<{data: SubcorpusRecord, liveAttrsEnabled: boolean}> = (props) => {
 
         const handleSubmit = () => {
             if (window.confirm(he.translate('subclist__info_subc_will_be_wiped'))) {
@@ -114,7 +116,7 @@ export function init(
             <FormActionTemplate>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
                 {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
-                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={null} LiveAttrsView={null} /> : null}
+                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
 
                 <button type="button" className="default-button"
                         onClick={handleSubmit}>
@@ -271,7 +273,7 @@ export function init(
                         <layoutViews.TabView
                                 className="ActionMenu"
                                 items={items} >
-                            <FormActionReuse key="action-reuse" data={props.data} />
+                            <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled}/>
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
