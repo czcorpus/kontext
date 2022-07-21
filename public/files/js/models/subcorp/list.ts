@@ -37,15 +37,12 @@ export interface SubcListFilter {
 
 
 export interface SubcorpListItem {
+    id:string;
     name:string;
     corpname:string;
-    usesubcorp:string; // user-defined name or public key (if published)
-    origSubcName:string;
-    deleted:boolean;
+    archived:Date;
     created:Date;
-    cql:string;
     size:number;
-    published:boolean;
     description:string;
 }
 
@@ -222,16 +219,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     private importLines(data:Array<ServerSubcorpListItem>):Array<SubcorpListItem> {
         return List.map(item => ({
-            name: decodeURIComponent(item.name),
+            id: item.id,
+            name: item.name,
             corpname: item.corpname,
-            usesubcorp: decodeURIComponent(item.usesubcorp),
-            origSubcName: item.orig_subcname ? decodeURIComponent(item.orig_subcname) : null,
-            deleted: item.deleted,
             size: item.size,
-            cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
             created: new Date(item.created * 1000),
+            archived: item.archived ? new Date(item.archived * 1000) : undefined,
             selected: false,
-            published: item.published,
             description: item.description
         }), data);
     }
@@ -259,7 +253,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             this.layoutModel.createActionUrl('subcorpus/delete'),
             {
                 corpname: item.corpname,
-                usesubcorp: item.usesubcorp
+                usesubcorp: item.name
             },
 
         ).pipe(

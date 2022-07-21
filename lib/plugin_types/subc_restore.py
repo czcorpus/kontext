@@ -31,17 +31,20 @@ from typing import Any, Dict, List, Optional, Union
 import ujson as json
 from action.model.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, TextTypesType, WithinType)
-from action.model.subcorpus.listing import ListingItem
-from action.plugin.ctx import PluginCtx
 
 
 @dataclass
-class SubcRestoreRow:
+class SubcorpusRecord:
+    # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
     id: str
     user_id: int
+    author_id: int
     corpname: str
-    subcname: str
-    timestamp: datetime.datetime
+    name: str  # name user gives to the subcorpus
+    size: int
+    created: datetime.datetime
+    archived: datetime.datetime
+    data_path: str
     cql: InitVar[Optional[str]] = None
     within_cond: InitVar[Optional[WithinType]] = None
     text_types: InitVar[Optional[TextTypesType]] = None
@@ -81,38 +84,24 @@ class SubcRestoreRow:
 class AbstractSubcRestore(abc.ABC):
 
     @abc.abstractmethod
-    async def store_query(self, user_id: int, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
+    async def create(
+            self, ident: str, user_id: int, corpname: str, subcname: str, size: int, public_description, data_path: str,
+            data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         """
-        Store user's subcorpus query. Please note that the method should
-        also:
-        1. store a current UNIX timestamp
-        2. generate and store unique (on its own, i.e. even without user_id) string ID for the record
-
-        arguments:
-        user_id -- int, ID of a user
-        data -- subcorpus create arguments
-        returns:
-        None
+        Create subcorpus in the database. It is assumed that actual subc. files are created somewhere else and
+        the proper path is passed here.
         """
 
     @abc.abstractmethod
-    async def delete_query(self, user_id: int, corpname: str, subcname: str):
+    async def archive(self, user_id: int, corpname: str, subcname: str):
         """
-        Remove a query from archive
-
-        arguments:
-        user_id -- int, ID of a user
-        corpname -- a name of a corpus
-        subcname -- a name of a subcorpus
-
-        returns:
-        None
+        Archive subcorpus
         """
 
     @abc.abstractmethod
-    async def list_queries(self, user_id: int, from_idx: int, to_idx: int) -> List[SubcRestoreRow]:
+    async def list(self, user_id: int, filter_args: Dict, from_idx: int, to_idx: int) -> List[SubcorpusRecord]:
         """
-        List all user subcorpus queries from index from_idx to index to_idx
+        List all user subcorpora from index from_idx to index to_idx
         (including both ends). The method is not expected to support negative
         indices (like e.g. Python does).
 
@@ -122,28 +111,22 @@ class AbstractSubcRestore(abc.ABC):
         to_idx -- values from 0 to num_of_user_queries - 1
 
         returns:
-        a list/tuple of SubcRestoreRow dataclass
+        a list/tuple of SubcorpusRecord dataclass
         If nothing is found then an empty list/tuple is returned.
         """
 
     @abc.abstractmethod
-    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcRestoreRow]:
+    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcorpusRecord]:
         """
         Returns an information about the most recent record matching provided arguments
         """
 
     @abc.abstractmethod
-    async def get_query(self, query_id: int) -> Optional[SubcRestoreRow]:
+    async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         """
         Returns a query with ID == query_id
 
         returns:
-        SubcRestoreRow dataclass
+        SubcorpusRecord dataclass
         If nothing is found then None is returned.
         """
-
-    @abc.abstractmethod
-    async def extend_subc_list(
-            self, plugin_ctx: PluginCtx, subc_list: List[ListingItem], filter_args: Dict[str, Any],
-            from_idx: int, to_idx: int, include_cql: bool = False) -> List[ListingItem]:
-        pass

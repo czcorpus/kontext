@@ -69,5 +69,4 @@ def widectx(request: KRequest):
 
 def new_subcorpus(request: KRequest):
     return dict(
-        corpname=request.json.get('corpname'), form_type=request.json.get('form_type'),
-        publish=request.json.get('publish', False))
+        corpname=request.json.get('corpname'), form_type=request.json.get('form_type'))

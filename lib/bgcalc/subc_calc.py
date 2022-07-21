@@ -25,14 +25,12 @@ class EmptySubcorpusException(Exception):
 
 class CreateSubcorpusTask(object):
 
-    def __init__(self, user_id: int, corpus_id: str, author, description):
+    def __init__(self, user_id: int, corpus_id: str):
         self._user_id = user_id
         self._cm = corplib.CorpusManager()
         self._corpus_id = corpus_id
-        self._author = author
-        self._description = description
 
-    async def run(self, tt_query, cql, path, publish_path):
+    async def run(self, tt_query, cql, path):
         """
         returns:
         True in case of success
@@ -50,9 +48,5 @@ class CreateSubcorpusTask(object):
             logging.getLogger(__name__).warning(
                 'Sync. called conc. file not created (path: {})'.format(path))
             time.sleep(5)
-        # we must set write perms for group as this is created by Celery and we won't be
-        # able to create hardlinks otherwise
         os.chmod(path, 0o664)
-        if publish_path:
-            await corplib.mk_publish_links(path, publish_path, self._author, self._description)
         return ans

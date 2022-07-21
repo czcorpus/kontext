@@ -25,14 +25,14 @@ from dataclasses_json import dataclass_json
 @dataclass
 class ListingItem:
     name: str
-    created: float
+    created: str
+    archived: str
     corpname: str
     human_corpname: str
     usesubcorp: str
     deleted: bool
-    published: bool
     size: Optional[int] = None
     orig_subcname: Optional[str] = None
-    description: Optional[str] = None
+    public_description: Optional[str] = None
     cql: Optional[str] = None
     cqlAvailable: Optional[bool] = False

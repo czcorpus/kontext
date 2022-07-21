@@ -368,11 +368,15 @@ class CorpusActionModel(UserActionModel):
         return cn, redirect
 
     async def _load_corpus(self):
+        if self.args.usesubcorp:
+            with plugins.runtime.SUBC_RESTORE as sr:
+                corpus_ident = sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.args.usesubcorp)
+        else:
+            corpus_ident = self.args.corpname
         if self.args.corpname:
             try:
                 corp = await self.cm.get_corpus(
-                    self.args.corpname, subcname=self.args.usesubcorp,
-                    corp_variant=self._corpus_variant, translate=self._req.translate)
+                    corpus_ident, corp_variant=self._corpus_variant, translate=self._req.translate)
                 corp._conc_dir = self._conc_dir
                 return corp
             except Exception as ex:

@@ -28,7 +28,6 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { IUnregistrable } from '../common/common';
 import { Actions as GlobalActions } from '../common/actions';
 import { Actions as LiveattrsActions } from '../../types/plugins/liveAttributes';
-import { Action } from 'rxjs/internal/scheduler/Action';
 import { concatMap, map, throwError } from 'rxjs';
 import { tuple } from 'cnc-tskit';
 
@@ -146,7 +145,6 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                                 const args:CreateSubcorpusArgs = {
                                     corpname: pageModel.getNestedConf('corpusIdent', 'id'),
                                     subcname: this.state.subcname,
-                                    publish: false,
                                     description: '',
                                     aligned_corpora: pageModel.getConf('alignedCorpora'),
                                     text_types: action.payload.selections,

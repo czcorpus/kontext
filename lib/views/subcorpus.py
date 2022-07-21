@@ -50,14 +50,13 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
         'corpname': amodel.corp.corpname,
         'subcname': amodel.corp.subcname,
         'origSubcname': amodel.corp.orig_subcname,
-        'size': amodel.corp.size,
-        'published': amodel.corp.is_published
+        'size': amodel.corp.size
     }
 
     with plugins.runtime.SUBC_RESTORE as sr:
         info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcname)
         if info:
-            data['created'] = info.timestamp.isoformat()
+            data['created'] = info.created.isoformat()
             if info.text_types is not None:
                 data['selections'] = info.text_types
             elif info.within_cond is not None:
@@ -135,22 +134,9 @@ async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, res
 @bp.route('/delete', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    spath = amodel.corp.spath
-    orig_spath = amodel.corp.orig_spath
-    if orig_spath:
+    if amodel.corp.spath:
         try:
-            os.unlink(orig_spath)
-        except IOError as e:
-            logging.getLogger(__name__).warning(e)
-        pub_link = os.path.splitext(orig_spath)[0] + '.pub'
-        if os.path.islink(pub_link):
-            try:
-                os.unlink(pub_link)
-            except IOError as e:
-                logging.getLogger(__name__).warning(e)
-    elif not amodel.corp.is_published:
-        try:
-            os.unlink(spath)
+            os.unlink(amodel.corp.spath)
         except IOError as e:
             logging.getLogger(__name__).warning(e)
     return {}
@@ -169,30 +155,8 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
                        corpname=req.args.get('corpname'))
     data = []
-    # by a convention, the first item is user's subc. dir.
-    involved_corpora = os.listdir(amodel.subcpath[0])
-    for corp in involved_corpora:
-        _, has_acc, _ = await plugins.runtime.AUTH.instance.corpus_access(amodel.session_get('user'), corp)
-        if not has_acc:
-            continue
-        for item in amodel.user_subc_names(corp):
-            try:
-                sc = await amodel.cm.get_corpus(
-                    corp, subcname=item['n'], decode_desc=False, translate=req.translate)
-                data.append(ListingItem(
-                    name='%s / %s' % (corp, item['n']),
-                    size=sc.search_size,
-                    created=time.mktime(sc.created.timetuple()),
-                    corpname=corp,
-                    human_corpname=sc.get_conf('NAME'),
-                    usesubcorp=sc.subcname,
-                    orig_subcname=sc.orig_subcname,
-                    deleted=False,
-                    description=sc.description,
-                    published=sc.is_published))
-            except RuntimeError as e:
-                logging.getLogger(__name__).warning(
-                    'Failed to fetch information about subcorpus {0}:{1}: {2}'.format(corp, item['n'], e))
+    involved_corpora = []
+    # TODO fetch list of subcorpora
 
     if filter_args['corpname']:
         data = [item for item in data if not filter_args['corpname']
@@ -203,7 +167,7 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     full_list = data
     with plugins.runtime.SUBC_RESTORE as sr:
         try:
-            full_list = await sr.extend_subc_list(amodel.plugin_ctx, data, filter_args, 0)
+            full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, 0)
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_restore plug-in failed to list queries: %s' % e)
@@ -232,32 +196,6 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     return ans
 
 
-@bp.route('/subcorpus_info')
-@http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
-async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    if not amodel.corp.is_subcorpus:
-        raise UserActionException('Not a subcorpus')
-    ans = dict(
-        corpusId=amodel.corp.corpname,
-        corpusName=amodel.corp.human_readable_corpname,
-        subCorpusName=amodel.corp.subcname,
-        origSubCorpusName=amodel.corp.orig_subcname,
-        corpusSize=amodel.corp.size,
-        subCorpusSize=amodel.corp.search_size,
-        created=time.mktime(amodel.corp.created.timetuple()),
-        description=amodel.corp.description,
-        published=amodel.corp.is_published,
-        extended_info={}
-    )
-
-    if plugins.runtime.SUBC_RESTORE.exists:
-        with plugins.runtime.SUBC_RESTORE as sr:
-            tmp = await sr.get_info(amodel.session_get('user', 'id'), amodel.args.corpname, amodel.corp.subcname)
-            if tmp:
-                ans['extended_info'].update(tmp.to_dict())
-    return ans
-
-
 @bp.route('/ajax_wipe_subcorpus', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
@@ -278,27 +216,9 @@ async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRes
     return {}
 
 
-@bp.route('/publish_subcorpus', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
-async def publish_subcorpus(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    subcname = req.form.get('subcname')
-    corpname = req.form.get('corpname')
-    description = req.form.get('description')
-    curr_subc = os.path.join(amodel.subcpath[0], corpname, subcname + '.subc')
-    public_subc = await amodel.prepare_subc_path(corpname, subcname, True)
-    if await aiofiles.os.path.isfile(curr_subc):
-        await corplib.mk_publish_links(curr_subc, public_subc,
-                                       amodel.session_get('user', 'fullname'), description)
-        return dict(code=os.path.splitext(os.path.basename(public_subc))[0])
-    else:
-        raise UserActionException(f'Subcorpus {subcname} not found')
-
-
 @bp.route('/update_public_desc', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    if not amodel.corp.is_published:
-        raise UserActionException('Corpus is not published - cannot change description')
     await amodel.corp.save_subc_description(req.form.get('description'))
     return {}
 
