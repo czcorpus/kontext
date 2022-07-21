@@ -234,10 +234,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             (state, action, dispatch) => {
                 if (action.error) {
                     this.pageModel.showMessage('error', action.error);
-
-                } else if (!isServerWithinSelection(action.payload?.data.selections)) {
-                    // no need to translate this - this should happen only in case of a bug in the code
-                    this.pageModel.showMessage('error', 'Invalid data type provided for subcorpus within form');
                 }
             }
         )
