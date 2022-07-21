@@ -18,24 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { concatMap, Observable, of as rxOf, tap, throwError } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 import { IActionQueue, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { HTTP, List } from 'cnc-tskit';
-import { CreateSubcorpus } from './common';
+import { HTTP } from 'cnc-tskit';
+import { CreateSubcorpus, SubcorpusRecord } from './common';
+import * as TextTypes from '../../types/textTypes';
+import * as Kontext from '../../types/kontext';
+import { TTInitialData } from '../textTypes/common';
+import { TextTypesModel } from '../textTypes/main';
 
 
-export interface SubcorpusRecord {
 
-    corpname:string;
-    usesubcorp:string;
-    origSubcName:string;
-    deleted:string;
-    created:string;
+export interface DerivedSubcorp {
     cql:string|undefined;
-    size:number;
     published:boolean;
     description:string|undefined;
 }
@@ -44,6 +42,15 @@ export interface SubcorpusRecord {
 export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
+    derivedSubc:DerivedSubcorp|undefined;
+    liveAttrsEnabled:boolean;
+}
+
+interface LoadPropertiesResponse extends Kontext.AjaxResponse {
+    data:SubcorpusRecord;
+    textTypes:TTInitialData;
+    structsAndAttrs:Kontext.StructsAndAttrs;
+    liveAttrsEnabled:boolean;
 }
 
 /*
@@ -97,6 +104,61 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         super(dispatcher, initialState);
         this.layoutModel = layoutModel;
 
+        this.addActionHandler(
+            Actions.LoadSubcorpus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.ajax$<LoadPropertiesResponse>(
+                    HTTP.Method.GET,
+                    this.layoutModel.createActionUrl(
+                        '/subcorpus/properties',
+                        {
+                            corpname: action.payload?.corpname,
+                            usesubcorp: action.payload?.subcname,
+                        }
+                    ),
+                    {}
+
+                ).subscribe({
+                    next: (data) => {
+                        dispatch(
+                            Actions.LoadSubcorpusDone,
+                            {
+                                corpname: action.payload?.corpname,
+                                subcname: action.payload?.subcname,
+                                data: data.data,
+                                textTypes: data.textTypes,
+                                structsAndAttrs: data.structsAndAttrs,
+                                liveAttrsEnabled: data.liveAttrsEnabled,
+                            }
+                        );
+                    },
+                    error: (error) => {
+                        dispatch(
+                            Actions.LoadSubcorpusDone,
+                            error
+                        );
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (action.error) {
+                    // TODO
+                    console.log('err: ', action.error)
+
+                } else {
+                    state.data = action.payload?.data;
+                    state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
+                }
+            }
+        );
 
         this.addActionHandler(
             Actions.WipeSubcorpus,
@@ -327,7 +389,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 corpname: state.data.corpname,
                 subcname: subcname !== undefined ? subcname : state.data.usesubcorp,
                 publish: false,
-                cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
+                //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
             }
 
         ).pipe(

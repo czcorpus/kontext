@@ -48,14 +48,32 @@ class SubmitBase:
         return len(self.aligned_corpora) > 0 if type(self.aligned_corpora) is list else False
 
 
+TextTypesType = Dict[str, Union[List[str], List[int]]]
+
+
 @dataclass
 class CreateSubcorpusArgs(SubmitBase):
-    text_types: Dict[str, Union[List[str], List[int]]]
+    text_types: TextTypesType
+
+
+WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
 
 
 @dataclass
 class CreateSubcorpusWithinArgs(SubmitBase):
-    within: List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
+    within: WithinType
+
+    def deserialize(self) -> str:
+        """
+         return this.lines.filter((v)=>v != null).map(
+            (v:WithinLine) => (
+                (v.negated ? '!within' : 'within') + ' <' + v.structureName
+                    + ' ' + v.attributeCql + ' />')
+        ).join(' ');
+        }
+        """
+        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
+            item['structure_name'], item['attribute_cql']) for item in [item for item in self.within if bool(item)]])
 
 
 @dataclass
@@ -66,18 +84,6 @@ class CreateSubcorpusRawCQLArgs(SubmitBase):
 class SubcorpusActionModel(CorpusActionModel):
 
     TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
-
-    def _deserialize_custom_within(self, data: Dict[str, Any]) -> str:
-        """
-         return this.lines.filter((v)=>v != null).map(
-            (v:WithinLine) => (
-                (v.negated ? '!within' : 'within') + ' <' + v.structureName
-                    + ' ' + v.attributeCql + ' />')
-        ).join(' ');
-        }
-        """
-        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-            item['structure_name'], item['attribute_cql']) for item in [item for item in data if bool(item)]])
 
     async def create_subcorpus(self) -> Dict[str, Any]:
         """
@@ -113,7 +119,7 @@ class SubcorpusActionModel(CorpusActionModel):
                     tt_query = TextTypeCollector(self.corp, sel_attrs).get_query()
                     tmp = ['<%s %s />' % item for item in tt_query]
                     full_cql = ' within '.join(tmp)
-                    full_cql = 'aword,[] within %s' % full_cql
+                    full_cql = f'aword,[] within {full_cql}'
                     imp_cql = (full_cql,)
                 else:
                     raise FunctionNotSupported(
@@ -122,13 +128,13 @@ class SubcorpusActionModel(CorpusActionModel):
                 tt_query = TextTypeCollector(self.corp, data.text_types).get_query()
                 tmp = ['<%s %s />' % item for item in tt_query]
                 full_cql = ' within '.join(tmp)
-                full_cql = 'aword,[] within %s' % full_cql
+                full_cql = f'aword,[] within {full_cql}'
                 imp_cql = (full_cql,)
         elif form_type == 'within':
-            data = CreateSubcorpusWithinArgs(**self._req.json)
+            data = CreateSubcorpusWithinArgs(aligned_corpora=[], **self._req.json)
             tt_query = ()
-            within_cql = self._deserialize_custom_within(data.within)
-            full_cql = 'aword,[] %s' % within_cql
+            within_cql = data.deserialize()
+            full_cql = f'aword,[] {within_cql}'
             imp_cql = (full_cql,)
         elif form_type == 'cql':
             data = CreateSubcorpusRawCQLArgs(**self._req.json)
@@ -138,7 +144,8 @@ class SubcorpusActionModel(CorpusActionModel):
             imp_cql = (full_cql,)
         else:
             raise UserActionException(f'Invalid form type provided - "{form_type}"')
-
+        logging.getLogger(__name__).warning('>>>>>> data: {}'.format(data))
+        logging.getLogger(__name__).warning('>>>>>> full_cql: {}'.format(full_cql))
         if not data.subcname:
             raise UserActionException(self._req.translate('No subcorpus name specified!'))
 
@@ -173,11 +180,7 @@ class SubcorpusActionModel(CorpusActionModel):
         if result is not False:
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
-                    await sr.store_query(
-                        user_id=self.session_get('user', 'id'),
-                        corpname=self.args.corpname,
-                        subcname=data.subcname,
-                        cql=full_cql.strip().split('[]', 1)[-1])
+                    await sr.store_query(user_id=self.session_get('user', 'id'), data=data)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self._resp.add_system_message(

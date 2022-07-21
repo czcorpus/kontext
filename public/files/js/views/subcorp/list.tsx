@@ -25,11 +25,15 @@ import {
     SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
     SubcorpListModelState
 } from '../../models/subcorp/list';
-import * as CoreViews from '../../types/coreViews';
+import * as PluginInterfaces from '../../types/plugins';
 import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
+import { init as editViewInit } from './edit';
 
 import * as S from './style';
+import { SubcorpusEditModel } from '../../models/subcorp/edit';
+import { TextTypesModel } from '../../models/textTypes/main';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 
 
 
@@ -44,10 +48,15 @@ export interface ListViews {
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    subcorpLinesModel:SubcorpListModel
+    subcorpLinesModel:SubcorpListModel,
+    subcorpEditModel:SubcorpusEditModel,
+    textTypesModel:TextTypesModel,
+    subcorpWithinFormModel:SubcorpWithinFormModel,
+    liveAttrsViews:PluginInterfaces.LiveAttributes.Views,
 ) {
 
     const layoutViews = he.getLayoutViews();
+    const SubcorpEdit = editViewInit(dispatcher, he, subcorpEditModel, textTypesModel, subcorpWithinFormModel, liveAttrsViews);
 
     // ------------------------ <TrUnfinishedLine /> --------------------------
 
@@ -85,27 +94,25 @@ export function init(
         return <input type="checkbox" checked={props.value} onChange={props.onChange} />;
     };
 
-    // ------------------------ <DeleteButton /> -----------------------------
+    // ------------------------ <ArchiveButton /> -----------------------------
 
-    const DeleteButton:React.FC<{
+    const ArchiveButton:React.FC<{
         rowIdx:number;
         subcname:string;
 
     }> = (props) => {
 
         const handleSubmit = () => {
-            if (window.confirm(he.translate('subclist__subc_delete_confirm_{subc}', {subc: props.subcname}))) {
-                dispatcher.dispatch<typeof Actions.DeleteSubcorpus>({
-                    name: Actions.DeleteSubcorpus.name,
-                    payload: {
-                        rowIdx: props.rowIdx
-                    }
-                });
-            }
+            dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
+                name: Actions.ArchiveSubcorpus.name,
+                payload: {
+                    rowIdx: props.rowIdx
+                }
+            });
         };
 
-        return <layoutViews.DelItemIcon className="delete-subc"
-                    title={he.translate('subclist__delete_subcorp')}
+        return <layoutViews.DelItemIcon className="archive-subc"
+                    title={he.translate('subclist__archive_subcorp')}
                     onClick={handleSubmit} />;
     }
 
@@ -156,15 +163,13 @@ export function init(
                     }
                 </td>
                 <td className="action-link">
-                    {props.item.cqlAvailable ?
-                        <a onClick={()=>props.actionButtonHandle(props.idx)}
-                                title={he.translate('subclist__click_to_access_the_backup')}>{'\u2713'}</a> :
-                        null
-                    }
+                        <a onClick={()=>props.actionButtonHandle(props.idx)}>
+                            {he.translate('subclist__subc_properties')}
+                        </a>
                 </td>
                 <td>
                     {!props.item.deleted ?
-                        <DeleteButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
+                        <ArchiveButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
                         null
                     }
                 </td>
@@ -264,7 +269,7 @@ export function init(
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
-                            <th>{he.translate('subclist__col_backed_up')}</th>
+                            <th />
                             <th />
                         </tr>
                         {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
@@ -288,12 +293,12 @@ export function init(
 
     }> = (props) => {
 
-        const handleShowDeleted = () => {
+        const handleShowArchived = () => {
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: props.filter.corpname,
-                    show_deleted: !props.filter.show_deleted
+                    show_archived: !props.filter.show_archived
                 }
             });
         };
@@ -303,7 +308,7 @@ export function init(
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: evt.target.value,
-                    show_deleted: props.filter.show_deleted
+                    show_archived: props.filter.show_archived
                 }
             });
         };
@@ -322,8 +327,8 @@ export function init(
                     </div>
                     {props.usesSubcRestore ?
                         <div>
-                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_deleted')}:</label>
-                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowDeleted} checked={props.filter['show_deleted']} />
+                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
+                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter['show_archived']} />
                         </div> :
                         null
                     }
@@ -374,8 +379,8 @@ export function init(
                         ? (
                             <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
                                 <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                    label="subc. properties (TODO msg)" scrollable={true}>
-
+                                        label="subc. properties (TODO msg)" scrollable={true}>
+                                    <SubcorpEdit corpname={this.props.editWindowSubcorpus[0]} subcname={this.props.editWindowSubcorpus[1]} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}

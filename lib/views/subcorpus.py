@@ -41,6 +41,47 @@ from texttypes.model import TextTypeCollector
 bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 
+@bp.route('/properties')
+@http_action(
+    access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
+async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    struct_and_attrs = await amodel.get_structs_and_attrs()
+    data = {
+        'corpname': amodel.corp.corpname,
+        'subcname': amodel.corp.subcname,
+        'origSubcname': amodel.corp.orig_subcname,
+        'size': amodel.corp.size,
+        'published': amodel.corp.is_published
+    }
+
+    with plugins.runtime.SUBC_RESTORE as sr:
+        info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcname)
+        if info:
+            data['created'] = info.timestamp.isoformat()
+            if info.text_types is not None:
+                data['selections'] = info.text_types
+            elif info.within_cond is not None:
+                data['selections'] = info.within_cond
+            elif info.cql is not None:
+                data['selections'] = info.cql
+
+    liveAttrsEnabled = False
+    with plugins.runtime.LIVE_ATTRIBUTES as la:
+        liveAttrsEnabled = 'selections' in data and info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
+
+    if 'created' not in data and amodel.corp.created:
+        data['created'] = amodel.corp.created.isoformat()
+    if amodel.corp.description:
+        data['description'] = amodel.corp.description
+
+    return {
+        'data': data,
+        'textTypes': await amodel.tt.export_with_norms(),
+        'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
+        'liveAttrsEnabled': liveAttrsEnabled,
+    }
+
+
 @bp.route('/create', ['POST'])
 @http_action(
     access_level=1, return_type='json', action_log_mapper=log_mapping.new_subcorpus, action_model=SubcorpusActionModel)
@@ -128,7 +169,8 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
                        corpname=req.args.get('corpname'))
     data = []
-    involved_corpora = os.listdir(amodel.subcpath[0])  # by a convention, the first item is user's subc. dir.
+    # by a convention, the first item is user's subc. dir.
+    involved_corpora = os.listdir(amodel.subcpath[0])
     for corp in involved_corpora:
         _, has_acc, _ = await plugins.runtime.AUTH.instance.corpus_access(amodel.session_get('user'), corp)
         if not has_acc:
@@ -184,7 +226,8 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
         related_corpora=sorted(involved_corpora),
-        uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists
+        uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists,
+        uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
     )
     return ans
 
@@ -206,6 +249,7 @@ async def subcorpus_info(amodel: CorpusActionModel, req: KRequest, resp: KRespon
         published=amodel.corp.is_published,
         extended_info={}
     )
+
     if plugins.runtime.SUBC_RESTORE.exists:
         with plugins.runtime.SUBC_RESTORE as sr:
             tmp = await sr.get_info(amodel.session_get('user', 'id'), amodel.args.corpname, amodel.corp.subcname)

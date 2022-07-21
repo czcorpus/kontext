@@ -25,6 +25,12 @@ import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
 import { ServerSubcorpListItem } from '../models/subcorp/common';
 import { SubcorpusEditModel } from '../models/subcorp/edit';
+import { TextTypesModel } from '../models/textTypes/main';
+import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
+import * as PluginInterfaces from '../types/plugins';
+import { PluginName } from '../app/plugin';
+import liveAttributes from 'plugins/liveAttributes/init';
 
 /**
  *
@@ -37,15 +43,34 @@ class SubcorpListPage {
 
     private subcorpEditModel:SubcorpusEditModel;
 
+    private textTypesModel:TextTypesModel;
+
+    private subcorpWithinFormModel:SubcorpWithinFormModel;
+
+    private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
+
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
     }
 
     private renderView():void {
+        let liveAttrsViews:PluginInterfaces.LiveAttributes.Views;
+        if (this.liveAttrsPlugin !== undefined) {
+            liveAttrsViews = this.liveAttrsPlugin.getViews(null, this.textTypesModel);
+        } else {
+            liveAttrsViews = {
+                LiveAttrsCustomTT: null,
+                LiveAttrsView: null,
+            };
+        }
         const views = listViewInit(
             this.layoutModel.dispatcher,
             this.layoutModel.getComponentHelpers(),
-            this.subcorpListModel
+            this.subcorpListModel,
+            this.subcorpEditModel,
+            this.textTypesModel,
+            this.subcorpWithinFormModel,
+            liveAttrsViews,
         );
         const props = {};
         this.layoutModel.renderReactComponent(
@@ -69,14 +94,45 @@ class SubcorpListPage {
                     unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
                     initialFilter: this.layoutModel.getConf<SubcListFilter>('Filter')
                 });
+                this.textTypesModel = new TextTypesModel({
+                    dispatcher: this.layoutModel.dispatcher,
+                    pluginApi: this.layoutModel.pluginApi(),
+                    attributes: [],
+                    bibIdAttr: undefined,
+                    bibLabelAttr: undefined,
+                    readonlyMode: false,
+                });
                 this.subcorpEditModel = new SubcorpusEditModel(
                     this.layoutModel.dispatcher,
                     {
                         isBusy: false,
-                        data: undefined
+                        data: undefined,
+                        derivedSubc: undefined,
+                        liveAttrsEnabled: false,
                     },
-                    this.layoutModel
+                    this.layoutModel,
                 );
+                this.subcorpWithinFormModel = new SubcorpWithinFormModel(
+                    this.layoutModel.dispatcher,
+                    this.layoutModel,
+                    'within',
+                    this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
+                )
+
+                if (this.layoutModel.getConf<boolean>('UsesLiveAttrs')) {
+                    this.liveAttrsPlugin = liveAttributes(
+                        this.layoutModel.pluginApi(),
+                        this.layoutModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
+                        false,
+                        {
+                            bibAttr: null,
+                            availableAlignedCorpora: [],
+                            refineEnabled: false,
+                            manualAlignCorporaMode: false
+                        }
+                    );
+                }
+
                 this.renderView();
             }
         );

@@ -19,25 +19,31 @@
  */
 
 import * as React from 'react';
-import { SubcorpListItem } from '../../models/subcorp/list';
-import * as CoreViews from '../../types/coreViews';
-import { List } from 'cnc-tskit';
 import { Actions } from '../../models/subcorp/actions';
 
-import * as S from './style';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
-import { IActionDispatcher } from 'kombo';
+import { BoundWithProps, IActionDispatcher } from 'kombo';
+import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
+import { TextTypesModel } from '../../models/textTypes/main';
+import { init as ttInit } from '../../views/textTypes/index';
+import { init as withinViewInit } from './withinForm';
+import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
+import * as PluginInterfaces from '../../types/plugins';
 
 
 export function init(
     dispatcher:IActionDispatcher,
     he:Kontext.ComponentHelpers,
-    subcorpEditModel:SubcorpusEditModel
+    subcorpEditModel:SubcorpusEditModel,
+    textTypesModel:TextTypesModel,
+    subcorpWithinFormModel:SubcorpWithinFormModel,
+    liveAttrsViews:PluginInterfaces.LiveAttributes.Views,
 ) {
 
     const layoutViews = he.getLayoutViews();
-
+    const ttViews = ttInit(dispatcher, he, textTypesModel);
+    const WithinForm = withinViewInit(dispatcher, he, subcorpWithinFormModel);
 
     // ------------------------ <FormActionTemplate /> --------------------------
 
@@ -56,124 +62,79 @@ export function init(
         );
     };
 
-    // ------------------------ <FormActionReuse /> --------------------------
+    // ------------------------ <FormActionReuseCQL /> --------------------------
 
-    class FormActionReuse extends React.Component<{
-        idx:number;
-        data:SubcorpListItem;
-    },
-    {
-        newName:string;
-        newCql:string;
-    }> {
+    const FormActionReuseCQL:React.FC<{data: SubcorpusRecord}> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this._handleSubmit = this._handleSubmit.bind(this);
-            this._handleNameChange = this._handleNameChange.bind(this);
-            this._handleCqlChange = this._handleCqlChange.bind(this);
-            const subcorpusName = this.props.data.origSubcName ? this.props.data.origSubcName : this.props.data.usesubcorp;
-            this.state = {
-                newName: `${subcorpusName} (${he.translate('global__copy')})`,
-                newCql: this.props.data.cql
-            };
-        }
+        let [state, setState] = React.useState({
+            newName: props.data.origSubcName + ' (copy)',
+            newCql: props.data.selections as string,
+        });
 
-        _handleSubmit() {
-            dispatcher.dispatch<typeof Actions.ReuseQuery>({
-                name: Actions.ReuseQuery.name,
-                payload: {
-                    newName: this.state.newName,
-                    newCql: this.state.newCql
-                }
-            });
-        }
+        return (
+            <div>
+                <div>
+                    <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
+                    <input id="inp_0sAoz" type="text" style={{width: '20em'}}
+                        onChange={e => setState({...state, newName: e.target.value})}
+                        defaultValue={state.newName} />
 
-        _handleNameChange(evt) {
-            this.setState({
-                ...this.state,
-                newName: evt.target.value
-            });
-        }
-
-        _handleCqlChange(evt) {
-            this.setState({
-                ...this.state,
-                newCql: evt.target.value
-            });
-        }
-
-        render() {
-            return (
-                <FormActionTemplate>
-                    <div>
-                        <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
-                        <input id="inp_0sAoz" type="text" style={{width: '20em'}}
-                                defaultValue={this.state.newName}
-                                onChange={this._handleNameChange} />
-
-                    </div>
-                    <div>
-                        <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                        <textarea id="inp_zBuJi" className="cql" defaultValue={this.props.data.cql}
-                                onChange={this._handleCqlChange} rows={4} />
-                    </div>
-                    <p>
-                        <img src={he.createStaticUrl('img/warning-icon.svg')}
-                                alt={he.translate('global__warning')}
-                                style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
-                        {he.translate('subclist__reuse_query_warn')}
-                    </p>
-                    <div>
-                        <button type="button" className="default-button"
-                            onClick={this._handleSubmit}>{he.translate('subcform__create_subcorpus')}</button>
-                    </div>
-                </FormActionTemplate>
-            );
-        }
+                </div>
+                <div>
+                    <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
+                    <textarea id="inp_zBuJi" className="cql" defaultValue={JSON.stringify(state.newCql)}
+                            onChange={e => setState({...state, newCql: e.target.value})}
+                            rows={4} />
+                </div>
+                <p>
+                    <img src={he.createStaticUrl('img/warning-icon.svg')}
+                            alt={he.translate('global__warning')}
+                            style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
+                </p>
+                <div>
+                    <button type="button" className="default-button"
+                        //onClick={this._handleSubmit} TODO
+                    >{he.translate('subcform__create_subcorpus')}</button>
+                </div>
+            </div>
+        );
     }
 
-    // ------------------------ <FormActionWipe /> --------------------------
+    // ------------------------ <FormActionReuse /> --------------------------
 
-    const FormActionWipe:React.FC<{
-        idx:number;
-
-    }> = (props) => {
+    const FormActionReuse:React.FC<{data: SubcorpusRecord, liveAttrsEnabled: boolean}> = (props) => {
 
         const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
-                name: Actions.WipeSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
-            });
+            if (window.confirm(he.translate('subclist__info_subc_will_be_wiped'))) {
+                dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
+                    name: Actions.WipeSubcorpus.name,
+                });
+            }
         };
 
         return (
             <FormActionTemplate>
-                <p>{he.translate('subclist__info_subc_will_be_wiped')}</p>
+                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
+                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
+                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
+
                 <button type="button" className="default-button"
                         onClick={handleSubmit}>
-                    {he.translate('global__confirm')}
+                    {he.translate('subclist__action_wipe')}
                 </button>
             </FormActionTemplate>
         );
-    };
-
+    }
 
     // ------------------------ <FormActionRestore /> --------------------------
 
     const FormActionRestore:React.FC<{
-        idx:number;
 
     }> = (props) => {
 
         const handleSubmit = () => {
             dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
-                name: Actions.RestoreSubcorpus.name,
-                payload: {
-                    idx: props.idx
-                }
+                name: Actions.RestoreSubcorpus.name
             });
         };
 
@@ -281,43 +242,52 @@ export function init(
 
     // ------------------------ <SubcorpusEdit /> --------------------------
 
-    const SubcorpusEdit:React.FC<SubcorpusEditModelState> = (props) => {
+    const _SubcorpusEdit:React.FC<SubcorpusEditModelState & {corpname:string; subcname: string}> = (props) => {
 
         // TODO avail translations:
         // subclist__public_access_btn
         // subclist__action_reuse
         // subclist__subc_actions_{subc}
 
-        let items: Array<{id:string, label:string}> = [
+        const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
+            {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
             {id: 'pub', label: he.translate('subclist__public_access_btn')},
-            {id: 'reuse', label: he.translate('subclist__action_reuse')},
-            {id: 'restore', label: he.translate('subclist__action_restore')},
-            {id: 'wipe', label: he.translate('subclist__action_wipe')}
+            {id: 'restore', label: he.translate('subclist__action_restore')}
         ];
+
+        React.useEffect(
+            () => {
+                dispatcher.dispatch(
+                    Actions.LoadSubcorpus,
+                    {corpname: props.corpname, subcname: props.subcname}
+                );
+            },
+            []
+        );
+
         return (
-            <layoutViews.ModalOverlay onCloseKey={this.props.onCloseClick}>
-                <layoutViews.CloseableFrame onCloseClick={this.props.onCloseClick}
-                        customClass="subcorp-actions"
-                        autoWidth={CoreViews.AutoWidth.WIDE}
-                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.data.name})}>
-                    <div>
+            <div>
+                {!props.data ?
+                    <layoutViews.AjaxLoaderImage /> :
+                    <>
                         <layoutViews.TabView
                                 className="ActionMenu"
-                                callback={this.handleActionSelect}
                                 items={items} >
+                            <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled}/>
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
-                            <FormActionReuse key="action-reuse" idx={this.props.idx} data={this.props.data} />
-                            <FormActionRestore key="restore" idx={this.props.idx}  />, <FormActionWipe key="wipe" idx={this.props.idx} />
+                            <FormActionRestore key="restore" />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
-                            {this.props.modelIsBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
+                            {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null}
                         </div>
-                    </div>
-                </layoutViews.CloseableFrame>
-            </layoutViews.ModalOverlay>
+                    </>
+            }
+            </div>
         )
     }
+
+    return BoundWithProps<{corpname:string; subcname:string}, SubcorpusEditModelState>(_SubcorpusEdit, subcorpEditModel);
 
 }

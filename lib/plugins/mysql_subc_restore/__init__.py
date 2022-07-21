@@ -18,10 +18,14 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import plugins
+import ujson as json
 import werkzeug.urls
+from action.model.subcorpus import (CreateSubcorpusArgs,
+                                    CreateSubcorpusRawCQLArgs,
+                                    CreateSubcorpusWithinArgs)
 from action.model.subcorpus.listing import ListingItem
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcRestore, SubcRestoreRow
@@ -46,13 +50,20 @@ class MySQLSubcRestore(AbstractSubcRestore):
         self._corparch = corparch
         self._db = db
 
-    async def store_query(self, user_id: int, corpname: str, subcname: str, cql: str):
+    async def store_query(self, user_id: int, data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         async with self._db.cursor() as cursor:
+            if isinstance(data, CreateSubcorpusRawCQLArgs):
+                column, value = 'cql', data.cql
+            elif isinstance(data, CreateSubcorpusWithinArgs):
+                column, value = 'within_cond', json.dumps(data.within)
+            elif isinstance(data, CreateSubcorpusArgs):
+                column, value = 'text_types', json.dumps(data.text_types)
+
             await cursor.execute(
                 f'INSERT INTO {self.TABLE_NAME} '
-                '(user_id, corpname, subcname, cql, timestamp) '
+                f'(user_id, corpname, subcname, {column}, timestamp) '
                 'VALUES (%s, %s, %s, %s, %s)',
-                (user_id, corpname, subcname, cql, datetime.now())
+                (user_id, data.corpname, data.subcname, value, datetime.now())
             )
         await cursor.connection.commit()
 
@@ -75,7 +86,7 @@ class MySQLSubcRestore(AbstractSubcRestore):
             sql.append('LIMIT %s, %s')
             args += (from_idx, to_idx - from_idx)
         else:
-            sql.append('OFFSET %s ROWS')
+            sql.append('LIMIT 100000000 OFFSET %s')
             args += (from_idx,)
 
         async with self._db.cursor() as cursor:
@@ -157,7 +168,8 @@ class MySQLSubcRestore(AbstractSubcRestore):
                         human_corpname=corpus_info.name,
                         corpname=corpus_name,
                         usesubcorp=escape_subcname(subc_query.subcname),
-                        cql=urllib.parse.quote(subc_query.cql).encode('utf-8') if include_cql else None,
+                        cql=urllib.parse.quote(subc_query.cql).encode(
+                            'utf-8') if include_cql else None,
                         cqlAvailable=bool(urllib.parse.quote(subc_query.cql)),
                         deleted=True,
                         published=False))

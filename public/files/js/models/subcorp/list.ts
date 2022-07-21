@@ -31,7 +31,7 @@ import { ServerSubcorpListItem, SubcorpList } from './common';
 
 
 export interface SubcListFilter {
-    show_deleted:boolean;
+    show_archived:boolean;
     corpname:string;
 }
 
@@ -43,7 +43,6 @@ export interface SubcorpListItem {
     origSubcName:string;
     deleted:boolean;
     created:Date;
-    cqlAvailable:boolean;
     cql:string;
     size:number;
     published:boolean;
@@ -108,7 +107,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_deleted: false, corpname: ''},
+                filter: initialFilter || {show_archived: false, corpname: ''},
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
@@ -175,13 +174,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
-            Actions.DeleteSubcorpus,
-            action => this.deleteSubcorpus(action.payload.rowIdx).subscribe({
+            Actions.ArchiveSubcorpus,
+            action => this.archiveSubcorpus(action.payload.rowIdx).subscribe({
                 next: data => {
                     this.emitChange();
                     this.layoutModel.showMessage(
                         'info',
-                        this.layoutModel.translate('subclist__subc_deleted')
+                        this.layoutModel.translate('subclist__subc_archived')
                     );
                 },
                 error: error => {
@@ -229,7 +228,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             origSubcName: item.orig_subcname ? decodeURIComponent(item.orig_subcname) : null,
             deleted: item.deleted,
             size: item.size,
-            cqlAvailable: item.cqlAvailable,
             cql: item.cql ? decodeURIComponent(item.cql).trim() : undefined,
             created: new Date(item.created * 1000),
             selected: false,
@@ -251,7 +249,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         )
     }
 
-    private deleteSubcorpus(rowIdx:number):Observable<any> {
+    private archiveSubcorpus(rowIdx:number):Observable<any> {
         const item = this.state.lines[rowIdx];
         if (!item) {
             return throwError(new Error(`Cannot delete item. Row ${rowIdx} not found.`));

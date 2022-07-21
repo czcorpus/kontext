@@ -20,10 +20,11 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
-import { FormWithinSubmitCommonArgs, InputMode } from './common';
+import { FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
+import { TTInitialData } from '../textTypes/common';
 
 
 export class Actions {
@@ -35,7 +36,7 @@ export class Actions {
         name: 'SUBCORP_LIST_SORT_LINES'
     };
 
-    static DeleteSubcorpus:Action<{
+    static ArchiveSubcorpus:Action<{
         rowIdx:number;
     }> = {
         name: 'SUBCORP_LIST_DELETE_SUBCORPUS'
@@ -51,6 +52,24 @@ export class Actions {
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
+
+    static LoadSubcorpus:Action<{
+        corpname:string;
+        subcname:string;
+    }> = {
+        name: 'SUBCORP_LOAD_SUBCORPUS'
+    }
+
+    static LoadSubcorpusDone:Action<{
+        corpname:string;
+        subcname:string;
+        data:SubcorpusRecord;
+        textTypes:TTInitialData;
+        structsAndAttrs:Kontext.StructsAndAttrs;
+        liveAttrsEnabled:boolean;
+    }> = {
+        name: 'SUBCORP_LOAD_SUBCORPUS_DONE'
+    }
 
     static HideSubcEditWindow:Action<{
     }> = {

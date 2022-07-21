@@ -149,7 +149,7 @@ class KCorpus(AbstractKCorpus):
     _spath: Union[str, None] = None
     _subcname: Union[str, None] = None
     _subchash: Union[str, None] = None
-    _created: Union[str, None] = None
+    _created: Union[datetime, None] = None
     _is_published: bool = False
     _orig_spath: Union[str, None] = None
     _orig_subcname: Union[str, None] = None

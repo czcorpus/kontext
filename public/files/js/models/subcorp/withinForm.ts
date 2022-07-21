@@ -20,7 +20,7 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode } from './common';
+import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode, isServerWithinSelection } from './common';
 import { SubcorpFormModel } from './form';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap, throwError } from 'rxjs';
@@ -28,7 +28,6 @@ import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
-import { Action } from 'rxjs/internal/scheduler/Action';
 
 /**
  *
@@ -72,14 +71,11 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
 
     private pageModel:PageModel;
 
-    private subcFormModel:SubcorpFormModel;
-
     constructor(
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
         inputMode:InputMode,
-        structsAndAttrs:Kontext.StructsAndAttrs,
-        subcFormModel:SubcorpFormModel
+        structsAndAttrs:Kontext.StructsAndAttrs
     ) {
         super(
             dispatcher,
@@ -106,7 +102,6 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             }
         );
         this.pageModel = pageModel;
-        this.subcFormModel = subcFormModel;
 
         this.addActionHandler(
             Actions.FormSetInputMode,
@@ -219,6 +214,29 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 });
             }
         );
+
+        this.addActionHandler(
+            Actions.LoadSubcorpusDone,
+            (state, action) => {
+                state.structsAndAttrs = action.payload?.structsAndAttrs;
+                if (!action.error && isServerWithinSelection(action.payload?.data.selections)) {
+                    state.lines = List.map(
+                        (item, rowIdx) => ({
+                            rowIdx,
+                            attributeCql: Kontext.newFormValue(item.attribute_cql, true),
+                            negated: item.negated,
+                            structureName: item.structure_name
+                        }),
+                        action.payload?.data.selections
+                    )
+                }
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.pageModel.showMessage('error', action.error);
+                }
+            }
+        )
 
         this.addActionHandler(
             GlobalActions.SwitchCorpus,

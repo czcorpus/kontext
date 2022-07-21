@@ -21,6 +21,7 @@
 export interface Props {
     isActive:boolean;
     label:string;
+    isDisabled?:boolean;
     htmlClass?:string;
     onClick:()=>void;
 }
