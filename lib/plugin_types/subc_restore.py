@@ -25,14 +25,12 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 import datetime
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, InitVar
 from typing import Any, Dict, List, Optional, Union
 
 import ujson as json
-from action.model.subcorpus import (CreateSubcorpusArgs,
-                                    CreateSubcorpusRawCQLArgs,
-                                    CreateSubcorpusWithinArgs, TextTypesType,
-                                    WithinType)
+from action.model.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, TextTypesType, WithinType)
 from action.model.subcorpus.listing import ListingItem
 from action.plugin.ctx import PluginCtx
 
@@ -44,15 +42,32 @@ class SubcRestoreRow:
     corpname: str
     subcname: str
     timestamp: datetime.datetime
-    cql: Optional[str] = None
-    within_cond: Optional[WithinType] = None
-    text_types: Optional[TextTypesType] = None
+    cql: InitVar[Optional[str]] = None
+    within_cond: InitVar[Optional[WithinType]] = None
+    text_types: InitVar[Optional[TextTypesType]] = None
+    _cql: Optional[str] = None
+    _within_cond: Optional[WithinType] = None
+    _text_types: Optional[TextTypesType] = None
 
-    def __post_init__(self):
-        if isinstance(self.within_cond, str):
-            self.within_cond = json.loads(self.within_cond)
-        if isinstance(self.text_types, str):
-            self.text_types = json.loads(self.text_types)
+    def __post_init__(self, cql, within_cond, text_types):
+        if within_cond:
+            self._within_cond = json.loads(within_cond)
+        if text_types:
+            self._text_types = json.loads(text_types)
+        if cql:
+            self._cql = cql
+
+    @property
+    def within_cond(self):
+        return self._within_cond
+
+    @property
+    def text_types(self):
+        return self._text_types
+
+    @property
+    def cql(self):
+        return self._cql
 
     def to_dict(self) -> Dict[str, Any]:
         """
