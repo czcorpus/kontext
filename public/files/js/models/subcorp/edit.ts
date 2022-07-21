@@ -43,12 +43,14 @@ export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
     derivedSubc:DerivedSubcorp|undefined;
+    liveAttrsEnabled:boolean;
 }
 
 interface LoadPropertiesResponse extends Kontext.AjaxResponse {
     data:SubcorpusRecord;
     textTypes:TTInitialData;
     structsAndAttrs:Kontext.StructsAndAttrs;
+    liveAttrsEnabled:boolean;
 }
 
 /*
@@ -128,7 +130,8 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                 subcname: action.payload?.subcname,
                                 data: data.data,
                                 textTypes: data.textTypes,
-                                structsAndAttrs: data.structsAndAttrs
+                                structsAndAttrs: data.structsAndAttrs,
+                                liveAttrsEnabled: data.liveAttrsEnabled,
                             }
                         );
                     },
@@ -152,6 +155,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
                 } else {
                     state.data = action.payload?.data;
+                    state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
                 }
             }
         );

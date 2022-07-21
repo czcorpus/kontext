@@ -33,6 +33,7 @@ import { Actions as SubcActions } from '../../models/subcorp/actions';
 import { Actions as GlobalActions } from '../../models/common/actions';
 import { IUnregistrable } from '../../models/common/common';
 import { IPluginApi } from '../../types/plugins/common';
+import { isTTSelection } from '../../models/subcorp/common';
 
 
 
@@ -452,6 +453,21 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                 this.reloadSizes(state, dispatch);
             }
         )
+
+        this.addActionHandler(
+            SubcActions.LoadSubcorpusDone,
+            (state, action) => {
+                if (!action.error) {
+                    const selections = action.payload.data.selections;
+                    if (isTTSelection(selections)) {
+                        this.reset(state)
+                        state.firstCorpus = action.payload.data.corpname;
+                        state.bibliographyAttribute = action.payload.textTypes.bib_attr;
+                        state.controlsEnabled = Dict.size(selections) > 0;
+                    }
+                }
+            }
+        );
     }
 
     getRegistrationId():string {
@@ -472,7 +488,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     HTTP.Method.POST,
                     this.pluginApi.createActionUrl('filter_attributes'),
                     {
-                        corpname: this.pluginApi.getCorpusIdent().id,
+                        corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
                         attrs: JSON.stringify({}),
                         aligned: JSON.stringify(pipe(
                             state.alignedCorpora,
@@ -696,7 +712,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             HTTP.Method.POST,
             this.pluginApi.createActionUrl('filter_attributes'),
             {
-                corpname: this.pluginApi.getCorpusIdent().id,
+                corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
                 attrs: JSON.stringify(selections),
                 aligned: JSON.stringify(aligned)
             }
