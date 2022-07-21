@@ -58,7 +58,7 @@ from plugins.default_taghelper.loaders.positional import \
     PositionalTagVariantLoader
 from sanic.blueprints import Blueprint
 
-bp = Blueprint('default_taghelper')
+bp = Blueprint('default_taghelper', 'corpora')
 
 
 @bp.route('/ajax_get_tag_variants')
