@@ -16,7 +16,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
@@ -95,7 +95,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
         sql = 'SELECT * FROM {} WHERE {} ORDER BY id LIMIT %s OFFSET %s'.format(
             self.TABLE_NAME, ' AND '.join(where)
         )
-
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
             return [SubcorpusRecord(**row) async for row in cursor]

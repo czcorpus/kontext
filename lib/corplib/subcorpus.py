@@ -17,8 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-13
 
-import datetime
-from dataclasses import InitVar, asdict, dataclass
+from datetime import datetime
+from dataclasses import InitVar, asdict, dataclass, field
+from dataclasses_json import dataclass_json, config
 from typing import Any, Dict, List, Optional, Union
 
 import ujson
@@ -28,6 +29,7 @@ TextTypesType = Dict[str, Union[List[str], List[int]]]
 WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
 
 
+@dataclass_json
 @dataclass
 class SubcorpusIdent:
     """
@@ -40,6 +42,7 @@ class SubcorpusIdent:
     data_path: str
 
 
+@dataclass_json
 @dataclass
 class SubcorpusRecord(SubcorpusIdent):
     """
@@ -49,10 +52,12 @@ class SubcorpusRecord(SubcorpusIdent):
     user_id: int
     author_id: int
     size: int
-    created: datetime.datetime
-    archived: datetime.datetime
+    created: datetime = field(metadata=config(
+            encoder=datetime.isoformat,
+            decoder=datetime.fromisoformat))
     public_description: str
     data_path: str
+    archived: Optional[datetime] = None
     cql: InitVar[Optional[str]] = None
     within_cond: InitVar[Optional[str]] = None
     text_types: InitVar[Optional[str]] = None
@@ -85,5 +90,6 @@ class SubcorpusRecord(SubcorpusIdent):
         Method to get json serializable dict
         """
         res = asdict(self)
-        res['timestamp'] = self.timestamp.timestamp()
+        res['created'] = self.created.timestamp()
+        res['archived'] = self.archived.timestamp() if self.archived else None
         return res

@@ -609,7 +609,6 @@ class CorpusActionModel(UserActionModel):
         """
         subcorp_list = l10n.sort(
             await self.user_subc_names(self.corp.corpname), loc=self._req.ui_lang, key=lambda x: x.name)
-
         if self.corp.author_id is not None and self.corp.author_id != self._req.session_get('user', 'id'):
             try:
                 srch = next((x for x in subcorp_list if x.id == self.corp.subcorpus_id))
@@ -619,8 +618,9 @@ class CorpusActionModel(UserActionModel):
                 subcorp_list.insert(0, dict(v=self.corp.subcorpus_name, n=self.corp.subcorpus_name,
                                             pub=self.corp.subcorpus_id, foreign=True))
         if len(subcorp_list) > 0:
-            subcorp_list = [
-                {'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] + subcorp_list
+            subcorp_list = (
+                    [{'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] +
+                    [{'n': item.name, 'v': item.id} for item in subcorp_list])
 
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []
