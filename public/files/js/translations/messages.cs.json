@@ -596,7 +596,7 @@
         "subclist__col_name": "Název",
         "subclist__col_size": "Velikost (pozice)",
         "subclist__col_created": "Vytvořeno",
-        "subclist__action_restore": "Obnovit",
+        "subclist__action_file": "Soubor",
         "subclist__action_structure": "Struktura subkorpusu",
         "subclist__action_wipe": "Odstranit",
         "subclist__info_subc_will_be_wiped": "Záloha subkorpusu bude vymazána a subkorpus tak již nebude možno obnovit.",

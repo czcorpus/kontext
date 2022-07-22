@@ -74,7 +74,6 @@ export interface BaseSubcorpFormState {
 interface SubmitBase {
     corpname:string;
     subcname:string;
-    publish:boolean;
     description:string;
 }
 
@@ -104,22 +103,20 @@ export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
 
 
 export interface ServerSubcorpListItem {
-    deleted:boolean;
-    usesubcorp:string;
-    orig_subcname:string;
-    created:number;
-    cql:string;
-    human_corpname:string;
+    id:string;
+    user_id:number;
+    author_id:number;
     corpname:string;
-    size:number;
     name:string;
-    published:boolean;
-    description:string;
+    created:string;
+    archived:string|undefined;
+    cql:string|undefined;
+    within_cond:string|undefined;
+    text_types:string|undefined;
 }
 
 
 export interface SubcorpList extends Kontext.AjaxResponse {
-    SubcorpList:Array<any>; // TODO - do we need this?
     subcorp_list:Array<ServerSubcorpListItem>;
     filter:{[k:string]:any};
     sort_key:{name:string; reverse:boolean};

@@ -29,11 +29,12 @@ import aiofiles.os
 import l10n
 import manatee
 import plugins
+from corplib.subcorpus import SubcorpusIdent
 from manatee import Concordance, StrVector, SubCorpus
-from plugin_types.corparch.corpus import ManateeCorpusInfo, DefaultManateeCorpusInfo
+from plugin_types.corparch.corpus import (DefaultManateeCorpusInfo,
+                                          ManateeCorpusInfo)
 
-from .corpus import (AbstractKCorpus, KCorpus, KSubcorpus,
-                     _PublishedSubcMetadata)
+from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
 from .errors import MissingSubCorpFreqFile
 from .fallback import EmptyCorpus
 
@@ -113,47 +114,6 @@ def conf_bool(v: str) -> bool:
     return v in ('y', 'yes', 'true', 't', '1')
 
 
-async def mk_publish_links(subcpath: str, publicpath: str, author: str, desc: str):
-
-    def rm_silent(p):
-        try:
-            os.unlink(p)
-        except Exception:
-            pass
-
-    orig_cwd = os.getcwd()
-    symlink_path = None
-    namefile_path = None
-    try:
-        os.chdir(os.path.dirname(subcpath))
-        os.link(subcpath, publicpath)
-
-        rest, tmp = os.path.split(publicpath)
-        link_elms = [tmp]
-        while link_elms[0] != 'published' and rest != '' and rest != os.path.sep:
-            rest, tmp = os.path.split(rest)
-            link_elms = [tmp] + link_elms
-        link_elms = (['..'] * (len(link_elms) - 1)) + link_elms
-        symlink_path = os.path.splitext(subcpath)[0] + '.pub'
-        os.symlink(os.path.join(*link_elms), symlink_path)
-        namefile_path = os.path.splitext(publicpath)[0] + '.name'
-        async with aiofiles.open(namefile_path, 'w') as namefile:
-            # TODO what if the path struct changes?
-            author_id = os.path.basename(os.path.dirname(os.path.dirname(subcpath)))
-            meta = _PublishedSubcMetadata(
-                subcpath=subcpath, author_id=int(author_id) if author_id else None, author_name=author)
-            await namefile.write(meta.to_json())
-            await namefile.write('\n\n')
-            await namefile.write(desc)
-    except Exception as ex:
-        rm_silent(symlink_path)
-        rm_silent(namefile_path)
-        rm_silent(publicpath)
-        raise ex
-    finally:
-        os.chdir(orig_cwd)
-
-
 class CorpusManager:
 
     def __init__(self, subcpath: Union[List[str], Tuple[str, ...]] = ()) -> None:
@@ -162,17 +122,10 @@ class CorpusManager:
             subcpath: a list of paths where user corpora are located
         """
         self.subcpath: List[str] = list(subcpath)
-        self._cache: Dict[Tuple[str, str, Optional[str]], AbstractKCorpus] = {}
-
-    def get_subc_public_name(self, corpname: str, subcname: str) -> Optional[str]:
-        if len(self.subcpath) > 0:
-            test = os.path.join(self.subcpath[0], corpname, (subcname if subcname else '') + '.pub')
-            if os.path.islink(test):
-                return os.path.splitext(os.path.basename(os.path.realpath(test)))[0]
-        return None
+        self._cache: Dict[Tuple[str, str], AbstractKCorpus] = {}
 
     async def get_corpus(
-            self, corpname: str, corp_variant: str = '', subcname: str = '',
+            self, corp_ident: Union[str, SubcorpusIdent], corp_variant: str = '',
             decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
         """
         args:
@@ -181,27 +134,26 @@ class CorpusManager:
                           wants to see a continuous text (e.g. kwic context) we must make sure he
                           sees only a 'legal' chunk.
         """
-        public_subcname = self.get_subc_public_name(corpname, subcname)
+        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusIdent) else corp_ident
+        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
-        cache_key = (registry_file, subcname, public_subcname)
+        cache_key = (registry_file, subc_id)
         if cache_key in self._cache:
             return self._cache[cache_key]
+
         corp = manatee.Corpus(registry_file)
 
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
         # KonText does not need such an attribute but to keep developers informed I leave
         # the comment here.
-        if subcname:
-            if public_subcname:
-                subcname = public_subcname
-            for sp in self.subcpath:
-                spath = os.path.join(sp, corpname, subcname + '.subc')
-                if await aiofiles.os.path.isfile(spath):
-                    subc = await KSubcorpus.load(corp, corpname, subcname, spath, decode_desc)
-                    self._cache[cache_key] = subc
-                    return subc
-            raise RuntimeError(translate(f'Subcorpus "{subcname}" not found'))   # TODO error type
+        if isinstance(corp_ident, SubcorpusIdent):
+            if await aiofiles.os.path.isfile(corp_ident.data_path):
+                subc = await KSubcorpus.load(corp, corpname, corp_ident.id, corp_ident.data_path, decode_desc)
+                self._cache[cache_key] = subc
+                return subc
+            # TODO error type
+            raise RuntimeError(translate(f'Subcorpus "{corp_ident.id}" data not found'))
         else:
             kcorp = KCorpus(corp, corpname)
             self._cache[cache_key] = kcorp
@@ -209,14 +161,15 @@ class CorpusManager:
 
     async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> ManateeCorpusInfo:
         try:
-            corp = await self.get_corpus(corpus_id, '', '', True, translate=translate)
+            corp = await self.get_corpus(corpus_id, '', True, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)
         try:
             info = DefaultManateeCorpusInfo(corp, corpus_id)
         except Exception as ex:
-            logging.getLogger(__name__).error(f'Manatee failed to fetch info about {corpus_id}: {ex}')
+            logging.getLogger(__name__).error(
+                f'Manatee failed to fetch info about {corpus_id}: {ex}')
             info = ManateeCorpusInfo(name=corpus_id, encoding='utf-8')
         return info
 
@@ -247,12 +200,6 @@ class CorpusManager:
         for x in glob.glob(os.path.join(sp, corpname, '*.subc')):
             items.append(x)
         return sorted(items)
-
-    def subcorp_names(self, corpname: str) -> List[Dict[str, Optional[str]]]:
-        return [dict(n=os.path.splitext(os.path.basename(s))[0],
-                     v=os.path.splitext(os.path.basename(s))[0],
-                     pub=self.get_subc_public_name(corpname, os.path.splitext(os.path.basename(s))[0]))
-                for s in self.subc_files(corpname)]
 
 
 def texttype_values(

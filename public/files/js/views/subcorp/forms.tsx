@@ -44,7 +44,6 @@ export interface SubcorpFormProps {
 
 export interface FormViews {
     SubcorpForm:React.ComponentClass<SubcorpFormProps>;
-    SubcNamePublicCheckbox:React.FC<{value:boolean}>;
     SubcDescription:React.FC<{value:Kontext.FormValue<string>}>;
 }
 
@@ -76,26 +75,6 @@ export function init({
         return <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
                 <input type="text" value={props.value.value} onChange={handleChange} />
             </layoutViews.ValidatedItem>;
-    };
-
-    // ------------------------ <SubcNamePublicCheckbox /> --------------------------
-
-    const SubcNamePublicCheckbox:React.FC<{
-        value:boolean;
-
-    }> = (props) => {
-
-        const handleCheckbox = (evt) => {
-            dispatcher.dispatch<typeof Actions.FormSetSubcAsPublic>({
-                name: Actions.FormSetSubcAsPublic.name,
-                payload: {
-                    value: !props.value
-                }
-            });
-        };
-
-        return <input type="checkbox" onChange={handleCheckbox} checked={props.value}
-                    style={{verticalAlign: 'middle'}} />;
     };
 
     // ------------------------ <SubcDescription /> --------------------------
@@ -190,18 +169,13 @@ export function init({
                                         </div>
                                     </layoutViews.InlineHelp>
                                 </th>
+                            </tr>
+                            <tr>
+                                <th>{he.translate('subcform__public_description')}:</th>
                                 <td>
-                                    <SubcNamePublicCheckbox value={this.props.isPublic} />
+                                    <SubcDescription value={this.props.description} />
                                 </td>
                             </tr>
-                            {this.props.isPublic ?
-                                (<tr>
-                                    <th>{he.translate('subcform__public_description')}:</th>
-                                    <td>
-                                        <SubcDescription value={this.props.description} />
-                                    </td>
-                                </tr>) : null
-                            }
                         </tbody>
                     </table>
                     <div className="data-sel">
@@ -241,7 +215,6 @@ export function init({
 
     return {
         SubcorpForm: BoundWithProps<SubcorpFormProps, SubcorpFormModelState>(SubcorpForm, subcorpFormModel),
-        SubcNamePublicCheckbox,
         SubcDescription
     };
 }

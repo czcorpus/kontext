@@ -321,11 +321,10 @@ async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
+async def create_subcorpus(user_id, corp_id, path, tt_query, cql):
     try:
-        worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id,
-                                               description=description, author=author)
-        return await worker.run(tt_query, cql, path, publish_path)
+        worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
+        return await worker.run(tt_query, cql, path)
     except Exception as ex:
         msg = getattr(ex, 'message', None)
         if not msg:

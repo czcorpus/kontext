@@ -20,6 +20,7 @@ import os
 import time
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
+import uuid
 
 import aiofiles.os
 import corplib
@@ -38,6 +39,7 @@ from bgcalc.task import AsyncTaskStatus
 from main_menu import MainMenu, generate_main_menu
 from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
+from plugin_types.subc_restore import SubcListFilterArgs
 from sanic import Sanic
 from texttypes.cache import TextTypesCache
 
@@ -451,24 +453,18 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
         return result
 
-    def user_subc_names(self, corpname):
+    async def user_subc_names(self, corpname):
         if self.user_is_anonymous():
             return []
-        return self.cm.subcorp_names(corpname)
+        with plugins.runtime.SUBC_RESTORE as subc_arch:
+            return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpus=corpname))
 
-    async def prepare_subc_path(self, corpname: str, subcname: str, publish: bool) -> str:
-        if publish:
-            code = hashlib.md5('{0} {1} {2}'.format(self.session_get(
-                'user', 'id'), corpname, subcname).encode('utf-8')).hexdigest()[:10]
-            path = os.path.join(self.subcpath[1], corpname)
-            if not await aiofiles.os.path.isdir(path):
-                await aiofiles.os.makedirs(path)
-            return os.path.join(path, code) + '.subc'
-        else:
-            path = os.path.join(self.subcpath[0], corpname)
-            if not await aiofiles.os.path.isdir(path):
-                await aiofiles.os.makedirs(path)
-            return os.path.join(path, subcname) + '.subc'
+    async def prepare_subc_path(self, corpname: str) -> Tuple[str, str]:
+        code = hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()
+        path = os.path.join(self.subcpath[1], corpname, code[:2])
+        if not await aiofiles.os.path.isdir(path):
+            await aiofiles.os.makedirs(path)
+        return os.path.join(path, code) + '.subc', code
 
     @staticmethod
     def parse_sorting_param(k):

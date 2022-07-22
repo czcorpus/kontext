@@ -317,5 +317,11 @@ export const QuickSubcLABEL = styled.label`
     input {
         margin-left: 0.7em;
     }
-
 `
+
+// ---------------- <TabContentWrapper /> --------------------------------
+
+export const TabContentWrapper = styled.div`
+
+
+`;

@@ -368,11 +368,15 @@ class CorpusActionModel(UserActionModel):
         return cn, redirect
 
     async def _load_corpus(self):
+        if self.args.usesubcorp:
+            with plugins.runtime.SUBC_RESTORE as sr:
+                corpus_ident = sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.args.usesubcorp)
+        else:
+            corpus_ident = self.args.corpname
         if self.args.corpname:
             try:
                 corp = await self.cm.get_corpus(
-                    self.args.corpname, subcname=self.args.usesubcorp,
-                    corp_variant=self._corpus_variant, translate=self._req.translate)
+                    corpus_ident, corp_variant=self._corpus_variant, translate=self._req.translate)
                 corp._conc_dir = self._conc_dir
                 return corp
             except Exception as ex:
@@ -593,7 +597,7 @@ class CorpusActionModel(UserActionModel):
                     ))
         return bib_mapping
 
-    def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
+    async def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
@@ -609,7 +613,7 @@ class CorpusActionModel(UserActionModel):
         out -- a dictionary used by templating system
         """
         subcorp_list = l10n.sort(
-            self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
+            await self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:
