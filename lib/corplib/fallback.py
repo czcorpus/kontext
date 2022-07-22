@@ -157,5 +157,14 @@ class ErrorCorpus(EmptyCorpus):
         """
         return self._error
 
+    @property
     def subcorpus_id(self):
+        return None
+
+    @property
+    def subcorpus_name(self):
+        return None
+
+    @property
+    def portable_ident(self):
         return None

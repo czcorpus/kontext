@@ -39,7 +39,12 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
-    def system_ident(self) -> Union[str, SubcorpusRecord]:
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
+        """
+        portable_ident defines an identification value/object we are able to fully instantiate
+        a corpus/subcorpus from; it is e.g. used when passing corpus between web server and worker where
+        we need only easily searializable values as args.
+        """
         pass
 
     @property

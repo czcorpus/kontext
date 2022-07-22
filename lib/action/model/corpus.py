@@ -567,7 +567,6 @@ class CorpusActionModel(UserActionModel):
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
-
         for k in asdict(self.args):
             if k not in result:
                 result[k] = getattr(self.args, k)

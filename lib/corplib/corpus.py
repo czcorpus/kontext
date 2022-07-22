@@ -180,7 +180,7 @@ class KCorpus(AbstractKCorpus):
         return self.corp.get_conffile()
 
     @property
-    def system_ident(self) -> Union[str, SubcorpusRecord]:
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
         return self.corpname
 
     @property
@@ -327,7 +327,7 @@ class KSubcorpus(KCorpus):
         return kcorp
 
     @property
-    def system_ident(self) -> Union[str, SubcorpusRecord]:
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
         return self._data_record
 
     @property
