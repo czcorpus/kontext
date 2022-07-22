@@ -50,7 +50,7 @@ class EmptyCorpus(AbstractKCorpus):
         return None
 
     @property
-    def subchash(self):
+    def cache_key(self):
         return None
 
     @property
@@ -58,15 +58,7 @@ class EmptyCorpus(AbstractKCorpus):
         return None
 
     @property
-    def is_published(self):
-        return False
-
-    @property
     def orig_spath(self):
-        return None
-
-    @property
-    def orig_subcname(self):
         return None
 
     @property
@@ -119,8 +111,8 @@ class EmptyCorpus(AbstractKCorpus):
     def filter_query(self, *args, **kwargs):
         pass
 
-    def is_subcorpus(self):
-        return False
+    def subcorpus_id(self):
+        return None
 
     async def save_subc_description(self, desc: str):
         pass
@@ -165,5 +157,5 @@ class ErrorCorpus(EmptyCorpus):
         """
         return self._error
 
-    def is_subcorpus(self):
-        return False
+    def subcorpus_id(self):
+        return None

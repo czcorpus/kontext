@@ -51,6 +51,8 @@ class SubcorpusRecord(SubcorpusIdent):
     size: int
     created: datetime.datetime
     archived: datetime.datetime
+    description: str
+    data_path: str
     cql: InitVar[Optional[str]] = None
     within_cond: InitVar[Optional[str]] = None
     text_types: InitVar[Optional[str]] = None

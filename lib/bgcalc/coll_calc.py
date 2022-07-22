@@ -97,7 +97,7 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
     (MissingSubCorpFreqFile exception), the function triggers
     a respective calculation.
     """
-    cm = corplib.CorpusManager(subcpath=coll_args.subcpath)
+    cm = corplib.CorpusManager(subc_root=coll_args.subcpath)
     corp = await cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile

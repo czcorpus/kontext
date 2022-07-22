@@ -49,7 +49,7 @@ async def form(amodel: WordlistActionModel, _: KRequest, __: KResponse):
     amodel.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
                                   MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     out = dict(freq_figures=amodel.FREQ_FIGURES)
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
+    await amodel.export_subcorpora_list(out)
     amodel.export_form_args(out)
     return out
 
@@ -188,7 +188,7 @@ async def result(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     result['SubcorpList'] = []
     result['quick_save_row_limit'] = amodel.WORDLIST_QUICK_SAVE_MAX_LINES
     result['query_id'] = amodel.q_code
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, result)
+    await amodel.export_subcorpora_list(result)
     return result
 
 

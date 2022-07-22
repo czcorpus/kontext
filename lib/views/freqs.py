@@ -191,7 +191,7 @@ async def _freqs(
 
     args = FreqCalcArgs(
         corpname=amodel.corp.corpname,
-        subcname=amodel.corp.subcname,
+        subcname=amodel.corp.subcorpus_id,
         subcpath=amodel.subcpath,
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,

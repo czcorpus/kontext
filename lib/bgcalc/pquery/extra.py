@@ -114,7 +114,7 @@ async def calc_merged_freqs_threaded(
     user_id -- user ID
     collator_locale -- a locale used for collation within the current corpus
     """
-    cm = CorpusManager(subcpath=subcpath)
+    cm = CorpusManager(subc_root=subcpath)
     corp = await cm.get_corpus(pquery.corpname, subcname=pquery.usesubcorp)
 
     with ThreadPoolExecutor(max_workers=len(pquery.conc_ids)) as executor:

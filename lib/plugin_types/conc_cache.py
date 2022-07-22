@@ -177,19 +177,19 @@ class ConcCacheStatus:
 class AbstractConcCache(abc.ABC):
 
     @abc.abstractmethod
-    async def get_stored_size(self, subchash: str, q: QueryType) -> Union[int, None]:
+    async def get_stored_size(self, corp_cache_key: str, q: QueryType) -> Union[int, None]:
         """
         Return stored concordance size.
         The method should return None if no record is found at all.
 
         Arguments:
-        subchash -- a md5 hash generated from subcorpus identifier by
+        corp_cache_key -- a md5 hash generated from subcorpus identifier by
                     CorpusManager.get_corpus()
         q -- a list of query elements
         """
 
     @abc.abstractmethod
-    async def get_calc_status(self, subchash: str, query: QueryType) -> Union[ConcCacheStatus, None]:
+    async def get_calc_status(self, corp_cache_key: str, query: QueryType) -> Union[ConcCacheStatus, None]:
         pass
 
     @abc.abstractmethod
@@ -207,27 +207,27 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def readable_cache_path(self, subchash: str, q: QueryType) -> Optional[str]:
+    async def readable_cache_path(self, corp_cache_key: str, q: QueryType) -> Optional[str]:
         """
         Return a path to a cache file matching provided subcorpus hash and query
-        elements. If there is no entry matching (subchash, q) or if a respective
+        elements. If there is no entry matching (corp_cache_key, q) or if a respective
         entry is not in the 'readable' state then None must be returned.
 
         arguments:
-        subchash -- hashed subcorpus identifier (corplib.CorpusManager does this)
+        corp_cache_key -- hashed subcorpus identifier (corplib.CorpusManager does this)
         q -- a list of query items
         """
 
     @abc.abstractmethod
-    async def add_to_map(self, subchash: Optional[str], query: QueryType, calc_status: ConcCacheStatus,
+    async def add_to_map(self, corp_cache_key: Optional[str], query: QueryType, calc_status: ConcCacheStatus,
                          overwrite: bool = False) -> ConcCacheStatus:
         """
         Add a cache entry. If already present, the stored version is returned unless overwrite is set to True
 
         arguments:
-        subchash -- a subcorpus identifier hash (see corplib.CorpusManager.get_corpus)
+        corp_cache_key -- a subcorpus identifier hash (see corplib.CorpusManager.get_corpus)
         query -- a list/tuple of query elements
-        size -- current size of a respective concordance (the one defined by corpus, subchash
+        size -- current size of a respective concordance (the one defined by corpus, corp_cache_key
                 and query)
         calc_status -- an instance of ConcCacheStatus
         overwrite -- if true then the new calc_status value is always used
@@ -236,28 +236,28 @@ class AbstractConcCache(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def del_entry(self, subchash: Optional[str], q: QueryType):
+    async def del_entry(self, corp_cache_key: Optional[str], q: QueryType):
         """
-        Remove a specific entry with concrete subchash and query.
+        Remove a specific entry with concrete corp_cache_key and query.
 
-        subchash -- a md5 hash generated from subcorpus identifier by
+        corp_cache_key -- a md5 hash generated from subcorpus identifier by
                     CorpusManager.get_corpus()
         q -- a list of query elements
         """
 
     @abc.abstractmethod
-    async def del_full_entry(self, subchash: Optional[str], q: QueryType):
+    async def del_full_entry(self, corp_cache_key: Optional[str], q: QueryType):
         """
         Removes all the entries with the same base query no matter
         what other operations the query (e.g. shuffle, filter) contains.
 
-        subchash -- a md5 hash generated from subcorpus identifier by
+        corp_cache_key -- a md5 hash generated from subcorpus identifier by
                     CorpusManager.get_corpus()
         q -- a list of query elements
         """
 
     @abc.abstractmethod
-    async def update_calc_status(self, subchash: Optional[str], query: Tuple[str, ...], **kw):
+    async def update_calc_status(self, corp_cache_key: Optional[str], query: Tuple[str, ...], **kw):
         pass
 
 

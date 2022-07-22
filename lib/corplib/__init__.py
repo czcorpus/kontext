@@ -29,7 +29,7 @@ import aiofiles.os
 import l10n
 import manatee
 import plugins
-from corplib.subcorpus import SubcorpusIdent
+from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
 from manatee import Concordance, StrVector, SubCorpus
 from plugin_types.corparch.corpus import (DefaultManateeCorpusInfo,
                                           ManateeCorpusInfo)
@@ -116,12 +116,12 @@ def conf_bool(v: str) -> bool:
 
 class CorpusManager:
 
-    def __init__(self, subcpath: Union[List[str], Tuple[str, ...]] = ()) -> None:
+    def __init__(self, subc_root: Optional[str] = None) -> None:
         """
         Args:
             subcpath: a list of paths where user corpora are located
         """
-        self.subcpath: List[str] = list(subcpath)
+        self.subcpath = subc_root
         self._cache: Dict[Tuple[str, str], AbstractKCorpus] = {}
 
     async def get_corpus(
@@ -134,8 +134,10 @@ class CorpusManager:
                           wants to see a continuous text (e.g. kwic context) we must make sure he
                           sees only a 'legal' chunk.
         """
-        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusIdent) else corp_ident
-        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
+        if isinstance(corp_ident, SubcorpusRecord) and self.subcpath is None:
+            raise RuntimeError('CorpusManager not configured for creating subcorpora instances')
+        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusRecord) else corp_ident
+        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusRecord) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
         cache_key = (registry_file, subc_id)
         if cache_key in self._cache:
@@ -195,7 +197,7 @@ class CorpusManager:
 
     def subc_files(self, corpname: str) -> List[str]:
         # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
-        sp = self.subcpath[0]
+        sp = self.subcpath
         items = []
         for x in glob.glob(os.path.join(sp, corpname, '*.subc')):
             items.append(x)
@@ -360,7 +362,7 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
             raise MissingSubCorpFreqFile(ex)
     else:
         try:
-            if corp.get_conf('VIRTUAL') and not corp.is_subcorpus and nums == 'frq':
+            if corp.get_conf('VIRTUAL') and not corp.subcorpus_id and nums == 'frq':
                 raise IOError
             frq = array.array('i')
             frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
@@ -374,7 +376,7 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
                 frq = array.array('l')
                 frq.fromfile(open(filename + '64', 'rb'), id_range)  # type: ignore
             except IOError as ex:
-                if not corp.is_subcorpus and nums == 'frq':
+                if not corp.subcorpus_id and nums == 'frq':
                     a = corp.get_attr(attrname)
                     frq.fromlist([a.freq(i) for i in range(a.id_range())])
                 else:

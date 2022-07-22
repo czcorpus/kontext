@@ -53,19 +53,18 @@ class TaskWrapper:
 # ----------------------------- CONCORDANCE -----------------------------------
 
 @as_sync
-async def conc_register(user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit):
+async def conc_register(user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit):
     return await general.conc_register(
-        TaskWrapper(get_current_job()), user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker)
+        TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit, worker)
+
+@as_sync
+async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize):
+    return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize)
 
 
 @as_sync
-async def conc_calculate(initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
-    return await general.conc_calculate(TaskWrapper(get_current_job()), initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize)
-
-
-@as_sync
-async def conc_sync_calculate(user_id, corpus_name, subc_name, subchash, query, samplesize):
-    return await general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, subchash, query, samplesize)
+async def conc_sync_calculate(user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
+    return await general.conc_sync_calculate(TaskWrapper(get_current_job()), user_id, corpus_name, subc_name, corp_cache_key, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
@@ -107,18 +106,18 @@ async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collat
 
 
 @as_sync
-async def compile_frq(user_id, corp_id, subcorp: str, attr, logfile):
-    return await general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
+async def compile_frq(user_id, corpus_ident, attr, logfile):
+    return await general.compile_frq(user_id, corpus_ident, attr, logfile)
 
 
 @as_sync
-async def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
-    return await general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
+async def compile_arf(user_id, corpus_ident, attr, logfile):
+    return await general.compile_arf(user_id, corpus_ident, attr, logfile)
 
 
 @as_sync
-async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
-    return await general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
+async def compile_docf(user_id, corpus_ident, attr, logfile):
+    return await general.compile_docf(user_id, corpus_ident, attr, logfile)
 
 # ----------------------------- WORD LIST -------------------------------------
 
