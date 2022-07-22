@@ -322,7 +322,7 @@ class KSubcorpus(KCorpus):
         load is a recommended factory function to create a KSubcorpus instance.
         """
         subc = SubCorpus(corp, data_record.data_path)
-        kcorp = KSubcorpus(subc, corpname=data_record.corpname)
+        kcorp = KSubcorpus(subc, data_record)
         kcorp._corp = subc
         return kcorp
 

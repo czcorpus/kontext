@@ -134,10 +134,10 @@ class CorpusManager:
                           wants to see a continuous text (e.g. kwic context) we must make sure he
                           sees only a 'legal' chunk.
         """
-        if isinstance(corp_ident, SubcorpusRecord) and self.subcpath is None:
+        if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
             raise RuntimeError('CorpusManager not configured for creating subcorpora instances')
-        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusRecord) else corp_ident
-        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusRecord) else ''
+        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusIdent) else corp_ident
+        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
         cache_key = (registry_file, subc_id)
         if cache_key in self._cache:
@@ -151,7 +151,7 @@ class CorpusManager:
         # the comment here.
         if isinstance(corp_ident, SubcorpusIdent):
             if await aiofiles.os.path.isfile(corp_ident.data_path):
-                subc = await KSubcorpus.load(corp, corpname, corp_ident.id, corp_ident.data_path, decode_desc)
+                subc = await KSubcorpus.load(corp, corp_ident, decode_desc)
                 self._cache[cache_key] = subc
                 return subc
             # TODO error type

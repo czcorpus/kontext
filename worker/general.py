@@ -306,7 +306,7 @@ async def compile_docf(corpus_ident, attr, logfile):
                 await f.write('\n100 %\n')
         return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
-        corp_id = corpus_ident.corpname if isinstance(corpus_ident, SubcorpusRecord) else corpus_ident
+        corp_id = corpus_ident.corpname if isinstance(corpus_ident, SubcorpusIdent) else corpus_ident
         raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))
 
