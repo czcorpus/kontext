@@ -1,6 +1,7 @@
 # Copyright (c) 2021 Charles University in Prague, Faculty of Arts,
 #                    Institute of the Czech National Corpus
 # Copyright (c) 2021 Martin Zimandl <martin.zimandl@gmail.com>
+# Copyright (c) 2021 Tomas Machalek <tomas.machalek@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,19 +15,16 @@
 
 
 import logging
-import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import plugins
 import ujson as json
-from action.model.subcorpus import (CreateSubcorpusArgs,
-                                    CreateSubcorpusRawCQLArgs,
-                                    CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
+from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.subc_restore import AbstractSubcRestore, SubcorpusRecord
+from plugin_types.subc_restore import AbstractSubcRestore
 from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb

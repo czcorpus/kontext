@@ -28,10 +28,10 @@ import aiofiles
 import aiofiles.os
 import l10n
 import manatee
-import plugins
 from manatee import Concordance, StrVector, SubCorpus
+import plugins
 from plugin_types.corparch.corpus import ManateeCorpusInfo, DefaultManateeCorpusInfo
-from plugin_types.subc_restore import SubcorpusRecord
+from corplib.subcorpus import SubcorpusRecord
 
 from .corpus import (
     AbstractKCorpus, KCorpus, KSubcorpus, _PublishedSubcMetadata)
@@ -125,7 +125,8 @@ class CorpusManager:
         self._cache: Dict[Tuple[str, str], AbstractKCorpus] = {}
 
     async def get_corpus(
-            self, corp_ident: Union[str, SubcorpusRecord], corp_variant: str = '', decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
+            self, corp_ident: Union[str, SubcorpusRecord], corp_variant: str = '',
+            decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
         """
         args:
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
@@ -159,7 +160,7 @@ class CorpusManager:
 
     async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> ManateeCorpusInfo:
         try:
-            corp = await self.get_corpus(corpus_id, '', '', True, translate=translate)
+            corp = await self.get_corpus(corpus_id, '', True, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)

@@ -24,61 +24,11 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
-import datetime
-from dataclasses import asdict, dataclass, InitVar
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
-import ujson as json
-from action.model.subcorpus import (
-    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, TextTypesType, WithinType)
-
-
-@dataclass
-class SubcorpusRecord:
-    # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
-    id: str
-    user_id: int
-    author_id: int
-    corpname: str
-    name: str  # name user gives to the subcorpus
-    size: int
-    created: datetime.datetime
-    archived: datetime.datetime
-    data_path: str
-    cql: InitVar[Optional[str]] = None
-    within_cond: InitVar[Optional[WithinType]] = None
-    text_types: InitVar[Optional[TextTypesType]] = None
-    _cql: Optional[str] = None
-    _within_cond: Optional[WithinType] = None
-    _text_types: Optional[TextTypesType] = None
-
-    def __post_init__(self, cql, within_cond, text_types):
-        if within_cond:
-            self._within_cond = json.loads(within_cond)
-        if text_types:
-            self._text_types = json.loads(text_types)
-        if cql:
-            self._cql = cql
-
-    @property
-    def within_cond(self):
-        return self._within_cond
-
-    @property
-    def text_types(self):
-        return self._text_types
-
-    @property
-    def cql(self):
-        return self._cql
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Method to get json serializable dict
-        """
-        res = asdict(self)
-        res['timestamp'] = self.timestamp.timestamp()
-        return res
+from corplib.subcorpus import SubcorpusRecord
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 
 
 class AbstractSubcRestore(abc.ABC):

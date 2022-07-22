@@ -18,8 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Dict
 
 import bgcalc
 import corplib
@@ -27,57 +26,13 @@ import plugins
 import settings
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
+from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs
 from bgcalc.task import AsyncTaskStatus
 from texttypes.model import TextTypeCollector
 
 
 class SubcorpusError(Exception):
     pass
-
-
-@dataclass
-class SubmitBase:
-    corpname: str
-    subcname: str
-    description: str
-    aligned_corpora: List[str]
-    form_type: str
-
-    def has_aligned_corpora(self):
-        return len(self.aligned_corpora) > 0 if type(self.aligned_corpora) is list else False
-
-
-TextTypesType = Dict[str, Union[List[str], List[int]]]
-
-
-@dataclass
-class CreateSubcorpusArgs(SubmitBase):
-    text_types: TextTypesType
-
-
-WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
-
-
-@dataclass
-class CreateSubcorpusWithinArgs(SubmitBase):
-    within: WithinType
-
-    def deserialize(self) -> str:
-        """
-         return this.lines.filter((v)=>v != null).map(
-            (v:WithinLine) => (
-                (v.negated ? '!within' : 'within') + ' <' + v.structureName
-                    + ' ' + v.attributeCql + ' />')
-        ).join(' ');
-        }
-        """
-        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-            item['structure_name'], item['attribute_cql']) for item in [item for item in self.within if bool(item)]])
-
-
-@dataclass
-class CreateSubcorpusRawCQLArgs(SubmitBase):
-    cql: str
 
 
 class SubcorpusActionModel(CorpusActionModel):
