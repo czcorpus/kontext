@@ -131,10 +131,9 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
     involved_corpora = []
-    # TODO show deleted, etc
-    # filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
-    #                   corpname=req.args.get('corpname'))
-    filter_args = SubcListFilterArgs(corpus=req.args.get('corpname'))
+    active_only = False if bool(int(req.args.get('show_archived', 0))) else True
+    filter_args = SubcListFilterArgs(
+        active_only=active_only, archived_only=False, corpus=req.args.get('corpname'))
 
     with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
         try:
