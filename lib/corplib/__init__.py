@@ -28,13 +28,13 @@ import aiofiles
 import aiofiles.os
 import l10n
 import manatee
-from manatee import Concordance, StrVector, SubCorpus
 import plugins
-from plugin_types.corparch.corpus import ManateeCorpusInfo, DefaultManateeCorpusInfo
-from corplib.subcorpus import SubcorpusRecord
+from corplib.subcorpus import SubcorpusIdent
+from manatee import Concordance, StrVector, SubCorpus
+from plugin_types.corparch.corpus import (DefaultManateeCorpusInfo,
+                                          ManateeCorpusInfo)
 
-from .corpus import (
-    AbstractKCorpus, KCorpus, KSubcorpus, _PublishedSubcMetadata)
+from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
 from .errors import MissingSubCorpFreqFile
 from .fallback import EmptyCorpus
 
@@ -125,7 +125,7 @@ class CorpusManager:
         self._cache: Dict[Tuple[str, str], AbstractKCorpus] = {}
 
     async def get_corpus(
-            self, corp_ident: Union[str, SubcorpusRecord], corp_variant: str = '',
+            self, corp_ident: Union[str, SubcorpusIdent], corp_variant: str = '',
             decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
         """
         args:
@@ -134,8 +134,8 @@ class CorpusManager:
                           wants to see a continuous text (e.g. kwic context) we must make sure he
                           sees only a 'legal' chunk.
         """
-        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusRecord) else corp_ident
-        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusRecord) else ''
+        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusIdent) else corp_ident
+        subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
         cache_key = (registry_file, subc_id)
         if cache_key in self._cache:
@@ -147,12 +147,13 @@ class CorpusManager:
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
         # KonText does not need such an attribute but to keep developers informed I leave
         # the comment here.
-        if isinstance(corp_ident, SubcorpusRecord):
+        if isinstance(corp_ident, SubcorpusIdent):
             if await aiofiles.os.path.isfile(corp_ident.data_path):
                 subc = await KSubcorpus.load(corp, corpname, corp_ident.id, corp_ident.data_path, decode_desc)
                 self._cache[cache_key] = subc
                 return subc
-            raise RuntimeError(translate(f'Subcorpus "{corp_ident.id}" data not found'))   # TODO error type
+            # TODO error type
+            raise RuntimeError(translate(f'Subcorpus "{corp_ident.id}" data not found'))
         else:
             kcorp = KCorpus(corp, corpname)
             self._cache[cache_key] = kcorp
@@ -167,7 +168,8 @@ class CorpusManager:
         try:
             info = DefaultManateeCorpusInfo(corp, corpus_id)
         except Exception as ex:
-            logging.getLogger(__name__).error(f'Manatee failed to fetch info about {corpus_id}: {ex}')
+            logging.getLogger(__name__).error(
+                f'Manatee failed to fetch info about {corpus_id}: {ex}')
             info = ManateeCorpusInfo(name=corpus_id, encoding='utf-8')
         return info
 
