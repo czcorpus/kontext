@@ -30,7 +30,7 @@ from action.argmapping.subcorpus import (CreateSubcorpusArgs,
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
-from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
+from corplib.subcorpus import SubcorpusIdent
 from texttypes.model import TextTypeCollector
 
 

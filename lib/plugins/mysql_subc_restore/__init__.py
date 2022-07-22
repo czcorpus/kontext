@@ -69,7 +69,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'UPDATE {self.TABLE_NAME} SET archived = NOW() '
-                'WHERE user_id = %s AND corpname = %s AND subcname = %s',
+                'WHERE user_id = %s AND corpus_name = %s AND name = %s',
                 (user_id, corpname, subcname)
             )
         await cursor.connection.commit()
@@ -100,14 +100,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.execute(sql, args)
             return [SubcorpusRecord(**row) async for row in cursor]
 
-    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcorpusRecord]:
+    async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
-                'WHERE user_id = %s AND corpname = %s AND subcname = %s '
+                'WHERE user_id = %s AND corpus_name = %s AND id = %s '
                 'ORDER BY created '
                 'LIMIT 1',
-                (user_id, corpname, subcname)
+                (user_id, corpname, subc_id)
             )
             row = await cursor.fetchone()
             return None if row is None else SubcorpusRecord(**row)

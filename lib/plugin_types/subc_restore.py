@@ -77,7 +77,7 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcorpusRecord]:
+    async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
         """
         Returns an information about the most recent record matching provided arguments
         """

@@ -36,7 +36,7 @@ class SubcorpusIdent:
     # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
     id: str
     name: str  # name user gives to the subcorpus
-    corpname: str
+    corpus_name: str
     data_path: str
 
 
@@ -51,7 +51,7 @@ class SubcorpusRecord(SubcorpusIdent):
     size: int
     created: datetime.datetime
     archived: datetime.datetime
-    description: str
+    public_description: str
     data_path: str
     cql: InitVar[Optional[str]] = None
     within_cond: InitVar[Optional[str]] = None

@@ -309,8 +309,8 @@ class KSubcorpus(KCorpus):
     """
 
     def __init__(self, corp: SubCorpus, data_record: SubcorpusRecord):
-        super().__init__(corp, data_record.corpname)
-        self._corpname = data_record.corpname
+        super().__init__(corp, data_record.corpus_name)
+        self._corpname = data_record.corpus_name
         self._data_record = data_record
 
     def __str__(self):
@@ -352,7 +352,7 @@ class KSubcorpus(KCorpus):
         """
         Return a description of the source corpus this subc. is derived from
         """
-        return self._data_record.description
+        return self._data_record.public_description
 
     def freq_precalc_file(self, attrname: str) -> str:
-        return self.spath[:-4] + attrname
+        return self._data_record.data_path[:-4] + attrname
