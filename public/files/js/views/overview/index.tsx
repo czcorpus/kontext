@@ -208,15 +208,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     const SubcorpusInfo:React.FC<{
         data:SubcorpusInfo;
+        userId:number;
     }> = (props) => {
 
         const getAccess = () => {
-            if (props.data.published) {
+            if (props.data.public_description) {
                 return <>
                     {he.translate('global__published_subcorp')}
                     {'\u00a0'}
                     <span className="note">({he.translate('global__published_subcorp_id')}{':\u00a0'}
-                    {props.data.subCorpusName})</span>
+                    {props.data.name})</span>
                 </>;
             }
             return he.translate('global__subc_info_access_private');
@@ -225,30 +226,21 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         return (
             <S.SubcorpusInfo>
                 <h2 className="subcorpus-name">
-                    {props.data.corpusName}{'\u00a0/\u00a0'}<strong>{props.data.published ? props.data.origSubCorpusName : props.data.subCorpusName}</strong>
+                    {props.data.corpus_name}{'\u00a0/\u00a0'}<strong>{props.data.author_id != props.userId ? props.data.id : props.data.name}</strong>
                 </h2>
 
                 <dl>
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{props.data.subCorpusSize}</dd>
+                    <dd>{props.data.size}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
-                    {props.data.extended_info.cql ?
-                        <>
-                            <dt>{he.translate('global__subc_query')}:</dt>
-                            <dd>
-                                <textarea readOnly={true} value={props.data.extended_info.cql} style={{width: '100%'}} />
-                            </dd>
-                        </> :
-                        null
-                    }
+                    <dd>{he.formatDate(new Date(Date.parse(props.data.created)))}</dd>
                     <dt>{he.translate('global__subc_info_access_hd')}:</dt>
                     <dd>{getAccess()}</dd>
-                    {props.data.description ?
+                    {props.data.public_description ?
                         <>
                             <dt>{he.translate('global__description')}:</dt>
                             <dd className="description">
-                                <div className="html" dangerouslySetInnerHTML={{__html: props.data.description}} />
+                                <div className="html" dangerouslySetInnerHTML={{__html: props.data.public_description}} />
                             </dd>
                         </> :
                         null
@@ -413,7 +405,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // ----------------------------- <OverviewArea /> --------------------------
 
-    class OverviewArea extends React.Component<{}, OverviewAreaState> {
+    class OverviewArea extends React.Component<{userId:number}, OverviewAreaState> {
 
         private modelSubscription:Subscription;
 
@@ -457,7 +449,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case CorpusInfoType.CITATION:
                         return <CorpusReference data={this.state.data} />;
                     case CorpusInfoType.SUBCORPUS:
-                        return <SubcorpusInfo data={this.state.data} />;
+                        return <SubcorpusInfo data={this.state.data} userId={this.props.userId} />;
                     case CorpusInfoType.KEY_SHORTCUTS:
                         return <KeyboardShortcuts />;
                 }

@@ -34,7 +34,6 @@ export interface MessageModelState {
     isDebug:boolean;
 }
 
-
 /**
  *
  */
@@ -258,20 +257,29 @@ export interface CorpusInfo extends CorpusInfoResponse {
     type:CorpusInfoType.CORPUS;
 }
 
-export interface SubcorpusInfoResponse {
-    corpusId:string;
-    corpusName:string;
-    corpusSize:string; // formatted num
-    created:number; // UNIX timestamp
-    extended_info:{[key:string]:string};
-    subCorpusName:string;
-    origSubCorpusName:string;
-    subCorpusSize:string; // formatted num
-    description:string; // a desc. for public corpora
-    published:boolean;
+export interface SubcorpusServerRecord {
+    id:string;
+    name:string;
+    corpus_name:string;
+    user_id:number;
+    author_id:number;
+    size:number;
+    created:string;
+    archived:string|undefined;
+    public_description:string|undefined;
+    cql:string|undefined;
+    within_cond:string|undefined;
+    text_types:string|undefined;
 }
 
-export interface SubcorpusInfo extends SubcorpusInfoResponse {
+export interface SubcorpusInfoResponse {
+    liveAttrsEnabled:boolean;
+    data:SubcorpusServerRecord;
+    structsAndAttrs:unknown; // TODO
+    textTypes:unknown; // TODO
+}
+
+export interface SubcorpusInfo extends SubcorpusServerRecord {
     type:CorpusInfoType.SUBCORPUS;
 }
 
@@ -289,7 +297,7 @@ export type AnyOverviewInfo = CorpusInfo|SubcorpusInfo|CitationInfo|KeyShortcuts
  */
 export interface CorpusInfoModelState {
     corpusData:CorpusInfoResponse;
-    subcorpusData:SubcorpusInfoResponse;
+    subcorpusData:SubcorpusServerRecord;
     currentCorpus:string;
     currentSubcorpus:string;
     currentInfoType:CorpusInfoType;
@@ -444,7 +452,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                     (data) => {
                         return this.pluginApi.ajax$<SubcorpusInfoResponse>(
                             HTTP.Method.GET,
-                            this.pluginApi.createActionUrl('subcorpus/subcorpus_info'),
+                            this.pluginApi.createActionUrl('subcorpus/properties'),
                             {
                                 'corpname': corpusId,
                                 'usesubcorp': subcorpusId
@@ -452,11 +460,8 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                         ).pipe(
                             concatMap(
                                 (data) => {
-                                    if (!data.extended_info) {
-                                        data.extended_info = {cql: '-'};
-                                    }
                                     this.changeState(state => {
-                                        state.subcorpusData = data;
+                                        state.subcorpusData = data.data;
                                         state.currentCorpus = corpusId;
                                         state.currentSubcorpus = subcorpusId;
                                     })
