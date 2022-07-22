@@ -48,13 +48,12 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
     struct_and_attrs = await amodel.get_structs_and_attrs()
     data = {
         'corpname': amodel.corp.corpname,
-        'subcname': amodel.corp.subcname,
-        'origSubcname': amodel.corp.orig_subcname,
+        'subcname': amodel.corp.subcorpus_id,
         'size': amodel.corp.size
     }
 
     with plugins.runtime.SUBC_RESTORE as sr:
-        info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcname)
+        info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcorpus_id)
         if info:
             data['created'] = info.created.isoformat()
             if info.text_types is not None:

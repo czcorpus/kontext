@@ -21,7 +21,7 @@
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import aiofiles.os
 import manatee
@@ -31,6 +31,7 @@ from conclib.errors import ConcCalculationStatusException
 from conclib.pyconc import PyConc
 from corplib import CorpusManager
 from corplib.corpus import AbstractKCorpus
+from corplib.subcorpus import SubcorpusRecord
 from plugin_types.conc_cache import ConcCacheStatus
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
@@ -68,7 +69,7 @@ class GeneralWorker:
             q = ()
         ans = CachedConcSizes()
         cache_map = self._cache_factory.get_mapping(corp)
-        status = await cache_map.get_calc_status(corp.subchash, q)
+        status = await cache_map.get_calc_status(corp.cache_key, q)
         if not status:
             raise ConcCalculationStatusException('Concordance calculation not found', None)
         status.check_for_errors(TASK_TIME_LIMIT)
@@ -88,7 +89,7 @@ class GeneralWorker:
             else:
                 relconcsize = 1000000.0 * concsize / corp.search_size
 
-            if finished and not corp.is_subcorpus:
+            if finished and not corp.subcorpus_id:
                 conc = manatee.Concordance(corp.unwrap(), status.cachefile)
                 result_arf = round(conc.compute_ARF(), 2)
             else:
@@ -118,15 +119,16 @@ class TaskRegistration(GeneralWorker):
     def __init__(self, task_id: str):
         super(TaskRegistration, self).__init__(task_id=task_id)
 
-    async def run(self, corpus_name: str, subc_name: str, subchash: Optional[str], subcpaths: Tuple[str, ...],
-                  query: Tuple[str, ...], samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
-        corpus_manager = CorpusManager(subcpath=subcpaths)
-        corpus_obj = await corpus_manager.get_corpus(corpus_name, subcname=subc_name, translate=translate)
+    async def run(
+            self, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key: str, query: Tuple[str, ...],
+            samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
+        corpus_manager = CorpusManager(subc_root=settings.get('corpora', 'users_subcpath'))
+        corpus_obj = await corpus_manager.get_corpus(corpus_ident, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
-        status = await cache_map.get_calc_status(subchash, query)
+        status = await cache_map.get_calc_status(corp_cache_key, query)
         if status is None or status.error:
             status = self.create_new_calc_status()
-            status = await cache_map.add_to_map(subchash, query, status, overwrite=True)
+            status = await cache_map.add_to_map(corp_cache_key, query, status, overwrite=True)
             already_running = False
         else:
             already_running = True

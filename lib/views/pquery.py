@@ -49,7 +49,7 @@ async def index(amodel: ParadigmaticQueryActionModel, req: KRequest, resp: KResp
         'pquery_default_attr': amodel.get_default_attr(),
     }
     await amodel.export_form_args(ans)
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, ans)
+    await amodel.export_subcorpora_list(ans)
     amodel.add_save_menu()
     return ans
 
@@ -82,7 +82,7 @@ async def result(amodel: ParadigmaticQueryActionModel, req: KRequest, resp: KRes
         'data_ready': data_ready
     }
     await amodel.export_form_args(ans)
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, ans)
+    await amodel.export_subcorpora_list(ans)
     amodel.add_save_menu()
     amodel.disabled_menu_items = (
         MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS,

@@ -34,6 +34,7 @@ import os
 import pickle
 import sys
 import time
+from typing import Union
 
 import aiofiles
 import aiofiles.os
@@ -70,6 +71,7 @@ from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusManager
 from corplib.corpus import KCorpus
+from corplib.subcorpus import SubcorpusRecord
 
 stderr_redirector = get_stderr_redirector(settings)
 
@@ -109,7 +111,7 @@ def is_compiled(corp: KCorpus, attr, method):
     return False
 
 
-async def _load_corp(corp_id, subc: str, user_id):
+async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
     """
     Instantiate a manatee.Corpus (or manatee.SubCorpus)
     instance
@@ -119,11 +121,8 @@ async def _load_corp(corp_id, subc: str, user_id):
     subc -- a subcorpus identifier (None if not defined)
     user_id --
     """
-    subc_paths = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
-    if user_id is not None:
-        subc_paths.insert(0, os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id)))
-    cm = CorpusManager(subc_paths)
-    return await cm.get_corpus(corp_id, '', subc)
+    cm = CorpusManager(subc_root=settings.get('corpora', 'users_subcpath'))
+    return await cm.get_corpus(corp_ident)
 
 
 async def _compile_frq(corp: KCorpus, attr, logfile):
@@ -150,15 +149,13 @@ async def _compile_frq(corp: KCorpus, attr, logfile):
 # ----------------------------- CONCORDANCE -----------------------------------
 
 
-async def conc_register(self, user_id, corpus_id, subc_name, subchash, query, samplesize, time_limit, worker):
+async def conc_register(self, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize, time_limit, worker):
     """
     Register concordance calculation and initiate the calculation.
 
     arguments:
     user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
-    corpus_id -- a corpus identifier
-    subc_name -- a sub-corpus identifier (None if not used)
-    subchash -- a MD5 checksum of the sub-corpus data file
+    corpus_ident -- a corpus identifier (either a corpus name or data for a subcorpus)
     query -- a query tuple
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
     time_limit -- a time limit (in seconds) for the main conc. task
@@ -167,19 +164,17 @@ async def conc_register(self, user_id, corpus_id, subc_name, subchash, query, sa
     a dict(cachefile=..., pidfile=..., stored_pidfile=...)
     """
     task = conclib.calc.base.TaskRegistration(task_id=self.request.id)
-    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
-    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
-    initial_args = await task.run(corpus_id, subc_name, subchash, (subc_path, pub_path), query, samplesize)
+    initial_args = await task.run(corpus_ident, corp_cache_key, query, samplesize)
     if not initial_args['already_running']:   # we are first trying to calc this
         worker.send_task_sync(
             'conc_calculate', object.__class__,
-            args=(initial_args, user_id, corpus_id, subc_name, subchash, query, samplesize),
+            args=(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize),
             soft_time_limit=time_limit)
         # there is no return from the send_task as we obtain the status via conc cache map
     return initial_args
 
 
-async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, subchash, query, samplesize):
+async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize):
     """
     Perform actual concordance calculation.
     This is called automatically by the 'register()' function above.
@@ -187,27 +182,24 @@ async def conc_calculate(self, initial_args, user_id, corpus_name, subc_name, su
     arguments:
     initial_args -- a dict(cachefile=..., pidfile=..., stored_pidfile=...) as obtained from register()
     user_id -- an identifier of the user who entered the query (used to specify subc. directory if needed)
-    corpus_id -- a corpus identifier
+    corpus_id -- a corpus system identifier
     subc_name -- a sub-corpus identifier (None if not used)
-    subchash -- a MD5 checksum of the sub-corpus data file
+    corp_cache_key -- a MD5 checksum of the sub-corpus data file
     query -- a query tuple
     samplesize -- a row number limit (if 0 then unlimited - see Manatee API)
     """
     task = conclib.calc.ConcCalculation(task_id=self.request.id)
-    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
-    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
-    return await task.run(initial_args, (subc_path, pub_path), corpus_name, subc_name, subchash, query, samplesize)
+    return await task.run(
+        initial_args, settings.get('corpora', 'users_subcpath'), corpus_ident, corp_cache_key, query, samplesize)
 
 
-async def conc_sync_calculate(self, user_id, corpus_name, subc_name, subchash, query, samplesize):
-    subc_path = os.path.join(settings.get('corpora', 'users_subcpath'), str(user_id))
-    pub_path = os.path.join(settings.get('corpora', 'users_subcpath'), 'published')
+async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
-    task = conclib.calc.ConcSyncCalculation(task_id=self.request.id, cache_factory=None,
-                                            subc_dirs=(
-                                                subc_path, pub_path), corpus_name=corpus_name,
-                                            subc_name=subc_name, conc_dir=conc_dir)
-    return await task.run(subchash, query, samplesize)
+    task = conclib.calc.ConcSyncCalculation(
+        task_id=self.request.id, cache_factory=None,
+        subc_root=settings.get('corpora', 'users_subcpath'), corpus_name=corpus_name,
+        subc_name=subc_name, conc_dir=conc_dir)
+    return await task.run(corp_cache_key, query, samplesize)
 
 
 # ----------------------------- COLLOCATIONS ----------------------------------
@@ -256,21 +248,21 @@ async def calc_merged_freqs(worker, request_json, raw_queries, subcpath, user_id
 # ----------------------------- DATA PRECALCULATION ---------------------------
 
 
-async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
+async def compile_frq(corpus_ident, attr, logfile):
     """
     Precalculate freqency data for collocations and wordlists.
     (see freqs.build_arf_db)worker.py
     """
-    corp = await _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corpus_ident)
     return await _compile_frq(corp, attr, logfile)
 
 
-async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
+async def compile_arf(corpus_ident, attr, logfile):
     """
     Precalculate ARF data for collocations and wordlists.
     (see freqs.build_arf_db)
     """
-    corp = await _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corpus_ident)
     num_wait = 20
     if not is_compiled(corp, attr, 'freq'):
         base_path = await freqs.corp_freqs_cache_path(corp, attr)
@@ -282,7 +274,7 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
             num_wait -= 1
         if not await aiofiles.os.path.isfile(frq_data_file):
             await _compile_frq(corp, attr, logfile)
-        corp = await _load_corp(corp_id, subcorp, user_id)  # must reopen freq files
+        corp = await _load_corp(corpus_ident)  # must reopen freq files
     if is_compiled(corp, attr, 'arf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -295,12 +287,12 @@ async def compile_arf(user_id, corp_id, subcorp, attr, logfile):
     return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
 
 
-async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
+async def compile_docf(corpus_ident, attr, logfile):
     """
     Precalculate document counts data for collocations and wordlists.
     (see freqs.build_arf_db)
     """
-    corp = await _load_corp(corp_id, subcorp, user_id)
+    corp = await _load_corp(corpus_ident)
     if is_compiled(corp, attr, 'docf'):
         async with aiofiles.open(logfile, 'a') as f:
             await f.write('\n100 %\n')  # to get proper calculation of total progress
@@ -314,6 +306,7 @@ async def compile_docf(user_id, corp_id, subcorp, attr, logfile):
                 await f.write('\n100 %\n')
         return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
+        corp_id = corpus_ident.corpname if isinstance(corpus_ident, SubcorpusIdent) else corpus_ident
         raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))
 
@@ -334,9 +327,9 @@ async def create_subcorpus(user_id, corp_id, path, tt_query, cql):
 
 # ----------------------------- WORD LIST -------------------------------------
 
-async def get_wordlist(args, max_items, user_id):
+async def get_wordlist(corpus_ident: Union[str, SubcorpusRecord], args, max_items):
     form = WordlistFormArgs.from_dict(args)
-    corp = await _load_corp(form.corpname, form.usesubcorp, user_id)
+    corp = await _load_corp(corpus_ident)
     await wordlist.wordlist(corp, form, max_items)
 
 

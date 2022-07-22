@@ -23,12 +23,12 @@ import datetime
 from datetime import datetime
 from hashlib import md5
 from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
-from dataclasses import asdict, dataclass, InitVar
 
 import aiofiles
 import aiofiles.os
 import ujson as json
 from corplib.abstract import AbstractKCorpus
+from corplib.subcorpus import SubcorpusRecord
 from manatee import Corpus, SubCorpus
 
 try:
@@ -148,16 +148,6 @@ class KCorpus(AbstractKCorpus):
 
     _corpname: str
     _corp: Union[Corpus, SubCorpus]
-    _spath: Union[str, None] = None
-    _subcname: Union[str, None] = None
-    _subchash: Union[str, None] = None
-    _created: Union[datetime, None] = None
-    _is_published: bool = False
-    _orig_spath: Union[str, None] = None
-    _orig_subcname: Union[str, None] = None
-    _author: Union[str, None] = None
-    _author_id: Union[int, None] = None
-    _description: Union[str, None] = None
 
     def __init__(self, corp: Union[Corpus, SubCorpus], corpname: str):
         self._corp = corp
@@ -190,57 +180,33 @@ class KCorpus(AbstractKCorpus):
         return self.corp.get_conffile()
 
     @property
-    def spath(self):
-        """
-        Return a path of subcorpus data file.
-        In case of a regular corpus, the value is None
-        """
-        return self._spath
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
+        return self.corpname
 
     @property
-    def subcname(self):
+    def cache_key(self):
         """
-        Return a private name of subcorpus.
-        In case of a regular corpus, the value is None
+        Return a cache key for storing concordances (please
+        note that the final cache entry key contains also
+        a query part)
         """
-        return self._subcname
-
-    @property
-    def subchash(self):
-        """
-        Return a hashed version of subc. name used mainly
-        for caching purposes.
-        In case of a regular corpus, the value is None
-        """
-        return self._subchash
+        return self._corpname
 
     @property
     def created(self):
-        return self._created
-
-    @property
-    def is_published(self):
-        return self._is_published
-
-    @property
-    def orig_spath(self):
-        return self._orig_spath
-
-    @property
-    def orig_subcname(self):
-        return self._orig_subcname if self.is_published else self.subcname
+        return None
 
     @property
     def author(self):
-        return self._author
+        return None
 
     @property
     def author_id(self):
-        return self._author_id
+        return None
 
     @property
     def description(self):
-        return self._description
+        return None
 
     def get_conf(self, key: str) -> Any:
         """
@@ -298,14 +264,12 @@ class KCorpus(AbstractKCorpus):
         return self._corp.compile_docf(attr, doc_attr)
 
     @property
-    def is_subcorpus(self):
-        return False
+    def subcorpus_id(self):
+        return None
 
-    async def save_subc_description(self, desc: str):
-        meta, _ = await _get_subcorp_pub_info(self._spath)
-        async with aiofiles.open(os.path.splitext(self._spath)[0] + '.name', 'wb') as fw:
-            await fw.write(meta.to_json().encode('utf-8') + '\n\n')
-            await fw.write(desc.encode('utf-8'))
+    @property
+    def subcorpus_name(self):
+        return None
 
     def freq_precalc_file(self, attrname: str) -> str:
         return self._corp.get_conf('PATH') + attrname
@@ -344,71 +308,51 @@ class KSubcorpus(KCorpus):
     orig_description.
     """
 
-    def __init__(self, corp: SubCorpus, corpname: str):
-        super().__init__(corp, corpname)
-        self._corpname = corpname
+    def __init__(self, corp: SubCorpus, data_record: SubcorpusRecord):
+        super().__init__(corp, data_record.corpname)
+        self._corpname = data_record.corpname
+        self._data_record = data_record
 
     def __str__(self):
         return f'KSubcorpus(ident={self.corpname}, subcname={self.subcname})'
 
     @staticmethod
-    async def load(corp: Corpus, corpname: str, subcname: str, spath: str, decode_desc: bool) -> 'KSubcorpus':
+    async def load(corp: Corpus, data_record: SubcorpusRecord, decode_desc: bool) -> 'KSubcorpus':
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """
-        subc = SubCorpus(corp, spath)
-        kcorp = KSubcorpus(subc, corpname=corpname)
+        subc = SubCorpus(corp, data_record.data_path)
+        kcorp = KSubcorpus(subc, data_record)
         kcorp._corp = subc
-        kcorp._spath = spath
-        try:
-            open(spath[:-4] + 'used', 'w')
-        except IOError:
-            pass
-        kcorp._subcname = subcname
-        async with aiofiles.open(spath, 'rb') as subcinfo:
-            kcorp._subchash = md5(await subcinfo.read()).hexdigest()
-        kcorp._created = datetime.fromtimestamp(int(await aiofiles.os.path.getctime(spath)))
-        stat = os.lstat(spath)
-        kcorp._is_published = stat.st_nlink > 1
-        meta, desc = await _get_subcorp_pub_info(os.path.splitext(spath)[0] + '.name')
-        if meta.subcpath:
-            kcorp._orig_spath = meta.subcpath
-            kcorp._orig_subcname = os.path.splitext(os.path.basename(meta.subcpath))[0]
-        else:
-            kcorp._orig_spath = None
-            kcorp._orig_subcname = None
-        kcorp._author = meta.author_name
-        kcorp._author_id = meta.author_id
-        if desc:
-            kcorp._description = k_markdown(desc) if decode_desc else desc
-        else:
-            kcorp._description = None
         return kcorp
 
     @property
-    def is_subcorpus(self):
-        return True
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
+        return self._data_record
 
     @property
-    def source_author(self):
-        """
-        Return an author of the source corpus this subc. is derived from
-        """
-        return super().author
+    def subcorpus_id(self):
+        return self._data_record.id
 
     @property
-    def source_author_id(self):
+    def subcorpus_name(self):
+        return self._data_record.name
+
+    @property
+    def cache_key(self):
         """
-        Return an author ID of the source corpus this subc. is derived from
+        Return a hashed version of subc. name used mainly
+        for caching purposes.
+        In case of a regular corpus, the value is None
         """
-        return super().author_id
+        return f'{self._corpname}/{self._data_record.id}'
 
     @property
     def source_description(self):
         """
         Return a description of the source corpus this subc. is derived from
         """
-        return super().description
+        return self._data_record.description
 
     def freq_precalc_file(self, attrname: str) -> str:
         return self.spath[:-4] + attrname

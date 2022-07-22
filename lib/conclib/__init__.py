@@ -52,7 +52,7 @@ async def get_conc_desc(corpus: AbstractKCorpus, q=None, translate=True, skip_in
     q = tuple(q)
 
     async def get_size(pos):
-        return await cache_map.get_stored_size(corpus.subchash, q[:pos + 1])
+        return await cache_map.get_stored_size(corpus.cache_key, q[:pos + 1])
 
     def is_aligned_op(query_items, pos):
         return (query_items[pos].startswith('x-') and query_items[pos + 1] == 'p0 0 1 []' and

@@ -423,20 +423,19 @@ class CorpusActionModel(UserActionModel):
         result['corp_description'] = maincorp.get_info()
         result['corp_size'] = self.corp.size
 
-        if self.corp.is_subcorpus:
-            self.args.usesubcorp = self.corp.subcname
+        if self.corp.subcorpus_id:
+            self.args.usesubcorp = self.corp.subcorpus_id
 
         result['corpus_ident'] = dict(
             id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
             name=self.corp.human_readable_corpname,
             usesubcorp=self.args.usesubcorp,
-            origSubcorpName=self.corp.orig_subcname,
             foreignSubcorp=self.corp.author_id is not None and self.session_get(
                 'user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)
-        if self.corp.is_subcorpus:
+        if self.corp.subcorpus_id:
             result['subcorp_size'] = self.corp.search_size
         else:
             result['subcorp_size'] = None
@@ -568,7 +567,6 @@ class CorpusActionModel(UserActionModel):
 
         result['explicit_conc_persistence_ui'] = settings.get_bool(
             'global', 'explicit_conc_persistence_ui', False)
-
         for k in asdict(self.args):
             if k not in result:
                 result[k] = getattr(self.args, k)
@@ -597,7 +595,7 @@ class CorpusActionModel(UserActionModel):
                     ))
         return bib_mapping
 
-    async def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
+    async def export_subcorpora_list(self, out: Dict[str, Any]):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
@@ -608,21 +606,19 @@ class CorpusActionModel(UserActionModel):
         foreign (= of a different user) subcorpus.
 
         arguments:
-        corpname -- corpus id
-        curr_subcorp -- current subcorpus (even a public foreign one)
         out -- a dictionary used by templating system
         """
         subcorp_list = l10n.sort(
-            await self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
+            await self.user_subc_names(self.corp.corpname), loc=self._req.ui_lang, key=lambda x: x.name)
 
-        if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
+        if self.corp.author_id is not None and self.corp.author_id != self._req.session_get('user', 'id'):
             try:
-                srch = next((x for x in subcorp_list if x['pub'] == self.corp.subcname))
+                srch = next((x for x in subcorp_list if x.id == self.corp.subcorpus_id))
             except StopIteration:
                 srch = None
             if srch is None:
-                subcorp_list.insert(0, dict(v=self.corp.orig_subcname, n=self.corp.orig_subcname,
-                                            pub=self.corp.subcname, foreign=True))
+                subcorp_list.insert(0, dict(v=self.corp.subcorpus_name, n=self.corp.subcorpus_name,
+                                            pub=self.corp.subcorpus_id, foreign=True))
         if len(subcorp_list) > 0:
             subcorp_list = [
                 {'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] + subcorp_list

@@ -86,7 +86,7 @@ async def prepare_arf_calc_paths(corp: KCorpus, attrname, logstep=0.02):
     outfilename = corp.freq_precalc_file(attrname)
     if await aiofiles.os.path.isfile(outfilename + '.arf') and await aiofiles.os.path.isfile(outfilename + '.docf'):
         return None
-    elif corp.is_subcorpus:
+    elif corp.subcorpus_id:
         return corp.spath
     else:
         return None
@@ -167,7 +167,7 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
         await write_log_header(corp, logfilename_m)
         res = await worker.send_task(
             f'compile_{m}', object.__class__,
-            (user_id, corp.corpname, corp.subcname, attrname, logfilename_m),
+            (user_id, corp.corpname, corp.subcorpus_id, attrname, logfilename_m),
             time_limit=TASK_TIME_LIMIT)
         logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
         async_task = AsyncTaskStatus(
@@ -208,7 +208,7 @@ async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     returns:
     a dict(freqs=..., conc_size=...)
     """
-    cm = corplib.CorpusManager(subcpath=args.subcpath)
+    cm = corplib.CorpusManager(subc_root=args.subcpath)
     corp = await cm.get_corpus(args.corpname, subcname=args.subcname)
     conc = await require_existing_conc(corp=corp, q=args.q)
     return calculate_freqs_bg_sync(args, conc)
@@ -348,7 +348,7 @@ class Freq2DCalculation:
         """
         note: this is called by a background worker
         """
-        cm = corplib.CorpusManager(subcpath=self._args.subcpath)
+        cm = corplib.CorpusManager(subc_root=self._args.subcpath)
         self._corp = await cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(

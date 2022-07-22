@@ -280,7 +280,7 @@ class Kwic:
 
         out.concsize = self.conc.size()
 
-        if self.corpus.is_subcorpus:
+        if self.corpus.subcorpus_id:
             out.result_arf = ''
         else:
             out.result_arf = round(self.conc.compute_ARF(), 2)

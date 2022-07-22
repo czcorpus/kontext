@@ -100,7 +100,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.add_conc_form_args(qf_args)
     await amodel.attach_query_params(out)
     await amodel.attach_aligned_query_params(out)
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
+    await amodel.export_subcorpora_list(out)
     return out
 
 
@@ -158,10 +158,10 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
     resp.set_header('Content-Type', 'text/plain')
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(amodel.corp)
     q = tuple(amodel.args.q)
-    subchash = amodel.corp.subchash
+    corp_cache_key = amodel.corp.cache_key
 
     try:
-        cache_status = await cache_map.get_calc_status(subchash, q)
+        cache_status = await cache_map.get_calc_status(corp_cache_key, q)
         if cache_status is None:  # conc is not cached nor calculated
             raise NotFoundException('Concordance calculation is lost')
         elif not cache_status.finished and cache_status.task_id:
@@ -178,10 +178,10 @@ async def get_conc_cache_status(amodel: ConcActionModel, req: KRequest, resp: KR
             relconcsize=cache_status.relconcsize,
             arf=cache_status.arf)
     except CalcTaskNotFoundError as ex:
-        await cancel_conc_task(cache_map, subchash, q)
+        await cancel_conc_task(cache_map, corp_cache_key, q)
         raise NotFoundException(f'Concordance calculation is lost: {ex}')
     except Exception as ex:
-        await cancel_conc_task(cache_map, subchash, q)
+        await cancel_conc_task(cache_map, corp_cache_key, q)
         raise ex
 
 
@@ -308,7 +308,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
     out['freq_form_args'] = FreqFormArgs().update(amodel.args).to_dict()
     out['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
+    await amodel.export_subcorpora_list(out)
 
     out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
@@ -624,7 +624,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             persist=False))
     await amodel.attach_query_params(tmp_out)
     await amodel.attach_aligned_query_params(tmp_out)
-    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
+    await amodel.export_subcorpora_list(tmp_out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     plg_status = {}
     await amodel.export_optional_plugins_conf(plg_status)
@@ -643,7 +643,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
 
     ans = dict(
         corpname=amodel.args.corpname,
-        subcorpname=amodel.corp.subcname if amodel.corp.is_subcorpus else None,
+        subcorpname=amodel.corp.subcorpus_id,
         baseAttr=amodel.BASE_ATTR,
         tagsets=[tagset.to_dict() for tagset in corpus_info.tagsets],
         humanCorpname=amodel.corp.human_readable_corpname,
@@ -651,7 +651,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             id=amodel.args.corpname, name=amodel.corp.human_readable_corpname,
             variant=amodel.corpus_variant,
             usesubcorp=amodel.args.usesubcorp if amodel.args.usesubcorp else None,
-            origSubcorpName=amodel.corp.orig_subcname,
+            origSubcorpName=amodel.corp.subcorpus_id,
             foreignSubcorp=(amodel.corp.author_id is not None and
                             amodel.session_get('user', 'id') != amodel.corp.author_id),
             size=amodel.corp.size,
@@ -1117,8 +1117,8 @@ def _get_ipm_base_set_desc(corp: AbstractKCorpus, contains_within, translate: Ca
     corpus_name = corp.get_conf('NAME')
     if contains_within:
         return translate('related to the subset defined by the selected text types')
-    elif corp.is_subcorpus:
-        return translate('related to the whole %s').format(corpus_name) + f'/{corp.subcname}'
+    elif corp.subcorpus_id:
+        return translate('related to the whole %s').format(corpus_name) + f'/{corp.subcorpus_id}'
     else:
         return translate('related to the whole %s').format(corpus_name)
 

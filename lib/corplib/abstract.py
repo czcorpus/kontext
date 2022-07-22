@@ -19,7 +19,8 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Awaitable, List, Union
+from typing import Any, Awaitable, List, Union, Optional
+from corplib.subcorpus import SubcorpusRecord
 
 from manatee import Corpus
 
@@ -38,37 +39,22 @@ class AbstractKCorpus(ABC):
 
     @property
     @abstractmethod
-    def spath(self) -> str:
+    def portable_ident(self) -> Union[str, SubcorpusRecord]:
+        """
+        portable_ident defines an identification value/object we are able to fully instantiate
+        a corpus/subcorpus from; it is e.g. used when passing corpus between web server and worker where
+        we need only easily searializable values as args.
+        """
         pass
 
     @property
     @abstractmethod
-    def subcname(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def subchash(self) -> str:
+    def cache_key(self) -> str:
         pass
 
     @property
     @abstractmethod
     def created(self) -> Union[datetime, None]:
-        pass
-
-    @property
-    @abstractmethod
-    def is_published(self) -> bool:
-        pass
-
-    @property
-    @abstractmethod
-    def orig_spath(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def orig_subcname(self) -> str:
         pass
 
     @property
@@ -141,12 +127,14 @@ class AbstractKCorpus(ABC):
     def filter_query(self, *args, **kwargs):
         pass
 
+    @property
     @abstractmethod
-    def is_subcorpus(self) -> bool:
+    def subcorpus_id(self) -> Optional[str]:
         pass
 
+    @property
     @abstractmethod
-    async def save_subc_description(self, desc: str):
+    def subcorpus_name(self) -> Optional[str]:
         pass
 
     @abstractmethod

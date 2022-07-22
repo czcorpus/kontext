@@ -46,7 +46,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = bgcalc.freqs.FreqCalcArgs(
             corpname=corp.corpname,
-            subcname=corp.subcname,
+            subcname=corp.subcorpus_id,
             subcpath=[],
             user_id=user_id,
             pagesize=100,

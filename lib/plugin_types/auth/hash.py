@@ -40,7 +40,7 @@ def split_pwd_hash(hashed):
             res['salt'] = '$'.join(first_split[1:-1]).split(":")[0]
             res['iterations'] = int(first_split[-2].split(":")[1])
             res['data'] = first_split[-1]
-            res['keylen'] = len(res['data']) / 2
+            res['keylen'] = int(len(res['data']) / 2)
         else:
             raise TypeError("wrong hash format")
     return res

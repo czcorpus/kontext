@@ -24,6 +24,7 @@ from dataclasses_json import dataclass_json
 @dataclass_json
 @dataclass
 class ListingItem:
+    id: str
     name: str
     created: str
     archived: str
@@ -32,7 +33,6 @@ class ListingItem:
     usesubcorp: str
     deleted: bool
     size: Optional[int] = None
-    orig_subcname: Optional[str] = None
     public_description: Optional[str] = None
     cql: Optional[str] = None
     cqlAvailable: Optional[bool] = False
