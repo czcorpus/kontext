@@ -16,11 +16,9 @@
 
 import logging
 import os
-import time
+from dataclasses import asdict
 from typing import Any, Dict
 
-import aiofiles.os
-import corplib
 import l10n
 import plugins
 from action.argmapping import log_mapping
@@ -29,12 +27,12 @@ from action.errors import UserActionException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
-from action.model.subcorpus.listing import ListingItem
 from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.corpus import list_public_subcorpora
 from main_menu.model import MainMenu
+from plugin_types.subc_restore import AbstractSubcArchive, SubcListFilterArgs
 from sanic import Blueprint
 from texttypes.model import TextTypeCollector
 
@@ -151,22 +149,15 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
-    filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
-                       corpname=req.args.get('corpname'))
-    data = []
     involved_corpora = []
-    # TODO fetch list of subcorpora
+    # TODO show deleted, etc
+    # filter_args = dict(show_deleted=bool(int(req.args.get('show_deleted', 0))),
+    #                   corpname=req.args.get('corpname'))
+    filter_args = SubcListFilterArgs(corpus=req.args.get('corpname'))
 
-    if filter_args['corpname']:
-        data = [item for item in data if not filter_args['corpname']
-                or item.corpname == filter_args['corpname']]
-    elif filter_args['corpname'] is None:
-        filter_args['corpname'] = ''  # JS code requires non-null value
-
-    full_list = data
-    with plugins.runtime.SUBC_RESTORE as sr:
+    with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
         try:
-            full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args, 0)
+            full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args)
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_restore plug-in failed to list queries: %s' % e)
@@ -179,11 +170,14 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
         full_list = l10n.sort(full_list, loc=req.ui_lang,
                               key=lambda x: getattr(x, sort_key), reverse=rev)
 
+    if filter_args.corpus is None:
+        filter_args.corpus = ''  # JS code requires non-null value
+
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
         subcorp_list=[x.to_dict() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
-        filter=filter_args,
+        filter=asdict(filter_args),
         processed_subc=[
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)

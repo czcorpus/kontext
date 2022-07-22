@@ -17,12 +17,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-13
 
-from datetime import datetime
 from dataclasses import InitVar, asdict, dataclass, field
-from dataclasses_json import dataclass_json, config
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import ujson
+import ujson as json
+from dataclasses_json import config, dataclass_json
 
 TextTypesType = Dict[str, Union[List[str], List[int]]]
 
@@ -53,8 +53,8 @@ class SubcorpusRecord(SubcorpusIdent):
     author_id: int
     size: int
     created: datetime = field(metadata=config(
-            encoder=datetime.isoformat,
-            decoder=datetime.fromisoformat))
+        encoder=datetime.isoformat,
+        decoder=datetime.fromisoformat))
     public_description: str
     data_path: str
     archived: Optional[datetime] = None
@@ -64,12 +64,15 @@ class SubcorpusRecord(SubcorpusIdent):
     _cql: Optional[str] = None
     _within_cond: Optional[WithinType] = None
     _text_types: Optional[TextTypesType] = None
+    archived: Optional[datetime] = field(default=None, metadata=config(
+        encoder=lambda x: datetime.isoformat(x) if x else None,
+        decoder=lambda x: datetime.fromisoformat(x) if x else None))
 
     def __post_init__(self, cql, within_cond, text_types):
         if within_cond:
-            self._within_cond = ujson.loads(within_cond)
+            self._within_cond = json.loads(within_cond)
         if text_types:
-            self._text_types = ujson.loads(text_types)
+            self._text_types = json.loads(text_types)
         if cql:
             self._cql = cql
 

@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS kontext_subcorpus;
       within_cond TEXT,
       text_types TEXT,
       created TIMESTAMP NOT NULL,
-      archived TIMESTAMP,
+      archived TIMESTAMP NULL,
       public_description TEXT,
       data_path VARCHAR(255) NOT NULL,
       CONSTRAINT kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES kontext_corpus(name),

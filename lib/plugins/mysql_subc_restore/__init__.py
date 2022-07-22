@@ -20,8 +20,9 @@ from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcArchive, SubcArchiveException
@@ -78,9 +79,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
         if filter_args.archived_only and filter_args.active_only:
             raise SubcArchiveException('Invalid filter specified')
 
-        where = ['user_id = %s']
-        args = [user_id]
-        if filter_args.corpus:
+        where, args = ['user_id = %s'], [user_id]
+        if filter_args.corpus is not None:
             where.append('corpus_name = %s')
             args.append(filter_args.corpus)
         if filter_args.archived_only:
@@ -90,11 +90,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
         if limit is None:
             limit = 1000000000
-        args += (limit, offset)
+        args.extend((limit, offset))
 
-        sql = 'SELECT * FROM {} WHERE {} ORDER BY id LIMIT %s OFFSET %s'.format(
-            self.TABLE_NAME, ' AND '.join(where)
-        )
+        sql = f'SELECT * FROM {self.TABLE_NAME} WHERE {" AND ".join(where)} ORDER BY id LIMIT %s OFFSET %s'
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
             return [SubcorpusRecord(**row) async for row in cursor]
