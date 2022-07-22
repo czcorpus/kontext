@@ -136,7 +136,7 @@ class CorpusManager:
         """
         if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
             raise RuntimeError('CorpusManager not configured for creating subcorpora instances')
-        corpname = corp_ident.corpname if isinstance(corp_ident, SubcorpusIdent) else corp_ident
+        corpname = corp_ident.corpus_name if isinstance(corp_ident, SubcorpusIdent) else corp_ident
         subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
         cache_key = (registry_file, subc_id)
@@ -177,20 +177,18 @@ class CorpusManager:
 
     @staticmethod
     async def _ensure_reg_file(corpname: str, variant: Optional[str]) -> str:
-        full_corpname = os.path.join(variant, corpname) if variant else corpname
+        corp_relative_dir = os.path.join(variant, corpname) if variant else corpname
         reg_root = os.environ['MANATEE_REGISTRY']
-        if variant:
-            reg_root = os.path.join(reg_root, variant)
-        fullpath = os.path.join(reg_root, full_corpname)
+        fullpath = os.path.join(reg_root, corp_relative_dir)
         with plugins.runtime.DB as db, plugins.runtime.AUTH as auth:
             if not await aiofiles.os.path.isfile(fullpath) and auth.ignores_corpora_names_case():
-                cached = await db.hash_get(TYPO_CACHE_KEY, full_corpname)
+                cached = await db.hash_get(TYPO_CACHE_KEY, corp_relative_dir)
                 if cached:
                     return cached
                 for item in os.listdir(reg_root):
                     fp = os.path.join(reg_root, item)
                     if await aiofiles.os.path.isfile(fp) and item.lower() == corpname.lower():
-                        await db.hash_set(TYPO_CACHE_KEY, full_corpname, fp)
+                        await db.hash_set(TYPO_CACHE_KEY, corp_relative_dir, fp)
                         await db.set_ttl(TYPO_CACHE_KEY, TYPO_CACHE_TTL)
                         return fp
         return fullpath

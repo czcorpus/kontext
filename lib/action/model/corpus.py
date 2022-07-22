@@ -293,14 +293,11 @@ class CorpusActionModel(UserActionModel):
         else:
             self.return_url = '{}query?{}'.format(self._req.get_root_url(),
                                                   '&'.join([f'{k}={v}' for k, v in list(args.items())]))
-
         self._curr_corpus = await self._load_corpus()
-
         # plugins setup
         for p in plugins.runtime:
             if callable(getattr(p.instance, 'setup', None)):
                 p.instance.setup(self)
-
         if isinstance(self.corp, ErrorCorpus):
             raise self.corp.get_error()
         info = await self.get_corpus_info(self.args.corpname)
@@ -370,9 +367,11 @@ class CorpusActionModel(UserActionModel):
     async def _load_corpus(self):
         if self.args.usesubcorp:
             with plugins.runtime.SUBC_RESTORE as sr:
-                corpus_ident = sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.args.usesubcorp)
+                corpus_ident = await sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.args.usesubcorp)
         else:
             corpus_ident = self.args.corpname
+        if corpus_ident is None:
+            return ErrorCorpus(Exception('Corpus not found'))
         if self.args.corpname:
             try:
                 corp = await self.cm.get_corpus(

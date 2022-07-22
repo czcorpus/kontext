@@ -203,7 +203,6 @@ def http_action(
             except Exception as ex:
                 if aprops.return_type == 'plain':
                     raise
-
                 resp.add_system_message('error', str(ex))
                 ans = await resolve_error(amodel, req, resp, ex)
                 if aprops.template:
