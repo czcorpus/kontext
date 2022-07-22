@@ -46,37 +46,18 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
     access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
 async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     struct_and_attrs = await amodel.get_structs_and_attrs()
-    data = {
-        'corpname': amodel.corp.corpname,
-        'subcname': amodel.corp.subcorpus_id,
-        'size': amodel.corp.size
-    }
-
     with plugins.runtime.SUBC_RESTORE as sr:
         info = await sr.get_info(amodel.plugin_ctx.user_id, amodel.corp.corpname, amodel.corp.subcorpus_id)
-        if info:
-            data['created'] = info.created.isoformat()
-            if info.text_types is not None:
-                data['selections'] = info.text_types
-            elif info.within_cond is not None:
-                data['selections'] = info.within_cond
-            elif info.cql is not None:
-                data['selections'] = info.cql
-
-    liveAttrsEnabled = False
+    live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
-        liveAttrsEnabled = 'selections' in data and info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
-
-    if 'created' not in data and amodel.corp.created:
-        data['created'] = amodel.corp.created.isoformat()
-    if amodel.corp.description:
-        data['description'] = amodel.corp.description
-
+        live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
+    info_dict = info.to_dict()
+    del info_dict['data_path']
     return {
-        'data': data,
+        'data': info.to_dict(),
         'textTypes': await amodel.tt.export_with_norms(),
         'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
-        'liveAttrsEnabled': liveAttrsEnabled,
+        'liveAttrsEnabled': live_attrs_enabled,
     }
 
 
