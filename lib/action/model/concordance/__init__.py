@@ -27,9 +27,8 @@ import plugins
 import settings
 from action.argmapping import ConcArgsMapping
 from action.argmapping.conc import build_conc_form_args
-from action.argmapping.conc.filter import (ContextFilterArgsConv,
-                                           FilterFormArgs,
-                                           FirstHitsFilterFormArgs)
+from action.argmapping.conc.filter import (
+    ContextFilterArgsConv, FilterFormArgs, FirstHitsFilterFormArgs)
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from action.argmapping.conc.query import ConcFormArgs, QueryFormArgs
 from action.argmapping.conc.sort import SortFormArgs
@@ -42,7 +41,8 @@ from action.response import KResponse
 from conclib.common import KConc
 from conclib.search import get_conc
 from main_menu.model import MainMenu
-from plugin_types.corparch.corpus import CorpusInfo, StructAttrInfo
+from plugin_types.corparch.corpus import CorpusInfo
+from plugin_types.subc_restore import SubcListFilterArgs
 from strings import re_escape
 from texttypes.model import TextTypeCollector, TextTypesCache
 
@@ -82,7 +82,7 @@ class ConcActionModel(CorpusActionModel):
         curr = self._req.ctx.session.get('last_search', {})
         last_op = curr.get(query_type, None)
         if last_op:
-            with plugins.runtime.QUERY_PERSISTENCE as qp:
+            with plugins.runtime.QUERY_PERSISTENCE as qp, plugins.runtime.SUBC_RESTORE as subc_arch:
                 last_op_form = await qp.open(last_op)
                 if last_op_form is None:  # probably a lost/deleted concordance record
                     return None
@@ -94,9 +94,10 @@ class ConcActionModel(CorpusActionModel):
                 if prev_corpora and len(curr_corpora) == 1 and prev_corpora[0] == curr_corpora[0]:
                     args = [('corpname', prev_corpora[0])] + [('align', a)
                                                               for a in prev_corpora[1:]]
-                    if prev_subcorp and not curr_subcorp and any(
-                            subc['n'] == prev_subcorp or subc.get('pub') == prev_subcorp
-                            for subc in self.cm.subcorp_names(prev_corpora[0])):
+
+                    subcorpora = await subc_arch.list(
+                        self._req.ctx.session.get('user')['id'], SubcListFilterArgs(corpus=prev_corpora[0]))
+                    if prev_subcorp and not curr_subcorp and any(subc.id == prev_subcorp for subc in subcorpora):
                         args += [('usesubcorp', prev_subcorp)]
 
                     if len(args) > 1:

@@ -24,15 +24,15 @@ from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
-from plugin_types.subc_restore import AbstractSubcRestore
+from plugin_types.subc_restore import AbstractSubcArchive, SubcArchiveException
 from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
-class MySQLSubcRestore(AbstractSubcRestore):
+class MySQLSubcArchive(AbstractSubcArchive):
     """
-    For the documentation of individual methods, please see AbstractSubcRestore class
+    For the documentation of individual methods, please see AbstractSubcArchive class
     """
 
     TABLE_NAME = 'kontext_subcorpus'
@@ -74,21 +74,30 @@ class MySQLSubcRestore(AbstractSubcRestore):
             )
         await cursor.connection.commit()
 
-    async def list(self, user_id: int, filter_args: Dict, from_idx: int, to_idx: Optional[int] = None) -> List[SubcorpusRecord]:
-        sql = [
-            f'SELECT * FROM {self.TABLE_NAME}',
-            'WHERE user_id = %s ORDER BY id',
-        ]
-        args = (user_id,)
-        if to_idx is not None:
-            sql.append('LIMIT %s, %s')
-            args += (from_idx, to_idx - from_idx)
-        else:
-            sql.append('LIMIT 100000000 OFFSET %s')
-            args += (from_idx,)
+    async def list(self, user_id, filter_args, offset=0, limit=None):
+        if filter_args.archived_only and filter_args.active_only:
+            raise SubcArchiveException('Invalid filter specified')
+
+        where = ['user_id = %s']
+        args = [user_id]
+        if filter_args.corpus:
+            where.append('corpus_name = %s')
+            args.append(filter_args.corpus)
+        if filter_args.archived_only:
+            where.append('archived IS NOT NULL')
+        elif filter_args.active_only:
+            where.append('archived IS NULL')
+
+        if limit is None:
+            limit = 1000000000
+        args += (limit, offset)
+
+        sql = 'SELECT * FROM {} WHERE {} ORDER BY id LIMIT %s OFFSET %s'.format(
+            self.TABLE_NAME, ' AND '.join(where)
+        )
 
         async with self._db.cursor() as cursor:
-            await cursor.execute(' '.join(sql), args)
+            await cursor.execute(sql, args)
             return [SubcorpusRecord(**row) async for row in cursor]
 
     async def get_info(self, user_id: int, corpname: str, subcname: str) -> Optional[SubcorpusRecord]:
@@ -118,7 +127,7 @@ def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlInteg
     plugin_conf = conf.get('plugins', 'subc_restore')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_restore uses integration_db[{integ_db.info}]')
-        return MySQLSubcRestore(plugin_conf, corparch, integ_db)
+        return MySQLSubcArchive(plugin_conf, corparch, integ_db)
     else:
         raise PluginCompatibilityException(
             'mysql_subc_restore works only with integration_db enabled')

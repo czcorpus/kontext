@@ -39,6 +39,7 @@ from bgcalc.task import AsyncTaskStatus
 from main_menu import MainMenu, generate_main_menu
 from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
+from plugin_types.subc_restore import SubcListFilterArgs
 from sanic import Sanic
 from texttypes.cache import TextTypesCache
 
@@ -452,10 +453,11 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
         return result
 
-    def user_subc_names(self, corpname):
+    async def user_subc_names(self, corpname):
         if self.user_is_anonymous():
             return []
-        return self.cm.subcorp_names(corpname)
+        with plugins.runtime.SUBC_RESTORE as subc_arch:
+            return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpus=corpname))
 
     async def prepare_subc_path(self, corpname: str) -> Tuple[str, str]:
         code = hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()

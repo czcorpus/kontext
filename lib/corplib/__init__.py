@@ -199,12 +199,6 @@ class CorpusManager:
             items.append(x)
         return sorted(items)
 
-    def subcorp_names(self, corpname: str) -> List[Dict[str, Optional[str]]]:
-        return [dict(n=os.path.splitext(os.path.basename(s))[0],
-                     v=os.path.splitext(os.path.basename(s))[0],
-                     pub=self.get_subc_public_name(corpname, os.path.splitext(os.path.basename(s))[0]))
-                for s in self.subc_files(corpname)]
-
 
 def texttype_values(
         corp: AbstractKCorpus,
