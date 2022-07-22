@@ -30,6 +30,7 @@ import { init as ttInit } from '../../views/textTypes/index';
 import { init as withinViewInit } from './withinForm';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 import * as PluginInterfaces from '../../types/plugins';
+import * as S from './style';
 
 
 export function init(
@@ -45,22 +46,19 @@ export function init(
     const ttViews = ttInit(dispatcher, he, textTypesModel);
     const WithinForm = withinViewInit(dispatcher, he, subcorpWithinFormModel);
 
-    // ------------------------ <FormActionTemplate /> --------------------------
 
-    const FormActionTemplate:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => {
+    // ------------------------ <TabContentWrapper /> --------------------------
 
-        return (
-            <form className="subc-action">
+    const TabContentWrapper:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => (
+        <S.TabContentWrapper>
+            <form>
                 {props.auxInfoElm ? props.auxInfoElm : null}
                 <fieldset>
-                    <legend>
-                        <img src={he.createStaticUrl('img/collapse.svg')} alt="action form" />
-                    </legend>
                     {props.children}
                 </fieldset>
             </form>
-        );
-    };
+        </S.TabContentWrapper>
+    );
 
     // ------------------------ <FormActionReuseCQL /> --------------------------
 
@@ -113,7 +111,7 @@ export function init(
         };
 
         return (
-            <FormActionTemplate>
+            <TabContentWrapper>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
                 {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
                 {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
@@ -122,13 +120,13 @@ export function init(
                         onClick={handleSubmit}>
                     {he.translate('subclist__action_wipe')}
                 </button>
-            </FormActionTemplate>
+            </TabContentWrapper>
         );
     }
 
-    // ------------------------ <FormActionRestore /> --------------------------
+    // ------------------------ <FormActionFile /> --------------------------
 
-    const FormActionRestore:React.FC<{
+    const FormActionFile:React.FC<{
 
     }> = (props) => {
 
@@ -139,13 +137,13 @@ export function init(
         };
 
         return (
-            <FormActionTemplate>
+            <TabContentWrapper>
                 <p>{he.translate('subclist__info_subc_will_be_restored')}</p>
                 <button type="button" className="default-button"
                         onClick={handleSubmit}>
                     {he.translate('global__confirm')}
                 </button>
-            </FormActionTemplate>
+            </TabContentWrapper>
         );
     };
 
@@ -216,7 +214,7 @@ export function init(
         }
 
         render() {
-            return <FormActionTemplate auxInfoElm={this.renderPublicCodeInfo()}>
+            return <TabContentWrapper auxInfoElm={this.renderPublicCodeInfo()}>
                 <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
                 <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
                         onChange={this.handleTextAreaChange}
@@ -235,7 +233,7 @@ export function init(
                     <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
                                             this.handleSubmitPublish} published={this.props.published} />
                 </div>
-            </FormActionTemplate>
+            </TabContentWrapper>
         }
     };
 
@@ -250,9 +248,9 @@ export function init(
         // subclist__subc_actions_{subc}
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
+            {id: 'restore', label: he.translate('subclist__action_file')},
             {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
-            {id: 'pub', label: he.translate('subclist__public_access_btn')},
-            {id: 'restore', label: he.translate('subclist__action_restore')}
+            {id: 'pub', label: he.translate('subclist__public_access_btn')}
         ];
 
         React.useEffect(
@@ -270,14 +268,12 @@ export function init(
                 {!props.data ?
                     <layoutViews.AjaxLoaderImage /> :
                     <>
-                        <layoutViews.TabView
-                                className="ActionMenu"
-                                items={items} >
-                            <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled}/>
+                        <layoutViews.TabView className="ActionMenu" items={items} >
+                            <FormActionFile key="restore" />
+                            <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
-                            <FormActionRestore key="restore" />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
                             {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null}

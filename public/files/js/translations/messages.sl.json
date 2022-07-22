@@ -607,7 +607,7 @@
         "subclist__col_name": "Ime",
         "subclist__col_size": "Velikost (v pojavnicah)",
         "subclist__col_created": "Ustvarjeno",
-        "subclist__action_restore": "Obnovi",
+        "subclist__action_file": "File UNTRANSLATED",
         "subclist__action_structure": "Subcorpus structure UNTRANSLATED",
         "subclist__action_wipe": "Delete UNTRANSLATED",
         "subclist__info_subc_will_be_wiped": "Varnostna kopija podkorpusa bo izbrisana. Obnovitev podkorpusa ne bo mogoča.",

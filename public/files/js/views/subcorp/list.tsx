@@ -84,16 +84,6 @@ export function init(
         );
     };
 
-    // ------------------------ <PublishCheckbox /> -----------------------------
-
-    const PublishCheckbox:React.FC<{
-        value:boolean;
-        onChange:()=>void;
-
-    }> = (props) => {
-        return <input type="checkbox" checked={props.value} onChange={props.onChange} />;
-    };
-
     // ------------------------ <ArchiveButton /> -----------------------------
 
     const ArchiveButton:React.FC<{
@@ -121,20 +111,19 @@ export function init(
     const TrDataLine:React.FC<{
         idx:number;
         item:SubcorpListItem;
-        publishCheckboxHandle:(idx:number)=>void;
         actionButtonHandle:(idx:number)=>void;
 
     }> = (props) => {
 
         const renderLabel = () => {
             const item = props.item;
-            if (!item.deleted) {
+            if (!item.archived) {
                 const title = he.translate('subclist__search_in_subc');
                 const href = he.createActionLink(
                     'query',
                     {
                         corpname: item.corpname,
-                        usesubcorp: item.usesubcorp
+                        usesubcorp: item.id
                     }
                 );
                 return <a title={title} href={href}>{item.name}</a>;
@@ -155,21 +144,14 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
-                <td>
-                    {props.item.deleted ?
-                        null :
-                        <PublishCheckbox value={props.item.published}
-                                onChange={()=>props.publishCheckboxHandle(props.idx)} />
-                    }
-                </td>
                 <td className="action-link">
                         <a onClick={()=>props.actionButtonHandle(props.idx)}>
                             {he.translate('subclist__subc_properties')}
                         </a>
                 </td>
                 <td>
-                    {!props.item.deleted ?
-                        <ArchiveButton rowIdx={props.idx} subcname={props.item.usesubcorp} /> :
+                    {!props.item.archived ?
+                        <ArchiveButton rowIdx={props.idx} subcname={props.item.id} /> :
                         null
                     }
                 </td>
@@ -238,7 +220,6 @@ export function init(
 
         constructor(props) {
             super(props);
-            this._handlePublishCheckbox = this._handlePublishCheckbox.bind(this);
         }
 
         _exportSortKey(name) {
@@ -246,18 +227,6 @@ export function init(
                 return this.props.sortKey;
             }
             return null;
-        }
-
-        _handlePublishCheckbox(corpname:string, subcname:string):void {
-            if (window.confirm(he.translate('subclist__publish_warning'))) {
-                dispatcher.dispatch<typeof Actions.PublishItem>({
-                    name: Actions.PublishItem.name,
-                    payload: {
-                        corpname: corpname,
-                        subcname: subcname
-                    }
-                });
-            }
         }
 
         render() {
@@ -275,8 +244,7 @@ export function init(
                         {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
                         {List.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
-                                    actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')}
-                                    publishCheckboxHandle={this.props.actionButtonHandle.bind(null, 'pub')} />
+                                    actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
                         ), this.props.lines)}
                     </tbody>
                 </table>
@@ -356,7 +324,7 @@ export function init(
                 name: Actions.ShowSubcEditWindow.name,
                 payload: {
                     corpname: item.corpname,
-                    subcname: item.usesubcorp
+                    subcname: item.id
                 }
             });
         }

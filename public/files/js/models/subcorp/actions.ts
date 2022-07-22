@@ -159,12 +159,6 @@ export class Actions {
         name: 'SUBCORP_FORM_SET_INPUT_MODE'
     };
 
-    static FormSetSubcAsPublic:Action<{
-        value:boolean;
-    }> = {
-        name: 'SUBCORP_FORM_SET_SUBC_AS_PUBLIC'
-    };
-
     static FormSetDescription:Action<{
         value:string;
     }> = {

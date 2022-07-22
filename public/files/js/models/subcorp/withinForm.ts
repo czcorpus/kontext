@@ -21,7 +21,6 @@
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode, isServerWithinSelection } from './common';
-import { SubcorpFormModel } from './form';
 import { StatelessModel, IActionDispatcher } from 'kombo';
 import { concatMap, throwError } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';

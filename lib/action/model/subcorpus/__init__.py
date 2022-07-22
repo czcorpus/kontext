@@ -18,8 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Dict
 
 import bgcalc
 import corplib
@@ -27,58 +26,13 @@ import plugins
 import settings
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
+from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs
 from bgcalc.task import AsyncTaskStatus
 from texttypes.model import TextTypeCollector
 
 
 class SubcorpusError(Exception):
     pass
-
-
-@dataclass
-class SubmitBase:
-    corpname: str
-    subcname: str
-    publish: bool
-    description: str
-    aligned_corpora: List[str]
-    form_type: str
-
-    def has_aligned_corpora(self):
-        return len(self.aligned_corpora) > 0 if type(self.aligned_corpora) is list else False
-
-
-TextTypesType = Dict[str, Union[List[str], List[int]]]
-
-
-@dataclass
-class CreateSubcorpusArgs(SubmitBase):
-    text_types: TextTypesType
-
-
-WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
-
-
-@dataclass
-class CreateSubcorpusWithinArgs(SubmitBase):
-    within: WithinType
-
-    def deserialize(self) -> str:
-        """
-         return this.lines.filter((v)=>v != null).map(
-            (v:WithinLine) => (
-                (v.negated ? '!within' : 'within') + ' <' + v.structureName
-                    + ' ' + v.attributeCql + ' />')
-        ).join(' ');
-        }
-        """
-        return ' '.join([('!within' if item['negated'] else 'within') + ' <%s %s />' % (
-            item['structure_name'], item['attribute_cql']) for item in [item for item in self.within if bool(item)]])
-
-
-@dataclass
-class CreateSubcorpusRawCQLArgs(SubmitBase):
-    cql: str
 
 
 class SubcorpusActionModel(CorpusActionModel):
@@ -144,43 +98,39 @@ class SubcorpusActionModel(CorpusActionModel):
             imp_cql = (full_cql,)
         else:
             raise UserActionException(f'Invalid form type provided - "{form_type}"')
-        logging.getLogger(__name__).warning('>>>>>> data: {}'.format(data))
-        logging.getLogger(__name__).warning('>>>>>> full_cql: {}'.format(full_cql))
         if not data.subcname:
             raise UserActionException(self._req.translate('No subcorpus name specified!'))
 
-        if data.publish and not data.description:
-            raise UserActionException(self._req.translate('No description specified'))
-
-        path = await self.prepare_subc_path(self.args.corpname, data.subcname, publish=False)
-        publish_path = await self.prepare_subc_path(
-            self.args.corpname, data.subcname, publish=True) if data.publish else None
+        path, subc_id = await self.prepare_subc_path(self.args.corpname)
 
         if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = await corplib.create_subcorpus(
                 path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
-            if result and publish_path:
-                await corplib.mk_publish_links(path, publish_path, self.session_get(
-                    'user', 'fullname'), data.description)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)
             res = await worker.send_task(
                 'create_subcorpus', object.__class__,
-                (self.session_get('user', 'id'), self.args.corpname, path, publish_path,
-                    tt_query, imp_cql, self.session_get('user', 'fullname'), data.description),
+                (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql),
                 time_limit=self.TASK_TIME_LIMIT)
-            self.store_async_task(AsyncTaskStatus(status=res.status, ident=res.id,
-                                                  category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
-                                                  label=f'{self.args.corpname}/{data.subcname}',
-                                                  args=dict(subcname=data.subcname,
-                                                            corpname=self.args.corpname)))
+            self.store_async_task(AsyncTaskStatus(
+                status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
+                label=f'{self.args.corpname}/{data.subcname}',
+                args=dict(subcname=data.subcname, corpname=self.args.corpname)))
             result = {}
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
         if result is not False:
+            self.cm.get_corpus(corpname=data.corpname, subcname=data.subcname)
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
-                    await sr.store_query(user_id=self.session_get('user', 'id'), data=data)
+                    await sr.create(
+                        ident=subc_id,
+                        user_id=self.session_get('user', 'id'),
+                        corpname=self.args.corpname,
+                        subcname=data.subcname,
+                        public_description=data.description,
+                        data_path=path,
+                        data=data)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
                     self._resp.add_system_message(

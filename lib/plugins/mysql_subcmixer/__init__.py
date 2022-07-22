@@ -108,9 +108,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        publish = bool(int(req.form.get('publish')))
-        subc_path = await amodel.prepare_subc_path(
-            req.form.get('corpname'), req.form.get('subcname'), publish=False)
+        subc_path, _ = await amodel.prepare_subc_path(req.form.get('corpname'))
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
@@ -118,13 +116,6 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
             for idx in struct_indices:
                 await fw.write(struct.pack('<q', attr.beg(idx)))
                 await fw.write(struct.pack('<q', attr.end(idx)))
-
-        pub_path = await amodel.prepare_subc_path(
-            req.form.get('corpname'), req.form.get('subcname'), publish=publish) if publish else None
-        if pub_path:
-            await corplib.mk_publish_links(subc_path, pub_path, amodel.session_get('user', 'fullname'),
-                                           req.form.get('description'))
-
         return dict(status=True)
 
 

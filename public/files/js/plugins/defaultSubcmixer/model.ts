@@ -88,13 +88,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         );
 
         this.addActionHandler(
-            SubcActions.FormSetSubcAsPublic,
-            (state, action) => {
-                state.subcIsPublic = !!action.payload.value;
-            }
-        );
-
-        this.addActionHandler(
             SubcActions.FormSetDescription,
             (state, action) => {
                 state.description = Kontext.updateFormValue(

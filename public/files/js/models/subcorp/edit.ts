@@ -25,10 +25,8 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus, SubcorpusRecord } from './common';
-import * as TextTypes from '../../types/textTypes';
 import * as Kontext from '../../types/kontext';
 import { TTInitialData } from '../textTypes/common';
-import { TextTypesModel } from '../textTypes/main';
 
 
 

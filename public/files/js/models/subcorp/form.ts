@@ -75,7 +75,6 @@ export interface SubcorpFormModelState {
     inputMode:InputMode;
     corpname:string;
     subcname:Kontext.FormValue<string>;
-    isPublic:boolean;
     description:Kontext.FormValue<string>;
     isBusy:boolean;
     otherValidationError:Error|null;
@@ -100,7 +99,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                 corpname,
                 inputMode,
                 subcname: {value: '', isRequired: true, isInvalid: false},
-                isPublic: false,
                 description: {value: '', isRequired: false, isInvalid: false},
                 isBusy: false,
                 alignedCorpora: [],
@@ -117,21 +115,12 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         );
 
         this.addActionHandler(
-            Actions.FormSetSubcAsPublic,
-            action => {
-                this.changeState(state => {state.isPublic = action.payload.value});
-            }
-        );
-
-        this.addActionHandler(
             Actions.FormSetDescription,
             action => this.changeState(state => {
                 state.description = Kontext.updateFormValue(
                     this.state.description, {value: action.payload.value})
             })
         );
-
-        this.DEBUG_logActions({});
 
         this.addActionHandler(
             Actions.FormWithinSubmit,
@@ -150,7 +139,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
                         payload: {
                             corpname: this.state.corpname,
                             subcname: this.state.subcname.value,
-                            publish:  this.state.isPublic,
                             description: this.state.description.value,
                         }
                     })
@@ -242,7 +230,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         return {
             corpname: this.state.corpname,
             subcname: this.state.subcname.value,
-            publish: this.state.isPublic,
             description: this.state.description.value,
             aligned_corpora: List.map(v => v.value, this.state.alignedCorpora),
             text_types: ttSelection,

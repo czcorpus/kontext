@@ -268,16 +268,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                 <p>{he.translate('subcform__publication_notes')}</p>
                                 <p>{he.translate('subcform__publication_notes_2')}</p>
                             </layoutViews.InlineHelp>
-                            <subcFormViews.SubcNamePublicCheckbox value={props.isPublic} />
-                            {props.isPublic ?
-                                (<div>
-                                    <h3>{he.translate('subcform__public_description')}:</h3>
-                                    <div>
-                                        <subcFormViews.SubcDescription
-                                            value={props.description} />
-                                    </div>
-                                </div>) : null
-                            }
+                            <div>
+                                <h3>{he.translate('subcform__public_description')}:</h3>
+                                <div>
+                                    <subcFormViews.SubcDescription
+                                        value={props.description} />
+                                </div>
+                            </div>
                         </div>
                         <p>
                             <button className="default-button" type="button"
