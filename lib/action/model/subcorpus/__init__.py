@@ -24,10 +24,13 @@ import bgcalc
 import corplib
 import plugins
 import settings
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
-from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs
 from bgcalc.task import AsyncTaskStatus
+from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
 from texttypes.model import TextTypeCollector
 
 
@@ -119,8 +122,9 @@ class SubcorpusActionModel(CorpusActionModel):
             result = {}
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
+
         if result is not False:
-            self.cm.get_corpus(corpname=data.corpname, subcname=data.subcname)
+            subc = await self.cm.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname, path))
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
                     await sr.create(
@@ -128,6 +132,7 @@ class SubcorpusActionModel(CorpusActionModel):
                         user_id=self.session_get('user', 'id'),
                         corpname=self.args.corpname,
                         subcname=data.subcname,
+                        size=subc.search_size,
                         public_description=data.description,
                         data_path=path,
                         data=data)

@@ -17,9 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-13
 
-from typing import Dict, Union, List, Optional, Any
-from dataclasses import dataclass, InitVar, asdict
 import datetime
+from dataclasses import InitVar, asdict, dataclass
+from typing import Any, Dict, List, Optional, Union
+
 import ujson
 
 TextTypesType = Dict[str, Union[List[str], List[int]]]
@@ -28,24 +29,31 @@ WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attri
 
 
 @dataclass
-class SubcorpusRecord:
+class SubcorpusIdent:
+    """
+    SubcorpusIdent is a base subcorpus identification dataclass.
+    """
+    # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
+    id: str
+    name: str  # name user gives to the subcorpus
+    corpname: str
+    data_path: str
+
+
+@dataclass
+class SubcorpusRecord(SubcorpusIdent):
     """
     SubcorpusRecord is a database representation of a subcorpus. It contains all the data
     necessary to restore actual binary subcorpus at any time.
     """
-    # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
-    id: str
     user_id: int
     author_id: int
-    corpname: str
-    name: str  # name user gives to the subcorpus
     size: int
     created: datetime.datetime
     archived: datetime.datetime
-    data_path: str
     cql: InitVar[Optional[str]] = None
-    within_cond: InitVar[Optional[WithinType]] = None
-    text_types: InitVar[Optional[TextTypesType]] = None
+    within_cond: InitVar[Optional[str]] = None
+    text_types: InitVar[Optional[str]] = None
     _cql: Optional[str] = None
     _within_cond: Optional[WithinType] = None
     _text_types: Optional[TextTypesType] = None
