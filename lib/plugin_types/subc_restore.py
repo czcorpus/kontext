@@ -24,14 +24,34 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
+from dataclasses import dataclass
 
 from corplib.subcorpus import SubcorpusRecord
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 
 
-class AbstractSubcRestore(abc.ABC):
+class SubcArchiveException(Exception):
+    pass
+
+
+@dataclass
+class SubcListFilterArgs:
+    """
+    SubcListFilterArgs defines filtering args for
+    listing subcorpora. Please note that
+    active_only and archived_only should be treated
+    as mutually exclusive and a respective listing
+    logic should raise an Exception in case both
+    arguments are True.
+    """
+    active_only: bool = True
+    archived_only: bool = False
+    corpus: Optional[str] = None
+
+
+class AbstractSubcArchive(abc.ABC):
 
     @abc.abstractmethod
     async def create(
@@ -49,20 +69,11 @@ class AbstractSubcRestore(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def list(self, user_id: int, filter_args: Dict, from_idx: int, to_idx: int) -> List[SubcorpusRecord]:
+    async def list(
+            self, user_id: int, filter_args: SubcListFilterArgs,
+            offset: int = 0, limit: Optional[int] = None) -> List[SubcorpusRecord]:
         """
-        List all user subcorpora from index from_idx to index to_idx
-        (including both ends). The method is not expected to support negative
-        indices (like e.g. Python does).
-
-        arguments:
-        user_id -- int, ID of a user
-        from_idx -- values from 0 to num_of_user_queries - 1
-        to_idx -- values from 0 to num_of_user_queries - 1
-
-        returns:
-        a list/tuple of SubcorpusRecord dataclass
-        If nothing is found then an empty list/tuple is returned.
+        List all user subcorpora based on provided filter_args and with optional offset and limit (for pagination)
         """
 
     @abc.abstractmethod

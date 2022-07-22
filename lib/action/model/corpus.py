@@ -597,7 +597,7 @@ class CorpusActionModel(UserActionModel):
                     ))
         return bib_mapping
 
-    def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
+    async def export_subcorpora_list(self, corpname: str, curr_subcorp: str, out: Dict[str, Any]):
         """
         Updates passed dictionary by information about available sub-corpora.
         Listed values depend on current user and corpus.
@@ -613,7 +613,7 @@ class CorpusActionModel(UserActionModel):
         out -- a dictionary used by templating system
         """
         subcorp_list = l10n.sort(
-            self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
+            await self.user_subc_names(corpname), loc=self._req.ui_lang, key=lambda x: x['n'])
 
         if self.corp and self.corp.is_published and self.corp.subcname == curr_subcorp:
             try:

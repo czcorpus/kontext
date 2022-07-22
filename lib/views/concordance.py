@@ -100,7 +100,7 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.add_conc_form_args(qf_args)
     await amodel.attach_query_params(out)
     await amodel.attach_aligned_query_params(out)
-    amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
+    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
     return out
 
 
@@ -308,7 +308,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['coll_form_args'] = CollFormArgs().update(amodel.args).to_dict()
     out['freq_form_args'] = FreqFormArgs().update(amodel.args).to_dict()
     out['ctfreq_form_args'] = CTFreqFormArgs().update(amodel.args).to_dict()
-    amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
+    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, out)
 
     out['fast_adhoc_ipm'] = await plugins.runtime.LIVE_ATTRIBUTES.is_enabled_for(
         amodel.plugin_ctx, [amodel.args.corpname] + amodel.args.align)
@@ -624,7 +624,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             persist=False))
     await amodel.attach_query_params(tmp_out)
     await amodel.attach_aligned_query_params(tmp_out)
-    amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
+    await amodel.export_subcorpora_list(amodel.args.corpname, amodel.args.usesubcorp, tmp_out)
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
     plg_status = {}
     await amodel.export_optional_plugins_conf(plg_status)

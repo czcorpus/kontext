@@ -48,7 +48,7 @@ from plugin_types.query_history import AbstractQueryHistory
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_suggest import AbstractQuerySuggest
 from plugin_types.settings_storage import AbstractSettingsStorage
-from plugin_types.subc_restore import AbstractSubcRestore
+from plugin_types.subc_restore import AbstractSubcArchive
 from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
 from plugin_types.taghelper import AbstractTaghelper
@@ -180,7 +180,7 @@ class _Names(object):
     APPLICATION_BAR: _ID[AbstractApplicationBar] = _ID('application_bar', optional=True)
     FOOTER_BAR: _ID[AbstractFootbar] = _ID('footer_bar', optional=True)
     LIVE_ATTRIBUTES: _ID[AbstractLiveAttributes] = _ID('live_attributes', optional=True)
-    SUBC_RESTORE: _ID[AbstractSubcRestore] = _ID('subc_restore', optional=True)
+    SUBC_RESTORE: _ID[AbstractSubcArchive] = _ID('subc_restore', optional=True)
     TAGHELPER: _ID[AbstractTaghelper] = _ID('taghelper', optional=True)
     SYNTAX_VIEWER: _ID[AbstractSyntaxViewerPlugin] = _ID('syntax_viewer', optional=True)
     SUBCMIXER: _ID[AbstractSubcMixer] = _ID('subcmixer', optional=True)
