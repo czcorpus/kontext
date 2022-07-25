@@ -39,7 +39,7 @@ export interface SubcListFilter {
 export interface SubcorpListItem {
     id:string;
     name:string;
-    corpname:string;
+    corpus_name:string;
     archived:Date;
     created:Date;
     size:number;
@@ -202,9 +202,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         this.addActionHandler(
             Actions.ShowSubcEditWindow,
-            action => this.changeState(state => {
-                state.editWindowSubcorpus = [action.payload.corpname, action.payload.subcname];
-            })
+            action => {
+                this.changeState(state => {
+                    state.editWindowSubcorpus = [action.payload.corpname, action.payload.subcname];
+                });
+            }
         );
 
         this.addActionHandler(
@@ -221,7 +223,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         return List.map(item => ({
             id: item.id,
             name: item.name,
-            corpname: item.corpname,
+            corpus_name: item.corpus_name,
             size: item.size,
             created: new Date(item.created),
             archived: item.archived ? new Date(item.archived) : undefined,
@@ -252,7 +254,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
             {
-                corpname: item.corpname,
+                corpname: item.corpus_name,
                 usesubcorp: item.name
             },
 

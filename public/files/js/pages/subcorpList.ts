@@ -26,7 +26,6 @@ import { KontextPage } from '../app/main';
 import { ServerSubcorpListItem } from '../models/subcorp/common';
 import { SubcorpusEditModel } from '../models/subcorp/edit';
 import { TextTypesModel } from '../models/textTypes/main';
-import { SubcorpFormModel } from '../models/subcorp/form';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import * as PluginInterfaces from '../types/plugins';
 import { PluginName } from '../app/plugin';
@@ -72,11 +71,10 @@ class SubcorpListPage {
             this.subcorpWithinFormModel,
             liveAttrsViews,
         );
-        const props = {};
         this.layoutModel.renderReactComponent(
             views.SubcorpList,
             window.document.getElementById('my-subcorpora-mount'),
-            props
+            {}
         );
     }
 

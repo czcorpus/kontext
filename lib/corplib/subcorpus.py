@@ -24,20 +24,37 @@ from typing import Any, Dict, List, Optional, Union
 import ujson as json
 from dataclasses_json import config, dataclass_json
 
-TextTypesType = Dict[str, Union[List[str], List[int]]]
+"""
+This module defines a backend-independent subcorpus representation.
+"""
 
-WithinType = List[Dict[str, Union[str, bool]]]  # negated, structure_name, attribute_cql
+TextTypesType = Dict[str, Union[List[str], List[int]]]
+"""
+({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz) 
+"""
+# TODO: I am not very sure about the List[int] here
+
+WithinType = List[Dict[str, Union[str, bool]]]
+"""
+for each structural attribute, specify: negated? (!within), structure_name, attribute_cql
+"""
 
 
 @dataclass_json
 @dataclass
 class SubcorpusIdent:
     """
-    SubcorpusIdent is a base subcorpus identification dataclass.
+    SubcorpusIdent is a base subcorpus identification dataclass. It contains all the
+    necessary data for opening a Manatee subcorpus.
+
+    Attributes:
+        id: a URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
+        name:  name user gives to the subcorpus
+        corpus_name: an identifier of the corpus (registry file name)
+        data_path: a relative path (to a configured common root for all user subcorpora) of actual data files
     """
-    # id is URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
     id: str
-    name: str  # name user gives to the subcorpus
+    name: str
     corpus_name: str
     data_path: str
 
@@ -48,6 +65,25 @@ class SubcorpusRecord(SubcorpusIdent):
     """
     SubcorpusRecord is a database representation of a subcorpus. It contains all the data
     necessary to restore actual binary subcorpus at any time.
+
+    Attributes:
+        user_id: user ID of actual owner; this is removed once user deletes the corpus (but it is still avail.
+            via existing URLs)
+        author_id: user ID of the author (this is kept no matter whether corpus is active/archived/deleted)
+        size: size of the subcorpus in tokens
+        created: datetime of corpus creation
+        public_description: a public descripton (Markdown format) allows the subcorpus to be searched on the
+            "published subcorpora" page
+        archived: datetime specifying when the subcorpus was archived (= not listed anywhere by default but URLs
+            with the subcorpus are still available
+        cql: (mutually exclusive with 'within_cond' and 'text_types') defines a raw CQL specification of the subcorpus;
+            this is mainly for legacy reasons as no user interface allows creating new subcorpus in this way
+        within_cond (mutually exclusive with 'cql' and 'text_types') defines a set of CQL expressions to specify
+            a subcorpus using a "within helper form"
+        text_types (mutually exclusive with 'cql' and 'within_cond') defines an encoded set of individually selected
+            structural attributes and their values:
+            ({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz)
+
     """
     user_id: int
     author_id: int
@@ -56,7 +92,6 @@ class SubcorpusRecord(SubcorpusIdent):
         encoder=datetime.isoformat,
         decoder=datetime.fromisoformat))
     public_description: str
-    data_path: str
     archived: Optional[datetime] = None
     cql: InitVar[Optional[str]] = None
     within_cond: InitVar[Optional[str]] = None
@@ -64,9 +99,6 @@ class SubcorpusRecord(SubcorpusIdent):
     _cql: Optional[str] = None
     _within_cond: Optional[WithinType] = None
     _text_types: Optional[TextTypesType] = None
-    archived: Optional[datetime] = field(default=None, metadata=config(
-        encoder=lambda x: datetime.isoformat(x) if x else None,
-        decoder=lambda x: datetime.fromisoformat(x) if x else None))
 
     def __post_init__(self, cql, within_cond, text_types):
         if within_cond:

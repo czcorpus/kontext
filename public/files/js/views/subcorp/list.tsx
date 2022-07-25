@@ -19,7 +19,7 @@
  */
 
 import * as React from 'react';
-import {IActionDispatcher, BoundWithProps} from 'kombo';
+import {IActionDispatcher, Bound} from 'kombo';
 import * as Kontext from '../../types/kontext';
 import {
     SubcorpListModel, SubcListFilter, SortKey, UnfinishedSubcorp, SubcorpListItem,
@@ -36,13 +36,8 @@ import { TextTypesModel } from '../../models/textTypes/main';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 
 
-
-export interface SubcorpListProps {
-
-}
-
 export interface ListViews {
-    SubcorpList:React.ComponentClass<SubcorpListProps>;
+    SubcorpList:React.ComponentClass;
 }
 
 export function init(
@@ -122,7 +117,7 @@ export function init(
                 const href = he.createActionLink(
                     'query',
                     {
-                        corpname: item.corpname,
+                        corpname: item.corpus_name,
                         usesubcorp: item.id
                     }
                 );
@@ -306,11 +301,9 @@ export function init(
     };
 
 
-
-
     // ------------------------ <SubcorpList /> --------------------------
 
-    class SubcorpList extends React.Component<SubcorpListProps & SubcorpListModelState> {
+    class SubcorpList extends React.Component<SubcorpListModelState> {
 
         constructor(props) {
             super(props);
@@ -323,7 +316,7 @@ export function init(
             dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
                 name: Actions.ShowSubcEditWindow.name,
                 payload: {
-                    corpname: item.corpname,
+                    corpname: item.corpus_name,
                     subcname: item.id
                 }
             });
@@ -362,6 +355,6 @@ export function init(
     }
 
     return {
-        SubcorpList: BoundWithProps(SubcorpList, subcorpLinesModel)
+        SubcorpList: Bound(SubcorpList, subcorpLinesModel)
     };
 }
