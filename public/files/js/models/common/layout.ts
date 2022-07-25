@@ -264,8 +264,8 @@ export interface SubcorpusServerRecord {
     user_id:number;
     author_id:number;
     size:number;
-    created:string;
-    archived:string|undefined;
+    created:number;
+    archived:number|undefined;
     public_description:string|undefined;
     cql:string|undefined;
     within_cond:string|undefined;

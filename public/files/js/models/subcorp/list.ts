@@ -298,7 +298,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             return String(v);
         }
         for (let p in filter) {
-            if (filter.hasOwnProperty(p)) {
+            if (filter.hasOwnProperty(p) && filter[p] !== undefined) {
                 currArgs[p] = exportVal(filter[p]);
             }
         }

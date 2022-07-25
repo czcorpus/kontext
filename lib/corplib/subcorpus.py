@@ -91,40 +91,19 @@ class SubcorpusRecord(SubcorpusIdent):
     created: datetime = field(metadata=config(
         encoder=datetime.isoformat,
         decoder=datetime.fromisoformat))
+    published: bool
     public_description: str
     archived: Optional[datetime] = None
-    cql: InitVar[Optional[str]] = None
-    within_cond: InitVar[Optional[str]] = None
-    text_types: InitVar[Optional[str]] = None
-    _cql: Optional[str] = None
-    _within_cond: Optional[WithinType] = None
-    _text_types: Optional[TextTypesType] = None
+    cql: Optional[str] = None
+    within_cond: Optional[WithinType] = None
+    text_types: Optional[TextTypesType] = None
 
-    def __post_init__(self, cql, within_cond, text_types):
-        if within_cond:
-            self._within_cond = json.loads(within_cond)
-        if text_types:
-            self._text_types = json.loads(text_types)
-        if cql:
-            self._cql = cql
-
-    @property
-    def within_cond(self):
-        return self._within_cond
-
-    @property
-    def text_types(self):
-        return self._text_types
-
-    @property
-    def cql(self):
-        return self._cql
-
-    def to_dict(self) -> Dict[str, Any]:
+    def prepare_response(self) -> Dict[str, Any]:
         """
         Method to get json serializable dict
         """
         res = asdict(self)
         res['created'] = self.created.timestamp()
         res['archived'] = self.archived.timestamp() if self.archived else None
+        del res['data_path']
         return res

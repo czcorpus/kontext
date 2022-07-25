@@ -95,7 +95,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
         sql = f'SELECT * FROM {self.TABLE_NAME} WHERE {" AND ".join(where)} ORDER BY id LIMIT %s OFFSET %s'
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
-            return [SubcorpusRecord(**row) async for row in cursor]
+            return [SubcorpusRecord(**{
+                **row,
+                'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
+                'text_types': json.loads(row['text_types']) if row['text_types'] else None,
+                'published': bool(row['published']),
+            }) async for row in cursor]
 
     async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
@@ -107,7 +112,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 (user_id, corpname, subc_id)
             )
             row = await cursor.fetchone()
-            return None if row is None else SubcorpusRecord(**row)
+            return None if row is None else SubcorpusRecord(**{
+                **row,
+                'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
+                'text_types': json.loads(row['text_types']) if row['text_types'] else None,
+                'published': bool(row['published']),
+            })
 
     async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
@@ -116,7 +126,12 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 'WHERE id = %s', (query_id, )
             )
             row = await cursor.fetchone()
-            return None if row is None else SubcorpusRecord(**row)
+            return None if row is None else SubcorpusRecord(**{
+                **row,
+                'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
+                'text_types': json.loads(row['text_types']) if row['text_types'] else None,
+                'published': bool(row['published']),
+            })
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)

@@ -234,7 +234,6 @@ export function init(
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th>{he.translate('subclist__col_published')}</th>
                             <th />
-                            <th />
                         </tr>
                         {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
                         {List.map((item, i) => (
