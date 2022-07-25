@@ -27,7 +27,7 @@ class CreateSubcorpusTask(object):
 
     def __init__(self, user_id: int, corpus_id: str):
         self._user_id = user_id
-        self._cm = corplib.CorpusManager()
+        self._cf = corplib.CorpusFactory()
         self._corpus_id = corpus_id
 
     async def run(self, tt_query, cql, path):
@@ -36,7 +36,7 @@ class CreateSubcorpusTask(object):
         True in case of success
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
-        corp = await self._cm.get_corpus(self._corpus_id)
+        corp = await self._cf.get_corpus(self._corpus_id)
         conc = await conclib.search.get_conc(corp, self._user_id, q=cql, asnc=0)
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')

@@ -124,7 +124,7 @@ class SubcorpusActionModel(CorpusActionModel):
             raise UserActionException(self._req.translate('Nothing specified!'))
 
         if result is not False:
-            subc = await self.cm.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname, path))
+            subc = await self.cf.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname, path))
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
                     await sr.create(

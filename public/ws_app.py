@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(APP_PATH, 'lib'))  # application libraries
 import settings
 from conclib.calc import cancel_conc_task
 from corplib.corpus import KCorpus
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from bgcalc.errors import CalcTaskNotFoundError
 from bgcalc import calc_backend_client
 import plugins
@@ -161,7 +161,7 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
         if not auth.is_anonymous(params['user_id']):
             subcpath.insert(0, os.path.join(settings.get(
                 'corpora', 'users_subcpath'), str(params['user_id'])))
-    cm = CorpusManager(subcpath)
+    cm = CorpusFactory(subcpath)
     corp = await cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
     # check until finished

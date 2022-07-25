@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional
 
 from action.cookie import KonTextCookie
 from action.krequest import KRequest
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus
 from plugin_types.auth import UserInfo
 from sanic_session import Session
@@ -143,7 +143,7 @@ class AbstractCorpusPluginCtx(AbstractUserPluginCtx, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def corpus_manager(self) -> CorpusManager:
+    def corpus_factory(self) -> CorpusFactory:
         pass
 
 

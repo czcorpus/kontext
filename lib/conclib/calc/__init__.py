@@ -33,7 +33,7 @@ from conclib.empty import InitialConc
 from conclib.errors import (
     BrokenConcordanceException, ConcCalculationStatusException, ConcNotFoundException, extract_manatee_error)
 from conclib.pyconc import PyConc
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from corplib.corpus import AbstractKCorpus
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.conc_cache import AbstractConcCache, ConcCacheStatus
@@ -145,7 +145,7 @@ async def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...],
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
     """
-    corpus_manager = CorpusManager()
+    corpus_factory = CorpusFactory()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     corp_cache_key = getattr(corp, 'corp_cache_key', None)
     status = await cache_map.get_calc_status(corp_cache_key, q)
@@ -155,7 +155,7 @@ async def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...],
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
-                mcorp = await corpus_manager.get_corpus(qq[2:], translate=translate)
+                mcorp = await corpus_factory.get_corpus(qq[2:], translate=translate)
                 break
         try:
             return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp, translate=translate)
@@ -180,7 +180,7 @@ async def find_cached_conc_base(
     returns:
     a 2-tuple [an index within 'q' where to start with non-cached results], [a concordance instance]
     """
-    corpus_manager = CorpusManager()
+    corpus_factory = CorpusFactory()
     start_time = time.time()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
     await cache_map.refresh_map()
@@ -225,7 +225,7 @@ async def find_cached_conc_base(
                     mcorp = corp
                     for qq in reversed(q[:i]):  # find the right main corp, if aligned
                         if qq.startswith('x-'):
-                            mcorp = await corpus_manager.get_corpus(qq[2:], translate=translate)
+                            mcorp = await corpus_factory.get_corpus(qq[2:], translate=translate)
                             break
                     conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp, translate=translate)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
@@ -262,8 +262,8 @@ class ConcCalculation(GeneralWorker):
         """
         cache_map = None
         try:
-            corpus_manager = CorpusManager(subc_root=subc_root)
-            corpus_obj = await corpus_manager.get_corpus(corpus_ident, translate=self._translate)
+            corpus_factory = CorpusFactory(subc_root=subc_root)
+            corpus_obj = await corpus_factory.get_corpus(corpus_ident, translate=self._translate)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
@@ -317,7 +317,7 @@ class ConcSyncCalculation(GeneralWorker):
             self, task_id, cache_factory, subc_root, corpus_ident: Union[str, SubcorpusRecord], conc_dir: str,
             translate: Callable[[str], str] = lambda x: x):
         super().__init__(task_id, cache_factory, translate)
-        self.corpus_manager = CorpusManager(subc_root=subc_root)
+        self.corpus_factory = CorpusFactory(subc_root=subc_root)
         self.corpus_ident = corpus_ident
         self.corpus_obj = None
         self.cache_map = None
@@ -328,7 +328,7 @@ class ConcSyncCalculation(GeneralWorker):
             await self.cache_map.update_calc_status(corp_cache_key, query[:i + 1], error=err, finished=True)
 
     async def run(self,  corp_cache_key, query: Tuple[str, ...], samplesize: int):
-        self.corpus_obj = await self.corpus_manager.get_corpus(self.corpus_ident, translate=self._translate)
+        self.corpus_obj = await self.corpus_factory.get_corpus(self.corpus_ident, translate=self._translate)
         setattr(self.corpus_obj, '_conc_dir', self.conc_dir)
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 

@@ -90,14 +90,15 @@ class AbstractQueryHistory(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
-                               archived_only=False, offset=0, limit=None, translate=lambda x: x):
+    async def get_user_queries(
+            self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            archived_only=False, offset=0, limit=None, translate=lambda x: x):
         """
         Returns list of queries of a specific user.
 
         arguments:
         user_id -- database user ID
-        corpus_manager -- a corplib.CorpusManager instance
+        corpus_factory -- a corplib.CorpusFactory instance
         from_date -- YYYY-MM-DD date string
         to_date -- YYY-MM-DD date string
         q_supertype -- one of {conc, pquery, wlist}

@@ -184,7 +184,7 @@ class AbstractConcCache(abc.ABC):
 
         Arguments:
         corp_cache_key -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_corpus()
+                    CorpusFactory.get_corpus()
         q -- a list of query elements
         """
 
@@ -214,7 +214,7 @@ class AbstractConcCache(abc.ABC):
         entry is not in the 'readable' state then None must be returned.
 
         arguments:
-        corp_cache_key -- hashed subcorpus identifier (corplib.CorpusManager does this)
+        corp_cache_key -- hashed subcorpus identifier (corplib.CorpusFactory does this)
         q -- a list of query items
         """
 
@@ -225,7 +225,7 @@ class AbstractConcCache(abc.ABC):
         Add a cache entry. If already present, the stored version is returned unless overwrite is set to True
 
         arguments:
-        corp_cache_key -- a subcorpus identifier hash (see corplib.CorpusManager.get_corpus)
+        corp_cache_key -- a subcorpus identifier hash (see corplib.CorpusFactory.get_corpus)
         query -- a list/tuple of query elements
         size -- current size of a respective concordance (the one defined by corpus, corp_cache_key
                 and query)
@@ -241,7 +241,7 @@ class AbstractConcCache(abc.ABC):
         Remove a specific entry with concrete corp_cache_key and query.
 
         corp_cache_key -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_corpus()
+                    CorpusFactory.get_corpus()
         q -- a list of query elements
         """
 
@@ -252,7 +252,7 @@ class AbstractConcCache(abc.ABC):
         what other operations the query (e.g. shuffle, filter) contains.
 
         corp_cache_key -- a md5 hash generated from subcorpus identifier by
-                    CorpusManager.get_corpus()
+                    CorpusFactory.get_corpus()
         q -- a list of query elements
         """
 
