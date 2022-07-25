@@ -17,11 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-13
 
-from dataclasses import InitVar, asdict, dataclass, field
+import os
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import ujson as json
 from dataclasses_json import config, dataclass_json
 
 """
@@ -56,7 +56,14 @@ class SubcorpusIdent:
     id: str
     name: str
     corpus_name: str
-    data_path: str
+
+    @property
+    def data_path(self):
+        return SubcorpusIdent.mk_relative_data_path(self.id)
+
+    @staticmethod
+    def mk_relative_data_path(ident: str):
+        return os.path.join(ident[:2], f'{ident}.subc')
 
 
 @dataclass_json
@@ -106,5 +113,4 @@ class SubcorpusRecord(SubcorpusIdent):
         res['created'] = self.created.timestamp()
         res['archived'] = self.archived.timestamp() if self.archived else None
         res['published'] = self.published.timestamp() if self.archived else None
-        del res['data_path']
         return res

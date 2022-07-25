@@ -57,7 +57,7 @@ class Freq2DCalcArgs:
     ctminfreq_type: str
     fcrit: str
     cache_path: Optional[str] = None
-    subcpath: List[str] = field(default_factory=list)
+    subcpath: Optional[str] = None
     subcname: Optional[str] = None
     collator_locale: Optional[str] = None
 

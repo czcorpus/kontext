@@ -68,7 +68,7 @@
     </logging>
     <corpora>
         <calc_pid_dir>/opt/kontext/pids</calc_pid_dir>
-        <users_subcpath>/opt/kontext/data/subcorp</users_subcpath>
+        <subcorpora_dir>/opt/kontext/data/subcorp</subcorpora_dir>
         <conc_dir>/opt/kontext/bits/stored-conc</conc_dir>
         <manatee_registry>/opt/kontext/data/registry</manatee_registry>
         <manatee_registry_locale>cs_CZ</manatee_registry_locale>

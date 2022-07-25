@@ -325,7 +325,7 @@ def test_8(finfo):
       '... and the directory has a proper owner and group',
       '... and the directory has a proper permissions')
 def test_9(finfo):
-    path = settings.get('corpora', 'users_subcpath')
+    path = settings.get('corpora', 'subcorpora_dir')
     yield finfo.dir_exists(path)
     yield finfo.test_owner_and_group(path, owner=finfo.webserver_user, group=finfo.webserver_group)
     yield finfo.permissions(path, match='2775')

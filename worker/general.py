@@ -121,7 +121,7 @@ async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
     subc -- a subcorpus identifier (None if not defined)
     user_id --
     """
-    cm = CorpusFactory(subc_root=settings.get('corpora', 'users_subcpath'))
+    cm = CorpusFactory(subc_root=settings.get('corpora', 'subcorpora_dir'))
     return await cm.get_corpus(corp_ident)
 
 
@@ -190,14 +190,14 @@ async def conc_calculate(self, initial_args, user_id, corpus_ident: Union[str, S
     """
     task = conclib.calc.ConcCalculation(task_id=self.request.id)
     return await task.run(
-        initial_args, settings.get('corpora', 'users_subcpath'), corpus_ident, corp_cache_key, query, samplesize)
+        initial_args, settings.get('corpora', 'subcorpora_dir'), corpus_ident, corp_cache_key, query, samplesize)
 
 
 async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_key, query, samplesize):
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
     task = conclib.calc.ConcSyncCalculation(
         task_id=self.request.id, cache_factory=None,
-        subc_root=settings.get('corpora', 'users_subcpath'), corpus_name=corpus_name,
+        subc_root=settings.get('corpora', 'subcorpora_dir'), corpus_name=corpus_name,
         subc_name=subc_name, conc_dir=conc_dir)
     return await task.run(corp_cache_key, query, samplesize)
 

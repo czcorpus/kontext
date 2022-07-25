@@ -19,16 +19,16 @@
 import glob
 import logging
 import os
-import datetime
-from datetime import datetime
-from hashlib import md5
 from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
+import hashlib
+import uuid
 
 import aiofiles
 import aiofiles.os
 import ujson as json
 from corplib.abstract import AbstractKCorpus
-from corplib.subcorpus import SubcorpusRecord
+from corplib.subcorpus import SubcorpusRecord, SubcorpusIdent
+from corplib.errors import CorpusInstantiationError
 from manatee import Corpus, SubCorpus
 
 try:
@@ -308,23 +308,34 @@ class KSubcorpus(KCorpus):
     orig_description.
     """
 
-    def __init__(self, corp: SubCorpus, data_record: SubcorpusRecord):
+    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent):
         super().__init__(corp, data_record.corpus_name)
         self._corpname = data_record.corpus_name
         self._data_record = data_record
 
     def __str__(self):
-        return f'KSubcorpus(ident={self.corpname}, subcname={self.subcname})'
+        return f'KSubcorpus(ident={self.corpname}, subcorpus_name={self.subcorpus_name})'
 
     @staticmethod
-    async def load(corp: Corpus, data_record: SubcorpusRecord, decode_desc: bool) -> 'KSubcorpus':
+    async def load(corp: Corpus, data_record: SubcorpusIdent, subcorp_root_dir: str) -> 'KSubcorpus':
         """
         load is a recommended factory function to create a KSubcorpus instance.
         """
-        subc = SubCorpus(corp, data_record.data_path)
+        full_data_path = os.path.join(subcorp_root_dir, data_record.data_path)
+        if not await aiofiles.os.path.isfile(full_data_path):
+            raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
+        subc = SubCorpus(corp, full_data_path)
         kcorp = KSubcorpus(subc, data_record)
         kcorp._corp = subc
         return kcorp
+
+    @staticmethod
+    async def create_new_subc_path(subc_root: str) -> Tuple[str, str]:
+        code = hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()
+        path = os.path.join(subc_root, code[:2])
+        if not await aiofiles.os.path.isdir(path):
+            await aiofiles.os.makedirs(path)
+        return SubcorpusRecord.mk_relative_data_path(code), code
 
     @property
     def portable_ident(self) -> Union[str, SubcorpusRecord]:
@@ -346,6 +357,10 @@ class KSubcorpus(KCorpus):
         In case of a regular corpus, the value is None
         """
         return f'{self._corpname}/{self._data_record.id}'
+
+    @property
+    def is_unbound(self):
+        return not isinstance(self._data_record, SubcorpusRecord)
 
     @property
     def source_description(self):

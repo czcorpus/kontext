@@ -31,11 +31,11 @@ import manatee
 import plugins
 from corplib.subcorpus import SubcorpusIdent, SubcorpusRecord
 from manatee import Concordance, StrVector, SubCorpus
-from plugin_types.corparch.corpus import (DefaultManateeCorpusInfo,
-                                          ManateeCorpusInfo)
+from plugin_types.corparch.corpus import (
+    DefaultManateeCorpusInfo, ManateeCorpusInfo)
 
 from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
-from .errors import MissingSubCorpFreqFile
+from .errors import MissingSubCorpFreqFile, CorpusInstantiationError
 from .fallback import EmptyCorpus
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
@@ -67,7 +67,12 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-async def create_subcorpus(path: str, corpus: KCorpus, structname: str, subquery: str, translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
+async def create_subcorpus(
+        path: str,
+        corpus: KCorpus,
+        structname: str,
+        subquery: str,
+        translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -119,23 +124,27 @@ class CorpusFactory:
     def __init__(self, subc_root: Optional[str] = None) -> None:
         """
         Args:
-            subcpath: a list of paths where user corpora are located
+            subc_root: an optional path where to look for subcorpora; in case it is omitted the
+                factory will be able to provide only full corpora and ra
         """
         self.subcpath = subc_root
         self._cache: Dict[Tuple[str, str], AbstractKCorpus] = {}
 
     async def get_corpus(
-            self, corp_ident: Union[str, SubcorpusIdent], corp_variant: str = '',
-            decode_desc: bool = True, translate=lambda x: x) -> AbstractKCorpus:
+            self,
+            corp_ident: Union[str, SubcorpusIdent],
+            corp_variant: str = '',
+            translate=lambda x: x) -> AbstractKCorpus:
         """
-        args:
+        Args:
+            corp_ident: an ID (= registry file name) of a subcorpus or a subcorpus identification record
             corp_variant: a registry file path prefix for (typically) limited variant of a corpus;
-                          please note that in many cases this can be omitted as only in case user
-                          wants to see a continuous text (e.g. kwic context) we must make sure he
-                          sees only a 'legal' chunk.
+                please note that in many cases this can be omitted as only in case user wants to see
+                a continuous text (e.g. kwic context) we must make sure they see only a 'legal' chunk.
+            translate: a function providing translation of misc. corpus metadata
         """
-        if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
-            raise RuntimeError('CorpusFactory not configured for creating subcorpora instances')
+        if isinstance(corp_ident, SubcorpusRecord) and self.subcpath is None:
+            raise CorpusInstantiationError('CorpusFactory not configured for creating subcorpora instances')
         corpname = corp_ident.corpus_name if isinstance(corp_ident, SubcorpusIdent) else corp_ident
         subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)
@@ -147,23 +156,26 @@ class CorpusFactory:
 
         # NOTE: line corp.cm = self (as present in NoSke and older KonText versions) has
         # been causing file descriptor leaking for some operations (e.g. corp.get_attr).
-        # KonText does not need such an attribute but to keep developers informed I leave
+        # KonText does not need such an attribute but to keep developers informed we leave
         # the comment here.
         if isinstance(corp_ident, SubcorpusIdent):
-            if await aiofiles.os.path.isfile(corp_ident.data_path):
-                subc = await KSubcorpus.load(corp, corp_ident, decode_desc)
-                self._cache[cache_key] = subc
-                return subc
-            # TODO error type
-            raise RuntimeError(translate(f'Subcorpus "{corp_ident.id}" data not found'))
+            subc = await KSubcorpus.load(corp, corp_ident, self.subcpath)
+            self._cache[cache_key] = subc
+            return subc
         else:
             kcorp = KCorpus(corp, corpname)
             self._cache[cache_key] = kcorp
         return kcorp
 
     async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> ManateeCorpusInfo:
+        """
+        Return a low-level information (provided via Manatee) about a corpus
+        Args:
+            corpus_id: corpus ID (= registry file name)
+            translate: message translation function
+        """
         try:
-            corp = await self.get_corpus(corpus_id, '', True, translate=translate)
+            corp = await self.get_corpus(corpus_id, translate=translate)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)
@@ -193,14 +205,6 @@ class CorpusFactory:
                         return fp
         return fullpath
 
-    def subc_files(self, corpname: str) -> List[str]:
-        # values for the glob.glob() functions must be encoded properly otherwise it fails for non-ascii files
-        sp = self.subcpath
-        items = []
-        for x in glob.glob(os.path.join(sp, corpname, '*.subc')):
-            items.append(x)
-        return sorted(items)
-
 
 def texttype_values(
         corp: AbstractKCorpus,
@@ -228,7 +232,7 @@ def texttype_values(
 
     !!!!!!
     NOTE: avoid calling this method repeatedly for the same corpus as the
-    attr = corp.get_attr(n) line is leaking opened files of corpora indexes which
+    attr = corp.get_attr(n) line is probably leaking file descriptors of corpora indexes which
     leads to exhausted limit for opened files for Gunicorn/Celery after some time.
     KonText caches the value returned by this function to prevent this.
 

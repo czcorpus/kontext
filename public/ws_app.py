@@ -155,14 +155,9 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     msg = await ws.receive()
     params = json.loads(msg.data)
     logging.debug('Received conc parameters: %s', params)
-
-    subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
-    with plugins.runtime.AUTH as auth:
-        if not auth.is_anonymous(params['user_id']):
-            subcpath.insert(0, os.path.join(settings.get(
-                'corpora', 'users_subcpath'), str(params['user_id'])))
-    cm = CorpusFactory(subcpath)
-    corp = await cm.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
+    subcpath = [settings.get('corpora', 'subcorpora_dir')]
+    cf = CorpusFactory(subcpath)
+    corp = await cf.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
 
     # check until finished
     while not ws.closed:

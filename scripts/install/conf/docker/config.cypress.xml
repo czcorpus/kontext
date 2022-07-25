@@ -59,7 +59,7 @@
     <corpora>
         <manatee_registry>/var/lib/manatee/registry</manatee_registry>
         <manatee_registry_locale>cs_CZ</manatee_registry_locale>
-        <users_subcpath>/var/local/corpora/subcorp</users_subcpath>
+        <subcorpora_dir>/var/local/corpora/subcorp</subcorpora_dir>
         <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <freqs_cache_ttl>3600</freqs_cache_ttl>
