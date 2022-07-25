@@ -120,11 +120,18 @@ class SubcorpusRecord(SubcorpusIdent):
     def cql(self):
         return self._cql
 
-    def to_dict(self) -> Dict[str, Any]:
+    def prepare_response(self) -> Dict[str, Any]:
         """
         Method to get json serializable dict
         """
         res = asdict(self)
+        res['within_cond'] = res['_within_cond']
+        del res['_within_cond']
+        res['text_types'] = res['_text_types']
+        del res['_text_types']
+        res['cql'] = res['_cql']
+        del res['_cql']
         res['created'] = self.created.timestamp()
         res['archived'] = self.archived.timestamp() if self.archived else None
+        del res['data_path']
         return res

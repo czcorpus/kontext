@@ -50,10 +50,8 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
     live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
-    info_dict = info.to_dict()
-    del info_dict['data_path']
     return {
-        'data': info.to_dict(),
+        'data': info.prepare_response(),
         'textTypes': await amodel.tt.export_with_norms(),
         'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
         'liveAttrsEnabled': live_attrs_enabled,

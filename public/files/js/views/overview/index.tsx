@@ -233,7 +233,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
                     <dd>{props.data.size}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{he.formatDate(new Date(Date.parse(props.data.created)))}</dd>
+                    <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
                     <dt>{he.translate('global__subc_info_access_hd')}:</dt>
                     <dd>{getAccess()}</dd>
                     {props.data.public_description ?
