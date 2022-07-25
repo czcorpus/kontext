@@ -25,8 +25,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus, SubcorpusRecord } from './common';
-import * as Kontext from '../../types/kontext';
-import { TTInitialData } from '../textTypes/common';
+import { SubcorpusPropertiesResponse } from '../common/layout';
 
 
 
@@ -41,13 +40,6 @@ export interface SubcorpusEditModelState {
     isBusy:boolean;
     data:SubcorpusRecord|undefined;
     derivedSubc:DerivedSubcorp|undefined;
-    liveAttrsEnabled:boolean;
-}
-
-interface LoadPropertiesResponse extends Kontext.AjaxResponse {
-    data:SubcorpusRecord;
-    textTypes:TTInitialData;
-    structsAndAttrs:Kontext.StructsAndAttrs;
     liveAttrsEnabled:boolean;
 }
 
@@ -108,7 +100,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$<LoadPropertiesResponse>(
+                this.layoutModel.ajax$<SubcorpusPropertiesResponse>(
                     HTTP.Method.GET,
                     this.layoutModel.createActionUrl(
                         '/subcorpus/properties',
@@ -126,7 +118,18 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                             {
                                 corpname: action.payload?.corpname,
                                 subcname: action.payload?.subcname,
-                                data: data.data,
+                                // TODO improve data SubcorpusRecord type
+                                data: {
+                                    corpname: data.data.corpus_name,
+                                    usesubcorp: data.data.id,
+                                    origSubcName: data.data.name,
+                                    deleted: data.data.archived,
+                                    created: data.data.created,
+                                    selections: data.data.text_types||data.data.within_cond||data.data.cql,
+                                    size: data.data.size,
+                                    published: data.data.published,
+                                    description: data.data.public_description,
+                                },
                                 textTypes: data.textTypes,
                                 structsAndAttrs: data.structsAndAttrs,
                                 liveAttrsEnabled: data.liveAttrsEnabled,

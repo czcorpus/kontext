@@ -23,13 +23,13 @@ import { PageModel } from '../app/page';
 import { SubcorpListModel, SortKey, SubcListFilter } from '../models/subcorp/list';
 import { init as listViewInit } from '../views/subcorp/list';
 import { KontextPage } from '../app/main';
-import { ServerSubcorpListItem } from '../models/subcorp/common';
 import { SubcorpusEditModel } from '../models/subcorp/edit';
 import { TextTypesModel } from '../models/textTypes/main';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import * as PluginInterfaces from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import liveAttributes from 'plugins/liveAttributes/init';
+import { SubcorpusServerRecord } from '../models/common/layout';
 
 /**
  *
@@ -86,7 +86,7 @@ class SubcorpListPage {
                 this.subcorpListModel = new SubcorpListModel({
                     dispatcher: this.layoutModel.dispatcher,
                     layoutModel: this.layoutModel,
-                    data: this.layoutModel.getConf<Array<ServerSubcorpListItem>>('SubcorpList'),
+                    data: this.layoutModel.getConf<Array<SubcorpusServerRecord>>('SubcorpList'),
                     sortKey: this.layoutModel.getConf<SortKey>('SortKey'),
                     relatedCorpora: this.layoutModel.getConf<Array<string>>('RelatedCorpora'),
                     unfinished: this.layoutModel.getConf<Array<Kontext.AsyncTaskInfo>>('ProcessedSubcorpora'),
