@@ -116,7 +116,7 @@ export class Actions {
 
     static PublishSubcorpusDone:Action<{
         pubSubcname:string;
-        published:boolean;
+        published:number;
         description:string;
     }> = {
         name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS_DONE'

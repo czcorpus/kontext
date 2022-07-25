@@ -91,9 +91,9 @@ class SubcorpusRecord(SubcorpusIdent):
     created: datetime = field(metadata=config(
         encoder=datetime.isoformat,
         decoder=datetime.fromisoformat))
-    published: bool
     public_description: str
     archived: Optional[datetime] = None
+    published: Optional[datetime] = None
     cql: Optional[str] = None
     within_cond: Optional[WithinType] = None
     text_types: Optional[TextTypesType] = None
@@ -105,5 +105,6 @@ class SubcorpusRecord(SubcorpusIdent):
         res = asdict(self)
         res['created'] = self.created.timestamp()
         res['archived'] = self.archived.timestamp() if self.archived else None
+        res['published'] = self.published.timestamp() if self.archived else None
         del res['data_path']
         return res

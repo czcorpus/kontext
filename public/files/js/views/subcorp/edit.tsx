@@ -271,7 +271,7 @@ export function init(
                         <layoutViews.TabView className="ActionMenu" items={items} >
                             <FormActionFile key="restore" />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
-                            <PublishingTab key="publish" published={props.data.published}
+                            <PublishingTab key="publish" published={!!props.data.published}
                                 description={props.data.description}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
                         </layoutViews.TabView>
