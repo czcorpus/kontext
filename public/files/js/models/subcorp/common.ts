@@ -43,9 +43,9 @@ export interface SubcorpusRecord {
     origSubcName:string;
     created:number;
     deleted:number|undefined;
+    published:number|undefined;
     selections:SelectionsType;
     size:number;
-    published:boolean;
     description:string|undefined;
 }
 
