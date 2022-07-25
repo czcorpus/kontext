@@ -429,7 +429,8 @@ class CorpusActionModel(UserActionModel):
             id=getattr(self.args, 'corpname'),
             variant=self._corpus_variant,
             name=self.corp.human_readable_corpname,
-            usesubcorp=self.args.usesubcorp,
+            usesubcorp=self.corp.subcorpus_id,
+            origSubcorpName=self.corp.subcorpus_name,
             foreignSubcorp=self.corp.author_id is not None and self.session_get(
                 'user', 'id') != self.corp.author_id,
             size=self.corp.size,
