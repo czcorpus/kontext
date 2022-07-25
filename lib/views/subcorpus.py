@@ -17,7 +17,7 @@
 import logging
 import os
 from dataclasses import asdict
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import l10n
 import plugins
@@ -31,6 +31,7 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.corpus import list_public_subcorpora
+from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
 from plugin_types.subc_restore import AbstractSubcArchive, SubcListFilterArgs
 from sanic import Blueprint
@@ -122,7 +123,7 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
 @bp.route('/list')
 @http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
-async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     """
     Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
     installed then the list is enriched by additional re-use/undelete information.
@@ -130,14 +131,13 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
-    involved_corpora = []
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
     filter_args = SubcListFilterArgs(
         active_only=active_only, archived_only=False, corpus=req.args.get('corpname'))
 
     with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
         try:
-            full_list = await sr.list(amodel.plugin_ctx.user_id, filter_args)
+            full_list: List[SubcorpusRecord] = (await sr.list(amodel.plugin_ctx.user_id, filter_args))
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_restore plug-in failed to list queries: %s' % e)
@@ -162,7 +162,7 @@ async def list(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
-        related_corpora=sorted(involved_corpora),
+        related_corpora=sorted(list(set(x.corpus_name for x in full_list))),
         uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists,
         uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
     )
