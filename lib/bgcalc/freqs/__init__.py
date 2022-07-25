@@ -208,7 +208,7 @@ async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     returns:
     a dict(freqs=..., conc_size=...)
     """
-    cm = corplib.CorpusManager(subc_root=args.subcpath)
+    cm = corplib.CorpusFactory(subc_root=args.subcpath)
     corp = await cm.get_corpus(args.corpname, subcname=args.subcname)
     conc = await require_existing_conc(corp=corp, q=args.q)
     return calculate_freqs_bg_sync(args, conc)
@@ -348,7 +348,7 @@ class Freq2DCalculation:
         """
         note: this is called by a background worker
         """
-        cm = corplib.CorpusManager(subc_root=self._args.subcpath)
+        cm = corplib.CorpusFactory(subc_root=self._args.subcpath)
         self._corp = await cm.get_corpus(self._args.corpname, subcname=self._args.subcname)
         self._conc = await require_existing_conc(corp=self._corp, q=self._args.q)
         result, full_size = self.ct_dist(

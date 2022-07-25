@@ -36,15 +36,15 @@ from plugins import inject
 
 class CorpusCache:
 
-    def __init__(self, corpus_manager):
-        self._cm = corpus_manager
+    def __init__(self, corpus_factory):
+        self._cf = corpus_factory
         self._corpora = {}
 
     async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = await self._cm.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cf.get_corpus(cname, translate=translate)
         return self._corpora[cname]
 
 
@@ -186,8 +186,9 @@ class QueryHistory(AbstractQueryHistory):
         else:
             return None   # persistent result not available
 
-    async def get_user_queries(self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
-                               archived_only=False, offset=0, limit=None, translate=lambda x: x):
+    async def get_user_queries(
+            self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            archived_only=False, offset=0, limit=None, translate=lambda x: x):
         """
         Returns list of queries of a specific user.
 
@@ -208,7 +209,7 @@ class QueryHistory(AbstractQueryHistory):
         data = list(reversed(data))[offset:(offset + limit)]
         full_data = []
 
-        corpora = CorpusCache(corpus_manager)
+        corpora = CorpusCache(corpus_factory)
         for item in data:
             if 'query_id' in item:
                 item_qs = item.get('q_supertype', item.get('qtype'))

@@ -29,7 +29,7 @@ import plugins
 import settings
 from conclib.errors import ConcCalculationStatusException
 from conclib.pyconc import PyConc
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from corplib.corpus import AbstractKCorpus
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.conc_cache import ConcCacheStatus
@@ -122,8 +122,8 @@ class TaskRegistration(GeneralWorker):
     async def run(
             self, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key: str, query: Tuple[str, ...],
             samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
-        corpus_manager = CorpusManager(subc_root=settings.get('corpora', 'users_subcpath'))
-        corpus_obj = await corpus_manager.get_corpus(corpus_ident, translate=translate)
+        corpus_factory = CorpusFactory(subc_root=settings.get('corpora', 'users_subcpath'))
+        corpus_obj = await corpus_factory.get_corpus(corpus_ident, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = await cache_map.get_calc_status(corp_cache_key, query)
         if status is None or status.error:

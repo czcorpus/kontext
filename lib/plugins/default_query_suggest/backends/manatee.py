@@ -22,7 +22,7 @@ import l10n
 from conclib.freq import multi_level_crit
 from conclib.pyconc import PyConc
 from conclib.search import get_conc
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from corplib.corpus import KCorpus
 from plugin_types.query_suggest import AbstractBackend
 from strings import re_escape
@@ -31,7 +31,7 @@ from util import as_sync
 
 @as_sync
 async def _load_corp_sync(name: str, translate: Callable[[str], str]):
-    return await CorpusManager().get_corpus(name, translate=translate) if name else None
+    return await CorpusFactory().get_corpus(name, translate=translate) if name else None
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):

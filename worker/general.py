@@ -69,7 +69,7 @@ import conclib.calc
 import conclib.calc.base
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
-from corplib import CorpusManager
+from corplib import CorpusFactory
 from corplib.corpus import KCorpus
 from corplib.subcorpus import SubcorpusRecord
 
@@ -121,7 +121,7 @@ async def _load_corp(corp_ident: Union[str, SubcorpusRecord]):
     subc -- a subcorpus identifier (None if not defined)
     user_id --
     """
-    cm = CorpusManager(subc_root=settings.get('corpora', 'users_subcpath'))
+    cm = CorpusFactory(subc_root=settings.get('corpora', 'users_subcpath'))
     return await cm.get_corpus(corp_ident)
 
 

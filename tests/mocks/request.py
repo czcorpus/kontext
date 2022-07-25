@@ -18,7 +18,7 @@
 # 02110-1301, USA.
 
 from mocks import MultiDict
-from mocks.manatee import CorpusManager
+from mocks.manatee import CorpusFactory
 
 
 class PluginCtx(object):
@@ -29,7 +29,7 @@ class PluginCtx(object):
 class Controller(object):
 
     def __init__(self):
-        self.cm = CorpusManager()
+        self.cf = CorpusFactory()
         self._plugin_ctx = PluginCtx()
 
 

@@ -88,7 +88,7 @@ class FCSActionModel(UserActionModel):
             if i >= max_items:
                 break
             resource_info: Dict[str, Any] = {}
-            c = await self.cm.get_corpus(corpus_id)
+            c = await self.cf.get_corpus(corpus_id)
             corpus_title: str = c.get_conf('NAME')
             resource_info = FCSResourceInfo(
                 corpus_title,

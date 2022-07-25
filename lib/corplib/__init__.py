@@ -114,7 +114,7 @@ def conf_bool(v: str) -> bool:
     return v in ('y', 'yes', 'true', 't', '1')
 
 
-class CorpusManager:
+class CorpusFactory:
 
     def __init__(self, subc_root: Optional[str] = None) -> None:
         """
@@ -135,7 +135,7 @@ class CorpusManager:
                           sees only a 'legal' chunk.
         """
         if isinstance(corp_ident, SubcorpusIdent) and self.subcpath is None:
-            raise RuntimeError('CorpusManager not configured for creating subcorpora instances')
+            raise RuntimeError('CorpusFactory not configured for creating subcorpora instances')
         corpname = corp_ident.corpus_name if isinstance(corp_ident, SubcorpusIdent) else corp_ident
         subc_id = corp_ident.id if isinstance(corp_ident, SubcorpusIdent) else ''
         registry_file = await self._ensure_reg_file(corpname, corp_variant)

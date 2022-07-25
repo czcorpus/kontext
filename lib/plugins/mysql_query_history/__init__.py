@@ -45,15 +45,15 @@ from plugins.mysql_integration_db import MySqlIntegrationDb
 
 class CorpusCache:
 
-    def __init__(self, corpus_manager):
-        self._cm = corpus_manager
+    def __init__(self, corpus_factory):
+        self._cf = corpus_factory
         self._corpora = {}
 
     async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> AbstractKCorpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = await self._cm.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cf.get_corpus(cname, translate=translate)
         return self._corpora[cname]
 
 
@@ -177,7 +177,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             return None   # persistent result not available
 
     async def get_user_queries(
-            self, user_id, corpus_manager, from_date=None, to_date=None, q_supertype=None, corpname=None,
+            self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
             archived_only=False, offset=0, limit=None, translate=lambda x: x):
         """
         Returns list of queries of a specific user.
@@ -212,7 +212,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
             ''', values)
 
             full_data = []
-            corpora = CorpusCache(corpus_manager)
+            corpora = CorpusCache(corpus_factory)
             async for item in cursor:
                 q_supertype = item['q_supertype']
                 if q_supertype == 'conc':

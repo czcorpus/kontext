@@ -286,7 +286,7 @@ class XMLExport(AbstractExport):
         self._document = ConcDocument()
         aligned_corpora = [
             amodel.corp,
-            *[(await amodel.cm.get_corpus(c)) for c in amodel.args.align if c],
+            *[(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c],
         ]
         self._set_corpnames([c.get_conf('NAME') or c.get_conffile() for c in aligned_corpora])
         if args.heading:

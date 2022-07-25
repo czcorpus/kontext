@@ -47,7 +47,7 @@ class CorpusDummy(EmptyCorpus):
         return 4000
 
 
-class CorpusManager(object):
+class CorpusFactory:
 
     def get_corpus(self, name, corp_variant='', subcname=None):
         return CorpusDummy(name, subcname)

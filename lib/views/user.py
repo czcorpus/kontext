@@ -190,7 +190,7 @@ async def _load_query_history(
     with plugins.runtime.QUERY_HISTORY as qh:
         rows = await qh.get_user_queries(
             user_id,
-            amodel.cm,
+            amodel.cf,
             offset=offset, limit=limit,
             q_supertype=q_supertype, corpname=corpname,
             from_date=from_date, to_date=to_date,

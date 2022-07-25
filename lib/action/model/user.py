@@ -51,7 +51,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     and authenticated user). Any more complicated action model
     will likely inherit from this one.
 
-    The model also provides a CorpusManager instance but it
+    The model also provides a CorpusFactory instance but it
     does not perform any implicit actions on it. It is provided
     purely for the 'view' functions.
     """
@@ -79,15 +79,15 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         self._plugin_ctx: Optional[UserPluginCtx] = None
         self.args = UserActionArgs()
         self.subcpath: List[str] = []
-        # a CorpusManager instance (created in pre_dispatch() phase)
+        # a CorpusFactory instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
-        self.cm: Optional[corplib.CorpusManager] = None
+        self.cf: Optional[corplib.CorpusFactory] = None
 
     async def pre_dispatch(self, req_args):
         """
         pre_dispatch calls its descendant first and the it
         initializes scheduled actions, user settings, user paths
-        and the CorpusManager.
+        and the CorpusFactory.
         """
         req_args = await super().pre_dispatch(req_args)
         with plugins.runtime.DISPATCH_HOOK as dhook:
@@ -104,7 +104,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             options.update(await self._load_general_settings())
             self.args.map_args_to_attrs(options)
             self._setup_user_paths()
-            self.cm = corplib.CorpusManager(self.subcpath)
+            self.cf = corplib.CorpusFactory(self.subcpath)
         except ValueError as ex:
             raise UserActionException(ex)
         return req_args
@@ -493,10 +493,10 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             for x in menu_items['submenuItems']]
 
     async def resolve_error_state(self, req, resp, result, err):
-        if self.cm:
+        if self.cf:
             with plugins.runtime.QUERY_HISTORY as qh:
                 queries = await qh.get_user_queries(
-                    self.session_get('user', 'id'), self.cm, limit=1, translate=req.translate)
+                    self.session_get('user', 'id'), self.cf, limit=1, translate=req.translate)
                 if len(queries) > 0:
                     result['last_used_corp'] = dict(
                         corpname=queries[0].get('corpname', None),
