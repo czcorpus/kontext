@@ -108,11 +108,13 @@ export interface ServerSubcorpListItem {
     author_id:number;
     corpname:string;
     name:string;
+    size:number;
     created:string;
     archived:string|undefined;
     cql:string|undefined;
     within_cond:string|undefined;
     text_types:string|undefined;
+    public_description:string;
 }
 
 

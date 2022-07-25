@@ -43,7 +43,7 @@ export interface SubcorpListItem {
     archived:Date;
     created:Date;
     size:number;
-    description:string;
+    public_description:string;
 }
 
 
@@ -223,10 +223,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             name: item.name,
             corpname: item.corpname,
             size: item.size,
-            created: new Date(item.created * 1000),
-            archived: item.archived ? new Date(item.archived * 1000) : undefined,
+            created: new Date(item.created),
+            archived: item.archived ? new Date(item.archived) : undefined,
             selected: false,
-            description: item.description
+            public_description: item.public_description
         }), data);
     }
 
