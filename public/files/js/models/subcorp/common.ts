@@ -106,7 +106,7 @@ export interface ServerSubcorpListItem {
     id:string;
     user_id:number;
     author_id:number;
-    corpname:string;
+    corpus_name:string;
     name:string;
     size:number;
     created:string;
