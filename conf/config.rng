@@ -535,7 +535,7 @@
                             <text />
                         </element>
                     </optional>
-                    <element name="users_subcpath">
+                    <element name="subcorpora_dir">
                         <a:documentation>A directory where user subcorpora are stored</a:documentation>
                         <text />
                     </element>

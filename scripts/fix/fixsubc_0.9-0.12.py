@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         'used to name directories, e.g. id in 0.12')
 
     args = parser.parse_args()
-    subcpath = autoconf.settings.get('corpora', 'users_subcpath')
+    subcpath = autoconf.settings.get('corpora', 'subcorpora_dir')
     redis_db = plugins.runtime.DB.instance
     db = redis_db.get_instance('auth')
     keys = list([key for key in list(db.keys()) if key != '__user_count'])

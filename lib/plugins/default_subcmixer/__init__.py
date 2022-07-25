@@ -20,7 +20,6 @@ from collections import defaultdict
 from typing import Any, Dict, List
 
 import aiofiles
-import corplib
 import plugins
 import ujson as json
 from action.decorators import http_action
@@ -36,6 +35,7 @@ from sanic.blueprints import Blueprint
 from .category_tree import CategoryExpression, CategoryTree
 from .database import Database
 from .metadata_model import MetadataModel
+from corplib.corpus import KSubcorpus
 
 bp = Blueprint('default_subcmixer')
 
@@ -69,7 +69,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        subc_path, _ = await amodel.prepare_subc_path(req.form.get('corpname'))
+        subc_path, _ = await KSubcorpus.create_new_subc_path(amodel.subcpath)
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])

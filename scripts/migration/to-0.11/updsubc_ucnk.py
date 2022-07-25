@@ -24,7 +24,7 @@ if __name__ == '__main__':
     print("Migration of subcorpora directories - version for the Czech National Corpus")
     print("(for default_auth based installations, please use updsubc.py instead)")
     print('')
-    subc_root = autoconf.settings.get('corpora', 'users_subcpath')
+    subc_root = autoconf.settings.get('corpora', 'subcorpora_dir')
     conn = MySQLdb.connect(host='skalicka', user='manatee',
                            passwd=input('password? '),
                            db='manatee',

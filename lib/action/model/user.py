@@ -78,7 +78,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         self.return_url: Optional[str] = None
         self._plugin_ctx: Optional[UserPluginCtx] = None
         self.args = UserActionArgs()
-        self.subcpath: List[str] = []
+        self.subcpath: Optional[str] = None
         # a CorpusFactory instance (created in pre_dispatch() phase)
         # generates (sub)corpus objects with additional properties
         self.cf: Optional[corplib.CorpusFactory] = None
@@ -129,10 +129,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
     def _setup_user_paths(self):
         user_id = self.session_get('user', 'id')
-        self.subcpath = [os.path.join(settings.get('corpora', 'users_subcpath'), 'published')]
-        if not self.user_is_anonymous():
-            self.subcpath.insert(0, os.path.join(settings.get(
-                'corpora', 'users_subcpath'), str(user_id)))
+        self.subcpath = settings.get('corpora', 'subcorpora_dir')
         self._conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
 
     # missing return statement type check error
@@ -457,13 +454,6 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             return []
         with plugins.runtime.SUBC_RESTORE as subc_arch:
             return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpus=corpname))
-
-    async def prepare_subc_path(self, corpname: str) -> Tuple[str, str]:
-        code = hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()
-        path = os.path.join(self.subcpath[1], corpname, code[:2])
-        if not await aiofiles.os.path.isdir(path):
-            await aiofiles.os.makedirs(path)
-        return os.path.join(path, code) + '.subc', code
 
     @staticmethod
     def parse_sorting_param(k):

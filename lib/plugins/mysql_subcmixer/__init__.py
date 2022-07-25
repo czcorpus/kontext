@@ -31,13 +31,12 @@ except ImportError:
 import struct
 from collections import defaultdict
 
-import corplib
 import plugins
 import ujson as json
 from action.decorators import http_action
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
-from corplib.corpus import KCorpus
+from corplib.corpus import KCorpus, KSubcorpus
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subcmixer import AbstractSubcMixer, ExpressionItem
 from plugin_types.subcmixer.error import (ResultNotFoundException,
@@ -108,7 +107,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        subc_path, _ = await amodel.prepare_subc_path(req.form.get('corpname'))
+        subc_path, _ = await KSubcorpus.create_new_subc_path(amodel.subcpath)
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])

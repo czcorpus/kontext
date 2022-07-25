@@ -19,3 +19,7 @@
 
 class MissingSubCorpFreqFile(Exception):
     pass
+
+
+class CorpusInstantiationError(Exception):
+    pass

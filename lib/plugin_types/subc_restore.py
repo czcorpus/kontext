@@ -55,7 +55,7 @@ class AbstractSubcArchive(abc.ABC):
 
     @abc.abstractmethod
     async def create(
-            self, ident: str, user_id: int, corpname: str, subcname: str, size: int, public_description, data_path: str,
+            self, ident: str, user_id: int, corpname: str, subcname: str, size: int, public_description,
             data: Union[CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, CreateSubcorpusArgs]):
         """
         Create subcorpus in the database. It is assumed that actual subc. files are created somewhere else and

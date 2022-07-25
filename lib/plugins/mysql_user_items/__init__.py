@@ -74,14 +74,26 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     """
     corpora = []
     main_size = None
-    for i, c_id in enumerate(req.form_getlist('corpora')):
-        corp = await amodel.cf.get_corpus(c_id, subcname=req.form.get(
-            'subcorpus_id') if i == 0 else None, translate=req.translate)
+    req_corpora = req.form_getlist('corpora')
+    subc = req.form.get('subcorpus_id')
+    if subc:
+        with plugins.runtime.SUBC_RESTORE as sa:
+            ident = await sa.get_info(amodel.session_get('user', 'id', ), req_corpora[0], subc)
+            maincorp = await amodel.cf.get_corpus(ident)
+            subcorpus_orig_id = ident.id
+            subcorpus_id = ident.name
+    else:
+        maincorp = await amodel.cf.get_corpus(req_corpora[0])
+        subcorpus_orig_id = None
+        subcorpus_id = None
+
+    main_size = maincorp.search_size
+    for i, c_id in enumerate(req_corpora):
         if i == 0:
-            main_size = corp.search_size
+            corp = maincorp
+        else:
+            corp = await amodel.cf.get_corpus(c_id, translate=req.translate)
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
-    subcorpus_id = req.form.get('subcorpus_id')
-    subcorpus_orig_id = req.form.get('subcorpus_orig_id')
     item = FavoriteItem(dict(
         id=None,  # will be updated after database insert (autoincrement)
         name=' || '.join(c['name'] for c in corpora) +

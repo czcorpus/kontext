@@ -19,18 +19,19 @@
 
 import logging
 from typing import Any, Dict
+import os
 
 import bgcalc
 import corplib
 import plugins
 import settings
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
 from corplib.subcorpus import SubcorpusIdent
+from corplib.corpus import KSubcorpus
 from texttypes.model import TextTypeCollector
 
 
@@ -104,16 +105,16 @@ class SubcorpusActionModel(CorpusActionModel):
         if not data.subcname:
             raise UserActionException(self._req.translate('No subcorpus name specified!'))
 
-        path, subc_id = await self.prepare_subc_path(self.args.corpname)
-
+        path, subc_id = await KSubcorpus.create_new_subc_path(self.subcpath)
+        full_path = os.path.join(self.subcpath, path)
         if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = await corplib.create_subcorpus(
-                path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
+                full_path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)
             res = await worker.send_task(
                 'create_subcorpus', object.__class__,
-                (self.session_get('user', 'id'), self.args.corpname, path, tt_query, imp_cql),
+                (self.session_get('user', 'id'), self.args.corpname, full_path, tt_query, imp_cql),
                 time_limit=self.TASK_TIME_LIMIT)
             self.store_async_task(AsyncTaskStatus(
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
@@ -122,9 +123,8 @@ class SubcorpusActionModel(CorpusActionModel):
             result = {}
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
-
-        if result is not False:
-            subc = await self.cf.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname, path))
+        if result:
+            subc = await self.cf.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname))
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
                     await sr.create(
@@ -134,7 +134,6 @@ class SubcorpusActionModel(CorpusActionModel):
                         subcname=data.subcname,
                         size=subc.search_size,
                         public_description=data.description,
-                        data_path=path,
                         data=data)
                 except Exception as e:
                     logging.getLogger(__name__).warning('Failed to store subcorpus query: %s' % e)
@@ -145,4 +144,4 @@ class SubcorpusActionModel(CorpusActionModel):
                 category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
             return dict(processed_subc=[uc.to_dict() for uc in unfinished_corpora])
         else:
-            raise SubcorpusError(self._req.translate('Empty subcorpus!'))
+            raise SubcorpusError('empty subcorpus')

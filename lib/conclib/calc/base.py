@@ -122,7 +122,7 @@ class TaskRegistration(GeneralWorker):
     async def run(
             self, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key: str, query: Tuple[str, ...],
             samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
-        corpus_factory = CorpusFactory(subc_root=settings.get('corpora', 'users_subcpath'))
+        corpus_factory = CorpusFactory(subc_root=settings.get('corpora', 'subcorpora_dir'))
         corpus_obj = await corpus_factory.get_corpus(corpus_ident, translate=translate)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = await cache_map.get_calc_status(corp_cache_key, query)

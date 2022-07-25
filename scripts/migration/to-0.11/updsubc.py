@@ -23,7 +23,7 @@ from action.plugin import initializer
 initializer.init_plugin('db')
 
 if __name__ == '__main__':
-    subc_root = autoconf.settings.get('corpora', 'users_subcpath')
+    subc_root = autoconf.settings.get('corpora', 'subcorpora_dir')
     for username, user_key in list(plugins.runtime.DB.instance.hash_get_all('user_index').items()):
         user_id = user_key.split(':')[1]
 
