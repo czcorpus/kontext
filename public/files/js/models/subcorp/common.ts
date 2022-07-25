@@ -114,6 +114,7 @@ export interface ServerSubcorpListItem {
     cql:string|undefined;
     within_cond:string|undefined;
     text_types:string|undefined;
+    published:boolean;
     public_description:string;
 }
 
