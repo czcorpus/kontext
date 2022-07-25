@@ -27,6 +27,9 @@ import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
+import { ServerWithinSelection } from '../subcorp/common';
+import * as TextTypes from '../../types/textTypes';
+import { TTInitialData } from '../textTypes/common';
 
 
 export interface MessageModelState {
@@ -266,17 +269,18 @@ export interface SubcorpusServerRecord {
     size:number;
     created:number;
     archived:number|undefined;
+    published:boolean;
     public_description:string|undefined;
     cql:string|undefined;
-    within_cond:string|undefined;
-    text_types:string|undefined;
+    within_cond:Array<ServerWithinSelection>|undefined;
+    text_types:TextTypes.ExportedSelection|undefined;
 }
 
-export interface SubcorpusInfoResponse {
-    liveAttrsEnabled:boolean;
+export interface SubcorpusPropertiesResponse {
     data:SubcorpusServerRecord;
-    structsAndAttrs:unknown; // TODO
-    textTypes:unknown; // TODO
+    textTypes:TTInitialData;
+    structsAndAttrs:Kontext.StructsAndAttrs;
+    liveAttrsEnabled:boolean;
 }
 
 export interface SubcorpusInfo extends SubcorpusServerRecord {
@@ -450,7 +454,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
             return prom.pipe(
                 concatMap(
                     (data) => {
-                        return this.pluginApi.ajax$<SubcorpusInfoResponse>(
+                        return this.pluginApi.ajax$<SubcorpusPropertiesResponse>(
                             HTTP.Method.GET,
                             this.pluginApi.createActionUrl('subcorpus/properties'),
                             {

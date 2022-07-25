@@ -24,6 +24,7 @@ import { Observable, throwError } from 'rxjs';
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
+import { SubcorpusServerRecord } from '../common/layout';
 import { TextTypesModel } from '../textTypes/main';
 
 
@@ -40,8 +41,8 @@ export interface SubcorpusRecord {
     corpname:string;
     usesubcorp:string;
     origSubcName:string;
-    deleted:string|undefined;
-    created:string|undefined;
+    created:number;
+    deleted:number|undefined;
     selections:SelectionsType;
     size:number;
     published:boolean;
@@ -102,25 +103,8 @@ export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
 }
 
 
-export interface ServerSubcorpListItem {
-    id:string;
-    user_id:number;
-    author_id:number;
-    corpus_name:string;
-    name:string;
-    size:number;
-    created:string;
-    archived:string|undefined;
-    cql:string|undefined;
-    within_cond:string|undefined;
-    text_types:string|undefined;
-    published:boolean;
-    public_description:string;
-}
-
-
 export interface SubcorpList extends Kontext.AjaxResponse {
-    subcorp_list:Array<ServerSubcorpListItem>;
+    subcorp_list:Array<SubcorpusServerRecord>;
     filter:{[k:string]:any};
     sort_key:{name:string; reverse:boolean};
     related_corpora:Array<string>,

@@ -26,7 +26,8 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { ServerSubcorpListItem, SubcorpList } from './common';
+import { SubcorpList } from './common';
+import { SubcorpusServerRecord } from '../common/layout';
 
 
 
@@ -43,6 +44,7 @@ export interface SubcorpListItem {
     archived:Date;
     created:Date;
     size:number;
+    published:boolean;
     public_description:string;
 }
 
@@ -76,7 +78,7 @@ export interface SubcorpListModelState {
 export interface SubcorpListModelArgs {
     dispatcher:IFullActionControl;
     layoutModel:PageModel;
-    data:Array<ServerSubcorpListItem>;
+    data:Array<SubcorpusServerRecord>;
     sortKey:SortKey;
     relatedCorpora:Array<string>;
     unfinished:Array<Kontext.AsyncTaskInfo>;
@@ -219,7 +221,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     }
 
 
-    private importLines(data:Array<ServerSubcorpListItem>):Array<SubcorpListItem> {
+    private importLines(data:Array<SubcorpusServerRecord>):Array<SubcorpListItem> {
         return List.map(item => ({
             id: item.id,
             name: item.name,
@@ -228,6 +230,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             created: new Date(item.created),
             archived: item.archived ? new Date(item.archived) : undefined,
             selected: false,
+            published: item.published,
             public_description: item.public_description
         }), data);
     }
