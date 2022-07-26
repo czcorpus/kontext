@@ -124,10 +124,10 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         corpus_name: item.corpus_name,
         author_fullname: item.author_fullname,
         size: item.size,
-        created: new Date(item.created),
-        archived: item.archived ? new Date(item.archived) : undefined,
+        created: new Date(item.created * 1000),
+        archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,
-        published: item.published ? new Date(item.published) : undefined,
+        published: item.published ? new Date(item.published * 1000) : undefined,
         public_description: item.public_description
     }), data);
 }

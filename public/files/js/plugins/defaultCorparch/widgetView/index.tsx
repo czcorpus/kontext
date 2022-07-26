@@ -625,25 +625,20 @@ export function init({
                 payload: {
                     corpusName: props.corpusName,
                     subcorp: props.availSubcorpora[evt.target.value].v,
-                    pubName: props.availSubcorpora[evt.target.value].pub,
+                    pubName: props.availSubcorpora[evt.target.value].n,
                     foreign: props.availSubcorpora[evt.target.value].foreign
                 }
             });
         };
-
-        const selItemIdx = () => {
-            const orig = props.origSubcorpName && props.currSubcorpus !== props.origSubcorpName ?
-                props.origSubcorpName :
-                props.currSubcorpus;
-            return props.availSubcorpora.findIndex(v => v.v === orig);
-        };
+        console.log('prps: ', props);
         return (
             <span id="subcorp-selector-wrapper">
-                <select id="subcorp-selector" name="usesubcorp" value={selItemIdx()}
+                <select id="subcorp-selector" name="usesubcorp" value={props.currSubcorpus}
                         onChange={handleSubcorpChange}>
-                    {props.availSubcorpora.map((item, i) => {
-                        return <option key={item.v} value={i}>{item.n}</option>;
-                    })}
+                    {List.map(
+                        item => <option key={item.v} value={item.v}>{item.n}</option>,
+                        props.availSubcorpora
+                    )}
                 </select>
             </span>
         )

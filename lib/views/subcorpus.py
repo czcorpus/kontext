@@ -53,7 +53,7 @@ async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KRespons
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
     return {
-        'data': info.prepare_response(),
+        'data': info.to_dict(),
         'textTypes': await amodel.tt.export_with_norms(),
         'structsAndAttrs': {k: [x.to_dict() for x in item] for k, item in struct_and_attrs.items()},
         'liveAttrsEnabled': live_attrs_enabled,
@@ -159,7 +159,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
-        subcorp_list=[x.prepare_response() for x in full_list],
+        subcorp_list=[x.to_dict() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
         filter=asdict(filter_args),
         processed_subc=[
@@ -220,4 +220,4 @@ async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs]
         else:
             items = await sr.list(
                 amodel.session_get('user', 'id'), req.mapped_args, req.mapped_args.offset, req.mapped_args.limit)
-    return dict(data=[v.prepare_response() for v in items], min_query_size=min_query_size)
+    return dict(data=[v.to_dict() for v in items], min_query_size=min_query_size)

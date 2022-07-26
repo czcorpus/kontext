@@ -569,7 +569,10 @@ export function init(
                         <strong>{props.origSubcorpName}</strong>
                     </a>
                     <span title={he.translate('global__public_subc_id_{id}', {id: props.usesubcorp})}>
-                        {'\u00a0'}({props.foreignSubcorp ? he.translate('global__published_foreign_subcorp') : he.translate('global__published_subcorp')})
+                        {'\u00a0'}
+                        {props.foreignSubcorp ?
+                        <span>({he.translate('global__published_foreign_subcorp')}</span> : null
+                        }
                     </span>
                 </>;
 

@@ -32,6 +32,22 @@ from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
+try:
+    from markdown import markdown
+    from markdown.extensions import Extension
+
+    class EscapeHtml(Extension):
+        def extendMarkdown(self, md, md_globals):
+            del md.preprocessors['html_block']
+            del md.inlinePatterns['html']
+
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
+
+except ImportError:
+    import html
+
+    def k_markdown(s): return html.escape(s)
+
 
 def _subc_from_row(row: Dict) -> SubcorpusRecord:
     return SubcorpusRecord(
@@ -43,7 +59,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         author_fullname=row['fullname'],
         size=row['size'],
         created=row['created'],
-        public_description=row['public_description'],
+        public_description=k_markdown(row['public_description']),
         archived=row['archived'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
@@ -153,7 +169,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 **row,
                 'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
                 'text_types': json.loads(row['text_types']) if row['text_types'] else None,
-                'published': bool(row['published']),
             })
 
 
