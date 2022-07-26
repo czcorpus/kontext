@@ -16,17 +16,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from abc import ABC, abstractmethod
-from datetime import datetime
 import hashlib
-import uuid
-from typing import Any, Awaitable, List, Union, Optional, Tuple
-from dataclasses import dataclass
 import os
+import uuid
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Awaitable, List, Optional, Tuple, Union
 
 import aiofiles
 from dataclasses_json import dataclass_json
-
 from manatee import Corpus
 
 
@@ -65,13 +64,13 @@ class SubcorpusIdent:
         return os.path.join(ident[:2], ident, 'data.subc')
 
 
-@staticmethod
 async def create_new_subc_ident(subc_root: str, corpus_name: str) -> SubcorpusIdent:
     """
     create_new_subc_ident generates a new instance of SubcorpusIdent and also
     ensures that a target data directory exists.
     """
-    ans = SubcorpusIdent(id=hashlib.md5(str(uuid.uuid1()).encode()).hexdigest(), corpus_name=corpus_name)
+    ans = SubcorpusIdent(id=hashlib.md5(str(uuid.uuid1()).encode()
+                                        ).hexdigest(), corpus_name=corpus_name)
     full_dir_path = os.path.join(subc_root, ans.data_dir)
     if not await aiofiles.os.path.isdir(full_dir_path):
         await aiofiles.os.makedirs(full_dir_path)
