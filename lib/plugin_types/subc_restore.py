@@ -24,12 +24,13 @@ Expected factory method signature: create_instance(config, db)
 """
 
 import abc
-from typing import List, Optional, Union
 from dataclasses import dataclass
+from typing import List, Optional, Union
 
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 
 
 class SubcArchiveException(Exception):
@@ -63,7 +64,7 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def archive(self, user_id: int, corpname: str, subcname: str):
+    async def archive(self, user_id: int, corpname: str, subc_id: str):
         """
         Archive subcorpus
         """

@@ -258,7 +258,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             this.layoutModel.createActionUrl('subcorpus/delete'),
             {
                 corpname: item.corpus_name,
-                usesubcorp: item.name
+                usesubcorp: item.id
             },
 
         ).pipe(
@@ -266,7 +266,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
     }
 
-    private sortItems(name:string, reverse:boolean):Observable<any> {
+    private sortItems(name:string, reverse:boolean):Observable<SubcorpList> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (reverse ? '-' : '') + name
@@ -307,23 +307,24 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         }
     }
 
-    private reloadItems():Observable<any> {
+    private reloadItems():Observable<SubcorpList> {
         return this.filterItems(this.state.filter);
     }
 
-    private filterItems(filter:SubcListFilter):Observable<any> {
+    private filterItems(filter:SubcListFilter):Observable<SubcorpList> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
         }
         this.mergeFilter(args, filter);
+
         return this.layoutModel.ajax$<SubcorpList>(
             HTTP.Method.GET,
             this.layoutModel.createActionUrl('subcorpus/list'),
             args
 
         ).pipe(
-            tap(data => {
+            tap((data) => {
                 this.changeState(state => {
                     state.lines = this.importLines(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
