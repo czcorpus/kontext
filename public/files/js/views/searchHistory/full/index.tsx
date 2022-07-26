@@ -584,7 +584,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             nfilter={data.nfilter_words} />;
             }
         };
-
         return (
             <S.DataRowLi>
                 <div className="heading">
@@ -595,9 +594,9 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     <h3>
                         <span className="supertype">{supertypeToHuman(data.q_supertype)}</span>,{'\u00a0'}
                         {data.human_corpname}
-                        {data.subcorpname ?
-                            <span className="subcorpname" title={he.translate('global__subcorpus')}>:
-                                    {data.subcorpname}</span> :
+                        {data.subcorpus_name ?
+                            <span className="subcorpname" title={he.translate('global__subcorpus')}>{'\u00a0/\u00a0'}
+                                    {data.subcorpus_name}</span> :
                             null
                         }
                     </h3>

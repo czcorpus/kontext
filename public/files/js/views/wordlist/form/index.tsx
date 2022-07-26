@@ -84,10 +84,16 @@ export function init({dispatcher, he, CorparchWidget, wordlistFormModel}:Wordlis
                 <span>
                     <select id="wl-attr-selector" value={props.wlattr} onChange={handleChange}>
                         <optgroup label={he.translate('global__attrsel_group_pos_attrs')}>
-                            {props.attrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
+                            {List.map(
+                                (x, i) => <option key={`${x.n}:${i}`} value={x.n}>{x.label}</option>,
+                                props.attrList
+                            )}
                         </optgroup>
                         <optgroup label={he.translate('global__attrsel_group_struct_attrs')}>
-                            {props.structAttrList.map(x => <option key={x.n} value={x.n}>{x.label}</option>)}
+                            {List.map(
+                                (x, i) => <option key={`${x.n}:${i}`} value={x.n}>{x.label}</option>,
+                                props.structAttrList
+                            )}
                         </optgroup>
                     </select>
                 </span>

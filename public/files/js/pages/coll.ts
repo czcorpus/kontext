@@ -33,7 +33,6 @@ import { init as collResultViewInit, CollResultViewProps } from '../views/coll/r
 import { init as freqFormInit } from '../views/freqs/forms';
 import { init as queryOverviewInit } from '../views/query/overview';
 import { TextTypesModel } from '../models/textTypes/main';
-import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { List, pipe, tuple, URL } from 'cnc-tskit';
 import { CollResultsSaveModel } from '../models/coll/save';
@@ -71,8 +70,6 @@ export class CollPage {
     private collResultSaveModel:CollResultsSaveModel;
 
     private querySaveAsFormModel:QuerySaveAsFormModel;
-
-    private subcorpSel:NonQueryCorpusSelectionModel;
 
     constructor(layoutModel:PageModel) {
         this.layoutModel = layoutModel;
@@ -358,15 +355,6 @@ export class CollPage {
 
     init():void {
         this.layoutModel.init(true, [], () => {
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
-                layoutModel: this.layoutModel,
-                dispatcher: this.layoutModel.dispatcher,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                corpora: [this.layoutModel.getCorpusIdent().id],
-                availSubcorpora: []
-            });
             const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to

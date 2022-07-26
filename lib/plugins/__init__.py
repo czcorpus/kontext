@@ -193,11 +193,15 @@ class _Names(object):
     ACTION_LOG: _ID[AbstractActionLog] = _ID('action_log', optional=True)
 
     def __iter__(self) -> Iterator[_ID]:
+        """
+        this iterator defines an order in which plug-ins are initialized. Please note that this
+        determines possible dependencies between plug-ins when using @inject.
+        """
         return iter([
             self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
             self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.QUERY_HISTORY,
-            self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.SUBC_RESTORE, self.TAGHELPER,
+            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_RESTORE, self.QUERY_HISTORY,
+            self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
             self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])
 

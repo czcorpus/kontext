@@ -30,8 +30,8 @@ complete and properly configured KonText package.
 """
 
 import os
-import pickle
 import sys
+from typing import Union
 
 import uvloop
 
@@ -46,7 +46,7 @@ if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
 from bgcalc.adapter.factory import init_backend
-
+from corplib.abstract import SubcorpusIdent
 from worker import general
 
 uvloop.install()
@@ -168,8 +168,8 @@ async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, 
 
 @worker.task(name='get_wordlist')
 @as_sync
-async def get_wordlist(args, max_items, user_id):
-    return await general.get_wordlist(args, max_items, user_id)
+async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items):
+    return await general.get_wordlist(corpus_ident, args, max_items)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

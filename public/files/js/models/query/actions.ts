@@ -244,15 +244,6 @@ export class Actions {
         name: 'QUERY_INPUT_SELECT_TYPE'
     };
 
-    static QueryInputSelectSubcorp: Action<{
-        corpusName:string;
-        pubName:string;
-        subcorp:string;
-        foreign:boolean;
-    }> = {
-        name: 'QUERY_INPUT_SELECT_SUBCORP'
-    };
-
     static QueryInputMoveCursor: Action<{
         formType:QueryFormType;
         sourceId:string;

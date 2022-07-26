@@ -32,6 +32,22 @@ from plugins import inject
 from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
+try:
+    from markdown import markdown
+    from markdown.extensions import Extension
+
+    class EscapeHtml(Extension):
+        def extendMarkdown(self, md, md_globals):
+            del md.preprocessors['html_block']
+            del md.inlinePatterns['html']
+
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
+
+except ImportError:
+    import html
+
+    def k_markdown(s): return html.escape(s)
+
 
 def _subc_from_row(row: Dict) -> SubcorpusRecord:
     return SubcorpusRecord(
@@ -43,7 +59,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         author_fullname=row['fullname'],
         size=row['size'],
         created=row['created'],
-        public_description=row['public_description'],
+        public_description=k_markdown(row['public_description']),
         archived=row['archived'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
@@ -129,18 +145,30 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.execute(sql, args)
             return [_subc_from_row(row) async for row in cursor]
 
-    async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
+    async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
                 FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id 
-                WHERE t1.user_id = %s AND t1.corpus_name = %s AND t1.id = %s 
+                WHERE t1.id = %s 
                 ORDER BY t1.created 
                 LIMIT 1""",
-                (user_id, corpname, subc_id)
+                (subc_id, )
             )
             row = await cursor.fetchone()
             return None if row is None else _subc_from_row(row)
+
+    async def get_names(self, subc_ids):
+        async with self._db.cursor() as cursor:
+            wc = ', '.join(['%s'] * len(subc_ids))
+            await cursor.execute(
+                f"SELECT id, name FROM {self.TABLE_NAME} WHERE id IN ({wc})",
+                tuple(subc_ids)
+            )
+            ans = {}
+            async for row in cursor:
+                ans[row['id']] = row['name']
+            return ans
 
     async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
@@ -153,7 +181,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 **row,
                 'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
                 'text_types': json.loads(row['text_types']) if row['text_types'] else None,
-                'published': bool(row['published']),
             })
 
 

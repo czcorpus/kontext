@@ -523,24 +523,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
-            (state, action) => {
-                if (action.payload.pubName) {
-                    state.currSubcorpus = action.payload.pubName;
-                    state.currSubcorpusOrigName = action.payload.subcorp;
-
-                } else {
-                    state.currSubcorpus = action.payload.subcorp;
-                    state.currSubcorpusOrigName = action.payload.subcorp;
-                }
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection(state)
-                );
-            }
-        );
-
         this.addActionHandler<typeof CommonActions.SwitchCorpus>(
             CommonActions.SwitchCorpus.name,
             null,

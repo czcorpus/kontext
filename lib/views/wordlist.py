@@ -62,11 +62,11 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     form_args = WordlistFormArgs()
     form_args.update_by_user_query(req.json)
     worker = calc_backend_client(settings)
-    ans = dict(corpname=amodel.args.corpname, usesubcorp=amodel.args.usesubcorp,
-               freq_files_avail=True, subtasks=[])
+    ans = dict(
+        corpname=amodel.args.corpname, usesubcorp=amodel.args.usesubcorp, freq_files_avail=True, subtasks=[])
     async_res = await worker.send_task(
         'get_wordlist', object.__class__,
-        args=(form_args.to_dict(), amodel.corp.size, amodel.session_get('user', 'id')))
+        args=(amodel.corp.portable_ident, form_args.to_dict(), amodel.corp.size))
     bg_result = async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
         data_calc = build_arf_db(amodel.session_get(
@@ -100,10 +100,9 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     mutates_result=True, action_log_mapper=log_mapping.wordlist, action_model=WordlistActionModel)
 async def restore(amodel: WordlistActionModel, req: KRequest, _: KResponse):
     worker = calc_backend_client(settings)
-    q_id = req.args_getlist('q')[0]
     async_res = await worker.send_task(
         'get_wordlist', object.__class__,
-        args=(amodel.curr_wlform_args.to_dict(), amodel.corp.size, amodel.session_get('user', 'id')))
+        args=(amodel.corp.portable_ident, amodel.curr_wlform_args.to_dict(), amodel.corp.size))
 
     def on_query_store(query_ids, history_ts, result):
         async_task = AsyncTaskStatus(

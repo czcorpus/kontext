@@ -19,6 +19,7 @@
 
 import os
 import sys
+from typing import Union
 from rq import Connection, Worker, get_current_job
 import redis
 import uvloop
@@ -37,6 +38,7 @@ if settings.get('global', 'manatee_path', None):
 
 import general
 from bgcalc.adapter.factory import init_backend
+from corplib.abstract import SubcorpusIdent
 import logging
 
 uvloop.install()
@@ -123,8 +125,8 @@ async def compile_docf(user_id, corpus_ident, attr, logfile):
 
 
 @as_sync
-async def get_wordlist(args, max_items, user_id):
-    return await general.get_wordlist(args, max_items, user_id)
+async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items):
+    return await general.get_wordlist(corpus_ident, args, max_items)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 

@@ -169,8 +169,7 @@ export class QuickSubcorpModel extends BaseTTSubcorpFormModel<QuickSubcorpModelS
                             name: QueryActions.QueryAddSubcorp.name,
                             payload: {
                                 n: args.subcname,
-                                v: args.subcname,
-                                pub: null,
+                                v: args.subcname
                             }
                         });
                     },

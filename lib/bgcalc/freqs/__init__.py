@@ -210,7 +210,8 @@ async def calculate_freqs_bg(args: FreqCalcArgs) -> FreqCalcResult:
     a dict(freqs=..., conc_size=...)
     """
     cm = corplib.CorpusFactory(subc_root=args.subcpath)
-    corp = await cm.get_corpus(SubcorpusIdent(id=args.subcname, corpus_name=args.corpname))
+    corp = await cm.get_corpus(
+        SubcorpusIdent(id=args.subcname, corpus_name=args.corpname) if args.subcname else args.corpname)
     conc = await require_existing_conc(corp=corp, q=args.q)
     return calculate_freqs_bg_sync(args, conc)
 
