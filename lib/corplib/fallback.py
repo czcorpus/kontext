@@ -10,18 +10,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-from typing import Any, Awaitable, List
+from typing import Any, Awaitable, List, Union, Optional
 
+from corplib import SubcorpusIdent
 from corplib.abstract import AbstractKCorpus
 from manatee import Corpus
 
 
 class EmptyCorpus(AbstractKCorpus):
     """
-    EmptyCorpus serves as kind of a fake corpus to keep KonText operational
-    in some special cases (= cases where we do not need any corpus to be
-    instantiated which is a situation original Bonito code probably never
-    count with).
+    EmptyCorpus serves as an error-replacement corpus to keep
+    request processing logic operational in some cases.
     """
 
     def __init__(self, corpname: str = ''):
@@ -32,6 +31,14 @@ class EmptyCorpus(AbstractKCorpus):
             'ATTRLIST': '',
             'STRUCTLIST': ''
         }
+
+    @property
+    def subcorpus_name(self):
+        return None
+
+    @property
+    def portable_ident(self):
+        return self._corpname
 
     @property
     def corpname(self):
@@ -167,4 +174,4 @@ class ErrorCorpus(EmptyCorpus):
 
     @property
     def portable_ident(self):
-        return None
+        return ''

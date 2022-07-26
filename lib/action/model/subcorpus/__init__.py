@@ -30,8 +30,7 @@ from action.argmapping.subcorpus import (
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
-from corplib.subcorpus import SubcorpusIdent
-from corplib.corpus import KSubcorpus
+from corplib.abstract import SubcorpusIdent, create_new_subc_ident
 from texttypes.model import TextTypeCollector
 
 
@@ -105,8 +104,8 @@ class SubcorpusActionModel(CorpusActionModel):
         if not data.subcname:
             raise UserActionException(self._req.translate('No subcorpus name specified!'))
 
-        path, subc_id = await KSubcorpus.create_new_subc_path(self.subcpath)
-        full_path = os.path.join(self.subcpath, path)
+        subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
+        full_path = os.path.join(self.subcpath, subc_id.data_path)
         if len(tt_query) == 1 and not data.has_aligned_corpora():
             result = await corplib.create_subcorpus(
                 full_path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
@@ -124,11 +123,11 @@ class SubcorpusActionModel(CorpusActionModel):
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
         if result:
-            subc = await self.cf.get_corpus(SubcorpusIdent(subc_id, data.subcname, self.args.corpname))
+            subc = await self.cf.get_corpus(subc_id)
             with plugins.runtime.SUBC_RESTORE as sr:
                 try:
                     await sr.create(
-                        ident=subc_id,
+                        ident=subc_id.id,
                         user_id=self.session_get('user', 'id'),
                         corpname=self.args.corpname,
                         subcname=data.subcname,
