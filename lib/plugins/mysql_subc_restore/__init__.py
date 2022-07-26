@@ -65,14 +65,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
                  size))
             await cursor.connection.commit()
 
-    async def archive(self, user_id: int, corpname: str, subcname: str):
+    async def archive(self, user_id: int, corpname: str, subc_id: str):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'UPDATE {self.TABLE_NAME} SET archived = NOW() '
-                'WHERE user_id = %s AND corpus_name = %s AND name = %s',
-                (user_id, corpname, subcname)
+                'WHERE user_id = %s AND corpus_name = %s AND id = %s',
+                (user_id, corpname, subc_id)
             )
-        await cursor.connection.commit()
+            await cursor.connection.commit()
 
     async def list(self, user_id, filter_args, offset=0, limit=None):
         if filter_args.archived_only and filter_args.active_only:

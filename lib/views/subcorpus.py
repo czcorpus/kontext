@@ -21,6 +21,7 @@ from typing import Any, Dict, List
 
 import l10n
 import plugins
+import settings
 from action.argmapping import log_mapping
 from action.decorators import http_action
 from action.errors import UserActionException
@@ -30,6 +31,7 @@ from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
 from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
+from corplib.abstract import SubcorpusIdent
 from corplib.corpus import list_public_subcorpora
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
@@ -111,9 +113,13 @@ async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, res
 @bp.route('/delete', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    if amodel.corp.spath:
+    corp_ident = amodel.corp.portable_ident
+    if isinstance(corp_ident, SubcorpusIdent):
+        with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
+            await sr.archive(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
+
         try:
-            os.unlink(amodel.corp.spath)
+            os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'), corp_ident.data_path))
         except IOError as e:
             logging.getLogger(__name__).warning(e)
     return {}
@@ -135,7 +141,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 
     with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
         try:
-            full_list: List[SubcorpusRecord] = (await sr.list(amodel.plugin_ctx.user_id, filter_args))
+            full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_restore plug-in failed to list queries: %s' % e)
