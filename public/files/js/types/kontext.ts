@@ -41,7 +41,7 @@ export type AnyInterface<T> = {[P in keyof T]: T[P]};
 
 export type ListOfPairs = Array<[string, string]>;
 
-export type SubcorpListItem = {v:string; n:string; pub:string, foreign?:boolean};
+export type SubcorpListItem = {v:string; n:string; foreign?:boolean};
 
 export interface StructuralAttribute {
     name:string;

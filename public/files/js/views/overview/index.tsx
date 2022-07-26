@@ -210,19 +210,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         data:SubcorpusInfo;
         userId:number;
     }> = (props) => {
-
-        const getAccess = () => {
-            if (props.data.public_description) {
-                return <>
-                    {he.translate('global__published_subcorp')}
-                    {'\u00a0'}
-                    <span className="note">({he.translate('global__published_subcorp_id')}{':\u00a0'}
-                    {props.data.id})</span>
-                </>;
-            }
-            return he.translate('global__subc_info_access_private');
-        };
-
         return (
             <S.SubcorpusInfo>
                 <h2 className="subcorpus-name">
@@ -231,11 +218,13 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
                 <dl>
                     <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{props.data.size}</dd>
+                    <dd>{he.formatNumber(props.data.size)}</dd>
+                    <dt>{he.translate('pubsubclist__author')}:</dt>
+                    <dd>{props.data.author_fullname}</dd>
                     <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{he.formatDate(new Date(props.data.created * 1000))}</dd>
-                    <dt>{he.translate('global__subc_info_access_hd')}:</dt>
-                    <dd>{getAccess()}</dd>
+                    <dd>{he.formatDate(new Date(props.data.created * 1000), 1)}</dd>
+                    <dt>{he.translate('global__published_subcorp_id')}:</dt>
+                    <dd>{props.data.id}</dd>
                     {props.data.public_description ?
                         <>
                             <dt>{he.translate('global__description')}:</dt>

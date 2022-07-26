@@ -18,34 +18,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-13
 
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Dict, List, Optional, Union, Callable
 
 from dataclasses_json import config, dataclass_json
 from manatee import Corpus, SubCorpus, Concordance, create_subcorpus as m_create_subcorpus
 import aiofiles
-
 from ..errors import CorpusInstantiationError
 from ..abstract import SubcorpusIdent
 from ..corpus import KCorpus
-
-try:
-    from markdown import markdown
-    from markdown.extensions import Extension
-
-    class EscapeHtml(Extension):
-        def extendMarkdown(self, md, md_globals):
-            del md.preprocessors['html_block']
-            del md.inlinePatterns['html']
-
-    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
-
-except ImportError:
-    import html
-
-    def k_markdown(s): return html.escape(s)
-
 
 
 """
@@ -54,7 +36,7 @@ This module defines a backend-independent subcorpus representation.
 
 TextTypesType = Dict[str, Union[List[str], List[int]]]
 """
-({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz) 
+({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz)
 """
 # TODO: I am not very sure about the List[int] here
 
@@ -62,6 +44,14 @@ WithinType = List[Dict[str, Union[str, bool]]]
 """
 for each structural attribute, specify: negated? (!within), structure_name, attribute_cql
 """
+
+
+def serialize_datetime(dt: Optional[datetime]) -> Optional[float]:
+    return None if dt is None else dt.timestamp()
+
+
+def deserialize_datetime(timestamp: Optional[float]) -> Optional[datetime]:
+    return None if timestamp is None else datetime.fromtimestamp(timestamp)
 
 
 @dataclass_json
@@ -98,24 +88,18 @@ class SubcorpusRecord(SubcorpusIdent):
     author_fullname: str
     size: int
     created: datetime = field(metadata=config(
-        encoder=datetime.isoformat,
-        decoder=datetime.fromisoformat))
+        encoder=datetime.timestamp,
+        decoder=datetime.fromtimestamp))
     public_description: str
-    archived: Optional[datetime] = None
-    published: Optional[datetime] = None
+    archived: Optional[datetime] = field(default=None, metadata=config(
+        encoder=serialize_datetime,
+        decoder=deserialize_datetime))
+    published: Optional[datetime] = field(default=None, metadata=config(
+        encoder=serialize_datetime,
+        decoder=deserialize_datetime))
     cql: Optional[str] = None
     within_cond: Optional[WithinType] = None
     text_types: Optional[TextTypesType] = None
-
-    def prepare_response(self) -> Dict[str, Any]:
-        """
-        Method to get json serializable dict
-        """
-        res = asdict(self)
-        res['created'] = self.created.timestamp()
-        res['archived'] = self.archived.timestamp() if self.archived else None
-        res['published'] = self.published.timestamp() if self.published else None
-        return res
 
 
 class KSubcorpus(KCorpus):
@@ -168,7 +152,7 @@ class KSubcorpus(KCorpus):
     def description(self):
         if self.is_unbound:
             return None
-        return k_markdown(self._data_record.public_description)
+        return self._data_record.public_description
 
     @property
     def cache_key(self):

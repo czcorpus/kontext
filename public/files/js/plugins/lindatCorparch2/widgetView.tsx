@@ -592,7 +592,7 @@ export function init({
                 payload: {
                     corpusName: props.corpusName,
                     subcorp: props.availSubcorpora[evt.target.value].v,
-                    pubName: props.availSubcorpora[evt.target.value].pub,
+                    pubName: props.availSubcorpora[evt.target.value].n,
                     foreign: props.availSubcorpora[evt.target.value].foreign
                 }
             });
