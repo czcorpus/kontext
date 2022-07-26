@@ -17,6 +17,7 @@ import time
 import aiofiles.os
 import conclib.search
 import corplib
+from corplib.subcorpus import subcorpus_from_conc
 
 
 class EmptySubcorpusException(Exception):
@@ -40,7 +41,7 @@ class CreateSubcorpusTask(object):
         conc = await conclib.search.get_conc(corp, self._user_id, q=cql, asnc=0)
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')
-        ans = corplib.subcorpus_from_conc(path, conc)
+        ans = subcorpus_from_conc(path, conc)
         if ans is False:
             raise EmptySubcorpusException('Failed to create the subcorpus from a concordance')
         # this should not happen but it looks like it did

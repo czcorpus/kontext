@@ -16,7 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import glob
 import logging
 import os
 from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
@@ -27,111 +26,6 @@ import ujson as json
 from corplib.abstract import AbstractKCorpus
 from corplib.subcorpus import SubcorpusIdent
 from manatee import Corpus
-
-try:
-    from markdown import markdown
-    from markdown.extensions import Extension
-
-    class EscapeHtml(Extension):
-        def extendMarkdown(self, md, md_globals):
-            del md.preprocessors['html_block']
-            del md.inlinePatterns['html']
-
-    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
-
-except ImportError:
-    import html
-
-    def k_markdown(s): return html.escape(s)
-
-
-class _PublishedSubcMetadata(object):
-    """
-    PublishedSubcMetadata is a helper class for storing published
-    subcorpus information. It is used internally by the module.
-    """
-
-    def __init__(self, **kw):
-        self.author_id: Optional[int] = kw.get('author_id', None)
-        self.author_name: Optional[str] = kw.get('author_name', None)
-        self.subcpath: Optional[str] = kw.get('subcpath', None)
-
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @staticmethod
-    def from_json(data):
-        return _PublishedSubcMetadata(**json.loads(data))
-
-
-async def _get_subcorp_pub_info(spath: str) -> Tuple[_PublishedSubcMetadata, Optional[str]]:
-    """
-    Obtain publishing information stored in a dedicated file.
-    """
-    desc = None
-    namepath = os.path.splitext(spath)[0] + '.name'
-    metadata = _PublishedSubcMetadata()
-
-    if await aiofiles.os.path.isfile(namepath):
-        async with aiofiles.open(namepath, 'r') as nf:
-            desc = ''
-            i = 0
-            async for line in nf:
-                if i == 0:
-                    try:
-                        metadata = _PublishedSubcMetadata.from_json(line)
-                    except Exception as ex:
-                        logging.getLogger(__name__).error(
-                            f'Failed to read published subcorpus data. File {namepath}, error: {ex}')
-                elif i > 1:
-                    desc += line
-                i += 1
-    return metadata, desc
-
-
-async def _list_public_corp_dir(corpname: str, path: str, value_prefix: Optional[str]) -> List[Dict[str, Any]]:
-    ans: List[Dict[str, Any]] = []
-    subc_root = os.path.dirname(os.path.dirname(path))
-    for item in glob.glob(f'{path}/*.subc'):
-        full_path = os.path.join(path, item)
-        meta, desc = await _get_subcorp_pub_info(full_path)
-        if meta.subcpath is None or meta.author_name is None or not desc:
-            logging.getLogger(__name__).warning(
-                f'Missing metainformation for published subcorpus {item}')
-        else:
-            try:
-                ident = os.path.splitext(os.path.basename(item))[0]
-                author_rev = ' '.join(reversed(meta.author_name.split(' '))
-                                      ).lower() if meta.author_name else ''
-                if ident.startswith(value_prefix) or author_rev.startswith(value_prefix.lower()):
-                    ans.append(dict(
-                        ident=ident,
-                        origName=os.path.splitext(os.path.basename(meta.subcpath))[0],
-                        corpname=corpname,
-                        author=meta.author_name,
-                        description=k_markdown(desc),
-                        created=int(await aiofiles.os.path.getctime(full_path)),
-                        userId=int(meta.subcpath.lstrip(subc_root).split(os.path.sep, 1)[0])
-                    ))
-            except Exception as ex:
-                logging.getLogger(__name__).warning(f'Broken published subcorpus {full_path}: {ex}')
-    return ans
-
-
-async def list_public_subcorpora(subcpath: str, value_prefix: Optional[str] = None,
-                                 offset: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
-    """
-    List subcorpora stored in a provided subcpath (typically a path dedicated to a specific user)
-    """
-    data: List[Dict[str, Any]] = []
-    for corp in os.listdir(subcpath):
-        try:
-            data += await _list_public_corp_dir(corp, os.path.join(subcpath, corp), value_prefix)
-            if len(data) >= offset + limit:
-                break
-        except Exception as ex:
-            logging.getLogger(__name__).warning(ex)
-    return data[offset:limit]
 
 
 class KCorpus(AbstractKCorpus):

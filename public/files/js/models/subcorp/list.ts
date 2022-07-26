@@ -26,7 +26,7 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { SubcorpList } from './common';
+import { importServerSubcList, SubcorpList } from './common';
 import { SubcorpusServerRecord } from '../common/layout';
 
 
@@ -42,6 +42,7 @@ export interface SubcorpListItem {
     name:string;
     corpus_name:string;
     archived:Date;
+    author_fullname: string;
     created:Date;
     published:Date;
     size:number;
@@ -115,7 +116,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
         this.layoutModel = layoutModel;
         this.changeState(state => {
-            state.lines = this.importLines(data);
+            state.lines = importServerSubcList(data);
             state.unfinished = this.importProcessed(unfinished);
         })
 
@@ -220,21 +221,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     }
 
-
-    private importLines(data:Array<SubcorpusServerRecord>):Array<SubcorpListItem> {
-        return List.map(item => ({
-            id: item.id,
-            name: item.name,
-            corpus_name: item.corpus_name,
-            size: item.size,
-            created: new Date(item.created),
-            archived: item.archived ? new Date(item.archived) : undefined,
-            selected: false,
-            published: item.published ? new Date(item.published) : undefined,
-            public_description: item.public_description
-        }), data);
-    }
-
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
         return pipe(
             data,
@@ -281,7 +267,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = this.importLines(data.subcorp_list);
+                    state.lines = importServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.sortKey = {
@@ -326,7 +312,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = this.importLines(data.subcorp_list);
+                    state.lines = importServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     for (let p in filter) {

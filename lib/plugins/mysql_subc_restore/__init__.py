@@ -20,9 +20,11 @@ from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs,
+    CreateSubcorpusRawCQLArgs,
+    CreateSubcorpusWithinArgs
+)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcArchive, SubcArchiveException
@@ -31,12 +33,32 @@ from plugins.errors import PluginCompatibilityException
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
 
+def _subc_from_row(row: Dict) -> SubcorpusRecord:
+    return SubcorpusRecord(
+        id=row['id'],
+        corpus_name=row['corpus_name'],
+        name=row['name'],
+        user_id=row['user_id'],
+        author_id=row['author_id'],
+        author_fullname=row['fullname'],
+        size=row['size'],
+        created=row['created'],
+        public_description=row['public_description'],
+        archived=row['archived'],
+        within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
+        text_types=json.loads(row['text_types']) if row['text_types'] else None,
+        published=row['published'])
+
+
 class MySQLSubcArchive(AbstractSubcArchive):
     """
     For the documentation of individual methods, please see AbstractSubcArchive class
     """
 
     TABLE_NAME = 'kontext_subcorpus'
+    USER_TABLE_NAME = 'kontext_user'
+    USER_TABLE_FIRSTNAME_COL = 'firstname'
+    USER_TABLE_LASTNAME_COL = 'lastname'
 
     def __init__(
             self,
@@ -75,48 +97,50 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.connection.commit()
 
     async def list(self, user_id, filter_args, offset=0, limit=None):
-        if filter_args.archived_only and filter_args.active_only:
+        if (filter_args.archived_only and filter_args.active_only or
+                filter_args.archived_only and filter_args.published_only):
             raise SubcArchiveException('Invalid filter specified')
 
-        where, args = ['user_id = %s'], [user_id]
+        where, args = ['t1.user_id = %s'], [user_id]
         if filter_args.corpus is not None:
-            where.append('corpus_name = %s')
+            where.append('t1.corpus_name = %s')
             args.append(filter_args.corpus)
         if filter_args.archived_only:
-            where.append('archived IS NOT NULL')
+            where.append('t1.archived IS NOT NULL')
         elif filter_args.active_only:
-            where.append('archived IS NULL')
+            where.append('t1.archived IS NULL')
+        elif filter_args.published_only:
+            where.append('t1.published IS NOT NULL')
+
+        if filter_args.ia_query:
+            v = f'{filter_args.ia_query}%'
+            where.append(f't1.id LIKE %s OR t2.{self.USER_TABLE_LASTNAME_COL} LIKE %s')
+            args.extend([v, v])
 
         if limit is None:
             limit = 1000000000
         args.extend((limit, offset))
 
-        sql = f'SELECT * FROM {self.TABLE_NAME} WHERE {" AND ".join(where)} ORDER BY id LIMIT %s OFFSET %s'
+        sql = f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname 
+            FROM {self.TABLE_NAME} AS t1 
+            JOIN {self.USER_TABLE_NAME} as t2 ON t1.author_id = t2.id
+            WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
-            return [SubcorpusRecord(**{
-                **row,
-                'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
-                'text_types': json.loads(row['text_types']) if row['text_types'] else None,
-                'published': bool(row['published']),
-            }) async for row in cursor]
+            return [_subc_from_row(row) async for row in cursor]
 
     async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'SELECT * FROM {self.TABLE_NAME} '
-                'WHERE user_id = %s AND corpus_name = %s AND id = %s '
-                'ORDER BY created '
-                'LIMIT 1',
+                f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
+                FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id 
+                WHERE t1.user_id = %s AND t1.corpus_name = %s AND t1.id = %s 
+                ORDER BY t1.created 
+                LIMIT 1""",
                 (user_id, corpname, subc_id)
             )
             row = await cursor.fetchone()
-            return None if row is None else SubcorpusRecord(**{
-                **row,
-                'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
-                'text_types': json.loads(row['text_types']) if row['text_types'] else None,
-                'published': bool(row['published']),
-            })
+            return None if row is None else _subc_from_row(row)
 
     async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:

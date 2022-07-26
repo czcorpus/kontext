@@ -266,6 +266,7 @@ export interface SubcorpusServerRecord {
     corpus_name:string;
     user_id:number;
     author_id:number;
+    author_fullname:string;
     size:number;
     created:number;
     archived:number|undefined;

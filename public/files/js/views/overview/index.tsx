@@ -217,7 +217,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     {he.translate('global__published_subcorp')}
                     {'\u00a0'}
                     <span className="note">({he.translate('global__published_subcorp_id')}{':\u00a0'}
-                    {props.data.name})</span>
+                    {props.data.id})</span>
                 </>;
             }
             return he.translate('global__subc_info_access_private');
