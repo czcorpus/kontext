@@ -25,31 +25,18 @@ import { Observable, Subject } from 'rxjs';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { debounceTime } from 'rxjs/operators';
+import { SubcorpusServerRecord } from '../common/layout';
+import { importServerSubcList } from './common';
+import { SubcorpListItem } from './list';
 
 
 export interface LoadDataResponse extends Kontext.AjaxResponse {
-    data:Array<DataItem>;
-    corpora:Array<CorpusItem>;
-}
-
-export interface DataItem {
-    ident:string;
-    origName:string;
-    corpname:string;
-    author:string;
-    description:string;
-    userId:number;
-    created:number;
-}
-
-export interface CorpusItem {
-    ident:string;
-    label:string;
+    data:Array<SubcorpusServerRecord>;
 }
 
 export interface PublicSubcorpListState {
     isBusy:boolean;
-    data:Array<DataItem>;
+    data:Array<SubcorpListItem>;
     searchQuery:string;
     minQuerySize:number;
 }
@@ -62,7 +49,12 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
 
     private autoSubmitTrigger:Subject<string>;
 
-    constructor(dispatcher:IActionDispatcher, pageModel:PageModel, data:Array<DataItem>, minQuerySize:number) {
+    constructor(
+        dispatcher:IActionDispatcher,
+        pageModel:PageModel,
+        data:Array<SubcorpListItem>,
+        minQuerySize:number
+    ) {
         super(
             dispatcher,
             {
@@ -113,8 +105,8 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
             },
             (state, action, dispatch) => {
                 if (action.payload.query.length >= state.minQuerySize) {
-                    this.loadData(state).subscribe(
-                        (data) => {
+                    this.loadData(state).subscribe({
+                        next: data => {
                             dispatch<typeof Actions.DataLoadDone>({
                                 name: Actions.DataLoadDone.name,
                                 payload: {
@@ -122,14 +114,14 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                                 }
                             });
                         },
-                        (err) => {
-                            this.pageModel.showMessage('error', err);
+                        error: error => {
+                            this.pageModel.showMessage('error', error);
                             dispatch<typeof Actions.DataLoadDone>({
                                 name: Actions.DataLoadDone.name,
-                                error: err
+                                error
                             });
                         }
-                    );
+                    });
                 }
             }
         );
@@ -142,7 +134,7 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
                     state.data = [];
 
                 } else {
-                    state.data = action.payload.data.data;
+                    state.data = importServerSubcList(action.payload.data.data);
                 }
             }
         );
@@ -167,13 +159,17 @@ export class PublicSubcorpListModel extends StatelessModel<PublicSubcorpListStat
         // TODO
         return this.pageModel.ajax$<LoadDataResponse>(
             HTTP.Method.GET,
-            this.pageModel.createActionUrl('subcorpus/list_published'),
-            {
-                format: 'json',
-                query: state.searchQuery,
-                offset: 0, // TODO
-                limit: 20 // TODO
-            }
+            this.pageModel.createActionUrl(
+                'subcorpus/list_published',
+                {
+                    format: 'json',
+                    ia_query: state.searchQuery,
+                    published_only: true,
+                    offset: 0, // TODO
+                    limit: 20 // TODO
+                }
+            ),
+            {}
         );
     }
 

@@ -140,15 +140,17 @@ async def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], corp_c
     return status.has_some_result(minsize=minsize), status.finished
 
 
-async def require_existing_conc(corp: AbstractKCorpus, q: Union[Tuple[str, ...], List[str]], translate: Callable[[str], str] = lambda x: x) -> PyConc:
+async def require_existing_conc(
+        corp: AbstractKCorpus,
+        q: Union[Tuple[str, ...], List[str]],
+        translate: Callable[[str], str] = lambda x: x) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
     """
     corpus_factory = CorpusFactory()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    corp_cache_key = getattr(corp, 'corp_cache_key', None)
-    status = await cache_map.get_calc_status(corp_cache_key, q)
+    status = await cache_map.get_calc_status(corp.cache_key, q)
     if status is None:
         raise ConcNotFoundException('Concordance not found: {}'.format(', '.join(q)))
     if status.finished and status.readable:

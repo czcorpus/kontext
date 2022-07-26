@@ -19,21 +19,20 @@
  */
 
 import * as React from 'react';
-import { IActionDispatcher, BoundWithProps } from 'kombo';
+import { IActionDispatcher, Bound } from 'kombo';
 import * as Kontext from '../../types/kontext';
-import { PublicSubcorpListState, PublicSubcorpListModel, DataItem } from '../../models/subcorp/listPublic';
+import { PublicSubcorpListState, PublicSubcorpListModel } from '../../models/subcorp/listPublic';
 import { Actions } from '../../models/subcorp/actions';
 import { List } from 'cnc-tskit';
 
 import * as S from './style';
+import { SubcorpListItem } from '../../models/subcorp/list';
+
 
 export interface Views {
-    ListPublic:React.ComponentClass<ListPublicProps>;
+    ListPublic:React.ComponentClass;
 }
 
-export interface ListPublicProps {
-
-}
 
 export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         model:PublicSubcorpListModel) {
@@ -90,7 +89,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <Filter /> -------------------------
 
-    const Filter:React.SFC<{
+    const Filter:React.FC<{
         query:string;
         minQuerySize:number;
 
@@ -137,7 +136,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <DataRow /> -------------------------
 
-    class DataRow extends React.Component<{item:DataItem}, {expanded:boolean}> {
+    class DataRow extends React.Component<{item:SubcorpListItem}, {expanded:boolean}> {
 
         constructor(props) {
             super(props);
@@ -154,8 +153,8 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             dispatcher.dispatch<typeof Actions.UseInQuery>({
                 name: Actions.UseInQuery.name,
                 payload: {
-                    corpname: this.props.item.corpname,
-                    id: this.props.item.ident
+                    corpname: this.props.item.corpus_name,
+                    id: this.props.item.id
                 }
             });
         }
@@ -167,28 +166,28 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     {he.translate('pubsubclist__use_in_query')}
                 </button>
                 <h3>
-                    {`${this.props.item.corpname} / ${this.props.item.origName}`}
+                    {`${this.props.item.corpus_name} / ${this.props.item.name}`}
                 </h3>
                 <table className="props">
                     <tbody>
                         <tr className="created">
                             <th>{he.translate('global__creation_date')}:</th>
-                            <td>{he.formatDate(new Date(this.props.item.created * 1000))}</td>
+                            <td>{he.formatDate(this.props.item.created)}</td>
                         </tr>
                         <tr className="author">
                             <th>{he.translate('pubsubclist__author')}:</th>
-                            <td>{this.props.item.author}</td>
+                            <td>{this.props.item.author_fullname}</td>
                         </tr>
                         <tr className="code">
                             <th>{he.translate('subclist__public_code')}:</th>
                             <td>
                                 <a href={he.createActionLink(
                                     'query', {
-                                        corpname: this.props.item.corpname,
-                                        usesubcorp: this.props.item.ident
+                                        corpname: this.props.item.corpus_name,
+                                        usesubcorp: this.props.item.id
                                     })
                                 } title={he.translate('pubsubclist__use_in_query')}>
-                                    {this.props.item.ident}
+                                    {this.props.item.id}
                                 </a>
                             </td>
                         </tr>
@@ -198,7 +197,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     onClick={this._handleExpandAction} />
                 {this.state.expanded ?
                         <div className="description">
-                            <div dangerouslySetInnerHTML={{__html: this.props.item.description}} />
+                            <div dangerouslySetInnerHTML={{__html: this.props.item.public_description}} />
                         </div> :
                     null
                 }
@@ -208,16 +207,16 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
 
     // -------------------------- <DataTable /> -------------------------
 
-    const DataList:React.SFC<{
+    const DataList:React.FC<{
         hasQuery:boolean;
-        data:Array<DataItem>;
+        data:Array<SubcorpListItem>;
 
     }> = (props) => {
         if (props.hasQuery) {
             return (
                 <S.DataList>
                     {props.data.length > 0 ?
-                        List.map(item => <DataRow key={item.ident} item={item} />, props.data) :
+                        List.map(item => <DataRow key={item.id} item={item} />, props.data) :
                         <li>
                             <p className="no-result">
                                 {he.translate('pubsubclist__no_result')}
@@ -232,35 +231,32 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         }
     };
 
-    // -------------------------- <List /> -------------------------
+    // -------------------------- <ListPublic /> -------------------------
 
-    class ListPublic extends React.PureComponent<ListPublicProps & PublicSubcorpListState> {
-
-        render() {
-            return (
-                <S.ListPublic>
-                    <form>
-                        <fieldset>
-                            <legend>{he.translate('pubsubclist__filter_legend')}</legend>
-                            <Filter query={this.props.searchQuery}
-                                minQuerySize={this.props.minQuerySize} />
-                        </fieldset>
-                    </form>
-                    {this.props.isBusy ?
-                        <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
-                        <DataList data={this.props.data} hasQuery={this.props.searchQuery.length >= this.props.minQuerySize} />
-                    }
-                    <p className="disclaimer">
-                        <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
-                        {he.translate('pubsubclist__operator_disclaimer')}
-                    </p>
-                </S.ListPublic>
-            );
-        }
+    const ListPublic:React.FC<PublicSubcorpListState> = (props) => {
+        return (
+            <S.ListPublic>
+                <form>
+                    <fieldset>
+                        <legend>{he.translate('pubsubclist__filter_legend')}</legend>
+                        <Filter query={props.searchQuery}
+                            minQuerySize={props.minQuerySize} />
+                    </fieldset>
+                </form>
+                {props.isBusy ?
+                    <div className="loader"><layoutViews.AjaxLoaderImage /></div> :
+                    <DataList data={props.data} hasQuery={props.searchQuery.length >= props.minQuerySize} />
+                }
+                <p className="disclaimer">
+                    <img src={he.createStaticUrl('img/info-icon.svg')} alt={he.translate('global__info_icon')} />
+                    {he.translate('pubsubclist__operator_disclaimer')}
+                </p>
+            </S.ListPublic>
+        );
     }
 
     return {
-        ListPublic: BoundWithProps(ListPublic, model)
+        ListPublic: Bound(ListPublic, model)
     };
 
 }

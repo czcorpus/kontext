@@ -20,17 +20,31 @@
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, Tuple
-import hashlib
-import uuid
+from typing import Any, Dict, List, Optional, Union, Callable
 
 from dataclasses_json import config, dataclass_json
-from manatee import Corpus, SubCorpus
+from manatee import Corpus, SubCorpus, Concordance, create_subcorpus as m_create_subcorpus
 import aiofiles
 
-from .errors import CorpusInstantiationError
-from .abstract import SubcorpusIdent
-from .corpus import KCorpus
+from ..errors import CorpusInstantiationError
+from ..abstract import SubcorpusIdent
+from ..corpus import KCorpus
+
+try:
+    from markdown import markdown
+    from markdown.extensions import Extension
+
+    class EscapeHtml(Extension):
+        def extendMarkdown(self, md, md_globals):
+            del md.preprocessors['html_block']
+            del md.inlinePatterns['html']
+
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
+
+except ImportError:
+    import html
+
+    def k_markdown(s): return html.escape(s)
 
 
 
@@ -62,6 +76,7 @@ class SubcorpusRecord(SubcorpusIdent):
         user_id: user ID of actual owner; this is removed once user deletes the corpus (but it is still avail.
             via existing URLs)
         author_id: user ID of the author (this is kept no matter whether corpus is active/archived/deleted)
+        author_fullname: author first and last names
         size: size of the subcorpus in tokens
         created: datetime of corpus creation
         public_description: a public descripton (Markdown format) allows the subcorpus to be searched on the
@@ -80,6 +95,7 @@ class SubcorpusRecord(SubcorpusIdent):
     name: str
     user_id: int
     author_id: int
+    author_fullname: str
     size: int
     created: datetime = field(metadata=config(
         encoder=datetime.isoformat,
@@ -98,7 +114,7 @@ class SubcorpusRecord(SubcorpusIdent):
         res = asdict(self)
         res['created'] = self.created.timestamp()
         res['archived'] = self.archived.timestamp() if self.archived else None
-        res['published'] = self.published.timestamp() if self.archived else None
+        res['published'] = self.published.timestamp() if self.published else None
         return res
 
 
@@ -149,6 +165,12 @@ class KSubcorpus(KCorpus):
         return self._data_record.name
 
     @property
+    def description(self):
+        if self.is_unbound:
+            return None
+        return k_markdown(self._data_record.public_description)
+
+    @property
     def cache_key(self):
         """
         Return a hashed version of subc. name used mainly
@@ -172,3 +194,40 @@ class KSubcorpus(KCorpus):
 
     def freq_precalc_file(self, attrname: str) -> str:
         return self._data_record.data_path[:-4] + attrname
+
+
+async def create_subcorpus(
+        path: str,
+        corpus: KCorpus,
+        structname: str,
+        subquery: str,
+        translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
+    """
+    Creates a subcorpus
+
+    arguments:
+    path -- path of the new subcorpus file
+    corpus -- parent corpus (a manatee.Corpus instance)
+    structname -- a structure used to specify subcorpus content (only one structure name can be used)
+    subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
+    """
+    if await aiofiles.os.path.exists(path):
+        raise RuntimeError(translate('Subcorpus already exists'))
+    return m_create_subcorpus(path, corpus.unwrap(), structname, subquery)
+
+
+def subcorpus_from_conc(path: str, conc: Concordance, struct: Optional[str] = None) -> SubCorpus:
+    """
+    Creates a subcorpus from provided concordance. In case
+    a struct is provided then only positions located wihtin
+    the provided structure are included.
+
+    arguments:
+    path -- path to the subcorpus we want to create
+    conc -- a manatee.Concordance instance
+    struct -- an optional structure to restrict the result to
+
+    returns:
+    True in case of success else False (= empty subcorpus)
+    """
+    return m_create_subcorpus(path, conc.RS(), struct)

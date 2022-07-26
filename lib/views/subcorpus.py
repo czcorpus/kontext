@@ -16,13 +16,14 @@
 
 import logging
 import os
-from dataclasses import asdict
-from typing import Any, Dict, List
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional
 
 import l10n
 import plugins
 import settings
 from action.argmapping import log_mapping
+from action.argmapping.action import IntOpt
 from action.decorators import http_action
 from action.errors import UserActionException
 from action.krequest import KRequest
@@ -32,7 +33,6 @@ from action.model.user import UserActionModel
 from action.response import KResponse
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
-from corplib.corpus import list_public_subcorpora
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
 from plugin_types.subc_restore import AbstractSubcArchive, SubcListFilterArgs
@@ -159,7 +159,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
-        subcorp_list=[x.to_dict() for x in full_list],
+        subcorp_list=[x.prepare_response() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
         filter=asdict(filter_args),
         processed_subc=[
@@ -200,19 +200,24 @@ async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KRe
     return {}
 
 
-@bp.route('/list_published')
-@http_action(template='subcorpus/list_published.html', page_model='pubSubcorpList', action_model=UserActionModel)
-async def list_published(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    amodel.disabled_menu_items = (MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY,
-                                  MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+@dataclass
+class _PublicListArgs(SubcListFilterArgs):
+    offset: IntOpt = 0
+    limit: IntOpt = 20
 
+
+@bp.route('/list_published')
+@http_action(
+    template='subcorpus/list_published.html', page_model='pubSubcorpList', action_model=UserActionModel,
+    mapped_args=_PublicListArgs)
+async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs], resp: KResponse) -> Dict[str, Any]:
+    amodel.disabled_menu_items = (
+        MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     min_query_size = 3
-    query = req.args.get('query', '')
-    offset = int(req.args.get('offset', '0'))
-    limit = int(req.args.get('limit', '20'))
-    if len(query) >= min_query_size:
-        subclist = await list_public_subcorpora(
-            amodel.subcpath[-1], value_prefix=query, offset=offset, limit=limit)
-    else:
-        subclist = []
-    return dict(data=subclist, min_query_size=min_query_size)
+    with plugins.runtime.SUBC_RESTORE as sr:
+        if not req.mapped_args.ia_query or len(req.mapped_args.ia_query) < 3:
+            items = []
+        else:
+            items = await sr.list(
+                amodel.session_get('user', 'id'), req.mapped_args, req.mapped_args.offset, req.mapped_args.limit)
+    return dict(data=[v.prepare_response() for v in items], min_query_size=min_query_size)

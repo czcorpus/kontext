@@ -68,43 +68,6 @@ def manatee_min_version(ver: str) -> bool:
     return ver_parsed <= actual
 
 
-async def create_subcorpus(
-        path: str,
-        corpus: KCorpus,
-        structname: str,
-        subquery: str,
-        translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
-    """
-    Creates a subcorpus
-
-    arguments:
-    path -- path of the new subcorpus file
-    corpus -- parent corpus (a manatee.Corpus instance)
-    structname -- a structure used to specify subcorpus content (only one structure name can be used)
-    subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
-    """
-    if await aiofiles.os.path.exists(path):
-        raise RuntimeError(translate('Subcorpus already exists'))
-    return manatee.create_subcorpus(path, corpus.unwrap(), structname, subquery)
-
-
-def subcorpus_from_conc(path: str, conc: Concordance, struct: Optional[str] = None) -> SubCorpus:
-    """
-    Creates a subcorpus from provided concordance. In case
-    a struct is provided then only positions located wihtin
-    the provided structure are included.
-
-    arguments:
-    path -- path to the subcorpus we want to create
-    conc -- a manatee.Concordance instance
-    struct -- an optional structure to restrict the result to
-
-    returns:
-    True in case of success else False (= empty subcorpus)
-    """
-    return manatee.create_subcorpus(path, conc.RS(), struct)
-
-
 def create_str_vector() -> StrVector:
     """
     Creates a new manatee.StrVector instance

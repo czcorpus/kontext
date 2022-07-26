@@ -20,8 +20,9 @@
 
 import { PageModel } from '../app/page';
 import { init as viewInit } from '../views/subcorp/listPublic';
-import { PublicSubcorpListModel, DataItem } from '../models/subcorp/listPublic';
+import { PublicSubcorpListModel } from '../models/subcorp/listPublic';
 import { KontextPage } from '../app/main';
+import { SubcorpListItem } from '../models/subcorp/list';
 
 
 class PubSubcorpPage {
@@ -37,7 +38,7 @@ class PubSubcorpPage {
             const model = new PublicSubcorpListModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                this.layoutModel.getConf<Array<DataItem>>('Data'),
+                this.layoutModel.getConf<Array<SubcorpListItem>>('Data'),
                 this.layoutModel.getConf<number>('MinQuerySize'),
             );
             const views = viewInit(

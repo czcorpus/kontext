@@ -27,10 +27,10 @@ import abc
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
+from action.argmapping.action import IntOpt, StrOpt
 
 
 class SubcArchiveException(Exception):
@@ -46,10 +46,20 @@ class SubcListFilterArgs:
     as mutually exclusive and a respective listing
     logic should raise an Exception in case both
     arguments are True.
+
+    Attributes:
+        active_only: list only non-archived, non-deleted items
+        archived_only: list only archived items (i.e. no deleted or active ones)
+        published_only: list only items with public description (and thus searchable; please note that
+            any subcorpus is publicly accessible once a user has a URL)
+        corpus: if defined then display only subcorpora of that corpus
+        ia_query: ID or author name prefix for published subcorpora listing
     """
-    active_only: bool = True
-    archived_only: bool = False
-    corpus: Optional[str] = None
+    active_only: IntOpt = 1
+    archived_only: IntOpt = 0
+    published_only: IntOpt = 0
+    corpus: StrOpt = None
+    ia_query: StrOpt = None
 
 
 class AbstractSubcArchive(abc.ABC):

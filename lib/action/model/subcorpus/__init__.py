@@ -22,16 +22,17 @@ import os
 from typing import Any, Dict
 
 import bgcalc
-import corplib
 import plugins
 import settings
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs,
+    CreateSubcorpusRawCQLArgs,
+    CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import create_new_subc_ident
+from corplib.subcorpus import create_subcorpus
 from texttypes.model import TextTypeCollector
 
 
@@ -108,7 +109,7 @@ class SubcorpusActionModel(CorpusActionModel):
         subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
         full_path = os.path.join(self.subcpath, subc_id.data_path)
         if len(tt_query) == 1 and not data.has_aligned_corpora():
-            result = await corplib.create_subcorpus(
+            result = await create_subcorpus(
                 full_path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
         elif len(tt_query) > 1 or within_cql or data.has_aligned_corpora():
             worker = bgcalc.calc_backend_client(settings)

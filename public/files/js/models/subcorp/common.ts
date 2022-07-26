@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { HTTP } from 'cnc-tskit';
+import { HTTP, List } from 'cnc-tskit';
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, throwError } from 'rxjs';
 import { PageModel } from '../../app/page';
@@ -26,6 +26,7 @@ import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { SubcorpusServerRecord } from '../common/layout';
 import { TextTypesModel } from '../textTypes/main';
+import { SubcorpListItem } from './list';
 
 
 export interface WithinSelection {
@@ -116,6 +117,20 @@ export interface CreateSubcorpus extends Kontext.AjaxResponse {
     processed_subc:Array<Kontext.AsyncTaskInfo>;
 }
 
+export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<SubcorpListItem> {
+    return List.map(item => ({
+        id: item.id,
+        name: item.name,
+        corpus_name: item.corpus_name,
+        author_fullname: item.author_fullname,
+        size: item.size,
+        created: new Date(item.created),
+        archived: item.archived ? new Date(item.archived) : undefined,
+        selected: false,
+        published: item.published ? new Date(item.published) : undefined,
+        public_description: item.public_description
+    }), data);
+}
 
 /**
  * Arguments common for both "gui" and "within" modes.
