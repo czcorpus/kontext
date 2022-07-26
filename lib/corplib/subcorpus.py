@@ -20,9 +20,19 @@
 import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
+import hashlib
+import uuid
 
 from dataclasses_json import config, dataclass_json
+from manatee import Corpus, SubCorpus
+import aiofiles
+
+from .errors import CorpusInstantiationError
+from .abstract import SubcorpusIdent
+from .corpus import KCorpus
+
+
 
 """
 This module defines a backend-independent subcorpus representation.
@@ -42,38 +52,13 @@ for each structural attribute, specify: negated? (!within), structure_name, attr
 
 @dataclass_json
 @dataclass
-class SubcorpusIdent:
-    """
-    SubcorpusIdent is a base subcorpus identification dataclass. It contains all the
-    necessary data for opening a Manatee subcorpus.
-
-    Attributes:
-        id: a URL identifier of the subcoprus (typically with name 'usesubcorp' in URL)
-        name:  name user gives to the subcorpus
-        corpus_name: an identifier of the corpus (registry file name)
-        data_path: a relative path (to a configured common root for all user subcorpora) of actual data files
-    """
-    id: str
-    name: str
-    corpus_name: str
-
-    @property
-    def data_path(self):
-        return SubcorpusIdent.mk_relative_data_path(self.id)
-
-    @staticmethod
-    def mk_relative_data_path(ident: str):
-        return os.path.join(ident[:2], f'{ident}.subc')
-
-
-@dataclass_json
-@dataclass
 class SubcorpusRecord(SubcorpusIdent):
     """
     SubcorpusRecord is a database representation of a subcorpus. It contains all the data
     necessary to restore actual binary subcorpus at any time.
 
     Attributes:
+        name:  name user gives to the subcorpus (please note that it cannot be used e.g. in URLs as identifier)
         user_id: user ID of actual owner; this is removed once user deletes the corpus (but it is still avail.
             via existing URLs)
         author_id: user ID of the author (this is kept no matter whether corpus is active/archived/deleted)
@@ -92,6 +77,7 @@ class SubcorpusRecord(SubcorpusIdent):
             ({attrA: [value_A1, ...,value_Aa], ..., attrZ: [value_Z1, ...,valueZz)
 
     """
+    name: str
     user_id: int
     author_id: int
     size: int
@@ -114,3 +100,75 @@ class SubcorpusRecord(SubcorpusIdent):
         res['archived'] = self.archived.timestamp() if self.archived else None
         res['published'] = self.published.timestamp() if self.archived else None
         return res
+
+
+class KSubcorpus(KCorpus):
+    """
+    KSubcorpus is an abstraction of a subcorpus used by KonText.
+
+    Please note that properties like 'author', 'author_id',
+    'description' refer here to the author of the subcorpus.
+    To obtain the original author of the main corpus, new properties
+    are available in KSubcorpus - orig_author, orig_author_id,
+    orig_description.
+    """
+
+    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent):
+        super().__init__(corp, data_record.corpus_name)
+        self._corpname = data_record.corpus_name
+        self._data_record = data_record
+
+    def __str__(self):
+        return f'KSubcorpus(corpname={self.corpname}, subcorpus_id={self.subcorpus_id}, subcorpus_name={self.subcorpus_name})'
+
+    @staticmethod
+    async def load(corp: Corpus, data_record: SubcorpusIdent, subcorp_root_dir: str) -> 'KSubcorpus':
+        """
+        load is a recommended factory function to create a KSubcorpus instance.
+        """
+        full_data_path = os.path.join(subcorp_root_dir, data_record.data_path)
+        if not await aiofiles.os.path.isfile(full_data_path):
+            raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
+        subc = SubCorpus(corp, full_data_path)
+        kcorp = KSubcorpus(subc, data_record)
+        kcorp._corp = subc
+        return kcorp
+
+    @property
+    def portable_ident(self) -> Union[str, SubcorpusIdent]:
+        return self._data_record
+
+    @property
+    def subcorpus_id(self):
+        return self._data_record.id
+
+    @property
+    def subcorpus_name(self):
+        if self.is_unbound:
+            return None
+        return self._data_record.name
+
+    @property
+    def cache_key(self):
+        """
+        Return a hashed version of subc. name used mainly
+        for caching purposes.
+        In case of a regular corpus, the value is None
+        """
+        return f'{self._corpname}/{self._data_record.id}'
+
+    @property
+    def is_unbound(self):
+        return not isinstance(self._data_record, SubcorpusRecord)
+
+    @property
+    def source_description(self):
+        """
+        Return a description of the source corpus this subc. is derived from
+        """
+        if self.is_unbound:
+            return None
+        return self._data_record.public_description
+
+    def freq_precalc_file(self, attrname: str) -> str:
+        return self._data_record.data_path[:-4] + attrname

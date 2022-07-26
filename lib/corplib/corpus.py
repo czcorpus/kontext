@@ -20,16 +20,13 @@ import glob
 import logging
 import os
 from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
-import hashlib
-import uuid
 
 import aiofiles
 import aiofiles.os
 import ujson as json
 from corplib.abstract import AbstractKCorpus
-from corplib.subcorpus import SubcorpusRecord, SubcorpusIdent
-from corplib.errors import CorpusInstantiationError
-from manatee import Corpus, SubCorpus
+from corplib.subcorpus import SubcorpusIdent
+from manatee import Corpus
 
 try:
     from markdown import markdown
@@ -147,14 +144,14 @@ class KCorpus(AbstractKCorpus):
     """
 
     _corpname: str
-    _corp: Union[Corpus, SubCorpus]
+    _corp: Corpus
 
-    def __init__(self, corp: Union[Corpus, SubCorpus], corpname: str):
+    def __init__(self, corp: Corpus, corpname: str):
         self._corp = corp
         self._corpname = corpname
 
     def __str__(self):
-        return f'KCorpus(ident={self.corpname})'
+        return f'KCorpus(corpname={self.corpname})'
 
     @property
     def corp(self):
@@ -162,34 +159,20 @@ class KCorpus(AbstractKCorpus):
 
     @property
     def corpname(self):
-        """
-        Return corpus short name (sometimes referred as ID).
-        It is basically a name of the configuration "registry" file.
-        """
         return self._corpname
 
     @property
     def human_readable_corpname(self):
-        """
-        Returns an user-readable name of the current corpus (i.e. it cannot be used
-        to identify the corpus in KonText's code as it is only intended to be printed
-        somewhere on a page).
-        """
         if self.corp.get_conf('NAME'):
             return self.corp.get_conf('NAME')
         return self.corp.get_conffile()
 
     @property
-    def portable_ident(self) -> Union[str, SubcorpusRecord]:
+    def portable_ident(self) -> Union[str, SubcorpusIdent]:
         return self.corpname
 
     @property
     def cache_key(self):
-        """
-        Return a cache key for storing concordances (please
-        note that the final cache entry key contains also
-        a query part)
-        """
         return self._corpname
 
     @property
@@ -296,78 +279,3 @@ class KCorpus(AbstractKCorpus):
         items = self._corp.get_conf('STRUCTLIST')
         return items.split(',') if items else []
 
-
-class KSubcorpus(KCorpus):
-    """
-    KSubcorpus is an abstraction of a subcorpus used by KonText.
-
-    Please note that properties like 'author', 'author_id',
-    'description' refer here to the author of the subcorpus.
-    To obtain the original author of the main corpus, new properties
-    are available in KSubcorpus - orig_author, orig_author_id,
-    orig_description.
-    """
-
-    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent):
-        super().__init__(corp, data_record.corpus_name)
-        self._corpname = data_record.corpus_name
-        self._data_record = data_record
-
-    def __str__(self):
-        return f'KSubcorpus(ident={self.corpname}, subcorpus_name={self.subcorpus_name})'
-
-    @staticmethod
-    async def load(corp: Corpus, data_record: SubcorpusIdent, subcorp_root_dir: str) -> 'KSubcorpus':
-        """
-        load is a recommended factory function to create a KSubcorpus instance.
-        """
-        full_data_path = os.path.join(subcorp_root_dir, data_record.data_path)
-        if not await aiofiles.os.path.isfile(full_data_path):
-            raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
-        subc = SubCorpus(corp, full_data_path)
-        kcorp = KSubcorpus(subc, data_record)
-        kcorp._corp = subc
-        return kcorp
-
-    @staticmethod
-    async def create_new_subc_path(subc_root: str) -> Tuple[str, str]:
-        code = hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()
-        path = os.path.join(subc_root, code[:2])
-        if not await aiofiles.os.path.isdir(path):
-            await aiofiles.os.makedirs(path)
-        return SubcorpusRecord.mk_relative_data_path(code), code
-
-    @property
-    def portable_ident(self) -> Union[str, SubcorpusRecord]:
-        return self._data_record
-
-    @property
-    def subcorpus_id(self):
-        return self._data_record.id
-
-    @property
-    def subcorpus_name(self):
-        return self._data_record.name
-
-    @property
-    def cache_key(self):
-        """
-        Return a hashed version of subc. name used mainly
-        for caching purposes.
-        In case of a regular corpus, the value is None
-        """
-        return f'{self._corpname}/{self._data_record.id}'
-
-    @property
-    def is_unbound(self):
-        return not isinstance(self._data_record, SubcorpusRecord)
-
-    @property
-    def source_description(self):
-        """
-        Return a description of the source corpus this subc. is derived from
-        """
-        return self._data_record.public_description
-
-    def freq_precalc_file(self, attrname: str) -> str:
-        return self._data_record.data_path[:-4] + attrname

@@ -18,6 +18,7 @@
 import struct
 from collections import defaultdict
 from typing import Any, Dict, List
+import os
 
 import aiofiles
 import plugins
@@ -27,15 +28,15 @@ from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
 from plugin_types.subcmixer import AbstractSubcMixer
-from plugin_types.subcmixer.error import (ResultNotFoundException,
-                                          SubcMixerException)
+from plugin_types.subcmixer.error import (
+    ResultNotFoundException, SubcMixerException)
 from plugins import inject
 from sanic.blueprints import Blueprint
 
 from .category_tree import CategoryExpression, CategoryTree
 from .database import Database
 from .metadata_model import MetadataModel
-from corplib.corpus import KSubcorpus
+from corplib.abstract import create_new_subc_ident
 
 bp = Blueprint('default_subcmixer')
 
@@ -69,11 +70,11 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        subc_path, _ = await KSubcorpus.create_new_subc_path(amodel.subcpath)
+        subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
         struct_indices = sorted([int(x) for x in req.form.get('ids').split(',')])
         id_attr = req.form.get('idAttr').split('.')
         attr = amodel.corp.get_struct(id_attr[0])
-        async with aiofiles.open(subc_path, 'wb') as fw:
+        async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw:
             for idx in struct_indices:
                 await fw.write(struct.pack('<q', attr.beg(idx)))
                 await fw.write(struct.pack('<q', attr.end(idx)))

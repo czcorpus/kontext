@@ -34,7 +34,8 @@ from manatee import Concordance, StrVector, SubCorpus
 from plugin_types.corparch.corpus import (
     DefaultManateeCorpusInfo, ManateeCorpusInfo)
 
-from .corpus import AbstractKCorpus, KCorpus, KSubcorpus
+from .corpus import AbstractKCorpus, KCorpus
+from .subcorpus import KSubcorpus
 from .errors import MissingSubCorpFreqFile, CorpusInstantiationError
 from .fallback import EmptyCorpus
 
