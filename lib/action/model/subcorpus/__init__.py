@@ -18,19 +18,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from typing import Any, Dict
 import os
+from typing import Any, Dict
 
 import bgcalc
 import corplib
 import plugins
 import settings
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
-from corplib.abstract import SubcorpusIdent, create_new_subc_ident
+from corplib.abstract import create_new_subc_ident
 from texttypes.model import TextTypeCollector
 
 
