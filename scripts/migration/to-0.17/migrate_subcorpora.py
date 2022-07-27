@@ -38,11 +38,15 @@ from action.plugin import initializer
 from corplib.abstract import create_new_subc_ident
 
 
-async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[int, int]:
+async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_user_id: int) -> Tuple[int, int]:
     total_count, published_count = 0, 0
+    published_hashes = []
     with plugins.runtime.INTEGRATION_DB as mysql_db:
         async with mysql_db.cursor() as cursor:
-            for user_id in (path for path in os.listdir(users_subcpath) if re.match('^\d+$', path)):
+            for user_id in os.listdir(users_subcpath):
+                if user_id == 'published':
+                    continue
+
                 user_path = os.path.join(users_subcpath, user_id)
                 for corpname in os.listdir(user_path):
                     corp_path = os.path.join(user_path, corpname)
@@ -61,6 +65,7 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[
                             link = os.path.join(corp_path, os.path.relpath(
                                 os.readlink(pubfile_path)))
                             published = datetime.datetime.fromtimestamp(os.path.getctime(link))
+                            p_hash = os.path.basename(link).split('.')[0]
                             metainfo_path = link.replace('.subc', '.name')
 
                             # for public corpora determine author_id, default set to 1
@@ -71,10 +76,11 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[
                                     public_description = f.read()
                                 author_id = metadata['author_id']
                                 if author_id is None:
-                                    author_id = 1
+                                    author_id = default_user_id
                             else:
-                                author_id = 1
+                                author_id = default_user_id
                             published_count += 1
+                            published_hashes.append(p_hash)
 
                         await cursor.execute(
                             'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
@@ -86,6 +92,48 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[
                         os.makedirs(new_path, exist_ok=True)
                         shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
                         total_count += 1
+
+            published_dir = os.path.join(users_subcpath, 'published')
+            if os.path.isdir(published_dir):
+                for corpname in os.listdir(published_dir):
+                    p_hashes = [h.split('.')[0] for h in os.listdir(
+                        os.path.join(published_dir, corpname)) if h.endswith('name')]
+                    for p_hash in p_hashes:
+                        if p_hash in published_hashes:
+                            continue
+
+                        with open(os.path.join(published_dir, corpname, f'{p_hash}.name')) as f:
+                            line = f.readline()
+                            if not line:
+                                continue
+                            metadata = json.loads(line)
+                            f.readline()
+                            public_description = f.read()
+
+                        subc_path = os.path.join(published_dir, corpname, f'{p_hash}.subc')
+                        if not os.path.isfile(subc_path):
+                            continue
+
+                        subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
+                        published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
+                        created = published
+                        user_id = default_user_id
+                        author_id = metadata['author_id']
+                        if author_id is None:
+                            author_id = default_user_id
+
+                        await cursor.execute(
+                            'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                            (subc_id.id, subcname, int(user_id), int(author_id), corpname,
+                             0, None, None, None, created, None, published, public_description)
+                        )
+
+                        new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
+                        os.makedirs(new_path, exist_ok=True)
+                        shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                        total_count += 1
+                        published_count += 1
+
             await cursor.connection.commit()
     return total_count, published_count
 
@@ -100,6 +148,8 @@ if __name__ == "__main__":
                         help='Path to old subcorpora dir', default=None)
     parser.add_argument('--subcorpora-dir', type=str,
                         help='Path to new subcorpora dir', default=None)
+    parser.add_argument('--backup-user-id', type=str,
+                        help='ID used for unknown user/author', default='1')
     args = parser.parse_args()
 
     settings.load(args.config_path, defaultdict(lambda: None))
@@ -120,7 +170,7 @@ if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()
         total, published = loop.run_until_complete(
-            migrate_subcorpora(users_subcpath, subcorpora_dir))
+            migrate_subcorpora(users_subcpath, subcorpora_dir, args.backup_user_id))
         print(f'Imported {total} entries, {published} were published')
     except Exception as ex:
         print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
