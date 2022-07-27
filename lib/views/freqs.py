@@ -408,8 +408,8 @@ async def freqtt(amodel: ConcActionModel, req: KRequest[FreqttActionArgs], resp:
 async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     args = Freq2DCalcArgs(
         corpname=amodel.corp.corpname,
-        subcname=getattr(amodel.corp, 'subcname', None),
-        subcpath=amodel.subcpath,
+        subcorpus_id=amodel.corp.subcorpus_id,
+        subcorpora_dir=amodel.subcpath,
         user_id=req.session_get('user', 'id'),
         q=amodel.args.q,
         ctminfreq=int(req.args.get('ctminfreq', '1')),

@@ -374,9 +374,10 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     out['items_per_page'] = amodel.args.pagesize
     try:
         corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
-        conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-                              fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
-                              samplesize=corpus_info.sample_size, translate=req.translate)
+        conc = await get_conc(
+            corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
+            samplesize=corpus_info.sample_size, translate=req.translate)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
