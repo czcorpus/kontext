@@ -57,8 +57,8 @@ class Freq2DCalcArgs:
     ctminfreq_type: str
     fcrit: str
     cache_path: Optional[str] = None
-    subcpath: Optional[str] = None
-    subcname: Optional[str] = None
+    subcorpora_dir: Optional[str] = None
+    subcorpus_id: Optional[str] = None
     collator_locale: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
