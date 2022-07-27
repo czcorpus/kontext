@@ -361,15 +361,6 @@ export class MainMenuModel extends StatelessModel<MainMenuModelState> {
         );
 
         this.addActionHandler(
-            QueryActions.QueryInputSelectSubcorp,
-            (state, action) => {
-                state.usesubcorp = action.payload.pubName ? action.payload.pubName : action.payload.subcorp;
-                state.origSubcorpName = action.payload.pubName ? action.payload.subcorp : null;
-                state.foreignSubcorp = action.payload.foreign;
-            }
-        );
-
-        this.addActionHandler(
             FreqActions.ResultSetActiveTab,
             (state, action) => {
                 const [,srch] = List.find(([id,]) => id === 'menu-save', state.data);

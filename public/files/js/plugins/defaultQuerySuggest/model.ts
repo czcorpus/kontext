@@ -130,25 +130,6 @@ export class Model extends StatelessModel<ModelState> {
         super(dispatcher, state);
         this.pluginApi = pluginApi;
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
-            (state, action) => {
-                state.suggestionArgs = Dict.map(
-                    v => ({...v, subcorpus: action.payload.subcorp}),
-                    state.suggestionArgs
-                );
-            },
-            (state, action, dispatch) => {
-                if (state.activeSourceId) {
-                    this.loadSuggestions(
-                        state,
-                        state.suggestionArgs[state.activeSourceId],
-                        dispatch
-                    );
-                }
-            }
-        );
-
         this.addActionHandler<typeof QueryActions.QueryInputSetQType>(
             QueryActions.QueryInputSetQType.name,
             (state, action) => {

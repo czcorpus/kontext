@@ -25,7 +25,7 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 from corplib.subcorpus import SubcorpusRecord
 from action.argmapping.subcorpus import (
@@ -88,9 +88,16 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
+    async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         """
-        Returns an information about the most recent record matching provided arguments
+        Returns an information about the most recent record matching provided ID
+        """
+
+    @abc.abstractmethod
+    async def get_names(self, subc_ids: List[str]) -> Dict[str, str]:
+        """
+        For a list of subc IDs provide a dict mapping those IDs to original names
+        authors gave them
         """
 
     @abc.abstractmethod

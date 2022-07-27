@@ -239,22 +239,6 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                 });
             }
         );
-
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
-            action => {
-                this.history.pushState(
-                    this.conf.getConf<string>('currentAction'),
-                    Dict.filter(
-                        v => !!v,
-                        {
-                            corpname: action.payload.corpusName,
-                            usesubcorp: action.payload.subcorp
-                        }
-                    )
-                );
-            }
-        );
     }
 
     private allRegisteredIds():Array<string> {

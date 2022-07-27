@@ -78,7 +78,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
     subc = req.form.get('subcorpus_id')
     if subc:
         with plugins.runtime.SUBC_RESTORE as sa:
-            ident = await sa.get_info(amodel.session_get('user', 'id', ), req_corpora[0], subc)
+            ident = await sa.get_info(subc)
             maincorp = await amodel.cf.get_corpus(ident)
             subcorpus_orig_id = ident.id
             subcorpus_id = ident.name

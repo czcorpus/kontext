@@ -545,30 +545,6 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
-            (state, action) => {
-                if (action.payload.pubName) {
-                    state.corpusIdent = {
-                        ...state.corpusIdent,
-                        usesubcorp: action.payload.pubName,
-                        origSubcorpName: action.payload.subcorp
-                    };
-
-                } else {
-                    state.corpusIdent = {
-                        ...state.corpusIdent,
-                        usesubcorp: action.payload.subcorp,
-                        origSubcorpName: action.payload.subcorp
-                    };
-                }
-                state.currFavitemId = findCurrFavitemId(
-                    state.dataFav,
-                    this.getFullCorpusSelection(state)
-                );
-            }
-        );
-
         this.addActionHandler<typeof GlobalActions.SwitchCorpus>(
             GlobalActions.SwitchCorpus.name,
             null,
@@ -657,6 +633,7 @@ export class CorplistWidgetModel extends StatelessModel<CorplistWidgetModelState
                 state.availableSubcorpora.push(action.payload);
             }
         );
+
     }
 
     getRegistrationId():string {

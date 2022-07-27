@@ -27,7 +27,7 @@ import { CorplistItem } from '../common';
 import { SearchKeyword, SearchResultRow } from '../search';
 import { Actions } from '../actions';
 import { Keyboard, Strings, List } from 'cnc-tskit';
-import { Actions as QueryActions } from '../../../models/query/actions';
+import { Actions as GlobalActions } from '../../../models/common/actions';
 import { CorpusSwitchModel, CorpusSwitchModelState } from '../../../models/common/corpusSwitch';
 import * as S from './style';
 import * as S2 from '../commonStyle';
@@ -619,21 +619,23 @@ export function init({
 
     }> = (props) => {
 
-        const handleSubcorpChange = (evt) => {
-            dispatcher.dispatch<typeof QueryActions.QueryInputSelectSubcorp>({
-                name: QueryActions.QueryInputSelectSubcorp.name,
+        const handleSubcorpChange = (evt:React.ChangeEvent<HTMLSelectElement>) => {
+            const srch = List.find(
+                x => x.v === evt.target.value,
+                props.availSubcorpora
+            );
+            dispatcher.dispatch<typeof GlobalActions.SwitchCorpus>({
+                name: GlobalActions.SwitchCorpus.name,
                 payload: {
-                    corpusName: props.corpusName,
-                    subcorp: props.availSubcorpora[evt.target.value].v,
-                    pubName: props.availSubcorpora[evt.target.value].n,
-                    foreign: props.availSubcorpora[evt.target.value].foreign
+                    corpora: [props.corpusName],
+                    subcorpus: srch.v
                 }
             });
         };
-        console.log('prps: ', props);
+
         return (
             <span id="subcorp-selector-wrapper">
-                <select id="subcorp-selector" name="usesubcorp" value={props.currSubcorpus}
+                <select id="subcorp-selector" name="usesubcorp" value={props.currSubcorpus ? props.currSubcorpus : ''}
                         onChange={handleSubcorpChange}>
                     {List.map(
                         item => <option key={item.v} value={item.v}>{item.n}</option>,

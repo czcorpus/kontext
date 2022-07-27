@@ -434,34 +434,6 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 compositionModeOn: false
         });
 
-        this.addActionHandler(
-            Actions.QueryInputSelectSubcorp,
-            action => {
-                this.changeState(state => {
-                    if (action.payload.pubName) {
-                        state.currentSubcorp = action.payload.pubName;
-                        state.origSubcorpName = action.payload.subcorp;
-                        state.isForeignSubcorpus = action.payload.foreign;
-
-                    } else {
-                        state.currentSubcorp = action.payload.subcorp;
-                        state.origSubcorpName = action.payload.subcorp;
-                        state.isForeignSubcorpus = false;
-                    }
-                    const corpIdent = this.pageModel.getCorpusIdent();
-                    this.pageModel.setConf<Kontext.FullCorpusIdent>(
-                        'corpusIdent',
-                        {
-                            ...corpIdent,
-                            usesubcorp: state.currentSubcorp,
-                            origSubcorpName: state.origSubcorpName,
-                            foreignSubcorp: state.isForeignSubcorpus
-                        }
-                    );
-                });
-            }
-        );
-
         this.addActionSubtypeHandler(
             Actions.QueryInputSetLpos,
             action => action.payload.formType === 'query',

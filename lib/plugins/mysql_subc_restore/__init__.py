@@ -145,18 +145,30 @@ class MySQLSubcArchive(AbstractSubcArchive):
             await cursor.execute(sql, args)
             return [_subc_from_row(row) async for row in cursor]
 
-    async def get_info(self, user_id: int, corpname: str, subc_id: str) -> Optional[SubcorpusRecord]:
+    async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
                 FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id 
-                WHERE t1.user_id = %s AND t1.corpus_name = %s AND t1.id = %s 
+                WHERE t1.id = %s 
                 ORDER BY t1.created 
                 LIMIT 1""",
-                (user_id, corpname, subc_id)
+                (subc_id, )
             )
             row = await cursor.fetchone()
             return None if row is None else _subc_from_row(row)
+
+    async def get_names(self, subc_ids):
+        async with self._db.cursor() as cursor:
+            wc = ', '.join(['%s'] * len(subc_ids))
+            await cursor.execute(
+                f"SELECT id, name FROM {self.TABLE_NAME} WHERE id IN ({wc})",
+                tuple(subc_ids)
+            )
+            ans = {}
+            async for row in cursor:
+                ans[row['id']] = row['name']
+            return ans
 
     async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:

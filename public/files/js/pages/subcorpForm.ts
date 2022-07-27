@@ -29,7 +29,6 @@ import { SubcorpFormModel } from '../models/subcorp/form';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import { TextTypesModel } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
-import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { PluginName } from '../app/plugin';
 import { KontextPage } from '../app/main';
@@ -73,8 +72,6 @@ export class SubcorpForm {
     private subcorpWithinFormModel:SubcorpWithinFormModel;
 
     private textTypesModel:TextTypesModel;
-
-    private subcorpSel:NonQueryCorpusSelectionModel;
 
     private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
 
@@ -188,15 +185,6 @@ export class SubcorpForm {
             const ttComponent = this.createTextTypesComponents(
                 this.layoutModel.getConf<TextTypes.ExportedSelection>('SelectedTextTypes')
             );
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
-                layoutModel: this.layoutModel,
-                dispatcher: this.layoutModel.dispatcher,
-                usesubcorp: this.corpusIdent.usesubcorp,
-                origSubcorpName: this.corpusIdent.origSubcorpName,
-                foreignSubcorp: this.corpusIdent.foreignSubcorp,
-                corpora: [this.corpusIdent.id],
-                availSubcorpora: []
-            });
             this.subcorpFormModel = new SubcorpFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,

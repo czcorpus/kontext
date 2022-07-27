@@ -143,6 +143,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         structAttrList,
         initialArgs
     }:WordlistFormModelArgs) {
+        console.log('initial: ', initialArgs.wlposattrs)
         super(
             dispatcher,
             {
@@ -162,7 +163,7 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
                 wltype: initialArgs.wltype,
                 wlminfreq: {value: initialArgs.wlminfreq.toFixed(), isInvalid: false, isRequired: true},
                 wlposattrs: List.empty(initialArgs.wlposattrs) ?
-                        [{inputId: Ident.puid(), value: ''}] :
+                        [{inputId: Ident.puid(), value: 'word'}] :
                         List.map(
                             value => ({inputId: Ident.puid(), value}),
                             initialArgs.wlposattrs
@@ -188,34 +189,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             }
         );
         this.layoutModel = layoutModel;
-
-        this.addActionHandler(
-            QueryActions.QueryInputSelectSubcorp,
-            (state, action) => {
-                if (action.payload.pubName) {
-                    state.currentSubcorpus = action.payload.pubName;
-                    state.origSubcorpName = action.payload.subcorp;
-                    state.isForeignSubcorp = action.payload.foreign;
-
-                } else {
-                    state.currentSubcorpus = action.payload.subcorp;
-                    state.origSubcorpName = action.payload.subcorp;
-                    state.isForeignSubcorp = false;
-                }
-            },
-            (state, action, dispatch) => {
-                const corpIdent = this.layoutModel.getCorpusIdent();
-                this.layoutModel.setConf<Kontext.FullCorpusIdent>(
-                    'corpusIdent',
-                    {
-                        ...corpIdent,
-                        usesubcorp: state.currentSubcorpus,
-                        origSubcorpName: state.origSubcorpName,
-                        foreignSubcorp: state.isForeignSubcorp
-                    }
-                );
-            }
-        );
 
         this.addActionHandler(
             Actions.WordlistResultReload,
@@ -703,7 +676,9 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
             pfilter_words: splitFilterWords(state.pfilterWords),
             nfilter_words: splitFilterWords(state.nfilterWords),
             include_nonwords: state.includeNonwords,
-            wlposattrs: List.map(v => v.value, state.wlposattrs)
+            wlposattrs: state.wltype === 'multilevel' ?
+                List.map(v => v.value, state.wlposattrs) :
+                []
         };
     }
 

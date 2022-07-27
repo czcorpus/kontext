@@ -39,7 +39,8 @@ interface AbstractQueryHistoryItem {
     corpname:string;
     corpus_id:string;
     human_corpname:string;
-    subcorpname:string;
+    subcorpus_name:string;
+    subcorpus_id:string;
 
     /**
      * a UNIX timestamp in seconds

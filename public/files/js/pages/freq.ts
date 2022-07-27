@@ -38,7 +38,6 @@ import { init as ctResultViewInit } from '../views/freqs/twoDimension/table2d';
 import { FreqDataRowsModel, importData as importFreqData } from '../models/freqs/regular/table';
 import { FreqCTResultsSaveModel } from '../models/freqs/twoDimension/save';
 import { TextTypesModel } from '../models/textTypes/main';
-import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { IndirectQueryReplayModel } from '../models/query/replay/indirect';
 import { Dict, List, Maths, pipe, tuple, URL as CURL } from 'cnc-tskit';
@@ -562,15 +561,6 @@ class FreqPage {
 
     init() {
         this.layoutModel.init(true, [], () => {
-            const subcorpSel = new NonQueryCorpusSelectionModel({
-                layoutModel: this.layoutModel,
-                dispatcher: this.layoutModel.dispatcher,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                corpora: [this.layoutModel.getCorpusIdent().id],
-                availSubcorpora: []
-            });
             const mainMenuModel = this.layoutModel.getModels().mainMenuModel;
             // we must capture concordance-related actions which lead
             // to specific "pop-up" forms and redirect user back to

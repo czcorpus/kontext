@@ -201,15 +201,6 @@ export class PqueryFormModel extends StatefulModel<PqueryFormModelState> impleme
             }
         );
 
-        this.addActionHandler<typeof QueryActions.QueryInputSelectSubcorp>(
-            QueryActions.QueryInputSelectSubcorp.name,
-            action => {
-                this.changeState(state => {
-                    state.usesubcorp = action.payload.subcorp;
-                });
-            }
-        );
-
         this.addActionHandler(
             QueryActions.QueryInputSetQuery,
             action => {

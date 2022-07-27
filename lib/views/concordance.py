@@ -652,8 +652,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
             variant=amodel.corpus_variant,
             usesubcorp=amodel.args.usesubcorp if amodel.args.usesubcorp else None,
             origSubcorpName=amodel.corp.subcorpus_name,
-            foreignSubcorp=(amodel.corp.author_id is not None and
-                            amodel.session_get('user', 'id') != amodel.corp.author_id),
+            foreignSubcorp=amodel.session_get('user', 'id') != amodel.corp.author_id,
             size=amodel.corp.size,
             searchSize=amodel.corp.search_size),
         currentArgs=conc_args,

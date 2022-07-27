@@ -24,7 +24,6 @@ import * as PluginInterfaces from '../types/plugins';
 import { init as wordlistFormInit, WordlistFormExportViews } from '../views/wordlist/form';
 import { init as basicOverviewViewsInit } from '../views/query/basicOverview';
 import { WordlistFormModel, WordlistFormModelArgs } from '../models/wordlist/form';
-import { NonQueryCorpusSelectionModel } from '../models/corpsel';
 import { KontextPage } from '../app/main';
 import { WlnumsTypes } from '../models/wordlist/common';
 import { Actions as GlobalActions } from '../models/common/actions';
@@ -43,8 +42,6 @@ class WordlistFormPage {
     private views:WordlistFormExportViews;
 
     private wordlistFormModel:WordlistFormModel;
-
-    private subcorpSel:NonQueryCorpusSelectionModel;
 
     private corparchPlugin:PluginInterfaces.Corparch.IPlugin;
 
@@ -102,17 +99,6 @@ class WordlistFormPage {
     init():void {
         this.layoutModel.init(true, [], () => {
             this.corpusIdent = this.layoutModel.getConf<Kontext.FullCorpusIdent>('corpusIdent');
-            this.subcorpSel = new NonQueryCorpusSelectionModel({
-                layoutModel: this.layoutModel,
-                dispatcher: this.layoutModel.dispatcher,
-                usesubcorp: this.layoutModel.getCorpusIdent().usesubcorp,
-                origSubcorpName: this.layoutModel.getCorpusIdent().origSubcorpName,
-                foreignSubcorp: this.layoutModel.getCorpusIdent().foreignSubcorp,
-                corpora: [this.layoutModel.getCorpusIdent().id],
-                availSubcorpora: this.layoutModel.getConf<Array<Kontext.SubcorpListItem>>(
-                    'SubcorpList'
-                )
-            });
             const wlForm = this.layoutModel.getConf<WordlistFormModelArgs["initialArgs"]>('FormData');
             this.wordlistFormModel = new WordlistFormModel({
                 dispatcher: this.layoutModel.dispatcher,

@@ -367,7 +367,7 @@ class CorpusActionModel(UserActionModel):
     async def _load_corpus(self):
         if self.args.usesubcorp:
             with plugins.runtime.SUBC_RESTORE as sr:
-                corpus_ident = await sr.get_info(self.session_get('user', 'id'), self.args.corpname, self.args.usesubcorp)
+                corpus_ident = await sr.get_info(self.args.usesubcorp)
         else:
             corpus_ident = self.args.corpname
         if corpus_ident is None:
@@ -431,8 +431,7 @@ class CorpusActionModel(UserActionModel):
             name=self.corp.human_readable_corpname,
             usesubcorp=self.corp.subcorpus_id,
             origSubcorpName=self.corp.subcorpus_name,
-            foreignSubcorp=self.corp.author_id is not None and self.session_get(
-                'user', 'id') != self.corp.author_id,
+            foreignSubcorp=self.session_get('user', 'id') != self.corp.author_id,
             size=self.corp.size,
             searchSize=self.corp.search_size)
         if self.corp.subcorpus_id:
