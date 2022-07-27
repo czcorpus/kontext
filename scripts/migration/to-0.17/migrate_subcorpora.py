@@ -53,6 +53,7 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[
                         author_id = user_id
                         created = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
                         published = None
+                        public_description = None
                         subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
 
                         pubfile_path = os.path.join(corp_path, f'{subcname}.pub')
@@ -66,19 +67,19 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[
                             if os.path.isfile(metainfo_path):
                                 with open(metainfo_path) as f:
                                     metadata = json.loads(f.readline())
+                                    f.readline()
+                                    public_description = f.read()
                                 author_id = metadata['author_id']
-
                                 if author_id is None:
                                     author_id = 1
                             else:
                                 author_id = 1
-
                             published_count += 1
 
                         await cursor.execute(
                             'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                             (subc_id.id, subcname, int(user_id), int(author_id), corpname,
-                             0, None, None, None, created, None, published, None)
+                             0, None, None, None, created, None, published, public_description)
                         )
 
                         new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
