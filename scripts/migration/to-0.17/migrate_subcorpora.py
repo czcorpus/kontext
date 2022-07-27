@@ -1,0 +1,126 @@
+# Copyright (c) 2022 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+import asyncio
+import json
+import os
+import os.path
+import shutil
+import sys
+from collections import defaultdict
+from typing import Tuple
+
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../lib')))
+
+import argparse
+import datetime
+import re
+
+import plugins
+import settings
+from action.plugin import initializer
+from corplib.abstract import create_new_subc_ident
+
+
+async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str) -> Tuple[int, int]:
+    total_count, published_count = 0, 0
+    with plugins.runtime.INTEGRATION_DB as mysql_db:
+        async with mysql_db.cursor() as cursor:
+            for user_id in (path for path in os.listdir(users_subcpath) if re.match('^\d+$', path)):
+                user_path = os.path.join(users_subcpath, user_id)
+                for corpname in os.listdir(user_path):
+                    corp_path = os.path.join(user_path, corpname)
+                    subcorpora = [file.split('.')[0]
+                                  for file in os.listdir(corp_path) if file.endswith('.subc')]
+                    for subcname in subcorpora:
+                        subc_path = os.path.join(corp_path, f'{subcname}.subc')
+                        author_id = user_id
+                        created = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
+                        published = None
+                        subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
+
+                        pubfile_path = os.path.join(corp_path, f'{subcname}.pub')
+                        if os.path.islink(pubfile_path):
+                            link = os.path.join(corp_path, os.path.relpath(
+                                os.readlink(pubfile_path)))
+                            published = datetime.datetime.fromtimestamp(os.path.getctime(link))
+                            metainfo_path = link.replace('.subc', '.name')
+
+                            # for public corpora determine author_id, default set to 1
+                            if os.path.isfile(metainfo_path):
+                                with open(metainfo_path) as f:
+                                    metadata = json.loads(f.readline())
+                                author_id = metadata['author_id']
+
+                                if author_id is None:
+                                    author_id = 1
+                            else:
+                                author_id = 1
+
+                            published_count += 1
+
+                        await cursor.execute(
+                            'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                            (subc_id.id, subcname, int(user_id), int(author_id), corpname,
+                             0, None, None, None, created, None, published, None)
+                        )
+
+                        new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
+                        os.makedirs(new_path, exist_ok=True)
+                        shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
+                        total_count += 1
+            await cursor.connection.commit()
+    return total_count, published_count
+
+
+if __name__ == "__main__":
+    conf_path = os.path.realpath(os.path.join(os.path.dirname(
+        __file__), '..', '..', '..', 'conf', 'config.xml'))
+
+    parser = argparse.ArgumentParser(description='Migrate subcorpora')
+    parser.add_argument('--config-path', type=str, help='Path to config file', default=conf_path)
+    parser.add_argument('--users-subcpath', type=str,
+                        help='Path to old subcorpora dir', default=None)
+    parser.add_argument('--subcorpora-dir', type=str,
+                        help='Path to new subcorpora dir', default=None)
+    args = parser.parse_args()
+
+    settings.load(args.config_path, defaultdict(lambda: None))
+    initializer.init_plugin('integration_db')
+
+    users_subcpath = settings.get(
+        'corpora', 'users_subcpath') if args.users_subcpath is None else args.users_subcpath
+    if users_subcpath is None:
+        raise Exception(
+            '`users_subcpath` not provided. Please provide it with parameter or config file.')
+
+    subcorpora_dir = settings.get(
+        'corpora', 'subcorpora_dir') if args.subcorpora_dir is None else args.subcorpora_dir
+    if subcorpora_dir is None:
+        raise Exception(
+            '`subcorpora_dir` not provided. Please provide it with parameter or config file.')
+
+    try:
+        loop = asyncio.get_event_loop()
+        total, published = loop.run_until_complete(
+            migrate_subcorpora(users_subcpath, subcorpora_dir))
+        print(f'Imported {total} entries, {published} were published')
+    except Exception as ex:
+        print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
+        sys.exit(1)
