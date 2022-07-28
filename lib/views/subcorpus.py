@@ -44,11 +44,12 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 @bp.route('/properties')
 @http_action(
-    access_level=1, return_type='json', page_model='subcorpList', action_model=SubcorpusActionModel)
-async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    access_level=1, return_type='json', page_model='subcorpList', action_model=CorpusActionModel)
+async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    subc_id = req.args['_usesubcorp']
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_RESTORE as sr:
-        info = await sr.get_info(amodel.corp.subcorpus_id)
+        info = await sr.get_info(subc_id)
     live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
         live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
