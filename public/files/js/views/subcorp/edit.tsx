@@ -101,8 +101,40 @@ export function init(
     // ------------------------ <FormActionReuse /> --------------------------
 
     const FormActionReuse:React.FC<{data: SubcorpusRecord, liveAttrsEnabled: boolean}> = (props) => {
+        return (
+            <TabContentWrapper>
+                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
+                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
+                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
+            </TabContentWrapper>
+        );
+    }
 
-        const handleSubmit = () => {
+    // ------------------------ <FormActionFile /> --------------------------
+
+    const FormActionFile:React.FC<{
+        corpname: string;
+        subcname: string
+        deleted: number;
+    }> = (props) => {
+
+        const handleArchive = () => {
+            dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
+                name: Actions.ArchiveSubcorpus.name,
+                payload: {
+                    corpname: props.corpname,
+                    subcname: props.subcname,
+                }
+            });
+        };
+
+        const handleRestore = () => {
+            dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
+                name: Actions.RestoreSubcorpus.name
+            });
+        };
+
+        const handleWipe = () => {
             if (window.confirm(he.translate('subclist__info_subc_will_be_wiped'))) {
                 dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
                     name: Actions.WipeSubcorpus.name,
@@ -112,36 +144,19 @@ export function init(
 
         return (
             <TabContentWrapper>
-                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
-                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
-                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
-
+                {props.deleted ?
+                    <button type="button" className="default-button"
+                            onClick={handleRestore}>
+                        {he.translate('global__restore')}
+                    </button> :
+                    <button type="button" className="default-button"
+                            onClick={handleArchive}>
+                        {he.translate('subclist__archive_subcorp')}
+                    </button>
+                }
                 <button type="button" className="default-button"
-                        onClick={handleSubmit}>
+                        onClick={handleWipe}>
                     {he.translate('subclist__action_wipe')}
-                </button>
-            </TabContentWrapper>
-        );
-    }
-
-    // ------------------------ <FormActionFile /> --------------------------
-
-    const FormActionFile:React.FC<{
-
-    }> = (props) => {
-
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.RestoreSubcorpus>({
-                name: Actions.RestoreSubcorpus.name
-            });
-        };
-
-        return (
-            <TabContentWrapper>
-                <p>{he.translate('subclist__info_subc_will_be_restored')}</p>
-                <button type="button" className="default-button"
-                        onClick={handleSubmit}>
-                    {he.translate('global__confirm')}
                 </button>
             </TabContentWrapper>
         );
@@ -269,7 +284,7 @@ export function init(
                     <layoutViews.AjaxLoaderImage /> :
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
-                            <FormActionFile key="restore" />
+                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} deleted={props.data.deleted} />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 description={props.data.description}

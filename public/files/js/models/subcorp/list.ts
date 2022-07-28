@@ -175,7 +175,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         this.addActionHandler(
             Actions.ArchiveSubcorpus,
-            action => this.archiveSubcorpus(action.payload.rowIdx).subscribe({
+            action => this.archiveSubcorpus(action.payload.corpname, action.payload.subcname).subscribe({
                 next: data => {
                     this.emitChange();
                     this.layoutModel.showMessage(
@@ -219,6 +219,21 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             })
         );
 
+        this.addActionHandler(
+            Actions.WipeSubcorpusDone,
+            action => {
+                this.reloadItems().subscribe({
+                    next: data => {
+                        this.emitChange();
+                    },
+                    error: error => {
+                        this.emitChange();
+                        this.layoutModel.showMessage('error', error);
+                    }
+                });
+            }
+        );
+
     }
 
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
@@ -234,17 +249,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         )
     }
 
-    private archiveSubcorpus(rowIdx:number):Observable<any> {
-        const item = this.state.lines[rowIdx];
-        if (!item) {
-            return throwError(new Error(`Cannot delete item. Row ${rowIdx} not found.`));
-        }
+    private archiveSubcorpus(corpname:string, subcname:string):Observable<SubcorpList> {
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
             {
-                corpname: item.corpus_name,
-                usesubcorp: item.id
+                corpname: corpname,
+                usesubcorp: subcname
             },
 
         ).pipe(

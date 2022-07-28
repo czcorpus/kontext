@@ -120,9 +120,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     corpname: data.data.corpus_name,
                                     usesubcorp: data.data.id,
                                     origSubcName: data.data.name,
-                                    deleted: data.data.archived,
                                     created: data.data.created,
                                     published: data.data.published,
+                                    deleted: data.data.archived,
                                     selections: data.data.text_types||data.data.within_cond||data.data.cql,
                                     size: data.data.size,
                                     description: data.data.public_description,
@@ -169,13 +169,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
                 ).subscribe({
                     next: data => {
-                        dispatch(
-                            Actions.WipeSubcorpusDone
-                        )
-                        // TODO this goes to subc list model (WipeSubcorpusDone)
-                        //this.layoutModel.showMessage('info',
-                        //this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
-
+                        dispatch(Actions.WipeSubcorpusDone);
+                        dispatch(Actions.HideSubcEditWindow);
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
                     },
                     error: error => {
                         this.layoutModel.showMessage('error', error);

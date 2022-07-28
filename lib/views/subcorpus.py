@@ -46,6 +46,8 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 @http_action(
     access_level=1, return_type='json', page_model='subcorpList', action_model=CorpusActionModel)
 async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    # we have to send subcorp id in `_usesubcorp` instead `usesubcorp`
+    # archived subcorpus would have a problem initializing Corpus instance -> no subcorpus data
     subc_id = req.args['_usesubcorp']
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_RESTORE as sr:
@@ -177,20 +179,14 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 @bp.route('/ajax_wipe_subcorpus', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=UserActionModel)
 async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    if plugins.runtime.SUBC_RESTORE.exists:
-        corpus_id = req.form.get('corpname')
-        subcorp_name = req.form.get('subcname')
-        with plugins.runtime.SUBC_RESTORE as sr:
-            await sr.delete_query(amodel.session_get('user', 'id'), corpus_id, subcorp_name)
-        resp.add_system_message(
-            'info',
-            req.translate(f'Subcorpus {subcorp_name} has been deleted permanently.')
-        )
-    else:
-        resp.add_system_message(
-            'error',
-            req.translate('Unsupported operation (plug-in not present)')
-        )
+    corpus_id = req.form.get('corpname')
+    subcorp_name = req.form.get('subcname')
+    with plugins.runtime.SUBC_RESTORE as sr:
+        await sr.delete_query(amodel.session_get('user', 'id'), corpus_id, subcorp_name)
+    resp.add_system_message(
+        'info',
+        req.translate(f'Subcorpus {subcorp_name} has been deleted permanently.')
+    )
     return {}
 
 

@@ -20,11 +20,9 @@ from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs,
-    CreateSubcorpusRawCQLArgs,
-    CreateSubcorpusWithinArgs
-)
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcArchive, SubcArchiveException
@@ -137,8 +135,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
             limit = 1000000000
         args.extend((limit, offset))
 
-        sql = f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname 
-            FROM {self.TABLE_NAME} AS t1 
+        sql = f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
+            FROM {self.TABLE_NAME} AS t1
             JOIN {self.USER_TABLE_NAME} as t2 ON t1.author_id = t2.id
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
@@ -149,9 +147,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
-                FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id 
-                WHERE t1.id = %s 
-                ORDER BY t1.created 
+                FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id
+                WHERE t1.id = %s
+                ORDER BY t1.created
                 LIMIT 1""",
                 (subc_id, )
             )
@@ -170,11 +168,11 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 ans[row['id']] = row['name']
             return ans
 
-    async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
+    async def get_query(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'SELECT * FROM {self.TABLE_NAME} '
-                'WHERE id = %s', (query_id, )
+                'WHERE id = %s', (subc_id, )
             )
             row = await cursor.fetchone()
             return None if row is None else SubcorpusRecord(**{
@@ -182,6 +180,16 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 'within_cond': json.loads(row['within_cond']) if row['within_cond'] else None,
                 'text_types': json.loads(row['text_types']) if row['text_types'] else None,
             })
+
+    async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'UPDATE {self.TABLE_NAME} '
+                'SET archived = IF (archived IS NULL, NOW(), archived), user_id = NULL '
+                'WHERE user_id = %s AND corpus_name = %s AND id = %s',
+                (user_id, corpname, subc_id)
+            )
+            await cursor.connection.commit()
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)

@@ -37,7 +37,8 @@ export class Actions {
     };
 
     static ArchiveSubcorpus:Action<{
-        rowIdx:number;
+        corpname: string;
+        subcname: string;
     }> = {
         name: 'SUBCORP_LIST_DELETE_SUBCORPUS'
     };
