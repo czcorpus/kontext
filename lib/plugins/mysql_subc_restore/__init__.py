@@ -41,12 +41,12 @@ try:
             del md.preprocessors['html_block']
             del md.inlinePatterns['html']
 
-    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()])
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()]) if s else ''
 
 except ImportError:
     import html
 
-    def k_markdown(s): return html.escape(s)
+    def k_markdown(s): return html.escape(s) if s else ''
 
 
 def _subc_from_row(row: Dict) -> SubcorpusRecord:
