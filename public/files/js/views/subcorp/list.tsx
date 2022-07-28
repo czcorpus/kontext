@@ -82,7 +82,7 @@ export function init(
     // ------------------------ <ArchiveButton /> -----------------------------
 
     const ArchiveButton:React.FC<{
-        rowIdx:number;
+        corpname:string;
         subcname:string;
 
     }> = (props) => {
@@ -91,7 +91,8 @@ export function init(
             dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
                 name: Actions.ArchiveSubcorpus.name,
                 payload: {
-                    rowIdx: props.rowIdx
+                    corpname: props.corpname,
+                    subcname: props.subcname,
                 }
             });
         };
@@ -146,7 +147,7 @@ export function init(
                 </td>
                 <td>
                     {!props.item.archived ?
-                        <ArchiveButton rowIdx={props.idx} subcname={props.item.id} /> :
+                        <ArchiveButton corpname={props.item.corpus_name} subcname={props.item.id} /> :
                         null
                     }
                 </td>

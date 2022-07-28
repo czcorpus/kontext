@@ -25,12 +25,13 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 from dataclasses import dataclass
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
-from corplib.subcorpus import SubcorpusRecord
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.argmapping.action import IntOpt, StrOpt
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
+from corplib.subcorpus import SubcorpusRecord
 
 
 class SubcArchiveException(Exception):
@@ -108,4 +109,10 @@ class AbstractSubcArchive(abc.ABC):
         returns:
         SubcorpusRecord dataclass
         If nothing is found then None is returned.
+        """
+
+    @abc.abstractmethod
+    async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
+        """
+        Makes sure subcorpus can not be used, restored and found anymore
         """
