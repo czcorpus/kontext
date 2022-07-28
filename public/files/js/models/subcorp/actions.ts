@@ -99,7 +99,6 @@ export class Actions {
 
     static ReuseQuery:Action<{
         newName:string;
-        newCql:string;
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY'
     };

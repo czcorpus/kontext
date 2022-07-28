@@ -220,7 +220,10 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
-            Actions.WipeSubcorpusDone,
+            [
+                Actions.WipeSubcorpusDone,
+                Actions.RestoreSubcorpusDone,
+            ],
             action => {
                 this.reloadItems().subscribe({
                     next: data => {
@@ -252,7 +255,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
     private archiveSubcorpus(corpname:string, subcname:string):Observable<SubcorpList> {
         return this.layoutModel.ajax$<Kontext.AjaxResponse>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/delete'),
+            this.layoutModel.createActionUrl('subcorpus/archive'),
             {
                 corpname: corpname,
                 usesubcorp: subcname
