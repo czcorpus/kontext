@@ -46,7 +46,6 @@ export function init(
     const ttViews = ttInit(dispatcher, he, textTypesModel);
     const WithinForm = withinViewInit(dispatcher, he, subcorpWithinFormModel);
 
-
     // ------------------------ <TabContentWrapper /> --------------------------
 
     const TabContentWrapper:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => (

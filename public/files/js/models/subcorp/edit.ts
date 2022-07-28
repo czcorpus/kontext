@@ -24,7 +24,7 @@ import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
-import { CreateSubcorpus, SubcorpusRecord } from './common';
+import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
 
 
@@ -163,12 +163,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.createSubcorpus(
-                    state,
-                    false,
-                    action.payload.newName,
-
-                ).subscribe({
+                this.createSubcorpus(state, action.payload.newName).subscribe({
                     next: data => {
                         dispatch(Actions.ReuseQueryDone);
                     },
@@ -281,19 +276,44 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
     private createSubcorpus(
         state:SubcorpusEditModelState,
-        removeOrig:boolean,
-        newName?:string,
+        newName:string,
     ):Observable<any> {
+        let args: CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs;
+        if (isTTSelection(state.data.selections)) {
+            args = {
+                corpname: state.data.corpname,
+                subcname: newName,
+                description: '',
+                aligned_corpora: [], // TODO
+                text_types: state.data.selections,
+                form_type: 'tt-sel'
+            } as CreateSubcorpusArgs;
+
+        } else if (isServerWithinSelection(state.data.selections)) {
+            args = {
+                corpname: state.data.corpname,
+                subcname: newName,
+                description: '',
+                aligned_corpora: [], // TODO
+                within: state.data.selections,
+                form_type: 'within'
+            } as CreateSubcorpusWithinArgs;
+
+        } else if (isCQLSelection(state.data.selections)) {
+            args = {
+                corpname: state.data.corpname,
+                subcname: newName,
+                description: '',
+                aligned_corpora: [], // TODO
+                cql: state.data.selections,
+                form_type: 'cql'
+            } as CreateSubcorpusRawCQLArgs;
+        }
 
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
-            {
-                corpname: state.data.corpname,
-                subcname: newName !== undefined ? newName : state.data.name,
-                publish: false,
-                //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
-            }
+            args,
 
         ).pipe(
             tap((data) => {
