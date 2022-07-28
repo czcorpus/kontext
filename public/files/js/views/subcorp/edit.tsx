@@ -65,7 +65,7 @@ export function init(
     const FormActionReuseCQL:React.FC<{data: SubcorpusRecord}> = (props) => {
 
         let [state, setState] = React.useState({
-            newName: props.data.origSubcName + ' (copy)',
+            newName: props.data.name + ' (copy)',
             newCql: props.data.selections as string,
         });
 
@@ -116,7 +116,7 @@ export function init(
         corpname: string;
         subcname: string;
         name: string;
-        deleted: number;
+        archived: number;
     }> = (props) => {
 
         const handleReuse = () => {
@@ -155,8 +155,8 @@ export function init(
 
         return (
             <TabContentWrapper>
-                {props.deleted ?
-                    <p>{he.translate('subclist__archived')}: {he.formatDate(new Date(props.deleted * 1000), 1)}</p> :
+                {props.archived ?
+                    <p>{he.translate('subclist__archived')}: {he.formatDate(new Date(props.archived * 1000), 1)}</p> :
                     null
                 }
                 <S.RestoreTabContentWrapper>
@@ -164,7 +164,7 @@ export function init(
                             onClick={handleReuse}>
                         {he.translate('subclist__action_reuse')}
                     </button>
-                    {props.deleted ?
+                    {props.archived ?
                         <button type="button" className="default-button"
                                 onClick={handleRestore}>
                             {he.translate('global__restore')}
@@ -263,7 +263,7 @@ export function init(
                     <layoutViews.AjaxLoaderImage /> :
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
-                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} name={props.data.origSubcName} deleted={props.data.deleted} />
+                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} name={props.data.name} archived={props.data.archived} />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 descriptionRaw={props.data.descriptionRaw}

@@ -159,7 +159,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.RestoreSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                state.data.deleted = undefined;
+                state.data.archived = undefined;
             }
         );
 
@@ -302,7 +302,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
             {
                 corpname: state.data.corpname,
-                subcname: newName !== undefined ? newName : state.data.origSubcName,
+                subcname: newName !== undefined ? newName : state.data.name,
                 publish: false,
                 //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
             }
@@ -357,10 +357,10 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         data: {
                             corpname: data.data.corpus_name,
                             usesubcorp: data.data.id,
-                            origSubcName: data.data.name,
+                            name: data.data.name,
                             created: data.data.created,
+                            archived: data.data.archived,
                             published: data.data.published,
-                            deleted: data.data.archived,
                             selections: data.data.text_types||data.data.within_cond||data.data.cql,
                             size: data.data.size,
                             description: data.data.public_description,
