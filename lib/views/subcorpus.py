@@ -44,17 +44,15 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 
 @bp.route('/properties')
 @http_action(
-    access_level=1, return_type='json', page_model='subcorpList', action_model=CorpusActionModel)
-async def properties(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
-    # we have to send subcorp id in `_usesubcorp` instead `usesubcorp`
-    # archived subcorpus would have a problem initializing Corpus instance -> no subcorpus data
-    subc_id = req.args['_usesubcorp']
+    access_level=1, return_type='json', action_model=CorpusActionModel)
+async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
+    corp_ident = amodel.corp.portable_ident
     struct_and_attrs = await amodel.get_structs_and_attrs()
     with plugins.runtime.SUBC_RESTORE as sr:
-        info = await sr.get_info(subc_id)
+        info = await sr.get_info(corp_ident.id)
     live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
-        live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [amodel.corp.corpname])
+        live_attrs_enabled = info.text_types is not None and await la.is_enabled_for(amodel.plugin_ctx, [corp_ident.corpus_name])
     return {
         'data': info.to_dict(),
         'textTypes': await amodel.tt.export_with_norms(),
@@ -113,7 +111,7 @@ async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, res
     return await amodel.create_subcorpus()
 
 
-@bp.route('/delete', ['POST'])
+@bp.route('/archive', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
@@ -121,10 +119,17 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
         with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
             await sr.archive(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
 
-        try:
-            os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'), corp_ident.data_path))
-        except IOError as e:
-            logging.getLogger(__name__).warning(e)
+    return {}
+
+
+@bp.route('/restore', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
+async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    corp_ident = amodel.corp.portable_ident
+    if isinstance(corp_ident, SubcorpusIdent):
+        with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
+            await sr.restore(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
+
     return {}
 
 
@@ -176,16 +181,21 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     return ans
 
 
-@bp.route('/ajax_wipe_subcorpus', ['POST'])
-@http_action(access_level=1, return_type='json', action_model=UserActionModel)
-async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    corpus_id = req.form.get('corpname')
-    subcorp_name = req.form.get('subcname')
+@bp.route('/delete', ['POST'])
+@http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
+async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    corp_ident = amodel.corp.portable_ident
     with plugins.runtime.SUBC_RESTORE as sr:
-        await sr.delete_query(amodel.session_get('user', 'id'), corpus_id, subcorp_name)
+        await sr.delete_query(amodel.session_get('user', 'id'), corp_ident.corpus_name, corp_ident.id)
+
+    try:
+        os.unlink(os.path.join(settings.get('corpora', 'subcorpora_dir'), corp_ident.data_path))
+    except IOError as e:
+        logging.getLogger(__name__).warning(e)
+
     resp.add_system_message(
         'info',
-        req.translate(f'Subcorpus {subcorp_name} has been deleted permanently.')
+        req.translate(f'Subcorpus {corp_ident.id} has been deleted permanently.')
     )
     return {}
 

@@ -114,9 +114,20 @@ export function init(
 
     const FormActionFile:React.FC<{
         corpname: string;
-        subcname: string
+        subcname: string;
+        name: string;
         deleted: number;
     }> = (props) => {
+
+        const handleReuse = () => {
+            let newName = prompt("New subcorpus name:", `${props.name} (copy)`)
+            if (newName) {
+                dispatcher.dispatch<typeof Actions.ReuseQuery>({
+                    name: Actions.ReuseQuery.name,
+                    payload: {newName}
+                });
+            }
+        };
 
         const handleArchive = () => {
             dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
@@ -145,19 +156,29 @@ export function init(
         return (
             <TabContentWrapper>
                 {props.deleted ?
-                    <button type="button" className="default-button"
-                            onClick={handleRestore}>
-                        {he.translate('global__restore')}
-                    </button> :
-                    <button type="button" className="default-button"
-                            onClick={handleArchive}>
-                        {he.translate('subclist__archive_subcorp')}
-                    </button>
+                    <p>{he.translate('subclist__archived')}: {he.formatDate(new Date(props.deleted * 1000), 1)}</p> :
+                    null
                 }
-                <button type="button" className="default-button"
-                        onClick={handleWipe}>
-                    {he.translate('subclist__action_wipe')}
-                </button>
+                <S.RestoreTabContentWrapper>
+                    <button type="button" className="default-button"
+                            onClick={handleReuse}>
+                        {he.translate('subclist__action_reuse')}
+                    </button>
+                    {props.deleted ?
+                        <button type="button" className="default-button"
+                                onClick={handleRestore}>
+                            {he.translate('global__restore')}
+                        </button> :
+                        <button type="button" className="default-button"
+                                onClick={handleArchive}>
+                            {he.translate('subclist__archive_subcorp')}
+                        </button>
+                    }
+                    <button type="button" className="danger-button"
+                            onClick={handleWipe}>
+                        {he.translate('subclist__action_wipe')}
+                    </button>
+                </S.RestoreTabContentWrapper>
             </TabContentWrapper>
         );
     };
@@ -242,7 +263,7 @@ export function init(
                     <layoutViews.AjaxLoaderImage /> :
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
-                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} deleted={props.data.deleted} />
+                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} name={props.data.origSubcName} deleted={props.data.deleted} />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 descriptionRaw={props.data.descriptionRaw}

@@ -19,7 +19,7 @@
  */
 
 import { Observable, tap, throwError } from 'rxjs';
-import { IActionQueue, StatelessModel } from 'kombo';
+import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
@@ -101,47 +101,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$<SubcorpusPropertiesResponse>(
-                    HTTP.Method.GET,
-                    this.layoutModel.createActionUrl('/subcorpus/properties'),
-                    {
-                        corpname: action.payload?.corpname,
-                        _usesubcorp: action.payload?.subcname,
-                    }
-
-                ).subscribe({
-                    next: (data) => {
-                        dispatch(
-                            Actions.LoadSubcorpusDone,
-                            {
-                                corpname: action.payload?.corpname,
-                                subcname: action.payload?.subcname,
-                                // TODO improve data SubcorpusRecord type
-                                data: {
-                                    corpname: data.data.corpus_name,
-                                    usesubcorp: data.data.id,
-                                    origSubcName: data.data.name,
-                                    created: data.data.created,
-                                    published: data.data.published,
-                                    deleted: data.data.archived,
-                                    selections: data.data.text_types||data.data.within_cond||data.data.cql,
-                                    size: data.data.size,
-                                    description: data.data.public_description,
-                                    descriptionRaw: data.data.public_description_raw
-                                },
-                                textTypes: data.textTypes,
-                                structsAndAttrs: data.structsAndAttrs,
-                                liveAttrsEnabled: data.liveAttrsEnabled,
-                            }
-                        );
-                    },
-                    error: (error) => {
-                        dispatch(
-                            Actions.LoadSubcorpusDone,
-                            error
-                        );
-                    }
-                })
+                this.loadSubcorpData(action.payload?.corpname, action.payload?.subcname, dispatch);
             }
         );
 
@@ -157,6 +117,49 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     state.data = action.payload?.data;
                     state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
                 }
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ArchiveSubcorpus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.loadSubcorpData(state.data.corpname, state.data.usesubcorp, dispatch);
+            }
+        );
+
+        this.addActionHandler(
+            Actions.RestoreSubcorpus,
+            (state, action) => {
+                state.isBusy = true;
+            },
+            (state, action, dispatch) => {
+                this.layoutModel.ajax$<any>(
+                    HTTP.Method.POST,
+                    this.layoutModel.createActionUrl('/subcorpus/restore'),
+                    {
+                        corpname: state.data.corpname,
+                        usesubcorp: state.data.usesubcorp,
+                    }
+                ).subscribe({
+                    next: data => {
+                        dispatch(Actions.RestoreSubcorpusDone);
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
+                    },
+                    error: error => {
+                        this.layoutModel.showMessage('error', error);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.RestoreSubcorpusDone,
+            (state, action) => {
+                state.isBusy = false;
+                state.data.deleted = undefined;
             }
         );
 
@@ -190,44 +193,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         )
 
         this.addActionHandler(
-            Actions.RestoreSubcorpus,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                this.createSubcorpus(
-                    state,
-                    true
-                ).subscribe({
-                    next: data => {
-                        dispatch(
-                            Actions.RestoreSubcorpusDone,
-                        )
-                    },
-                    error: error => {
-                        dispatch(
-                            Actions.RestoreSubcorpusDone,
-                            error
-                        )
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.RestoreSubcorpusDone,
-            (state, action) => {
-                state.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-
-                } else {
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restore_confirm_msg'));
-                }
-            }
-        )
-
-        this.addActionHandler(
             Actions.ReuseQuery,
             (state, action) => {
                 state.isBusy = true;
@@ -237,7 +202,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     state,
                     false,
                     action.payload.newName,
-                    action.payload.newCql
 
                 ).subscribe({
                     next: data => {
@@ -330,8 +294,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     private createSubcorpus(
         state:SubcorpusEditModelState,
         removeOrig:boolean,
-        subcname?:string,
-        cql?:string
+        newName?:string,
     ):Observable<any> {
 
         return this.layoutModel.ajax$<CreateSubcorpus>(
@@ -339,7 +302,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
             {
                 corpname: state.data.corpname,
-                subcname: subcname !== undefined ? subcname : state.data.usesubcorp,
+                subcname: newName !== undefined ? newName : state.data.origSubcName,
                 publish: false,
                 //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
             }
@@ -366,13 +329,55 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     private wipeSubcorpus(state:SubcorpusEditModelState):Observable<any> {
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/ajax_wipe_subcorpus'),
+            this.layoutModel.createActionUrl('subcorpus/delete'),
             {
                 corpname: state.data.corpname,
-                subcname: state.data.usesubcorp
+                usesubcorp: state.data.usesubcorp
             }
         );
     }
 
+    private loadSubcorpData(corpname: string, subcname: string, dispatch: SEDispatcher) {
+        this.layoutModel.ajax$<SubcorpusPropertiesResponse>(
+            HTTP.Method.GET,
+            this.layoutModel.createActionUrl('/subcorpus/properties'),
+            {
+                corpname: corpname,
+                usesubcorp: subcname,
+            }
 
+        ).subscribe({
+            next: (data) => {
+                dispatch(
+                    Actions.LoadSubcorpusDone,
+                    {
+                        corpname: corpname,
+                        subcname: subcname,
+                        // TODO improve data SubcorpusRecord type
+                        data: {
+                            corpname: data.data.corpus_name,
+                            usesubcorp: data.data.id,
+                            origSubcName: data.data.name,
+                            created: data.data.created,
+                            published: data.data.published,
+                            deleted: data.data.archived,
+                            selections: data.data.text_types||data.data.within_cond||data.data.cql,
+                            size: data.data.size,
+                            description: data.data.public_description,
+                            descriptionRaw: data.data.public_description_raw,
+                        },
+                        textTypes: data.textTypes,
+                        structsAndAttrs: data.structsAndAttrs,
+                        liveAttrsEnabled: data.liveAttrsEnabled,
+                    }
+                );
+            },
+            error: (error) => {
+                dispatch(
+                    Actions.LoadSubcorpusDone,
+                    error
+                );
+            }
+        })
+    }
 }

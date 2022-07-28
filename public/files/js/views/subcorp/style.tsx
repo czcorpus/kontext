@@ -319,6 +319,13 @@ export const QuickSubcLABEL = styled.label`
     }
 `
 
+// ---------------- <RestoreTabContentWrapper /> --------------------------------
+
+export const RestoreTabContentWrapper = styled.div`
+    display: flex;
+    justify-content: space-between;
+`;
+
 // ---------------- <TabContentWrapper /> --------------------------------
 
 export const TabContentWrapper = styled.div`

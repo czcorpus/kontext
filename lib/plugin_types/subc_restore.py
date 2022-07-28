@@ -81,6 +81,12 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def restore(self, user_id: int, corpname: str, subc_id: str):
+        """
+        Restore archived subcorpus
+        """
+
+    @abc.abstractmethod
     async def list(
             self, user_id: int, filter_args: SubcListFilterArgs,
             offset: int = 0, limit: Optional[int] = None) -> List[SubcorpusRecord]:
