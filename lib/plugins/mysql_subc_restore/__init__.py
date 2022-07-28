@@ -58,6 +58,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         size=row['size'],
         created=row['created'],
         public_description=k_markdown(row['public_description']),
+        public_description_raw=row['public_description'],
         archived=row['archived'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
@@ -157,13 +158,15 @@ class MySQLSubcArchive(AbstractSubcArchive):
             return None if row is None else _subc_from_row(row)
 
     async def get_names(self, subc_ids):
+        ans = {}
+        if len(subc_ids) == 0:
+            return ans
         async with self._db.cursor() as cursor:
             wc = ', '.join(['%s'] * len(subc_ids))
             await cursor.execute(
                 f"SELECT id, name FROM {self.TABLE_NAME} WHERE id IN ({wc})",
                 tuple(subc_ids)
             )
-            ans = {}
             async for row in cursor:
                 ans[row['id']] = row['name']
             return ans
@@ -190,6 +193,17 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 (user_id, corpname, subc_id)
             )
             await cursor.connection.commit()
+
+    async def update_description(self, user_id: int, subc_id: str, description: str):
+        async with self._db.cursor() as cursor:
+            await cursor.execute(
+                f'UPDATE {self.TABLE_NAME} '
+                'SET public_description = %s '
+                'WHERE user_id = %s AND id = %s',
+                (description, user_id, subc_id)
+            )
+            await cursor.connection.commit()
+            return k_markdown(description)
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)

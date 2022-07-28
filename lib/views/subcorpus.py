@@ -193,8 +193,10 @@ async def ajax_wipe_subcorpus(amodel: UserActionModel, req: KRequest, resp: KRes
 @bp.route('/update_public_desc', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    await amodel.corp.save_subc_description(req.form.get('description'))
-    return {}
+    with plugins.runtime.SUBC_RESTORE as sa:
+        preview = await sa.update_description(
+            amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('description'))
+    return dict(preview=preview)
 
 
 @dataclass

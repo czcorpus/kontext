@@ -109,43 +109,21 @@ export class Actions {
         name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
     };
 
-    static PublishSubcorpus:Action<{
-        description:string;
-    }> = {
-        name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS'
-    };
-
-    static PublishSubcorpusDone:Action<{
-        pubSubcname:string;
-        published:number;
-        description:string;
-    }> = {
-        name: 'SUBCORP_LIST_PUBLISH_SUBCORPUS_DONE'
-    };
-
     static UpdatePublicDescription:Action<{
-        description:string;
+        value:string;
     }> = {
         name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION'
     };
 
     static SubmitPublicDescription:Action<{
-        rowIdx:number;
     }> = {
         name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT'
     };
 
     static SubmitPublicDescriptionDone:Action<{
-        rowIdx:number;
+        preview:string;
     }> = {
         name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT_DONE'
-    };
-
-    static PublishItem:Action<{
-        corpname:string;
-        subcname:string;
-    }> = {
-        name: 'SUBCORP_LIST_PUBLISH_ITEM'
     };
 
     static FormSetSubcName:Action<{

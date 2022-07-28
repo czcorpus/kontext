@@ -121,9 +121,6 @@ class EmptyCorpus(AbstractKCorpus):
     def subcorpus_id(self):
         return None
 
-    async def save_subc_description(self, desc: str):
-        pass
-
     def compile_arf(self, attr):
         pass
 

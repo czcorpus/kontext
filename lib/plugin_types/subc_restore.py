@@ -116,3 +116,10 @@ class AbstractSubcArchive(abc.ABC):
         """
         Makes sure subcorpus can not be used, restored and found anymore
         """
+
+    @abc.abstractmethod
+    async def update_description(self, user_id: int, subc_id: str, description: str) -> str:
+        """
+        Update public description and return decode version (Markdown -> HTML) for preview
+        """
+        pass

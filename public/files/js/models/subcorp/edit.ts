@@ -26,6 +26,7 @@ import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus, SubcorpusRecord } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
+import { ResponsiveWrapper } from '../../types/coreViews';
 
 
 
@@ -126,6 +127,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     selections: data.data.text_types||data.data.within_cond||data.data.cql,
                                     size: data.data.size,
                                     description: data.data.public_description,
+                                    descriptionRaw: data.data.public_description_raw
                                 },
                                 textTypes: data.textTypes,
                                 structsAndAttrs: data.structsAndAttrs,
@@ -262,53 +264,18 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
 
         this.addActionHandler(
-            Actions.PublishSubcorpus,
-            (state, action) => {
-                state.isBusy = true;
-            },
-            (state, action, dispatch) => {
-                this.publishSubcorpus(
-                    state,
-                    action.payload.description
-
-                ).subscribe({
-                    next: _ => {
-                        dispatch(Actions.PublishSubcorpusDone);
-                    },
-                    error: error => {
-                        dispatch(Actions.PublishSubcorpusDone, error);
-                    }
-                });
-            }
-        );
-
-        this.addActionHandler(
-            Actions.PublishSubcorpusDone,
-            (state, action) => {
-                state.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('error', action.error);
-
-                } else {
-                    state.data.published = action.payload.published;
-                    state.data.description = action.payload.description;
-                    state.data.origSubcName = state.data.usesubcorp;
-                    state.data.usesubcorp = action.payload.pubSubcname;
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_published'));
-                }
-            }
-        )
-
-        this.addActionHandler(
             Actions.SubmitPublicDescription,
             (state, action) => {
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
                 this.updateSubcorpusDescSubmit(state).subscribe({
-                    next: _ => {
+                    next: resp => {
                         dispatch(
-                            Actions.SubmitPublicDescriptionDone
+                            Actions.SubmitPublicDescriptionDone,
+                            {
+                                preview: resp.preview
+                            }
                         );
 
                     },
@@ -325,11 +292,17 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         this.addActionHandler(
             Actions.SubmitPublicDescriptionDone,
             (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.data.description = action.payload.preview;
+                }
+            },
+            (state, action, dispatch) => {
                 if (action.error) {
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
+                    this.layoutModel.showMessage('error', action.error);
 
                 } else {
-                    this.layoutModel.showMessage('error', action.error);
+                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
                 }
             }
         )
@@ -337,34 +310,19 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         this.addActionHandler(
             Actions.UpdatePublicDescription,
             (state, action) => {
-                state.data.description = action.payload.description;
+                state.data.descriptionRaw = action.payload.value;
             }
         );
     }
 
-    private updateSubcorpusDescSubmit(state:SubcorpusEditModelState):Observable<any> {
+    private updateSubcorpusDescSubmit(state:SubcorpusEditModelState):Observable<{preview:string}> {
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
             {
                 corpname: state.data.corpname,
                 usesubcorp: state.data.usesubcorp,
-                description: state.data.description
-            }
-        );
-    }
-
-    private publishSubcorpus(state:SubcorpusEditModelState, description:string):Observable<any> {
-        if (state.data.deleted) {
-            return throwError(() => new Error('Cannot publish deleted subcorpus'));
-        }
-        return this.layoutModel.ajax$(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/publish_subcorpus'),
-            {
-                corpname: state.data.corpname,
-                subcname: state.data.usesubcorp,
-                description
+                description: state.data.descriptionRaw
             }
         );
     }
