@@ -176,7 +176,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     next: data => {
                         dispatch(Actions.WipeSubcorpusDone);
                         dispatch(Actions.HideSubcEditWindow);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_wipe_confirm_msg'));
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
                     },
                     error: error => {
                         this.layoutModel.showMessage('error', error);

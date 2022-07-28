@@ -146,7 +146,7 @@ export function init(
         };
 
         const handleWipe = () => {
-            if (window.confirm(he.translate('subclist__info_subc_will_be_wiped'))) {
+            if (window.confirm(he.translate('subclist__subc_delete_confirm_msg'))) {
                 dispatcher.dispatch<typeof Actions.WipeSubcorpus>({
                     name: Actions.WipeSubcorpus.name,
                 });
