@@ -124,8 +124,11 @@ class EmptyCorpus(AbstractKCorpus):
     async def save_subc_description(self, desc: str):
         pass
 
-    def freq_precalc_file(self, attrname: str):
-        return None
+    def compile_arf(self, attr):
+        pass
+
+    def freq_precalc_file(self, attrname: str, ftype: str):
+        pass
 
     @property
     def corp_mtime(self) -> Awaitable[float]:

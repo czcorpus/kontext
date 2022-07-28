@@ -224,7 +224,11 @@ class AbstractKCorpus(ABC):
         pass
 
     @abstractmethod
-    def freq_precalc_file(self, attrname: str):
+    def compile_arf(self, attr):
+        pass
+
+    @abstractmethod
+    def freq_precalc_file(self, attrname: str, ftype: str):
         pass
 
     @property

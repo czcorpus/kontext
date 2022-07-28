@@ -108,18 +108,18 @@ async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collat
 
 
 @as_sync
-async def compile_frq(user_id, corpus_ident, attr, logfile):
-    return await general.compile_frq(user_id, corpus_ident, attr, logfile)
+async def compile_frq(corpus_ident, attr, logfile):
+    return await general.compile_frq(corpus_ident, attr, logfile)
 
 
 @as_sync
-async def compile_arf(user_id, corpus_ident, attr, logfile):
-    return await general.compile_arf(user_id, corpus_ident, attr, logfile)
+async def compile_arf(corpus_ident, attr, logfile):
+    return await general.compile_arf(corpus_ident, attr, logfile)
 
 
 @as_sync
-async def compile_docf(user_id, corpus_ident, attr, logfile):
-    return await general.compile_docf(user_id, corpus_ident, attr, logfile)
+async def compile_docf(corpus_ident, attr, logfile):
+    return await general.compile_docf(corpus_ident, attr, logfile)
 
 # ----------------------------- WORD LIST -------------------------------------
 

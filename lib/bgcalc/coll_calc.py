@@ -28,6 +28,7 @@ import settings
 from bgcalc.errors import UnfinishedConcordanceError
 from conclib.calc import require_existing_conc
 from corplib.errors import MissingSubCorpFreqFile
+from corplib.abstract import SubcorpusIdent
 
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
@@ -51,8 +52,8 @@ class CollCalcArgs:
     ctow: int
     cminbgr: int
     cminfreq: int
-    subcname: Optional[str]
-    subcpath: List[str] = field(default_factory=list)
+    subcorpus_id: Optional[str]
+    subcorpora_dir: Optional[str]
     cache_path: Optional[str] = field(default=None)
     samplesize: int = field(default=0)
 
@@ -97,8 +98,10 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
     (MissingSubCorpFreqFile exception), the function triggers
     a respective calculation.
     """
-    cm = corplib.CorpusFactory(subc_root=coll_args.subcpath)
-    corp = await cm.get_corpus(coll_args.corpname, subcname=coll_args.subcname)
+    cm = corplib.CorpusFactory(subc_root=coll_args.subcorpora_dir)
+    corp = await cm.get_corpus(
+        SubcorpusIdent(id=coll_args.subcorpus_id, corpus_name=coll_args.corpname) if coll_args.subcorpus_id
+        else coll_args.corpname)
     try:
         # try to fetch precalculated data; if none then MissingSubCorpFreqFile
         await corplib.frq_db(corp, coll_args.cattr)
@@ -106,16 +109,17 @@ async def calculate_colls_bg(coll_args: CollCalcArgs):
         if not conc.finished():
             raise UnfinishedConcordanceError(
                 'Cannot calculate yet - source concordance not finished. Please try again later.')
-        collocs = conc.collocs(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
-                               cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
-                               cminbgr=coll_args.cminbgr, max_lines=conc.size())
+        collocs = conc.collocs(
+            cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
+            cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminfreq=coll_args.cminfreq,
+            cminbgr=coll_args.cminbgr, max_lines=conc.size())
         for item in collocs['Items']:
             item['pfilter'] = {'q2': item['pfilter']}
             item['nfilter'] = {'q2': item['nfilter']}
         return dict(data=collocs, processing=0, tasks=[])
-    except MissingSubCorpFreqFile:
+    except MissingSubCorpFreqFile as ex:
         ans = {'attrname': coll_args.cattr, 'tasks': []}
-        out = bgcalc.freqs.build_arf_db(coll_args.user_id, corp, coll_args.cattr)
+        out = await bgcalc.freqs.build_arf_db(coll_args.user_id, corp, coll_args.cattr)
         if type(out) is list:
             processing = 1
             ans['tasks'].extend(out)
@@ -146,11 +150,13 @@ async def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
     """
     collstart = (coll_args.collpage - 1) * coll_args.citemsperpage
     collend = collstart + coll_args.citemsperpage
-    cache = CollCalcCache(corpname=coll_args.corpname, subcname=coll_args.subcname, subcpath=coll_args.subcpath,
-                          user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
-    collocs, cache_path = await cache.get(cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
-                                          cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
-                                          cminfreq=coll_args.cminfreq)
+    cache = CollCalcCache(
+        corpname=coll_args.corpname, subcname=coll_args.subcorpus_id, subcpath=coll_args.subcorpora_dir,
+        user_id=coll_args.user_id, q=coll_args.q, samplesize=coll_args.samplesize)
+    collocs, cache_path = await cache.get(
+        cattr=coll_args.cattr, csortfn=coll_args.csortfn, cbgrfns=coll_args.cbgrfns,
+        cfromw=coll_args.cfromw, ctow=coll_args.ctow, cminbgr=coll_args.cminbgr,
+        cminfreq=coll_args.cminfreq)
     if collocs is None:
         coll_args.cache_path = cache_path
         worker = bgcalc.calc_backend_client(settings)
@@ -160,6 +166,8 @@ async def calculate_colls(coll_args: CollCalcArgs) -> CalculateCollsResult:
         ans = res.get()
     else:
         ans = dict(data=collocs, processing=0)
+    if isinstance(ans, Exception):
+        raise ans
     return CalculateCollsResult(
         Head=ans['data']['Head'],
         attrname=coll_args.cattr,

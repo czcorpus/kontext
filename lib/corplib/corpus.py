@@ -16,13 +16,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
 import os
-from typing import Any, Awaitable, Dict, List, Optional, Tuple, Union
+from typing import Any, Awaitable, List, Union
 
 import aiofiles
 import aiofiles.os
-import ujson as json
 from corplib.abstract import AbstractKCorpus
 from corplib.subcorpus import SubcorpusIdent
 from manatee import Corpus
@@ -148,8 +146,8 @@ class KCorpus(AbstractKCorpus):
     def subcorpus_name(self):
         return None
 
-    def freq_precalc_file(self, attrname: str) -> str:
-        return self._corp.get_conf('PATH') + attrname
+    def freq_precalc_file(self, attrname: str, ftype: str) -> str:
+        return self._corp.get_conf('PATH') + attrname + '.' + ftype
 
     @property
     def corp_mtime(self) -> Awaitable[float]:

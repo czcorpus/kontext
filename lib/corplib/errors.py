@@ -21,5 +21,13 @@ class MissingSubCorpFreqFile(Exception):
     pass
 
 
+class VirtualSubcFreqFileError(Exception):
+    pass
+
+
+class InvalidSubCorpFreqFileType(Exception):
+    pass
+
+
 class CorpusInstantiationError(Exception):
     pass

@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Union, Callable
 from dataclasses_json import config, dataclass_json
 from manatee import Corpus, SubCorpus, Concordance, create_subcorpus as m_create_subcorpus
 import aiofiles
-from ..errors import CorpusInstantiationError
+from ..errors import CorpusInstantiationError, InvalidSubCorpFreqFileType
 from ..abstract import SubcorpusIdent
 from ..corpus import KCorpus
 
@@ -113,10 +113,11 @@ class KSubcorpus(KCorpus):
     orig_description.
     """
 
-    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent):
+    def __init__(self, corp: SubCorpus, data_record: SubcorpusIdent, subcorp_root_dir: str):
         super().__init__(corp, data_record.corpus_name)
         self._corpname = data_record.corpus_name
         self._data_record = data_record
+        self._subcorp_root_dir = subcorp_root_dir
 
     def __str__(self):
         return f'KSubcorpus(corpname={self.corpname}, subcorpus_id={self.subcorpus_id}, subcorpus_name={self.subcorpus_name})'
@@ -130,7 +131,7 @@ class KSubcorpus(KCorpus):
         if not await aiofiles.os.path.isfile(full_data_path):
             raise CorpusInstantiationError(f'Subcorpus data not found for "{data_record.id}"')
         subc = SubCorpus(corp, full_data_path)
-        kcorp = KSubcorpus(subc, data_record)
+        kcorp = KSubcorpus(subc, data_record, subcorp_root_dir)
         kcorp._corp = subc
         return kcorp
 
@@ -176,8 +177,13 @@ class KSubcorpus(KCorpus):
             return None
         return self._data_record.public_description
 
-    def freq_precalc_file(self, attrname: str) -> str:
-        return self._data_record.data_path[:-4] + attrname
+    def freq_precalc_file(self, attrname: str, ftype: str) -> str:
+        if ftype not in ('frq', 'docf', 'arf'):
+            raise InvalidSubCorpFreqFileType(f'invalid subcorpus freq type file specification: {ftype}')
+        return os.path.join(self._subcorp_root_dir, self._data_record.data_dir, f'data.{attrname}.{ftype}')
+
+    def compile_arf(self, attr):
+        return self._corp.compile_arf(attr)
 
 
 async def create_subcorpus(

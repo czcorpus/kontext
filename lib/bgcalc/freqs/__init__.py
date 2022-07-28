@@ -19,7 +19,7 @@ import re
 import time
 from dataclasses import asdict
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Iterable
 
 import aiofiles
 import aiofiles.os
@@ -34,7 +34,7 @@ from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
 from bgcalc.task import AsyncTaskStatus
 from conclib.calc import require_existing_conc
 from conclib.pyconc import PyConc
-from corplib.corpus import KCorpus
+from corplib.corpus import KCorpus, AbstractKCorpus
 from corplib.abstract import SubcorpusIdent
 
 from ..errors import CalcArgsAssertionError
@@ -44,57 +44,27 @@ MAX_LOG_FILE_AGE = 1800  # in seconds
 TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
 
-async def corp_freqs_cache_path(corp: KCorpus, attrname):
+def corp_freqs_cache_paths(corp: AbstractKCorpus, attrname) -> Dict[str, str]:
     """
-    Generates an absolute path to an 'attribute' directory/file. The path
-    consists of two parts: 1) absolute path to corpus indexed data
-    2) filename given by the 'attrname' argument. It is also dependent
-    on whether you pass a subcorpus (files are created in user's assigned directory)
-    or a regular corpus (files are created in the 'cache' directory).
+    Generates an absolute paths of auxiliary freq. files for
+    corpus/subcorpus.
 
     arguments:
     corp -- a corpus instance
     attrname -- name of an attribute
 
     returns:
-    a path encoded as an 8-bit string (i.e. unicode paths are encoded)
+    mappings between freq type and path (e.g. {'arf': '/path/to/arf.freq.file', ...})
     """
-    if corp.spath:
-        path_ne, _ = os.path.splitext(corp.spath)
-        ans = path_ne + '.' + attrname
-    else:
-        cache_dir = os.path.abspath(settings.get('corpora', 'freqs_precalc_dir'))
-        subdirs = (corp.corpname,)
-        for d in subdirs:
-            cache_dir = os.path.join(cache_dir, d)
-            if not await aiofiles.os.path.exists(cache_dir):
-                await aiofiles.os.makedirs(cache_dir)
-        ans = os.path.join(cache_dir, attrname)
-    return ans
+    return {
+        'arf': corp.freq_precalc_file(attrname, 'arf'),
+        'frq': corp.freq_precalc_file(attrname, 'frq'),
+        'docf': corp.freq_precalc_file(attrname, 'docf')
+    }
 
 
-# TODO not used anywhere
-async def prepare_arf_calc_paths(corp: KCorpus, attrname, logstep=0.02):
-    """
-    Calculates frequencies, ARFs and document frequencies for a specified corpus. Because this
-    is quite computationally demanding the function is typically called in background by KonText.
-
-    arguments:
-    corp -- a corpus instance
-    attrname -- name of a positional or structure's attribute
-    logstep -- specifies how often (as a ratio of calculated data) should the logfile be updated
-    """
-    outfilename = corp.freq_precalc_file(attrname)
-    if await aiofiles.os.path.isfile(outfilename + '.arf') and await aiofiles.os.path.isfile(outfilename + '.docf'):
-        return None
-    elif corp.subcorpus_id:
-        return corp.spath
-    else:
-        return None
-
-
-def create_log_path(base_path, calc_type):
-    return f'{base_path}.{calc_type}.build'
+def create_log_path(base_path):
+    return f'{base_path}.build'
 
 
 async def get_log_last_line(path):
@@ -105,18 +75,18 @@ async def get_log_last_line(path):
         return None
 
 
-async def _clear_old_calc_status(base_path):
-    for m in ('frq', 'arf', 'docf'):
-        log_file = create_log_path(base_path, m)
+async def _clear_old_calc_status(base_paths: Iterable[str]):
+    for m in base_paths:
+        log_file = create_log_path(m)
         if await aiofiles.os.path.isfile(log_file) and await aiofiles.os.path.getmtime(log_file) > 3600:
-            aiofiles.os.unlink(log_file)
+            os.unlink(log_file)
 
 
-async def _get_total_calc_status(base_path):
+async def _get_total_calc_status(base_paths: Iterable[str]):
     items = []
-    for m in ('frq', 'arf', 'docf'):
+    for m in base_paths:
         try:
-            log_file = create_log_path(base_path, m)
+            log_file = create_log_path(m)
             last_line = await get_log_last_line(log_file)
             p = int(re.split(r'\s+', last_line)[0])
         except Exception as ex:
@@ -126,14 +96,13 @@ async def _get_total_calc_status(base_path):
     return sum(items) / 3.
 
 
-async def calc_is_running(base_path, calc_type=None):
-    to_check = (calc_type,) if calc_type else ('frq', 'arf', 'docf')
+async def calc_is_running(base_paths: Iterable[str]):
 
     async def is_fresh(fx):
         return time.mktime(datetime.now().timetuple()) - await aiofiles.os.path.getmtime(fx) <= MAX_LOG_FILE_AGE
 
-    for m in to_check:
-        log_path = create_log_path(base_path, m)
+    for m in base_paths:
+        log_path = create_log_path(m)
         if await aiofiles.os.path.isfile(log_path) and await is_fresh(log_path):
             return True
     return False
@@ -154,23 +123,22 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
     TODO: we should always return a list of async tasks - i.e. even in case the calculation
           is already running (possibly triggered by someone else).
     """
-    base_path = await corp_freqs_cache_path(corp, attrname)
-    await _clear_old_calc_status(base_path)
-    if await calc_is_running(base_path):
-        curr_status = await _get_total_calc_status(base_path)
+    base_paths = corp_freqs_cache_paths(corp, attrname)
+    await _clear_old_calc_status(base_paths.values())
+    if await calc_is_running(base_paths.values()):
+        curr_status = await _get_total_calc_status(base_paths)
         if curr_status < 100:
             return curr_status
 
     worker = bgcalc.calc_backend_client(settings)
     tasks = []
-    for m in ('frq', 'arf', 'docf'):
-        logfilename_m = create_log_path(base_path, m)
+    for ftype, freq_path in base_paths.items():
+        logfilename_m = create_log_path(freq_path)
         await write_log_header(corp, logfilename_m)
         res = await worker.send_task(
-            f'compile_{m}', object.__class__,
-            (user_id, corp.corpname, corp.subcorpus_id, attrname, logfilename_m),
+            f'compile_{ftype}', object.__class__,
+            (corp.portable_ident, attrname, logfilename_m),
             time_limit=TASK_TIME_LIMIT)
-        logging.getLogger(__name__).warning('sending {}, res_id: {}'.format(m, res.id))
         async_task = AsyncTaskStatus(
             status=res.status, ident=res.id,
             category=AsyncTaskStatus.CATEGORY_FREQ_PRECALC,
@@ -180,7 +148,7 @@ async def build_arf_db(user_id: int, corp: KCorpus, attrname: str) -> Union[floa
 
 
 async def build_arf_db_status(corp, attrname):
-    return await _get_total_calc_status(await corp_freqs_cache_path(corp, attrname))
+    return await _get_total_calc_status(corp_freqs_cache_paths(corp, attrname).values())
 
 
 def calculate_freqs_bg_sync(args: FreqCalcArgs, conc: PyConc) -> FreqCalcResult:
