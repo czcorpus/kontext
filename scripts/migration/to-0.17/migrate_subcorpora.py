@@ -30,15 +30,25 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../
 
 import argparse
 import datetime
-import re
 
 import plugins
 import settings
 from action.plugin import initializer
 from corplib.abstract import create_new_subc_ident
+from pymysql.err import IntegrityError
 
 
-async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_user_id: int) -> Tuple[int, int]:
+async def user_exists(user_id: int, users_table: str) -> bool:
+    with plugins.runtime.INTEGRATION_DB as mysql_db:
+        async with mysql_db.cursor() as cursor:
+            await cursor.execute(f'SELECT COUNT(*) AS cnt FROM {users_table} WHERE id = %s', (user_id,))
+            row = await cursor.fetchone()
+            return row['cnt'] == 1
+
+
+async def migrate_subcorpora(
+        users_subcpath: str, subcorpora_dir: str, default_user_id: int, is_ucnk: bool) -> Tuple[int, int]:
+    user_table = 'user' if is_ucnk else 'kontext_user'
     total_count, published_count = 0, 0
     published_hashes = []
     with plugins.runtime.INTEGRATION_DB as mysql_db:
@@ -64,6 +74,9 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_u
                         if os.path.islink(pubfile_path):
                             link = os.path.join(corp_path, os.path.relpath(
                                 os.readlink(pubfile_path)))
+                            if not os.path.exists(link):
+                                print(f'linked file {link} does not exist - skipping')
+                                continue
                             published = datetime.datetime.fromtimestamp(os.path.getctime(link))
                             p_hash = os.path.basename(link).split('.')[0]
                             metainfo_path = link.replace('.subc', '.name')
@@ -82,11 +95,25 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_u
                             published_count += 1
                             published_hashes.append(p_hash)
 
-                        await cursor.execute(
-                            'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                            (subc_id.id, subcname, int(user_id), int(author_id), corpname,
-                             0, None, None, None, created, None, published, public_description)
-                        )
+                        try:
+                            await cursor.execute(
+                                'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
+                                'within_cond, text_types, created, archived, published, public_description) '
+                                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                                (subc_id.id, subcname, int(user_id), int(author_id), corpname,
+                                 0, None, None, None, created, None, published, public_description)
+                            )
+                        except IntegrityError:
+                            print(f'failed to insert subcorpus {subcname} for user {user_id}')
+                            if not await user_exists(int(user_id), user_table):
+                                print(f'no such user ... going to insert using a backup user ID {default_user_id}')
+                                await cursor.execute(
+                                    'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
+                                    'within_cond, text_types, created, archived, published, public_description) '
+                                    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                                    (subc_id.id, subcname, int(default_user_id), int(default_user_id), corpname,
+                                     0, None, None, None, created, None, published, public_description)
+                                )
 
                         new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
                         os.makedirs(new_path, exist_ok=True)
@@ -106,7 +133,11 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_u
                             line = f.readline()
                             if not line:
                                 continue
-                            metadata = json.loads(line)
+                            try:
+                                metadata = json.loads(line)
+                            except:
+                                print('failed to decode JSON subc. metadata - will use default values')
+                                metadata = {'author_id': default_user_id, 'author_name': 'unknown'}
                             f.readline()
                             public_description = f.read()
 
@@ -122,11 +153,16 @@ async def migrate_subcorpora(users_subcpath: str, subcorpora_dir: str, default_u
                         if author_id is None:
                             author_id = default_user_id
 
-                        await cursor.execute(
-                            'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, within_cond, text_types, created, archived, published, public_description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                            (subc_id.id, subcname, int(user_id), int(author_id), corpname,
-                             0, None, None, None, created, None, published, public_description)
-                        )
+                        try:
+                            await cursor.execute(
+                                'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
+                                'within_cond, text_types, created, archived, published, public_description) '
+                                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                                (subc_id.id, subcname, int(user_id), int(author_id), corpname,
+                                 0, None, None, None, created, None, published, public_description)
+                            )
+                        except IntegrityError:
+                            print(f'failed to insert published-only subcorpus {subcname} for user {user_id}')
 
                         new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
                         os.makedirs(new_path, exist_ok=True)
@@ -144,12 +180,18 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Migrate subcorpora')
     parser.add_argument('--config-path', type=str, help='Path to config file', default=conf_path)
-    parser.add_argument('--users-subcpath', type=str,
-                        help='Path to old subcorpora dir', default=None)
-    parser.add_argument('--subcorpora-dir', type=str,
-                        help='Path to new subcorpora dir', default=None)
-    parser.add_argument('--backup-user-id', type=str,
-                        help='ID used for unknown user/author', default='1')
+    parser.add_argument(
+        '--users-subcpath', type=str,
+        help='Path to old subcorpora dir', default=None)
+    parser.add_argument(
+        '--subcorpora-dir', type=str,
+        help='Path to new subcorpora dir', default=None)
+    parser.add_argument(
+        '--backup-user-id', type=str,
+        help='ID used for unknown user/author', default='1')
+    parser.add_argument(
+        '--env-ucnk', action='store_true',
+        help='Set environment to UCNK (likely suitable only for the Institute of the Czech National Corpus)')
     args = parser.parse_args()
 
     settings.load(args.config_path, defaultdict(lambda: None))
@@ -168,10 +210,10 @@ if __name__ == "__main__":
             '`subcorpora_dir` not provided. Please provide it with parameter or config file.')
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         total, published = loop.run_until_complete(
-            migrate_subcorpora(users_subcpath, subcorpora_dir, args.backup_user_id))
+            migrate_subcorpora(users_subcpath, subcorpora_dir, args.backup_user_id, args.env_ucnk))
         print(f'Imported {total} entries, {published} were published')
-    except Exception as ex:
+    except TypeError as ex:
         print(('{0}: {1}'.format(ex.__class__.__name__, ex)))
         sys.exit(1)
