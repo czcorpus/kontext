@@ -39,9 +39,8 @@ from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugins import inject
+from util import int2chash
 
-KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z'))] + [chr(x) for x in range(ord('A'), ord('Z'))] + \
-               ['%d' % i for i in range(10)]
 
 DEFAULT_CONC_ID_LENGTH = 12
 
@@ -69,17 +68,7 @@ def mk_short_id(s, min_length):
     min_length -- minimum length of the output hash
     """
     x = int(hashlib.md5(s).hexdigest(), 16)
-    ans = []
-    while x > 0:
-        p = x % len(KEY_ALPHABET)
-        ans.append(KEY_ALPHABET[p])
-        x = int(x / len(KEY_ALPHABET))
-    ans = ''.join([str(x) for x in ans])
-    max_length = len(ans)
-    i = min_length
-    while id_exists(ans[:i]) and i < max_length:
-        i += 1
-    return ans[:i]
+    return int2chash(x, min_length)
 
 
 def generate_uniq_id():

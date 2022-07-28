@@ -23,10 +23,10 @@ from typing import Any, Dict, Union
 
 import ujson as json
 
-DEFAULT_CONC_ID_LENGTH = 12
+from util import int2chash
 
-KEY_ALPHABET = [chr(x) for x in range(ord('a'), ord('z') + 1)] + [chr(x) for x in range(ord('A'), ord('Z') + 1)] + \
-               ['%d' % i for i in range(10)]
+
+DEFAULT_CONC_ID_LENGTH = 12
 
 
 def _encode_to_az(hex_num: int) -> str:
@@ -38,12 +38,7 @@ def _encode_to_az(hex_num: int) -> str:
     s -- a string to be hashed
     min_length -- minimum length of the output hash
     """
-    ans = []
-    while hex_num > 0 and len(ans) < DEFAULT_CONC_ID_LENGTH:
-        p = hex_num % len(KEY_ALPHABET)
-        ans.append(KEY_ALPHABET[p])
-        hex_num = int(hex_num / len(KEY_ALPHABET))
-    return ''.join([str(x) for x in ans])
+    return int2chash(hex_num, DEFAULT_CONC_ID_LENGTH)
 
 
 def _to_json(data: Dict[str, Any]) -> Union[str, None]:

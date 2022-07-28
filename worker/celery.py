@@ -140,20 +140,20 @@ async def calc_merged_freqs(request_json, raw_queries, subcpath, user_id, collat
 
 @worker.task(name='compile_frq')
 @as_sync
-async def compile_frq(user_id, corp_id, subcorp, attr, logfile):
-    return await general.compile_frq(user_id, corp_id, subcorp, attr, logfile)
+async def compile_frq(corp_id, subcorp, attr, logfile):
+    return await general.compile_frq(corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_arf')
 @as_sync
-async def compile_arf(user_id, corp_id, subcorp: str, attr, logfile):
-    return await general.compile_arf(user_id, corp_id, subcorp, attr, logfile)
+async def compile_arf(corp_id, subcorp: str, attr, logfile):
+    return await general.compile_arf(corp_id, subcorp, attr, logfile)
 
 
 @worker.task(name='compile_docf')
 @as_sync
-async def compile_docf(user_id, corp_id, subcorp: str, attr, logfile):
-    return await general.compile_docf(user_id, corp_id, subcorp, attr, logfile)
+async def compile_docf(corp_id, subcorp: str, attr, logfile):
+    return await general.compile_docf(corp_id, subcorp, attr, logfile)
 
 # ----------------------------- SUBCORPORA ------------------------------------
 

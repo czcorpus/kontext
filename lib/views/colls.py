@@ -85,8 +85,8 @@ async def _collx(amodel: ConcActionModel, user_id: int, collpage: int, citemsper
     calc_args = CollCalcArgs(
         corpus_encoding=amodel.corp.get_conf('ENCODING'),
         corpname=amodel.args.corpname,
-        subcname=getattr(amodel.corp, 'subcname', None),
-        subcpath=amodel.subcpath,
+        subcorpus_id=amodel.corp.subcorpus_id,
+        subcorpora_dir=amodel.subcpath,
         user_id=user_id,
         q=amodel.args.q,
         samplesize=0,  # TODO (check also freqs)

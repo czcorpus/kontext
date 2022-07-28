@@ -71,6 +71,7 @@ from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
 from corplib.corpus import KCorpus
+from corplib.abstract import AbstractKCorpus, SubcorpusIdent
 from corplib.subcorpus import SubcorpusRecord
 
 stderr_redirector = get_stderr_redirector(settings)
@@ -84,7 +85,7 @@ class WorkerTaskException(Exception):
     pass
 
 
-def is_compiled(corp: KCorpus, attr, method):
+def is_compiled(corp: AbstractKCorpus, attr, method):
     """
     Test whether pre-calculated data for particular
     combination corpus+attribute+method (arf, docf, frq)
@@ -197,8 +198,9 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_
     conc_dir = os.path.join(settings.get('corpora', 'conc_dir'), str(user_id))
     task = conclib.calc.ConcSyncCalculation(
         task_id=self.request.id, cache_factory=None,
-        subc_root=settings.get('corpora', 'subcorpora_dir'), corpus_name=corpus_name,
-        subc_name=subc_name, conc_dir=conc_dir)
+        subc_root=settings.get('corpora', 'subcorpora_dir'),
+        corpus_ident=SubcorpusIdent(id=subc_name, corpus_name=corpus_name) if subc_name else corpus_name,
+        conc_dir=conc_dir)
     return await task.run(corp_cache_key, query, samplesize)
 
 
@@ -264,10 +266,11 @@ async def compile_arf(corpus_ident, attr, logfile):
     """
     corp = await _load_corp(corpus_ident)
     num_wait = 20
+    base_paths = freqs.corp_freqs_cache_paths(corp, attr)
+
     if not is_compiled(corp, attr, 'freq'):
-        base_path = await freqs.corp_freqs_cache_path(corp, attr)
-        frq_data_file = f'{base_path}.frq'
-        while num_wait > 0 and await freqs.calc_is_running(base_path, 'frq'):
+        frq_data_file = corp.freq_precalc_file(attr, 'frq')
+        while num_wait > 0 and await freqs.calc_is_running([base_paths['frq']]):
             if await aiofiles.os.path.isfile(frq_data_file):
                 break
             time.sleep(1)

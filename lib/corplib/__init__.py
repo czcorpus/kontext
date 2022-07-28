@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import glob
 import logging
 import os
 from array import array
@@ -36,7 +35,7 @@ from plugin_types.corparch.corpus import (
 
 from .corpus import AbstractKCorpus, KCorpus
 from .subcorpus import KSubcorpus
-from .errors import MissingSubCorpFreqFile, CorpusInstantiationError
+from .errors import MissingSubCorpFreqFile, CorpusInstantiationError, VirtualSubcFreqFileError
 from .fallback import EmptyCorpus
 
 TYPO_CACHE_KEY = 'cached_registry_typos'
@@ -312,35 +311,42 @@ def _print_attr_hierarchy(layer, level=0, label='', hsep='::'):
     return result
 
 
+def _frq_from_file(data, path, id_range):
+    if not os.path.isfile(path):
+        raise IOError(f'frq file does not exist: {path}')
+    data.fromfile(open(path, 'rb'), id_range)
+
+
 async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_range: int = 0) -> array:
     import array
-    filename = (corp.freq_precalc_file(attrname) + '.' + nums)
+    filename = corp.freq_precalc_file(attrname, nums)
     if not id_range:
         id_range = corp.get_attr(attrname).id_range()
     if nums == 'arf':
         frq = array.array('f')
         try:
-            frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
+            _frq_from_file(frq, filename, id_range)  # type: ignore
         except IOError as ex:
             raise MissingSubCorpFreqFile(ex)
         except EOFError as ex:
-            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.docf')
+            await aiofiles.os.remove(corp.freq_precalc_file(attrname, 'docf'))
             raise MissingSubCorpFreqFile(ex)
     else:
         try:
             if corp.get_conf('VIRTUAL') and not corp.subcorpus_id and nums == 'frq':
-                raise IOError
+                raise VirtualSubcFreqFileError()
             frq = array.array('i')
-            frq.fromfile(open(filename, 'rb'), id_range)  # type: ignore
-        except EOFError as ex:
-            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.docf')
-            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.arf')
-            await aiofiles.os.remove(filename.rsplit('.', 1)[0] + '.frq')
-            raise MissingSubCorpFreqFile(ex)
-        except IOError:
+            _frq_from_file(frq, filename, id_range)  # type: ignore
+        except (EOFError, IOError) as ex:
             try:
-                frq = array.array('l')
-                frq.fromfile(open(filename + '64', 'rb'), id_range)  # type: ignore
+                await aiofiles.os.remove(filename)
+            except:
+                pass
+            raise MissingSubCorpFreqFile(ex)
+        except VirtualSubcFreqFileError:
+            frq = array.array('l')
+            try:
+                _frq_from_file(frq, filename + '64', id_range)  # type: ignore
             except IOError as ex:
                 if not corp.subcorpus_id and nums == 'frq':
                     a = corp.get_attr(attrname)

@@ -69,7 +69,7 @@ async def submit(amodel: WordlistActionModel, req: KRequest, _: KResponse):
         args=(amodel.corp.portable_ident, form_args.to_dict(), amodel.corp.size))
     bg_result = async_res.get()
     if isinstance(bg_result, MissingSubCorpFreqFile):
-        data_calc = build_arf_db(amodel.session_get(
+        data_calc = await build_arf_db(amodel.session_get(
             'user', 'id'), amodel.corp, form_args.wlattr)
         if type(data_calc) is list:
             for subtask in data_calc:

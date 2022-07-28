@@ -16,17 +16,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import hashlib
 import os
 import uuid
+import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Awaitable, List, Optional, Tuple, Union
+from typing import Any, Awaitable, List, Optional, Union
 
 import aiofiles
 from dataclasses_json import dataclass_json
 from manatee import Corpus
+from util import int2chash
 
 
 @dataclass_json
@@ -69,8 +70,9 @@ async def create_new_subc_ident(subc_root: str, corpus_name: str) -> SubcorpusId
     create_new_subc_ident generates a new instance of SubcorpusIdent and also
     ensures that a target data directory exists.
     """
-    ans = SubcorpusIdent(id=hashlib.md5(str(uuid.uuid1()).encode()
-                                        ).hexdigest(), corpus_name=corpus_name)
+    ans = SubcorpusIdent(
+        id=int2chash(int(hashlib.sha1(uuid.uuid1().hex.encode()).hexdigest(), 16), 8),
+        corpus_name=corpus_name)
     full_dir_path = os.path.join(subc_root, ans.data_dir)
     if not await aiofiles.os.path.isdir(full_dir_path):
         await aiofiles.os.makedirs(full_dir_path)
@@ -224,7 +226,11 @@ class AbstractKCorpus(ABC):
         pass
 
     @abstractmethod
-    def freq_precalc_file(self, attrname: str):
+    def compile_arf(self, attr):
+        pass
+
+    @abstractmethod
+    def freq_precalc_file(self, attrname: str, ftype: str):
         pass
 
     @property
