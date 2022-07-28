@@ -340,7 +340,8 @@ export function init(
                         ? (
                             <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
                                 <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                        label="subc. properties (TODO msg)" scrollable={true}>
+                                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus[0]})}
+                                        scrollable={true}>
                                     <SubcorpEdit corpname={this.props.editWindowSubcorpus[0]} subcname={this.props.editWindowSubcorpus[1]} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>

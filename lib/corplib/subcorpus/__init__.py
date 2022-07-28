@@ -69,8 +69,8 @@ class SubcorpusRecord(SubcorpusIdent):
         author_fullname: author first and last names
         size: size of the subcorpus in tokens
         created: datetime of corpus creation
-        public_description: a public descripton (Markdown format) allows the subcorpus to be searched on the
-            "published subcorpora" page
+        public_description: a public description in a decoded format (HTML)
+        public_description_raw: a public description in Markdown format - just like stored in db
         archived: datetime specifying when the subcorpus was archived (= not listed anywhere by default but URLs
             with the subcorpus are still available
         cql: (mutually exclusive with 'within_cond' and 'text_types') defines a raw CQL specification of the subcorpus;
@@ -91,6 +91,7 @@ class SubcorpusRecord(SubcorpusIdent):
         encoder=datetime.timestamp,
         decoder=datetime.fromtimestamp))
     public_description: str
+    public_description_raw: str
     archived: Optional[datetime] = field(default=None, metadata=config(
         encoder=serialize_datetime,
         decoder=deserialize_datetime))

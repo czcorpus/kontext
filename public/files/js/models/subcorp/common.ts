@@ -48,6 +48,7 @@ export interface SubcorpusRecord {
     selections:SelectionsType;
     size:number;
     description:string|undefined;
+    descriptionRaw:string|undefined;
 }
 
 export function isCQLSelection(selections:SelectionsType): selections is string {

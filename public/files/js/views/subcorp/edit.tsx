@@ -181,75 +181,38 @@ export function init(
 
     // ------------------------ <PublishingTab /> --------------------------
 
-    class PublishingTab extends React.PureComponent<{
-        description:string;
+    const PublishingTab:React.FC<{
+        descriptionRaw:string;
         published:boolean;
         publicCode:string;
 
-    }> {
+    }> = (props) => {
 
-        constructor(props) {
-            super(props);
-            this.handleSubmitPublish = this.handleSubmitPublish.bind(this);
-            this.handleTextAreaChange = this.handleTextAreaChange.bind(this);
-            this.handleSubmitUpdateDesc = this.handleSubmitUpdateDesc.bind(this);
-        }
-
-        private handleSubmitPublish() {
-            dispatcher.dispatch<typeof Actions.PublishSubcorpus>({
-                name: Actions.PublishSubcorpus.name
+        const handleSubmitUpdateDesc = () => {
+            dispatcher.dispatch<typeof Actions.SubmitPublicDescription>({
+                name: Actions.SubmitPublicDescription.name
             });
-        }
+        };
 
-        private handleSubmitUpdateDesc() {
-            dispatcher.dispatch<typeof Actions.UpdatePublicDescription>({
-                name: Actions.UpdatePublicDescription.name
-            });
-        }
-
-        private handleTextAreaChange(evt:React.ChangeEvent<HTMLTextAreaElement>) {
+        const handleTextAreaChange = (evt:React.ChangeEvent<HTMLTextAreaElement>) => {
             dispatcher.dispatch<typeof Actions.UpdatePublicDescription>({
                 name: Actions.UpdatePublicDescription.name,
                 payload: {
-                    description: evt.target.value
+                    value: evt.target.value
                 }
             });
-        }
+        };
 
-        private renderPublicCodeInfo() {
-            if (this.props.publicCode) {
-                return (
-                    <dl className="public-code">
-                        <dt>{he.translate('subclist__public_code')}:</dt>
-                        <dd><input type="text" value={this.props.publicCode} readOnly={true} /></dd>
-                    </dl>
-                );
-            }
-            return null;
-        }
-
-        render() {
-            return <TabContentWrapper auxInfoElm={this.renderPublicCodeInfo()}>
-                <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
-                <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
-                        onChange={this.handleTextAreaChange}
-                        value={this.props.description || ''} />
-                <p className="note">({he.translate('global__markdown_supported')})</p>
-                <p style={{width: '40em'}}>
-                    <img src={he.createStaticUrl('img/warning-icon.svg')}
-                        alt="warning-icon.svg" style={{width: '1.3em', verticalAlign: 'middle', marginRight: '0.3em'}} />
-                    {
-                        this.props.published ?
-                            he.translate('subclist__ex_post_desc_update_warning') :
-                            he.translate('subclist__ex_post_publish_warning')
-                    }
-                </p>
-                <div>
-                    <PublishSubmitButton onSubmit={this.props.published ? this.handleSubmitUpdateDesc :
-                                            this.handleSubmitPublish} published={this.props.published} />
-                </div>
-            </TabContentWrapper>
-        }
+        return <TabContentWrapper>
+            <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
+            <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
+                    onChange={handleTextAreaChange}
+                    value={props.descriptionRaw || ''} />
+            <p className="note">({he.translate('global__markdown_supported')})</p>
+            <div>
+                <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} published={props.published} />
+            </div>
+        </TabContentWrapper>
     };
 
 
@@ -257,15 +220,10 @@ export function init(
 
     const _SubcorpusEdit:React.FC<SubcorpusEditModelState & {corpname:string; subcname: string}> = (props) => {
 
-        // TODO avail translations:
-        // subclist__public_access_btn
-        // subclist__action_reuse
-        // subclist__subc_actions_{subc}
-
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
             {id: 'restore', label: he.translate('subclist__action_file')},
             {id: 'structure', label: he.translate('subclist__action_structure'), isDisabled: props.data?.selections === undefined},
-            {id: 'pub', label: he.translate('subclist__public_access_btn')}
+            {id: 'pub', label: he.translate('subclist__public_description_btn')}
         ];
 
         React.useEffect(
@@ -287,7 +245,7 @@ export function init(
                             <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} deleted={props.data.deleted} />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
-                                description={props.data.description}
+                                descriptionRaw={props.data.descriptionRaw}
                                 publicCode={props.data.published ? props.data.usesubcorp : null} />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">

@@ -272,6 +272,7 @@ export interface SubcorpusServerRecord {
     archived:number|undefined;
     published:number|undefined;
     public_description:string|undefined;
+    public_description_raw:string|undefined;
     cql:string|undefined;
     within_cond:Array<ServerWithinSelection>|undefined;
     text_types:TextTypes.ExportedSelection|undefined;
