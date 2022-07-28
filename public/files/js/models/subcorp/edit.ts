@@ -102,14 +102,11 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             (state, action, dispatch) => {
                 this.layoutModel.ajax$<SubcorpusPropertiesResponse>(
                     HTTP.Method.GET,
-                    this.layoutModel.createActionUrl(
-                        '/subcorpus/properties',
-                        {
-                            corpname: action.payload?.corpname,
-                            usesubcorp: action.payload?.subcname,
-                        }
-                    ),
-                    {}
+                    this.layoutModel.createActionUrl('/subcorpus/properties'),
+                    {
+                        corpname: action.payload?.corpname,
+                        _usesubcorp: action.payload?.subcname,
+                    }
 
                 ).subscribe({
                     next: (data) => {

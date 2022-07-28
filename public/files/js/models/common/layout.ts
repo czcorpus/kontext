@@ -460,7 +460,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                             this.pluginApi.createActionUrl('subcorpus/properties'),
                             {
                                 'corpname': corpusId,
-                                'usesubcorp': subcorpusId
+                                '_usesubcorp': subcorpusId
                             }
                         ).pipe(
                             concatMap(
