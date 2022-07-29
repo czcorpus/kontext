@@ -20,9 +20,8 @@ from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_restore import AbstractSubcArchive, SubcArchiveException
@@ -203,16 +202,17 @@ class MySQLSubcArchive(AbstractSubcArchive):
             )
             await cursor.connection.commit()
 
-    async def update_description(self, user_id: int, subc_id: str, description: str):
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                f'UPDATE {self.TABLE_NAME} '
-                'SET public_description = %s '
-                'WHERE user_id = %s AND id = %s',
-                (description, user_id, subc_id)
-            )
-            await cursor.connection.commit()
-            return k_markdown(description)
+    async def update_description(self, user_id: int, subc_id: str, description: str, preview_only: bool):
+        if not preview_only:
+            async with self._db.cursor() as cursor:
+                await cursor.execute(
+                    f'UPDATE {self.TABLE_NAME} '
+                    'SET public_description = %s '
+                    'WHERE user_id = %s AND id = %s',
+                    (description, user_id, subc_id)
+                )
+                await cursor.connection.commit()
+        return k_markdown(description)
 
 
 @inject(plugins.runtime.CORPARCH, plugins.runtime.INTEGRATION_DB)

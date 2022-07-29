@@ -48,8 +48,9 @@ export class Actions {
     };
 
     static ShowSubcEditWindow:Action<{
-        corpname:string;
-        subcname:string;
+        corpusName:string;
+        subcorpusId:string;
+        subcorpusName:string;
     }> = {
         name: 'SUBCORP_SHOW_SUBC_EDIT_WINDOW'
     };
@@ -114,13 +115,26 @@ export class Actions {
         name: 'SUBCORP_LIST_UPDATE_PUBLIC_DESCRIPTION'
     };
 
+    static TogglePublicDescription:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_TOGGLE_PUBLIC_DESCRIPTION'
+    }
+
     static SubmitPublicDescription:Action<{
     }> = {
         name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT'
     };
 
     static SubmitPublicDescriptionDone:Action<{
+        /**
+         * Decoded Markdown description
+         */
         preview:string;
+
+        /**
+         * if false then it means we requested only Markdown preview
+         */
+        saved:boolean;
     }> = {
         name: 'SUBCORP_LIST_PUBLIC_DESCRIPTION_SUBMIT_DONE'
     };

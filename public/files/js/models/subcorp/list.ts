@@ -64,6 +64,13 @@ export interface SortKey {
 }
 
 
+interface currSubcorpusProps {
+    subcorpusId:string;
+    subcorpusName:string;
+    corpusName:string;
+}
+
+
 export interface SubcorpListModelState {
     lines:Array<SubcorpListItem>;
     unfinished:Array<UnfinishedSubcorp>;
@@ -71,7 +78,7 @@ export interface SubcorpListModelState {
     sortKey:SortKey;
     filter:SubcListFilter;
     isBusy:boolean;
-    editWindowSubcorpus:[string,string]|null;
+    editWindowSubcorpus:currSubcorpusProps|null;
     usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
 }
@@ -207,7 +214,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             Actions.ShowSubcEditWindow,
             action => {
                 this.changeState(state => {
-                    state.editWindowSubcorpus = [action.payload.corpname, action.payload.subcname];
+                    state.editWindowSubcorpus = {
+                        corpusName: action.payload.corpusName,
+                        subcorpusId: action.payload.subcorpusId,
+                        subcorpusName: action.payload.subcorpusName
+                    }
                 });
             }
         );

@@ -600,6 +600,8 @@
         "subcform__publication_notes": "Če izberete to, bo podkorpusu dodan javni identifikator (poleg originalnega imena), ki drugim uporabnikom omogoča pravico do dostopa. Uporabite to, če želite objaviti/deliti rezultate iz tega podkorpusa.",
         "subcform__publication_notes_2": "To lahko nastavite tudi za obstoječe privatne podkorpuse, vendar morate najprej objaviti podkorpus, preden lahko delite URL-je s konkordancami.",
         "subcform__public_description": "Javni opis",
+        "subcform__public_desc_preview_switch": "Show preview UNTRANSLATED",
+        "subcform__unsaved_changes": "There are unsaved changes UNTRANSLATED",
         "subclist__my_subc_heading": "Moji podkorpusi",
         "subclist__show_archived": "Show also archived items UNTRANSLATED",
         "subclist__filter_heading": "Filter",

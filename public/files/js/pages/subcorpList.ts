@@ -107,6 +107,8 @@ class SubcorpListPage {
                         data: undefined,
                         derivedSubc: undefined,
                         liveAttrsEnabled: false,
+                        previewEnabled: false,
+                        prevRawDescription: undefined
                     },
                     this.layoutModel,
                 );

@@ -124,7 +124,7 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def update_description(self, user_id: int, subc_id: str, description: str) -> str:
+    async def update_description(self, user_id: int, subc_id: str, description: str, preview_only: bool) -> str:
         """
         Update public description and return decode version (Markdown -> HTML) for preview
         """

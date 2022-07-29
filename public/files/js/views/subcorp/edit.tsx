@@ -203,9 +203,12 @@ export function init(
     // ------------------------ <PublishingTab /> --------------------------
 
     const PublishingTab:React.FC<{
+        description:string;
         descriptionRaw:string;
         published:boolean;
         publicCode:string;
+        previewEnabled:boolean;
+        unsavedChanges:boolean;
 
     }> = (props) => {
 
@@ -224,16 +227,40 @@ export function init(
             });
         };
 
-        return <TabContentWrapper>
-            <label htmlFor="inp_3IDJH">{he.translate('subcform__public_description')}:</label>
-            <textarea className="desc" id="inp_3IDJH" cols={60} rows={10}
-                    onChange={handleTextAreaChange}
-                    value={props.descriptionRaw || ''} />
-            <p className="note">({he.translate('global__markdown_supported')})</p>
-            <div>
-                <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} published={props.published} />
-            </div>
-        </TabContentWrapper>
+        const handlePreviewModeSwitch = () => {
+            dispatcher.dispatch<typeof Actions.TogglePublicDescription>({
+                name: Actions.TogglePublicDescription.name
+            });
+        };
+
+        return (
+            <TabContentWrapper>
+                <S.PublishingTab>
+                    <div className="preview-switch">
+                        <span>
+                            {props.unsavedChanges ?
+                                <span>{he.translate('subcform__unsaved_changes') + '\u00a0|\u00a0'}</span> :
+                                null
+                            }
+                        </span>
+                        <label>
+                            {he.translate('subcform__public_desc_preview_switch')}
+                            <input type="checkbox" onChange={handlePreviewModeSwitch} checked={props.previewEnabled} />
+                        </label>
+                    </div>
+                    {props.previewEnabled ?
+                        <div className="preview" dangerouslySetInnerHTML={{__html: props.description}} /> :
+                        <textarea className="desc" cols={60} rows={10}
+                                onChange={handleTextAreaChange}
+                                value={props.descriptionRaw || ''} />
+                    }
+                    <p className="markdown-note note">({he.translate('global__markdown_supported')})</p>
+                    <div>
+                        <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} published={props.published} />
+                    </div>
+                </S.PublishingTab>
+            </TabContentWrapper>
+        );
     };
 
 
@@ -267,7 +294,10 @@ export function init(
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 descriptionRaw={props.data.descriptionRaw}
-                                publicCode={props.data.published ? props.data.usesubcorp : null} />
+                                description={props.data.description}
+                                previewEnabled={props.previewEnabled}
+                                publicCode={props.data.published ? props.data.usesubcorp : null}
+                                unsavedChanges={props.prevRawDescription !== props.data.descriptionRaw} />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
                             {props.isBusy ? <layoutViews.AjaxLoaderBarImage /> : null}

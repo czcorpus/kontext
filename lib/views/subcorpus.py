@@ -204,9 +204,10 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> D
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     with plugins.runtime.SUBC_RESTORE as sa:
+        preview_only = req.args.get('preview-only') == '1'
         preview = await sa.update_description(
-            amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('description'))
-    return dict(preview=preview)
+            amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('description'), preview_only)
+    return dict(preview=preview, saved=not preview_only)
 
 
 @dataclass

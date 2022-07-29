@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, tap, throwError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
@@ -26,7 +26,6 @@ import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { CreateSubcorpus, SubcorpusRecord } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
-import { ResponsiveWrapper } from '../../types/coreViews';
 
 
 
@@ -42,45 +41,9 @@ export interface SubcorpusEditModelState {
     data:SubcorpusRecord|undefined;
     derivedSubc:DerivedSubcorp|undefined;
     liveAttrsEnabled:boolean;
+    previewEnabled:boolean;
+    prevRawDescription:string|undefined;
 }
-
-/*
-if (action.payload.value === 'reuse') {
-                    const line = this.state.lines[action.payload.row];
-                    if (line.cql === undefined && line.cqlAvailable) {
-                        this.changeState(state => {
-                            state.isBusy = true;
-                        });
-
-                        this.layoutModel.ajax$<SubcorpusInfoResponse>(
-                            HTTP.Method.GET,
-                            this.layoutModel.createActionUrl('subcorpus/subcorpus_info'),
-                            {
-                                'corpname': line.corpname,
-                                'usesubcorp': line.usesubcorp
-                            }
-                        ).subscribe({
-                            next: data => {
-                                if (data.extended_info) {
-                                    this.changeState(state => {
-                                        state.lines[action.payload.row].cql = data.extended_info.cql;
-                                        state.isBusy = false;
-                                    })
-                                }
-                            },
-                            error: error => {
-                                this.changeState(
-                                    state => {
-                                        state.isBusy = false;
-                                    }
-                                );
-                                this.layoutModel.showMessage('error', error);
-                            }
-                        });
-                    }
-                }
-                */
-
 
 
 export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> {
@@ -109,13 +72,15 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.LoadSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                if (action.error) {
-                    // TODO
-                    console.log('err: ', action.error)
-
-                } else {
+                if (!action.error) {
                     state.data = action.payload?.data;
                     state.liveAttrsEnabled = action.payload.liveAttrsEnabled;
+                    state.prevRawDescription = state.data.descriptionRaw;
+                }
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.layoutModel.showMessage('error', action.error);
                 }
             }
         );
@@ -233,23 +198,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.updateSubcorpusDescSubmit(state).subscribe({
-                    next: resp => {
-                        dispatch(
-                            Actions.SubmitPublicDescriptionDone,
-                            {
-                                preview: resp.preview
-                            }
-                        );
-
-                    },
-                    error: error => {
-                        dispatch(
-                            Actions.SubmitPublicDescriptionDone,
-                            error
-                        )
-                    }
-                });
+                this.updateSubcorpusDescSubmit(state, false, dispatch);
             }
         );
 
@@ -259,13 +208,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = false;
                 if (!action.error) {
                     state.data.description = action.payload.preview;
+                    if (action.payload.saved) {
+                        state.prevRawDescription = state.data.descriptionRaw;
+                    }
                 }
             },
             (state, action, dispatch) => {
                 if (action.error) {
                     this.layoutModel.showMessage('error', action.error);
 
-                } else {
+                } else if (action.payload.saved) {
                     this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_desc_updated'));
                 }
             }
@@ -277,18 +229,54 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.data.descriptionRaw = action.payload.value;
             }
         );
+
+        this.addActionHandler(
+            Actions.TogglePublicDescription,
+            (state, action) => {
+                state.previewEnabled = !state.previewEnabled;
+            },
+            (state, action, dispatch) => {
+                if (state.previewEnabled && state.prevRawDescription !== state.data.descriptionRaw) {
+                    this.updateSubcorpusDescSubmit(state, true, dispatch);
+                }
+            }
+        )
     }
 
-    private updateSubcorpusDescSubmit(state:SubcorpusEditModelState):Observable<{preview:string}> {
-        return this.layoutModel.ajax$(
+    private updateSubcorpusDescSubmit(
+        state:SubcorpusEditModelState,
+        previewOnly:boolean,
+        dispatch:SEDispatcher
+    ):void {
+        this.layoutModel.ajax$<{preview:string; saved:boolean}>(
             HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/update_public_desc'),
+            this.layoutModel.createActionUrl(
+                'subcorpus/update_public_desc',
+                {'preview-only': previewOnly ? previewOnly : undefined}
+            ),
             {
                 corpname: state.data.corpname,
                 usesubcorp: state.data.usesubcorp,
                 description: state.data.descriptionRaw
             }
-        );
+        ).subscribe({
+            next: resp => {
+                dispatch(
+                    Actions.SubmitPublicDescriptionDone,
+                    {
+                        preview: resp.preview,
+                        saved: resp.saved
+                    }
+                );
+
+            },
+            error: error => {
+                dispatch(
+                    Actions.SubmitPublicDescriptionDone,
+                    error
+                )
+            }
+        });
     }
 
     private createSubcorpus(
