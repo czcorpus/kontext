@@ -27,8 +27,9 @@ import plugins
 import settings
 from action.argmapping import ConcArgsMapping
 from action.argmapping.conc import build_conc_form_args
-from action.argmapping.conc.filter import (
-    ContextFilterArgsConv, FilterFormArgs, FirstHitsFilterFormArgs)
+from action.argmapping.conc.filter import (ContextFilterArgsConv,
+                                           FilterFormArgs,
+                                           FirstHitsFilterFormArgs)
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from action.argmapping.conc.query import ConcFormArgs, QueryFormArgs
 from action.argmapping.conc.sort import SortFormArgs
@@ -42,7 +43,7 @@ from conclib.common import KConc
 from conclib.search import get_conc
 from main_menu.model import MainMenu
 from plugin_types.corparch.corpus import CorpusInfo
-from plugin_types.subc_restore import SubcListFilterArgs
+from plugin_types.subc_storage import SubcListFilterArgs
 from strings import re_escape
 from texttypes.model import TextTypeCollector, TextTypesCache
 
@@ -82,7 +83,7 @@ class ConcActionModel(CorpusActionModel):
         curr = self._req.ctx.session.get('last_search', {})
         last_op = curr.get(query_type, None)
         if last_op:
-            with plugins.runtime.QUERY_PERSISTENCE as qp, plugins.runtime.SUBC_RESTORE as subc_arch:
+            with plugins.runtime.QUERY_PERSISTENCE as qp, plugins.runtime.SUBC_STORAGE as subc_arch:
                 last_op_form = await qp.open(last_op)
                 if last_op_form is None:  # probably a lost/deleted concordance record
                     return None

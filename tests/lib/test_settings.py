@@ -15,10 +15,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+import imp
 import os
 import unittest
+
 import settings
-import imp
 
 conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.default.xml')
 
@@ -169,7 +170,7 @@ class SettingsSampleTest(unittest.TestCase):
         self.assertTrue(settings.contains('plugins', 'settings_storage'))
         self.assertTrue(settings.contains('plugins', 'sessions'))
         self.assertTrue(settings.contains('plugins', 'subcmixer'))
-        self.assertTrue(settings.contains('plugins', 'subc_restore'))
+        self.assertTrue(settings.contains('plugins', 'subc_storage'))
         self.assertTrue(settings.contains('plugins', 'syntax_viewer'))
         self.assertTrue(settings.contains('plugins', 'taghelper'))
         self.assertTrue(settings.contains('plugins', 'user_items'))

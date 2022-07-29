@@ -176,8 +176,8 @@
             <xlsx>default_xlsx</xlsx>
             <xml>default_xml</xml>
         </export>
-        <subc_restore>
-        </subc_restore>
+        <subc_storage>
+        </subc_storage>
         <taghelper>
             <module>default_taghelper</module>
             <js_module>defaultTaghelper</js_module>

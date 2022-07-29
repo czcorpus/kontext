@@ -48,7 +48,7 @@ from plugin_types.query_history import AbstractQueryHistory
 from plugin_types.query_persistence import AbstractQueryPersistence
 from plugin_types.query_suggest import AbstractQuerySuggest
 from plugin_types.settings_storage import AbstractSettingsStorage
-from plugin_types.subc_restore import AbstractSubcArchive
+from plugin_types.subc_storage import AbstractSubcArchive
 from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.syntax_viewer import AbstractSyntaxViewerPlugin
 from plugin_types.taghelper import AbstractTaghelper
@@ -180,7 +180,7 @@ class _Names(object):
     APPLICATION_BAR: _ID[AbstractApplicationBar] = _ID('application_bar', optional=True)
     FOOTER_BAR: _ID[AbstractFootbar] = _ID('footer_bar', optional=True)
     LIVE_ATTRIBUTES: _ID[AbstractLiveAttributes] = _ID('live_attributes', optional=True)
-    SUBC_RESTORE: _ID[AbstractSubcArchive] = _ID('subc_restore', optional=True)
+    SUBC_STORAGE: _ID[AbstractSubcArchive] = _ID('subc_storage', optional=True)
     TAGHELPER: _ID[AbstractTaghelper] = _ID('taghelper', optional=True)
     SYNTAX_VIEWER: _ID[AbstractSyntaxViewerPlugin] = _ID('syntax_viewer', optional=True)
     SUBCMIXER: _ID[AbstractSubcMixer] = _ID('subcmixer', optional=True)
@@ -200,7 +200,7 @@ class _Names(object):
         return iter([
             self.DB, self.INTEGRATION_DB, self.SESSIONS, self.SETTINGS_STORAGE, self.AUTH,
             self.QUERY_PERSISTENCE, self.CONC_CACHE, self.EXPORT, self.EXPORT_FREQ2D, self.USER_ITEMS,
-            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_RESTORE, self.QUERY_HISTORY,
+            self.MENU_ITEMS, self.AUDIO_PROVIDER, self.GETLANG, self.CORPARCH, self.SUBC_STORAGE, self.QUERY_HISTORY,
             self.APPLICATION_BAR, self.FOOTER_BAR, self.LIVE_ATTRIBUTES, self.TAGHELPER,
             self.SYNTAX_VIEWER, self.SUBCMIXER, self.CHART_EXPORT, self.ISSUE_REPORTING, self.TOKEN_CONNECT,
             self.KWIC_CONNECT, self.DISPATCH_HOOK, self.QUERY_SUGGEST, self.ACTION_LOG])

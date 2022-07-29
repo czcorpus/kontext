@@ -24,10 +24,9 @@ from typing import Any, Dict
 import bgcalc
 import plugins
 import settings
-from action.argmapping.subcorpus import (
-    CreateSubcorpusArgs,
-    CreateSubcorpusRawCQLArgs,
-    CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (CreateSubcorpusArgs,
+                                         CreateSubcorpusRawCQLArgs,
+                                         CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
@@ -126,7 +125,7 @@ class SubcorpusActionModel(CorpusActionModel):
             raise UserActionException(self._req.translate('Nothing specified!'))
         if result:
             subc = await self.cf.get_corpus(subc_id)
-            with plugins.runtime.SUBC_RESTORE as sr:
+            with plugins.runtime.SUBC_STORAGE as sr:
                 try:
                     await sr.create(
                         ident=subc_id.id,

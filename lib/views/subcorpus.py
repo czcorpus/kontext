@@ -35,7 +35,7 @@ from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import SubcorpusIdent
 from corplib.subcorpus import SubcorpusRecord
 from main_menu.model import MainMenu
-from plugin_types.subc_restore import AbstractSubcArchive, SubcListFilterArgs
+from plugin_types.subc_storage import AbstractSubcArchive, SubcListFilterArgs
 from sanic import Blueprint
 from texttypes.model import TextTypeCollector
 
@@ -48,7 +48,7 @@ bp = Blueprint('subcorpus', url_prefix='subcorpus')
 async def properties(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     struct_and_attrs = await amodel.get_structs_and_attrs()
-    with plugins.runtime.SUBC_RESTORE as sr:
+    with plugins.runtime.SUBC_STORAGE as sr:
         info = await sr.get_info(corp_ident.id)
     live_attrs_enabled = False
     with plugins.runtime.LIVE_ATTRIBUTES as la:
@@ -116,7 +116,7 @@ async def ajax_create_subcorpus(amodel: SubcorpusActionModel, req: KRequest, res
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
-        with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
+        with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
             await sr.archive(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
 
     return {}
@@ -127,7 +127,7 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
-        with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
+        with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
             await sr.restore(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
 
     return {}
@@ -137,7 +137,7 @@ async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 @http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
 async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     """
-    Displays a list of user subcorpora. In case there is a 'subc_restore' plug-in
+    Displays a list of user subcorpora. In case there is a 'subc_storage' plug-in
     installed then the list is enriched by additional re-use/undelete information.
     """
     amodel.disabled_menu_items = (
@@ -147,12 +147,12 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     filter_args = SubcListFilterArgs(
         active_only=active_only, archived_only=False, corpus=req.args.get('corpname'))
 
-    with plugins.runtime.SUBC_RESTORE(AbstractSubcArchive) as sr:
+    with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
         try:
             full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
         except Exception as e:
             logging.getLogger(__name__).error(
-                'subc_restore plug-in failed to list queries: %s' % e)
+                'subc_storage plug-in failed to list queries: %s' % e)
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
@@ -175,7 +175,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
         related_corpora=sorted(list(set(x.corpus_name for x in full_list))),
-        uses_subc_restore=plugins.runtime.SUBC_RESTORE.exists,
+        uses_subc_storage=plugins.runtime.SUBC_STORAGE.exists,
         uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
     )
     return ans
@@ -185,7 +185,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
     corp_ident = amodel.corp.portable_ident
-    with plugins.runtime.SUBC_RESTORE as sr:
+    with plugins.runtime.SUBC_STORAGE as sr:
         await sr.delete_query(amodel.session_get('user', 'id'), corp_ident.corpus_name, corp_ident.id)
 
     try:
@@ -203,7 +203,7 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> D
 @bp.route('/update_public_desc', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def update_public_desc(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    with plugins.runtime.SUBC_RESTORE as sa:
+    with plugins.runtime.SUBC_STORAGE as sa:
         preview_only = req.args.get('preview-only') == '1'
         preview = await sa.update_description(
             amodel.session_get('user', 'id'), amodel.corp.subcorpus_id, req.form.get('description'), preview_only)
@@ -224,7 +224,7 @@ async def list_published(amodel: UserActionModel, req: KRequest[_PublicListArgs]
     amodel.disabled_menu_items = (
         MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
     min_query_size = 3
-    with plugins.runtime.SUBC_RESTORE as sr:
+    with plugins.runtime.SUBC_STORAGE as sr:
         if not req.mapped_args.ia_query or len(req.mapped_args.ia_query) < 3:
             items = []
         else:
