@@ -21,8 +21,8 @@
 import urllib.parse
 from dataclasses import asdict
 from functools import partial
-from typing import (
-    Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    TypeVar, Union)
 
 import corplib
 import l10n
@@ -30,8 +30,9 @@ import plugins
 import settings
 from action.argmapping import Args, ConcArgsMapping
 from action.argmapping.conc.query import ConcFormArgs
-from action.errors import (
-    AlignedCorpusForbiddenException, ImmediateRedirectException, NotFoundException, UserActionException)
+from action.errors import (AlignedCorpusForbiddenException,
+                           ImmediateRedirectException, NotFoundException,
+                           UserActionException)
 from action.krequest import KRequest
 from action.model.user import UserActionModel, UserPluginCtx
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -42,7 +43,8 @@ from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
-from plugin_types.corparch.corpus import BrokenCorpusInfo, CorpusInfo, StructAttrInfo
+from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
+                                          StructAttrInfo)
 from texttypes.model import TextTypes, TextTypesCache
 
 T = TypeVar('T')
@@ -366,7 +368,7 @@ class CorpusActionModel(UserActionModel):
 
     async def _load_corpus(self):
         if self.args.usesubcorp:
-            with plugins.runtime.SUBC_RESTORE as sr:
+            with plugins.runtime.SUBC_STORAGE as sr:
                 corpus_ident = await sr.get_info(self.args.usesubcorp)
         else:
             corpus_ident = self.args.corpname
@@ -619,8 +621,8 @@ class CorpusActionModel(UserActionModel):
                                             pub=self.corp.subcorpus_id, foreign=True))
         if len(subcorp_list) > 0:
             subcorp_list = (
-                    [{'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] +
-                    [{'n': item.name, 'v': item.id} for item in subcorp_list])
+                [{'n': '--{}--'.format(self._req.translate('whole corpus')), 'v': ''}] +
+                [{'n': item.name, 'v': item.id} for item in subcorp_list])
 
         if out.get('SubcorpList', None) is None:
             out['SubcorpList'] = []

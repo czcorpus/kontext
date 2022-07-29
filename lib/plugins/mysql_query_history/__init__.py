@@ -39,7 +39,7 @@ from corplib.fallback import EmptyCorpus
 from plugin_types.auth import AbstractAuth
 from plugin_types.query_history import AbstractQueryHistory
 from plugin_types.query_persistence import AbstractQueryPersistence
-from plugin_types.subc_restore import AbstractSubcArchive
+from plugin_types.subc_storage import AbstractSubcArchive
 from plugins import inject
 from plugins.mysql_integration_db import MySqlIntegrationDb
 
@@ -334,7 +334,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 @inject(
     plugins.runtime.INTEGRATION_DB,
     plugins.runtime.QUERY_PERSISTENCE,
-    plugins.runtime.SUBC_RESTORE,
+    plugins.runtime.SUBC_STORAGE,
     plugins.runtime.AUTH
 )
 def create_instance(

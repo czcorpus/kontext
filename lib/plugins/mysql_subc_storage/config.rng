@@ -2,9 +2,9 @@
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
          datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
     <start>
-        <element name="subc_restore">
+        <element name="subc_storage">
             <element name="module">
-                <value>mysql_subc_restore</value>
+                <value>mysql_subc_storage</value>
             </element>
         </element>
     </start>

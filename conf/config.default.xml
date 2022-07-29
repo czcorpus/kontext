@@ -166,7 +166,7 @@
             <ttl>14400</ttl>
         </sessions>
         <subcmixer/>
-        <subc_restore/>
+        <subc_storage/>
         <syntax_viewer/>
         <taghelper/>
         <user_items>

@@ -18,9 +18,9 @@ import inspect
 import logging
 import os
 import time
+import uuid
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-import uuid
 
 import aiofiles.os
 import corplib
@@ -39,7 +39,7 @@ from bgcalc.task import AsyncTaskStatus
 from main_menu import MainMenu, generate_main_menu
 from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
-from plugin_types.subc_restore import SubcListFilterArgs
+from plugin_types.subc_storage import SubcListFilterArgs
 from sanic import Sanic
 from texttypes.cache import TextTypesCache
 
@@ -452,7 +452,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def user_subc_names(self, corpname):
         if self.user_is_anonymous():
             return []
-        with plugins.runtime.SUBC_RESTORE as subc_arch:
+        with plugins.runtime.SUBC_STORAGE as subc_arch:
             return await subc_arch.list(self._req.session_get('user', 'id'), SubcListFilterArgs(corpus=corpname))
 
     @staticmethod
