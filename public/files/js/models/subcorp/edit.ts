@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, tap } from 'rxjs';
+import { concatMap, map, Observable, tap, throwError } from 'rxjs';
 import { IActionQueue, SEDispatcher, StatelessModel } from 'kombo';
 
 import { PageModel } from '../../app/page';
 import { Actions } from './actions';
-import { HTTP } from 'cnc-tskit';
-import { CreateSubcorpus, SubcorpusRecord } from './common';
+import { Actions as TTActions } from '../textTypes/actions';
+import { HTTP, tuple } from 'cnc-tskit';
+import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord, WithinSelection } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
 
 
@@ -163,17 +164,76 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.createSubcorpus(
-                    state,
-                    false,
-                    action.payload.newName,
+                let newName = action.payload.newName;
+                this.suspendWithTimeout(
+                    2000,
+                    {},
+                    (action, syncData) => {
+                        if (isTTSelection(state.data.selections) && TTActions.isTextTypesQuerySubmitReady(action)) {
+                            return null;
+                        } else if (isServerWithinSelection(state.data.selections) && Actions.isFormWithinSubmitArgsReady(action)) {
+                            return null;
+                        } else if (isCQLSelection(state.data.selections)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+
+                ).pipe(
+                    concatMap(
+                        action => {
+                            let args: CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs;
+                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                                args = {
+                                    corpname: state.data.corpname,
+                                    subcname: newName,
+                                    description: '',
+                                    aligned_corpora: [], // TODO what to do with this?
+                                    text_types: action.payload.selections,
+                                    form_type: 'tt-sel'
+                                };
+                            } else if (Actions.isFormWithinSubmitArgsReady(action)) {
+                                const selections = state.data.selections;
+                                if (isServerWithinSelection(selections)) {
+                                    args = {
+                                        corpname: state.data.corpname,
+                                        subcname: newName,
+                                        description: '',
+                                        within: selections, // TODO get this from within form
+                                        form_type: 'within'
+                                    };
+                                }
+                            } else {
+                                const selections = state.data.selections;
+                                if (isCQLSelection(selections)) {
+                                    args = {
+                                        corpname: state.data.corpname,
+                                        subcname: newName,
+                                        description: '',
+                                        cql: selections, // TODO get this from cql form
+                                        form_type: 'cql'
+                                    };
+                                }
+                            }
+
+                            if (args) {
+                                return this.createSubcorpus(state, args).pipe(
+                                    map(resp => tuple(args, resp))
+                                )
+                            }
+                            
+                            throwError(() => new Error('Invalid action passed through suspend filter'));
+                        }
+                    )
 
                 ).subscribe({
-                    next: data => {
+                    next: ([args, resp]) => {
                         dispatch(Actions.ReuseQueryDone);
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
                     },
                     error: error => {
                         dispatch(Actions.ReuseQueryDone, error);
+                        this.layoutModel.showMessage('error', action.error);
                     }
                 });
             }
@@ -183,12 +243,6 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.ReuseQueryDone,
             (state, action) => {
                 state.isBusy = false;
-                if (action.error) {
-                    this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-
-                } else {
-                    this.layoutModel.showMessage('error', action.error);
-                }
             }
         );
 
@@ -281,18 +335,14 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
     private createSubcorpus(
         state:SubcorpusEditModelState,
-        removeOrig:boolean,
-        newName?:string,
+        args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs|CreateSubcorpusRawCQLArgs,
     ):Observable<any> {
-
         return this.layoutModel.ajax$<CreateSubcorpus>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/ajax_create_subcorpus'),
+            args,
             {
-                corpname: state.data.corpname,
-                subcname: newName !== undefined ? newName : state.data.name,
-                publish: false,
-                //cql: cql !== undefined ? cql : state.data.cql // TODO not just from CQL
+                contentType: 'application/json'
             }
 
         ).pipe(
