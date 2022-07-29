@@ -629,7 +629,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 QueryActions.QuerySubmit,
                 QueryActions.BranchQuery,
                 SubcActions.FormSubmit,
-                SubcActions.QuickSubcorpSubmit
+                SubcActions.QuickSubcorpSubmit,
+                SubcActions.ReuseQuery,
             ],
             action => {
                 this.dispatchSideEffect<typeof Actions.TextTypesQuerySubmitReady>({

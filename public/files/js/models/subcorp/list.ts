@@ -234,6 +234,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             [
                 Actions.WipeSubcorpusDone,
                 Actions.RestoreSubcorpusDone,
+                Actions.ReuseQueryDone,
             ],
             action => {
                 this.reloadItems().subscribe({
