@@ -20,9 +20,8 @@ from typing import Any, Dict, Optional, Union
 
 import plugins
 import ujson as json
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 from plugin_types.corparch import AbstractCorporaArchive
 from plugin_types.subc_storage import AbstractSubcArchive, SubcArchiveException

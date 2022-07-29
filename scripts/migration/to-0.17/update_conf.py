@@ -64,10 +64,16 @@ def update_4(doc):
         srch.getparent().remove(srch)
 
 
+def update_5(doc):
+    srch = doc.find('plugins/subc_restore')
+    if srch is not None:
+        srch.text = 'subc_storage'
+
+
 if __name__ == '__main__':
     import argparse
-    argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.15.x '
-                                                    'to the version 0.16')
+    argparser = argparse.ArgumentParser(description='Upgrade KonText config.xml version 0.16.x '
+                                                    'to the version 0.17')
     argparser.add_argument('conf_file', metavar='CONF_FILE',
                            help='an XML configuration file')
     argparser.add_argument('-u', '--update', type=int,

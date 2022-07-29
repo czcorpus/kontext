@@ -24,9 +24,8 @@ from typing import Any, Dict
 import bgcalc
 import plugins
 import settings
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from action.errors import FunctionNotSupported, UserActionException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus

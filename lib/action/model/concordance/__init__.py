@@ -27,9 +27,8 @@ import plugins
 import settings
 from action.argmapping import ConcArgsMapping
 from action.argmapping.conc import build_conc_form_args
-from action.argmapping.conc.filter import (ContextFilterArgsConv,
-                                           FilterFormArgs,
-                                           FirstHitsFilterFormArgs)
+from action.argmapping.conc.filter import (
+    ContextFilterArgsConv, FilterFormArgs, FirstHitsFilterFormArgs)
 from action.argmapping.conc.other import SampleFormArgs, ShuffleFormArgs
 from action.argmapping.conc.query import ConcFormArgs, QueryFormArgs
 from action.argmapping.conc.sort import SortFormArgs

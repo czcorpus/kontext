@@ -22,7 +22,7 @@ import urllib.parse
 from dataclasses import asdict
 from functools import partial
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
-                    TypeVar, Union)
+    TypeVar, Union)
 
 import corplib
 import l10n

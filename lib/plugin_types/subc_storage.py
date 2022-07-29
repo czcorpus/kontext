@@ -28,9 +28,8 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
 from action.argmapping.action import IntOpt, StrOpt
-from action.argmapping.subcorpus import (CreateSubcorpusArgs,
-                                         CreateSubcorpusRawCQLArgs,
-                                         CreateSubcorpusWithinArgs)
+from action.argmapping.subcorpus import (
+    CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
 from corplib.subcorpus import SubcorpusRecord
 
 
