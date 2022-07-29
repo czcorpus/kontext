@@ -316,8 +316,9 @@ export function init(
             dispatcher.dispatch<typeof Actions.ShowSubcEditWindow>({
                 name: Actions.ShowSubcEditWindow.name,
                 payload: {
-                    corpname: item.corpus_name,
-                    subcname: item.id
+                    corpusName: item.corpus_name,
+                    subcorpusId: item.id,
+                    subcorpusName: item.name
                 }
             });
         }
@@ -340,9 +341,9 @@ export function init(
                         ? (
                             <layoutViews.ModalOverlay onCloseKey={this._handleActionsClose}>
                                 <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
-                                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus[0]})}
+                                        label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus.subcorpusName})}
                                         scrollable={true}>
-                                    <SubcorpEdit corpname={this.props.editWindowSubcorpus[0]} subcname={this.props.editWindowSubcorpus[1]} />
+                                    <SubcorpEdit corpname={this.props.editWindowSubcorpus.corpusName} subcname={this.props.editWindowSubcorpus.subcorpusId} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}

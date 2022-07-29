@@ -328,7 +328,42 @@ export const RestoreTabContentWrapper = styled.div`
 
 // ---------------- <TabContentWrapper /> --------------------------------
 
-export const TabContentWrapper = styled.div`
+export const TabContentWrapper = styled.div``;
 
+// ---------------- <PublishingTab /> ------------------------------------
 
+export const PublishingTab = styled.div`
+
+    .preview, textarea {
+        font-size: 1.4em;
+        border-radius: ${theme.borderRadiusDefault};
+        border-color: ${theme.colorLightFrame};
+        border-width: 1px;
+        border-style: solid;
+    }
+
+    .preview {
+        padding: 0.6em;
+        background-color: #FFFFFF;
+    }
+
+    textarea {
+        padding: 0.3em;
+    }
+
+    div.preview-switch {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: 1.1em;
+
+        label {
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    .markdown-note {
+        text-align: right;
+    }
 `;

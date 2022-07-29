@@ -589,6 +589,8 @@
         "subcform__publication_notes": "If selected then the subcorpus will be given a public identifier (besides its original name) giving access rights to other users. Use this in case you plan to publish/share results based on this subcorpus.",
         "subcform__publication_notes_2": "This property can be set also on an existing private subcorpus but the publication must always be done before you start to share concordance URLs.",
         "subcform__public_description": "Public description",
+        "subcform__public_desc_preview_switch": "Show preview",
+        "subcform__unsaved_changes": "There are unsaved changes",
         "subclist__my_subc_heading": "My subcorpora",
         "subclist__show_archived": "Show also archived items",
         "subclist__filter_heading": "Filter",

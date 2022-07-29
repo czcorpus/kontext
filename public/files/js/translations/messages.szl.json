@@ -588,6 +588,8 @@
         "subcform__publication_notes": "Jak wybrane, to podkorpus dostanie publiczny idyntyfikatōr (ôkrōm swojigo ôryginalnego miana), żeby dać dostymp inkszym używŏczōm. Użyj tego, jeźli chcesz ôpublikować abo podzielić sie wynikami ôpartymi na tym podkorpusie.",
         "subcform__publication_notes_2": "Ta włŏsność może być nasztalowanŏ na istniyjōncym prywatnym podkorpusie, ale przed udostympnianiym adresōw URL kōnkordancyji, trzeba przekludzić publikacyjõ.",
         "subcform__public_description": "Ôpis publiczny",
+        "subcform__public_desc_preview_switch": "Show preview UNTRANSLATED",
+        "subcform__unsaved_changes": "There are unsaved changes UNTRANSLATED",
         "subclist__my_subc_heading": "Moje podkorpusy",
         "subclist__show_archived": "Show also archived items UNTRANSLATED",
         "subclist__filter_heading": "Filter",
