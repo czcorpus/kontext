@@ -25,7 +25,7 @@ coroutines within a single process.
 import logging
 from types import ModuleType
 from typing import (Any, Callable, Dict, Generic, Iterator, List, Optional,
-                    Sequence, TypeVar, Union)
+    Sequence, TypeVar, Union)
 
 from action.plugin.ctx import AbstractUserPluginCtx
 from plugin_types.action_log import AbstractActionLog

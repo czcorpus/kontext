@@ -34,12 +34,10 @@ from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
 from action.argmapping.conc import (QueryFormArgs, ShuffleFormArgs,
                                     build_conc_form_args)
-from action.argmapping.conc.filter import (FilterFormArgs,
-                                           FirstHitsFilterFormArgs,
-                                           QuickFilterArgsConv,
-                                           SubHitsFilterFormArgs)
-from action.argmapping.conc.other import (KwicSwitchArgs, LgroupOpArgs,
-                                          LockedOpFormsArgs, SampleFormArgs)
+from action.argmapping.conc.filter import (
+    FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs)
+from action.argmapping.conc.other import (
+    KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.decorators import http_action
 from action.errors import NotFoundException, UserActionException
@@ -55,8 +53,7 @@ from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc import cancel_conc_task
 from conclib.empty import InitialConc
 from conclib.errors import (ConcordanceException, ConcordanceQueryParamsError,
-                            ConcordanceSpecificationError,
-                            UnknownConcordanceAction, extract_manatee_error)
+    ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
 from corplib.corpus import AbstractKCorpus
