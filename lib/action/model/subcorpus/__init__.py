@@ -121,7 +121,7 @@ class SubcorpusActionModel(CorpusActionModel):
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                 label=f'{self.args.corpname}/{data.subcname}',
                 args=dict(subcname=data.subcname, corpname=self.args.corpname)))
-            result = res.get()
+            result = {}
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
 
