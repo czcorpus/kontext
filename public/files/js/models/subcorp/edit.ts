@@ -25,9 +25,8 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
-import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpList, SubcorpusRecord, WithinSelection } from './common';
+import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
-import * as Kontext from '../../types/kontext';
 
 
 
@@ -113,22 +112,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$<any>(
-                    HTTP.Method.POST,
-                    this.layoutModel.createActionUrl('/subcorpus/restore'),
-                    {
-                        corpname: state.data.corpname,
-                        usesubcorp: state.data.usesubcorp,
-                    }
-                ).subscribe({
-                    next: data => {
-                        dispatch(Actions.RestoreSubcorpusDone);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                    }
-                });
+                this.restoreSubcorpus(state.data.corpname, state.data.usesubcorp, dispatch);
             }
         );
 
@@ -148,19 +132,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.wipeSubcorpus(
-                    state
-
-                ).subscribe({
-                    next: data => {
-                        dispatch(Actions.WipeSubcorpusDone);
-                        dispatch(Actions.HideSubcEditWindow);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                    }
-                })
+                this.wipeSubcorpus(state, dispatch);
             }
         );
 
@@ -377,7 +349,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
     }
 
-    private wipeSubcorpus(state:SubcorpusEditModelState):Observable<any> {
+    private wipeSubcorpus(state:SubcorpusEditModelState, dispatch: SEDispatcher) {
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
@@ -385,7 +357,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 corpname: state.data.corpname,
                 usesubcorp: state.data.usesubcorp
             }
-        );
+        ).subscribe({
+            next: data => {
+                dispatch(Actions.WipeSubcorpusDone);
+                dispatch(Actions.HideSubcEditWindow);
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+            }
+        });
     }
 
     private loadSubcorpData(corpname: string, subcname: string, dispatch: SEDispatcher) {
@@ -453,6 +434,25 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     Actions.ArchiveSubcorpusDone,
                     error,
                 )
+                this.layoutModel.showMessage('error', error);
+            }
+        });
+    }
+
+    private restoreSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
+        this.layoutModel.ajax$<{}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('/subcorpus/restore'),
+            {
+                corpname: corpname,
+                usesubcorp: subcname,
+            }
+        ).subscribe({
+            next: data => {
+                dispatch(Actions.RestoreSubcorpusDone);
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
+            },
+            error: error => {
                 this.layoutModel.showMessage('error', error);
             }
         });
