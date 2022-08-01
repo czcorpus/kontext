@@ -17,6 +17,7 @@
 import logging
 from datetime import datetime
 from typing import Any, Dict, Optional, Union
+from dataclasses import dataclass
 
 import plugins
 import ujson as json
@@ -64,22 +65,28 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         published=row['published'])
 
 
+@dataclass
+class BackendConfig:
+    user_table: str = 'kontext_user'
+    subccorp_table: str = 'kontext_subcorpus'
+    user_table_firstname_col: str = 'firstname'
+    user_table_lastname_col: str = 'lastname'
+
+
 class MySQLSubcArchive(AbstractSubcArchive):
     """
     For the documentation of individual methods, please see AbstractSubcArchive class
     """
 
-    TABLE_NAME = 'kontext_subcorpus'
-    USER_TABLE_NAME = 'kontext_user'
-    USER_TABLE_FIRSTNAME_COL = 'firstname'
-    USER_TABLE_LASTNAME_COL = 'lastname'
-
     def __init__(
             self,
             plugin_conf: Dict[str, Any],
             corparch: AbstractCorporaArchive,
-            db: MySqlIntegrationDb):
+            db: MySqlIntegrationDb,
+            backend_conf: BackendConfig
+    ):
         self._conf = plugin_conf
+        self._bconf = backend_conf
         self._corparch = corparch
         self._db = db
 
@@ -94,7 +101,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
             elif isinstance(data, CreateSubcorpusArgs):
                 column, value = 'text_types', json.dumps(data.text_types)
             await cursor.execute(
-                f'INSERT INTO {self.TABLE_NAME} '
+                f'INSERT INTO {self._bconf.subccorp_table} '
                 f'(id, user_id, author_id, corpus_name, name, {column}, created, public_description, size) '
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (ident, user_id, user_id, data.corpname, data.subcname, value, datetime.now(), public_description,
@@ -104,7 +111,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def archive(self, user_id: int, corpname: str, subc_id: str):
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'UPDATE {self.TABLE_NAME} SET archived = NOW() '
+                f'UPDATE {self._bconf.subccorp_table} SET archived = NOW() '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (user_id, corpname, subc_id)
             )
@@ -113,7 +120,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def restore(self, user_id: int, corpname: str, subc_id: str):
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'UPDATE {self.TABLE_NAME} SET archived = NULL '
+                f'UPDATE {self._bconf.subccorp_table} SET archived = NULL '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (user_id, corpname, subc_id)
             )
@@ -137,16 +144,18 @@ class MySQLSubcArchive(AbstractSubcArchive):
 
         if filter_args.ia_query:
             v = f'{filter_args.ia_query}%'
-            where.append(f't1.id LIKE %s OR t2.{self.USER_TABLE_LASTNAME_COL} LIKE %s')
+            where.append(f't1.id LIKE %s OR t2.{self._bconf.user_table_lastname_col} LIKE %s')
             args.extend([v, v])
 
         if limit is None:
             limit = 1000000000
         args.extend((limit, offset))
 
-        sql = f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
-            FROM {self.TABLE_NAME} AS t1
-            JOIN {self.USER_TABLE_NAME} as t2 ON t1.author_id = t2.id
+        sql = f"""SELECT 
+            t1.*, 
+            CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
+            FROM {self._bconf.subccorp_table} AS t1
+            JOIN {self._bconf.user_table} as t2 ON t1.author_id = t2.id
             WHERE {" AND ".join(where)} ORDER BY t1.id LIMIT %s OFFSET %s"""
         async with self._db.cursor() as cursor:
             await cursor.execute(sql, args)
@@ -155,8 +164,11 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f"""SELECT t1.*, CONCAT(t2.{self.USER_TABLE_FIRSTNAME_COL}, ' ', {self.USER_TABLE_LASTNAME_COL}) AS fullname
-                FROM {self.TABLE_NAME} AS t1 JOIN {self.USER_TABLE_NAME} AS t2 ON t1.author_id = t2.id
+                f"""SELECT 
+                t1.*, 
+                CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
+                FROM {self._bconf.subccorp_table} AS t1 
+                JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
                 WHERE t1.id = %s
                 ORDER BY t1.created
                 LIMIT 1""",
@@ -172,7 +184,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             wc = ', '.join(['%s'] * len(subc_ids))
             await cursor.execute(
-                f"SELECT id, name FROM {self.TABLE_NAME} WHERE id IN ({wc})",
+                f"SELECT id, name FROM {self._bconf.subccorp_table} WHERE id IN ({wc})",
                 tuple(subc_ids)
             )
             async for row in cursor:
@@ -182,7 +194,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def get_query(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'SELECT * FROM {self.TABLE_NAME} '
+                f'SELECT * FROM {self._bconf.subccorp_table} '
                 'WHERE id = %s', (subc_id, )
             )
             row = await cursor.fetchone()
@@ -195,7 +207,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def delete_query(self, user_id: int, corpname: str, subc_id: str) -> None:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'UPDATE {self.TABLE_NAME} '
+                f'UPDATE {self._bconf.subccorp_table} '
                 'SET archived = IF (archived IS NULL, NOW(), archived), user_id = NULL '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
                 (user_id, corpname, subc_id)
@@ -206,7 +218,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
         if not preview_only:
             async with self._db.cursor() as cursor:
                 await cursor.execute(
-                    f'UPDATE {self.TABLE_NAME} '
+                    f'UPDATE {self._bconf.subccorp_table} '
                     'SET public_description = %s '
                     'WHERE user_id = %s AND id = %s',
                     (description, user_id, subc_id)
@@ -220,7 +232,7 @@ def create_instance(conf, corparch: AbstractCorporaArchive, integ_db: MySqlInteg
     plugin_conf = conf.get('plugins', 'subc_storage')
     if integ_db.is_active:
         logging.getLogger(__name__).info(f'mysql_subc_storage uses integration_db[{integ_db.info}]')
-        return MySQLSubcArchive(plugin_conf, corparch, integ_db)
+        return MySQLSubcArchive(plugin_conf, corparch, integ_db, BackendConfig())
     else:
         raise PluginCompatibilityException(
             'mysql_subc_storage works only with integration_db enabled')
