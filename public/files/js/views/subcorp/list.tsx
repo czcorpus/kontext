@@ -73,33 +73,9 @@ export function init(
                 </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td />
-                <td />
             </tr>
         );
     };
-
-    // ------------------------ <ArchiveButton /> -----------------------------
-
-    const ArchiveButton:React.FC<{
-        corpname:string;
-        subcname:string;
-
-    }> = (props) => {
-
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
-                name: Actions.ArchiveSubcorpus.name,
-                payload: {
-                    corpname: props.corpname,
-                    subcname: props.subcname,
-                }
-            });
-        };
-
-        return <layoutViews.DelItemIcon className="archive-subc"
-                    title={he.translate('subclist__archive_subcorp')}
-                    onClick={handleSubmit} />;
-    }
 
     // ------------------------ <PropertiesButton /> -----------------------------
 
@@ -153,12 +129,6 @@ export function init(
                 </td>
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
-                </td>
-                <td>
-                    {!props.item.archived ?
-                        <ArchiveButton corpname={props.item.corpus_name} subcname={props.item.id} /> :
-                        null
-                    }
                 </td>
             </tr>
         );
@@ -243,9 +213,10 @@ export function init(
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th />
-                            <th />
                         </tr>
-                        {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
+                        {List.map(item => (
+                            <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
+                        ), this.props.unfinished)}
                         {List.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />

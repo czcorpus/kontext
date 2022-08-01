@@ -25,8 +25,9 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
-import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord, WithinSelection } from './common';
+import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpList, SubcorpusRecord, WithinSelection } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
+import * as Kontext from '../../types/kontext';
 
 
 
@@ -92,8 +93,15 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadSubcorpData(state.data.corpname, state.data.usesubcorp, dispatch);
+                this.archiveSubcorpus(action.payload.corpname, action.payload.subcname, dispatch);
             }
+        );
+
+        this.addActionHandler(
+            Actions.ArchiveSubcorpusDone,
+            (state, action) => {
+                state.isBusy = false;
+            },
         );
 
         this.addActionHandler(
@@ -221,7 +229,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     map(resp => tuple(args, resp))
                                 )
                             }
-                            
+
                             throwError(() => new Error('Invalid action passed through suspend filter'));
                         }
                     )
@@ -417,5 +425,26 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 );
             }
         })
+    }
+
+    private archiveSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
+        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('subcorpus/archive'),
+            {
+                corpname: corpname,
+                usesubcorp: subcname
+            },
+        ).subscribe({
+            next: _ => {
+                this.loadSubcorpData(corpname, subcname, dispatch)
+                dispatch(Actions.ArchiveSubcorpusDone)
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_archived'));
+            },
+            error: error => {
+                dispatch(Actions.ArchiveSubcorpusDone, error)
+                this.layoutModel.showMessage('error', error);
+            }
+        });
     }
 }

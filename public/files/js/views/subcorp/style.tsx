@@ -140,7 +140,7 @@ export const SubcorpList = styled.div`
         color: ${theme.colorLogoPink};
     }
 
-    .archive-subc, .properties-subc {
+    .properties-subc {
         font-size: 1.7em;
     }
 
