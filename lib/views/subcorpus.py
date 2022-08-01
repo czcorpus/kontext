@@ -17,7 +17,7 @@
 import logging
 import os
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import l10n
 import plugins
@@ -117,9 +117,9 @@ async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     corp_ident = amodel.corp.portable_ident
     if isinstance(corp_ident, SubcorpusIdent):
         with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
-            await sr.archive(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
+            dt = await sr.archive(amodel.plugin_ctx.user_id, corp_ident.corpus_name, corp_ident.id)
 
-    return {}
+    return {'archived': dt.timestamp()}
 
 
 @bp.route('/restore', ['POST'])

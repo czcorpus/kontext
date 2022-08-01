@@ -108,7 +108,7 @@ class MySQLSubcArchive(AbstractSubcArchive):
                  size))
             await cursor.connection.commit()
 
-    async def archive(self, user_id: int, corpname: str, subc_id: str):
+    async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'UPDATE {self._bconf.subccorp_table} SET archived = NOW() '
@@ -116,6 +116,14 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 (user_id, corpname, subc_id)
             )
             await cursor.connection.commit()
+
+            result = await cursor.execute(
+                f'SELECT archived FROM {self._bconf.subccorp_table} '
+                'WHERE user_id = %s AND corpus_name = %s AND id = %s',
+                (user_id, corpname, subc_id)
+            )
+            row = await cursor.fetchone()
+            return row['archived']
 
     async def restore(self, user_id: int, corpname: str, subc_id: str):
         async with self._db.cursor() as cursor:
@@ -151,8 +159,8 @@ class MySQLSubcArchive(AbstractSubcArchive):
             limit = 1000000000
         args.extend((limit, offset))
 
-        sql = f"""SELECT 
-            t1.*, 
+        sql = f"""SELECT
+            t1.*,
             CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
             FROM {self._bconf.subccorp_table} AS t1
             JOIN {self._bconf.user_table} as t2 ON t1.author_id = t2.id
@@ -164,10 +172,10 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def get_info(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f"""SELECT 
-                t1.*, 
+                f"""SELECT
+                t1.*,
                 CONCAT(t2.{self._bconf.user_table_firstname_col}, ' ', {self._bconf.user_table_lastname_col}) AS fullname
-                FROM {self._bconf.subccorp_table} AS t1 
+                FROM {self._bconf.subccorp_table} AS t1
                 JOIN {self._bconf.user_table} AS t2 ON t1.author_id = t2.id
                 WHERE t1.id = %s
                 ORDER BY t1.created

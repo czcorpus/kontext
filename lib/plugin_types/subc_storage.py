@@ -25,6 +25,7 @@ Expected factory method signature: create_instance(config, db)
 
 import abc
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from action.argmapping.action import IntOpt, StrOpt
@@ -74,7 +75,7 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def archive(self, user_id: int, corpname: str, subc_id: str):
+    async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         """
         Archive subcorpus
         """

@@ -101,6 +101,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.ArchiveSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
+                if (!action.error) {
+                    state.data.archived = action.payload.archived;
+                }
             },
         );
 
@@ -133,7 +136,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.RestoreSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                state.data.archived = undefined;
+                if (!action.error) {
+                    state.data.archived = undefined;
+                }
             }
         );
 
@@ -428,7 +433,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
     }
 
     private archiveSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
-        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
+        return this.layoutModel.ajax$<{archived: number}>(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/archive'),
             {
@@ -436,13 +441,18 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 usesubcorp: subcname
             },
         ).subscribe({
-            next: _ => {
-                this.loadSubcorpData(corpname, subcname, dispatch)
-                dispatch(Actions.ArchiveSubcorpusDone)
+            next: resp => {
+                dispatch(
+                    Actions.ArchiveSubcorpusDone,
+                    {archived: resp.archived},
+                )
                 this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_archived'));
             },
             error: error => {
-                dispatch(Actions.ArchiveSubcorpusDone, error)
+                dispatch(
+                    Actions.ArchiveSubcorpusDone,
+                    error,
+                )
                 this.layoutModel.showMessage('error', error);
             }
         });

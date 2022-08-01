@@ -43,7 +43,9 @@ export class Actions {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS'
     };
 
-    static ArchiveSubcorpusDone:Action<{}> = {
+    static ArchiveSubcorpusDone:Action<{
+        archived: number;
+    }> = {
         name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS_DONE'
     };
 
