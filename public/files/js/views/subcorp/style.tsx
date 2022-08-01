@@ -136,25 +136,11 @@ export const SubcorpList = styled.div`
         }
     }
 
-    table td.action-link {
-        text-align: center;
-
-        a {
-            border-radius: 3px;
-            padding-left: 0.2em;
-            padding-right: 0.2em;
-            background-color: ${theme.colorLogoBlue};
-            color: #FFFFFF;
-            text-transform: lowercase;
-            text-decoration:  none;
-        }
-    }
-
     table td.processing {
         color: ${theme.colorLogoPink};
     }
 
-    .archive-subc {
+    .archive-subc, .properties-subc {
         font-size: 1.7em;
     }
 

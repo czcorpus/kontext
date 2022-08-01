@@ -74,7 +74,6 @@ export function init(
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td />
                 <td />
-                <td />
             </tr>
         );
     };
@@ -100,6 +99,18 @@ export function init(
         return <layoutViews.DelItemIcon className="archive-subc"
                     title={he.translate('subclist__archive_subcorp')}
                     onClick={handleSubmit} />;
+    }
+
+    // ------------------------ <PropertiesButton /> -----------------------------
+
+    const PropertiesButton:React.FC<{
+        onClick:() => void;
+
+    }> = (props) => {
+
+        return <layoutViews.ConfIcon className="properties-subc"
+                    title={he.translate('subclist__subc_properties')}
+                    onClick={props.onClick} />;
     }
 
     // ------------------------ <TrDataLine /> --------------------------
@@ -140,10 +151,8 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
-                <td className="action-link">
-                        <a onClick={()=>props.actionButtonHandle(props.idx)}>
-                            {he.translate('subclist__subc_properties')}
-                        </a>
+                <td>
+                        <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
                 <td>
                     {!props.item.archived ?
@@ -233,7 +242,7 @@ export function init(
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                            <th>{he.translate('subclist__col_published')}</th>
+                            <th />
                             <th />
                         </tr>
                         {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
