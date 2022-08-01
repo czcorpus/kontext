@@ -20,26 +20,28 @@
 import os
 import sys
 from typing import Union
-from rq import Connection, Worker, get_current_job
+
 import redis
 import uvloop
+from rq import Connection, Worker, get_current_job
 
 APP_PATH = os.path.realpath(f'{os.path.dirname(os.path.abspath(__file__))}/..')
 sys.path.insert(0, os.path.join(APP_PATH, 'lib'))
 sys.path.insert(0, os.path.join(APP_PATH, 'worker'))
 
-import settings
 import plugins
+import settings
 from util import as_sync
 
 settings.load(os.path.join(APP_PATH, 'conf', 'config.xml'))
 if settings.get('global', 'manatee_path', None):
     sys.path.insert(0, settings.get('global', 'manatee_path'))
 
+import logging
+
 import general
 from bgcalc.adapter.factory import init_backend
 from corplib.abstract import SubcorpusIdent
-import logging
 
 uvloop.install()
 
@@ -58,6 +60,7 @@ class TaskWrapper:
 async def conc_register(user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit):
     return await general.conc_register(
         TaskWrapper(get_current_job()), user_id, corpus_ident, corp_cache_key, query, samplesize, time_limit, worker)
+
 
 @as_sync
 async def conc_calculate(initial_args, user_id, corpus_ident, corp_cache_key, query, samplesize):
@@ -132,8 +135,8 @@ async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items
 
 
 @as_sync
-async def create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description):
-    return await general.create_subcorpus(user_id, corp_id, path, publish_path, tt_query, cql, author, description)
+async def create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description):
+    return await general.create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

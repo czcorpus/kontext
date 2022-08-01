@@ -70,8 +70,8 @@ import conclib.calc.base
 from action.argmapping.wordlist import WordlistFormArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
-from corplib.corpus import KCorpus
 from corplib.abstract import AbstractKCorpus, SubcorpusIdent
+from corplib.corpus import KCorpus
 from corplib.subcorpus import SubcorpusRecord
 
 stderr_redirector = get_stderr_redirector(settings)
@@ -199,7 +199,8 @@ async def conc_sync_calculate(self, user_id, corpus_name, subc_name, corp_cache_
     task = conclib.calc.ConcSyncCalculation(
         task_id=self.request.id, cache_factory=None,
         subc_root=settings.get('corpora', 'subcorpora_dir'),
-        corpus_ident=SubcorpusIdent(id=subc_name, corpus_name=corpus_name) if subc_name else corpus_name,
+        corpus_ident=SubcorpusIdent(
+            id=subc_name, corpus_name=corpus_name) if subc_name else corpus_name,
         conc_dir=conc_dir)
     return await task.run(corp_cache_key, query, samplesize)
 
@@ -309,7 +310,8 @@ async def compile_docf(corpus_ident, attr, logfile):
                 await f.write('\n100 %\n')
         return {'message': 'OK', 'last_log_record': await freqs.get_log_last_line(logfile)}
     except manatee.AttrNotFound:
-        corp_id = corpus_ident.corpname if isinstance(corpus_ident, SubcorpusIdent) else corpus_ident
+        corp_id = corpus_ident.corpname if isinstance(
+            corpus_ident, SubcorpusIdent) else corpus_ident
         raise WorkerTaskException('Failed to compile docf: attribute {}.{} not found in {}'.format(
                                   doc_struct, attr, corp_id))
 
@@ -317,7 +319,7 @@ async def compile_docf(corpus_ident, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-async def create_subcorpus(user_id, corp_id, path, tt_query, cql):
+async def create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description):
     try:
         worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
         return await worker.run(tt_query, cql, path)

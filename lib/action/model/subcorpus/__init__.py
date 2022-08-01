@@ -51,6 +51,8 @@ class SubcorpusActionModel(CorpusActionModel):
         """
         within_cql = None
         form_type = self._req.json['form_type']
+        author = self.session_get('user', 'id')
+        description = self._req.json['description']
 
         if form_type == 'tt-sel':
             data = CreateSubcorpusArgs(**self._req.json)
@@ -113,7 +115,7 @@ class SubcorpusActionModel(CorpusActionModel):
             worker = bgcalc.calc_backend_client(settings)
             res = await worker.send_task(
                 'create_subcorpus', object.__class__,
-                (self.session_get('user', 'id'), self.args.corpname, full_path, tt_query, imp_cql),
+                (author, self.args.corpname, full_path, tt_query, imp_cql, author, description),
                 time_limit=self.TASK_TIME_LIMIT)
             self.store_async_task(AsyncTaskStatus(
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
@@ -122,13 +124,14 @@ class SubcorpusActionModel(CorpusActionModel):
             result = {}
         else:
             raise UserActionException(self._req.translate('Nothing specified!'))
+
         if result:
             subc = await self.cf.get_corpus(subc_id)
             with plugins.runtime.SUBC_STORAGE as sr:
                 try:
                     await sr.create(
                         ident=subc_id.id,
-                        user_id=self.session_get('user', 'id'),
+                        user_id=author,
                         corpname=self.args.corpname,
                         subcname=data.subcname,
                         size=subc.search_size,
