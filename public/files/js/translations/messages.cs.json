@@ -601,7 +601,7 @@
         "subclist__action_file": "Soubor",
         "subclist__action_structure": "Struktura subkorpusu",
         "subclist__action_wipe": "Odstranit",
-        "subclist__action_reuse": "Použít",
+        "subclist__action_reuse": "Uložit jako...",
         "subclist__subc_delete_confirm_msg": "Subkorpus bude vymazán a již jej nebude možno obnovit.",
         "subclist__subc_reuse_confirm_msg": "Vytváří se nový subkorpus",
         "subclist__col_published": "Veřejně přístupný UNUSED",
