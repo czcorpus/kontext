@@ -113,4 +113,4 @@ export * as ToggleSwitch from './toggleSwitch';
 export * as UnsupportedRenderer from './unsupportedRenderer';
 export * as ValidatedItem from './validateItem';
 export * as ResponsiveWrapper from './responsiveWrapper';
-export * as ConfIcon from './confIcon';
+export * as ConfIcon from './delItemIcon';

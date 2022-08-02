@@ -56,11 +56,12 @@ initializer.init_plugin('integration_db')
 initializer.init_plugin('sessions')
 initializer.init_plugin('auth')
 initializer.init_plugin('conc_cache')
+initializer.init_plugin('corparch')
+initializer.init_plugin('subc_storage')
 initializer.init_plugin('query_history')
 initializer.init_plugin('query_persistence')
 initializer.init_plugin('sessions')
 initializer.init_plugin('user_items')
-initializer.init_plugin('corparch')
 initializer.init_plugin('token_connect', optional=True)
 initializer.init_plugin('live_attributes', optional=True)
 initializer.init_plugin('dispatch_hook', optional=True)
@@ -68,6 +69,7 @@ initializer.init_plugin('dispatch_hook', optional=True)
 import conclib.calc
 import conclib.calc.base
 from action.argmapping.wordlist import WordlistFormArgs
+from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 from bgcalc import coll_calc, freqs, pquery, subc_calc, wordlist
 from corplib import CorpusFactory
 from corplib.abstract import AbstractKCorpus, SubcorpusIdent
@@ -319,10 +321,15 @@ async def compile_docf(corpus_ident, attr, logfile):
 # ----------------------------- SUBCORPORA ------------------------------------
 
 
-async def create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description):
+async def create_subcorpus(
+        user_id,
+        specification: Union[CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs],
+        subcorpus_id: SubcorpusIdent,
+        path: str
+):
     try:
-        worker = subc_calc.CreateSubcorpusTask(user_id=user_id, corpus_id=corp_id)
-        return await worker.run(tt_query, cql, path)
+        worker = subc_calc.CreateSubcorpusTask(user_id=user_id)
+        return await worker.run(specification, subcorpus_id, path)
     except Exception as ex:
         msg = getattr(ex, 'message', None)
         if not msg:

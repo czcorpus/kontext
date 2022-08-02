@@ -337,13 +337,13 @@ async def frq_db(corp: AbstractKCorpus, attrname: str, nums: str = 'frq', id_ran
                 raise VirtualSubcFreqFileError()
             frq = array.array('i')
             _frq_from_file(frq, filename, id_range)  # type: ignore
-        except (EOFError, IOError) as ex:
+        except EOFError as ex:
             try:
                 await aiofiles.os.remove(filename)
             except:
                 pass
             raise MissingSubCorpFreqFile(ex)
-        except VirtualSubcFreqFileError:
+        except (VirtualSubcFreqFileError, IOError):
             frq = array.array('l')
             try:
                 _frq_from_file(frq, filename + '64', id_range)  # type: ignore
