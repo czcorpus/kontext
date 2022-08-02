@@ -19,8 +19,8 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, throwError } from 'rxjs';
-import { tap, concatMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
@@ -81,6 +81,7 @@ export interface SubcorpListModelState {
     editWindowSubcorpus:currSubcorpusProps|null;
     usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
+    page:number;
 }
 
 export interface SubcorpListModelArgs {
@@ -118,7 +119,8 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
-                finishedTasks: {}
+                finishedTasks: {},
+                page: 1,
             }
         );
         this.layoutModel = layoutModel;
@@ -181,23 +183,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
 
         this.addActionHandler(
-            Actions.ArchiveSubcorpus,
-            action => this.archiveSubcorpus(action.payload.corpname, action.payload.subcname).subscribe({
-                next: data => {
-                    this.emitChange();
-                    this.layoutModel.showMessage(
-                        'info',
-                        this.layoutModel.translate('subclist__subc_archived')
-                    );
-                },
-                error: error => {
-                    this.emitChange();
-                    this.layoutModel.showMessage('error', error);
-                }
-            })
-        );
-
-        this.addActionHandler(
             Actions.UpdateFilter,
             action => this.filterItems(action.payload).subscribe({
                 next: _ => {
@@ -235,6 +220,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 Actions.WipeSubcorpusDone,
                 Actions.RestoreSubcorpusDone,
                 Actions.ReuseQueryDone,
+                Actions.ArchiveSubcorpusDone,
             ],
             action => {
                 this.reloadItems().subscribe({
@@ -262,20 +248,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 failed: item.status === 'FAILURE'
             }))
         )
-    }
-
-    private archiveSubcorpus(corpname:string, subcname:string):Observable<SubcorpList> {
-        return this.layoutModel.ajax$<Kontext.AjaxResponse>(
-            HTTP.Method.POST,
-            this.layoutModel.createActionUrl('subcorpus/archive'),
-            {
-                corpname: corpname,
-                usesubcorp: subcname
-            },
-
-        ).pipe(
-            concatMap(data => this.reloadItems())
-        );
     }
 
     private sortItems(name:string, reverse:boolean):Observable<SubcorpList> {

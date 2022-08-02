@@ -40,7 +40,13 @@ export class Actions {
         corpname: string;
         subcname: string;
     }> = {
-        name: 'SUBCORP_LIST_DELETE_SUBCORPUS'
+        name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS'
+    };
+
+    static ArchiveSubcorpusDone:Action<{
+        archived: number;
+    }> = {
+        name: 'SUBCORP_LIST_ARCHIVE_SUBCORPUS_DONE'
     };
 
     static UpdateFilter:Action<SubcListFilter> = {

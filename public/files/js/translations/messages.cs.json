@@ -604,7 +604,7 @@
         "subclist__action_reuse": "Použít",
         "subclist__subc_delete_confirm_msg": "Subkorpus bude vymazán a již jej nebude možno obnovit.",
         "subclist__subc_reuse_confirm_msg": "Vytváří se nový subkorpus",
-        "subclist__col_published": "Veřejně přístupný",
+        "subclist__col_published": "Veřejně přístupný UNUSED",
         "subclist__publish_warning": "Skutečně chcete tento subkorpus zpřístupnit všem?",
         "subclist__subc_actions_{subc}": "Subkorpus {subc}",
         "subclist__public_description_btn": "Veřejný popis",

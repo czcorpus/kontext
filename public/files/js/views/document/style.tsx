@@ -698,6 +698,27 @@ export const DelItemIconA = styled.a`
     }
 `;
 
+// --------------- <ConfIconA /> -----------------------
+
+export const ConfIconA = styled.a`
+
+    display: inline-block;
+    text-decoration: none;
+    padding: 0 0.1em;
+
+    &.disabled,
+    &.disabled:hover {
+        cursor: default !important;
+        color: ${theme.colorSuperlightText} !important;
+        background-color: transparent !important;
+    }
+
+    &:hover {
+        text-decoration: none !important;
+        color: #FFFFFF !important;
+    }
+`;
+
 // ------------------ <ExpandButton /> ---------------------
 
 export const ExpandButton = styled.button`

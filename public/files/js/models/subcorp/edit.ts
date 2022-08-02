@@ -25,7 +25,7 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
-import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord, WithinSelection } from './common';
+import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord } from './common';
 import { SubcorpusPropertiesResponse } from '../common/layout';
 
 
@@ -92,8 +92,18 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.loadSubcorpData(state.data.corpname, state.data.usesubcorp, dispatch);
+                this.archiveSubcorpus(action.payload.corpname, action.payload.subcname, dispatch);
             }
+        );
+
+        this.addActionHandler(
+            Actions.ArchiveSubcorpusDone,
+            (state, action) => {
+                state.isBusy = false;
+                if (!action.error) {
+                    state.data.archived = action.payload.archived;
+                }
+            },
         );
 
         this.addActionHandler(
@@ -102,22 +112,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.layoutModel.ajax$<any>(
-                    HTTP.Method.POST,
-                    this.layoutModel.createActionUrl('/subcorpus/restore'),
-                    {
-                        corpname: state.data.corpname,
-                        usesubcorp: state.data.usesubcorp,
-                    }
-                ).subscribe({
-                    next: data => {
-                        dispatch(Actions.RestoreSubcorpusDone);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                    }
-                });
+                this.restoreSubcorpus(state.data.corpname, state.data.usesubcorp, dispatch);
             }
         );
 
@@ -125,7 +120,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             Actions.RestoreSubcorpusDone,
             (state, action) => {
                 state.isBusy = false;
-                state.data.archived = undefined;
+                if (!action.error) {
+                    state.data.archived = undefined;
+                }
             }
         );
 
@@ -135,19 +132,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                this.wipeSubcorpus(
-                    state
-
-                ).subscribe({
-                    next: data => {
-                        dispatch(Actions.WipeSubcorpusDone);
-                        dispatch(Actions.HideSubcEditWindow);
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
-                    },
-                    error: error => {
-                        this.layoutModel.showMessage('error', error);
-                    }
-                })
+                this.wipeSubcorpus(state, dispatch);
             }
         );
 
@@ -221,7 +206,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     map(resp => tuple(args, resp))
                                 )
                             }
-                            
+
                             throwError(() => new Error('Invalid action passed through suspend filter'));
                         }
                     )
@@ -364,7 +349,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
         );
     }
 
-    private wipeSubcorpus(state:SubcorpusEditModelState):Observable<any> {
+    private wipeSubcorpus(state:SubcorpusEditModelState, dispatch: SEDispatcher) {
         return this.layoutModel.ajax$(
             HTTP.Method.POST,
             this.layoutModel.createActionUrl('subcorpus/delete'),
@@ -372,7 +357,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 corpname: state.data.corpname,
                 usesubcorp: state.data.usesubcorp
             }
-        );
+        ).subscribe({
+            next: data => {
+                dispatch(Actions.WipeSubcorpusDone);
+                dispatch(Actions.HideSubcEditWindow);
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_deleted'));
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+            }
+        });
     }
 
     private loadSubcorpData(corpname: string, subcname: string, dispatch: SEDispatcher) {
@@ -417,5 +411,50 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 );
             }
         })
+    }
+
+    private archiveSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
+        return this.layoutModel.ajax$<{archived: number}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('subcorpus/archive'),
+            {
+                corpname: corpname,
+                usesubcorp: subcname
+            },
+        ).subscribe({
+            next: resp => {
+                dispatch(
+                    Actions.ArchiveSubcorpusDone,
+                    {archived: resp.archived},
+                )
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_archived'));
+            },
+            error: error => {
+                dispatch(
+                    Actions.ArchiveSubcorpusDone,
+                    error,
+                )
+                this.layoutModel.showMessage('error', error);
+            }
+        });
+    }
+
+    private restoreSubcorpus(corpname:string, subcname:string, dispatch: SEDispatcher) {
+        this.layoutModel.ajax$<{}>(
+            HTTP.Method.POST,
+            this.layoutModel.createActionUrl('/subcorpus/restore'),
+            {
+                corpname: corpname,
+                usesubcorp: subcname,
+            }
+        ).subscribe({
+            next: data => {
+                dispatch(Actions.RestoreSubcorpusDone);
+                this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_restored'));
+            },
+            error: error => {
+                this.layoutModel.showMessage('error', error);
+            }
+        });
     }
 }

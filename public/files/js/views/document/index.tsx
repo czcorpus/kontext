@@ -672,6 +672,17 @@ export function init(
 
     // ------------------------------------------------------------------------------------
 
+    const ConfIcon:React.FC<CoreViews.ConfIcon.Props> = (props) => {
+        return <S.ConfIconA className={`${props.disabled ? 'disabled' : ''} ${props.className}`}
+                        onClick={props.onClick && !props.disabled ? props.onClick : undefined}
+                        title={props.title}>
+                    <ImgWithMouseover src={he.createStaticUrl('img/config-icon.svg')}
+                            alt={props.title ? props.title : "config"} />
+                </S.ConfIconA>;
+    };
+
+    // ------------------------------------------------------------------------------------
+
     const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
         return <S.ValidatedItem className={props.invalid ? 'invalid' : ''}>
             {props.children}
@@ -822,6 +833,7 @@ export function init(
         Shortener,
         StatusIcon,
         DelItemIcon,
+        ConfIcon,
         ValidatedItem,
         TabButton,
         TabView,

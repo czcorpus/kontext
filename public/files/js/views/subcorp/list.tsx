@@ -73,33 +73,20 @@ export function init(
                 </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td />
-                <td />
-                <td />
             </tr>
         );
     };
 
-    // ------------------------ <ArchiveButton /> -----------------------------
+    // ------------------------ <PropertiesButton /> -----------------------------
 
-    const ArchiveButton:React.FC<{
-        corpname:string;
-        subcname:string;
+    const PropertiesButton:React.FC<{
+        onClick:() => void;
 
     }> = (props) => {
 
-        const handleSubmit = () => {
-            dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
-                name: Actions.ArchiveSubcorpus.name,
-                payload: {
-                    corpname: props.corpname,
-                    subcname: props.subcname,
-                }
-            });
-        };
-
-        return <layoutViews.DelItemIcon className="archive-subc"
-                    title={he.translate('subclist__archive_subcorp')}
-                    onClick={handleSubmit} />;
+        return <layoutViews.ConfIcon className="properties-subc"
+                    title={he.translate('subclist__subc_properties')}
+                    onClick={props.onClick} />;
     }
 
     // ------------------------ <TrDataLine /> --------------------------
@@ -140,16 +127,8 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
-                <td className="action-link">
-                        <a onClick={()=>props.actionButtonHandle(props.idx)}>
-                            {he.translate('subclist__subc_properties')}
-                        </a>
-                </td>
                 <td>
-                    {!props.item.archived ?
-                        <ArchiveButton corpname={props.item.corpus_name} subcname={props.item.id} /> :
-                        null
-                    }
+                        <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
             </tr>
         );
@@ -233,10 +212,11 @@ export function init(
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                            <th>{he.translate('subclist__col_published')}</th>
                             <th />
                         </tr>
-                        {List.map(item => <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />, this.props.unfinished)}
+                        {List.map(item => (
+                            <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
+                        ), this.props.unfinished)}
                         {List.map((item, i) => (
                             <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
