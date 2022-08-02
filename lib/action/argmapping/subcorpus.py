@@ -22,7 +22,7 @@ This module contains dataclasses for requests specifying
 a subcorpus in different ways
 """
 
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 from corplib.subcorpus import WithinType, TextTypesType
 
@@ -44,8 +44,15 @@ class CreateSubcorpusArgs(_SubcGenerateArgsBase):
     """
     CreateSubcorpusArgs specifies a subc. creation request with
     individually selected values for different structural attributes.
+
+    Attributes:
+        text_types: a serialized text types form (= individually selected
+            values for various text type attributes)
+        text_types_cql: a CQL representation of the selection in 'text_types'
+
     """
     text_types: TextTypesType
+    text_types_cql: Optional[str] = None
 
 
 @dataclass

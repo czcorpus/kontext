@@ -42,6 +42,7 @@ import logging
 import general
 from bgcalc.adapter.factory import init_backend
 from corplib.abstract import SubcorpusIdent
+from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
 
 uvloop.install()
 
@@ -135,8 +136,13 @@ async def get_wordlist(corpus_ident: Union[str, SubcorpusIdent], args, max_items
 
 
 @as_sync
-async def create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description):
-    return await general.create_subcorpus(user_id, corp_id, path, tt_query, cql, author, description)
+async def create_subcorpus(
+        user_id,
+        specification: Union[CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs],
+        subcorpus_id: SubcorpusIdent,
+        path: str
+):
+    return await general.create_subcorpus(user_id, specification, subcorpus_id, path)
 
 
 # ----------------------------- PLUG-IN TASKS ---------------------------------

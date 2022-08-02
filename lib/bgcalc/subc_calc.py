@@ -13,11 +13,15 @@
 import logging
 import os
 import time
+from typing import Union
 
 import aiofiles.os
 import conclib.search
 import corplib
 from corplib.subcorpus import subcorpus_from_conc
+from corplib.abstract import SubcorpusIdent
+from action.argmapping.subcorpus import CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs
+import plugins
 
 
 class EmptySubcorpusException(Exception):
@@ -26,19 +30,31 @@ class EmptySubcorpusException(Exception):
 
 class CreateSubcorpusTask(object):
 
-    def __init__(self, user_id: int, corpus_id: str):
+    def __init__(self, user_id: int):
         self._user_id = user_id
         self._cf = corplib.CorpusFactory()
-        self._corpus_id = corpus_id
 
-    async def run(self, tt_query, cql, path):
+    async def run(
+            self,
+            specification: Union[CreateSubcorpusArgs, CreateSubcorpusWithinArgs, CreateSubcorpusRawCQLArgs],
+            subcorpus_id: SubcorpusIdent,
+            path: str
+    ):
         """
         returns:
         True in case of success
         In case of an empty subcorus, EmptySubcorpusException is thrown
         """
-        corp = await self._cf.get_corpus(self._corpus_id)
-        conc = await conclib.search.get_conc(corp, self._user_id, q=cql, asnc=0)
+        if isinstance(specification, CreateSubcorpusWithinArgs):
+            full_cql = f'aword,[] {specification.deserialize()}'
+        elif isinstance(specification, CreateSubcorpusRawCQLArgs):
+            full_cql = f'aword,[] {specification.cql}'
+        else:
+            full_cql = f'aword,[] {specification.text_types_cql}'
+
+        corp = await self._cf.get_corpus(subcorpus_id.corpus_name)
+        conc = await conclib.search.get_conc(corp, self._user_id, q=(full_cql,), asnc=0)
+        conc.sync()
         if conc.size() == 0:
             raise EmptySubcorpusException('Empty subcorpus')
         ans = subcorpus_from_conc(path, conc)
@@ -50,4 +66,14 @@ class CreateSubcorpusTask(object):
                 'Sync. called conc. file not created (path: {})'.format(path))
             time.sleep(5)
         os.chmod(path, 0o664)
+
+        with plugins.runtime.SUBC_STORAGE as sr:
+            await sr.create(
+                ident=subcorpus_id.id,
+                user_id=self._user_id,
+                corpname=subcorpus_id.corpus_name,
+                subcname=specification.subcname,
+                size=conc.size(),
+                public_description=specification.description,
+                data=specification)
         return ans
