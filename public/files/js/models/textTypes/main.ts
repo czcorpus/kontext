@@ -764,7 +764,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         if (attrIdx > -1) {
             state.attributes[attrIdx] = TTSelOps.setTextFieldValue(
                 state.attributes[attrIdx], value, decodedValue);
-            state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
+            state.hasSelectedItems = this.findHasSelectedItems(state);
         }
     }
 
