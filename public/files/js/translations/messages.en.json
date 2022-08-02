@@ -613,6 +613,7 @@
         "subclist__subc_desc_updated": "Subcorpus description has been updated",
         "subclist__archive_subcorp": "Archive",
         "subclist__archived": "Archived",
+        "subclist__published": "Published",
         "subclist__subc_archived": "The subcorpus has been archived.",
         "subclist__subc_restored": "The subcorpus has been restored.",
         "subclist__subc_deleted": "Subcorpus has been deleted.",

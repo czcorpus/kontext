@@ -613,6 +613,7 @@
         "subclist__subc_desc_updated": "Popis subkorpusu byl upraven.",
         "subclist__archive_subcorp": "Archivovat",
         "subclist__archived": "Archivováno",
+        "subclist__published": "Publikováno",
         "subclist__subc_archived": "Subkorpus byl archivován",
         "subclist__subc_restored": "Subkorpus byl obnoven",
         "subclist__subc_deleted": "Subkorpus byl zcela odstraněn.",

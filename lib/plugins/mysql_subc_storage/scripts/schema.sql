@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS kontext_subcorpus;
       cql TEXT,
       within_cond TEXT,
       text_types TEXT,
-      created TIMESTAMP NOT NULL,
+      created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       archived TIMESTAMP NULL,
       published TIMESTAMP NULL,
       public_description TEXT,

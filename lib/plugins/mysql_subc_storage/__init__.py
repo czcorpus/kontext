@@ -111,9 +111,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
     async def archive(self, user_id: int, corpname: str, subc_id: str) -> datetime:
         async with self._db.cursor() as cursor:
             await cursor.execute(
-                f'UPDATE {self._bconf.subccorp_table} SET archived = NOW() '
+                f'UPDATE {self._bconf.subccorp_table} SET archived = %s '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
-                (user_id, corpname, subc_id)
+                (datetime.now(), user_id, corpname, subc_id)
             )
             await cursor.connection.commit()
 
@@ -216,9 +216,9 @@ class MySQLSubcArchive(AbstractSubcArchive):
         async with self._db.cursor() as cursor:
             await cursor.execute(
                 f'UPDATE {self._bconf.subccorp_table} '
-                'SET archived = IF (archived IS NULL, NOW(), archived), user_id = NULL '
+                'SET archived = IF (archived IS NULL, %s, archived), user_id = NULL '
                 'WHERE user_id = %s AND corpus_name = %s AND id = %s',
-                (user_id, corpname, subc_id)
+                (datetime.now(), user_id, corpname, subc_id)
             )
             await cursor.connection.commit()
 

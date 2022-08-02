@@ -115,6 +115,8 @@ export function init(
         corpname: string;
         subcname: string;
         name: string;
+        created: number;
+        published: number;
         archived: number;
     }> = (props) => {
 
@@ -154,6 +156,11 @@ export function init(
 
         return (
             <TabContentWrapper>
+                <p>{he.translate('subclist__col_created')}: {he.formatDate(new Date(props.created * 1000), 1)}</p>
+                {props.published ?
+                    <p>{he.translate('subclist__published')}: {he.formatDate(new Date(props.published * 1000), 1)}</p> :
+                    null
+                }
                 {props.archived ?
                     <p>{he.translate('subclist__archived')}: {he.formatDate(new Date(props.archived * 1000), 1)}</p> :
                     null
@@ -289,7 +296,12 @@ export function init(
                     <layoutViews.AjaxLoaderImage /> :
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
-                            <FormActionFile key="restore" corpname={props.data.corpname} subcname={props.data.usesubcorp} name={props.data.name} archived={props.data.archived} />
+                            <FormActionFile key="restore" corpname={props.data.corpname}
+                                subcname={props.data.usesubcorp}
+                                name={props.data.name}
+                                created={props.data.created}
+                                published={props.data.published}
+                                archived={props.data.archived} />
                             <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 descriptionRaw={props.data.descriptionRaw}
