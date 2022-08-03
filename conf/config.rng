@@ -807,9 +807,9 @@
                             </element>
                         </zeroOrMore>
                     </element>
-                    <element name="subc_restore">
+                    <element name="subc_storage">
                         <optional>
-                            <a:documentation>Backup/restore of subcorpora</a:documentation>
+                            <a:documentation>Storage backend for subcorpora</a:documentation>
                             <ref name="plugin_common" />
                             <ref name="customPluginConfiguration" />
                         </optional>
