@@ -217,12 +217,17 @@ class MySqlQueryHistory(AbstractQueryHistory):
             rows = [item async for item in cursor]
             qdata_map = {}
             for item in rows:
-                qdata_map[item['query_id']] = await self._query_persistence.open(item['query_id'])
+                stored = await self._query_persistence.open(item['query_id'])
+                if stored:
+                    qdata_map[item['query_id']] = stored
             subc_names = await self._subc_archive.get_names(
                 [item.get('usesubcorp') for item in qdata_map.values() if item.get('usesubcorp')])
             for item in rows:
                 q_id = item['query_id']
                 q_supertype = item['q_supertype']
+                if q_id not in qdata_map:
+                    logging.getLogger(__name__).warning('Missing subc data for query {}'.format(q_id))
+                    continue
                 qdata = qdata_map[q_id]
                 if q_supertype == 'conc':
                     tmp = await self._merge_conc_data(item, qdata)
