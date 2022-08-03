@@ -1,0 +1,2 @@
+[tool.isort]
+multi_line_output = 4

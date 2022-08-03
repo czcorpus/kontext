@@ -15,9 +15,9 @@
 
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional, Union
-from dataclasses import dataclass
 
 import plugins
 import ujson as json
