@@ -25,7 +25,7 @@ from conclib.search import get_conc
 from corplib import CorpusFactory
 from corplib.corpus import KCorpus
 from plugin_types.query_suggest import AbstractBackend
-from strings import re_escape
+from strings import escape_attr_val
 from util import as_sync
 
 
@@ -82,7 +82,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         used_corp = self._preset_corp if self._preset_corp is not None else maincorp
-        value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
+        value_norm = value if value_subformat in ('regexp', 'advanced') else escape_attr_val(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
         try:
