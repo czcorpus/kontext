@@ -20,10 +20,9 @@
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
-import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode, isServerWithinSelection } from './common';
+import { FormType, isServerWithinSelection, ServerWithinSelection } from './common';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { concatMap, Observable, throwError } from 'rxjs';
-import { List, pipe, HTTP, Dict } from 'cnc-tskit';
+import { List, pipe, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { IUnregistrable } from '../common/common';
@@ -31,24 +30,11 @@ import { IUnregistrable } from '../common/common';
 /**
  *
  */
-export class WithinLine {
+export interface WithinLine {
     rowIdx:number;
     negated:boolean;
     structureName:string;
     attributeCql:Kontext.FormValue<string>;
-
-    constructor(
-        rowIdx:number,
-        negated:boolean,
-        structureName:string,
-        attributeCql:Kontext.FormValue<string>
-    ) {
-
-        this.rowIdx = rowIdx;
-        this.negated = negated;
-        this.structureName = structureName;
-        this.attributeCql = attributeCql;
-    }
 }
 
 
@@ -58,7 +44,7 @@ export class WithinLine {
 export interface SubcorpWithinFormModelState {
     lines:Array<WithinLine>;
     lineIdGen:number;
-    inputMode:InputMode;
+    inputMode:FormType;
     structsAndAttrs:Kontext.StructsAndAttrs;
     helpHintVisible:boolean;
 }
@@ -73,7 +59,7 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
     constructor(
         dispatcher:IActionDispatcher,
         pageModel:PageModel,
-        inputMode:InputMode,
+        inputMode:FormType,
         structsAndAttrs:Kontext.StructsAndAttrs
     ) {
         super(
@@ -82,17 +68,17 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 lines: Dict.empty(structsAndAttrs) ?
                     [] :
                     [
-                        new WithinLine(
-                            0,
-                            false,
-                            pipe(
+                        {
+                            rowIdx: 0,
+                            negated: false,
+                            structureName: pipe(
                                 structsAndAttrs,
                                 Dict.keys(),
                                 List.sortedAlphaBy(v => v),
                                 List.head()
                             ),
-                            { value: '', isRequired: true, isInvalid: false }
-                        )
+                            attributeCql: { value: '', isRequired: true, isInvalid: false }
+                        }
                     ],
                 lineIdGen: 0,
                 inputMode,
@@ -164,41 +150,34 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         );
 
         this.addActionHandler(
-            Actions.FormWithinSubmit,
-            null,
+            Actions.FormSubmit,
+            (state, action) => {
+                this.validateForm(state);
+            },
             (state, action, dispatch) => {
-                if (state.inputMode !== 'within') {
-                    return;
-                }
-                this.createSubcorpus(state).subscribe({
-                    next: () => {
-                        window.location.href = this.pageModel.createActionUrl(
-                            'subcorpus/list');
-                    },
-                    error: error => {
-                        this.pageModel.showMessage('error', error);
+                dispatch(
+                    Actions.FormWithinSubmitArgsReady,
+                    {
+                        data: this.getSubmitArgs(state),
+                        firstValidationError: this.getFirstInputError(state)
                     }
-                });
+                );
             }
         );
 
         this.addActionHandler(
             Actions.ReuseQuery,
-            null,
+            (state, action) => {
+                this.validateForm(state);
+            },
             (state, action, dispatch) => {
-                if (action.payload.selectionType !== 'within') {
-                    return;
-                }
-                this.createSubcorpus(state).subscribe({
-                    next: () => {
-                        dispatch(Actions.ReuseQueryDone);
-                        this.pageModel.showMessage('info', this.pageModel.translate('subclist__subc_reuse_confirm_msg'));
-                    },
-                    error: error => {
-                        dispatch(Actions.ReuseQueryDone, error);
-                        this.pageModel.showMessage('error', error);
+                dispatch(
+                    Actions.FormWithinSubmitArgsReady,
+                    {
+                        data: this.getSubmitArgs(state),
+                        firstValidationError: this.getFirstInputError(state)
                     }
-                });
+                );
             }
         );
 
@@ -247,36 +226,36 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
     updateWithinType(state:SubcorpWithinFormModelState, rowIdx, negated) {
         const srchIdx = List.findIndex(v => v.rowIdx === rowIdx, state.lines);
         if (srchIdx > -1) {
-            state.lines[srchIdx] = new WithinLine(
-                srchIdx,
+            state.lines[srchIdx] = {
+                rowIdx: srchIdx,
                 negated,
-                state.lines[srchIdx].structureName,
-                state.lines[srchIdx].attributeCql
-            );
+                structureName: state.lines[srchIdx].structureName,
+                attributeCql: state.lines[srchIdx].attributeCql
+            };
         }
     }
 
     updateStruct(state:SubcorpWithinFormModelState, rowIdx, structName) {
         const srchIdx = List.findIndex(v => v.rowIdx === rowIdx, state.lines);
         if (srchIdx > -1) {
-            state.lines[srchIdx] = new WithinLine(
-                srchIdx,
-                state.lines[srchIdx].negated,
-                structName,
-                state.lines[srchIdx].attributeCql
-            );
+            state.lines[srchIdx] = {
+                rowIdx: srchIdx,
+                negated: state.lines[srchIdx].negated,
+                structureName:  structName,
+                attributeCql: state.lines[srchIdx].attributeCql
+            };
         }
     }
 
     updateCql(state:SubcorpWithinFormModelState, rowIdx, cql) {
         const srchIdx = List.findIndex(v => v.rowIdx === rowIdx, state.lines);
         if (srchIdx > -1) {
-            state.lines[srchIdx] = new WithinLine(
-                srchIdx,
-                state.lines[srchIdx].negated,
-                state.lines[srchIdx].structureName,
-                {value: cql, isRequired: true, isInvalid: false}
-            );
+            state.lines[srchIdx] = {
+                rowIdx: srchIdx,
+                negated: state.lines[srchIdx].negated,
+                structureName: state.lines[srchIdx].structureName,
+                attributeCql: {value: cql, isRequired: true, isInvalid: false}
+            };
         }
     }
 
@@ -287,12 +266,12 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         cql:string
     ):void {
         state.lineIdGen += 1;
-        state.lines.push(new WithinLine(
-            state.lineIdGen,
+        state.lines.push({
+            rowIdx: state.lineIdGen,
             negated,
-            structName,
-            {value: cql, isRequired: true, isInvalid: false}
-        ));
+            structureName: structName,
+            attributeCql: {value: cql, isRequired: true, isInvalid: false}
+        });
     }
 
     removeLine(state:SubcorpWithinFormModelState, rowIdx:number) {
@@ -312,75 +291,45 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
         ).join(' ');
     }
 
-    validateForm(state:SubcorpWithinFormModelState):Error|null {
+    validateForm(state:SubcorpWithinFormModelState):void {
         const errIdx = List.findIndex(v => v.attributeCql.value === '', state.lines);
         if (errIdx > -1) {
             const curr = state.lines[errIdx];
-            state.lines[errIdx] = new WithinLine(
-                curr.rowIdx,
-                curr.negated,
-                curr.structureName,
-                Kontext.updateFormValue(curr.attributeCql, {isInvalid: true})
-            );
-            return new Error(this.pageModel.translate('subcform__cql_cannot_be_empty'));
+            state.lines[errIdx] = {
+                rowIdx: curr.rowIdx,
+                negated: curr.negated,
+                structureName: curr.structureName,
+                attributeCql: Kontext.updateFormValue(
+                    curr.attributeCql,
+                    {
+                        isInvalid: true,
+                        errorDesc: this.pageModel.translate('subcform__cql_cannot_be_empty')
+                    }
+                )
+            };
         }
-        return null;
+    }
+
+    private getFirstInputError(state:SubcorpWithinFormModelState):string|undefined {
+        const srch = List.find(
+            x => x.attributeCql.isInvalid,
+            state.lines
+        );
+        return srch ? srch.attributeCql.errorDesc : undefined
     }
 
     private getSubmitArgs(
-        state:SubcorpWithinFormModelState,
-        commonArgs:FormWithinSubmitCommonArgs
-    ):CreateSubcorpusWithinArgs {
-
-        return {
-            ...commonArgs,
-            within: pipe(
-                state.lines,
-                List.filter((v)=>v != null),
-                List.map((v:WithinLine) => ({
-                    negated: v.negated,
-                    structure_name: v.structureName,
-                    attribute_cql: v.attributeCql.value
-                }))
-            ),
-            form_type:'within'
-        };
-    }
-
-    private createSubcorpus(state:SubcorpWithinFormModelState):Observable<any> {
-        return this.suspendWithTimeout(
-            5,
-            {},
-            (action, syncData) => {
-                if (Actions.isFormWithinSubmitArgsReady(action)) {
-                    return null;
-                }
-                return syncData;
-            }
-
-        ).pipe(
-            concatMap(
-                action => {
-                    if (Actions.isFormWithinSubmitArgsReady(action)) {
-                        const args = this.getSubmitArgs(state, action.payload);
-                        const err = this.validateForm(state);
-                        return err === null ?
-                            this.pageModel.ajax$<any>(
-                                HTTP.Method.POST,
-                                this.pageModel.createActionUrl(
-                                    '/subcorpus/create',
-                                    {format: 'json'}
-                                ),
-                                args,
-                                {
-                                    contentType: 'application/json'
-                                }
-                            ) :
-                            throwError(err)
-                    }
-                }
-            )
-        )
+        state:SubcorpWithinFormModelState
+    ):Array<ServerWithinSelection> {
+        return pipe(
+            state.lines,
+            List.filter((v)=>v != null),
+            List.map((v:WithinLine) => ({
+                negated: v.negated,
+                structure_name: v.structureName,
+                attribute_cql: v.attributeCql.value
+            }))
+        );
     }
 
 }

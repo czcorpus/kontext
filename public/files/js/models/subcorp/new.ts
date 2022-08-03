@@ -21,8 +21,8 @@
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
 import { PageModel } from '../../app/page';
-import { TextTypesModel } from '../../models/textTypes/main';
-import { InputMode, BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel } from './common';
+import { TextTypesModel } from '../textTypes/main';
+import { BaseSubcorpFormState, CreateSubcorpusArgs, BaseTTSubcorpFormModel, FormType } from './common';
 import { ITranslator, IFullActionControl } from 'kombo';
 import { Dict, List } from 'cnc-tskit';
 import { Actions } from './actions';
@@ -72,7 +72,7 @@ export function validateSubcProps(
 
 
 export interface SubcorpFormModelState {
-    inputMode:InputMode;
+    inputMode:FormType;
     corpname:string;
     subcname:Kontext.FormValue<string>;
     description:Kontext.FormValue<string>;
@@ -89,7 +89,7 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         pageModel:PageModel,
         textTypesModel:TextTypesModel,
         corpname:string,
-        inputMode:InputMode
+        inputMode:FormType
     ) {
         super(
             dispatcher,
@@ -110,7 +110,6 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
             Actions.FormSetInputMode,
             action => {
                 this.changeState(state => {state.inputMode = action.payload.value});
-                console.log('this input mode: ', this.state.inputMode)
             }
         );
 
@@ -123,59 +122,43 @@ export class SubcorpFormModel extends BaseTTSubcorpFormModel<SubcorpFormModelSta
         );
 
         this.addActionHandler(
-            Actions.FormWithinSubmit,
-            action => {
-                if (this.state.inputMode === 'gui') {
-                    this.pageModel.showMessage('error', 'Invalid input mode');
-                    return;
-                }
-                this.validateForm({}, false);
-                if (this.state.otherValidationError) {
-                    this.pageModel.showMessage('error', this.state.otherValidationError);
-
-                } else {
-                    this.dispatchSideEffect({
-                        ...Actions.FormWithinSubmitArgsReady,
-                        payload: {
-                            corpname: this.state.corpname,
-                            subcname: this.state.subcname.value,
-                            description: this.state.description.value,
-                        }
-                    })
-                }
-            }
-        );
-
-        this.addActionHandler(
             Actions.FormSubmit,
             action => {
-                if (this.state.inputMode === 'within') {
-                    this.pageModel.showMessage('error', 'Invalid input mode');
-                }
                 this.changeState(state => { state.isBusy = true });
-
                 this.suspendWithTimeout(
                     5000,
                     {},
-                    (action, syncData) => {
-                        if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                    (sAction, syncData) => {
+                        if (action.payload.selectionType === 'tt-sel' && TTActions.isTextTypesQuerySubmitReady(sAction)) {
+                            return null;
+
+                        } else if (action.payload.selectionType === 'within' && Actions.isFormWithinSubmitArgsReady(sAction)) {
                             return null;
                         }
                         return syncData;
                     }
                 ).pipe(
-                    map(
-                        action => {
-                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
-                                return action.payload.selections;
-                            }
-                            return undefined;
-                        }
-                    ),
                     concatMap(
-                        (ttData) => this.submit(
-                            this.getSubmitArgs(ttData),
-                            (args) => this.validateForm(ttData, true))
+                        (action) => {
+                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                                return this.submit(
+                                    this.getSubmitArgs(action.payload.selections),
+                                    (args) => this.validateForm(action.payload.selections, true)
+                                );
+
+                            } else if (Actions.isFormWithinSubmitArgsReady(action)) {
+                                return this.submit(
+                                    {
+                                        corpname: this.state.corpname,
+                                        subcname: this.state.subcname.value,
+                                        description: this.state.description.value,
+                                        within: action.payload.data,
+                                        form_type: 'within'
+                                    },
+                                    (args) => undefined // TODO
+                                );
+                            }
+                        }
                     )
 
                 ).subscribe({

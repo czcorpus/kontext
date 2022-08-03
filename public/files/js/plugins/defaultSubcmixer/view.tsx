@@ -263,17 +263,10 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                             </label>
                         </p>
                         <div>
-                            {he.translate('subcform__set_as_public')}:
-                            <layoutViews.InlineHelp customStyle={{width: '20em'}} noSuperscript={true}>
-                                <p>{he.translate('subcform__publication_notes')}</p>
-                                <p>{he.translate('subcform__publication_notes_2')}</p>
-                            </layoutViews.InlineHelp>
+                            <h3>{he.translate('subcform__public_description')}:</h3>
                             <div>
-                                <h3>{he.translate('subcform__public_description')}:</h3>
-                                <div>
-                                    <subcFormViews.SubcDescription
-                                        value={props.description} />
-                                </div>
+                                <subcFormViews.SubcDescription
+                                    value={props.description} />
                             </div>
                         </div>
                         <p>

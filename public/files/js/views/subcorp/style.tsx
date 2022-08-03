@@ -24,12 +24,18 @@ import * as theme from '../theme/default';
 // ---------------- <SubcorpForm /> --------------------------------------
 
 export const SubcorpForm = styled.form`
+
     p.note {
         margin: 0.3em;
     }
 
     .data-sel {
         margin-top: 1.6em;
+    }
+
+    .subcname input {
+        font-size: 1.3em;
+        width: 20em;
     }
 `;
 
@@ -351,5 +357,14 @@ export const PublishingTab = styled.div`
 
     .markdown-note {
         text-align: right;
+    }
+`;
+
+// ------------------- <StructLineTR /> ----------------------------
+
+export const StructLineTR = styled.tr`
+
+    td.attr-sel {
+        white-space: nowrap;
     }
 `;
