@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
-import { FormType, FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common';
+import { FormType, SubcorpusRecord, ServerWithinSelection } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
@@ -157,7 +157,7 @@ export class Actions {
     };
 
     static FormSetInputMode:Action<{
-        value:InputMode;
+        value:FormType;
     }> = {
         name: 'SUBCORP_FORM_SET_INPUT_MODE'
     };
@@ -169,16 +169,15 @@ export class Actions {
     };
 
     static FormSubmit:Action<{
+        selectionType:FormType;
     }> = {
         name: 'SUBCORP_FORM_SUBMIT'
     };
 
-    static FormWithinSubmit:Action<{
+    static FormWithinSubmitArgsReady:Action<{
+        data:Array<ServerWithinSelection>;
+        firstValidationError:string|undefined;
     }> = {
-        name: 'SUBCORP_FORM_WITHIN_SUBMIT'
-    };
-
-    static FormWithinSubmitArgsReady:Action<FormWithinSubmitCommonArgs> = {
         name: 'SUBCORP_FORM_WITHIN_SUBMIT_ARGS_READY'
     };
 
