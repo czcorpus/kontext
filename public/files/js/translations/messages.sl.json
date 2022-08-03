@@ -105,6 +105,7 @@
         "global__subc_all_the_matching_tokens_{prev}": "... Med njimi izberi tiste, ki se ujemajo z izrazom",
         "global__calculate": "Izračunaj",
         "global__unknown_error": "Neznana napaka",
+        "global__tagsets": "Tagsets UNTRANSLATED",
         "global__tagset": "Nabor oznak",
         "global__on_attr": "na atributu",
         "global__query_type_mismatch_confirm_{type}": "Sintaksa dejanske poizvedbe ne ustreza trenutni izbrani vrsti \"{type}\". Ali želite nadaljevati?",

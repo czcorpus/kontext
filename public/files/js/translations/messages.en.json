@@ -8,6 +8,7 @@
         "global__structures": "Structures",
         "global__attributes": "Attributes",
         "global__attribute": "Attribute",
+        "global__tagsets": "Tagsets",
         "global__tagset": "Tagset",
         "global__on_attr": "on attribute",
         "global__keywords": "Keywords",

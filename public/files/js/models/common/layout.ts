@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { Observable, Subscription, timer as rxTimer, of as rxOf, empty as rxEmpty } from 'rxjs';
+import { Observable, Subscription, timer as rxTimer, of as rxOf, EMPTY } from 'rxjs';
 import { take, concatMap } from 'rxjs/operators';
 import { Ident, List, pipe, HTTP } from 'cnc-tskit';
 import { AjaxError } from 'rxjs/ajax';
@@ -30,6 +30,7 @@ import { IPluginApi } from '../../types/plugins/common';
 import { ServerWithinSelection } from '../subcorp/common';
 import * as TextTypes from '../../types/textTypes';
 import { TTInitialData } from '../textTypes/common';
+import { TagsetInfo } from '../../types/plugins/tagHelper';
 
 
 export interface MessageModelState {
@@ -254,6 +255,7 @@ export interface CorpusInfoResponse {
     webUrl:string;
     citationInfo:CitationInfo;
     keywords:Array<{name:string; color:string}>;
+    tagsets:Array<TagsetInfo>;
 }
 
 export interface CorpusInfo extends CorpusInfoResponse {
@@ -471,7 +473,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                                         state.currentCorpus = corpusId;
                                         state.currentSubcorpus = subcorpusId;
                                     })
-                                    return rxEmpty();
+                                    return EMPTY;
                                 }
                             )
                         );

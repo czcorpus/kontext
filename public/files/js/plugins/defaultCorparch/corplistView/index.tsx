@@ -222,6 +222,7 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                             customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
                             takeFocus={true}>
                         <CorpusInfoBox data={{...this.props.detailData, type:CorpusInfoType.CORPUS}}
+                        isLocalUiLang={this.props.isLocalUiLang}
                                     isWaiting={this.props.isBusy} />
                     </layoutViews.PopupBox>
                 );
