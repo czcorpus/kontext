@@ -60,6 +60,7 @@ def _subc_from_row(row: Dict) -> SubcorpusRecord:
         public_description=k_markdown(row['public_description']),
         public_description_raw=row['public_description'],
         archived=row['archived'],
+        cql=row['cql'],
         within_cond=json.loads(row['within_cond']) if row['within_cond'] else None,
         text_types=json.loads(row['text_types']) if row['text_types'] else None,
         published=row['published'])

@@ -24,7 +24,7 @@ import { Actions } from '../../models/subcorp/actions';
 import * as Kontext from '../../types/kontext';
 import { SubcorpusEditModel, SubcorpusEditModelState } from '../../models/subcorp/edit';
 import { BoundWithProps, IActionDispatcher } from 'kombo';
-import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord } from '../../models/subcorp/common';
+import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord, FormType, getFormTypeFromSelection } from '../../models/subcorp/common';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { init as ttInit } from '../../views/textTypes/index';
 import { init as withinViewInit } from './withinForm';
@@ -116,6 +116,7 @@ export function init(
         subcname: string;
         name: string;
         created: number;
+        selectionType: FormType;
         published: number;
         archived: number;
     }> = (props) => {
@@ -125,7 +126,10 @@ export function init(
             if (newName) {
                 dispatcher.dispatch<typeof Actions.ReuseQuery>({
                     name: Actions.ReuseQuery.name,
-                    payload: {newName}
+                    payload: {
+                        selectionType: props.selectionType,
+                        newName,
+                    }
                 });
             }
         };
@@ -299,6 +303,7 @@ export function init(
                             <FormActionFile key="restore" corpname={props.data.corpname}
                                 subcname={props.data.usesubcorp}
                                 name={props.data.name}
+                                selectionType={getFormTypeFromSelection(props.data.selections)}
                                 created={props.data.created}
                                 published={props.data.published}
                                 archived={props.data.archived} />

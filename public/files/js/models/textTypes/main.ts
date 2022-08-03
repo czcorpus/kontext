@@ -633,6 +633,9 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 SubcActions.ReuseQuery,
             ],
             action => {
+                if (SubcActions.isReuseQuery(action) && action.payload.selectionType !== 'tt-sel') {
+                    return;
+                }
                 this.dispatchSideEffect<typeof Actions.TextTypesQuerySubmitReady>({
                     name: Actions.TextTypesQuerySubmitReady.name,
                     payload: {
