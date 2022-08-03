@@ -355,7 +355,7 @@ export function init(
             const htmlClass = 'closeable-frame' + (this.props.customClass ? ` ${this.props.customClass}` : '');
 
             return (
-                <S.CloseableFrame className={htmlClass} ref={this.resizeFn}>
+                <S.CloseableFrame className={htmlClass} ref={this.resizeFn} fixedTop="5%">
                     <div className="heading">
                         <div className="control">
                             <ImgWithMouseover htmlClass="close-icon"
