@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import * as theme from '../theme/default';
 
 import closeIconImg from '../../../img/close-icon.svg';
@@ -42,7 +42,7 @@ export const ModalOverlay = styled.div`
 
 // ---------------- <CloseableFrame /> --------------------------------------
 
-export const CloseableFrame = styled.section`
+export const CloseableFrame = styled.section<{fixedTop?: string}>`
     background-color: ${theme.colorSectionBg};
     border-radius: ${theme.borderRadiusDefault};
     box-shadow: ${theme.portalBoxShadow};
@@ -54,9 +54,18 @@ export const CloseableFrame = styled.section`
 
     ${ModalOverlay} > & {
         position: absolute;
-        top: 30%;
         left: 50%;
-        transform: translate(-50%,-30%);
+
+        ${props => props.fixedTop ?
+            css`
+                top: ${props.fixedTop};
+                transform: translate(-50%,0%);
+            ` :
+            css`
+                top: 30%;
+                transform: translate(-50%,-30%);
+            `
+        }
     }
 
     > .heading {
