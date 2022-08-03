@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 
 import importlib
-from typing import Any, List
+from typing import Any, Dict, List, Tuple
 
 import plugin_types.corparch
 import plugins
@@ -22,7 +22,8 @@ from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
 from action.response import KResponse
-from plugin_types.query_suggest import AbstractQuerySuggest
+from plugin_types.query_suggest import (
+    AbstractBackend, AbstractFrontend, AbstractQuerySuggest)
 from sanic.blueprints import Blueprint
 
 bp = Blueprint('default_query_suggest')
@@ -49,7 +50,7 @@ async def fetch_query_suggestions(amodel: CorpusActionModel, req: KRequest, resp
 
 class DefaultQuerySuggest(AbstractQuerySuggest):
 
-    def __init__(self, providers, corparch: plugin_types.corparch.AbstractCorporaArchive):
+    def __init__(self, providers: Dict[str, Tuple[AbstractBackend, AbstractFrontend]], corparch: plugin_types.corparch.AbstractCorporaArchive):
         self._providers = providers
         self._corparch = corparch
 
@@ -120,7 +121,7 @@ def find_implementation(path: str) -> Any:
     return getattr(the_module, cl)
 
 
-def init_provider(conf, ident):
+def init_provider(conf, ident) -> Tuple[AbstractBackend, AbstractFrontend]:
     """
     Create and return both backend and frontend.
 
@@ -135,7 +136,7 @@ def init_provider(conf, ident):
     return backend_class(conf['conf'], ident), frontend_class(conf)
 
 
-def setup_providers(plg_conf, db):
+def setup_providers(plg_conf, db) -> Dict[str, Tuple[AbstractBackend, AbstractFrontend]]:
     return dict((prov['ident'], init_provider(prov, prov['ident'])) for prov in plg_conf.get('providers', []))
 
 
