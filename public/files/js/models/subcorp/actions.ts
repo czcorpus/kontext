@@ -20,7 +20,7 @@
 
 import { Action } from 'kombo';
 import { SubcListFilter } from './list';
-import { FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common';
+import { FormType, FormWithinSubmitCommonArgs, InputMode, SubcorpusRecord } from './common';
 import * as TextTypes from '../../types/textTypes';
 import { LoadDataResponse } from './listPublic';
 import * as Kontext from '../../types/kontext';
@@ -105,10 +105,15 @@ export class Actions {
     };
 
     static ReuseQuery:Action<{
+        selectionType:FormType;
         newName:string;
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY'
     };
+
+    static isReuseQuery(a:Action):a is typeof Actions.ReuseQuery {
+        return a.name === Actions.ReuseQuery.name;
+    }
 
     static ReuseQueryDone:Action<{
     }> = {

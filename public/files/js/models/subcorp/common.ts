@@ -66,6 +66,14 @@ export function isTTSelection(selections:SelectionsType): selections is TextType
 
 export type InputMode = 'gui'|'within';
 
+export type FormType = 'tt-sel'|'within'|'cql';
+
+export function getFormTypeFromSelection(selections:SelectionsType): FormType {
+    if (isTTSelection(selections)) return 'tt-sel';
+    else if (isServerWithinSelection(selections)) return 'within';
+    else return 'cql';
+}
+
 
 export interface BaseSubcorpFormState {
     subcname:Kontext.FormValue<string>;
@@ -141,7 +149,6 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
 export interface FormWithinSubmitCommonArgs {
     corpname:string;
     subcname:string;
-    publish:boolean;
     description:string;
 }
 

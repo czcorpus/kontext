@@ -22,7 +22,7 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { CreateSubcorpusWithinArgs, FormWithinSubmitCommonArgs, InputMode, isServerWithinSelection } from './common';
 import { StatelessModel, IActionDispatcher } from 'kombo';
-import { concatMap, throwError } from 'rxjs';
+import { concatMap, Observable, throwError } from 'rxjs';
 import { List, pipe, HTTP, Dict } from 'cnc-tskit';
 import { Actions } from './actions';
 import { Actions as GlobalActions } from '../common/actions';
@@ -170,44 +170,32 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
                 if (state.inputMode !== 'within') {
                     return;
                 }
-                this.suspendWithTimeout(
-                    5,
-                    {},
-                    (action, syncData) => {
-                        if (Actions.isFormWithinSubmitArgsReady(action)) {
-                            return null;
-                        }
-                        return syncData;
-                    }
-
-                ).pipe(
-                    concatMap(
-                        action => {
-                            if (Actions.isFormWithinSubmitArgsReady(action)) {
-                                const args = this.getSubmitArgs(state, action.payload);
-                                const err = this.validateForm(state);
-                                return err === null ?
-                                    this.pageModel.ajax$<any>(
-                                        HTTP.Method.POST,
-                                        this.pageModel.createActionUrl(
-                                            '/subcorpus/create',
-                                            {format: 'json'}
-                                        ),
-                                        args,
-                                        {
-                                            contentType: 'application/json'
-                                        }
-                                    ) :
-                                    throwError(err)
-                            }
-                        }
-                    )
-                ).subscribe({
+                this.createSubcorpus(state).subscribe({
                     next: () => {
                         window.location.href = this.pageModel.createActionUrl(
                             'subcorpus/list');
                     },
                     error: error => {
+                        this.pageModel.showMessage('error', error);
+                    }
+                });
+            }
+        );
+
+        this.addActionHandler(
+            Actions.ReuseQuery,
+            null,
+            (state, action, dispatch) => {
+                if (action.payload.selectionType !== 'within') {
+                    return;
+                }
+                this.createSubcorpus(state).subscribe({
+                    next: () => {
+                        dispatch(Actions.ReuseQueryDone);
+                        this.pageModel.showMessage('info', this.pageModel.translate('subclist__subc_reuse_confirm_msg'));
+                    },
+                    error: error => {
+                        dispatch(Actions.ReuseQueryDone, error);
                         this.pageModel.showMessage('error', error);
                     }
                 });
@@ -357,6 +345,42 @@ export class SubcorpWithinFormModel extends StatelessModel<SubcorpWithinFormMode
             ),
             form_type:'within'
         };
+    }
+
+    private createSubcorpus(state:SubcorpWithinFormModelState):Observable<any> {
+        return this.suspendWithTimeout(
+            5,
+            {},
+            (action, syncData) => {
+                if (Actions.isFormWithinSubmitArgsReady(action)) {
+                    return null;
+                }
+                return syncData;
+            }
+
+        ).pipe(
+            concatMap(
+                action => {
+                    if (Actions.isFormWithinSubmitArgsReady(action)) {
+                        const args = this.getSubmitArgs(state, action.payload);
+                        const err = this.validateForm(state);
+                        return err === null ?
+                            this.pageModel.ajax$<any>(
+                                HTTP.Method.POST,
+                                this.pageModel.createActionUrl(
+                                    '/subcorpus/create',
+                                    {format: 'json'}
+                                ),
+                                args,
+                                {
+                                    contentType: 'application/json'
+                                }
+                            ) :
+                            throwError(err)
+                    }
+                }
+            )
+        )
     }
 
 }
