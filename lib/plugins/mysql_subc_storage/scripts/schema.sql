@@ -20,7 +20,6 @@ DROP TABLE IF EXISTS kontext_subcorpus;
     );
 
 -- for CNC, use:
--- CONSTRAINT kontext_subc_archive_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES corpora(name),
--- CONSTRAINT kontext_subc_archive_user_id_fk FOREIGN KEY (user_id) REFERENCES `user`,
--- CONSTRAINT kontext_subc_archive_author_id_fk FOREIGN KEY (author_id) REFERENCES `user`(id),
-
+-- CONSTRAINT kontext_kontext_subcorpus_corpus_name_fk FOREIGN KEY (corpus_name) REFERENCES corpora(name),
+-- CONSTRAINT kontext_kontext_subcorpus_user_id_fk FOREIGN KEY (user_id) REFERENCES `user`(id),
+-- CONSTRAINT kontext_kontext_subcorpus_author_id_fk FOREIGN KEY (author_id) REFERENCES `user`(id)
