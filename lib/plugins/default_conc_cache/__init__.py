@@ -86,7 +86,7 @@ class DefaultCacheMapping(AbstractConcCache):
         await self._db.hash_set(self._mk_key(), _uniqname(corp_cache_key, q), data.to_dict())
 
     def _mk_key(self) -> str:
-        return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname)
+        return DefaultCacheMapping.KEY_TEMPLATE.format(self._corpus.corpname.lower())
 
     async def get_stored_calc_status(self, corp_cache_key: Optional[str], q: Tuple[str, ...]) -> Union[ConcCacheStatus, None]:
         return await self._get_entry(corp_cache_key, q)
