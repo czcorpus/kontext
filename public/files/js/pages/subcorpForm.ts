@@ -25,7 +25,7 @@ import * as TextTypes from '../types/textTypes';
 import * as PluginInterfaces from '../types/plugins';
 import { PageModel } from '../app/page';
 import { init as subcorpViewsInit } from '../views/subcorp/forms';
-import { SubcorpFormModel } from '../models/subcorp/form';
+import { SubcorpFormModel } from '../models/subcorp/new';
 import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import { TextTypesModel } from '../models/textTypes/main';
 import { init as ttViewsInit, TextTypesPanelProps } from '../views/textTypes';
@@ -190,12 +190,12 @@ export class SubcorpForm {
                 this.layoutModel,
                 ttComponent.ttModel,
                 this.layoutModel.getCorpusIdent().id,
-                'gui'
+                'tt-sel'
             );
             this.subcorpWithinFormModel = new SubcorpWithinFormModel(
                 this.layoutModel.dispatcher,
                 this.layoutModel,
-                'gui',
+                'tt-sel',
                 this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
             );
 

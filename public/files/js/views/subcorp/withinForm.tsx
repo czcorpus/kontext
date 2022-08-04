@@ -171,8 +171,8 @@ export function init(
         };
 
         return (
-            <tr>
-                <td>
+            <S.StructLineTR>
+                <td className="attr-sel">
                     <WithinSwitch withinType={props.lineData.negated ? '!within' : 'within'} rowIdx={props.rowIdx} />
                     {'\u00a0'}
                     <select value={props.lineData.structureName} onChange={handleStructChange}>
@@ -203,7 +203,7 @@ export function init(
                         ? <CloseImg onClick={removeHandler} /> : null
                     }
                 </td>
-            </tr>
+            </S.StructLineTR>
         );
     };
 

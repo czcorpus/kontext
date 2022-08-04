@@ -31,6 +31,7 @@ import * as S from './style';
 
 export interface CorplistTableProps {
     anonymousUser:boolean;
+    isLocalUiLang:boolean;
 }
 
 export interface FilterFormProps {
@@ -266,7 +267,8 @@ export function init({dispatcher, he, CorpusInfoBox, listModel}:CorplistViewModu
                             customStyle={{position: 'absolute', left: '80pt', marginTop: '5pt'}}
                             takeFocus={true}>
                         <CorpusInfoBox data={{...this.props.detailData, type:CorpusInfoType.CORPUS}}
-                                    isWaiting={this.props.isBusy} />
+                                    isWaiting={this.props.isBusy}
+                                    isLocalUiLang={this.props.isLocalUiLang} />
                     </layoutViews.PopupBox>
                 );
 

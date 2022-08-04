@@ -20,7 +20,7 @@ import * as React from 'react';
 import {IActionDispatcher, BoundWithProps} from 'kombo';
 import * as Kontext from '../../types/kontext';
 import * as PluginInterfaces from '../../types/plugins';
-import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/form';
+import { SubcorpFormModel, SubcorpFormModelState } from '../../models/subcorp/new';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 import { TextTypesPanelProps } from '../textTypes';
 import { Actions } from '../../models/subcorp/actions';
@@ -72,7 +72,7 @@ export function init({
             });
         };
 
-        return <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+        return <layoutViews.ValidatedItem invalid={props.value.isInvalid} htmlClass="subcname">
                 <input type="text" value={props.value.value} onChange={handleChange} />
             </layoutViews.ValidatedItem>;
     };
@@ -123,18 +123,12 @@ export function init({
         }
 
         _handleSubmitClick() {
-            if (this.props.inputMode === 'gui') {
-                dispatcher.dispatch<typeof Actions.FormSubmit>({
-                    name: Actions.FormSubmit.name,
-                    payload: {}
-                });
-
-            } else {
-                dispatcher.dispatch<typeof Actions.FormWithinSubmit>({
-                    name: Actions.FormWithinSubmit.name,
-                    payload: {}
-                });
-            }
+            dispatcher.dispatch<typeof Actions.FormSubmit>({
+                name: Actions.FormSubmit.name,
+                payload: {
+                    selectionType: this.props.inputMode
+                }
+            });
         }
 
         render() {
@@ -160,17 +154,6 @@ export function init({
                                 </td>
                             </tr>
                             <tr>
-                                <th>
-                                    {he.translate('subcform__set_as_public')}:
-                                    <layoutViews.InlineHelp noSuperscript={false}>
-                                        <div style={{width: '20em'}}>
-                                            <p>{he.translate('subcform__publication_notes')}</p>
-                                            <p>{he.translate('subcform__publication_notes_2')}</p>
-                                        </div>
-                                    </layoutViews.InlineHelp>
-                                </th>
-                            </tr>
-                            <tr>
                                 <th>{he.translate('subcform__public_description')}:</th>
                                 <td>
                                     <SubcDescription value={this.props.description} />
@@ -185,7 +168,7 @@ export function init({
                                 callback={this._handleInputModeChange}
                                 items={[
                                     {
-                                        id: 'gui',
+                                        id: 'tt-sel',
                                         label: he.translate('subcform__mode_attr_list')
                                     },
                                     {

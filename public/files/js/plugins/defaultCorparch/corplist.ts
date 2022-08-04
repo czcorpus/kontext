@@ -84,6 +84,7 @@ export interface CorplistTableModelState {
     limit:number;
     rows:Array<CorplistItem>;
     anonymousUser:boolean;
+    isLocalUiLang:boolean;
 }
 
 
@@ -120,6 +121,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
                 nextOffset: initialData.nextOffset,
                 rows: [...initialData.rows],
                 anonymousUser: pluginApi.getConf<boolean>('anonymousUser'),
+                isLocalUiLang: pluginApi.getConf<boolean>('isLocalUiLang')
             }
         );
         this.pluginApi = pluginApi;
@@ -447,6 +449,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             type: CorpusInfoType.CORPUS,
             attrlist: [],
             structlist: [],
+            tagsets: [],
             citationInfo: {
                 type: CorpusInfoType.CITATION,
                 corpname: null,

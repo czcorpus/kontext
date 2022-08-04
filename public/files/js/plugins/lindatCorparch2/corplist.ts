@@ -416,6 +416,7 @@ export class CorplistTableModel extends StatelessModel<CorplistTableModelState> 
             type: CorpusInfoType.CORPUS,
             attrlist: [],
             structlist: [],
+            tagsets: [],
             citationInfo: {
                 type: CorpusInfoType.CITATION,
                 corpname: null,

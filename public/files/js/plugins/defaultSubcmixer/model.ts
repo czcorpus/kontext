@@ -24,7 +24,7 @@ import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
-import { validateSubcProps } from '../../models/subcorp/form';
+import { validateSubcProps } from '../../models/subcorp/new';
 import { Actions } from './actions';
 import {
     SubcMixerExpression, CalculationResults, CalculationResponse,

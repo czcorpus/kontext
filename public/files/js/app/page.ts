@@ -631,7 +631,7 @@ export abstract class PageModel implements Kontext.IURLHandler, IConcArgsHandler
                 overviewViews.OverviewArea,
                 window.document.getElementById('general-overview-mount'),
                 {
-                    userId: this.getConf<number>('userId')
+                    isLocalUiLang: this.getConf<boolean>('isLocalUiLang')
                 }
             );
         }

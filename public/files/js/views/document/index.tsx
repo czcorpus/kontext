@@ -684,7 +684,14 @@ export function init(
     // ------------------------------------------------------------------------------------
 
     const ValidatedItem:CoreViews.ValidatedItem.Component = (props) => {
-        return <S.ValidatedItem className={props.invalid ? 'invalid' : ''}>
+        const cls:Array<string> = [];
+        if (props.htmlClass) {
+            cls.push(props.htmlClass);
+        }
+        if (props.invalid) {
+            cls.push('invalid')
+        }
+        return <S.ValidatedItem className={cls.join(' ')}>
             {props.children}
             {props.errorDesc ? <><br /><span className="error-desc">{props.errorDesc}</span></> : null}
         </S.ValidatedItem>;

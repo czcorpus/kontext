@@ -259,7 +259,7 @@ class PyConc(manatee.Concordance):
         norms = manatee.NumVector()
         self.pycorp.freq_dist(self.RS(), crit, limit, words, freqs, norms)
         if len(freqs) == 0:
-            return dict(Head=[], Items=[], SkippedEmpty=False, NoRelSorting=True)
+            return FreqData(Head=[], Items=[], SkippedEmpty=False, NoRelSorting=True)
 
         # for structural attrs, we intentionally rewrite norms as filled in by Corpus.freq_dist()
         # because of "hard to explain" metrics they lead to

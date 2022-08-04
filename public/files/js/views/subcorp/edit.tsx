@@ -122,7 +122,10 @@ export function init(
     }> = (props) => {
 
         const handleReuse = () => {
-            let newName = prompt("New subcorpus name:", `${props.name} (copy)`)
+            const newName = window.prompt(
+                he.translate('global__new_subcorpus_name_lab') + ':',
+                `${props.name} (copy)`
+            );
             if (newName) {
                 dispatcher.dispatch<typeof Actions.ReuseQuery>({
                     name: Actions.ReuseQuery.name,

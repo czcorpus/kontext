@@ -63,9 +63,6 @@ export function isTTSelection(selections:SelectionsType): selections is TextType
     return !isServerWithinSelection(selections) && selections instanceof Object;
 }
 
-
-export type InputMode = 'gui'|'within';
-
 export type FormType = 'tt-sel'|'within'|'cql';
 
 export function getFormTypeFromSelection(selections:SelectionsType): FormType {
@@ -146,7 +143,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
  * This is mainly used by "within" model to obtain common
  * args handled by SubcorpForm model.
  */
-export interface FormWithinSubmitCommonArgs {
+export interface CommonSubcorpFormArgs {
     corpname:string;
     subcname:string;
     description:string;
@@ -173,7 +170,7 @@ export class BaseTTSubcorpFormModel<T, U = {}> extends StatefulModel<T, U> {
         this.textTypesModel = textTypesModel;
     }
 
-    submit(args:CreateSubcorpusArgs, validator: (args) => Error|null):Observable<any> {
+    submit(args:CreateSubcorpusArgs|CreateSubcorpusWithinArgs, validator: (args) => Error|null):Observable<any> {
         const err = validator(args);
         if (!err) {
             return this.pageModel.ajax$<any>(

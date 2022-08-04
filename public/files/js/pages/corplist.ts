@@ -39,7 +39,8 @@ export function init(conf:Kontext.Conf, corplistData:any):void {
             pagePlugin.getList(),
             document.getElementById('corplist-mount-point'),
             {
-                anonymousUser:  layoutModel.getConf<boolean>('anonymousUser')
+                anonymousUser: layoutModel.getConf<boolean>('anonymousUser'),
+                isLocalUiLang: layoutModel.getConf<boolean>('isLocalUiLang')
             }
         );
     });

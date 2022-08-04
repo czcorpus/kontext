@@ -141,7 +141,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
             (state, action) => {
                 state.isBusy = false;
             }
-        )
+        );
 
         this.addActionHandler(
             Actions.ReuseQuery,
@@ -149,78 +149,66 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 state.isBusy = true;
             },
             (state, action, dispatch) => {
-                let newName = action.payload.newName;
-                // within selection uses within model to create subcorpus
-                if (isServerWithinSelection(state.data.selections)) {
-                    dispatch(
-                        Actions.FormWithinSubmitArgsReady,
-                        {
-                            corpname: state.data.corpname,
-                            subcname: newName,
-                            description: '',
-                        }
-                    );
+                const newName = action.payload.newName;
+                this.suspendWithTimeout(
+                    500,
+                    {},
+                    (sAction, syncData) => {
+                        if (action.payload.selectionType === 'tt-sel' && TTActions.isTextTypesQuerySubmitReady(sAction)) {
+                            return null;
 
-                } else {
-                    this.suspendWithTimeout(
-                        2000,
-                        {},
-                        (action, syncData) => {
-                            if (isTTSelection(state.data.selections) && TTActions.isTextTypesQuerySubmitReady(action)) {
-                                return null;
-                            } else if (isCQLSelection(state.data.selections)) {
-                                return null;
-                            }
-                            return syncData;
+                        } else if (action.payload.selectionType === 'within' && Actions.isFormWithinSubmitArgsReady(sAction)) {
+                            return null;
                         }
+                        return syncData;
+                    }
 
-                    ).pipe(
-                        concatMap(
-                            action => {
-                                let args: CreateSubcorpusArgs|CreateSubcorpusRawCQLArgs;
-                                if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                ).pipe(
+                    concatMap(
+                        action => {
+                            let args: CreateSubcorpusArgs|CreateSubcorpusWithinArgs;
+                            if (TTActions.isTextTypesQuerySubmitReady(action)) {
+                                args = {
+                                    corpname: state.data.corpname,
+                                    subcname: newName,
+                                    description: '',
+                                    aligned_corpora: [], // TODO what to do with this?
+                                    text_types: action.payload.selections,
+                                    form_type: 'tt-sel'
+                                };
+
+                            } else {
+                                if (Actions.isFormWithinSubmitArgsReady(action)) {
                                     args = {
                                         corpname: state.data.corpname,
                                         subcname: newName,
                                         description: '',
-                                        aligned_corpora: [], // TODO what to do with this?
-                                        text_types: action.payload.selections,
-                                        form_type: 'tt-sel'
+                                        within: action.payload.data,
+                                        form_type: 'within'
                                     };
-                                } else {
-                                    const selections = state.data.selections;
-                                    if (isCQLSelection(selections)) {
-                                        args = {
-                                            corpname: state.data.corpname,
-                                            subcname: newName,
-                                            description: '',
-                                            cql: selections, // TODO get this from cql form
-                                            form_type: 'cql'
-                                        };
-                                    }
                                 }
-
-                                if (args) {
-                                    return this.createSubcorpus(state, args).pipe(
-                                        map(resp => tuple(args, resp))
-                                    )
-                                }
-
-                                throwError(() => new Error('Invalid action passed through suspend filter'));
                             }
-                        )
 
-                    ).subscribe({
-                        next: ([args, resp]) => {
-                            dispatch(Actions.ReuseQueryDone);
-                            this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
-                        },
-                        error: error => {
-                            dispatch(Actions.ReuseQueryDone, error);
-                            this.layoutModel.showMessage('error', action.error);
+                            if (args) {
+                                return this.createSubcorpus(state, args).pipe(
+                                    map(resp => tuple(args, resp))
+                                )
+                            }
+
+                            return throwError(() => new Error('Invalid action passed through suspend filter'));
                         }
-                    });
-                }
+                    )
+
+                ).subscribe({
+                    next: ([args, resp]) => {
+                        dispatch(Actions.ReuseQueryDone);
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('subclist__subc_reuse_confirm_msg'));
+                    },
+                    error: error => {
+                        dispatch(Actions.ReuseQueryDone, error);
+                        this.layoutModel.showMessage('error', action.error);
+                    }
+                });
             }
         );
 
