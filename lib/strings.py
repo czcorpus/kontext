@@ -37,10 +37,8 @@ def shorten(val, length=8, suffix='...', nice=False):
     return '%s%s' % (s, suff)
 
 
-def re_escape(s):
-    if sys.version_info[1] <= 6:
-        return re.sub(r'[(){}\[\].*?|^$\\+-]', r'\\\g<0>', s)
-    return re.escape(s)
+def simple_query_escape(s):
+    return re.escape(s).replace('"', '\\"')
 
 
 def escape_attr_val(s):
