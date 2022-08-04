@@ -25,7 +25,7 @@ from conclib.search import get_conc
 from corplib import CorpusFactory
 from corplib.corpus import KCorpus
 from plugin_types.query_suggest import AbstractBackend
-from strings import re_escape
+from strings import simple_query_escape
 from util import as_sync
 
 
@@ -78,18 +78,26 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
 
         return attr1, attr2
 
+    def mk_query(self, icase, value_norm):
+        q = []
+        for i in range(1, 11):
+            a = f'attr{i}'
+            if a in self._conf:
+                q.append('{}="{}{}"'.format(self._conf[a], icase, value_norm))
+        return ' | '.join(q)
+
     async def find_suggestion(
             self, user_id, ui_lang, maincorp, corpora, subcorpus, value, value_type, value_subformat,
             query_type, p_attr, struct, s_attr):
         used_corp = self._preset_corp if self._preset_corp is not None else maincorp
-        value_norm = value if value_subformat in ('regexp', 'advanced') else re_escape(value)
+        value_norm = value if value_subformat in ('regexp', 'advanced') else simple_query_escape(value)
         icase = '(?i)' if value_subformat in ('simple_ic',) else ''
         rels = defaultdict(lambda: set())
         try:
             conc = await get_conc(
                 used_corp,
                 user_id,
-                (f'aword,[{self._conf["attr1"]}="{icase}{value_norm}" | {self._conf["attr2"]}="{icase}{value_norm}"]',),
+                (f'aword,[{self.mk_query(icase, value_norm)}]',),
                 translate=self._translate)
             conc.sync()
             mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])

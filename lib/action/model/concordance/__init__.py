@@ -43,7 +43,7 @@ from conclib.search import get_conc
 from main_menu.model import MainMenu
 from plugin_types.corparch.corpus import CorpusInfo
 from plugin_types.subc_storage import SubcListFilterArgs
-from strings import re_escape
+from strings import simple_query_escape
 from texttypes.model import TextTypeCollector, TextTypesCache
 
 
@@ -375,7 +375,7 @@ class ConcActionModel(CorpusActionModel):
         def mk_query_val(q):
             if qtype == 'advanced' or use_regexp:
                 return q.strip()
-            return icase + re_escape(q.strip())
+            return icase + simple_query_escape(q.strip())
 
         def stringify_parsed_query(q: List[List[str]]):
             expr = []
