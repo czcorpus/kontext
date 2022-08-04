@@ -65,7 +65,7 @@ class KCorpus(AbstractKCorpus):
 
     @property
     def cache_key(self):
-        return self._corpname
+        return self._corpname.lower()
 
     @property
     def created(self):

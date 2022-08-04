@@ -163,7 +163,7 @@ class KSubcorpus(KCorpus):
         for caching purposes.
         In case of a regular corpus, the value is None
         """
-        return f'{self._corpname}/{self._data_record.id}'
+        return f'{self._corpname.lower()}/{self._data_record.id}'
 
     @property
     def is_unbound(self):
