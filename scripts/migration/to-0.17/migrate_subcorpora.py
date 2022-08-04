@@ -19,6 +19,7 @@
 
 import asyncio
 import json
+from json.decoder import JSONDecodeError
 import os
 import os.path
 import shutil
@@ -90,8 +91,13 @@ async def migrate_subcorpora(
                             # for public corpora determine author_id, default set to 1
                             if os.path.isfile(metainfo_path):
                                 with open(metainfo_path) as f:
-                                    metadata = json.loads(f.readline())
-                                    f.readline()
+                                    try:
+                                        metadata = json.loads(f.readline())
+                                        f.readline()
+                                    except JSONDecodeError:
+                                        print('failed to find and decode JSON metadata')
+                                        metadata = {'author_id': default_user_id}
+
                                     public_description = f.read()
                                 author_id = metadata['author_id']
                                 if author_id is None:
