@@ -53,6 +53,13 @@ export class Actions {
         name: 'SUBCORP_LIST_UPDATE_FILTER'
     };
 
+    static SetPage:Action<{
+        page:string;
+        confirmed:boolean;
+    }> = {
+        name: 'SUBCORP_LIST_SET_PAGE'
+    };
+
     static ShowSubcEditWindow:Action<{
         corpusName:string;
         subcorpusId:string;

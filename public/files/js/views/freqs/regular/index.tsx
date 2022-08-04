@@ -105,7 +105,7 @@ export function init(
         }
 
         return (
-            <S.Paginator className="ktx-pagination">
+            <S.FreqPaginator className="ktx-pagination">
                 <globalComponents.SimplePaginator
                     isLoading={props.isLoading}
                     currentPage={props.currentPage}
@@ -133,7 +133,7 @@ export function init(
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
-            </S.Paginator>
+            </S.FreqPaginator>
         );
     };
 

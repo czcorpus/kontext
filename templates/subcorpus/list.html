@@ -27,6 +27,8 @@ __conf.RelatedCorpora = {{ related_corpora|to_json }};
 __conf.Filter = {{ filter|to_json }};
 __conf.UsesSubcRestore = {{ uses_subc_storage|to_json }};
 __conf.UsesLiveAttrs = {{ uses_live_attrs|to_json }};
+__conf.SubcPageSize = {{ subcpagesize|default(1, true)|to_json }};
+__conf.SubcTotalPages = {{ total_pages|default(1, true)|to_json }};
 subcorpListPage.init(__conf);
 {% endblock %}
 

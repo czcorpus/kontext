@@ -368,3 +368,19 @@ export const StructLineTR = styled.tr`
         white-space: nowrap;
     }
 `;
+
+// ------------------- <SubcPaginator /> ----------------------------
+
+export const SubcPaginator = styled.div`
+
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 0.4em;
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+
+    form {
+        margin: 0;
+    }
+`;

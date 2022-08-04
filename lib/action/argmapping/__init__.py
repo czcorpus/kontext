@@ -13,11 +13,11 @@
 import logging
 from dataclasses import Field, dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union, NewType
+from typing import Any, Callable, Dict, List, NewType, Optional, Union
 
-from action.req_args import (JSONRequestArgsProxy, RequestArgsProxy,
-                             create_req_arg_proxy, is_req_args_proxy)
-
+from action.req_args import (
+    JSONRequestArgsProxy, RequestArgsProxy, create_req_arg_proxy,
+    is_req_args_proxy)
 
 StrOpt = NewType('StrOpt', str)
 ListStrOpt = NewType('ListStrOpt', List[str])
@@ -109,6 +109,9 @@ class GeneralOptionsArgs:
     # collocations
     citemsperpage: int = field(default=50, metadata=mk_metdata(Persistence.PERSISTENT))
 
+    # wordlist
+    subcpagesize: int = field(default=40, metadata=mk_metdata(Persistence.PERSISTENT))
+
     def map_args_to_attrs(self, args: Union[RequestArgsProxy, JSONRequestArgsProxy, Dict[str, Any]]):
         in_args = args if is_req_args_proxy(args) else create_req_arg_proxy(args, {}, {})
         for key in in_args.keys():
@@ -189,7 +192,6 @@ class Args(UserActionArgs):
     collpage: int = field(default=1, metadata=mk_metdata())
     fpage: int = field(default=1, metadata=mk_metdata())
     ftt_include_empty: int = field(default=0, metadata=mk_metdata())
-    subcsize: int = field(default=0, metadata=mk_metdata())
     ref_usesubcorp: str = field(default='', metadata=mk_metdata())
     wlsort: str = field(default='', metadata=mk_metdata())
     keywords: str = field(default='', metadata=mk_metdata())

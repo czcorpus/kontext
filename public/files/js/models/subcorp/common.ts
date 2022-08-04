@@ -116,6 +116,7 @@ export interface SubcorpList extends Kontext.AjaxResponse {
     sort_key:{name:string; reverse:boolean};
     related_corpora:Array<string>,
     processed_subc:Array<Kontext.AsyncTaskInfo>;
+    total_pages:number;
 }
 
 

@@ -28,12 +28,14 @@ import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { importServerSubcList, SubcorpList } from './common';
 import { SubcorpusServerRecord } from '../common/layout';
+import { validateNumber } from '../base';
 
 
 
 export interface SubcListFilter {
     show_archived:boolean;
     corpname:string;
+    page:string;
 }
 
 
@@ -81,7 +83,8 @@ export interface SubcorpListModelState {
     editWindowSubcorpus:currSubcorpusProps|null;
     usesSubcRestore:boolean;
     finishedTasks:{[taskId:string]:boolean};
-    page:number;
+    pageSize:number;
+    totalPages:number;
 }
 
 export interface SubcorpListModelArgs {
@@ -115,12 +118,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_archived: false, corpname: ''},
+                filter: initialFilter || {show_archived: false, corpname: '', page: '1'},
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
                 finishedTasks: {},
-                page: 1,
+                pageSize: layoutModel.getConf<number>('SubcPageSize'),
+                totalPages: layoutModel.getConf<number>('SubcTotalPages'),
             }
         );
         this.layoutModel = layoutModel;
@@ -171,28 +175,34 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         this.addActionHandler(
             Actions.SortLines,
-            action => this.sortItems(action.payload.colName, action.payload.reverse).subscribe(
-                (data) => {
-                    this.emitChange();
-                },
-                (err) => {
-                    this.emitChange();
-                    this.layoutModel.showMessage('error', err);
-                }
-            )
+            action => {
+                this.changeState(state => {state.isBusy = true});
+                this.sortItems(action.payload.colName, action.payload.reverse, this.state.filter.page).subscribe({
+                    next: (data) => {
+                        this.emitChange();
+                    },
+                    error: (err) => {
+                        this.emitChange();
+                        this.layoutModel.showMessage('error', err);
+                    }
+                })
+            }
         );
 
         this.addActionHandler(
             Actions.UpdateFilter,
-            action => this.filterItems(action.payload).subscribe({
-                next: _ => {
-                    this.emitChange();
-                },
-                error: error => {
-                    this.emitChange();
-                    this.layoutModel.showMessage('error', error);
-                }
-            })
+            action => {
+                this.changeState(state => {state.isBusy = true});
+                this.filterItems(action.payload).subscribe({
+                    next: _ => {
+                        this.emitChange();
+                    },
+                    error: error => {
+                        this.emitChange();
+                        this.layoutModel.showMessage('error', error);
+                    }
+                })
+            }
         );
 
         this.addActionHandler(
@@ -235,6 +245,38 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             }
         );
 
+        this.addActionHandler(
+            Actions.SetPage,
+            action => {
+                if (validateNumber(action.payload.page) && action.payload.confirmed) {
+                    this.changeState(state => {
+                        state.filter.page = action.payload.page;
+                        state.isBusy = true;
+                    });
+
+                    if (parseInt(action.payload.page) > this.state.totalPages) {
+                        this.state.filter.page = `${this.state.totalPages}`;
+                        this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
+
+                    } else {
+                        this.reloadItems().subscribe({
+                            next: (data) => {
+                                this.emitChange();
+                            },
+                            error: (err) => {
+                                this.emitChange();
+                                this.layoutModel.showMessage('error', err);
+                            }
+                        })
+                    }
+
+                } else {
+                    this.changeState(state => {
+                        state.filter.page = action.payload.page;
+                    });
+                }
+            }
+        );
     }
 
     private importProcessed(data:Array<Kontext.AsyncTaskInfo>):Array<UnfinishedSubcorp> {
@@ -250,10 +292,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         )
     }
 
-    private sortItems(name:string, reverse:boolean):Observable<SubcorpList> {
+    private sortItems(name:string, reverse:boolean, page:string):Observable<SubcorpList> {
         const args:{[key:string]:string} = {
             format: 'json',
-            sort: (reverse ? '-' : '') + name
+            sort: (reverse ? '-' : '') + name,
+            page: page,
         }
         this.mergeFilter(args, this.state.filter);
 
@@ -268,10 +311,12 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     state.lines = importServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
+                    state.totalPages = data.total_pages;
                     state.sortKey = {
                         name: data.sort_key.name,
                         reverse: data.sort_key.reverse
                     };
+                    state.isBusy = false;
                 })
             })
         );
@@ -299,6 +344,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
+            page: filter.page,
         }
         this.mergeFilter(args, filter);
 
@@ -313,11 +359,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     state.lines = importServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
+                    state.totalPages = data.total_pages;
                     for (let p in filter) {
                         if (filter.hasOwnProperty(p)) {
                             state.filter[p] = filter[p];
                         }
                     }
+                    state.isBusy = false;
                 })
             })
         );

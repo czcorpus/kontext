@@ -44,6 +44,7 @@ interface GeneralOptionsArgsSubmit {
     citemsperpage:number;
     pqueryitemsperpage:number;
     rich_query_editor:boolean;
+    subcpagesize:number;
 }
 
 export interface GeneralViewOptionsModelState {
@@ -75,6 +76,8 @@ export interface GeneralViewOptionsModelState {
     loaded:boolean;
 
     userIsAnonymous:boolean;
+
+    subcpagesize:Kontext.FormValue<string>;
 }
 
 
@@ -84,7 +87,8 @@ type DebouncedActions =
     typeof Actions.GeneralSetWlPageSize |
     typeof Actions.GeneralSetFmaxItems |
     typeof Actions.GeneralSetCitemsPerPage |
-    typeof Actions.GeneralSetPQueryitemsPerPage;
+    typeof Actions.GeneralSetPQueryitemsPerPage |
+    typeof Actions.GeneralSetSubcListPageSize ;
 
 
 export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsModelState> {
@@ -117,6 +121,7 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                 pqueryitemsperpage: Kontext.newFormValue('0', true),
                 isBusy: false,
                 loaded: false,
+                subcpagesize: Kontext.newFormValue('0', true),
             }
         );
         this.layoutModel = layoutModel;
@@ -204,6 +209,11 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                         isRequired: true
                     };
                     state.useRichQueryEditor = action.payload.data.rich_query_editor;
+                    state.subcpagesize = {
+                        value: action.payload.data.subcpagesize + '',
+                        isInvalid: false,
+                        isRequired: true
+                    };
                 }
             }
         );
@@ -320,6 +330,19 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
         );
 
         this.addActionHandler(
+            Actions.GeneralSetSubcListPageSize,
+            (state, action) => {
+                state.subcpagesize.value = action.payload.value;
+                if (action.payload.debounced) {
+                    state.subcpagesize = this.validateGt1Value(state.subcpagesize, action.payload.value);
+
+                } else {
+                    this.debouncedAction$.next(action);
+                }
+            }
+        );
+
+        this.addActionHandler(
             Actions.GeneralSubmit,
             (state, action) => {
                 state.isBusy = true;
@@ -346,7 +369,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
                                     wlpagesize: parseInt(state.wlpagesize.value),
                                     fmaxitems: parseInt(state.fmaxitems.value),
                                     citemsperpage: parseInt(state.citemsperpage.value),
-                                    pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value)
+                                    pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
+                                    subcpagesize: parseInt(state.subcpagesize.value),
                                 }
                             });
                             List.forEach(fn => fn(this), this.submitResponseHandlers);
@@ -456,7 +480,8 @@ export class GeneralViewOptionsModel extends StatelessModel<GeneralViewOptionsMo
             fdefault_view: state.fdefaultView,
             citemsperpage: parseInt(state.citemsperpage.value),
             pqueryitemsperpage: parseInt(state.pqueryitemsperpage.value),
-            rich_query_editor: state.useRichQueryEditor
+            rich_query_editor: state.useRichQueryEditor,
+            subcpagesize: parseInt(state.subcpagesize.value),
         };
     }
 

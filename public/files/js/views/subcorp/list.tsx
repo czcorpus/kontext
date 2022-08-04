@@ -241,7 +241,8 @@ export function init(
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: props.filter.corpname,
-                    show_archived: !props.filter.show_archived
+                    show_archived: !props.filter.show_archived,
+                    page: '1',
                 }
             });
         };
@@ -251,7 +252,8 @@ export function init(
                 name: Actions.UpdateFilter.name,
                 payload: {
                     corpname: evt.target.value,
-                    show_archived: props.filter.show_archived
+                    show_archived: props.filter.show_archived,
+                    page: '1',
                 }
             });
         };
@@ -289,6 +291,8 @@ export function init(
             super(props);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
+            this._handlePageChangeByClick = this._handlePageChangeByClick.bind(this);
+            this._handlePageChange = this._handlePageChange.bind(this);
         }
 
         _handleActionButton(action:string, idx:number) {
@@ -310,6 +314,26 @@ export function init(
             });
         }
 
+        _handlePageChangeByClick = (curr, step) => {
+            dispatcher.dispatch<typeof Actions.SetPage>({
+                name: Actions.SetPage.name,
+                payload: {
+                    page: String(Number(curr) + step),
+                    confirmed: true,
+                }
+            });
+        };
+
+        _handlePageChange = (evt, confirmed: boolean = false) => {
+            dispatcher.dispatch<typeof Actions.SetPage>({
+                name: Actions.SetPage.name,
+                payload: {
+                    page: evt.target.value,
+                    confirmed: confirmed,
+                }
+            });
+        };
+
         render() {
             return (
                 <S.SubcorpList>
@@ -327,6 +351,15 @@ export function init(
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}
+                    <S.SubcPaginator className='ktx-pagination'>
+                        <layoutViews.SimplePaginator
+                            currentPage={this.props.filter.page}
+                            isLoading={this.props.isBusy}
+                            totalPages={this.props.totalPages}
+                            handleKeyPress={e => this._handlePageChange(e, true)}
+                            handlePageChangeByClick={this._handlePageChangeByClick}
+                            handlePageChangeByInput={this._handlePageChange} />
+                    </S.SubcPaginator>
                     <DataTable actionButtonHandle={this._handleActionButton}
                         lines={this.props.lines}
                         sortKey={this.props.sortKey}
