@@ -60,7 +60,7 @@ from main_menu import generate_main_menu
 from controller.querying import Querying
 import mailing
 from conclib.freq import one_level_crit, multi_level_crit
-from strings import re_escape, escape_attr_val
+from strings import simple_query_escape, escape_attr_val
 from plugins.abstract.conc_cache import ConcCacheStatusException
 from babel.numbers import format_decimal
 
@@ -579,7 +579,7 @@ class Actions(Querying):
         def mk_query_val(q):
             if qtype == 'advanced' or use_regexp:
                 return q.strip()
-            return icase + re_escape(q.strip())
+            return icase + simple_query_escape(q.strip())
 
         def stringify_parsed_query(q: List[List[str]]):
             expr = []
