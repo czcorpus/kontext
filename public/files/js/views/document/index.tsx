@@ -821,6 +821,64 @@ export function init(
         );
     }
 
+    // -------------------------- <SimplePaginator /> ---------------------------------
+
+    const SimplePaginator:CoreViews.SimplePaginator.Component = (props) => {
+
+        const handleKeyPress = (evt) => {
+            if (evt.key === Keyboard.Value.ENTER) {
+                props.handleKeyPress(evt);
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+        };
+
+        const renderPageNum = () => {
+            if (props.isLoading) {
+                return <div>
+                        <span className="overlay">
+                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
+                                alt={he.translate('global__loading')} />
+                        </span>
+                        <input type="text" />
+                </div>;
+
+            } else {
+                return (
+                    <input type="text" value={props.currentPage}
+                        title={he.translate('global__curr_page_num')}
+                        onKeyPress={handleKeyPress}
+                        onChange={props.handlePageChangeByInput}
+                        disabled={props.totalPages === 1}
+                        style={{width: '3em'}} />
+                );
+            }
+        };
+
+        return (
+            <S.SimplePaginator>
+                <div className="ktx-pagination-core">
+                    <div className="ktx-pagination-left">
+                        {parseInt(props.currentPage) > 1 ?
+                            (<a onClick={(e) => props.handlePageChangeByClick(props.currentPage, -1)}>
+                                <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
+                                        alt="další" title="další" />
+                            </a>) : null}
+                    </div>
+                    <span className="curr-page">{renderPageNum()}</span>
+                    <span className="numofpages">{'\u00a0/\u00a0'}{props.totalPages}</span>
+                    <div className="ktx-pagination-right">
+                        {parseInt(props.currentPage) < props.totalPages ?
+                            (<a onClick={(e) => props.handlePageChangeByClick(props.currentPage, 1)}>
+                                <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
+                                        alt="další" title="další" />
+                            </a>) : null}
+                    </div>
+                </div>
+            </S.SimplePaginator>
+        );
+    }
+
     // ------------------------------------------------------------------------------------
 
     return {
@@ -852,6 +910,7 @@ export function init(
         KwicRangeSelector,
         ToggleSwitch,
         UnsupportedRenderer,
-        ResponsiveWrapper
+        ResponsiveWrapper,
+        SimplePaginator
     };
 }

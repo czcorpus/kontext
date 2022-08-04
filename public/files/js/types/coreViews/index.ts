@@ -47,6 +47,7 @@ import * as ToggleSwitch from './toggleSwitch';
 import * as UnsupportedRenderer from './unsupportedRenderer';
 import * as ValidatedItem from './validateItem';
 import * as ResponsiveWrapper from './responsiveWrapper';
+import * as SimplePaginator from './simplePaginator';
 
 // -------------------------------
 
@@ -80,6 +81,7 @@ export interface Runtime {
     UnsupportedRenderer:UnsupportedRenderer.Component;
     ValidatedItem:ValidatedItem.Component;
     ResponsiveWrapper:ResponsiveWrapper.Component;
+    SimplePaginator:SimplePaginator.Component;
 }
 
 export { AutoWidth } from './common';
@@ -91,6 +93,7 @@ export * as Calendar from './calendar';
 export * as CloseableFrame from './closeableFrame';
 export * as CorpnameInfoTrigger from './corpnameInfoTrigger';
 export * as DelItemIcon from './delItemIcon';
+export * as ConfIcon from './delItemIcon';
 export * as ErrorBoundary from './errorBoundary';
 export * as ExpandableArea from './expandableArea';
 export * as ExpandButton from './expandButton';
@@ -113,4 +116,4 @@ export * as ToggleSwitch from './toggleSwitch';
 export * as UnsupportedRenderer from './unsupportedRenderer';
 export * as ValidatedItem from './validateItem';
 export * as ResponsiveWrapper from './responsiveWrapper';
-export * as ConfIcon from './delItemIcon';
+export * as SimplePaginator from './simplePaginator';
