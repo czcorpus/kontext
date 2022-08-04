@@ -31,11 +31,18 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../
 import argparse
 import datetime
 
+import aiofiles
 import plugins
 import settings
 from action.plugin import initializer
-from corplib.abstract import create_new_subc_ident
+from corplib.abstract import SubcorpusIdent, create_new_subc_ident
 from pymysql.err import IntegrityError
+
+
+async def ensure_subc_dir(subc_root: str, subc_ident: SubcorpusIdent):
+    full_dir_path = os.path.join(subc_root, subc_ident.data_dir)
+    if not await aiofiles.os.path.isdir(full_dir_path):
+        await aiofiles.os.makedirs(full_dir_path)
 
 
 async def user_exists(user_id: int, users_table: str) -> bool:
@@ -68,7 +75,6 @@ async def migrate_subcorpora(
                         created = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
                         published = None
                         public_description = None
-                        subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
 
                         pubfile_path = os.path.join(corp_path, f'{subcname}.pub')
                         if os.path.islink(pubfile_path):
@@ -95,6 +101,10 @@ async def migrate_subcorpora(
                             published_count += 1
                             published_hashes.append(p_hash)
 
+                            subc_id = SubcorpusIdent(p_hash, corpname)
+                        else:
+                            subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
+
                         try:
                             await cursor.execute(
                                 'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
@@ -106,7 +116,8 @@ async def migrate_subcorpora(
                         except IntegrityError:
                             print(f'failed to insert subcorpus {subcname} for user {user_id}')
                             if not await user_exists(int(user_id), user_table):
-                                print(f'no such user ... going to insert using a backup user ID {default_user_id}')
+                                print(
+                                    f'no such user ... going to insert using a backup user ID {default_user_id}')
                                 await cursor.execute(
                                     'INSERT INTO kontext_subcorpus (id, name, user_id, author_id, corpus_name, size, cql, '
                                     'within_cond, text_types, created, archived, published, public_description) '
@@ -115,8 +126,7 @@ async def migrate_subcorpora(
                                      0, None, None, None, created, None, published, public_description)
                                 )
 
-                        new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
-                        os.makedirs(new_path, exist_ok=True)
+                        await ensure_subc_dir(subcorpora_dir, subc_id)
                         shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
                         total_count += 1
 
@@ -145,7 +155,7 @@ async def migrate_subcorpora(
                         if not os.path.isfile(subc_path):
                             continue
 
-                        subc_id = await create_new_subc_ident(subcorpora_dir, corpname)
+                        subc_id = SubcorpusIdent(p_hash, corpname)
                         published = datetime.datetime.fromtimestamp(os.path.getctime(subc_path))
                         created = published
                         user_id = default_user_id
@@ -162,10 +172,10 @@ async def migrate_subcorpora(
                                  0, None, None, None, created, None, published, public_description)
                             )
                         except IntegrityError:
-                            print(f'failed to insert published-only subcorpus {subcname} for user {user_id}')
+                            print(
+                                f'failed to insert published-only subcorpus {subcname} for user {user_id}')
 
-                        new_path = os.path.join(subcorpora_dir, subc_id.data_dir)
-                        os.makedirs(new_path, exist_ok=True)
+                        await ensure_subc_dir(subcorpora_dir, subc_id)
                         shutil.copy(subc_path, os.path.join(subcorpora_dir, subc_id.data_path))
                         total_count += 1
                         published_count += 1
