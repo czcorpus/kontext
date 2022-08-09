@@ -470,6 +470,57 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
         );
     };
 
+    // ------------- <SubcListPageSizeInput /> ---------------------
+
+    const SubcListPageSizeInput:React.FC<{
+        value:Kontext.FormValue<string>;
+
+    }> = (props) => {
+
+        const handleInputChange = (evt) => {
+            dispatcher.dispatch<typeof Actions.GeneralSetSubcListPageSize>({
+                name: Actions.GeneralSetSubcListPageSize.name,
+                payload: {
+                    value: evt.target.value
+                }
+            });
+        };
+
+        return (
+            <tr>
+                <th>
+                    {he.translate('options__subclist_page_size')}:
+                </th>
+                <td>
+                    <layoutViews.ValidatedItem invalid={props.value.isInvalid}>
+                        <input type="text" value={props.value.value} onChange={handleInputChange}
+                                style={{width: '2em'}} min={0} />
+                    </layoutViews.ValidatedItem>
+                </td>
+            </tr>
+        );
+    }
+
+    // ------------- <FieldsetSubcList /> ---------------------
+
+    const FieldsetSubcList:React.FC<{
+        subcPageSize:Kontext.FormValue<string>;
+
+    }> = (props) => {
+        return (
+            <fieldset className="FieldsetSubcList">
+                <legend>
+                    {he.translate('options__subclist_fieldset_heading')}
+                </legend>
+                <S.ResultRangeAndPagingTable>
+                    <tbody>
+                        <SubcListPageSizeInput value={props.subcPageSize} />
+                    </tbody>
+                </S.ResultRangeAndPagingTable>
+            </fieldset>
+        );
+    };
+
     // --------------------- <SubmitButton /> -------------------------
 
     const SubmitButton:React.FC<{
@@ -521,6 +572,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                                     fdefaultView={this.props.fdefaultView} />
                                 <FieldsetColl citemsPerPage={this.props.citemsperpage} />
                                 <FieldsetPquery resultsPerPage={this.props.pqueryitemsperpage} />
+                                <FieldsetSubcList subcPageSize={this.props.subcpagesize} />
                             </> :
                             <p className='data-loader'>
                                 <img src={he.createStaticUrl('img/ajax-loader.gif')}

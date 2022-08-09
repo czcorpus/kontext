@@ -81,7 +81,7 @@ export const FreqResultLoaderView = styled.div`
 
 // ----------------- <Paginator /> -------------------------------------
 
-export const Paginator = styled.div`
+export const FreqPaginator = styled.div`
 
     display: flex;
     align-items: center;

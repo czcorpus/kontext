@@ -15,6 +15,7 @@
 
 
 import logging
+import math
 import os
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List
@@ -141,11 +142,16 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     installed then the list is enriched by additional re-use/undelete information.
     """
     amodel.disabled_menu_items = (
-        MainMenu.VIEW, MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+        MainMenu.VIEW('kwic-sent-switch'), MainMenu.VIEW('structs-attrs'), MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
+    page = int(req.args.get('page', 1))
     filter_args = SubcListFilterArgs(
-        active_only=active_only, archived_only=False, corpus=req.args.get('corpname'))
+        active_only=active_only,
+        archived_only=False,
+        corpus=req.args.get('corpname'),
+        page=page,
+    )
 
     with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
         try:
@@ -161,6 +167,9 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     else:
         full_list = l10n.sort(full_list, loc=req.ui_lang,
                               key=lambda x: getattr(x, sort_key), reverse=rev)
+    
+    total_pages = math.ceil(len(full_list) / amodel.args.subcpagesize)
+    full_list = full_list[(page - 1) * amodel.args.subcpagesize:page * amodel.args.subcpagesize]
 
     if filter_args.corpus is None:
         filter_args.corpus = ''  # JS code requires non-null value
@@ -177,6 +186,8 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         related_corpora=sorted(list(set(x.corpus_name for x in full_list))),
         uses_subc_storage=plugins.runtime.SUBC_STORAGE.exists,
         uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
+        subcpagesize=amodel.args.subcpagesize,
+        total_pages=total_pages,
     )
     return ans
 

@@ -61,8 +61,6 @@ export function init(
     interface PaginatorProps {
         isLoading:boolean;
         currentPage:string;
-        hasNextPage:boolean;
-        hasPrevPage:boolean;
         totalPages:number;
         totalItems:number;
         sourceId:string;
@@ -93,14 +91,6 @@ export function init(
             });
         };
 
-        const handleKeyPress = (evt) => {
-            if (evt.key === Keyboard.Value.ENTER) {
-                handlePageChange(evt, true);
-                evt.preventDefault();
-                evt.stopPropagation();
-            }
-        };
-
         const showShare = () => {
             dispatcher.dispatch<typeof Actions.ResultShowShareLink>({
                 name: Actions.ResultShowShareLink.name,
@@ -114,50 +104,15 @@ export function init(
             });
         }
 
-        const renderPageNum = () => {
-            if (props.isLoading) {
-                return <div>
-                        <span className="overlay">
-                            <img src={he.createStaticUrl('img/ajax-loader-bar.gif')}
-                                alt={he.translate('global__loading')} />
-                        </span>
-                        <input type="text" />
-                </div>;
-
-            } else {
-                return (
-                    <input type="text" value={props.currentPage}
-                        title={he.translate('global__curr_page_num')}
-                        onKeyPress={handleKeyPress}
-                        onChange={handlePageChange}
-                        disabled={props.totalPages === 1}
-                        style={{width: '3em'}} />
-                );
-            }
-        };
-
         return (
-            <S.Paginator className="ktx-pagination">
-                <form>
-                    <div className="ktx-pagination-core">
-                        <div className="ktx-pagination-left">
-                            {props.hasPrevPage ?
-                                (<a onClick={(e) => handlePageChangeByClick(props.currentPage, -1)}>
-                                    <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
-                                            alt="další" title="další" />
-                                </a>) : null}
-                        </div>
-                        <span className="curr-page">{renderPageNum()}</span>
-                        <span className="numofpages">{'\u00a0/\u00a0'}{props.totalPages}</span>
-                        <div className="ktx-pagination-right">
-                            {props.hasNextPage ?
-                                (<a onClick={(e) => handlePageChangeByClick(props.currentPage, 1)}>
-                                    <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
-                                            alt="další" title="další" />
-                                </a>) : null}
-                        </div>
-                    </div>
-                </form>
+            <S.FreqPaginator className="ktx-pagination">
+                <globalComponents.SimplePaginator
+                    isLoading={props.isLoading}
+                    currentPage={props.currentPage}
+                    totalPages={props.totalPages}
+                    handleKeyPress={evt => handlePageChange(evt, true)}
+                    handlePageChangeByClick={handlePageChangeByClick}
+                    handlePageChangeByInput={handlePageChange} />
                 <div className="desc">
                     ({he.translate('freq__avail_label')}:{'\u00a0'}
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
@@ -178,7 +133,7 @@ export function init(
                         </globalComponents.CloseableFrame>
                     </globalComponents.ModalOverlay> : null
                 }
-            </S.Paginator>
+            </S.FreqPaginator>
         );
     };
 
@@ -303,14 +258,6 @@ export function init(
             );
         }
 
-        const hasNextPage = (state:FreqDataRowsModelState, sourceId:string):boolean => {
-            return parseInt(state.currentPage[sourceId]) < state.data[sourceId].TotalPages;
-        }
-
-        const hasPrevPage = (state:FreqDataRowsModelState, sourceId:string):boolean => {
-            return parseInt(state.currentPage[sourceId]) > 1 && state.data[sourceId].TotalPages > 1;
-        }
-
         const handleConfidenceToggle = (checked:boolean) => {
             dispatcher.dispatch<typeof Actions.ToggleDisplayConfidence>({
                 name: Actions.ToggleDisplayConfidence.name,
@@ -350,8 +297,6 @@ export function init(
                                 <>
                                     <Paginator currentPage={props.currentPage[sourceId]}
                                             sourceId={sourceId}
-                                            hasNextPage={hasNextPage(props, sourceId)}
-                                            hasPrevPage={hasPrevPage(props, sourceId)}
                                             totalPages={block.TotalPages}
                                             isLoading={props.isBusy[sourceId]}
                                             totalItems={block.Total}

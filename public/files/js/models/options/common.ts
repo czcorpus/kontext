@@ -34,6 +34,7 @@ export interface ViewOptsResponse extends Kontext.AjaxResponse {
     pqueryitemsperpage:number;
     tt_overview:number;
     rich_query_editor:boolean;
+    subcpagesize:number;
 }
 
 export interface GeneralOptionsShared {
@@ -44,4 +45,5 @@ export interface GeneralOptionsShared {
     fmaxitems:number;
     citemsperpage:number;
     pqueryitemsperpage:number;
+    subcpagesize:number;
 }

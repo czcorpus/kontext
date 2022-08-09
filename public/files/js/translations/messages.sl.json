@@ -577,6 +577,8 @@
         "options__coll_page_size": "Velikost strani (število vrstic)",
         "options__pquery_fieldset_heading": "Paradigmatična poizvedba",
         "options__pquery_page_size": "Velikost strani (število vrstic)",
+        "options__subclist_fieldset_heading": "Subcorpora UNTRANSLATED",
+        "options__subclist_page_size": "Velikost strani (število vrstic)",
         "options__this_applies_for_all_the_corpora": "Naslednje nastavitve veljajo za vse korpuse.",
         "options__submit": "Uporabi možnosti prikaza",
         "options__max_items_per_page_exceeded_{num}": "Največje dovoljeno število {num, plural, one{# element} few{# elementi} other{# elementov}} na stran preseženo",

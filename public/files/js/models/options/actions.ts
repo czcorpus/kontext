@@ -99,6 +99,13 @@ export class Actions {
         name: 'GENERAL_VIEW_OPTIONS_SET_PQUERYITEMSPERPAGE'
     };
 
+    static GeneralSetSubcListPageSize:Action<{
+        value:string;
+        debounced?:boolean;
+    }> = {
+        name: 'GENERAL_VIEW_OPTIONS_SET_SUBCLISTPAGESIZE'
+    };
+
     static GeneralSubmit:Action<{
     }> = {
         name: 'GENERAL_VIEW_OPTIONS_SUBMIT'

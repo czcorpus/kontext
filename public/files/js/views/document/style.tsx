@@ -589,6 +589,12 @@ export const UnsupportedRenderer = styled.div`
     }
 `;
 
+// ---------------- <SimplePaginator /> --------------------------------------
+
+export const SimplePaginator = styled.form`
+
+`;
+
 // ---------------------- <Calendar /> -------------------------------------------
 
 export const Calendar = styled.div`
