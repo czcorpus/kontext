@@ -35,6 +35,7 @@ import { validateNumber } from '../base';
 export interface SubcListFilter {
     show_archived:boolean;
     corpname:string;
+    pattern:string;
     page:string;
 }
 
@@ -118,7 +119,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_archived: false, corpname: '', page: '1'},
+                filter: initialFilter || {show_archived: false, corpname: '', page: '1', pattern: ''},
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
@@ -177,7 +178,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             Actions.SortLines,
             action => {
                 this.changeState(state => {state.isBusy = true});
-                this.sortItems(action.payload.colName, action.payload.reverse, this.state.filter.page).subscribe({
+                this.sortItems(action.payload.colName, action.payload.reverse, this.state.filter.page, this.state.filter.page).subscribe({
                     next: (data) => {
                         this.emitChange();
                     },
@@ -290,10 +291,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         )
     }
 
-    private sortItems(name:string, reverse:boolean, page:string):Observable<SubcorpList> {
+    private sortItems(name:string, reverse:boolean, page:string, pattern:string):Observable<SubcorpList> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (reverse ? '-' : '') + name,
+            pattern: pattern,
             page: page,
         }
         this.mergeFilter(args, this.state.filter);
@@ -342,6 +344,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
+            pattern: filter.pattern,
             page: filter.page,
         }
         this.mergeFilter(args, filter);

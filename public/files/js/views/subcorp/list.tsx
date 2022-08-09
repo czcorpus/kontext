@@ -34,6 +34,7 @@ import * as S from './style';
 import { SubcorpusEditModel } from '../../models/subcorp/edit';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
+import { itemIsCorplist } from '../../plugins/treeCorparch/common';
 
 
 export interface ListViews {
@@ -73,6 +74,7 @@ export function init(
                 </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td />
+                <td />
             </tr>
         );
     };
@@ -94,6 +96,7 @@ export function init(
     const TrDataLine:React.FC<{
         idx:number;
         item:SubcorpListItem;
+        pattern:string;
         actionButtonHandle:(idx:number)=>void;
 
     }> = (props) => {
@@ -130,6 +133,10 @@ export function init(
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
+                <td>{
+                    props.pattern && !props.item.name.includes(props.pattern) ?
+                    he.translate('subclist__pattern_in_description') : null
+                }</td>
             </tr>
         );
     };
@@ -188,6 +195,7 @@ export function init(
 
     class DataTable extends React.Component<{
         actionButtonHandle:(action:string, idx:number)=>void;
+        pattern:string;
         lines:Array<SubcorpListItem>;
         sortKey:SortKey;
         unfinished:Array<UnfinishedSubcorp>;
@@ -213,12 +221,13 @@ export function init(
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
                             <th />
+                            <th />
                         </tr>
                         {List.map(item => (
                             <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
                         ), this.props.unfinished)}
                         {List.map((item, i) => (
-                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
+                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} pattern={this.props.pattern}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
                         ), this.props.lines)}
                     </tbody>
@@ -240,7 +249,7 @@ export function init(
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
-                    corpname: props.filter.corpname,
+                    ...props.filter,
                     show_archived: !props.filter.show_archived,
                     page: '1',
                 }
@@ -251,8 +260,19 @@ export function init(
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
+                    ...props.filter,
                     corpname: evt.target.value,
-                    show_archived: props.filter.show_archived,
+                    page: '1',
+                }
+            });
+        };
+
+        const handlePatternSearch = (evt) => {
+            dispatcher.dispatch<typeof Actions.UpdateFilter>({
+                name: Actions.UpdateFilter.name,
+                payload: {
+                    ...props.filter,
+                    pattern: evt.target.value,
                     page: '1',
                 }
             });
@@ -273,10 +293,14 @@ export function init(
                     {props.usesSubcRestore ?
                         <div>
                             <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
-                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter['show_archived']} />
+                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter.show_archived} />
                         </div> :
                         null
                     }
+                    <div>
+                        <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
+                        <input id="inp_pattern" type="text" onChange={handlePatternSearch} value={props.filter.pattern} />
+                    </div>
                 </fieldset>
             </form>
         );
@@ -361,6 +385,7 @@ export function init(
                             handlePageChangeByInput={this._handlePageChange} />
                     </S.SubcPaginator>
                     <DataTable actionButtonHandle={this._handleActionButton}
+                        pattern={this.props.filter.pattern}
                         lines={this.props.lines}
                         sortKey={this.props.sortKey}
                         unfinished={this.props.unfinished} />
