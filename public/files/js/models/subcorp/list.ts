@@ -250,25 +250,23 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             action => {
                 if (validateNumber(action.payload.page) && action.payload.confirmed) {
                     this.changeState(state => {
-                        state.filter.page = action.payload.page;
+                        if (parseInt(action.payload.page) > this.state.totalPages) {
+                            state.filter.page = `${state.totalPages}`;
+                        } else {
+                            state.filter.page = action.payload.page;
+                        } 
                         state.isBusy = true;
                     });
 
-                    if (parseInt(action.payload.page) > this.state.totalPages) {
-                        this.state.filter.page = `${this.state.totalPages}`;
-                        this.layoutModel.showMessage('info', this.layoutModel.translate('global__no_more_pages'));
-
-                    } else {
-                        this.reloadItems().subscribe({
-                            next: (data) => {
-                                this.emitChange();
-                            },
-                            error: (err) => {
-                                this.emitChange();
-                                this.layoutModel.showMessage('error', err);
-                            }
-                        })
-                    }
+                    this.reloadItems().subscribe({
+                        next: (data) => {
+                            this.emitChange();
+                        },
+                        error: (err) => {
+                            this.emitChange();
+                            this.layoutModel.showMessage('error', err);
+                        }
+                    })
 
                 } else {
                     this.changeState(state => {
