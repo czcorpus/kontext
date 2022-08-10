@@ -174,6 +174,8 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
 
     if filter_args.corpus is None:
         filter_args.corpus = ''  # JS code requires non-null value
+    if filter_args.pattern is None:
+        filter_args.pattern = ''  # JS code requires non-null value
 
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here

@@ -134,7 +134,7 @@ export function init(
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
                 <td>{
-                    props.pattern && !props.item.name.includes(props.pattern) ?
+                    props.pattern && !props.item.name.includes(props.pattern) && props.item.public_description.includes(props.pattern) ?
                     he.translate('subclist__pattern_in_description') : null
                 }</td>
             </tr>
