@@ -20,7 +20,7 @@
 
 import { IFullActionControl, StatefulModel } from 'kombo';
 import { Observable, Subject } from 'rxjs';
-import { concatMap, debounceTime, flatMap, tap } from 'rxjs/operators';
+import { concatMap, debounceTime, tap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
@@ -50,6 +50,8 @@ export interface SubcorpListItem {
     published:Date;
     size:number;
     public_description:string;
+
+    info?:string;
 }
 
 
@@ -134,7 +136,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
         this.layoutModel = layoutModel;
         this.changeState(state => {
-            state.lines = importServerSubcList(data);
+            state.lines = this.importAndProcessServerSubcList(data);
             state.unfinished = this.importProcessed(unfinished);
         })
 
@@ -345,7 +347,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = importServerSubcList(data.subcorp_list);
+                    state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
@@ -394,7 +396,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = importServerSubcList(data.subcorp_list);
+                    state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
@@ -405,6 +407,19 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     }
                     state.isBusy = false;
                 })
+            })
+        );
+    }
+
+    private importAndProcessServerSubcList(data:Array<SubcorpusServerRecord>) {
+        return pipe(
+            data,
+            importServerSubcList,
+            List.map(v => {
+                if (this.state.filter.pattern && !v.name.includes(this.state.filter.pattern) && v.public_description.includes(this.state.filter.pattern)) {
+                    v.info = this.layoutModel.translate('subclist__pattern_in_description');
+                }
+                return v
             })
         );
     }

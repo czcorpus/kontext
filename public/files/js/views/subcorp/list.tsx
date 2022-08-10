@@ -96,7 +96,6 @@ export function init(
     const TrDataLine:React.FC<{
         idx:number;
         item:SubcorpListItem;
-        pattern:string;
         actionButtonHandle:(idx:number)=>void;
 
     }> = (props) => {
@@ -133,10 +132,7 @@ export function init(
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
-                <td>{
-                    props.pattern && !props.item.name.includes(props.pattern) && props.item.public_description.includes(props.pattern) ?
-                    he.translate('subclist__pattern_in_description') : null
-                }</td>
+                <td>{props.item.info ? props.item.info : null}</td>
             </tr>
         );
     };
@@ -227,7 +223,7 @@ export function init(
                             <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
                         ), this.props.unfinished)}
                         {List.map((item, i) => (
-                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item} pattern={this.props.pattern}
+                            <TrDataLine key={`${i}:${item.name}`} idx={i} item={item}
                                     actionButtonHandle={this.props.actionButtonHandle.bind(null, 'reuse')} />
                         ), this.props.lines)}
                     </tbody>

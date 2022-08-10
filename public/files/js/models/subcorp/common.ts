@@ -135,7 +135,7 @@ export function importServerSubcList(data:Array<SubcorpusServerRecord>):Array<Su
         archived: item.archived ? new Date(item.archived * 1000) : undefined,
         selected: false,
         published: item.published ? new Date(item.published * 1000) : undefined,
-        public_description: item.public_description
+        public_description: item.public_description,
     }), data);
 }
 
