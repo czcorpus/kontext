@@ -59,7 +59,6 @@ export class Actions {
 
     static SetPage:Action<{
         page:string;
-        confirmed:boolean;
     }> = {
         name: 'SUBCORP_LIST_SET_PAGE'
     };

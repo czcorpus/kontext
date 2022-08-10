@@ -28,7 +28,7 @@ import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { importServerSubcList, SubcorpList } from './common';
 import { SubcorpusServerRecord } from '../common/layout';
-import { validateNumber } from '../base';
+import { validateGzNumber } from '../base';
 
 
 
@@ -288,7 +288,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler(
             Actions.SetPage,
             action => {
-                if (validateNumber(action.payload.page) && action.payload.confirmed) {
+                if (validateGzNumber(action.payload.page)) {
                     this.changeState(state => {
                         if (parseInt(action.payload.page) > this.state.totalPages) {
                             state.filter.page = `${state.totalPages}`;
@@ -309,9 +309,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     })
 
                 } else {
-                    this.changeState(state => {
-                        state.filter.page = action.payload.page;
-                    });
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('freq__page_invalid_val'));
                 }
             }
         );

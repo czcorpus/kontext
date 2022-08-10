@@ -308,7 +308,6 @@ export function init(
             super(props);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
-            this._handlePageChangeByClick = this._handlePageChangeByClick.bind(this);
             this._handlePageChange = this._handlePageChange.bind(this);
         }
 
@@ -331,23 +330,10 @@ export function init(
             });
         }
 
-        _handlePageChangeByClick = (curr, step) => {
+        _handlePageChange = (page:string) => {
             dispatcher.dispatch<typeof Actions.SetPage>({
                 name: Actions.SetPage.name,
-                payload: {
-                    page: String(Number(curr) + step),
-                    confirmed: true,
-                }
-            });
-        };
-
-        _handlePageChange = (evt, confirmed: boolean = false) => {
-            dispatcher.dispatch<typeof Actions.SetPage>({
-                name: Actions.SetPage.name,
-                payload: {
-                    page: evt.target.value,
-                    confirmed: confirmed,
-                }
+                payload: {page},
             });
         };
 
@@ -373,9 +359,7 @@ export function init(
                             currentPage={this.props.filter.page}
                             isLoading={this.props.isBusy}
                             totalPages={this.props.totalPages}
-                            handleKeyPress={e => this._handlePageChange(e, true)}
-                            handlePageChangeByClick={this._handlePageChangeByClick}
-                            handlePageChangeByInput={this._handlePageChange} />
+                            handlePageChange={this._handlePageChange} />
                     </S.SubcPaginator>
                     <DataTable actionButtonHandle={this._handleActionButton}
                         pattern={this.props.filter.pattern}

@@ -22,9 +22,7 @@ export interface Props {
     isLoading:boolean;
     currentPage:string;
     totalPages:number;
-    handlePageChangeByClick:(curr, step) => void;
-    handlePageChangeByInput:(evt) => void;
-    handleKeyPress:(evt) => void;
+    handlePageChange:(page:string) => void;
 }
 
 export type Component = React.FC<Props>;

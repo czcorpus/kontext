@@ -109,7 +109,6 @@ export class Actions {
     static ResultSetCurrentPage:Action<{
         value:string;
         sourceId:string;
-        confirmed:boolean;
     }> = {
         name: 'FREQ_RESULT_SET_CURRENT_PAGE'
     };

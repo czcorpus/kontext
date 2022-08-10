@@ -69,24 +69,12 @@ export function init(
 
     const Paginator:React.FC<PaginatorProps> = (props) => {
 
-        const handlePageChangeByClick = (curr, step) => {
+        const handlePageChange = (value:string) => {
             dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
                 name: Actions.ResultSetCurrentPage.name,
                 payload: {
-                    value: String(Number(curr) + step),
+                    value: value,
                     sourceId: props.sourceId,
-                    confirmed: true,
-                }
-            });
-        };
-
-        const handlePageChange = (evt, confirmed: boolean = false) => {
-            dispatcher.dispatch<typeof Actions.ResultSetCurrentPage>({
-                name: Actions.ResultSetCurrentPage.name,
-                payload: {
-                    value: evt.target.value,
-                    sourceId: props.sourceId,
-                    confirmed: confirmed,
                 }
             });
         };
@@ -110,9 +98,7 @@ export function init(
                     isLoading={props.isLoading}
                     currentPage={props.currentPage}
                     totalPages={props.totalPages}
-                    handleKeyPress={evt => handlePageChange(evt, true)}
-                    handlePageChangeByClick={handlePageChangeByClick}
-                    handlePageChangeByInput={handlePageChange} />
+                    handlePageChange={handlePageChange} />
                 <div className="desc">
                     ({he.translate('freq__avail_label')}:{'\u00a0'}
                     {he.translate('freq__avail_items_{num_items}', {num_items: props.totalItems})})
