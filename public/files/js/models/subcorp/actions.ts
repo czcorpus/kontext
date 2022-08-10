@@ -53,6 +53,10 @@ export class Actions {
         name: 'SUBCORP_LIST_UPDATE_FILTER'
     };
 
+    static UpdateFilterDebounce:Action<SubcListFilter> = {
+        name: 'SUBCORP_LIST_UPDATE_FILTER_DEBOUNCE'
+    };
+
     static SetPage:Action<{
         page:string;
         confirmed:boolean;

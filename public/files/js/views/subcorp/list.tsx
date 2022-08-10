@@ -268,8 +268,8 @@ export function init(
         };
 
         const handlePatternSearch = (evt) => {
-            dispatcher.dispatch<typeof Actions.UpdateFilter>({
-                name: Actions.UpdateFilter.name,
+            dispatcher.dispatch<typeof Actions.UpdateFilterDebounce>({
+                name: Actions.UpdateFilterDebounce.name,
                 payload: {
                     ...props.filter,
                     pattern: evt.target.value,
@@ -279,7 +279,7 @@ export function init(
         };
 
         return (
-            <form className="filter">
+            <form className="filter" onSubmit={e => {e.preventDefault()}}>
                 <fieldset>
                     <legend>{he.translate('subclist__filter_heading')}</legend>
                     <div>
@@ -290,16 +290,13 @@ export function init(
                                 {List.map(item => <option key={item} value={item}>{item}</option>, props.relatedCorpora)}
                             </select>
                     </div>
-                    {props.usesSubcRestore ?
-                        <div>
-                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
-                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter.show_archived} />
-                        </div> :
-                        null
-                    }
+                    <div>
+                        <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
+                        <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter.show_archived} />
+                    </div>
                     <div>
                         <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
-                        <input id="inp_pattern" type="text" onChange={handlePatternSearch} value={props.filter.pattern} />
+                        <input id="inp_pattern" onChange={handlePatternSearch} value={props.filter.pattern} />
                     </div>
                 </fieldset>
             </form>

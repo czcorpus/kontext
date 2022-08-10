@@ -19,8 +19,8 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { concatMap, debounceTime, flatMap, tap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
@@ -100,8 +100,12 @@ export interface SubcorpListModelArgs {
 
 
 export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
+    
+    private PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
 
     private layoutModel:PageModel;
+
+    private readonly debouncedFilter$:Subject<typeof Actions.UpdateFilter>;
 
     constructor({
         dispatcher,
@@ -133,6 +137,32 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             state.lines = importServerSubcList(data);
             state.unfinished = this.importProcessed(unfinished);
         })
+
+        this.debouncedFilter$ = new Subject();
+        this.debouncedFilter$.pipe(
+            tap(action => {
+                this.changeState(state => {
+                    for (let p in action.payload) {
+                        if (action.payload.hasOwnProperty(p)) {
+                            state.filter[p] = action.payload[p];
+                        }
+                    }
+                })
+            }),
+            debounceTime(this.PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS),
+            tap(_ => {
+                this.changeState(state => {state.isBusy = true})
+            }),
+            concatMap(action => this.filterItems(action.payload)),
+        ).subscribe({
+            next: _ => {
+                this.emitChange();
+            },
+            error: error => {
+                this.emitChange();
+                this.layoutModel.showMessage('error', error);
+            }
+        });
 
         this.layoutModel.addOnAsyncTaskUpdate(itemList => {
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
@@ -203,6 +233,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         this.layoutModel.showMessage('error', error);
                     }
                 })
+            }
+        );
+
+        this.addActionHandler(
+            Actions.UpdateFilterDebounce,
+            action => {
+                this.debouncedFilter$.next(action);
             }
         );
 
