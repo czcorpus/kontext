@@ -34,8 +34,6 @@ import * as S from './style';
 import { SubcorpusEditModel } from '../../models/subcorp/edit';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
-import { itemIsCorplist } from '../../plugins/treeCorparch/common';
-
 
 export interface ListViews {
     SubcorpList:React.ComponentClass;
@@ -240,14 +238,19 @@ export function init(
         usesSubcRestore:boolean;
 
     }> = (props) => {
+        const MIN_PATTERN_LENGTH = 3
+        const [pattern, setPattern] = React.useState(props.filter.pattern);
 
         const handleShowArchived = () => {
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
-                    ...props.filter,
-                    show_archived: !props.filter.show_archived,
-                    page: '1',
+                    filter: {
+                        ...props.filter,
+                        show_archived: !props.filter.show_archived,
+                        page: '1',
+                    },
+                    debounced: false,
                 }
             });
         };
@@ -256,22 +259,37 @@ export function init(
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
-                    ...props.filter,
-                    corpname: evt.target.value,
-                    page: '1',
+                    filter: {
+                        ...props.filter,
+                        corpname: evt.target.value,
+                        page: '1',
+                    },
+                    debounced: false,
                 }
             });
         };
 
         const handlePatternSearch = (evt) => {
-            dispatcher.dispatch<typeof Actions.UpdateFilterDebounce>({
-                name: Actions.UpdateFilterDebounce.name,
-                payload: {
-                    ...props.filter,
-                    pattern: evt.target.value,
-                    page: '1',
-                }
-            });
+            setPattern(evt.target.value);
+
+            let search = '';
+            if (evt.target.value.length >= MIN_PATTERN_LENGTH) {
+                search = evt.target.value;
+            }
+
+            if (props.filter.pattern !== search) {
+                dispatcher.dispatch<typeof Actions.UpdateFilter>({
+                    name: Actions.UpdateFilter.name,
+                    payload: {
+                        filter: {
+                            ...props.filter,
+                            pattern: search,
+                            page: '1',
+                        },
+                        debounced: true,
+                    }
+                });
+            };
         };
 
         return (
@@ -292,7 +310,7 @@ export function init(
                     </div>
                     <div>
                         <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
-                        <input id="inp_pattern" onChange={handlePatternSearch} value={props.filter.pattern} />
+                        <input id="inp_pattern" onChange={handlePatternSearch} value={pattern} className={pattern.length < MIN_PATTERN_LENGTH ? 'inactive' : null}/>
                     </div>
                 </fieldset>
             </form>

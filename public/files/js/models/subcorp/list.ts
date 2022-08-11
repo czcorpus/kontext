@@ -19,8 +19,8 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable, Subject } from 'rxjs';
-import { concatMap, debounceTime, tap } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
+import { concatMap, delay, switchMap, tap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
@@ -107,7 +107,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
     private layoutModel:PageModel;
 
-    private readonly debouncedFilter$:Subject<typeof Actions.UpdateFilter>;
+    private readonly filterSubject$:Subject<typeof Actions.UpdateFilter>;
 
     constructor({
         dispatcher,
@@ -140,22 +140,27 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             state.unfinished = this.importProcessed(unfinished);
         })
 
-        this.debouncedFilter$ = new Subject();
-        this.debouncedFilter$.pipe(
+        this.filterSubject$ = new Subject();
+        this.filterSubject$.pipe(
             tap(action => {
                 this.changeState(state => {
-                    for (let p in action.payload) {
-                        if (action.payload.hasOwnProperty(p)) {
-                            state.filter[p] = action.payload[p];
+                    for (let p in action.payload.filter) {
+                        if (action.payload.filter.hasOwnProperty(p)) {
+                            state.filter[p] = action.payload.filter[p];
                         }
                     }
                 })
             }),
-            debounceTime(this.PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS),
+            switchMap(action => {
+                if (action.payload.debounced) {
+                    return of(action).pipe(delay(this.PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS));
+                }
+                return of(action);
+            }),
             tap(_ => {
                 this.changeState(state => {state.isBusy = true})
             }),
-            concatMap(action => this.filterItems(action.payload)),
+            concatMap(action => this.filterItems(action.payload.filter)),
         ).subscribe({
             next: _ => {
                 this.emitChange();
@@ -225,23 +230,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler(
             Actions.UpdateFilter,
             action => {
-                this.changeState(state => {state.isBusy = true});
-                this.filterItems(action.payload).subscribe({
-                    next: _ => {
-                        this.emitChange();
-                    },
-                    error: error => {
-                        this.emitChange();
-                        this.layoutModel.showMessage('error', error);
-                    }
-                })
-            }
-        );
-
-        this.addActionHandler(
-            Actions.UpdateFilterDebounce,
-            action => {
-                this.debouncedFilter$.next(action);
+                this.filterSubject$.next(action);
             }
         );
 
@@ -398,11 +387,6 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
-                    for (let p in filter) {
-                        if (filter.hasOwnProperty(p)) {
-                            state.filter[p] = filter[p];
-                        }
-                    }
                     state.isBusy = false;
                 })
             })
