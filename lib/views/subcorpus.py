@@ -141,6 +141,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     Displays a list of user subcorpora. In case there is a 'subc_storage' plug-in
     installed then the list is enriched by additional re-use/undelete information.
     """
+    is_html = amodel._action_props.return_type == 'template'
     amodel.disabled_menu_items = (
         MainMenu.VIEW('kwic-sent-switch'), MainMenu.VIEW('structs-attrs'), MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
 
@@ -149,7 +150,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     filter_args = SubcListFilterArgs(
         active_only=active_only,
         archived_only=False,
-        corpus=req.args.get('corpname'),
+        corpus=None if is_html else req.args.get('corpname'),
         pattern=req.args.get('pattern'),
         page=page,
     )
@@ -157,6 +158,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     with plugins.runtime.SUBC_STORAGE(AbstractSubcArchive) as sr:
         try:
             full_list: List[SubcorpusRecord] = await sr.list(amodel.plugin_ctx.user_id, filter_args)
+            related_corpora: List[str] = await sr.get_related_corpora(amodel.plugin_ctx.user_id)
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_storage plug-in failed to list queries: %s' % e)
@@ -186,7 +188,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
-        related_corpora=sorted(list(set(x.corpus_name for x in full_list))),
+        related_corpora=related_corpora,
         uses_subc_storage=plugins.runtime.SUBC_STORAGE.exists,
         uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
         subcpagesize=amodel.args.subcpagesize,

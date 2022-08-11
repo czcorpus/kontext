@@ -110,6 +110,12 @@ class AbstractSubcArchive(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def get_related_corpora(self, user_id: int) -> List[str]:
+        """
+        Get list of related corpora for specified user
+        """
+
+    @abc.abstractmethod
     async def get_query(self, query_id: int) -> Optional[SubcorpusRecord]:
         """
         Returns a query with ID == query_id
