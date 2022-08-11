@@ -192,7 +192,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         uses_subc_storage=plugins.runtime.SUBC_STORAGE.exists,
         uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
         subcpagesize=amodel.args.subcpagesize,
-        total_pages=total_pages,
+        total_pages=total_pages if total_pages else 1,
     )
     return ans
 
