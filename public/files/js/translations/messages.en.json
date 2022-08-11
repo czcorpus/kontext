@@ -593,6 +593,8 @@
         "subcform__unsaved_changes": "There are unsaved changes",
         "subclist__my_subc_heading": "My subcorpora",
         "subclist__show_archived": "Show also archived items",
+        "subclist__search_pattern": "Search pattern",
+        "subclist__pattern_in_description": "Pattern found in description",
         "subclist__filter_heading": "Filter",
         "subclist__search_in_subc": "Search in the subcorpus",
         "subclist__col_name": "Name",

@@ -150,6 +150,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         active_only=active_only,
         archived_only=False,
         corpus=req.args.get('corpname'),
+        pattern=req.args.get('pattern'),
         page=page,
     )
 
@@ -167,12 +168,14 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     else:
         full_list = l10n.sort(full_list, loc=req.ui_lang,
                               key=lambda x: getattr(x, sort_key), reverse=rev)
-    
+
     total_pages = math.ceil(len(full_list) / amodel.args.subcpagesize)
     full_list = full_list[(page - 1) * amodel.args.subcpagesize:page * amodel.args.subcpagesize]
 
     if filter_args.corpus is None:
         filter_args.corpus = ''  # JS code requires non-null value
+    if filter_args.pattern is None:
+        filter_args.pattern = ''  # JS code requires non-null value
 
     ans = dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here

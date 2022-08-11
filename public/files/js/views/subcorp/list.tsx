@@ -34,6 +34,7 @@ import * as S from './style';
 import { SubcorpusEditModel } from '../../models/subcorp/edit';
 import { TextTypesModel } from '../../models/textTypes/main';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
+import { itemIsCorplist } from '../../plugins/treeCorparch/common';
 
 
 export interface ListViews {
@@ -72,6 +73,7 @@ export function init(
                     }
                 </td>
                 <td className="num">{he.formatDate(props.item.created, 1)}</td>
+                <td />
                 <td />
             </tr>
         );
@@ -130,6 +132,7 @@ export function init(
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
+                <td>{props.item.info ? props.item.info : null}</td>
             </tr>
         );
     };
@@ -188,6 +191,7 @@ export function init(
 
     class DataTable extends React.Component<{
         actionButtonHandle:(action:string, idx:number)=>void;
+        pattern:string;
         lines:Array<SubcorpListItem>;
         sortKey:SortKey;
         unfinished:Array<UnfinishedSubcorp>;
@@ -212,6 +216,7 @@ export function init(
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
+                            <th />
                             <th />
                         </tr>
                         {List.map(item => (
@@ -240,7 +245,7 @@ export function init(
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
-                    corpname: props.filter.corpname,
+                    ...props.filter,
                     show_archived: !props.filter.show_archived,
                     page: '1',
                 }
@@ -251,15 +256,26 @@ export function init(
             dispatcher.dispatch<typeof Actions.UpdateFilter>({
                 name: Actions.UpdateFilter.name,
                 payload: {
+                    ...props.filter,
                     corpname: evt.target.value,
-                    show_archived: props.filter.show_archived,
+                    page: '1',
+                }
+            });
+        };
+
+        const handlePatternSearch = (evt) => {
+            dispatcher.dispatch<typeof Actions.UpdateFilterDebounce>({
+                name: Actions.UpdateFilterDebounce.name,
+                payload: {
+                    ...props.filter,
+                    pattern: evt.target.value,
                     page: '1',
                 }
             });
         };
 
         return (
-            <form className="filter">
+            <form className="filter" onSubmit={e => {e.preventDefault()}}>
                 <fieldset>
                     <legend>{he.translate('subclist__filter_heading')}</legend>
                     <div>
@@ -270,13 +286,14 @@ export function init(
                                 {List.map(item => <option key={item} value={item}>{item}</option>, props.relatedCorpora)}
                             </select>
                     </div>
-                    {props.usesSubcRestore ?
-                        <div>
-                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
-                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter['show_archived']} />
-                        </div> :
-                        null
-                    }
+                    <div>
+                        <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
+                        <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter.show_archived} />
+                    </div>
+                    <div>
+                        <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
+                        <input id="inp_pattern" onChange={handlePatternSearch} value={props.filter.pattern} />
+                    </div>
                 </fieldset>
             </form>
         );
@@ -291,7 +308,6 @@ export function init(
             super(props);
             this._handleActionButton = this._handleActionButton.bind(this);
             this._handleActionsClose = this._handleActionsClose.bind(this);
-            this._handlePageChangeByClick = this._handlePageChangeByClick.bind(this);
             this._handlePageChange = this._handlePageChange.bind(this);
         }
 
@@ -314,23 +330,10 @@ export function init(
             });
         }
 
-        _handlePageChangeByClick = (curr, step) => {
+        _handlePageChange = (page:string) => {
             dispatcher.dispatch<typeof Actions.SetPage>({
                 name: Actions.SetPage.name,
-                payload: {
-                    page: String(Number(curr) + step),
-                    confirmed: true,
-                }
-            });
-        };
-
-        _handlePageChange = (evt, confirmed: boolean = false) => {
-            dispatcher.dispatch<typeof Actions.SetPage>({
-                name: Actions.SetPage.name,
-                payload: {
-                    page: evt.target.value,
-                    confirmed: confirmed,
-                }
+                payload: {page},
             });
         };
 
@@ -356,11 +359,10 @@ export function init(
                             currentPage={this.props.filter.page}
                             isLoading={this.props.isBusy}
                             totalPages={this.props.totalPages}
-                            handleKeyPress={e => this._handlePageChange(e, true)}
-                            handlePageChangeByClick={this._handlePageChangeByClick}
-                            handlePageChangeByInput={this._handlePageChange} />
+                            handlePageChange={this._handlePageChange} />
                     </S.SubcPaginator>
                     <DataTable actionButtonHandle={this._handleActionButton}
+                        pattern={this.props.filter.pattern}
                         lines={this.props.lines}
                         sortKey={this.props.sortKey}
                         unfinished={this.props.unfinished} />

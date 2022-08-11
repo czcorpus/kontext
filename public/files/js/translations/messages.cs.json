@@ -593,6 +593,8 @@
         "subcform__unsaved_changes": "Změny nejsou uloženy",
         "subclist__my_subc_heading": "Mé subkorpusy",
         "subclist__show_archived": "Zobrazit i archivované položky",
+        "subclist__search_pattern": "Hledat vzor",
+        "subclist__pattern_in_description": "Vzor nalezen v popisu",
         "subclist__filter_heading": "Filtr",
         "subclist__search_in_subc": "Hledat v subkorpusu",
         "subclist__col_name": "Název",

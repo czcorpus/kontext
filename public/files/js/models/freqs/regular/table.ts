@@ -24,8 +24,7 @@ import { IFullActionControl, SEDispatcher, StatelessModel } from 'kombo';
 import { Observable } from 'rxjs';
 import {
     EmptyResultBlock, FreqDataLoader, FreqDataRowsModelState, FreqServerArgs, isEmptyResultBlock,
-    isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock,
-    validateNumber } from './common';
+    isFreqChartsModelState, MulticritFreqServerArgs, recalculateConfIntervals, ResultBlock } from './common';
 import { Dict, List, Maths, pipe, tuple } from 'cnc-tskit';
 import { ConcQuickFilterServerArgs } from '../../concordance/common';
 import { Actions } from './actions';
@@ -34,6 +33,7 @@ import { TagsetInfo } from '../../../types/plugins/tagHelper';
 import { Block, FreqResultResponse } from '../common';
 import { Actions as GeneralOptsActions } from '../../options/actions';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
+import { validateGzNumber } from '../../base';
 
 
 export interface FreqDataRowsModelArgs {
@@ -447,36 +447,34 @@ export class FreqDataRowsModel extends StatelessModel<FreqDataRowsModelState> {
         this.addActionHandler(
             Actions.ResultSetCurrentPage,
             (state, action) => {
-                const sourceId = action.payload.sourceId;
-                state.currentPage[sourceId] = action.payload.value;
-                if (validateNumber(action.payload.value, 1) && action.payload.confirmed) {
+                if (validateGzNumber(action.payload.value)) {
+                    const sourceId = action.payload.sourceId;
+                    state.currentPage[sourceId] = action.payload.value;
+
                     if (parseInt(action.payload.value) > state.data[sourceId].TotalPages) {
                         state.currentPage[sourceId] = `${state.data[sourceId].TotalPages}`;
                         this.pageModel.showMessage('info', this.pageModel.translate('global__no_more_pages'));
-
                     }
                     state.isBusy[sourceId] = true;
                     state.isError[sourceId] = null;
                 }
             },
             (state, action, dispatch) => {
-                if (validateNumber(action.payload.value, 1)) {
-                    if (action.payload.confirmed) {
-                        this.dispatchLoad(
-                            this.freqLoader.loadPage(
-                                this.getSubmitArgs(
-                                    state,
-                                    action.payload.sourceId,
-                                    state.flimit,
-                                    parseInt(action.payload.value)
-                                )
-                            ),
-                            state,
-                            dispatch,
-                            true,
-                            action.payload.sourceId
-                        );
-                    }
+                if (validateGzNumber(action.payload.value)) {
+                    this.dispatchLoad(
+                        this.freqLoader.loadPage(
+                            this.getSubmitArgs(
+                                state,
+                                action.payload.sourceId,
+                                state.flimit,
+                                parseInt(action.payload.value)
+                            )
+                        ),
+                        state,
+                        dispatch,
+                        true,
+                        action.payload.sourceId
+                    );
                 } else {
                     this.pageModel.showMessage(
                         'error', this.pageModel.translate('freq__page_invalid_val'));

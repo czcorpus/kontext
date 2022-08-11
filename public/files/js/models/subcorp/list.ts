@@ -19,8 +19,8 @@
  */
 
 import { IFullActionControl, StatefulModel } from 'kombo';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { concatMap, debounceTime, tap } from 'rxjs/operators';
 
 import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
@@ -28,13 +28,14 @@ import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
 import { importServerSubcList, SubcorpList } from './common';
 import { SubcorpusServerRecord } from '../common/layout';
-import { validateNumber } from '../base';
+import { validateGzNumber } from '../base';
 
 
 
 export interface SubcListFilter {
     show_archived:boolean;
     corpname:string;
+    pattern:string;
     page:string;
 }
 
@@ -49,6 +50,8 @@ export interface SubcorpListItem {
     published:Date;
     size:number;
     public_description:string;
+
+    info?:string;
 }
 
 
@@ -99,8 +102,12 @@ export interface SubcorpListModelArgs {
 
 
 export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
+    
+    private PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
 
     private layoutModel:PageModel;
+
+    private readonly debouncedFilter$:Subject<typeof Actions.UpdateFilter>;
 
     constructor({
         dispatcher,
@@ -118,7 +125,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 unfinished: [],
                 relatedCorpora,
                 sortKey,
-                filter: initialFilter || {show_archived: false, corpname: '', page: '1'},
+                filter: initialFilter || {show_archived: false, corpname: '', page: '1', pattern: ''},
                 editWindowSubcorpus: null,
                 isBusy: false,
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
@@ -129,9 +136,35 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         );
         this.layoutModel = layoutModel;
         this.changeState(state => {
-            state.lines = importServerSubcList(data);
+            state.lines = this.importAndProcessServerSubcList(data);
             state.unfinished = this.importProcessed(unfinished);
         })
+
+        this.debouncedFilter$ = new Subject();
+        this.debouncedFilter$.pipe(
+            tap(action => {
+                this.changeState(state => {
+                    for (let p in action.payload) {
+                        if (action.payload.hasOwnProperty(p)) {
+                            state.filter[p] = action.payload[p];
+                        }
+                    }
+                })
+            }),
+            debounceTime(this.PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS),
+            tap(_ => {
+                this.changeState(state => {state.isBusy = true})
+            }),
+            concatMap(action => this.filterItems(action.payload)),
+        ).subscribe({
+            next: _ => {
+                this.emitChange();
+            },
+            error: error => {
+                this.emitChange();
+                this.layoutModel.showMessage('error', error);
+            }
+        });
 
         this.layoutModel.addOnAsyncTaskUpdate(itemList => {
             const subcTasks = itemList.filter(item => item.category === 'subcorpus');
@@ -177,7 +210,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             Actions.SortLines,
             action => {
                 this.changeState(state => {state.isBusy = true});
-                this.sortItems(action.payload.colName, action.payload.reverse, this.state.filter.page).subscribe({
+                this.sortItems(action.payload.colName, action.payload.reverse, this.state.filter.page, this.state.filter.page).subscribe({
                     next: (data) => {
                         this.emitChange();
                     },
@@ -202,6 +235,13 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                         this.layoutModel.showMessage('error', error);
                     }
                 })
+            }
+        );
+
+        this.addActionHandler(
+            Actions.UpdateFilterDebounce,
+            action => {
+                this.debouncedFilter$.next(action);
             }
         );
 
@@ -248,7 +288,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         this.addActionHandler(
             Actions.SetPage,
             action => {
-                if (validateNumber(action.payload.page) && action.payload.confirmed) {
+                if (validateGzNumber(action.payload.page)) {
                     this.changeState(state => {
                         if (parseInt(action.payload.page) > this.state.totalPages) {
                             state.filter.page = `${state.totalPages}`;
@@ -269,9 +309,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     })
 
                 } else {
-                    this.changeState(state => {
-                        state.filter.page = action.payload.page;
-                    });
+                    this.layoutModel.showMessage('error', this.layoutModel.translate('freq__page_invalid_val'));
                 }
             }
         );
@@ -290,10 +328,11 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         )
     }
 
-    private sortItems(name:string, reverse:boolean, page:string):Observable<SubcorpList> {
+    private sortItems(name:string, reverse:boolean, page:string, pattern:string):Observable<SubcorpList> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (reverse ? '-' : '') + name,
+            pattern: pattern,
             page: page,
         }
         this.mergeFilter(args, this.state.filter);
@@ -306,7 +345,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = importServerSubcList(data.subcorp_list);
+                    state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
@@ -342,6 +381,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         const args:{[key:string]:string} = {
             format: 'json',
             sort: (this.state.sortKey.reverse ? '-' : '') + this.state.sortKey.name,
+            pattern: filter.pattern,
             page: filter.page,
         }
         this.mergeFilter(args, filter);
@@ -354,7 +394,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
         ).pipe(
             tap((data) => {
                 this.changeState(state => {
-                    state.lines = importServerSubcList(data.subcorp_list);
+                    state.lines = this.importAndProcessServerSubcList(data.subcorp_list);
                     state.unfinished = this.importProcessed(data.processed_subc);
                     state.relatedCorpora = data.related_corpora;
                     state.totalPages = data.total_pages;
@@ -365,6 +405,19 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                     }
                     state.isBusy = false;
                 })
+            })
+        );
+    }
+
+    private importAndProcessServerSubcList(data:Array<SubcorpusServerRecord>) {
+        return pipe(
+            data,
+            importServerSubcList,
+            List.map(v => {
+                if (this.state.filter.pattern && !v.name.includes(this.state.filter.pattern) && v.public_description.includes(this.state.filter.pattern)) {
+                    v.info = this.layoutModel.translate('subclist__pattern_in_description');
+                }
+                return v
             })
         );
     }

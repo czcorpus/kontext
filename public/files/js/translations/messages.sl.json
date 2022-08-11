@@ -604,6 +604,8 @@
         "subcform__unsaved_changes": "There are unsaved changes UNTRANSLATED",
         "subclist__my_subc_heading": "Moji podkorpusi",
         "subclist__show_archived": "Show also archived items UNTRANSLATED",
+        "subclist__search_pattern": "Search pattern UNTRANSLATED",
+        "subclist__pattern_in_description": "Pattern found in description UNTRANSLATED",
         "subclist__filter_heading": "Filter",
         "subclist__search_in_subc": "Išči v podkorpusu",
         "subclist__col_name": "Ime",

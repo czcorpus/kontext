@@ -825,9 +825,14 @@ export function init(
 
     const SimplePaginator:CoreViews.SimplePaginator.Component = (props) => {
 
+        const [value, setValue] = React.useState(props.currentPage);
+        React.useEffect(() => {
+            setValue(props.currentPage);
+        }, [props.currentPage]);
+
         const handleKeyPress = (evt) => {
             if (evt.key === Keyboard.Value.ENTER) {
-                props.handleKeyPress(evt);
+                props.handlePageChange(evt.target.value);
                 evt.preventDefault();
                 evt.stopPropagation();
             }
@@ -845,10 +850,10 @@ export function init(
 
             } else {
                 return (
-                    <input type="text" value={props.currentPage}
+                    <input type="text" value={value}
                         title={he.translate('global__curr_page_num')}
                         onKeyPress={handleKeyPress}
-                        onChange={props.handlePageChangeByInput}
+                        onChange={e => setValue(e.target.value)}
                         disabled={props.totalPages === 1}
                         style={{width: '3em'}} />
                 );
@@ -860,7 +865,7 @@ export function init(
                 <div className="ktx-pagination-core">
                     <div className="ktx-pagination-left">
                         {parseInt(props.currentPage) > 1 ?
-                            (<a onClick={(e) => props.handlePageChangeByClick(props.currentPage, -1)}>
+                            (<a onClick={(e) => props.handlePageChange(`${parseInt(props.currentPage)-1}`)}>
                                 <img className="over-img" src={he.createStaticUrl('img/prev-page.svg')}
                                         alt="další" title="další" />
                             </a>) : null}
@@ -869,7 +874,7 @@ export function init(
                     <span className="numofpages">{'\u00a0/\u00a0'}{props.totalPages}</span>
                     <div className="ktx-pagination-right">
                         {parseInt(props.currentPage) < props.totalPages ?
-                            (<a onClick={(e) => props.handlePageChangeByClick(props.currentPage, 1)}>
+                            (<a onClick={(e) => props.handlePageChange(`${parseInt(props.currentPage)+1}`)}>
                                 <img className="over-img" src={he.createStaticUrl('img/next-page.svg')}
                                         alt="další" title="další" />
                             </a>) : null}

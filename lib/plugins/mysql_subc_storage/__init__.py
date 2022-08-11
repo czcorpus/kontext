@@ -151,6 +151,11 @@ class MySQLSubcArchive(AbstractSubcArchive):
         elif filter_args.published_only:
             where.append('t1.published IS NOT NULL')
 
+        if filter_args.pattern:
+            v = f'%{filter_args.pattern}%'
+            where.append('t1.name LIKE %s OR t1.public_description LIKE %s')
+            args.extend([v, v])
+
         if filter_args.ia_query:
             v = f'{filter_args.ia_query}%'
             where.append(f't1.id LIKE %s OR t2.{self._bconf.user_table_lastname_col} LIKE %s')
