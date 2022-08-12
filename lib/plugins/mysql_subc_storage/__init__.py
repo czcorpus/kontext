@@ -205,14 +205,6 @@ class MySQLSubcArchive(AbstractSubcArchive):
                 ans[row['id']] = row['name']
             return ans
 
-    async def get_related_corpora(self, user_id: int) -> List[str]:
-        async with self._db.cursor() as cursor:
-            await cursor.execute(
-                f"SELECT DISTINCT corpus_name FROM {self._bconf.subccorp_table} WHERE user_id = %s ORDER BY corpus_name",
-                (user_id,)
-            )
-            return [row['corpus_name'] async for row in cursor]
-
     async def get_query(self, subc_id: str) -> Optional[SubcorpusRecord]:
         async with self._db.cursor() as cursor:
             await cursor.execute(
