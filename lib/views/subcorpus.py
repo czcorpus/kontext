@@ -206,6 +206,15 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     return ans
 
 
+@bp.route('/ajax_list')
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    """
+    Used for updating subcorpora page information.
+    """
+    return await _filter_subcorpora(amodel, req)
+
+
 @bp.route('/delete', ['POST'])
 @http_action(access_level=1, return_type='json', action_model=CorpusActionModel)
 async def delete(amodel: CorpusActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:

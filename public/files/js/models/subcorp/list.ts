@@ -326,7 +326,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         return this.layoutModel.ajax$<SubcorpList>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('subcorpus/list'),
+            this.layoutModel.createActionUrl('subcorpus/ajax_list'),
             args
 
         ).pipe(
@@ -375,7 +375,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
 
         return this.layoutModel.ajax$<SubcorpList>(
             HTTP.Method.GET,
-            this.layoutModel.createActionUrl('subcorpus/list'),
+            this.layoutModel.createActionUrl('subcorpus/ajax_list'),
             args
 
         ).pipe(
