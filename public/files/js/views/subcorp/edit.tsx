@@ -32,7 +32,6 @@ import { init as subcOverviewInit } from './overview';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 import * as PluginInterfaces from '../../types/plugins';
 import * as S from './style';
-import { CorpusInfoType } from '../../models/common/layout';
 
 
 export function init(
@@ -51,9 +50,12 @@ export function init(
 
     // ------------------------ <TabContentWrapper /> --------------------------
 
-    const TabContentWrapper:React.FC<{auxInfoElm?:React.ReactElement}> = (props) => (
+    const TabContentWrapper:React.FC<{
+        auxInfoElm?:React.ReactElement;
+        htmlClass?:string;
+    }> = (props) => (
         <S.TabContentWrapper>
-            <form>
+            <form className={props.htmlClass}>
                 {props.auxInfoElm ? props.auxInfoElm : null}
                 <fieldset>
                     {props.children}
@@ -125,7 +127,11 @@ export function init(
         };
 
         return (
-            <TabContentWrapper>
+            <TabContentWrapper htmlClass="reuse">
+                <div className="info">
+                    <layoutViews.StatusIcon status="info" inline={true} htmlClass="" />
+                    <p>{he.translate('subclist__changes_can_be_saved_info')}</p>
+                </div>
                 {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
                 {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
                 {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
@@ -300,7 +306,7 @@ export function init(
         );
 
         return (
-            <div>
+            <S.SubcorpusEdit>
                 {!props.data ?
                     <layoutViews.AjaxLoaderImage /> :
                     <>
@@ -324,7 +330,7 @@ export function init(
                         </div>
                     </>
             }
-            </div>
+            </S.SubcorpusEdit>
         )
     }
 

@@ -319,8 +319,12 @@ export const QuickSubcLABEL = styled.label`
 
 export const RestoreTabContentWrapper = styled.div`
     display: flex;
-    justify-content: space-between;
     margin-top: 1em;
+    justify-content: flex-end;
+
+    > *:not(:first-child) {
+        margin-left: 0.7em;
+    }
 `;
 
 // ---------------- <TabContentWrapper /> --------------------------------
@@ -482,4 +486,22 @@ export const SubcorpusInfo = styled.div`
         background-color: #edf9fd;
         border: 1px solid #d8e7ed;
     }
+`;
+
+
+// ------------------ <_SubcorpusEdit /> -----------------------
+
+export const SubcorpusEdit = styled.div`
+
+    .reuse .info {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+
+        > span {
+            margin-right: 0.4em;
+        }
+    }
+
 `;

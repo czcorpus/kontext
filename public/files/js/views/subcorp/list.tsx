@@ -129,16 +129,19 @@ export function init(
                 <td>
                     {renderLabel()}
                 </td>
+                <td>
+                    {props.item.corpus_name}
+                </td>
                 <td className="num">
                 {   props.item.size ? he.formatNumber(props.item.size) : '-'}
                 </td>
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
+                <td>{notes.join(', ')}</td>
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
-                <td>{notes.join(', ')}</td>
             </tr>
         );
     };
@@ -220,10 +223,11 @@ export function init(
                     <tbody>
                         <tr>
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
+                            <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                            <th />
                             <th>{he.translate('global__note_heading')}</th>
+                            <th />
                         </tr>
                         {List.map(item => (
                             <TrUnfinishedLine key={`${item.name}:${item.created}`} item={item} />
