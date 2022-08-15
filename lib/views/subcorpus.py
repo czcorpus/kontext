@@ -134,22 +134,14 @@ async def restore(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     return {}
 
 
-@bp.route('/list')
-@http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
-async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
-    """
-    Displays a list of user subcorpora. In case there is a 'subc_storage' plug-in
-    installed then the list is enriched by additional re-use/undelete information.
-    """
-    amodel.disabled_menu_items = (
-        MainMenu.VIEW('kwic-sent-switch'), MainMenu.VIEW('structs-attrs'), MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
-
+async def _filter_subcorpora(amodel: UserActionModel, req: KRequest):
     active_only = False if bool(int(req.args.get('show_archived', 0))) else True
     page = int(req.args.get('page', 1))
+    corpus_name = req.args.get('corpname')
     filter_args = SubcListFilterArgs(
         active_only=active_only,
         archived_only=False,
-        corpus=req.args.get('corpname'),
+        corpus=None,  # to get available related corpora we need None filter here
         pattern=req.args.get('pattern'),
         page=page,
     )
@@ -160,6 +152,11 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
         except Exception as e:
             logging.getLogger(__name__).error(
                 'subc_storage plug-in failed to list queries: %s' % e)
+
+    # to get available related corpora we need to filter it here
+    related_corpora = sorted(set(x.corpus_name for x in full_list))
+    if corpus_name is not None:
+        full_list = [x for x in full_list if x.corpus_name == corpus_name]
 
     sort = req.args.get('sort', '-created')
     sort_key, rev = amodel.parse_sorting_param(sort)
@@ -177,7 +174,7 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
     if filter_args.pattern is None:
         filter_args.pattern = ''  # JS code requires non-null value
 
-    ans = dict(
+    return dict(
         SubcorpList=[],   # this is used by subcorpus SELECT element; no need for that here
         subcorp_list=[x.to_dict() for x in full_list],
         sort_key=dict(name=sort_key, reverse=rev),
@@ -186,13 +183,36 @@ async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KRespons
             v.to_dict()
             for v in amodel.get_async_tasks(category=AsyncTaskStatus.CATEGORY_SUBCORPUS)
         ],
-        related_corpora=sorted(list(set(x.corpus_name for x in full_list))),
-        uses_subc_storage=plugins.runtime.SUBC_STORAGE.exists,
-        uses_live_attrs=plugins.runtime.LIVE_ATTRIBUTES.exists,
-        subcpagesize=amodel.args.subcpagesize,
-        total_pages=total_pages,
+        related_corpora=related_corpora,
+        total_pages=total_pages if total_pages else 1,
     )
+
+
+@bp.route('/list')
+@http_action(access_level=1, template='subcorpus/list.html', page_model='subcorpList', action_model=UserActionModel)
+async def list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    """
+    Displays a list of user subcorpora. In case there is a 'subc_storage' plug-in
+    installed then the list is enriched by additional re-use/undelete information.
+    """
+    amodel.disabled_menu_items = (
+        MainMenu.VIEW('kwic-sent-switch'), MainMenu.VIEW('structs-attrs'), MainMenu.FILTER, MainMenu.FREQUENCY, MainMenu.COLLOCATIONS, MainMenu.SAVE, MainMenu.CONCORDANCE)
+
+    ans = await _filter_subcorpora(amodel, req)
+
+    # TODO this might be redundant, since subc storage is now mandatory
+    ans['uses_subc_storage'] = plugins.runtime.SUBC_STORAGE.exists
+    ans['uses_live_attrs'] = plugins.runtime.LIVE_ATTRIBUTES.exists
     return ans
+
+
+@bp.route('/ajax_list')
+@http_action(access_level=1, return_type='json', action_model=UserActionModel)
+async def ajax_list_subcorpora(amodel: UserActionModel, req: KRequest, resp: KResponse) -> Dict[str, Any]:
+    """
+    Used for updating subcorpora page information.
+    """
+    return await _filter_subcorpora(amodel, req)
 
 
 @bp.route('/delete', ['POST'])

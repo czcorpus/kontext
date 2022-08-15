@@ -163,6 +163,10 @@ export const SubcorpList = styled.div`
         input {
             vertical-align: middle;
         }
+
+        input.inactive {
+            color: gray;
+        }
     }
 
 
