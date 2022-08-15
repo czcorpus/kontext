@@ -320,6 +320,7 @@ export const QuickSubcLABEL = styled.label`
 export const RestoreTabContentWrapper = styled.div`
     display: flex;
     justify-content: space-between;
+    margin-top: 1em;
 `;
 
 // ---------------- <TabContentWrapper /> --------------------------------
@@ -386,5 +387,99 @@ export const SubcPaginator = styled.div`
 
     form {
         margin: 0;
+    }
+`;
+
+// ------------------ <SubclistFilterForm /> ------------------------
+
+export const SubclistFilterForm = styled.form`
+    .inputs {
+        display: flex;
+        align-items: center;
+    }
+
+    .inputs > div {
+
+        label {
+            margin-right: 0.3em;
+        }
+
+        input[type='checkbox'] {
+            margin: 0;
+        }
+    }
+
+    .inputs div:not(:first-child) {
+        margin-left: 1em;
+    }
+`;
+
+
+// ------------ <SubcorpusInfo /> --------------------------
+
+export const SubcorpusInfo = styled.div`
+
+    dl dt {
+        font-weight: normal;
+        color: ${theme.colorLightText};
+    }
+
+    dl dt::first-letter {
+        text-transform: uppercase;
+    }
+
+    dl dt:not(:first-of-type) {
+        margin-top: 0.9em;
+    }
+
+    dl dd {
+        margin-top: 0.3em;
+        margin-left: 1em;
+        font-size: 1.2em;
+    }
+
+    dl dd a {
+        color: ${theme.colorDefaultText};
+    }
+
+    dl dd a:hover {
+        color: ${theme.colorLogoBlue};
+    }
+
+    h2.subcorpus-name,
+    h2.corpus-name {
+        font-size: 2.3em;
+        font-weight: normal;
+        margin: 0 0 0.1em 0;
+        padding: 0.2em 0.3em;
+        display: inline-block;
+        color: ${theme.colorDefaultText};
+    }
+
+    h2 {
+        margin-left: 0;
+    }
+
+    .subc-query {
+        margin-top: 0.4em;
+    }
+
+    .subc-query textarea {
+        background-color: transparent;
+        border: 1px solid ${theme.colorLightGrey};
+        margin-top: 0.4em;
+    }
+
+    .subc-query h3,
+    .description h3 {
+        margin-bottom: 0.7em;
+    }
+
+    .description .html {
+        font-size: 0.9em;
+        border-radius: ${theme.inputBorderRadius};
+        padding: 0.7em;
+        background-color: #edf9fd;
+        border: 1px solid #d8e7ed;
     }
 `;

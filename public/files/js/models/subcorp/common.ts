@@ -24,9 +24,35 @@ import { Observable, throwError } from 'rxjs';
 import { PageModel } from '../../app/page';
 import * as Kontext from '../../types/kontext';
 import * as TextTypes from '../../types/textTypes';
-import { SubcorpusServerRecord } from '../common/layout';
+import { TTInitialData } from '../textTypes/common';
 import { TextTypesModel } from '../textTypes/main';
 import { SubcorpListItem } from './list';
+
+
+export interface SubcorpusServerRecord {
+    id:string;
+    name:string;
+    corpus_name:string;
+    user_id:number;
+    author_id:number;
+    author_fullname:string;
+    size:number;
+    created:number;
+    archived:number|undefined;
+    published:number|undefined;
+    public_description:string|undefined;
+    public_description_raw:string|undefined;
+    cql:string|undefined;
+    within_cond:Array<ServerWithinSelection>|undefined;
+    text_types:TextTypes.ExportedSelection|undefined;
+}
+
+export interface SubcorpusPropertiesResponse {
+    data:SubcorpusServerRecord;
+    textTypes:TTInitialData;
+    structsAndAttrs:Kontext.StructsAndAttrs;
+    liveAttrsEnabled:boolean;
+}
 
 
 export interface WithinSelection {
@@ -49,6 +75,27 @@ export interface SubcorpusRecord {
     size:number;
     description:string|undefined;
     descriptionRaw:string|undefined;
+    authorId:number;
+    authorFullname:string;
+}
+
+export function subcServerRecord2SubcorpusRecord(srec:SubcorpusServerRecord):SubcorpusRecord {
+    return {
+        corpname: srec.corpus_name,
+        usesubcorp: srec.id,
+        name: srec.name,
+        created: srec.created,
+        archived: srec.archived,
+        published: srec.published,
+        selections: srec.text_types ||
+            srec.within_cond ||
+            srec.cql,
+        size: srec.size,
+        description: srec.public_description,
+        descriptionRaw: srec.public_description_raw,
+        authorId: srec.author_id,
+        authorFullname: srec.author_fullname
+    };
 }
 
 export function isCQLSelection(selections:SelectionsType): selections is string {

@@ -28,9 +28,11 @@ import { isCQLSelection, isTTSelection, isServerWithinSelection, SubcorpusRecord
 import { TextTypesModel } from '../../models/textTypes/main';
 import { init as ttInit } from '../../views/textTypes/index';
 import { init as withinViewInit } from './withinForm';
+import { init as subcOverviewInit } from './overview';
 import { SubcorpWithinFormModel } from '../../models/subcorp/withinForm';
 import * as PluginInterfaces from '../../types/plugins';
 import * as S from './style';
+import { CorpusInfoType } from '../../models/common/layout';
 
 
 export function init(
@@ -45,6 +47,7 @@ export function init(
     const layoutViews = he.getLayoutViews();
     const ttViews = ttInit(dispatcher, he, textTypesModel);
     const WithinForm = withinViewInit(dispatcher, he, subcorpWithinFormModel);
+    const SubcOverview = subcOverviewInit(he);
 
     // ------------------------ <TabContentWrapper /> --------------------------
 
@@ -99,32 +102,16 @@ export function init(
 
     // ------------------------ <FormActionReuse /> --------------------------
 
-    const FormActionReuse:React.FC<{data: SubcorpusRecord, liveAttrsEnabled: boolean}> = (props) => {
-        return (
-            <TabContentWrapper>
-                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
-                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
-                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
-            </TabContentWrapper>
-        );
-    }
-
-    // ------------------------ <FormActionFile /> --------------------------
-
-    const FormActionFile:React.FC<{
-        corpname: string;
-        subcname: string;
-        name: string;
-        created: number;
-        selectionType: FormType;
-        published: number;
-        archived: number;
+    const FormActionReuse:React.FC<{
+        data:SubcorpusRecord;
+        liveAttrsEnabled:boolean;
+        selectionType:FormType;
     }> = (props) => {
 
         const handleReuse = () => {
             const newName = window.prompt(
                 he.translate('global__new_subcorpus_name_lab') + ':',
-                `${props.name} (copy)`
+                `${props.data.name} (copy)`
             );
             if (newName) {
                 dispatcher.dispatch<typeof Actions.ReuseQuery>({
@@ -137,12 +124,32 @@ export function init(
             }
         };
 
+        return (
+            <TabContentWrapper>
+                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
+                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
+                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
+                <button type="button" className="default-button"
+                            onClick={handleReuse}>
+                        {he.translate('subclist__action_reuse')}
+                </button>
+            </TabContentWrapper>
+        );
+    }
+
+    // ------------------------ <FormActionFile /> --------------------------
+
+    const FormActionFile:React.FC<{
+        data:SubcorpusRecord;
+        userId:number;
+    }> = (props) => {
+
         const handleArchive = () => {
             dispatcher.dispatch<typeof Actions.ArchiveSubcorpus>({
                 name: Actions.ArchiveSubcorpus.name,
                 payload: {
-                    corpname: props.corpname,
-                    subcname: props.subcname,
+                    corpname: props.data.corpname,
+                    subcname: props.data.usesubcorp,
                 }
             });
         };
@@ -163,21 +170,10 @@ export function init(
 
         return (
             <TabContentWrapper>
-                <p>{he.translate('subclist__col_created')}: {he.formatDate(new Date(props.created * 1000), 1)}</p>
-                {props.published ?
-                    <p>{he.translate('subclist__published')}: {he.formatDate(new Date(props.published * 1000), 1)}</p> :
-                    null
-                }
-                {props.archived ?
-                    <p>{he.translate('subclist__archived')}: {he.formatDate(new Date(props.archived * 1000), 1)}</p> :
-                    null
-                }
+                <SubcOverview data={props.data} userId={props.userId} standalone={false} />
+                <hr />
                 <S.RestoreTabContentWrapper>
-                    <button type="button" className="default-button"
-                            onClick={handleReuse}>
-                        {he.translate('subclist__action_reuse')}
-                    </button>
-                    {props.archived ?
+                    {props.data.archived ?
                         <button type="button" className="default-button"
                                 onClick={handleRestore}>
                             {he.translate('global__restore')}
@@ -279,7 +275,13 @@ export function init(
 
     // ------------------------ <SubcorpusEdit /> --------------------------
 
-    const _SubcorpusEdit:React.FC<SubcorpusEditModelState & {corpname:string; subcname: string}> = (props) => {
+    const _SubcorpusEdit:React.FC<
+    SubcorpusEditModelState &
+    {
+        corpname:string;
+        subcname:string;
+        userId:number;
+    }> = (props) => {
 
         const items:Array<{id:string, label:string, isDisabled?: boolean}> = [
             {id: 'restore', label: he.translate('subclist__action_file')},
@@ -303,14 +305,13 @@ export function init(
                     <layoutViews.AjaxLoaderImage /> :
                     <>
                         <layoutViews.TabView className="ActionMenu" items={items} >
-                            <FormActionFile key="restore" corpname={props.data.corpname}
-                                subcname={props.data.usesubcorp}
-                                name={props.data.name}
-                                selectionType={getFormTypeFromSelection(props.data.selections)}
-                                created={props.data.created}
-                                published={props.data.published}
-                                archived={props.data.archived} />
-                            <FormActionReuse key="action-reuse" data={props.data} liveAttrsEnabled={props.liveAttrsEnabled} />
+                            <FormActionFile key="restore" data={props.data}
+                                userId={props.userId} />
+                            <FormActionReuse
+                                key="action-reuse"
+                                data={props.data}
+                                liveAttrsEnabled={props.liveAttrsEnabled}
+                                selectionType={getFormTypeFromSelection(props.data.selections)} />
                             <PublishingTab key="publish" published={!!props.data.published}
                                 descriptionRaw={props.data.descriptionRaw}
                                 description={props.data.description}
@@ -327,6 +328,11 @@ export function init(
         )
     }
 
-    return BoundWithProps<{corpname:string; subcname:string}, SubcorpusEditModelState>(_SubcorpusEdit, subcorpEditModel);
+    return BoundWithProps<
+        {corpname:string; subcname:string; userId: number},
+        SubcorpusEditModelState
+    >(
+        _SubcorpusEdit, subcorpEditModel
+    );
 
 }
