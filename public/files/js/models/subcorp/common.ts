@@ -153,6 +153,7 @@ export interface CreateSubcorpusWithinArgs extends SubmitBase {
 
 export interface CreateSubcorpusRawCQLArgs extends SubmitBase {
     cql:string;
+    aligned_corpora:Array<string>;
     form_type:'cql';
 }
 

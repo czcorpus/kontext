@@ -57,6 +57,7 @@ export interface SubcorpListItem {
 export interface UnfinishedSubcorp {
     ident:string;
     name:string;
+    corpusName:string;
     created:Date;
     failed:boolean;
 }
@@ -310,6 +311,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
             List.map(item => ({
                 ident: item.ident,
                 name: item.label,
+                corpusName: item.args['corpname'],
                 created: new Date(item.created * 1000),
                 failed: item.status === 'FAILURE'
             }))

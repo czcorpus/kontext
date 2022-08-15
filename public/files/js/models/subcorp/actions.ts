@@ -124,6 +124,15 @@ export class Actions {
         return a.name === Actions.ReuseQuery.name;
     }
 
+    static ReuseQueryEmptyReady:Action<{
+    }> = {
+        name: 'SUBCORP_LIST_REUSE_EMPTY_READY'
+    }
+
+    static isReuseQueryEmptyReady(a:Action):a is typeof Actions.ReuseQueryEmptyReady {
+        return a.name === Actions.ReuseQueryEmptyReady.name;
+    }
+
     static ReuseQueryDone:Action<{
     }> = {
         name: 'SUBCORP_LIST_REUSE_QUERY_DONE'
@@ -259,6 +268,12 @@ export class Actions {
     }> = {
         name: 'SUBCORP_FORM_WITHIN_LINE_REMOVED'
     };
+
+    static FormRawCQLSetValue:Action<{
+        value:string;
+    }> = {
+        name: 'SUBCORP_FORM_RAW_CQL_SET_VALUE'
+    }
 
     static FormShowRawWithinHint:Action<{
     }> = {

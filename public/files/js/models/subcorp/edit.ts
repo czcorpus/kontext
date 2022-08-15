@@ -27,7 +27,7 @@ import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
 import {
     CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs,
-    CreateSubcorpusWithinArgs, SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord } from './common';
+    CreateSubcorpusWithinArgs, isCQLSelection, SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord } from './common';
 
 
 
@@ -160,6 +160,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
 
                         } else if (action.payload.selectionType === 'within' && Actions.isFormWithinSubmitArgsReady(sAction)) {
                             return null;
+
+                        } else if (action.payload.selectionType === 'cql' && Actions.isReuseQueryEmptyReady(sAction)) {
+                            return null;
                         }
                         return syncData;
                     }
@@ -167,7 +170,9 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                 ).pipe(
                     concatMap(
                         action => {
-                            let args: CreateSubcorpusArgs|CreateSubcorpusWithinArgs;
+                            let args: CreateSubcorpusArgs |
+                                CreateSubcorpusWithinArgs |
+                                CreateSubcorpusRawCQLArgs;
                             if (TTActions.isTextTypesQuerySubmitReady(action)) {
                                 args = {
                                     corpname: state.data.corpname,
@@ -178,15 +183,25 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                                     form_type: 'tt-sel'
                                 };
 
-                            } else {
-                                if (Actions.isFormWithinSubmitArgsReady(action)) {
-                                    args = {
-                                        corpname: state.data.corpname,
-                                        subcname: newName,
-                                        description: '',
-                                        within: action.payload.data,
-                                        form_type: 'within'
-                                    };
+                            } else if (Actions.isFormWithinSubmitArgsReady(action)) {
+                                args = {
+                                    corpname: state.data.corpname,
+                                    subcname: newName,
+                                    description: '',
+                                    within: action.payload.data,
+                                    form_type: 'within'
+                                };
+
+                            } else if (Actions.isReuseQueryEmptyReady(action)) {
+                                args = {
+                                    corpname: state.data.corpname,
+                                    subcname: newName,
+                                    description: '',
+                                    cql: isCQLSelection(state.data.selections) ?
+                                        state.data.selections :
+                                        '',
+                                    aligned_corpora: [],
+                                    form_type: 'cql'
                                 }
                             }
 
@@ -268,7 +283,16 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                     this.updateSubcorpusDescSubmit(state, true, dispatch);
                 }
             }
-        )
+        );
+
+        this.addActionHandler(
+            Actions.FormRawCQLSetValue,
+            (state, action) => {
+                if (isCQLSelection(state.data.selections)) {
+                    state.data.selections = action.payload.value;
+                }
+            }
+        );
     }
 
     private updateSubcorpusDescSubmit(

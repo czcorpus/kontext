@@ -64,41 +64,26 @@ export function init(
         </S.TabContentWrapper>
     );
 
-    // ------------------------ <FormActionReuseCQL /> --------------------------
+    // ------------------------ <RawCQL /> --------------------------
 
-    const FormActionReuseCQL:React.FC<{data: SubcorpusRecord}> = (props) => {
+    const RawCQL:React.FC<{cql:string}> = ({cql}) => {
 
-        let [state, setState] = React.useState({
-            newName: props.data.name + ' (copy)',
-            newCql: props.data.selections as string,
-        });
+        const handleInputChange = (e:React.ChangeEvent<HTMLTextAreaElement>) => {
+            dispatcher.dispatch(
+                Actions.FormRawCQLSetValue,
+                {
+                    value: e.target.value
+                }
+            );
+        }
 
         return (
-            <div>
-                <div>
-                    <label htmlFor="inp_0sAoz">{he.translate('global__name')}:</label>
-                    <input id="inp_0sAoz" type="text" style={{width: '20em'}}
-                        onChange={e => setState({...state, newName: e.target.value})}
-                        defaultValue={state.newName} />
-
-                </div>
-                <div>
-                    <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
-                    <textarea id="inp_zBuJi" className="cql" defaultValue={JSON.stringify(state.newCql)}
-                            onChange={e => setState({...state, newCql: e.target.value})}
-                            rows={4} />
-                </div>
-                <p>
-                    <img src={he.createStaticUrl('img/warning-icon.svg')}
-                            alt={he.translate('global__warning')}
-                            style={{width: '1em', marginRight: '0.4em', verticalAlign: 'middle'}} />
-                </p>
-                <div>
-                    <button type="button" className="default-button"
-                        //onClick={this._handleSubmit} TODO
-                    >{he.translate('subcform__create_subcorpus')}</button>
-                </div>
-            </div>
+            <S.RawCQL>
+                <label htmlFor="inp_zBuJi">{he.translate('global__cql_query')}:</label>
+                <textarea id="inp_zBuJi" className="cql" value={cql}
+                        onChange={handleInputChange}
+                        rows={6} cols={50} />
+            </S.RawCQL>
         );
     }
 
@@ -130,11 +115,15 @@ export function init(
             <TabContentWrapper htmlClass="reuse">
                 <div className="info">
                     <layoutViews.StatusIcon status="info" inline={true} htmlClass="" />
-                    <p>{he.translate('subclist__changes_can_be_saved_info')}</p>
+                    <p className="note">{he.translate('subclist__changes_can_be_saved_info')}</p>
                 </div>
-                {isCQLSelection(props.data.selections) ? <FormActionReuseCQL data={props.data} /> : null}
-                {isServerWithinSelection(props.data.selections) ? <WithinForm /> : null}
-                {isTTSelection(props.data.selections) ? <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> : null}
+                {isCQLSelection(props.data.selections) ?
+                    <RawCQL cql={props.data.selections} /> : null}
+                {isServerWithinSelection(props.data.selections) ?
+                    <WithinForm /> : null}
+                {isTTSelection(props.data.selections) ?
+                    <ttViews.TextTypesPanel LiveAttrsCustomTT={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsCustomTT : null} LiveAttrsView={props.liveAttrsEnabled ? liveAttrsViews.LiveAttrsView : null} /> :
+                    null}
                 <button type="button" className="default-button"
                             onClick={handleReuse}>
                         {he.translate('subclist__action_reuse')}

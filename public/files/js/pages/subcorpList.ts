@@ -30,6 +30,7 @@ import * as PluginInterfaces from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import liveAttributes from 'plugins/liveAttributes/init';
 import { SubcorpusServerRecord } from '../models/subcorp/common';
+import { RawCQLEmptyModel } from '../models/subcorp/rawCql';
 
 /**
  *
@@ -45,6 +46,8 @@ class SubcorpListPage {
     private textTypesModel:TextTypesModel;
 
     private subcorpWithinFormModel:SubcorpWithinFormModel;
+
+    private rawCQLEmptyModel:RawCQLEmptyModel;
 
     private liveAttrsPlugin:PluginInterfaces.LiveAttributes.IPlugin;
 
@@ -117,7 +120,10 @@ class SubcorpListPage {
                     this.layoutModel,
                     'within',
                     this.layoutModel.getConf<Kontext.StructsAndAttrs>('structsAndAttrs')
-                )
+                );
+                this.rawCQLEmptyModel = new RawCQLEmptyModel(
+                    this.layoutModel.dispatcher
+                );
 
                 if (this.layoutModel.getConf<boolean>('UsesLiveAttrs')) {
                     this.liveAttrsPlugin = liveAttributes(
