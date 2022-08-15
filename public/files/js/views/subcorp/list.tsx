@@ -64,14 +64,17 @@ export function init(
                 <td>
                     {props.item.name}
                 </td>
+                <td>
+                    {props.item.corpusName}
+                </td>
+                <td />
+                <td className="num">{he.formatDate(props.item.created, 1)}</td>
                 <td className="processing">
                     {props.item.failed ?
                         he.translate('subclist__failed_item') :
                         he.translate('global__processing')
                     }
                 </td>
-                <td className="num">{he.formatDate(props.item.created, 1)}</td>
-                <td />
                 <td />
             </tr>
         );

@@ -505,3 +505,20 @@ export const SubcorpusEdit = styled.div`
     }
 
 `;
+
+// ------------------- <RawCQLForm /> ------------------------------
+
+export const RawCQL = styled.div`
+
+    margin-top: 1.2em;
+
+    label {
+        display: block;
+        margin-bottom: 0.4em;
+    }
+
+    textarea {
+        font-size: 1.2em;
+        margin-bottom: 0.7em;
+    }
+`;

@@ -117,7 +117,10 @@ class SubcorpusActionModel(CorpusActionModel):
             self.store_async_task(AsyncTaskStatus(
                 status=res.status, ident=res.id, category=AsyncTaskStatus.CATEGORY_SUBCORPUS,
                 label=f'{self.args.corpname}/{specification.subcname}',
-                args=dict(subcname=specification.subcname, corpname=self.args.corpname)))
+                args=dict(
+                    subcname=specification.subcname,
+                    corpname=self.args.corpname
+                )))
 
         unfinished_corpora = [at for at in self.get_async_tasks(
             category=AsyncTaskStatus.CATEGORY_SUBCORPUS) if not at.is_finished()]
