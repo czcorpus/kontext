@@ -21,8 +21,9 @@
 import * as React from 'react';
 import {IActionDispatcher} from 'kombo';
 import * as Kontext from '../../types/kontext';
-import { CorpusInfoType, AnyOverviewInfo, SubcorpusInfo, CorpusInfo, CitationInfo }
+import { CorpusInfoType, AnyOverviewInfo, CorpusInfo, CitationInfo }
     from '../../models/common/layout';
+import { init as subcOverviewInit } from '../subcorp/overview';
 import { Subscription } from 'rxjs';
 import { Actions } from '../../models/common/actions';
 import * as S from './style';
@@ -58,6 +59,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
             corpusInfoModel:Kontext.ICorpusInfoModel):OverviewViews {
 
     const layoutViews = he.getLayoutViews();
+    const SubcOverview = subcOverviewInit(he);
 
     // ---------------------------- <ItemAndNumRow /> -----------------------------
 
@@ -224,41 +226,6 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                 </S.CorpusInfoBox>
             );
         }
-    };
-
-    // --------------------- <SubcorpusInfo /> -------------------------------------
-
-    const SubcorpusInfo:React.FC<{
-        data:SubcorpusInfo;
-        userId:number;
-    }> = (props) => {
-        return (
-            <S.SubcorpusInfo>
-                <h2 className="subcorpus-name">
-                    {props.data.corpus_name}{'\u00a0/\u00a0'}<strong>{props.data.author_id != props.userId ? props.data.id : props.data.name}</strong>
-                </h2>
-
-                <dl>
-                    <dt>{he.translate('global__size_in_tokens')}:</dt>
-                    <dd>{he.formatNumber(props.data.size)}</dd>
-                    <dt>{he.translate('pubsubclist__author')}:</dt>
-                    <dd>{props.data.author_fullname}</dd>
-                    <dt>{he.translate('global__subcorp_created_at')}:</dt>
-                    <dd>{he.formatDate(new Date(props.data.created * 1000), 1)}</dd>
-                    <dt>{he.translate('global__published_subcorp_id')}:</dt>
-                    <dd>{props.data.id}</dd>
-                    {props.data.public_description ?
-                        <>
-                            <dt>{he.translate('global__description')}:</dt>
-                            <dd className="description">
-                                <div className="html" dangerouslySetInnerHTML={{__html: props.data.public_description}} />
-                            </dd>
-                        </> :
-                        null
-                    }
-                </dl>
-            </S.SubcorpusInfo>
-        );
     };
 
     // ---------------------- <CorpusReference /> ------------------------------------
@@ -460,7 +427,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
                     case CorpusInfoType.CITATION:
                         return <CorpusReference data={this.state.data} />;
                     case CorpusInfoType.SUBCORPUS:
-                        return <SubcorpusInfo data={this.state.data} userId={this.props.userId} />;
+                        return <SubcOverview data={this.state.data} userId={this.props.userId} standalone={true} />;
                     case CorpusInfoType.KEY_SHORTCUTS:
                         return <KeyboardShortcuts />;
                 }

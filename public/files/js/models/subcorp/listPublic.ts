@@ -25,8 +25,7 @@ import { Observable, Subject } from 'rxjs';
 import { Actions } from './actions';
 import { HTTP } from 'cnc-tskit';
 import { debounceTime } from 'rxjs/operators';
-import { SubcorpusServerRecord } from '../common/layout';
-import { importServerSubcList } from './common';
+import { importServerSubcList, SubcorpusServerRecord } from './common';
 import { SubcorpListItem } from './list';
 
 

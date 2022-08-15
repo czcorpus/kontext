@@ -26,8 +26,7 @@ import * as Kontext from '../../types/kontext';
 import { PageModel } from '../../app/page';
 import { pipe, List, HTTP } from 'cnc-tskit';
 import { Actions } from './actions';
-import { importServerSubcList, SubcorpList } from './common';
-import { SubcorpusServerRecord } from '../common/layout';
+import { importServerSubcList, SubcorpList, SubcorpusServerRecord } from './common';
 import { validateGzNumber } from '../base';
 
 
@@ -77,6 +76,7 @@ interface currSubcorpusProps {
 
 
 export interface SubcorpListModelState {
+    userId:number;
     lines:Array<SubcorpListItem>;
     unfinished:Array<UnfinishedSubcorp>;
     relatedCorpora:Array<string>;
@@ -101,7 +101,7 @@ export interface SubcorpListModelArgs {
 
 
 export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
-    
+
     private PATTERN_INPUT_WRITE_THROTTLE_INTERVAL_MS = 500;
 
     private layoutModel:PageModel;
@@ -130,6 +130,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                 usesSubcRestore: layoutModel.getConf<boolean>('UsesSubcRestore'),
                 finishedTasks: {},
                 totalPages: layoutModel.getConf<number>('SubcTotalPages'),
+                userId: layoutModel.getConf<number>('userId')
             }
         );
         this.layoutModel = layoutModel;
@@ -281,7 +282,7 @@ export class SubcorpListModel extends StatefulModel<SubcorpListModelState> {
                             state.filter.page = `${state.totalPages}`;
                         } else {
                             state.filter.page = action.payload.page;
-                        } 
+                        }
                         state.isBusy = true;
                     });
 

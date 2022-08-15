@@ -25,8 +25,9 @@ import { PageModel } from '../../app/page';
 import { Actions } from './actions';
 import { Actions as TTActions } from '../textTypes/actions';
 import { HTTP, tuple } from 'cnc-tskit';
-import { CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs, isCQLSelection, isServerWithinSelection, isTTSelection, SubcorpusRecord } from './common';
-import { SubcorpusPropertiesResponse } from '../common/layout';
+import {
+    CreateSubcorpus, CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs,
+    CreateSubcorpusWithinArgs, SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord } from './common';
 
 
 
@@ -374,18 +375,7 @@ export class SubcorpusEditModel extends StatelessModel<SubcorpusEditModelState> 
                         corpname: corpname,
                         subcname: subcname,
                         // TODO improve data SubcorpusRecord type
-                        data: {
-                            corpname: data.data.corpus_name,
-                            usesubcorp: data.data.id,
-                            name: data.data.name,
-                            created: data.data.created,
-                            archived: data.data.archived,
-                            published: data.data.published,
-                            selections: data.data.text_types||data.data.within_cond||data.data.cql,
-                            size: data.data.size,
-                            description: data.data.public_description,
-                            descriptionRaw: data.data.public_description_raw,
-                        },
+                        data: subcServerRecord2SubcorpusRecord(data.data),
                         textTypes: data.textTypes,
                         structsAndAttrs: data.structsAndAttrs,
                         liveAttrsEnabled: data.liveAttrsEnabled,

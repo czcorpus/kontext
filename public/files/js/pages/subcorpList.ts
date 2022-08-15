@@ -29,7 +29,7 @@ import { SubcorpWithinFormModel } from '../models/subcorp/withinForm';
 import * as PluginInterfaces from '../types/plugins';
 import { PluginName } from '../app/plugin';
 import liveAttributes from 'plugins/liveAttributes/init';
-import { SubcorpusServerRecord } from '../models/common/layout';
+import { SubcorpusServerRecord } from '../models/subcorp/common';
 
 /**
  *

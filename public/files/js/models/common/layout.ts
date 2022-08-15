@@ -27,9 +27,9 @@ import { StatelessModel, StatefulModel, IActionDispatcher, IFullActionControl } 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
 import { IPluginApi } from '../../types/plugins/common';
-import { ServerWithinSelection } from '../subcorp/common';
-import * as TextTypes from '../../types/textTypes';
-import { TTInitialData } from '../textTypes/common';
+import {
+    SubcorpusPropertiesResponse, SubcorpusRecord, subcServerRecord2SubcorpusRecord
+} from '../subcorp/common';
 import { TagsetInfo } from '../../types/plugins/tagHelper';
 
 
@@ -262,40 +262,15 @@ export interface CorpusInfo extends CorpusInfoResponse {
     type:CorpusInfoType.CORPUS;
 }
 
-export interface SubcorpusServerRecord {
-    id:string;
-    name:string;
-    corpus_name:string;
-    user_id:number;
-    author_id:number;
-    author_fullname:string;
-    size:number;
-    created:number;
-    archived:number|undefined;
-    published:number|undefined;
-    public_description:string|undefined;
-    public_description_raw:string|undefined;
-    cql:string|undefined;
-    within_cond:Array<ServerWithinSelection>|undefined;
-    text_types:TextTypes.ExportedSelection|undefined;
-}
-
-export interface SubcorpusPropertiesResponse {
-    data:SubcorpusServerRecord;
-    textTypes:TTInitialData;
-    structsAndAttrs:Kontext.StructsAndAttrs;
-    liveAttrsEnabled:boolean;
-}
-
-export interface SubcorpusInfo extends SubcorpusServerRecord {
-    type:CorpusInfoType.SUBCORPUS;
-}
-
 export enum CorpusInfoType {
     CORPUS = 'corpus-info',
     CITATION = 'citation-info',
     SUBCORPUS = 'subcorpus-info',
     KEY_SHORTCUTS = 'keyboard-shortcuts'
+}
+
+export interface SubcorpusInfo extends SubcorpusRecord {
+    type:CorpusInfoType.SUBCORPUS;
 }
 
 export type AnyOverviewInfo = CorpusInfo|SubcorpusInfo|CitationInfo|KeyShortcutsInfo;
@@ -305,7 +280,7 @@ export type AnyOverviewInfo = CorpusInfo|SubcorpusInfo|CitationInfo|KeyShortcuts
  */
 export interface CorpusInfoModelState {
     corpusData:CorpusInfoResponse;
-    subcorpusData:SubcorpusServerRecord;
+    subcorpusData:SubcorpusRecord;
     currentCorpus:string;
     currentSubcorpus:string;
     currentInfoType:CorpusInfoType;
@@ -418,6 +393,8 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 });
             }
         );
+
+        this.DEBUG_logActions();
     }
 
     private loadCorpusInfo(corpusId:string):Observable<any> {
@@ -469,7 +446,7 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                             concatMap(
                                 (data) => {
                                     this.changeState(state => {
-                                        state.subcorpusData = data.data;
+                                        state.subcorpusData = subcServerRecord2SubcorpusRecord(data.data);
                                         state.currentCorpus = corpusId;
                                         state.currentSubcorpus = subcorpusId;
                                     })

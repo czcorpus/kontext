@@ -116,10 +116,21 @@ export function init(
             }
         };
 
+        const notes = [];
+        if (props.item.info) {
+            List.push(props.item.info, notes);
+        }
+        if (props.item.archived) {
+            List.push(he.translate('subclist__archived'), notes);
+        }
+
         return (
             <tr>
                 <td>
                     {renderLabel()}
+                </td>
+                <td>
+                    {props.item.corpus_name}
                 </td>
                 <td className="num">
                 {   props.item.size ? he.formatNumber(props.item.size) : '-'}
@@ -127,10 +138,10 @@ export function init(
                 <td>
                     {he.formatDate(props.item.created, 1)}
                 </td>
+                <td>{notes.join(', ')}</td>
                 <td>
                         <PropertiesButton onClick={()=>props.actionButtonHandle(props.idx)} />
                 </td>
-                <td>{props.item.info ? props.item.info : null}</td>
             </tr>
         );
     };
@@ -212,9 +223,10 @@ export function init(
                     <tbody>
                         <tr>
                             <ThSortable ident="name" sortKey={this._exportSortKey('name')} label={he.translate('subclist__col_name')} />
+                            <ThSortable ident="corpus_name" sortKey={this._exportSortKey('corpus_name')} label={he.translate('global__corpus')} />
                             <ThSortable ident="size" sortKey={this._exportSortKey('size')} label={he.translate('subclist__col_size')} />
                             <ThSortable ident="created" sortKey={this._exportSortKey('created')} label={he.translate('subclist__col_created')} />
-                            <th />
+                            <th>{he.translate('global__note_heading')}</th>
                             <th />
                         </tr>
                         {List.map(item => (
@@ -293,27 +305,29 @@ export function init(
         };
 
         return (
-            <form className="filter" onSubmit={e => {e.preventDefault()}}>
+            <S.SubclistFilterForm className="filter" onSubmit={e => {e.preventDefault()}}>
                 <fieldset>
                     <legend>{he.translate('subclist__filter_heading')}</legend>
-                    <div>
-                        <label htmlFor="inp_YT2rx">{he.translate('global__corpus')}: </label>
-                        <select id="inp_YT2rx" value={props.filter.corpname}
-                                    onChange={handleCorpusSelection}>
-                                <option value="">--</option>
-                                {List.map(item => <option key={item} value={item}>{item}</option>, props.relatedCorpora)}
-                            </select>
-                    </div>
-                    <div>
-                        <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
-                        <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={props.filter.show_archived} />
-                    </div>
-                    <div>
-                        <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
-                        <input id="inp_pattern" onChange={handlePatternSearch} value={pattern} className={pattern.length < MIN_PATTERN_LENGTH ? 'inactive' : null}/>
+                    <div className="inputs">
+                        <div>
+                            <label htmlFor="inp_YT2rx">{he.translate('global__corpus')}: </label>
+                            <select id="inp_YT2rx" value={props.filter.corpname}
+                                        onChange={handleCorpusSelection}>
+                                    <option value="">--</option>
+                                    {List.map(item => <option key={item} value={item}>{item}</option>, props.relatedCorpora)}
+                                </select>
+                        </div>
+                        <div>
+                            <label htmlFor="inp_EDPtb">{he.translate('subclist__show_archived')}:</label>
+                            <input id="inp_EDPtb" type="checkbox" onChange={handleShowArchived} checked={!!props.filter.show_archived} />
+                        </div>
+                        <div>
+                            <label htmlFor="inp_pattern">{he.translate('subclist__search_pattern')}:</label>
+                            <input id="inp_pattern" onChange={handlePatternSearch} value={pattern} className={pattern.length < MIN_PATTERN_LENGTH ? 'inactive' : null}/>
+                        </div>
                     </div>
                 </fieldset>
-            </form>
+            </S.SubclistFilterForm>
         );
     };
 
@@ -368,7 +382,10 @@ export function init(
                                 <layoutViews.CloseableFrame onCloseClick={this._handleActionsClose}
                                         label={he.translate('subclist__subc_actions_{subc}', {subc: this.props.editWindowSubcorpus.subcorpusName})}
                                         scrollable={true}>
-                                    <SubcorpEdit corpname={this.props.editWindowSubcorpus.corpusName} subcname={this.props.editWindowSubcorpus.subcorpusId} />
+                                    <SubcorpEdit
+                                        corpname={this.props.editWindowSubcorpus.corpusName}
+                                        subcname={this.props.editWindowSubcorpus.subcorpusId}
+                                        userId={this.props.userId} />
                                 </layoutViews.CloseableFrame>
                             </layoutViews.ModalOverlay>
                         ) : null}
