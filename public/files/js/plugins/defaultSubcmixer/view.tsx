@@ -28,6 +28,7 @@ import { init as subcorpViewsInit } from '../../views/subcorp/forms';
 import { CalculationResults, SubcMixerExpression } from './common';
 import { Actions } from './actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
 
 import * as S from './style';
 
@@ -415,14 +416,14 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers,
     const Widget:React.FC<WidgetProps & SubcMixerModelState> = (props) => {
 
         const handleCloseWidget = () => {
-            dispatcher.dispatch<typeof Actions.HideWidget>({
-                name: Actions.HideWidget.name
+            dispatcher.dispatch<typeof GeneralSubcmixerActions.HideWidget>({
+                name: GeneralSubcmixerActions.HideWidget.name
             });
         };
 
         const handleActivationButton = () => {
-            dispatcher.dispatch<typeof Actions.ShowWidget>({
-                name: Actions.ShowWidget.name
+            dispatcher.dispatch<typeof GeneralSubcmixerActions.ShowWidget>({
+                name: GeneralSubcmixerActions.ShowWidget.name
             });
         }
 

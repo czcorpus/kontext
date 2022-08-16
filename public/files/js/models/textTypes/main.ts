@@ -34,6 +34,7 @@ import { Actions as GlobalActions } from '../common/actions';
 import { Actions as ConcActions } from '../concordance/actions';
 import { Actions as QueryActions } from '../query/actions';
 import { Actions as SubcActions } from '../subcorp/actions';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
 import { PluginName } from '../../app/plugin';
 import { QueryFormArgs } from '../query/formArgs';
 import { IPluginApi } from '../../types/plugins/common';
@@ -671,6 +672,18 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 }
             }
         );
+
+        this.addActionHandler(
+            GeneralSubcmixerActions.ShowWidget,
+            action => {
+                this.dispatchSideEffect<typeof GeneralSubcmixerActions.TextTypesSubcmixerReady>({
+                    name: GeneralSubcmixerActions.TextTypesSubcmixerReady.name,
+                    payload: {
+                        attributes: [...this.state.attributes]
+                    }
+                });
+            }
+        )
     }
 
     private serialize(

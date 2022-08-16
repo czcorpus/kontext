@@ -24,16 +24,6 @@ import { CalculationResults } from './common';
 
 export class Actions {
 
-    static ShowWidget:Action<{
-    }> = {
-        name: 'UCNK_SUBCMIXER_SHOW_WIDGET'
-    };
-
-    static HideWidget:Action<{
-    }> = {
-        name: 'UCNK_SUBCMIXER_HIDE_WIDGET'
-    };
-
     static SetRatio:Action<{
         attrName:string;
         attrValue:string;

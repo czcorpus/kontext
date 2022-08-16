@@ -174,8 +174,9 @@ class MetadataModel:
             category_sizes.append(cat_size)
         size_assembled = self._get_assembled_size(variables)
 
-        return CorpusComposition(status=pulp.LpStatus[stat], variables=variables, size_assembled=size_assembled,
-                                 category_sizes=category_sizes, used_bounds=self.b, num_texts=sum(variables))
+        return CorpusComposition(
+            status=pulp.LpStatus[stat], variables=variables, size_assembled=size_assembled,
+            category_sizes=category_sizes, used_bounds=self.b, num_texts=sum(variables))
 
     def _get_assembled_size(self, results):
         return np.dot(results, self.text_sizes)

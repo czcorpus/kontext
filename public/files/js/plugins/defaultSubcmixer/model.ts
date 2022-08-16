@@ -19,7 +19,7 @@
  */
 
 import { IActionDispatcher, StatelessModel } from 'kombo';
-import { Observable, throwError as rxThrowError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { pipe, Dict, List, HTTP, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
@@ -31,6 +31,7 @@ import {
     TextTypeAttrVal } from './common';
 import { Actions as TTActions } from '../../models/textTypes/actions';
 import { Actions as SubcActions } from '../../models/subcorp/actions';
+import { Actions as GeneralSubcmixerActions } from '../../types/plugins/subcMixer';
 import { TTSelOps } from '../../models/textTypes/selectionOps';
 import { BaseSubcorpFormState } from '../../models/subcorp/common';
 import { IPluginApi } from '../../types/plugins/common';
@@ -67,6 +68,8 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     ) {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
+
+        this.DEBUG_logActions();
 
         this.addActionHandler(
             TTActions.SelectionChanged,
@@ -111,15 +114,57 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         );
 
         this.addActionHandler(
-            Actions.ShowWidget,
+            GeneralSubcmixerActions.ShowWidgetDone,
             (state, action) => {
-                state.isVisible = true;
-                this.refreshData(state);
+                if (!action.error) {
+                    state.isVisible = true;
+                    state.ttAttributes = action.payload.attributes;
+                    console.log('we have data: ', action.payload.attributes)
+                    this.refreshData(state);
+                }
+            },
+            (state, action, dispatch) => {
+                if (action.error) {
+                    this.pluginApi.showMessage(
+                        'error',
+                        action.error
+                    )
+                }
             }
         );
 
         this.addActionHandler(
-            Actions.HideWidget,
+            GeneralSubcmixerActions.ShowWidget,
+            null,
+            (state, action, dispatch) => {
+                this.suspendWithTimeout(
+                    500,
+                    {},
+                    (sAction, syncData) => {
+                        if (GeneralSubcmixerActions.isTextTypesSubcmixerReady(sAction)) {
+                            return null;
+                        }
+                        return syncData;
+                    }
+                ).subscribe({
+                    next: data => {
+                        dispatch(
+                            GeneralSubcmixerActions.ShowWidgetDone,
+                            {...data.payload}
+                        )
+                    },
+                    error: error => {
+                        dispatch(
+                            GeneralSubcmixerActions.ShowWidgetDone,
+                            error
+                        )
+                    }
+                })
+            }
+        );
+
+        this.addActionHandler(
+            GeneralSubcmixerActions.HideWidget,
             (state, action) => {
                 state.isVisible = false;
                 state.currentResult = null;
@@ -367,7 +412,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         });
         for (let k in sums) {
             if (sums[k] !== 100) {
-                return rxThrowError(new Error(this.pluginApi.translate(
+                return throwError(() => new Error(this.pluginApi.translate(
                     'subcmixer__ratios_cannot_over_100_{struct_name}{over_val}',
                     {struct_name: k, over_val: this.pluginApi.formatNumber(sums[k] - 100)})));
             }
@@ -394,7 +439,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
     }
 
     private getAvailableValues(state:SubcMixerModelState):Array<TextTypeAttrVal> {
-
         const getInitialAvailableValues = (attrName:string):Array<TextTypes.AttributeValue> => {
             const srchItem = List.find(
                 item => item.name === attrName,
@@ -487,6 +531,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
     private refreshData(state:SubcMixerModelState):void {
         const availableValues = this.getAvailableValues(state);
+        console.log('availableValues: ',availableValues)
         const numValsPerGroup = pipe(
             availableValues,
             List.filter(item => item.isSelected),

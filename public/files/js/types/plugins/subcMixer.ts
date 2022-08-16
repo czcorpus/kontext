@@ -18,8 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+import { Action } from 'kombo';
 import { AnyTTSelection } from '../textTypes';
 import { BasePlugin, IPluginApi } from './common';
+import * as TextTypes from '../textTypes';
 
 // ------------------------------------------------------------------------
 // --------------------------- [subcmixer] plug-in ------------------------
@@ -40,4 +42,34 @@ export interface Factory {
         ttSelections:Array<AnyTTSelection>,
         corpusIdAttr:string
     ):IPlugin;
+}
+
+
+export class Actions {
+
+    static ShowWidget:Action<{
+    }> = {
+        name: 'GENERAL_SUBCMIXER_SHOW_WIDGET'
+    };
+
+    static ShowWidgetDone:Action<{
+        attributes:Array<TextTypes.AnyTTSelection>;
+    }> = {
+        name: 'GENERAL_SUBCMIXER_SHOW_WIDGET_DONE'
+    };
+
+    static HideWidget:Action<{
+    }> = {
+        name: 'GENERAL_SUBCMIXER_HIDE_WIDGET'
+    };
+
+    static TextTypesSubcmixerReady:Action<{
+        attributes:Array<TextTypes.AnyTTSelection>;
+    }> = {
+        name: 'GENERAL_SUBCMIXER_TEXT_TYPES_SUBCMIXER_READY'
+    };
+
+    static isTextTypesSubcmixerReady(a:Action):a is typeof Actions.TextTypesSubcmixerReady {
+        return a.name === Actions.TextTypesSubcmixerReady.name;
+    }
 }

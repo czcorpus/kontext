@@ -232,7 +232,8 @@ class CategoryTree(object):
         sql = 'SELECT SUM(m1.{0}) FROM item as m1'.format(self._db.count_col)
         args = []
 
-        sql, args = self._db.append_aligned_corp_sql(sql, args)
+        sql2, args = self._db.append_aligned_corp_sql(sql, args)
+        sql += sql2
 
         where_items = ['m1.{0} {1} ?'.format(expr.attr, expr.op) for subl in mc for expr in subl]
         sql += ' WHERE {0} AND m1.corpus_id = ?'.format(' AND '.join(where_items))
