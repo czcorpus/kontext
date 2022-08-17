@@ -82,12 +82,18 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw:
             for sid in struct_ids:
                 idx = attr.str2id(sid)
-                logging.getLogger(__name__).warning('writing struct value {} as idx {}'.format(sid, idx))
                 await fw.write(struct.pack('<q', mstruct.beg(idx)))
                 await fw.write(struct.pack('<q', mstruct.end(idx)))
         subc = await amodel.cf.get_corpus(subc_id)
         author = amodel.session_get('user', 'id')
-        specification = CreateSubcorpusArgs(text_types={[id_attr]: [struct_ids]})
+        specification = CreateSubcorpusArgs(
+            corpname=amodel.args.corpname,
+            subcname=req.form.get('subcname'),
+            description=req.form.get('description'),
+            aligned_corpora=amodel.args.align,
+            form_type='tt-sel',
+            text_types={sid: struct_ids}
+        )
         with plugins.runtime.SUBC_STORAGE as sr:
             await sr.create(
                 ident=subc_id.id,
