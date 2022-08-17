@@ -119,7 +119,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 if (!action.error) {
                     state.isVisible = true;
                     state.ttAttributes = action.payload.attributes;
-                    console.log('we have data: ', action.payload.attributes)
                     this.refreshData(state);
                 }
             },

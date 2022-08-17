@@ -17,9 +17,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import os
+import struct
+import aiofiles
 import logging
 import aiohttp
 import ujson
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json, LetterCase
+from typing import Optional, List
 from sanic.blueprints import Blueprint
 from plugin_types.subcmixer import AbstractSubcMixer
 from plugin_types.subcmixer.error import (
@@ -30,6 +36,8 @@ from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
 from action.decorators import http_action
+from action.argmapping.subcorpus import CreateSubcorpusArgs
+from corplib.abstract import create_new_subc_ident
 from plugin_types.corparch import AbstractCorporaArchive
 import plugins
 
@@ -51,11 +59,69 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
         return {}
 
 
-async def proc_masm_response(resp):
+@bp.route('/subcmixer_create_subcorpus', methods=['POST'])
+@http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
+async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
+    """
+    Create a subcorpus in a low-level way.
+    The action writes a list of 64-bit signed integers
+    to a file (just like Manatee does).
+    The current version does not optimize the
+    write by merging adjacent position intervals
+    (Manatee does this).
+    """
+    if not req.form.get('subcname'):
+        resp.add_system_message('error', 'Missing subcorpus name')
+        return {}
+    else:
+        subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
+        struct_ids = [x for x in req.form.get('ids').split(',')]
+        id_attr = req.form.get('idAttr').split('.')
+        mstruct = amodel.corp.get_struct(id_attr[0])
+        attr = amodel.corp.get_attr(req.form.get('idAttr'))
+        async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw:
+            for sid in struct_ids:
+                idx = attr.str2id(sid)
+                logging.getLogger(__name__).warning('writing struct value {} as idx {}'.format(sid, idx))
+                await fw.write(struct.pack('<q', mstruct.beg(idx)))
+                await fw.write(struct.pack('<q', mstruct.end(idx)))
+        subc = await amodel.cf.get_corpus(subc_id)
+        author = amodel.session_get('user', 'id')
+        specification = CreateSubcorpusArgs(text_types={[id_attr]: [struct_ids]})
+        with plugins.runtime.SUBC_STORAGE as sr:
+            await sr.create(
+                ident=subc_id.id,
+                user_id=author,
+                corpname=amodel.args.corpname,
+                subcname=req.form.get('subcname'),
+                size=subc.search_size,
+                public_description=req.form.get('description'),
+                data=specification)
+        return dict(status=True)
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class CategorySize:
+    total: int
+    ratio: float
+    expression: str
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class MasmResponse:
+    doc_ids: List[str]
+    size_assembled: int
+    category_sizes: List[CategorySize]
+    error: Optional[str] = None
+
+
+async def proc_masm_response(resp) -> MasmResponse:
     data = await resp.json()
     if 400 <= resp.status <= 500:
         raise SubcMixerException(data.get('error', 'unspecified error'))
-    return data
+    return MasmResponse.from_dict(data)
 
 
 class MasmSubcmixer(AbstractSubcMixer):
@@ -89,7 +155,16 @@ class MasmSubcmixer(AbstractSubcMixer):
                     'textTypes': args
                 }) as resp:
             data = await proc_masm_response(resp)
-            logging.getLogger(__name__).debug('data  >>>>> {}'.format(data))
+        logging.getLogger(__name__).debug('calculated mix: {}'.format(data))
+        if data.size_assembled > 0:
+            return {
+                'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
+                'ids': data.doc_ids,
+                'structs': list(used_structs)
+            }
+
+        else:
+            raise ResultNotFoundException('subcmixer__failed_to_find_suiteable_mix')
 
     @staticmethod
     def export_actions():

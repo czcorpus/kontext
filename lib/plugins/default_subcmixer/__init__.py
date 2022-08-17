@@ -55,7 +55,7 @@ def subcmixer_run_calc(amodel: CorpusActionModel, req: KRequest, resp: KResponse
         return {}
 
 
-@bp.route('/subcmixer_create_subcorpus', methods='POST')
+@bp.route('/subcmixer_create_subcorpus', methods=['POST'])
 @http_action(return_type='json', access_level=1, action_model=CorpusActionModel)
 async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
     """
