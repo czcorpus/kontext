@@ -528,7 +528,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
     private refreshData(state:SubcMixerModelState):void {
         const availableValues = this.getAvailableValues(state);
-        console.log('availableValues: ',availableValues)
         const numValsPerGroup = pipe(
             availableValues,
             List.filter(item => item.isSelected),
