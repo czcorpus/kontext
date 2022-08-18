@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
+import logging
 import os
 import struct
 import aiofiles
@@ -73,14 +73,15 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
         resp.add_system_message('error', 'Missing subcorpus name')
         return {}
     else:
-        subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
         struct_ids = [x for x in req.form.get('ids').split(',')]
-        id_attr = req.form.get('idAttr').split('.')
-        mstruct = amodel.corp.get_struct(id_attr[0])
+        id_attr = req.form.get('idAttr')
+        mstruct = amodel.corp.get_struct(id_attr.split('.')[0])
         attr = amodel.corp.get_attr(req.form.get('idAttr'))
+        struct_idxs = sorted(attr.str2id(sid) for sid in struct_ids)
+
+        subc_id = await create_new_subc_ident(amodel.subcpath, amodel.corp.corpname)
         async with aiofiles.open(os.path.join(amodel.subcpath, subc_id.data_path), 'wb') as fw:
-            for sid in struct_ids:
-                idx = attr.str2id(sid)
+            for idx in struct_idxs:
                 await fw.write(struct.pack('<q', mstruct.beg(idx)))
                 await fw.write(struct.pack('<q', mstruct.end(idx)))
         subc = await amodel.cf.get_corpus(subc_id)
@@ -91,7 +92,7 @@ async def subcmixer_create_subcorpus(amodel: CorpusActionModel, req: KRequest, r
             description=req.form.get('description'),
             aligned_corpora=amodel.args.align,
             form_type='tt-sel',
-            text_types={sid: struct_ids}
+            text_types={id_attr: struct_ids}
         )
         with plugins.runtime.SUBC_STORAGE as sr:
             await sr.create(
