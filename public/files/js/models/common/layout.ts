@@ -393,8 +393,6 @@ export class CorpusInfoModel extends StatefulModel<CorpusInfoModelState>
                 });
             }
         );
-
-        this.DEBUG_logActions();
     }
 
     private loadCorpusInfo(corpusId:string):Observable<any> {

@@ -69,8 +69,6 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
         super(dispatcher, initialState);
         this.pluginApi = pluginApi;
 
-        this.DEBUG_logActions();
-
         this.addActionHandler(
             TTActions.SelectionChanged,
             (state, action) => {
