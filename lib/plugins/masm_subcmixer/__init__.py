@@ -20,7 +20,6 @@
 import os
 import struct
 import aiofiles
-import logging
 import aiohttp
 import ujson
 from dataclasses import dataclass
@@ -161,12 +160,12 @@ class MasmSubcmixer(AbstractSubcMixer):
                     'textTypes': args
                 }) as resp:
             data = await proc_masm_response(resp)
-        logging.getLogger(__name__).debug('calculated mix: {}'.format(data))
         if data.size_assembled > 0:
             return {
                 'attrs':  [(cs.expression, cs.ratio) for cs in data.category_sizes],
                 'ids': data.doc_ids,
-                'structs': list(used_structs)
+                'structs': list(used_structs),
+                'total': data.size_assembled
             }
 
         else:
