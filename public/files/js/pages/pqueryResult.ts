@@ -120,12 +120,14 @@ class ParadigmaticQueryPage {
             const saveModel = new PqueryResultsSaveModel({
                 dispatcher: this.layoutModel.dispatcher,
                 layoutModel: this.layoutModel,
-                saveLinkFn: (format:string, url:string) => {
+                saveLinkFn: (name:string, format:string, url:string, args?:any) => {
                     this.layoutModel.bgDownload({
+                        name,
                         format,
                         datasetType: DownloadType.PQUERY,
                         url,
-                        contentType: 'multipart/form-data'
+                        contentType: 'multipart/form-data',
+                        args,
                     });
                 },
                 quickSaveRowLimit: 10000 // TODO
