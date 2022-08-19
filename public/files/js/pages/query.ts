@@ -169,6 +169,7 @@ export class QueryPage {
     }
 
     private initQueryModel(
+        thPlugin:PluginInterfaces.TagHelper.IPlugin,
         queryFormArgs:QueryFormArgs,
         initialTTSelection:Array<AnyTTSelection>,
         bibIdAttr:string,
@@ -187,6 +188,7 @@ export class QueryPage {
             )) > 0,
             queryContextModel: this.queryContextModel,
             qsPlugin: this.layoutModel.qsuggPlugin,
+            thPlugin,
             props: {
                 corpora,
                 availableAlignedCorpora: this.layoutModel.getConf<Array<Kontext.AttrItem>>(
@@ -367,6 +369,7 @@ export class QueryPage {
             ttAns.allowCorpusSelection = true;
 
             this.initQueryModel(
+                tagHelperPlg,
                 queryFormArgs,
                 ttSelection,
                 textTypesData.id_attr,

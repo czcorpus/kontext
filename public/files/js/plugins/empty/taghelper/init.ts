@@ -19,23 +19,29 @@
  */
 
 import * as PluginInterfaces from '../../../types/plugins';
+import { EmptyPlugin } from '../init';
 
 
-export class EmptyTagHelperPlugin implements PluginInterfaces.TagHelper.IPlugin {
+export class EmptyTagHelperPlugin extends EmptyPlugin implements PluginInterfaces.TagHelper.IPlugin {
 
     getWidgetView(
         corpname:string,
         sourceId:string,
         tagsetInfo:Array<PluginInterfaces.TagHelper.TagsetInfo>
-    ):PluginInterfaces.TagHelper.View {
+    ):null {
         return null;
     }
 
     isActive():boolean {
         return false;
     }
+
+    getRegistrationId():string {
+        return 'empty-taghelper-plugin';
+    }
 }
 
-const create:PluginInterfaces.TagHelper.Factory = (pluginApi) => new EmptyTagHelperPlugin();
+const create:PluginInterfaces.TagHelper.Factory = (pluginApi) =>
+        new EmptyTagHelperPlugin(pluginApi.dispatcher());
 
 export default create;

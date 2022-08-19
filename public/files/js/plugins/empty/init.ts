@@ -61,7 +61,7 @@ export class EmptyPlugin implements IUnregistrable, BasePlugin {
         return true;
     }
 
-    getWidgetView():React.SFC|React.ComponentClass|null {
+    getWidgetView(...args:any):React.FC|React.ComponentClass|null {
         return null;
     }
 
