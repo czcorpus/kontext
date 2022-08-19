@@ -22,10 +22,12 @@ import uuid
 
 import settings
 from action.errors import (
-    ForbiddenException, ImmediateRedirectException, UserActionException, get_traceback)
+    ForbiddenException, ImmediateRedirectException, get_traceback)
 from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
+from action.model.user import UserActionModel
+from action.errors import UserActionException
 from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
@@ -193,7 +195,7 @@ def http_action(
             try:
                 await amodel.init_session()
                 if isinstance(amodel, AbstractUserModel) and aprops.access_level > 0 and amodel.user_is_anonymous():
-                    amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
+                    amodel = UserActionModel(req, resp, aprops, application.ctx.tt_cache)
                     raise ForbiddenException(req.translate('Access forbidden - please log-in.'))
                 await amodel.pre_dispatch(None)
                 ans = await func(amodel, req, resp)
