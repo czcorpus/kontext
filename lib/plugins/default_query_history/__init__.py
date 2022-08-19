@@ -40,11 +40,11 @@ class CorpusCache:
         self._cf = corpus_factory
         self._corpora = {}
 
-    async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> Corpus:
+    async def corpus(self, cname: str) -> Corpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = await self._cf.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cf.get_corpus(cname)
         return self._corpora[cname]
 
 
@@ -188,7 +188,7 @@ class QueryHistory(AbstractQueryHistory):
 
     async def get_user_queries(
             self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
-            archived_only=False, offset=0, limit=None, translate=lambda x: x):
+            archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 

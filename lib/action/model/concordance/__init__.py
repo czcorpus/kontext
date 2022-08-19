@@ -542,8 +542,7 @@ class ConcActionModel(CorpusActionModel):
         if sampled_size:
             orig_conc = await get_conc(
                 corp=self.corp, user_id=self.session_get('user', 'id'),
-                q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False,
-                translate=self._req.translate)
+                q=self.args.q[:i], fromp=self.args.fromp, pagesize=self.args.pagesize, asnc=False)
             concsize = orig_conc.size()
             fullsize = orig_conc.fullsize()
 

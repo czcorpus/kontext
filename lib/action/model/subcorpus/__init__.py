@@ -96,7 +96,7 @@ class SubcorpusActionModel(CorpusActionModel):
         subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
         full_path = os.path.join(self.subcpath, subc_id.data_path)
         if tt_query and len(tt_query) == 1 and not specification.has_aligned_corpora():
-            await create_subcorpus(full_path, self.corp, tt_query[0][0], tt_query[0][1], translate=self._req.translate)
+            await create_subcorpus(full_path, self.corp, tt_query[0][0], tt_query[0][1])
             subc = await self.cf.get_corpus(subc_id)
             with plugins.runtime.SUBC_STORAGE as sr:
                 await sr.create(

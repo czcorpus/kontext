@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Union, Callable
 from dataclasses_json import config, dataclass_json
 from manatee import Corpus, SubCorpus, Concordance, create_subcorpus as m_create_subcorpus
 import aiofiles
-from ..errors import CorpusInstantiationError, InvalidSubCorpFreqFileType
+from ..errors import CorpusInstantiationError, InvalidSubCorpFreqFileType, SubcorpusAlreadyExistsError
 from ..abstract import SubcorpusIdent
 from ..corpus import KCorpus
 
@@ -191,8 +191,7 @@ async def create_subcorpus(
         path: str,
         corpus: KCorpus,
         structname: str,
-        subquery: str,
-        translate: Callable[[str], str] = lambda x: x) -> SubCorpus:
+        subquery: str) -> SubCorpus:
     """
     Creates a subcorpus
 
@@ -203,7 +202,7 @@ async def create_subcorpus(
     subquery -- a within query specifying attribute values (attributes must be ones from the 'structname' structure)
     """
     if await aiofiles.os.path.exists(path):
-        raise RuntimeError(translate('Subcorpus already exists'))
+        raise SubcorpusAlreadyExistsError('Subcorpus already exists')
     return m_create_subcorpus(path, corpus.unwrap(), structname, subquery)
 
 

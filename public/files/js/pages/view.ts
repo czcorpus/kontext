@@ -333,6 +333,7 @@ export class ViewPage {
      *
      */
     private initQueryForm(
+        thPlugin:PluginInterfaces.TagHelper.IPlugin,
         queryFormArgs:formArgs.QueryFormArgsResponse,
         ttSelections:Array<AnyTTSelection>
     ):void {
@@ -430,6 +431,7 @@ export class ViewPage {
             quickSubcorpActive: TextTypesModel.findHasSelectedItems(ttSelections),
             queryContextModel: this.queryModels.queryContextModel,
             qsPlugin: this.layoutModel.qsuggPlugin,
+            thPlugin,
             props: queryFormProps
         });
 
@@ -451,6 +453,7 @@ export class ViewPage {
     }
 
     private initFilterForm(
+        thPlugin:PluginInterfaces.TagHelper.IPlugin,
         querySuggest:PluginInterfaces.QuerySuggest.IPlugin,
         firstHitsModel:FirstHitsModel
     ):void {
@@ -513,7 +516,8 @@ export class ViewPage {
             dispatcher: this.layoutModel.dispatcher,
             pageModel: this.layoutModel,
             queryContextModel: this.queryModels.queryContextModel,
-            qsPlugin:  querySuggest,
+            qsPlugin: querySuggest,
+            thPlugin,
             props: filterFormProps,
             syncInitialArgs: this.concFormsInitialArgs.filter
         });
@@ -1131,10 +1135,11 @@ export class ViewPage {
             });
             const tagHelperPlg = tagHelperPlugin(this.layoutModel.pluginApi());
             this.setupHistoryOnPopState();
-            this.initQueryForm(queryFormArgs, ttInitialData);
+            this.initQueryForm(tagHelperPlg, queryFormArgs, ttInitialData);
             this.initFirsthitsForm();
             this.initShuffleForm();
-            this.initFilterForm(this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
+            this.initFilterForm(
+                tagHelperPlg, this.layoutModel.qsuggPlugin, this.queryModels.firstHitsModel);
             this.initSortForm();
             this.initSwitchMainCorpForm();
             this.initSampleForm(this.queryModels.switchMcModel);

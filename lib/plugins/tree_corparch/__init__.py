@@ -192,8 +192,7 @@ class TreeCorparch(AbstractCorporaArchive):
         if isinstance(data, BrokenCorpusInfo):
             ans.description = 'An uninitialized corpus'
         else:
-            ans.description = (await plugin_ctx.corpus_factory.get_info(
-                ans.id, plugin_ctx.translate)).description
+            ans.description = (await plugin_ctx.corpus_factory.get_info(ans.id)).description
         return ans
 
     def setup(self, controller_obj):

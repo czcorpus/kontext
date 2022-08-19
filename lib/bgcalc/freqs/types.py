@@ -36,7 +36,7 @@ class FreqCalcArgs:
     rel_mode: int  # 0, 1 # TODO should be bool
     fmaxitems: int
     subcname: Optional[str] = None
-    subcpath: Optional[List[str]] = field(default_factory=list)
+    subcpath: Optional[str] = None
     fpage: Optional[int] = 1  # ??
     samplesize: Optional[int] = 0
     q: Optional[List[str]] = field(default_factory=list)

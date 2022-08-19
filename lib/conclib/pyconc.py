@@ -46,12 +46,12 @@ def get_conc_labelmap(infopath):
     return labels
 
 
-def get_stored_conc(corp, concname, conc_dir, translate):
+def get_stored_conc(corp, concname, conc_dir):
     conc_dir = os.path.join(conc_dir, corp.corpname)
     if not os.path.isdir(conc_dir):
         os.makedirs(conc_dir)
     cpath = os.path.join(conc_dir, concname)
-    conc = PyConc(corp, 'l', cpath + '.conc', translate=translate)
+    conc = PyConc(corp, 'l', cpath + '.conc')
     conc.labelmap = get_conc_labelmap(cpath + '.info')
     return conc
 
@@ -65,13 +65,19 @@ def lngrp_sortstr(lab, separator='.'):
 class PyConc(manatee.Concordance):
     selected_grps: List[int] = []
 
-    def __init__(self, corp: AbstractKCorpus, action, params, sample_size=0, full_size=-1, orig_corp=None, translate: Callable[[str], str] = lambda x: x):
+    def __init__(
+            self,
+            corp: AbstractKCorpus,
+            action,
+            params,
+            sample_size=0,
+            full_size=-1,
+            orig_corp=None):
         self.pycorp = corp
         self.corpname = corp.get_conffile()
         self.orig_corp = orig_corp or self.pycorp
         self.corpus_encoding = corp.get_conf('ENCODING')
         self._conc_file = None
-        self._translate = translate
         try:
             if action == 'q':
                 manatee.Concordance.__init__(
@@ -92,7 +98,7 @@ class PyConc(manatee.Concordance):
                     self.pycorp._conc_dir, corp.corpname, params + '.conc')
                 manatee.Concordance.__init__(self, corp, self._conc_file)
             else:
-                raise UnknownConcordanceAction(translate('Unknown concordance action: %s') % action)
+                raise UnknownConcordanceAction(f'Unknown concordance action: {action}')
         except UnicodeEncodeError:
             raise ConcordanceException(
                 'Character encoding of this corpus ({0}) does not support one or more characters in the query.'
@@ -119,7 +125,7 @@ class PyConc(manatee.Concordance):
         """
         sort according to linegroups
         """
-        annot = get_stored_conc(self.pycorp, options, self.pycorp._conc_dir, self._translate)
+        annot = get_stored_conc(self.pycorp, options, self.pycorp._conc_dir)
         self.set_linegroup_from_conc(annot)
         lmap = annot.labelmap
         lmap[0] = None
@@ -135,7 +141,7 @@ class PyConc(manatee.Concordance):
 
     def command_a(self, options):
         annotname, options = options.split(' ', 1)
-        annot = get_stored_conc(self.pycorp, annotname, self.pycorp._conc_dir, self._translate)
+        annot = get_stored_conc(self.pycorp, annotname, self.pycorp._conc_dir)
         self.set_linegroup_from_conc(annot)
         if options[0] == '-':
             self.delete_linegroups(options[1:], True)
@@ -164,8 +170,7 @@ class PyConc(manatee.Concordance):
                 self.add_aligned(options[1:])
             except RuntimeError as e:
                 logging.getLogger(__name__).warning('Failed to add aligned corpus: %s' % e)
-                raise EmptyParallelCorporaIntersection(
-                    self._translate('No alignment available for the selected languages'))
+                raise EmptyParallelCorporaIntersection('No alignment available for the selected languages')
             self.switch_aligned(options[1:])
             self.corpname = options[1:]
         else:
@@ -274,12 +279,11 @@ class PyConc(manatee.Concordance):
         attrs = crit.split()
         head: List[Dict[str, Any]] = [dict(n=label(attrs[x]), s=x / 2)
                                       for x in range(0, len(attrs), 2)]
-        head.append(dict(n=self._translate('Freq'), s='freq', title=self._translate('Frequency')))
+        head.append(dict(n='Freq', s='freq', title='Frequency'))
         has_empty_item = False
         head.append(dict(
             n='i.p.m.',
-            title=self._translate(
-                'instances per million positions (refers to the respective category)'),
+            title='instances per million positions (refers to the respective category)',
             s='rel'))
 
         lines: List[FreqItem] = []
@@ -331,15 +335,15 @@ class PyConc(manatee.Concordance):
         return begs, values
 
     def collocs(self, cattr='-', csortfn='m', cbgrfns='mt', cfromw=-5, ctow=5, cminfreq=5, cminbgr=3, max_lines=0):
-        statdesc = {'t': self._translate('T-score'),
-                    'm': self._translate('MI'),
-                    '3': self._translate('MI3'),
-                    'l': self._translate('log likelihood'),
-                    's': self._translate('min. sensitivity'),
-                    'p': self._translate('MI.log_f'),
-                    'r': self._translate('relative freq. [%]'),
-                    'f': self._translate('absolute freq.'),
-                    'd': self._translate('logDice')
+        statdesc = {'t': 'T-score',
+                    'm': 'MI',
+                    '3': 'MI3',
+                    'l': 'log likelihood',
+                    's': 'min. sensitivity',
+                    'p': 'MI.log_f',
+                    'r': 'relative freq. [%]',
+                    'f': 'absolute freq.',
+                    'd': 'logDice'
                     }
         items = []
         colls = manatee.CollocItems(self, cattr, csortfn, cminfreq, cminbgr,

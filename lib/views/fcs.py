@@ -159,7 +159,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 supported_args,
                 ['recordPacking', 'x-fcs-endpoint-description']
             )
-            corpus = await amodel.cf.get_corpus(corpname, translate=req.translate)
+            corpus = await amodel.cf.get_corpus(corpname)
 
             common_data.result = corpus.get_posattrs()
             common_data.numberOfRecords = len(common_data.result)
@@ -209,7 +209,7 @@ async def v1(amodel: FCSActionModel, req: KRequest, resp: KResponse):
                 amodel.plugin_ctx, corpname)
             common_data.corppid = '' if corp_conf_info.web is None else corp_conf_info.web
             query = req.args.get('query', '')
-            corpus = await amodel.cf.get_corpus(corpname, translate=req.translate)
+            corpus = await amodel.cf.get_corpus(corpname)
             if 0 == len(query):
                 raise Exception(7, 'fcs_query', 'Mandatory parameter not supplied')
             result = await amodel.fcs_search(

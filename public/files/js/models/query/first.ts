@@ -308,6 +308,7 @@ interface FirstQueryFormModelArgs {
     pageModel:PageModel;
     queryContextModel:QueryContextModel;
     qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    thPlugin:PluginInterfaces.TagHelper.IPlugin;
     props:QueryFormProperties;
     quickSubcorpActive:boolean;
 }
@@ -325,6 +326,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             quickSubcorpActive,
             queryContextModel,
             qsPlugin,
+            thPlugin,
             props
     }:FirstQueryFormModelArgs) {
         const corpora = props.corpora;
@@ -341,6 +343,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             pageModel,
             queryContextModel,
             qsPlugin,
+            thPlugin,
             attrHelper,
             'first-query-model',
             {
@@ -386,7 +389,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                 isAnonymousUser: props.isAnonymousUser,
                 supportedWidgets: determineSupportedWidgets(
                     queries,
-                    getTagBuilderSupport(props.tagsets),
+                    getTagBuilderSupport(thPlugin, props.tagsets),
                     props.isAnonymousUser
                 ),
                 contextFormVisible: false,   // TODO load from previous state ?
@@ -800,7 +803,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
             state.alignedCorporaVisible = data.alignedCorporaVisible;
             state.supportedWidgets = determineSupportedWidgets(
                 state.queries,
-                getTagBuilderSupport(this.getTagsets(state)),
+                getTagBuilderSupport(this.thPlugin, this.getTagsets(state)),
                 state.isAnonymousUser
             );
         }
@@ -836,7 +839,7 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                             state.hasLemma = data.has_lemma;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,
-                                getTagBuilderSupport(this.getTagsets(state)),
+                                getTagBuilderSupport(this.thPlugin, this.getTagsets(state)),
                                 state.isAnonymousUser
                             );
                             Dict.forEach(

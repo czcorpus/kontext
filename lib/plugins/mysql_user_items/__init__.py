@@ -92,7 +92,7 @@ async def set_favorite_item(amodel: UserActionModel, req: KRequest, resp: KRespo
         if i == 0:
             corp = maincorp
         else:
-            corp = await amodel.cf.get_corpus(c_id, translate=req.translate)
+            corp = await amodel.cf.get_corpus(c_id)
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))
     item = FavoriteItem(dict(
         id=None,  # will be updated after database insert (autoincrement)

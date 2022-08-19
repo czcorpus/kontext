@@ -92,7 +92,7 @@ class AbstractQueryHistory(abc.ABC):
     @abc.abstractmethod
     async def get_user_queries(
             self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
-            archived_only=False, offset=0, limit=None, translate=lambda x: x):
+            archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 

@@ -45,6 +45,7 @@ import { Actions as QueryHintsActions } from '../usageTips/actions';
 import { Actions as HistoryActions } from '../searchHistory/actions';
 import { SubmitEncodedSimpleTokens } from './formArgs';
 import { QueryValueSubformat } from '../../types/plugins/querySuggest';
+import { EmptyPlugin } from '../../plugins/empty/init';
 
 /*
 Some important terms to prevent confusion:
@@ -304,7 +305,13 @@ export function determineSupportedWidgets(
 /**
  *
  */
-export function getTagBuilderSupport(tagsets:{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>}):{[sourceId:string]:boolean} {
+export function getTagBuilderSupport(
+    plugin:PluginInterfaces.TagHelper.IPlugin,
+    tagsets:{[sourceId:string]:Array<PluginInterfaces.TagHelper.TagsetInfo>}
+):{[sourceId:string]:boolean} {
+    if (plugin instanceof EmptyPlugin) {
+        return {};
+    }
     return pipe(
         tagsets,
         Dict.map(
@@ -357,6 +364,8 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
 
     private readonly qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
 
+    protected readonly thPlugin:PluginInterfaces.TagHelper.IPlugin;
+
     protected readonly qsSubscription:Subscription|undefined;
 
     // -------
@@ -366,6 +375,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
             pageModel:PageModel,
             queryContextModel:QueryContextModel,
             qsPlugin:PluginInterfaces.QuerySuggest.IPlugin,
+            thPlugin:PluginInterfaces.TagHelper.IPlugin,
             attrHelper:AttrHelper,
             ident:string,
             initState:T) {
@@ -376,6 +386,7 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
         this.pageModel = pageModel;
         this.queryContextModel = queryContextModel;
         this.qsPlugin = qsPlugin;
+        this.thPlugin = thPlugin;
         this.queryTracer = {trace:(_)=>undefined};
         this.ident = ident;
         this.formType = initState.formType;
@@ -404,7 +415,9 @@ export abstract class QueryFormModel<T extends QueryFormModelState> extends Stat
                     }
                     state.supportedWidgets = determineSupportedWidgets(
                         state.queries,
-                        getTagBuilderSupport(this.getTagsets(state)),
+                        getTagBuilderSupport(
+                            this.thPlugin,
+                            this.getTagsets(state)),
                         state.isAnonymousUser
                     );
                 })

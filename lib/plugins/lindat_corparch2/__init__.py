@@ -470,7 +470,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             if user_allowed_corpora is None or corp_id in user_allowed_corpora:
                 corp_info = dict(name=corp_id)
                 try:
-                    corp_info = await plugin_ctx.corpus_factory.get_info(corp_id, plugin_ctx.translate)
+                    corp_info = await plugin_ctx.corpus_factory.get_info(corp_id)
                     cl.append({'id': corp_id,
                                'name': corp_info.name,
                                'desc': corp_info.description,
@@ -578,7 +578,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
 
         ans = self.create_corpus_info()
         ans.id = corpus_id
-        ans.name = (await plugin_ctx.corpus_factory.get_info(ans.id, plugin_ctx.translate)).name
+        ans.name = (await plugin_ctx.corpus_factory.get_info(ans.id)).name
         ans.path = path
         ans.web = web_url
         ans.sentence_struct = sentence_struct
@@ -619,8 +619,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             ans.metadata.sort_attrs = True if meta_elm.find(
                 self.SORT_ATTRS_KEY) is not None else False
             # ans.metadata.desc = self._parse_meta_desc(meta_elm)
-            ans.metadata.desc = (await plugin_ctx.corpus_factory.get_info(
-                ans.id, plugin_ctx.translate)).description
+            ans.metadata.desc = (await plugin_ctx.corpus_factory.get_info(ans.id)).description
             ans.metadata.keywords = self._get_corpus_keywords(meta_elm)
             ans.metadata.featured = True if meta_elm.find(self.FEATURED_KEY) is not None else False
             ans.metadata.group_duplicates = True if meta_elm.find(
@@ -691,8 +690,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
             translations = self._keywords.get(keyword, {})
             translated_k.append((keyword, translations.get(lang_code, keyword)))
         ans.metadata.keywords = translated_k
-        ans.description = (await plugin_ctx.corpus_factory.get_info(
-            ans.id, plugin_ctx.translate)).description
+        ans.description = (await plugin_ctx.corpus_factory.get_info(ans.id)).description
         return ans
 
     async def get_corpus_info(self, plugin_ctx, corp_name):
@@ -705,7 +703,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
                         plugin_ctx, (await self._raw_list(plugin_ctx))[corp_name], lang_code=plugin_ctx.user_lang)
                 else:
                     ans = (await self._raw_list(plugin_ctx))[corp_name]
-                ans.manatee = await plugin_ctx.corpus_factory.get_info(corp_name, plugin_ctx.translate)
+                ans.manatee = await plugin_ctx.corpus_factory.get_info(corp_name)
                 return ans
             return BrokenCorpusInfo(name=corp_name)
         else:
@@ -752,7 +750,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         featured = []
         for x in list((await self._raw_list(plugin_ctx)).values()):
             if x.id in permitted_corpora and is_featured(x):
-                corpus_info = await cm.get_info(x.id, plugin_ctx.translate)
+                corpus_info = await cm.get_info(x.id)
                 featured.append({
                     # on client-side, this may contain also subc. id, aligned ids
                     'id': x.id,
@@ -768,7 +766,7 @@ class CorpusArchive(AbstractSearchableCorporaArchive):
         for item in favitems:
             tmp = item.to_dict()
             tmp['description'] = self._export_untranslated_label(
-                plugin_ctx, (await plugin_ctx.corpus_factory.get_info(item.main_corpus_id, plugin_ctx.translate)).description)
+                plugin_ctx, (await plugin_ctx.corpus_factory.get_info(item.main_corpus_id)).description)
             ans.append(tmp)
         return ans
 

@@ -258,18 +258,22 @@ function importFormValues(src:any, sourceId?:string):{[key:string]:AnyQuery} {
 
 function determineFilterTagWidgets(
     queries:{[sourceId:string]:AnyQuery},
+    thPlugin:PluginInterfaces.TagHelper.IPlugin,
     tagsets:Array<PluginInterfaces.TagHelper.TagsetInfo>,
     anonymousUser:boolean
 ):{[sourceId:string]:Array<string>} {
 
     return determineSupportedWidgets(
         queries,
-        getTagBuilderSupport(pipe(
-            queries,
-            Dict.keys(),
-            List.map(k => tuple(k, tagsets)),
-            Dict.fromEntries()
-        )),
+        getTagBuilderSupport(
+            thPlugin,
+            pipe(
+                queries,
+                Dict.keys(),
+                List.map(k => tuple(k, tagsets)),
+                Dict.fromEntries()
+            )
+        ),
         anonymousUser
     )
 }
@@ -296,6 +300,7 @@ interface FilterFormModelArgs {
     pageModel:PageModel;
     queryContextModel:QueryContextModel;
     qsPlugin:PluginInterfaces.QuerySuggest.IPlugin;
+    thPlugin:PluginInterfaces.TagHelper.IPlugin;
     props:FilterFormProperties;
     syncInitialArgs:formArgs.FilterFormArgs;
 }
@@ -313,6 +318,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             pageModel,
             queryContextModel,
             qsPlugin,
+            thPlugin,
             props,
             syncInitialArgs
     }:FilterFormModelArgs) {
@@ -330,6 +336,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
             pageModel,
             queryContextModel,
             qsPlugin,
+            thPlugin,
             attrHelper,
             'filter-form-model',
             {
@@ -373,6 +380,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                 isAnonymousUser: props.isAnonymousUser,
                 supportedWidgets: determineFilterTagWidgets(
                     queries,
+                    thPlugin,
                     props.tagsets,
                     props.isAnonymousUser
                 ),
@@ -664,7 +672,7 @@ export class FilterFormModel extends QueryFormModel<FilterFormModelState> {
                             state.opLocks[filterId] = false;
                             state.supportedWidgets = determineSupportedWidgets(
                                 state.queries,
-                                getTagBuilderSupport(this.getTagsets(state)),
+                                getTagBuilderSupport(this.thPlugin, this.getTagsets(state)),
                                 state.isAnonymousUser
                             );
                             // set of default attrs for the simple query will be always the same (same corpus):
