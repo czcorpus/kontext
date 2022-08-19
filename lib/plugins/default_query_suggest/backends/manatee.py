@@ -30,8 +30,8 @@ from util import as_sync
 
 
 @as_sync
-async def _load_corp_sync(name: str, translate: Callable[[str], str]):
-    return await CorpusFactory().get_corpus(name, translate=translate) if name else None
+async def _load_corp_sync(name: str):
+    return await CorpusFactory().get_corpus(name) if name else None
 
 
 class PosAttrPairRelManateeBackend(AbstractBackend):
@@ -41,7 +41,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
         self._conf = conf
         self._translate = translate
         fixed_corp = conf.get('corpus')
-        self._preset_corp = _load_corp_sync(fixed_corp, translate)
+        self._preset_corp = _load_corp_sync(fixed_corp)
 
     def _freq_dist(self, corp: KCorpus, conc: PyConc, fcrit: str, user_id: int):
         args = bgcalc.freqs.FreqCalcArgs(
@@ -97,8 +97,7 @@ class PosAttrPairRelManateeBackend(AbstractBackend):
             conc = await get_conc(
                 used_corp,
                 user_id,
-                (f'aword,[{self.mk_query(icase, value_norm)}]',),
-                translate=self._translate)
+                (f'aword,[{self.mk_query(icase, value_norm)}]',))
             conc.sync()
             mlargs = dict(ml1attr=self._conf["attr1"], ml2attr=self._conf["attr2"])
             fcrit = multi_level_crit(2, mlargs)

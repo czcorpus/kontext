@@ -25,6 +25,7 @@ from bgcalc.pquery import (SUBTASK_TIMEOUT_SECS, create_freq_calc_args,
 from bgcalc.pquery.storage import stored_to_fs
 from conclib.calc import require_existing_conc
 from corplib import CorpusFactory
+from corplib.abstract import SubcorpusIdent
 
 
 @stored_to_fs
@@ -102,7 +103,7 @@ async def calc_merged_freqs_threaded(
         _,
         pquery: PqueryFormArgs,
         raw_queries: Dict[str, List[str]],
-        subcpath: List[str],
+        subcpath: str,
         user_id: int,
         collator_locale: str):
     """
@@ -115,7 +116,7 @@ async def calc_merged_freqs_threaded(
     collator_locale -- a locale used for collation within the current corpus
     """
     cm = CorpusFactory(subc_root=subcpath)
-    corp = await cm.get_corpus(pquery.corpname, subcname=pquery.usesubcorp)
+    corp = await cm.get_corpus(SubcorpusIdent(id=pquery.usesubcorp, corpus_name=pquery.corpname))
 
     with ThreadPoolExecutor(max_workers=len(pquery.conc_ids)) as executor:
         specif_futures = []

@@ -213,7 +213,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
                         fn = fn()
                     if callable(fn):
                         try:
-                            ans = fn(*(), **action, translate=self._req.translate)
+                            ans = fn(*(), **action)
                             if 'message' in ans:
                                 self._resp.add_system_message('message', ans['message'])
                             continue
@@ -485,8 +485,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     async def resolve_error_state(self, req, resp, result, err):
         if self.cf:
             with plugins.runtime.QUERY_HISTORY as qh:
-                queries = await qh.get_user_queries(
-                    self.session_get('user', 'id'), self.cf, limit=1, translate=req.translate)
+                queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
                     result['last_used_corp'] = dict(
                         corpname=queries[0].get('corpname', None),

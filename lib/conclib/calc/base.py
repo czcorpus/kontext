@@ -106,7 +106,7 @@ class GeneralWorker:
         start_time = time.time()
         q = tuple(q)
         if q[0][0] != 'R':
-            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize, translate=self._translate)
+            ans_conc = PyConc(corp, q[0][0], q[0][1:], samplesize)
         else:
             raise NotImplementedError('Function "online sample" is not supported')
         logging.getLogger(__name__).debug(f'compute_conc({corp.corpname}, [{", ".join(q)}]) '
@@ -117,13 +117,16 @@ class GeneralWorker:
 class TaskRegistration(GeneralWorker):
 
     def __init__(self, task_id: str):
-        super(TaskRegistration, self).__init__(task_id=task_id)
+        super().__init__(task_id=task_id)
 
     async def run(
-            self, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key: str, query: Tuple[str, ...],
-            samplesize: int, translate: Callable[[str], str] = lambda x: x) -> Dict[str, Any]:
+        self,
+            corpus_ident: Union[str, SubcorpusRecord],
+            corp_cache_key: str,
+            query: Tuple[str, ...],
+            samplesize: int) -> Dict[str, Any]:
         corpus_factory = CorpusFactory(subc_root=settings.get('corpora', 'subcorpora_dir'))
-        corpus_obj = await corpus_factory.get_corpus(corpus_ident, translate=translate)
+        corpus_obj = await corpus_factory.get_corpus(corpus_ident)
         cache_map = self._cache_factory.get_mapping(corpus_obj)
         status = await cache_map.get_calc_status(corp_cache_key, query)
         if status is None or status.error:

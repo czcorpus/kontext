@@ -349,8 +349,7 @@ class CorpusActionModel(UserActionModel):
             cn = form.corpora[0]
         elif not self.user_is_anonymous():
             with plugins.runtime.QUERY_HISTORY as qh:
-                queries = await qh.get_user_queries(self.session_get(
-                    'user', 'id'), self.cf, limit=1, translate=self._req.translate)
+                queries = await qh.get_user_queries(self.session_get('user', 'id'), self.cf, limit=1)
                 if len(queries) > 0:
                     cn = queries[0].get('corpname', '')
                     redirect = True
@@ -377,7 +376,7 @@ class CorpusActionModel(UserActionModel):
         if self.args.corpname:
             try:
                 corp = await self.cf.get_corpus(
-                    corpus_ident, corp_variant=self._corpus_variant, translate=self._req.translate)
+                    corpus_ident, corp_variant=self._corpus_variant)
                 corp._conc_dir = self._conc_dir
                 return corp
             except Exception as ex:
@@ -453,7 +452,7 @@ class CorpusActionModel(UserActionModel):
 
         align_common_posattrs = set(self.corp.get_posattrs())
         for a in self.args.align:
-            align_corp = await self.cf.get_corpus(a, translate=self._req.translate)
+            align_corp = await self.cf.get_corpus(a)
             align_common_posattrs.intersection_update(align_corp.get_posattrs())
         result['AlignCommonPosAttrs'] = list(align_common_posattrs)
 
@@ -548,7 +547,7 @@ class CorpusActionModel(UserActionModel):
 
         if self.args.maincorp and self.args.maincorp != self.args.corpname:
             try:
-                thecorp = await self.cf.get_corpus(self.args.maincorp, translate=self._req.translate)
+                thecorp = await self.cf.get_corpus(self.args.maincorp)
             except Exception as ex:
                 thecorp = ErrorCorpus(ex)
         else:
@@ -653,7 +652,7 @@ class CorpusActionModel(UserActionModel):
             if 'input_languages' not in tpl_out:
                 tpl_out['input_languages'] = {}
             for al in self.corp.get_conf('ALIGNED').split(','):
-                alcorp = await self.cf.get_corpus(al, translate=self._req.translate)
+                alcorp = await self.cf.get_corpus(al)
                 corp_info = await self.get_corpus_info(al)
 
                 tpl_out['Aligned'].append(dict(label=alcorp.get_conf('NAME') or al, n=al))

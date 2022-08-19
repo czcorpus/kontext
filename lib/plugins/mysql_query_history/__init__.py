@@ -50,11 +50,11 @@ class CorpusCache:
         self._cf = corpus_factory
         self._corpora = {}
 
-    async def corpus(self, cname: str, translate: Callable[[str], str] = lambda x: x) -> AbstractKCorpus:
+    async def corpus(self, cname: str) -> AbstractKCorpus:
         if not cname:
             return EmptyCorpus()
         if cname not in self._corpora:
-            self._corpora[cname] = await self._cf.get_corpus(cname, translate=translate)
+            self._corpora[cname] = await self._cf.get_corpus(cname)
         return self._corpora[cname]
 
 
@@ -179,7 +179,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
 
     async def get_user_queries(
             self, user_id, corpus_factory, from_date=None, to_date=None, q_supertype=None, corpname=None,
-            archived_only=False, offset=0, limit=None, translate=lambda x: x):
+            archived_only=False, offset=0, limit=None):
         """
         Returns list of queries of a specific user.
 
@@ -233,11 +233,9 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     tmp = await self._merge_conc_data(item, qdata)
                     if not tmp:
                         continue
-                    tmp['human_corpname'] = (await corpora.corpus(
-                        tmp['corpname'], translate)).get_conf('NAME')
+                    tmp['human_corpname'] = (await corpora.corpus(tmp['corpname'])).human_readable_corpname
                     for ac in tmp['aligned']:
-                        ac['human_corpname'] = (await corpora.corpus(
-                            ac['corpname'], translate)).get_conf('NAME')
+                        ac['human_corpname'] = (await corpora.corpus(ac['corpname'])).human_readable_corpname
                     tmp['subcorpus_name'] = subc_names.get(qdata.get('usesubcorp'))
                     full_data.append(tmp)
                 elif q_supertype == 'pquery':
@@ -246,7 +244,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     tmp = {
                         'corpname': qdata['corpora'][0],
                         'aligned': [],
-                        'human_corpname': (await corpora.corpus(qdata['corpora'][0], translate)).get_conf('NAME'),
+                        'human_corpname': (await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
                         'subcorpus_name': subc_names.get(qdata.get('usesubcorp'))
                     }
                     q_join = []
@@ -291,8 +289,7 @@ class MySqlQueryHistory(AbstractQueryHistory):
                     tmp = dict(
                         corpname=qdata['corpora'][0],
                         aligned=[],
-                        human_corpname=(await corpora.corpus(
-                            qdata['corpora'][0], translate)).get_conf('NAME'),
+                        human_corpname=(await corpora.corpus(qdata['corpora'][0])).human_readable_corpname,
                         query=qdata.get('form', {}).get('wlpat'),
                         subcorpus_name=subc_names.get(qdata.get('usesubcorp')),
                         pfilter_words=qdata['form']['pfilter_words'],

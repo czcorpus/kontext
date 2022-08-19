@@ -58,7 +58,7 @@ async def _get_async_conc(corp, user_id, q, corp_cache_key, samplesize, minsize,
         ans.get(timeout=CONC_REGISTER_WAIT_LIMIT)
     conc_avail = await wait_for_conc(cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q), translate=translate)
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q))
     else:
         return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q))
 
@@ -93,7 +93,7 @@ async def _get_bg_conc(
     # is ready in a few seconds - let's try this:
     conc_avail = await wait_for_conc(cache_map=cache_map, corp_cache_key=corp_cache_key, q=q, minsize=minsize)
     if conc_avail:
-        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q), translate=translate)
+        return PyConc(corp, 'l', await cache_map.readable_cache_path(corp_cache_key, q))
     else:
         # return empty yet unfinished concordance to make the client watch the calculation
         return InitialConc(corp, await cache_map.readable_cache_path(corp_cache_key, q))
@@ -153,8 +153,7 @@ async def get_conc(
         fromp: int = 0,
         pagesize: int = 0,
         asnc: int = 0,
-        samplesize: int = 0,
-        translate: Callable[[str], str] = lambda x: x) -> KConc:
+        samplesize: int = 0) -> KConc:
     """
     Get/calculate a concordance. The function always tries to fetch as complete
     result as possible (related to the 'q' tuple) from cache. The rest is calculated
@@ -190,12 +189,12 @@ async def get_conc(
         # 2nd goes through but it already finds an open cache entry so it 'wait_for_conc()' inside the lock
         # >= 3 cannot enter but once it can the concordance is already avail. so there is no unnecessary lag here
         # (it doesn't matter whether a coroutine waits here or in 'wait_for_conc()')
-        calc_from, conc = await find_cached_conc_base(corp, corp.cache_key, q, minsize, translate)
+        calc_from, conc = await find_cached_conc_base(corp, corp.cache_key, q, minsize)
     if not conc and q[0][0] == 'R':  # online sample
         q_copy = list(q)
         q_copy[0] = q[0][1:]
         q_copy = tuple(q_copy)
-        await find_cached_conc_base(corp, corp.cache_key, q_copy, -1, translate)
+        await find_cached_conc_base(corp, corp.cache_key, q_copy, -1)
         # TODO this branch has no use (unless we want to revive online sample func)
 
     # move mid-sized aligned corpora or large non-aligned corpora to background
@@ -203,7 +202,7 @@ async def get_conc(
         minsize = fromp * pagesize
         conc = await _get_bg_conc(
             corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key, samplesize=samplesize,
-            calc_from=calc_from, minsize=minsize, translate=translate)
+            calc_from=calc_from, minsize=minsize)
     else:
         worker = GeneralWorker()
         if isinstance(conc, InitialConc):
@@ -212,7 +211,7 @@ async def get_conc(
             if asnc and len(q) == 1:
                 conc = await _get_async_conc(
                     corp=corp, user_id=user_id, q=q, corp_cache_key=corp.cache_key,
-                    samplesize=samplesize, minsize=minsize, translate=translate)
+                    samplesize=samplesize, minsize=minsize)
 
             # do the calc here and return (OK for small to mid sized corpora without alignments)
             else:

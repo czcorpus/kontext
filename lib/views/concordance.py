@@ -132,7 +132,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=qinfo.data.asnc,
-            samplesize=corpus_info.sample_size, translate=req.translate)
+            samplesize=corpus_info.sample_size)
         ans['size'] = conc.size()
         ans['finished'] = conc.finished()
         amodel.on_query_store(store_last_op)
@@ -217,7 +217,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=req.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=asnc,
-            samplesize=corpus_info.sample_size, translate=req.translate)
+            samplesize=corpus_info.sample_size)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -225,8 +225,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
-            kwic_args.alignlist = [(await amodel.cf.get_corpus(
-                c, translate=req.translate)) for c in amodel.args.align if c]
+            kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
             kwic_args.ml_position_filters = ml_position_filters
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
@@ -248,8 +247,7 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     if amodel.corp.get_conf('ALIGNED'):
         out['Aligned'] = [{'n': w,
-                           'label': (await amodel.cf.get_corpus(w, translate=req.translate)).get_conf(
-                               'NAME') or w}
+                           'label': (await amodel.cf.get_corpus(w)).human_readable_corpname}
                           for w in amodel.corp.get_conf('ALIGNED').split(',')]
     if amodel.args.align and not amodel.args.maincorp:
         amodel.args.maincorp = amodel.args.corpname
@@ -374,7 +372,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         conc = await get_conc(
             corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
             fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=True,
-            samplesize=corpus_info.sample_size, translate=req.translate)
+            samplesize=corpus_info.sample_size)
         if conc:
             amodel.apply_linegroups(conc)
             conc.switch_aligned(os.path.basename(amodel.args.corpname))
@@ -382,8 +380,7 @@ async def restore_conc(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             kwic_args = KwicPageArgs(asdict(amodel.args), base_attr=amodel.BASE_ATTR)
             kwic_args.speech_attr = await amodel.get_speech_segment()
             kwic_args.labelmap = {}
-            kwic_args.alignlist = [(await amodel.cf.get_corpus(
-                c, translate=req.translate)) for c in amodel.args.align if c]
+            kwic_args.alignlist = [(await amodel.cf.get_corpus(c)) for c in amodel.args.align if c]
             kwic_args.structs = amodel.get_struct_opts()
 
             kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
@@ -587,7 +584,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
 
     avail_al_corp = []
     for al in [x for x in amodel.corp.get_conf('ALIGNED').split(',') if len(x) > 0]:
-        alcorp = await amodel.cf.get_corpus(al, translate=req.translate)
+        alcorp = await amodel.cf.get_corpus(al)
         avail_al_corp.append(dict(label=alcorp.get_conf('NAME') or al, n=al))
         if al in amodel.args.align:
             align_common_posattrs.intersection_update(alcorp.get_posattrs())
@@ -975,9 +972,10 @@ async def ajax_reedit_line_selection(amodel: ConcActionModel, req: KRequest, res
 @http_action(return_type='json', action_model=ConcActionModel)
 async def ajax_get_first_line_select_page(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     corpus_info = await amodel.get_corpus_info(amodel.args.corpname)
-    conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
-                          q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
-                          asnc=False, samplesize=corpus_info.sample_size, translate=req.translate)
+    conc = await get_conc(
+        corp=amodel.corp, user_id=amodel.session_get('user', 'id'),
+        q=amodel.args.q, fromp=amodel.args.fromp, pagesize=amodel.args.pagesize,
+        asnc=False, samplesize=corpus_info.sample_size)
     amodel.apply_linegroups(conc)
     kwic = Kwic(amodel.corp, amodel.args.corpname, conc)
     return {'first_page': int((kwic.get_groups_first_line() - 1) / amodel.args.pagesize) + 1}
@@ -1059,8 +1057,9 @@ async def get_adhoc_subcorp_size(amodel: ConcActionModel, req: KRequest, resp: K
         query = 'aword,[] within {}'.format(
             ' '.join('<{0} {1} />'.format(k, v) for k, v in tt_query))
         amodel.args.q = [query]
-        conc = await get_conc(corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
-                              fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0, translate=req.translate)
+        conc = await get_conc(
+            corp=amodel.corp, user_id=amodel.session_get('user', 'id'), q=amodel.args.q,
+            fromp=amodel.args.fromp, pagesize=amodel.args.pagesize, asnc=0)
         return dict(total=conc.fullsize() if conc else None)
 
 

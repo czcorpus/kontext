@@ -23,10 +23,11 @@ from action.model.corpus import CorpusActionModel
 from action.response import KResponse
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
-from plugin_types.user_items import (AbstractUserItems, FavoriteItem,
-                                     UserItemException)
+from plugin_types.user_items import (
+    AbstractUserItems, FavoriteItem, UserItemException)
 from plugins import inject
 from sanic import Blueprint
+from corplib.abstract import SubcorpusIdent
 
 bp = Blueprint('default_user_items')
 
@@ -73,8 +74,12 @@ async def set_favorite_item(amodel: CorpusActionModel, req: KRequest, resp: KRes
     corpora = []
     main_size = None
     for i, c_id in enumerate(req.form_getlist('corpora')):
-        corp = await amodel.cf.get_corpus(c_id, subcname=req.form.get(
-            'subcorpus_id') if i == 0 else None, translate=req.translate)
+        subc_id = req.form.get('subcorpus_id')
+        if subc_id:
+            corp_ident = SubcorpusIdent(id=subc_id, corpus_name=c_id)
+        else:
+            corp_ident = c_id
+        corp = await amodel.cf.get_corpus(corp_ident)
         if i == 0:
             main_size = corp.search_size
         corpora.append(dict(id=c_id, name=corp.get_conf('NAME')))

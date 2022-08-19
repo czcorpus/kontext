@@ -21,6 +21,7 @@ import settings
 from conclib.calc import cancel_conc_task
 from corplib.corpus import KCorpus
 from corplib import CorpusFactory
+from corplib.abstract import SubcorpusIdent
 from bgcalc.errors import CalcTaskNotFoundError
 from bgcalc import calc_backend_client
 import plugins
@@ -155,9 +156,11 @@ async def conc_cache_status_ws_handler(request: web.Request) -> web.WebSocketRes
     msg = await ws.receive()
     params = json.loads(msg.data)
     logging.debug('Received conc parameters: %s', params)
-    subcpath = [settings.get('corpora', 'subcorpora_dir')]
-    cf = CorpusFactory(subcpath)
-    corp = await cf.get_corpus(corpname=params['corp_id'], subcname=params.get('subc_path', None))
+    cf = CorpusFactory(subc_root=settings.get('corpora', 'subcorpora_dir'))
+    subc_id = params.get('subc_path', None)
+    corp = await cf.get_corpus(
+        SubcorpusIdent(id=subc_id, corpus_name=params['corp_id']) if subc_id else params['corp_id']
+    )
 
     # check until finished
     while not ws.closed:

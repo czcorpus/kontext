@@ -16,18 +16,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from errors import KontextError
 
-class MissingSubCorpFreqFile(Exception):
+
+class MissingSubCorpFreqFile(KontextError):
     pass
 
 
-class VirtualSubcFreqFileError(Exception):
+class VirtualSubcFreqFileError(KontextError):
     pass
 
 
-class InvalidSubCorpFreqFileType(Exception):
+class InvalidSubCorpFreqFileType(KontextError):
     pass
 
 
-class CorpusInstantiationError(Exception):
+class CorpusInstantiationError(KontextError):
+    pass
+
+
+class SubcorpusAlreadyExistsError(KontextError):
     pass

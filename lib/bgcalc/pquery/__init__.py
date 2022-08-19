@@ -40,7 +40,7 @@ def extract_freqs(data: FreqCalcResult):
 
 
 def create_freq_calc_args(
-        pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, List[str]], subcpath: List[str],
+        pquery: PqueryFormArgs, conc_id: str, raw_queries: Dict[str, List[str]], subcpath: str,
         user_id: int, collator_locale: str, flimit_override: Optional[int] = None) -> FreqCalcArgs:
     attr = pquery.attr
     return FreqCalcArgs(
@@ -65,7 +65,7 @@ async def calc_merged_freqs(
         _,
         pquery: PqueryFormArgs,
         raw_queries: Dict[str, List[str]],
-        subcpath: List[str],
+        subcpath: str,
         user_id: int,
         collator_locale: str):
     """

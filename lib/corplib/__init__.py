@@ -96,8 +96,7 @@ class CorpusFactory:
     async def get_corpus(
             self,
             corp_ident: Union[str, SubcorpusIdent],
-            corp_variant: str = '',
-            translate=lambda x: x) -> AbstractKCorpus:
+            corp_variant: str = '') -> AbstractKCorpus:
         """
         Args:
             corp_ident: an ID (= registry file name) of a subcorpus or a subcorpus identification record
@@ -130,15 +129,14 @@ class CorpusFactory:
             self._cache[cache_key] = kcorp
         return kcorp
 
-    async def get_info(self, corpus_id: str, translate: Callable[[str], str] = lambda x: x) -> ManateeCorpusInfo:
+    async def get_info(self, corpus_id: str) -> ManateeCorpusInfo:
         """
         Return a low-level information (provided via Manatee) about a corpus
         Args:
             corpus_id: corpus ID (= registry file name)
-            translate: message translation function
         """
         try:
-            corp = await self.get_corpus(corpus_id, translate=translate)
+            corp = await self.get_corpus(corpus_id)
         except manatee.CorpInfoNotFound as ex:
             corp = EmptyCorpus(corpus_id)
             logging.getLogger(__name__).warning(ex)

@@ -142,8 +142,7 @@ async def _check_result(cache_map: AbstractConcCache, q: Tuple[str, ...], corp_c
 
 async def require_existing_conc(
         corp: AbstractKCorpus,
-        q: Union[Tuple[str, ...], List[str]],
-        translate: Callable[[str], str] = lambda x: x) -> PyConc:
+        q: Union[Tuple[str, ...], List[str]]) -> PyConc:
     """
     Load a cached concordance based on a provided corpus and query.
     If nothing is found, ConcNotFoundException is thrown.
@@ -157,10 +156,10 @@ async def require_existing_conc(
         mcorp = corp
         for qq in reversed(q):  # find the right main corp, if aligned
             if qq.startswith('x-'):
-                mcorp = await corpus_factory.get_corpus(qq[2:], translate=translate)
+                mcorp = await corpus_factory.get_corpus(qq[2:])
                 break
         try:
-            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp, translate=translate)
+            return PyConc(mcorp, 'l', status.cachefile, orig_corp=corp)
         except manatee.FileAccessError as ex:
             raise ConcNotFoundException(ex)
     raise BrokenConcordanceException(
@@ -169,7 +168,7 @@ async def require_existing_conc(
 
 async def find_cached_conc_base(
         corp: AbstractKCorpus, corp_cache_key: Optional[str], q: Tuple[str, ...],
-        minsize: int, translate: Callable[[str], str] = lambda x: x) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
+        minsize: int) -> Tuple[Optional[int], Union[PyConc, InitialConc]]:
     """
     Load a concordance from cache starting from a complete operation q[:],
     then trying q[:-1], q[:-2], q:[:-i] etc. A possible found concordance can be
@@ -227,9 +226,9 @@ async def find_cached_conc_base(
                     mcorp = corp
                     for qq in reversed(q[:i]):  # find the right main corp, if aligned
                         if qq.startswith('x-'):
-                            mcorp = await corpus_factory.get_corpus(qq[2:], translate=translate)
+                            mcorp = await corpus_factory.get_corpus(qq[2:])
                             break
-                    conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp, translate=translate)
+                    conc = PyConc(mcorp, 'l', cache_path, orig_corp=corp)
             except (ConcCalculationStatusException, manatee.FileAccessError) as ex:
                 logging.getLogger(__name__).error(
                     f'Failed to use cached concordance for {q[:i]}: {ex}')
@@ -246,11 +245,10 @@ async def find_cached_conc_base(
 
 class ConcCalculation(GeneralWorker):
 
-    def __init__(self, task_id, cache_factory=None,  translate: Callable[[str], str] = lambda x: x):
+    def __init__(self, task_id, cache_factory=None):
         """
         """
-        super(ConcCalculation, self).__init__(task_id=task_id,
-                                              cache_factory=cache_factory, translate=translate)
+        super().__init__(task_id=task_id, cache_factory=cache_factory)
 
     async def run(self, initial_args, subc_root, corpus_ident: Union[str, SubcorpusRecord], corp_cache_key, query, samplesize):
         """
@@ -265,7 +263,7 @@ class ConcCalculation(GeneralWorker):
         cache_map = None
         try:
             corpus_factory = CorpusFactory(subc_root=subc_root)
-            corpus_obj = await corpus_factory.get_corpus(corpus_ident, translate=self._translate)
+            corpus_obj = await corpus_factory.get_corpus(corpus_ident)
             cache_map = self._cache_factory.get_mapping(corpus_obj)
             if not initial_args['already_running']:
                 # The conc object bellow is asynchronous; i.e. you obtain it immediately but it may
@@ -316,9 +314,8 @@ class ConcSyncCalculation(GeneralWorker):
     """
 
     def __init__(
-            self, task_id, cache_factory, subc_root, corpus_ident: Union[str, SubcorpusRecord], conc_dir: str,
-            translate: Callable[[str], str] = lambda x: x):
-        super().__init__(task_id, cache_factory, translate)
+            self, task_id, cache_factory, subc_root, corpus_ident: Union[str, SubcorpusRecord], conc_dir: str):
+        super().__init__(task_id, cache_factory)
         self.corpus_factory = CorpusFactory(subc_root=subc_root)
         self.corpus_ident = corpus_ident
         self.corpus_obj = None
@@ -330,13 +327,13 @@ class ConcSyncCalculation(GeneralWorker):
             await self.cache_map.update_calc_status(corp_cache_key, query[:i + 1], error=err, finished=True)
 
     async def run(self,  corp_cache_key, query: Tuple[str, ...], samplesize: int):
-        self.corpus_obj = await self.corpus_factory.get_corpus(self.corpus_ident, translate=self._translate)
+        self.corpus_obj = await self.corpus_factory.get_corpus(self.corpus_ident)
         setattr(self.corpus_obj, '_conc_dir', self.conc_dir)
         self.cache_map = self._cache_factory.get_mapping(self.corpus_obj)
 
         try:
             calc_from, conc = await find_cached_conc_base(
-                self.corpus_obj, corp_cache_key, query, minsize=0, translate=self._translate)
+                self.corpus_obj, corp_cache_key, query, minsize=0)
             if isinstance(conc, InitialConc):   # we have nothing, let's start with the 1st operation only
                 for i in range(0, len(query)):
                     await self.cache_map.add_to_map(corp_cache_key, query[:i + 1], ConcCacheStatus(task_id=self._task_id),
