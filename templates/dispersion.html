@@ -24,6 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 {% block bodyonload %}
 __conf.concPersistenceOpId = {{ conc_persistence_op_id|to_json }};
+__conf.ConcFormsArgs = {{ conc_forms_args|to_json }};
+__conf.textTypesData = {{ text_types_data|to_json }};
+__conf.FreqFormProps = {{ freq_form_args|to_json }};
+__conf.CTFreqFormProps = {{ ctfreq_form_args|to_json }};
+__conf.AttrList = {{ AttrList|default([], true)|to_json }};
+__conf.CollFormProps = {{ coll_form_args|to_json }};
 __conf.dispersionResolution = {{ dispersion_resolution|to_json }};
 __conf.dispersionData = {{ initial_data|to_json }};
 dispersionPage.init(__conf);
