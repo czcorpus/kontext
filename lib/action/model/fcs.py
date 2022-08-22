@@ -31,15 +31,15 @@ from action.props import ActionProps
 from action.response import KResponse
 from conclib.search import get_conc
 from corplib.corpus import KCorpus
-from texttypes.cache import TextTypesCache
+from action.model import ModelsSharedData
 
 
 @dataclass
 class FCSResourceInfo:
-    title: str
-    landingPageURI: str
-    language: str
-    description: str
+    title: Optional[str] = None
+    landingPageURI: Optional[str] = None
+    language: Optional[str] = None
+    description: Optional[str] = None
 
 
 class FCSCorpusInfo(NamedTuple):
@@ -67,18 +67,18 @@ class FCSActionModel(UserActionModel):
     """
 
     def __init__(
-            self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+            self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data)
         self.search_attrs = settings.get('fcs', 'search_attributes', ['word'])
 
-    def check_args(self, supported_default: List[str], supported: List[str]) -> Optional[Exception]:
+    def check_args(self, supported_default: List[str], supported: List[str]):
         supported_default.extend(supported)
         unsupported_args = set(self._req.args.keys()) - set(supported_default)
         if 0 < len(unsupported_args):
             raise Exception(8, list(unsupported_args)[0], 'Unsupported parameter')
 
     async def corpora_info(self, value: str, max_items: int) -> List[FCSCorpusInfo]:
-        resources: List[Tuple[str, str, Dict[str, Any]]] = []
+        resources: List[FCSCorpusInfo] = []
         corpora_d = [value]
         if value == 'root':
             with plugins.runtime.AUTH as auth:
@@ -87,7 +87,7 @@ class FCSActionModel(UserActionModel):
         for i, corpus_id in enumerate(corpora_d):
             if i >= max_items:
                 break
-            resource_info: Dict[str, Any] = {}
+            resource_info: FCSResourceInfo()
             c = await self.cf.get_corpus(corpus_id)
             corpus_title: str = c.get_conf('NAME')
             resource_info = FCSResourceInfo(
@@ -192,7 +192,7 @@ class FCSActionModel(UserActionModel):
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp, self._shared_data)
         return self._plugin_ctx
 
 

@@ -29,7 +29,7 @@ from action.response import KResponse
 from main_menu.model import AbstractMenuItem, MainMenuItemId
 from sanic import Sanic
 from sanic_session import Session
-from texttypes.cache import TextTypesCache
+from action.model import ModelsSharedData
 
 
 class BaseActionModel(AbstractPageModel):
@@ -47,7 +47,13 @@ class BaseActionModel(AbstractPageModel):
     # a user settings key entry used to access user's scheduled actions
     SCHEDULED_ACTIONS_KEY = '_scheduled'
 
-    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache) -> None:
+    def __init__(
+            self,
+            req: KRequest,
+            resp: KResponse,
+            action_props: ActionProps,
+            shared_data: ModelsSharedData
+    ) -> None:
         self._req: KRequest = req
         self._resp: KResponse = resp
         self._action_props: ActionProps = action_props
@@ -55,6 +61,7 @@ class BaseActionModel(AbstractPageModel):
         self.disabled_menu_items: Tuple[MainMenuItemId, ...] = ()
         # menu items - they should not be handled directly
         self._dynamic_menu_items: List[AbstractMenuItem] = []
+        self._plg_shared = shared_data.plg_shared
         self._plugin_ctx: Optional[BasePluginCtx] = None
 
     @property
@@ -146,11 +153,17 @@ class BasePluginCtx(AbstractBasePluginCtx):
     BasePluginCtx provides a subset of features from BaseActionModel for plug-ins.
     """
 
-    def __init__(self, action_model: BaseActionModel, request: KRequest, response: KResponse):
+    def __init__(
+            self,
+            action_model: BaseActionModel,
+            request: KRequest,
+            response: KResponse,
+            shared_data: Dict[str, Any]
+    ):
         self._action_model: BaseActionModel = action_model
         self._request = request
         self._response = response
-        self._shared_data: Dict[str, Any] = {}
+        self._shared_data = shared_data
 
     def set_shared(self, key: str, value: Any):
         self._shared_data[key] = value

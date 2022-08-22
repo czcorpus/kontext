@@ -31,7 +31,7 @@ from action.plugin.ctx import AbstractPqueryPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
 from main_menu.model import EventTriggeringItem, MainMenu
-from texttypes.model import TextTypesCache
+from action.model import ModelsSharedData
 
 
 class PQueryPluginCtx(CorpusPluginCtx, AbstractPqueryPluginCtx):
@@ -44,15 +44,15 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
 
     TASK_TIME_LIMIT = settings.get_int('calc_backend', 'task_time_limit', 300)
 
-    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data)
         self._curr_pquery_args: Optional[PqueryFormArgs] = None
         self._plugin_ctx: Optional[PQueryPluginCtx] = None
 
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = PQueryPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = PQueryPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
     async def load_conc_queries(self, conc_ids: List[str], corpus_id: str,

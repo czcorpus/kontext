@@ -35,8 +35,14 @@ class AbstractActionLog:
             self.collect_args(request, args_map, action_log_mapper, full_action_name, err_desc))
 
     @abc.abstractmethod
-    def collect_args(self, request: KRequest, args_map: MinArgs, action_log_mapper: Callable[[KRequest], Any],
-                     full_action_name: str, err_desc: Optional[Tuple[Exception, Optional[str]]]) -> Dict[str, Any]:
+    def collect_args(
+            self,
+            request: KRequest,
+            args_map: MinArgs,
+            action_log_mapper: Callable[[KRequest], Any],
+            full_action_name: str,
+            err_desc: Optional[Tuple[Exception, Optional[str]]]
+    ) -> Dict[str, Any]:
         """
         A custom implementation transforming passed arguments into a dictionary with possibly nested values.
         The only restriction regarding the structure is that the write_action() method should be able

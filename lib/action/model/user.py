@@ -13,16 +13,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import hashlib
 import inspect
 import logging
 import os
 import time
-import uuid
 from dataclasses import fields
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-import aiofiles.os
 import corplib
 import plugins
 import scheduled
@@ -30,6 +27,7 @@ import settings
 from action.argmapping import UserActionArgs
 from action.errors import UserReadableException
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.abstract import AbstractUserModel
 from action.model.base import BaseActionModel, BasePluginCtx
 from action.plugin.ctx import AbstractUserPluginCtx
@@ -41,7 +39,6 @@ from plugin_types import CorpusDependentPlugin
 from plugin_types.auth import AbstractInternalAuth, UserInfo
 from plugin_types.subc_storage import SubcListFilterArgs
 from sanic import Sanic
-from texttypes.cache import TextTypesCache
 
 
 class UserActionModel(BaseActionModel, AbstractUserModel):
@@ -72,8 +69,8 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         MainMenu.CORPORA('create-subcorpus'))
 
     def __init__(
-            self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+            self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data)
         self._uses_valid_sid: bool = True
         self.return_url: Optional[str] = None
         self._plugin_ctx: Optional[UserPluginCtx] = None
@@ -228,7 +225,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = UserPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = UserPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
     def session_get_user(self) -> UserInfo:
@@ -495,8 +492,14 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
 
 class UserPluginCtx(BasePluginCtx, AbstractUserPluginCtx):
 
-    def __init__(self, action_model: UserActionModel, request: KRequest, response: KResponse):
-        super().__init__(action_model, request, response)
+    def __init__(
+            self,
+            action_model: UserActionModel,
+            request: KRequest,
+            response: KResponse,
+            plg_shared: Dict[str, Any]
+    ):
+        super().__init__(action_model, request, response, plg_shared)
         self._action_model = action_model
 
     def refresh_session_id(self) -> None:

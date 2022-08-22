@@ -24,6 +24,7 @@ import settings
 from action.errors import (
     ForbiddenException, ImmediateRedirectException, get_traceback)
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
@@ -121,6 +122,10 @@ def get_explicit_return_type(req: KRequest) -> Optional[str]:
     return f[0] if len(f) > 0 else None
 
 
+def _is_authorized_to_execute_action(amodel: AbstractPageModel, aprops: ActionProps):
+    return not isinstance(amodel, AbstractUserModel) or aprops.access_level == 0 or not amodel.user_is_anonymous()
+
+
 def http_action(
         access_level: int = 0,
         template: Optional[str] = None,
@@ -188,18 +193,23 @@ def http_action(
             elif not return_type and template:
                 aprops.return_type = 'template'
 
+            shared_data = ModelsSharedData(application.ctx.tt_cache, dict())
             if action_model:
-                amodel = action_model(req, resp, aprops, application.ctx.tt_cache)
+                amodel = action_model(req, resp, aprops, shared_data)
             else:
-                amodel = BaseActionModel(req, resp, aprops, application.ctx.tt_cache)
+                amodel = BaseActionModel(req, resp, aprops, shared_data)
             try:
                 await amodel.init_session()
-                if isinstance(amodel, AbstractUserModel) and aprops.access_level > 0 and amodel.user_is_anonymous():
-                    amodel = UserActionModel(req, resp, aprops, application.ctx.tt_cache)
+                if _is_authorized_to_execute_action(amodel, aprops):
+                    await amodel.pre_dispatch(None)
+                    ans = await func(amodel, req, resp)
+                    await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
+                else:
+                    amodel = UserActionModel(req, resp, aprops, shared_data)
+                    await amodel.pre_dispatch(None)
+                    await amodel.post_dispatch(aprops, None, None)
                     raise ForbiddenException(req.translate('Access forbidden - please log-in.'))
-                await amodel.pre_dispatch(None)
-                ans = await func(amodel, req, resp)
-                await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
+
             except ImmediateRedirectException as ex:
                 return response.redirect(ex.url, status=ex.code)
             except Exception as ex:

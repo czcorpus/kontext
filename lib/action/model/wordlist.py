@@ -22,11 +22,11 @@ from action.argmapping import ConcArgsMapping, WordlistArgsMapping
 from action.argmapping.wordlist import WordlistFormArgs
 from action.errors import UserReadableException
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.props import ActionProps
 from action.response import KResponse
 from sanic import Sanic
-from texttypes.model import TextTypesCache
 
 
 class WordlistError(UserReadableException):
@@ -39,15 +39,15 @@ class WordlistActionModel(CorpusActionModel):
 
     WORDLIST_QUICK_SAVE_MAX_LINES = 10000
 
-    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data)
         self._curr_wlform_args: Optional[WordlistFormArgs] = None
         self._plugin_ctx: Optional[WordlistPluginCtx] = None
 
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = WordlistPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = WordlistPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
     async def pre_dispatch(self, req_args):

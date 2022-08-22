@@ -21,8 +21,8 @@
 import urllib.parse
 from dataclasses import asdict
 from functools import partial
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
-    TypeVar, Union)
+from typing import (
+    Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, Union)
 
 import corplib
 import l10n
@@ -30,9 +30,8 @@ import plugins
 import settings
 from action.argmapping import Args, ConcArgsMapping
 from action.argmapping.conc.query import ConcFormArgs
-from action.errors import (AlignedCorpusForbiddenException,
-                           ImmediateRedirectException, NotFoundException,
-                           UserReadableException)
+from action.errors import (
+    AlignedCorpusForbiddenException, ImmediateRedirectException, NotFoundException, UserReadableException)
 from action.krequest import KRequest
 from action.model.user import UserActionModel, UserPluginCtx
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -43,9 +42,10 @@ from corplib.abstract import AbstractKCorpus
 from corplib.corpus import KCorpus
 from corplib.fallback import EmptyCorpus, ErrorCorpus
 from main_menu.model import EventTriggeringItem, MainMenu
-from plugin_types.corparch.corpus import (BrokenCorpusInfo, CorpusInfo,
-                                          StructAttrInfo)
-from texttypes.model import TextTypes, TextTypesCache
+from plugin_types.corparch.corpus import (
+    BrokenCorpusInfo, CorpusInfo, StructAttrInfo)
+from texttypes.model import TextTypes
+from action.model import ModelsSharedData
 
 T = TypeVar('T')
 
@@ -68,8 +68,8 @@ class CorpusActionModel(UserActionModel):
 
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code
 
-    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data.tt_cache)
         self._proc_time: Optional[float] = None
         self.args: Args = Args()
 
@@ -88,16 +88,18 @@ class CorpusActionModel(UserActionModel):
         self._on_query_store: List[Callable[[List[str], Optional[int], Dict[str, Any]], None]] = [
             lambda s, uh, res: None]
 
-        self._tt_cache = tt_cache
+        self._tt_cache = shared_data.tt_cache
 
         self._tt = None  # this will be instantiated lazily
+
+        self._plg_shared = shared_data.plg_shared
 
         self._plugin_ctx: Optional[CorpusPluginCtx] = None
 
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = CorpusPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
     @property
@@ -668,8 +670,14 @@ class CorpusActionModel(UserActionModel):
 
 class CorpusPluginCtx(UserPluginCtx, AbstractCorpusPluginCtx):
 
-    def __init__(self, action_model: CorpusActionModel, request: KRequest, response: KResponse):
-        super().__init__(action_model, request, response)
+    def __init__(
+            self,
+            action_model: CorpusActionModel,
+            request: KRequest,
+            response: KResponse,
+            plg_shared: Dict[str, Any]
+    ):
+        super().__init__(action_model, request, response, plg_shared)
         self._action_model = action_model
 
     @property
