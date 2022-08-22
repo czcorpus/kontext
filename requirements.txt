@@ -12,7 +12,7 @@ sanic-jinja2 >= 2022.1.13
 # please note that lxml package requires the following system packages:
 # libxml2-dev, libxslt-dev, python-dev
 lxml >= 3.4
-Markdown >= 3.3.6
+Markdown >= 3.4.1
 openpyxl >= 3.0.10
 # aioredis will be part of redis in the future
 aioredis >= 2.0.1
