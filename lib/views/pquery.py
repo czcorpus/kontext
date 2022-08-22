@@ -21,7 +21,7 @@ import bgcalc
 import plugins
 import settings
 from action.argmapping.pquery import PqueryFormArgs
-from action.decorators import http_action
+from action.control import http_action
 from action.argmapping.action import IntOpt
 from action.errors import NotFoundException
 from action.krequest import KRequest

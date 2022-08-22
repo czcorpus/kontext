@@ -25,7 +25,7 @@ import asyncio
 from typing import Dict, List, Tuple
 
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse

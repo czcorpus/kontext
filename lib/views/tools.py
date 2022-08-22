@@ -16,7 +16,7 @@
 from io import BytesIO
 from typing import Tuple
 
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel

@@ -124,8 +124,10 @@ class CorpusActionModel(UserActionModel):
         """
         self._on_query_store.append(fn)
 
-    # TODO move to a more specific req_context object
     async def get_corpus_info(self, corp: str) -> CorpusInfo:
+        """
+        using a corparch plug-in, obtain corpus information
+        """
         with plugins.runtime.CORPARCH as plg:
             return await plg.get_corpus_info(self.plugin_ctx, corp)
 

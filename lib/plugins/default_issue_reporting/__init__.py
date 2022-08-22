@@ -23,7 +23,7 @@ from email.mime.text import MIMEText
 
 import plugins
 import ujson as json
-from action.decorators import http_action
+from action.control import http_action
 from action.model.user import UserActionModel
 from plugin_types.auth import AbstractAuth
 from plugin_types.issue_reporting import (AbstractIssueReporting,

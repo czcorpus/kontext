@@ -25,7 +25,7 @@ import plugins
 import settings
 from action.argmapping import log_mapping
 from action.argmapping.action import IntOpt
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel

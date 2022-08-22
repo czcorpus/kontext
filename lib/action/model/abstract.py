@@ -39,10 +39,19 @@ class AbstractPageModel(ABC):
             self,
             args_proxy: Union[None, RequestArgsProxy, JSONRequestArgsProxy]
     ) -> Union[RequestArgsProxy, JSONRequestArgsProxy]:
+        """
+        Execute actions required before a user action is performed.
+        """
         pass
 
     @abstractmethod
     async def post_dispatch(self, action_props: ActionProps, result, err_desc):
+        """
+        Execute actions required after a user action is performed. The result
+        argument is the one the user action returned. The err_desc argument may
+        contain actual error along with a unique anchor ID which will be stored
+        to the log for easier reviewing.
+        """
         pass
 
 

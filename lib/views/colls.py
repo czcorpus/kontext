@@ -18,7 +18,7 @@ from dataclasses import asdict, dataclass
 import plugins
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import http_action
+from action.control import http_action
 from action.argmapping.action import IntOpt
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel

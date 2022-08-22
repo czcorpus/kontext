@@ -92,6 +92,12 @@ class RequestArgsProxy:
             return tmp
 
     def set_forced_arg(self, k, v: Union[str, List[str]]) -> None:
+        """
+        Set an argument 'k' as a forced one. Force arguments have
+        the highest priority, i.e. no matter what is already set
+        in any of configured request data sources, the forced value
+        (if set) will be the one returned.
+        """
         if type(v) is list:
             self._forced[k] = v
         else:

@@ -18,7 +18,7 @@ from dataclasses import fields
 
 import settings
 from action.argmapping import GeneralOptionsArgs, WidectxArgsMapping
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.model.corpus import CorpusActionModel

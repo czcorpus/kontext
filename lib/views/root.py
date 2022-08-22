@@ -20,7 +20,7 @@ import aiofiles
 import aiofiles.os
 import bgcalc
 import settings
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import (FunctionNotSupported, ImmediateRedirectException,
                            NotFoundException)
 from action.krequest import KRequest

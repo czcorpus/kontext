@@ -25,7 +25,7 @@ import conclib
 import l10n
 import plugins
 import settings
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.fcs import FCSActionModel, Languages

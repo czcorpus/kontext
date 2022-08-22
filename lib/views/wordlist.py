@@ -22,7 +22,7 @@ import plugins
 import settings
 from action.argmapping import log_mapping
 from action.argmapping.wordlist import WordlistFormArgs, WordlistSaveFormArgs
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.wordlist import WordlistActionModel, WordlistError
 from action.errors import ImmediateRedirectException

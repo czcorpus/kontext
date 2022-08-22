@@ -113,7 +113,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse

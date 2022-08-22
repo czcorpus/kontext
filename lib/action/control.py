@@ -203,7 +203,7 @@ def http_action(
                 if _is_authorized_to_execute_action(amodel, aprops):
                     await amodel.pre_dispatch(None)
                     ans = await func(amodel, req, resp)
-                    await amodel.post_dispatch(aprops, ans, None)  # TODO error desc
+                    await amodel.post_dispatch(aprops, ans, None)
                 else:
                     amodel = UserActionModel(req, resp, aprops, shared_data)
                     await amodel.pre_dispatch(None)

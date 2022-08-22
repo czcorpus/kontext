@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import List, Union
 
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import ForbiddenException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
