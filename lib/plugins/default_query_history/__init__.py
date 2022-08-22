@@ -219,10 +219,10 @@ class QueryHistory(AbstractQueryHistory):
                     if not tmp:
                         continue
                     tmp['human_corpname'] = (await corpora.corpus(
-                        tmp['corpname'], translate)).get_conf('NAME')
+                        tmp['corpname'])).get_conf('NAME')
                     for ac in tmp['aligned']:
                         ac['human_corpname'] = (await corpora.corpus(
-                            ac['corpname'], translate)).get_conf('NAME')
+                            ac['corpname'])).get_conf('NAME')
                     full_data.append(tmp)
                 elif item_qs == 'pquery':
                     stored = await self._query_persistence.open(item['query_id'])
@@ -230,7 +230,7 @@ class QueryHistory(AbstractQueryHistory):
                         continue
                     tmp = {'corpname': stored['corpora'][0], 'aligned': []}
                     tmp['human_corpname'] = (await corpora.corpus(
-                        tmp['corpname'], translate)).get_conf('NAME')
+                        tmp['corpname'])).get_conf('NAME')
                     q_join = []
 
                     for q in stored.get('form', {}).get('conc_ids', []):
@@ -276,7 +276,7 @@ class QueryHistory(AbstractQueryHistory):
                         corpname=stored['corpora'][0],
                         aligned=[],
                         human_corpname=(await corpora.corpus(
-                            stored['corpora'][0], translate)).get_conf('NAME'),
+                            stored['corpora'][0])).get_conf('NAME'),
                         query=stored.get('form', {}).get('wlpat'),
                         pfilter_words=stored['form']['pfilter_words'],
                         nfilter_words=stored['form']['nfilter_words'])
