@@ -44,7 +44,7 @@ CONC_BG_SYNC_ALIGNED_CORP_THRESHOLD = 50000000
 CONC_BG_SYNC_SINGLE_CORP_THRESHOLD = 2000000000
 
 
-async def _get_async_conc(corp, user_id, q, corp_cache_key, samplesize, minsize, translate) -> KConc:
+async def _get_async_conc(corp, user_id, q, corp_cache_key, samplesize, minsize) -> KConc:
     """
     """
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
@@ -65,7 +65,7 @@ async def _get_async_conc(corp, user_id, q, corp_cache_key, samplesize, minsize,
 
 async def _get_bg_conc(
         corp: AbstractKCorpus, user_id: int, q: Tuple[str, ...], corp_cache_key: Optional[str], samplesize: int,
-        calc_from: int, minsize: int, translate: Callable[[str], str]) -> KConc:
+        calc_from: int, minsize: int) -> KConc:
     """
     arguments:
     calc_from - from which operation idx (inclusive) we have to calculate respective results

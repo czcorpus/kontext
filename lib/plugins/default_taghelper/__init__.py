@@ -40,7 +40,7 @@ from typing import Any, Dict
 
 import plugins
 from action.decorators import http_action
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
@@ -74,7 +74,7 @@ async def ajax_get_tag_variants(amodel: CorpusActionModel, req: KRequest, resp: 
     try:
         tag_loader = await plugins.runtime.TAGHELPER.instance.loader(amodel.plugin_ctx, corpname, tagset_name)
     except IOError:
-        raise UserActionException(
+        raise UserReadableException(
             req.translate('Corpus {corpname} is not supported by this widget.'))
 
     if await fetcher.is_empty(values_selection):

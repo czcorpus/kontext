@@ -15,7 +15,7 @@
 
 
 from typing import List, NewType, Type
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from sanic.request import Request
 from dataclasses import fields
 
@@ -41,36 +41,36 @@ def create_mapped_args(tp: Type, req: Request):
             v = req.form.get(mk, [])
         if mtype == str:
             if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
+                raise UserReadableException(f'Missing request argument {mk}')
             if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+                raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
             data[mk] = v[0]
         elif mtype == StrOpt:
             if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+                raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
             elif len(v) == 1:
                 data[mk] = v[0]
         elif mtype == List[str]:
             if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
+                raise UserReadableException(f'Missing request argument {mk}')
             data[mk] = v
         elif mtype == ListStrOpt:
             if len(v) > 0:
                 data[mk] = v
         elif mtype == int:
             if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
+                raise UserReadableException(f'Missing request argument {mk}')
             elif len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+                raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
             data[mk] = int(v[0])
         elif mtype == IntOpt:
             if len(v) > 1:
-                raise UserActionException(f'Argument {mk} is cannot be multi-valued')
+                raise UserReadableException(f'Argument {mk} is cannot be multi-valued')
             elif len(v) == 1:
                 data[mk] = int(v[0])
         elif mtype == List[int]:
             if len(v) == 0:
-                raise UserActionException(f'Missing request argument {mk}')
+                raise UserReadableException(f'Missing request argument {mk}')
             data[mk] = [int(x) for x in v]
         elif mtype == ListIntOpt:
             if len(v) > 0:

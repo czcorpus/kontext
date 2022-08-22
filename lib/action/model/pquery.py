@@ -24,7 +24,7 @@ import settings
 from action.argmapping.conc.filter import FilterFormArgs
 from action.argmapping.conc.query import QueryFormArgs
 from action.argmapping.pquery import PqueryFormArgs
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.plugin.ctx import AbstractPqueryPluginCtx
@@ -68,10 +68,10 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
             for conc_id in conc_ids:
                 data = await qs.open(conc_id)
                 if data is None:
-                    raise UserActionException(
+                    raise UserReadableException(
                         'Source concordance query does not exist: {}'.format(conc_id))
                 if qs.stored_form_type(data) != form_type:
-                    raise UserActionException('Invalid source query used: {}'.format(conc_id))
+                    raise UserReadableException('Invalid source query used: {}'.format(conc_id))
                 if form_type == 'query':
                     args = (await QueryFormArgs.create(
                         plugin_ctx=self.plugin_ctx, corpora=[corpus_id], persist=True)).updated(data['lastop_form'], conc_id)
@@ -113,7 +113,7 @@ class ParadigmaticQueryActionModel(CorpusActionModel):
         ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'pquery':
-                raise UserActionException('Invalid search session for a paradimatic query')
+                raise UserReadableException('Invalid search session for a paradimatic query')
             self._curr_pquery_args = PqueryFormArgs(
                 corpname=self.corp.corpname,
                 attr=self.get_default_attr(),

@@ -22,7 +22,7 @@ import imp
 import logging
 import os
 
-from action.errors import UserActionException
+from action.errors import UserReadableException
 
 
 class ExportPluginException(Exception):
@@ -34,10 +34,10 @@ class AbstractExportFreq2d(object):
         raise NotImplementedError()
 
     def set_content(self, attr1, attr2, labels1, labels2, alpha_level, min_freq, min_freq_type, data):
-        raise UserActionException(message='Table mode method for ExportFreq2d not implemented', code=500)
+        raise UserReadableException(message='Table mode method for ExportFreq2d not implemented', code=500)
 
     def set_content_flat(self, headings, alpha_level, min_freq, min_freq_type, data):
-        raise UserActionException(message='Flat mode method for ExportFreq2d not implemented', code=500)
+        raise UserReadableException(message='Flat mode method for ExportFreq2d not implemented', code=500)
 
     def raw_content(self):
         raise NotImplementedError()

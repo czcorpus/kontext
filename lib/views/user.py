@@ -19,7 +19,7 @@ import time
 import plugins
 import settings
 from action.decorators import http_action
-from action.errors import ImmediateRedirectException, UserActionException
+from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse
@@ -90,12 +90,12 @@ async def sign_up_form(amodel: UserActionModel, req: KRequest, resp: KResponse):
         if token_key:
             credentials = await auth.get_form_props_from_token(token_key)
             if not credentials:
-                raise UserActionException('Invalid confirmation token')
+                raise UserReadableException('Invalid confirmation token')
             del credentials['password']
             ans['credentials_form'] = credentials
             ans['username_taken'] = username_taken
         if not amodel.user_is_anonymous():
-            raise UserActionException('You are already registered')
+            raise UserReadableException('You are already registered')
         else:
             ans['user'] = dict(username=None)
     return ans
@@ -118,7 +118,7 @@ async def sign_up(amodel: UserActionModel, req: KRequest, resp: KResponse):
     if len(errors) == 0:
         return dict(ok=True, error_args={})
     else:
-        raise UserActionException(req.translate('Failed to sign up user'), error_args=errors)
+        raise UserReadableException(req.translate('Failed to sign up user'), error_args=errors)
 
 
 @bp.route('/test_username')
@@ -158,7 +158,7 @@ async def set_user_password(amodel: UserActionModel, req: KRequest, resp: KRespo
         ans = dict(fields=fields, messages=[])
 
         if not amodel.uses_internal_user_pages():
-            raise UserActionException(req.translate('This function is disabled.'))
+            raise UserReadableException(req.translate('This function is disabled.'))
         logged_in = await auth.validate_user(
             amodel.plugin_ctx, req.session_get('user', 'user'), curr_passwd)
 
@@ -243,7 +243,7 @@ async def ajax_user_info(amodel: UserActionModel, req: KRequest, resp: KResponse
     access_level=1, action_model=UserActionModel)
 async def profile(amodel: UserActionModel, req: KRequest, resp: KResponse):
     if not amodel.uses_internal_user_pages():
-        raise UserActionException(req.translate('This function is disabled.'))
+        raise UserReadableException(req.translate('This function is disabled.'))
     with plugins.runtime.AUTH as auth:
         user_info = await auth.get_user_info(amodel.plugin_ctx)
         if not amodel.user_is_anonymous():

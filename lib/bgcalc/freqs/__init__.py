@@ -27,7 +27,7 @@ import bgcalc
 import corplib
 import manatee
 import settings
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from bgcalc.errors import BgCalcError, UnfinishedConcordanceError
 from bgcalc.freqs.storage import stored_to_fs, find_cached_result
 from bgcalc.freqs.types import Freq2DCalcArgs, FreqCalcArgs, FreqCalcResult
@@ -310,7 +310,7 @@ class Freq2DCalculation:
             plimit = math.floor(limit / 100. * len(values))
             ans = values[plimit:]
         if len(ans) > 1000:
-            raise UserActionException(
+            raise UserReadableException(
                 'The result is too large. Please try to increase the minimum frequency.')
         return ans, len(mans)
 

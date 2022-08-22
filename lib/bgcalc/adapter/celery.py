@@ -60,7 +60,7 @@ class CeleryClient(AbstractBgClient):
     def is_wrapped_user_error(self, err):
         """
         Tests whether a provided exception is a Celery derived exception generated from
-        KonText's UserActionException. Please see is_bgcalc_error for more explanation.
+        KonText's UserReadableException. Please see is_bgcalc_error for more explanation.
 
         """
-        return self._is_celery_error(err) and err.__class__.__name__ == 'UserActionException'
+        return self._is_celery_error(err) and err.__class__.__name__ == 'UserReadableException'

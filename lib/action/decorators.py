@@ -27,7 +27,7 @@ from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel, AbstractUserModel
 from action.model.base import BaseActionModel
 from action.model.user import UserActionModel
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.props import ActionProps
 from action.response import KResponse
 from action.templating import CustomJSONEncoder, ResultType, TplEngine
@@ -105,7 +105,7 @@ async def resolve_error(
         'messages': resp.system_messages[:]
     }
     await amodel.resolve_error_state(req, resp, ans, err)
-    if isinstance(err, UserActionException):
+    if isinstance(err, UserReadableException):
         resp.set_http_status(err.code)
     else:
         resp.set_http_status(500)

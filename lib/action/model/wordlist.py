@@ -20,7 +20,7 @@ import plugins
 import settings
 from action.argmapping import ConcArgsMapping, WordlistArgsMapping
 from action.argmapping.wordlist import WordlistFormArgs
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.props import ActionProps
@@ -29,7 +29,7 @@ from sanic import Sanic
 from texttypes.model import TextTypesCache
 
 
-class WordlistError(UserActionException):
+class WordlistError(UserReadableException):
     pass
 
 
@@ -54,7 +54,7 @@ class WordlistActionModel(CorpusActionModel):
         ans = await super().pre_dispatch(req_args)
         if self._active_q_data is not None:
             if self._active_q_data.get('form', {}).get('form_type') != 'wlist':
-                raise UserActionException('Invalid search session for a word-list')
+                raise UserReadableException('Invalid search session for a word-list')
             self._curr_wlform_args = WordlistFormArgs.from_dict(
                 self._active_q_data['form'], id=self._active_q_data['id'])
         return ans

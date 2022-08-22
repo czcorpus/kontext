@@ -50,7 +50,7 @@ from typing import Dict
 
 import plugins
 from action.decorators import http_action
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.plugin.ctx import PluginCtx
@@ -81,7 +81,7 @@ async def get_syntax_data(amodel: ConcActionModel, req: KRequest, resp: KRespons
             return await sv.search_by_token_id(
                 amodel.corp, amodel.corp.corpname, int(req.args.get('kwic_id')), int(req.args.get('kwic_len')))
     except MaximumContextExceeded:
-        raise UserActionException(
+        raise UserReadableException(
             req.translate('Failed to get the syntax tree due to limited KWIC context (too long sentence).'))
 
 

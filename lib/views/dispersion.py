@@ -18,7 +18,7 @@ from typing import List
 from action.argmapping.analytics import (
     CollFormArgs, CTFreqFormArgs, FreqFormArgs)
 from action.decorators import http_action
-from action.errors import ImmediateRedirectException, UserActionException
+from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.response import KResponse
@@ -79,7 +79,7 @@ async def ajax_get_freq_dispersion(amodel: ConcActionModel, req: KRequest, resp:
     resolution = int(req.args.get('resolution', 100))
     if 0 < resolution < 1000:
         return _get_freq_dispersion(conc, resolution)
-    raise UserActionException('Invalid dispersion resolution. Acceptable values [1, 1000].')
+    raise UserReadableException('Invalid dispersion resolution. Acceptable values [1, 1000].')
 
 
 @bp.route('/index')

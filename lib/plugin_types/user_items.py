@@ -28,10 +28,10 @@ import abc
 import hashlib
 
 import l10n
-from action.errors import UserActionException
+from action.errors import UserReadableException
 
 
-class UserItemException(UserActionException):
+class UserItemException(UserReadableException):
     """
     General error related to
     the plug-in

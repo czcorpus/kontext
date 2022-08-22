@@ -40,7 +40,7 @@ from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
 from action.decorators import http_action
-from action.errors import NotFoundException, UserActionException
+from action.errors import NotFoundException, UserReadableException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.model.concordance import ConcActionModel
@@ -141,7 +141,7 @@ async def query_submit(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         ans['size'] = 0
         ans['finished'] = True
         if isinstance(ex, ConcordanceSpecificationError):
-            raise UserActionException(ex, code=422)
+            raise UserReadableException(ex, code=422)
         else:
             raise ex
     ans['conc_args'] = amodel.get_mapped_attrs(ConcArgsMapping)
@@ -196,9 +196,9 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
         amodel.args.refs = amodel.corp.get_conf('SHORTREF')
 
     if amodel.args.fromp < 1:
-        raise UserActionException(req.translate('Invalid page number'))
+        raise UserReadableException(req.translate('Invalid page number'))
     if amodel.args.pagesize < 1:
-        raise UserActionException('Invalid page size')
+        raise UserReadableException('Invalid page size')
 
     amodel.apply_viewmode(corpus_info.sentence_struct)
 
@@ -234,14 +234,14 @@ async def _view(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             out.update(asdict(kwic.kwicpage(kwic_args)))
             out.update(await amodel.get_conc_sizes(conc))
     except UnknownConcordanceAction as ex:
-        raise UserActionException(str(ex))
+        raise UserReadableException(str(ex))
     except TypeError as ex:
         resp.add_system_message('error', str(ex))
         logging.getLogger(__name__).error(ex)
     except (ConcordanceException, RuntimeError) as ex:
         manatee_error = extract_manatee_error(ex)
         if isinstance(manatee_error, ConcordanceSpecificationError):
-            raise UserActionException(manatee_error, code=422)
+            raise UserReadableException(manatee_error, code=422)
         else:
             raise ex
 
@@ -708,14 +708,14 @@ async def filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
             amodel.store_last_search('conc:filter', conc_ids[0])
 
     if len(amodel.lines_groups) > 0:
-        raise UserActionException('Cannot apply a filter once a group of lines has been saved')
+        raise UserReadableException('Cannot apply a filter once a group of lines has been saved')
 
     maincorp = amodel.args.maincorp if amodel.args.maincorp else amodel.args.corpname
     ff_args = await FilterFormArgs.create(amodel.plugin_ctx, maincorp, True)
     ff_args.update_by_user_query(req.json)
     err = ff_args.validate()
     if err is not None:
-        raise UserActionException(err)
+        raise UserReadableException(err)
 
     amodel.add_conc_form_args(ff_args)
     rank = dict(f=1, l=-1).get(ff_args.data.filfl, 1)
@@ -782,7 +782,7 @@ async def quick_filter(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
-        raise UserActionException(
+        raise UserReadableException(
             'Cannot apply the function once a group of lines has been saved')
     amodel.add_conc_form_args(SubHitsFilterFormArgs(persist=True))
     amodel.args.q.append('D')
@@ -793,10 +793,10 @@ async def filter_subhits(amodel: ConcActionModel, req: KRequest, resp: KResponse
 @http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def filter_firsthits(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
-        raise UserActionException(
+        raise UserReadableException(
             'Cannot apply the function once a group of lines has been saved')
     elif len(amodel.args.align) > 0:
-        raise UserActionException('The function is not supported for aligned corpora')
+        raise UserReadableException('The function is not supported for aligned corpora')
     amodel.add_conc_form_args(FirstHitsFilterFormArgs(
         persist=True, doc_struct=amodel.corp.get_conf('DOCSTRUCTURE')))
     amodel.args.q.append('F{0}'.format(req.args.get('fh_struct')))
@@ -812,7 +812,7 @@ async def sortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     amodel.disabled_menu_items = ()
 
     if len(amodel.lines_groups) > 0:
-        raise UserActionException('Cannot apply a sorting once a group of lines has been saved')
+        raise UserReadableException('Cannot apply a sorting once a group of lines has been saved')
 
     qinfo = SortFormArgs(persist=True)
     qinfo.update_by_user_query(req.json)
@@ -860,7 +860,7 @@ async def mlsortx(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 @http_action(template='view.html', page_model='view', mutates_result=True, action_model=ConcActionModel)
 async def shuffle(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     if len(amodel.lines_groups) > 0:
-        raise UserActionException('Cannot apply a shuffle once a group of lines has been saved')
+        raise UserReadableException('Cannot apply a shuffle once a group of lines has been saved')
     amodel.add_conc_form_args(ShuffleFormArgs(persist=True))
     amodel.args.q.append('f')
     return await _view(amodel, req, resp)
@@ -1081,7 +1081,7 @@ async def matching_structattr(amodel: CorpusActionModel, req: KRequest, resp: KR
 
     if (is_invalid(req.args.get('struct')) or is_invalid(req.args.get('attr')) or
             is_invalid(req.args.get('attr_val')) or is_invalid(req.args.get('search_attr'))):
-        raise UserActionException('Invalid character in attribute/structure name/value')
+        raise UserReadableException('Invalid character in attribute/structure name/value')
 
     ans, found, used = corplib.matching_structattr(
         amodel.corp, req.args.get('struct'), req.args.get(
@@ -1178,7 +1178,7 @@ async def reduce(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     random sample
     """
     if len(amodel.lines_groups) > 0:
-        raise UserActionException(
+        raise UserReadableException(
             'Cannot apply a random sample once a group of lines has been saved')
     qinfo = SampleFormArgs(persist=True)
     qinfo.rlines = amodel.args.rlines
