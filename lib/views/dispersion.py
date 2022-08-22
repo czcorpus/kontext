@@ -15,6 +15,8 @@
 from dataclasses import dataclass
 from typing import List
 
+from action.argmapping.analytics import (
+    CollFormArgs, CTFreqFormArgs, FreqFormArgs)
 from action.decorators import http_action
 from action.errors import ImmediateRedirectException, UserActionException
 from action.krequest import KRequest
@@ -24,6 +26,7 @@ from conclib.calc import require_existing_conc
 from conclib.errors import ConcNotFoundException
 from conclib.pyconc import PyConc
 from dataclasses_json import dataclass_json
+from main_menu import MainMenu
 from sanic import Blueprint
 
 bp = Blueprint('dispersion', url_prefix='dispersion')
@@ -82,6 +85,11 @@ async def ajax_get_freq_dispersion(amodel: ConcActionModel, req: KRequest, resp:
 @bp.route('/index')
 @http_action(action_model=ConcActionModel, page_model='dispersion', template='dispersion.html')
 async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
+    amodel.disabled_menu_items = (
+        MainMenu.CONCORDANCE('query-save-as'),
+        MainMenu.VIEW('kwic-sent-switch'),
+        MainMenu.CONCORDANCE('query-overview'))
+
     try:
         conc = await require_existing_conc(amodel.corp, amodel.args.q)
     except ConcNotFoundException:
@@ -94,7 +102,14 @@ async def index(amodel: ConcActionModel, req: KRequest, response: KResponse):
     elif resolution < 1:
         resolution = 1
 
-    return {
+    result = {
+        'coll_form_args': CollFormArgs().update(amodel.args).to_dict(),
+        'freq_form_args': FreqFormArgs().update(amodel.args).to_dict(),
+        'ctfreq_form_args': CTFreqFormArgs().update(amodel.args).to_dict(),
+        'text_types_data': await amodel.tt.export_with_norms(ret_nums=True),
         'dispersion_resolution': resolution,
         'initial_data': _get_freq_dispersion(conc, resolution),
     }
+    await amodel.attach_query_params(result)
+    await amodel.attach_query_overview(result)
+    return result
