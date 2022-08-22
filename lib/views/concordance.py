@@ -30,12 +30,13 @@ import settings
 import ujson as json
 from action.argmapping import ConcArgsMapping, WidectxArgsMapping, log_mapping
 from action.argmapping.action import IntOpt, StrOpt
-from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
-                                         FreqFormArgs)
-from action.argmapping.conc import (QueryFormArgs, ShuffleFormArgs,
-                                    build_conc_form_args)
+from action.argmapping.analytics import (
+    CollFormArgs, CTFreqFormArgs, FreqFormArgs)
+from action.argmapping.conc import (
+    QueryFormArgs, ShuffleFormArgs, build_conc_form_args)
 from action.argmapping.conc.filter import (
-    FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv, SubHitsFilterFormArgs)
+    FilterFormArgs, FirstHitsFilterFormArgs, QuickFilterArgsConv,
+    SubHitsFilterFormArgs)
 from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
@@ -52,11 +53,15 @@ from bgcalc import calc_backend_client
 from bgcalc.errors import CalcTaskNotFoundError
 from conclib.calc import cancel_conc_task
 from conclib.empty import InitialConc
-from conclib.errors import (ConcordanceException, ConcordanceQueryParamsError,
-    ConcordanceSpecificationError, UnknownConcordanceAction, extract_manatee_error)
+from conclib.errors import (
+    ConcordanceException, ConcordanceQueryParamsError,
+    ConcordanceSpecificationError, UnknownConcordanceAction,
+    extract_manatee_error)
 from conclib.freq import one_level_crit
 from conclib.search import get_conc
+from corplib.abstract import SubcorpusIdent
 from corplib.corpus import AbstractKCorpus
+from corplib.subcorpus import TextTypesType
 from kwiclib import Kwic, KwicPageArgs
 from main_menu import MainMenu, generate_main_menu
 from plugin_types.conc_cache import ConcCacheStatusException
@@ -87,6 +92,14 @@ async def query(amodel: ConcActionModel, req: KRequest, resp: KResponse):
     corp_info = await amodel.get_corpus_info(amodel.args.corpname)
     out['text_types_notes'] = corp_info.metadata.desc
     out['default_virt_keyboard'] = corp_info.metadata.default_virt_keyboard
+
+    out['subcorp_tt_structure'] = None
+    corp_ident = amodel.corp.portable_ident
+    if isinstance(corp_ident, SubcorpusIdent):
+        with plugins.runtime.SUBC_STORAGE as sr:
+            info = await sr.get_info(corp_ident.id)
+            if info.text_types:
+                out['subcorp_tt_structure'] = info.text_types
 
     qf_args = await amodel.fetch_prev_query('conc') if amodel.active_q_data is None else None
     if qf_args is None:
@@ -636,6 +649,14 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
     struct_and_attrs = [(k, [x.to_dict() for x in item])
                         for k, item in struct_and_attrs_tmp.items()]
 
+    subcorp_tt_structure: Optional[TextTypesType] = None
+    corp_ident = amodel.corp.portable_ident
+    if isinstance(corp_ident, SubcorpusIdent):
+        with plugins.runtime.SUBC_STORAGE as sr:
+            info = await sr.get_info(corp_ident.id)
+            if info.text_types:
+                subcorp_tt_structure = info.text_types
+
     ans = dict(
         corpname=amodel.args.corpname,
         subcorpname=amodel.corp.subcorpus_id,
@@ -671,6 +692,7 @@ async def ajax_switch_corpus(amodel: ConcActionModel, req: KRequest, resp: KResp
         DefaultVirtKeyboard=corpus_info.metadata.default_virt_keyboard,
         SimpleQueryDefaultAttrs=corpus_info.simple_query_default_attrs,
         QSEnabled=amodel.args.qs_enabled,
+        SubcorpTTStructure=subcorp_tt_structure,
     )
     await amodel.attach_plugin_exports(ans, direct=True)
     amodel.configure_auth_urls(ans)

@@ -142,7 +142,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         attributes,
         readonlyMode,
         bibLabelAttr,
-        bibIdAttr
+        bibIdAttr,
     }:TextTypesModelArgs) {
         super(
             dispatcher,
@@ -182,7 +182,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
                 metaInfoHelpVisible: false,
                 firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek'),
-                isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)
+                isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             }
         );
         this.readonlyMode = readonlyMode;
