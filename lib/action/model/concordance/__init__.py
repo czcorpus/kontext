@@ -34,6 +34,7 @@ from action.argmapping.conc.query import ConcFormArgs, QueryFormArgs
 from action.argmapping.conc.sort import SortFormArgs
 from action.errors import ImmediateRedirectException
 from action.krequest import KRequest
+from action.model import ModelsSharedData
 from action.model.concordance.linesel import LinesGroups
 from action.model.corpus import CorpusActionModel, CorpusPluginCtx
 from action.props import ActionProps
@@ -44,7 +45,7 @@ from main_menu.model import MainMenu
 from plugin_types.corparch.corpus import CorpusInfo
 from plugin_types.subc_storage import SubcListFilterArgs
 from strings import simple_query_escape
-from texttypes.model import TextTypeCollector, TextTypesCache
+from texttypes.model import TextTypeCollector
 
 
 class ConcActionModel(CorpusActionModel):
@@ -58,8 +59,8 @@ class ConcActionModel(CorpusActionModel):
     FREQ_QUICK_SAVE_MAX_LINES = 10000
     COLLS_QUICK_SAVE_MAX_LINES = 10000
 
-    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, tt_cache: TextTypesCache):
-        super().__init__(req, resp, action_props, tt_cache)
+    def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
+        super().__init__(req, resp, action_props, shared_data)
         self._curr_conc_form_args: Optional[ConcFormArgs] = None
         # data of the current manual concordance line selection/categorization
         self._lines_groups: LinesGroups = LinesGroups(data=[])
@@ -69,7 +70,7 @@ class ConcActionModel(CorpusActionModel):
     @property
     def plugin_ctx(self):
         if self._plugin_ctx is None:
-            self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp)
+            self._plugin_ctx = ConcPluginCtx(self, self._req, self._resp, self._plg_shared)
         return self._plugin_ctx
 
     async def _restore_prev_query_params(self, form):
