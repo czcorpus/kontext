@@ -32,7 +32,7 @@ from action.argmapping import Args, ConcArgsMapping
 from action.argmapping.conc.query import ConcFormArgs
 from action.errors import (AlignedCorpusForbiddenException,
                            ImmediateRedirectException, NotFoundException,
-                           UserActionException)
+                           UserReadableException)
 from action.krequest import KRequest
 from action.model.user import UserActionModel, UserPluginCtx
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -168,7 +168,7 @@ class CorpusActionModel(UserActionModel):
         from returning its original values (no matter what is there).
 
         In case the query_persistence is installed and invalid ID is encountered
-        UserActionException will be raised.
+        UserReadableException will be raised.
 
         Returns:
             True if query params have been loaded else False (which is still not an error)
@@ -186,7 +186,7 @@ class CorpusActionModel(UserActionModel):
                     if len(corpora) > 0:
                         orig_corpora = req_args.add_forced_arg('corpname', corpora[0])
                         if len(orig_corpora) > 0 and orig_corpora[0] != corpora[0]:
-                            raise UserActionException(self._req.translate(
+                            raise UserReadableException(self._req.translate(
                                 f'URL argument corpname={orig_corpora[0]} collides with corpus '
                                 f'{corpora[0]} stored as part of original concordance'))
                     if len(corpora) > 1:
@@ -196,7 +196,7 @@ class CorpusActionModel(UserActionModel):
                         req_args.add_forced_arg('usesubcorp', self._active_q_data['usesubcorp'])
                     return True
                 else:
-                    raise UserActionException(self._req.translate('Invalid or expired query'))
+                    raise UserReadableException(self._req.translate('Invalid or expired query'))
         return False
 
     async def _save_query_to_history(self, query_id: str, conc_data) -> Optional[int]:
@@ -253,7 +253,7 @@ class CorpusActionModel(UserActionModel):
 
         It is OK to override this method but the super().pre_dispatch()
         should be always called before performing custom actions.
-        It is also OK to raise UserActionException types if necessary.
+        It is also OK to raise UserReadableException types if necessary.
         """
         req_args = await super().pre_dispatch(req_args)
         try:
@@ -279,12 +279,12 @@ class CorpusActionModel(UserActionModel):
             # validate self.args.maincorp which is dependent on 'corpname', 'align'
             if self.args.maincorp and (self.args.maincorp != self.args.corpname and
                                        self.args.maincorp not in self.args.align):
-                raise UserActionException(
+                raise UserReadableException(
                     f'Invalid argument value {self.args.maincorp} for "maincorp"',
                     code=422)
 
         except ValueError as ex:
-            raise UserActionException(ex)
+            raise UserReadableException(ex)
 
         # return url (for 3rd party pages etc.)
         args = {}
@@ -344,7 +344,7 @@ class CorpusActionModel(UserActionModel):
         cn = ''
         redirect = False
         if is_api and len(form.corpora) == 0:
-            raise UserActionException('No corpus specified')
+            raise UserReadableException('No corpus specified')
         if len(form.corpora) > 0:
             cn = form.corpora[0]
         elif not self.user_is_anonymous():

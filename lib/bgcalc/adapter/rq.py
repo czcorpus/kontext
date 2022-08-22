@@ -21,7 +21,7 @@ import time
 from typing import Type, TypeVar, Union
 
 import ujson as json
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from bgcalc.adapter.abstract import AbstractBgClient, AbstractResultWrapper
 from bgcalc.errors import BgCalcError, CalcTaskNotFoundError
 from redis import Redis
@@ -201,4 +201,4 @@ class RqClient(AbstractBgClient):
             return None
 
     def is_wrapped_user_error(self, err):
-        return isinstance(err, UserActionException)
+        return isinstance(err, UserReadableException)

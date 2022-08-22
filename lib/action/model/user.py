@@ -28,7 +28,7 @@ import plugins
 import scheduled
 import settings
 from action.argmapping import UserActionArgs
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.abstract import AbstractUserModel
 from action.model.base import BaseActionModel, BasePluginCtx
@@ -106,7 +106,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             self._setup_user_paths()
             self.cf = corplib.CorpusFactory(self.subcpath)
         except ValueError as ex:
-            raise UserActionException(ex)
+            raise UserReadableException(ex)
         return req_args
 
     async def post_dispatch(self, action_props, result, err_desc):

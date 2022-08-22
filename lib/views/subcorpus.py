@@ -26,7 +26,7 @@ import settings
 from action.argmapping import log_mapping
 from action.argmapping.action import IntOpt
 from action.decorators import http_action
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.model.subcorpus import SubcorpusActionModel, SubcorpusError
@@ -69,7 +69,7 @@ async def create(amodel: SubcorpusActionModel, req: KRequest, resp: KResponse):
     try:
         return await amodel.create_subcorpus()
     except (SubcorpusError, RuntimeError) as e:
-        raise UserActionException(str(e)) from e
+        raise UserReadableException(str(e)) from e
 
 
 @bp.route('/new')
@@ -85,7 +85,7 @@ async def new(amodel: CorpusActionModel, req: KRequest, resp: KResponse):
 
     try:
         tt_sel = await amodel.tt.export_with_norms(subcnorm=subcnorm)
-    except UserActionException as e:
+    except UserReadableException as e:
         tt_sel = {'Normslist': [], 'Blocks': []}
         resp.add_system_message('warning', e)
 

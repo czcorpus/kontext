@@ -17,7 +17,7 @@ from io import BytesIO
 from typing import Tuple
 
 from action.decorators import http_action
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel
 from action.response import KResponse
@@ -33,7 +33,7 @@ def _parse_viewbox(vb: str) -> Tuple[float, float, float, float]:
     try:
         return items[0], items[1], items[2], items[3]
     except IndexError:
-        raise UserActionException(f'Invalid SVG viewBox: {vb}', code=422)
+        raise UserReadableException(f'Invalid SVG viewBox: {vb}', code=422)
 
 
 def _normalize_bar_chart_svg(src: bytes, vert_bar_chart_max_label: int):
@@ -97,4 +97,4 @@ async def convert_chart_svg(amodel: BaseActionModel, req: KRequest, resp: KRespo
         resp.set_header('Content-Type', 'application/pdf')
         return svg2pdf(bytestring=svg_src, scale=5, background_color='#FFFFFF')
     else:
-        raise UserActionException('Invalid data format', code=422)
+        raise UserReadableException('Invalid data format', code=422)

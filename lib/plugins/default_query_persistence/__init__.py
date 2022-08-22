@@ -34,7 +34,7 @@ from typing import Union
 
 import plugins
 import ujson as json
-from action.errors import ForbiddenException, UserActionException
+from action.errors import ForbiddenException, UserReadableException
 from plugin_types.auth import AbstractAuth
 from plugin_types.general_storage import KeyValueStorage
 from plugin_types.query_persistence import AbstractQueryPersistence
@@ -262,7 +262,7 @@ class DefaultQueryPersistence(AbstractQueryPersistence):
         key = self._mk_key(conc_id)
         data = await self.open(conc_id)
         if data is None:
-            raise UserActionException('Concordance key \'%s\' not found.' % (conc_id,))
+            raise UserReadableException('Concordance key \'%s\' not found.' % (conc_id,))
         stored_user_id = data.get('user_id', None)
         if user_id != stored_user_id:
             raise ForbiddenException(

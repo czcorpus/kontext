@@ -42,7 +42,7 @@ def fetch_exception_msg(ex):
     return msg
 
 
-class UserActionException(Exception):
+class UserReadableException(Exception):
     """
     This exception covers general errors occurring in Controller's action methods
     as a result of user action (e.g. user sends incorrect arguments, user does
@@ -57,7 +57,7 @@ class UserActionException(Exception):
         self._internal_message = internal_message
 
     def __repr__(self):
-        return f'UserActionException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
+        return f'UserReadableException, code: {self.code}, message: {self.args[0] if len(self.args) > 0 else "--"}'
 
     def __str__(self):
         return self.args[0]
@@ -67,13 +67,13 @@ class UserActionException(Exception):
         return self._internal_message if self._internal_message else str(self)
 
 
-class BackgroundCalculationException(UserActionException):
+class BackgroundCalculationException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
         super().__init__(message, 500, internal_message=internal_message)
 
 
-class NotFoundException(UserActionException):
+class NotFoundException(UserReadableException):
     """
     Raised in case user requests non-exposed/non-existing action
     """
@@ -82,7 +82,7 @@ class NotFoundException(UserActionException):
         super().__init__(message, 404, internal_message=internal_message)
 
 
-class ForbiddenException(UserActionException):
+class ForbiddenException(UserReadableException):
     """
     Raised in case user access is forbidden
     """
@@ -107,13 +107,13 @@ class AlignedCorpusForbiddenException(ForbiddenException):
         self.variant = variant
 
 
-class ServiceUnavailableException(UserActionException):
+class ServiceUnavailableException(UserReadableException):
 
     def __init__(self, message, internal_message=None):
         super().__init__(message, 503, internal_message=internal_message)
 
 
-class ImmediateRedirectException(UserActionException):
+class ImmediateRedirectException(Exception):
     """
     ImmediateRedirectException is used to trigger
     an immediate request response with http headers
@@ -124,8 +124,17 @@ class ImmediateRedirectException(UserActionException):
     """
 
     def __init__(self, url, code=303):
-        super().__init__('Redirect', code)
-        self.url = url
+        super().__init__('Redirect')
+        self._url = url
+        self._code = code
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def code(self):
+        return self._code
 
 
 class FunctionNotSupported(Exception):

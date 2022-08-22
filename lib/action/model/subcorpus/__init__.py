@@ -25,7 +25,7 @@ import plugins
 import settings
 from action.argmapping.subcorpus import (
     CreateSubcorpusArgs, CreateSubcorpusRawCQLArgs, CreateSubcorpusWithinArgs)
-from action.errors import FunctionNotSupported, UserActionException
+from action.errors import FunctionNotSupported, UserReadableException
 from action.model.corpus import CorpusActionModel
 from bgcalc.task import AsyncTaskStatus
 from corplib.abstract import create_new_subc_ident
@@ -89,9 +89,9 @@ class SubcorpusActionModel(CorpusActionModel):
         elif form_type == 'cql':
             specification = CreateSubcorpusRawCQLArgs(**self._req.json)
         else:
-            raise UserActionException(f'Invalid form type provided - "{form_type}"')
+            raise UserReadableException(f'Invalid form type provided - "{form_type}"')
         if not specification.subcname:
-            raise UserActionException(self._req.translate('No subcorpus name specified!'))
+            raise UserReadableException(self._req.translate('No subcorpus name specified!'))
 
         subc_id = await create_new_subc_ident(self.subcpath, self.corp.corpname)
         full_path = os.path.join(self.subcpath, subc_id.data_path)

@@ -18,7 +18,7 @@ from typing import Optional, Tuple, Union
 
 import settings
 import ujson as json
-from action.errors import ImmediateRedirectException, UserActionException
+from action.errors import ImmediateRedirectException, UserReadableException
 from plugin_types.action_log import AbstractActionLog
 
 
@@ -39,7 +39,7 @@ class DefaultActionLog(AbstractActionLog):
     def expand_error_desc(e: Tuple[Exception, str]) -> Tuple[str, Union[str, None], Union[str, None]]:
         if not isinstance(e[0], Exception):  # this should normally not happen (= incorrect error processing)
             return f'Unknown Error [{e[0]}]', None, None
-        elif isinstance(e[0], UserActionException):
+        elif isinstance(e[0], UserReadableException):
             return e[0].__class__.__name__, e[0].internal_message, e[1]
         elif hasattr(e, 'message'):
             return e[0].__class__.__name__, e.message, e[1]

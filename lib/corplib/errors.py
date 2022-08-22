@@ -16,24 +16,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from errors import KontextError
+from action.errors import UserReadableException
 
 
-class MissingSubCorpFreqFile(KontextError):
+class MissingSubCorpFreqFile(UserReadableException):
     pass
 
 
-class VirtualSubcFreqFileError(KontextError):
+class VirtualSubcFreqFileError(UserReadableException):
     pass
 
 
-class InvalidSubCorpFreqFileType(KontextError):
+class InvalidSubCorpFreqFileType(UserReadableException):
     pass
 
 
-class CorpusInstantiationError(KontextError):
+class CorpusInstantiationError(UserReadableException):
     pass
 
 
-class SubcorpusAlreadyExistsError(KontextError):
+class SubcorpusAlreadyExistsError(UserReadableException):
     pass

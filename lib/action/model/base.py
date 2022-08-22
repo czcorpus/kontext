@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import l10n
 import settings
 from action.cookie import KonTextCookie
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.abstract import AbstractPageModel
 from action.plugin.ctx import AbstractBasePluginCtx
@@ -125,7 +125,7 @@ class BaseActionModel(AbstractPageModel):
             if self._is_valid_return_type(self._req.args.get('format')):
                 self._action_props.return_type = self._req.args.get('format')
             else:
-                raise UserActionException(f'Unknown output format: {self._req.args.get("format")}')
+                raise UserReadableException(f'Unknown output format: {self._req.args.get("format")}')
         return create_req_arg_proxy(self._req.form, self._req.args, self._req.json)
 
     async def post_dispatch(self, action_props, result, err_desc):

@@ -26,7 +26,7 @@ from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
 from action.decorators import http_action
-from action.errors import UserActionException
+from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel
 from action.model.user import UserActionModel
@@ -81,7 +81,7 @@ async def freqs(amodel: ConcActionModel, req: KRequest[GeneralFreqArgs], resp: K
             fcrit=req.mapped_args.fcrit, fcrit_async=req.mapped_args.fcrit_async, flimit=req.mapped_args.flimit,
             freq_sort=req.mapped_args.freq_sort)
         if req.mapped_args.freq_type not in ('tokens', 'text-types', '2-attribute') and req.mapped_args.format != 'json':
-            raise UserActionException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
+            raise UserReadableException(f'Unknown freq type {req.mapped_args.freq_type}', code=422)
         ans['freq_type'] = req.mapped_args.freq_type
         ans['alpha_level'] = req.mapped_args.alpha_level
         return ans
@@ -418,7 +418,7 @@ async def _freqct(amodel: ConcActionModel, req: KRequest, resp: KResponse):
 
     try:
         freq_data = await calculate_freq2d(args)
-    except UserActionException as ex:
+    except UserReadableException as ex:
         freq_data = dict(data=[], full_size=0)
         resp.add_system_message('error', str(ex))
     amodel.add_save_menu_item('XLSX', save_format='xlsx')
