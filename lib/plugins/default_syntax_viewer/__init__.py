@@ -49,7 +49,7 @@ import os
 from typing import Dict
 
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel

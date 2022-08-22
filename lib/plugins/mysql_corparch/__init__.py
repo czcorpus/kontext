@@ -24,7 +24,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import plugins
 import ujson as json
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx

@@ -16,7 +16,7 @@ import logging
 
 import plugins
 import ujson as json
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.response import KResponse

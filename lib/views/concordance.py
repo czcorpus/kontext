@@ -39,7 +39,7 @@ from action.argmapping.conc.filter import (
 from action.argmapping.conc.other import (
     KwicSwitchArgs, LgroupOpArgs, LockedOpFormsArgs, SampleFormArgs)
 from action.argmapping.conc.sort import SortFormArgs
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import NotFoundException, UserReadableException
 from action.krequest import KRequest
 from action.model.base import BaseActionModel

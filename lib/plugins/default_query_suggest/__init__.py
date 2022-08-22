@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Tuple
 
 import plugin_types.corparch
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx

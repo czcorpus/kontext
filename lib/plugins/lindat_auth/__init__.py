@@ -12,7 +12,7 @@ import os
 from typing import List
 
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import ImmediateRedirectException
 from action.krequest import KRequest
 from action.model.user import UserActionModel

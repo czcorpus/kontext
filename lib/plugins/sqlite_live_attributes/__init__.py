@@ -45,7 +45,7 @@ except ImportError:
 import l10n
 import plugins
 import strings
-from action.decorators import http_action
+from action.control import http_action
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx
 from plugin_types.live_attributes import (AttrValue, AttrValuesResponse,

@@ -29,7 +29,7 @@ import l10n
 import plugins
 import strings
 import ujson as json
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.plugin.ctx import PluginCtx

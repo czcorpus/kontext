@@ -18,7 +18,7 @@ import time
 
 import plugins
 import settings
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import ImmediateRedirectException, UserReadableException
 from action.krequest import KRequest
 from action.model.user import UserActionModel

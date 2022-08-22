@@ -25,7 +25,7 @@ import plugins
 from action.argmapping.action import IntOpt, ListStrOpt, StrOpt
 from action.argmapping.analytics import (CollFormArgs, CTFreqFormArgs,
                                          FreqFormArgs)
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import UserReadableException
 from action.krequest import KRequest
 from action.model.concordance import ConcActionModel

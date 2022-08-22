@@ -38,7 +38,7 @@ from typing import Any, Dict, List, Sequence, Tuple
 import manatee
 import plugins
 import ujson as json
-from action.decorators import http_action
+from action.control import http_action
 from action.model.concordance import ConcActionModel
 from corplib.corpus import KCorpus
 from plugin_types.corparch import AbstractCorporaArchive

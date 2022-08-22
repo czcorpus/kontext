@@ -34,7 +34,7 @@ from plugin_types.subcmixer.error import (
 from action.krequest import KRequest
 from action.model.corpus import CorpusActionModel
 from action.response import KResponse
-from action.decorators import http_action
+from action.control import http_action
 from action.argmapping.subcorpus import CreateSubcorpusArgs
 from corplib.abstract import create_new_subc_ident
 from plugin_types.corparch import AbstractCorporaArchive

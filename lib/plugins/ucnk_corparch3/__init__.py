@@ -35,7 +35,7 @@ from collections import defaultdict
 from email.mime.text import MIMEText
 
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.errors import ForbiddenException
 from action.krequest import KRequest
 from action.model.user import UserActionModel

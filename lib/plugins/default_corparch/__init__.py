@@ -42,7 +42,7 @@ except ImportError:
     def markdown(s): return s
 import l10n
 import plugins
-from action.decorators import http_action
+from action.control import http_action
 from action.krequest import KRequest
 from action.model.user import UserActionModel
 from action.plugin.ctx import AbstractCorpusPluginCtx, PluginCtx
