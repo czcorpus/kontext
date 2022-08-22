@@ -69,7 +69,7 @@ class CorpusActionModel(UserActionModel):
     BASE_ATTR: str = 'word'  # TODO this value is actually hardcoded throughout the code
 
     def __init__(self, req: KRequest, resp: KResponse, action_props: ActionProps, shared_data: ModelsSharedData):
-        super().__init__(req, resp, action_props, shared_data.tt_cache)
+        super().__init__(req, resp, action_props, shared_data)
         self._proc_time: Optional[float] = None
         self.args: Args = Args()
 
