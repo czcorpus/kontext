@@ -231,10 +231,6 @@ def add_missing_plugin(name: str) -> None:
     _plugins[name] = None
 
 
-def flush_plugins() -> None:
-    _plugins.clear()
-
-
 def _has_plugin(name: str) -> bool:
     return _plugins.get(name) is not None
 
