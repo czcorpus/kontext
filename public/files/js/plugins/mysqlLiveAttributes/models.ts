@@ -92,6 +92,7 @@ export interface LiveAttrsModelState {
     isTTListMinimized:boolean;
     isEnabled:boolean;
     resetConfirmed:boolean;
+    subcorpTTStructure:TextTypes.ExportedSelection;
 }
 
 /**
@@ -120,7 +121,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
         dispatcher:IActionDispatcher,
         pluginApi:IPluginApi,
         initialState:LiveAttrsModelState,
-        controlsAlignedCorpora:boolean
+        controlsAlignedCorpora:boolean,
     ) {
 
         super(dispatcher, initialState);
@@ -235,6 +236,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     dispatch<typeof TTActions.ResetState>({
                         name: TTActions.ResetState.name
                     });
+                    this.reloadSizes(state, dispatch);
                 }
             }
         );
@@ -475,6 +477,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
+        dispatch<typeof TTActions.LockSelected>({
+            name: TTActions.LockSelected.name
+        });
+
         rxOf(null).pipe(
             tap(
                 _ => {
@@ -489,7 +495,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     this.pluginApi.createActionUrl('filter_attributes'),
                     {
                         corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
-                        attrs: JSON.stringify({}),
+                        attrs: JSON.stringify(state.subcorpTTStructure || {}),
                         aligned: JSON.stringify(pipe(
                             state.alignedCorpora,
                             List.filter(v =>  v.selected),
@@ -508,8 +514,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         total: data.poscount
                     }
                 );
+                dispatch(
+                    TTActions.FilterWholeSelection,
+                    {
+                        poscount: data.poscount,
+                        filterData: this.importFilter(data.attr_values, dispatch),
+                        selectedTypes: state.subcorpTTStructure,
+                        bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
+                    }
+                );
             },
             error: error => {
+                this.pluginApi.showMessage('error', error);
                 dispatch(
                     TTActions.ValueDomainsSizesChanged,
                     error
