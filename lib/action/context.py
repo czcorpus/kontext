@@ -1,5 +1,19 @@
+# Copyright (c) 2022 Charles University, Faculty of Arts,
+#                    Institute of the Czech National Corpus
+# Copyright (c) 2022 Tomas Machalek <tomas.machalek@gmail.com>
+# Copyright(c) 2022 Martin Zimandl <martin.zimandl@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; version 2
+# dated June, 1991.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
 import os
-from typing import Callable
 
 import plugins
 from texttypes.model import TextTypesCache
@@ -16,7 +30,6 @@ class ApplicationContext:
             for x in os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'locale'))
         }
         self._tt_cache = tt_cache
-        self.redis = None  # TODO TYPE
         # required by sanic_babel
         self.babel_instance = None
         self.babel_translations = None
@@ -28,14 +41,6 @@ class ApplicationContext:
     @property
     def tt_cache(self):
         return self._tt_cache
-
-    @staticmethod
-    def cleanup_runtime_modules():
-        """
-        Makes app to forget previously faked modules which
-        ensures proper plugins initialization if not starting from scratch.
-        """
-        plugins.flush_plugins()
 
     @property
     def installed_langs(self):

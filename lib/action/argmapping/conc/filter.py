@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
 import plugins
+from action.argmapping import Args
 from action.argmapping.conc.base import ConcFormArgs
 from action.argmapping.error import ArgumentMappingError, ValidationError
 from action.plugin.ctx import AbstractCorpusPluginCtx
@@ -192,7 +193,7 @@ class ContextFilterArgsConv:
 
 class QuickFilterArgsConv:
 
-    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, args) -> None:  # TODO args type ???
+    def __init__(self, plugin_ctx: AbstractCorpusPluginCtx, args: Args) -> None:
         self.args = args
         self.plugin_ctx = plugin_ctx
 
