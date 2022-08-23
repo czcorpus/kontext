@@ -95,10 +95,7 @@ class DefaultCacheMapping(AbstractConcCache):
         val = await self._get_entry(corp_cache_key, q)
         return val.concsize if val else None
 
-    async def refresh_map(self):
-        """
-        TODO change the name to something meaningful
-        """
+    async def ensure_writable_storage(self):
         cache_dir = self._cache_dir_path()
         if not await aiofiles.os.path.isdir(cache_dir):
             await aiofiles.os.makedirs(cache_dir)

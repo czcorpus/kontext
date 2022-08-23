@@ -184,7 +184,7 @@ async def find_cached_conc_base(
     corpus_factory = CorpusFactory()
     start_time = time.time()
     cache_map = plugins.runtime.CONC_CACHE.instance.get_mapping(corp)
-    await cache_map.refresh_map()
+    await cache_map.ensure_writable_storage()
     calc_status = await cache_map.get_calc_status(corp_cache_key, q)
     if calc_status:
         if calc_status.error is None:

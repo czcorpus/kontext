@@ -193,17 +193,11 @@ class AbstractConcCache(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def refresh_map(self):
+    async def ensure_writable_storage(self):
         """
-        Test whether the data for a given corpus (the one this instance
-        has been created for) is ready and valid (e.g. a directory
-        for the corpus cache files exists). If there is something missing
-        then the method has a chance to fix it.
-
-        Some implementations may probably leave this method empty
-        as long as their other interface methods ensure they can
-        handle 'missing initialization / invalid cache' situations
-        themselves.
+        Make sure the storage backend is able to accept writing
+        of cached data. This can be e.g. checking and creating target
+        filesystem directory.
         """
 
     @abc.abstractmethod
