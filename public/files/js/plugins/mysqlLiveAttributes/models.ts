@@ -92,7 +92,7 @@ export interface LiveAttrsModelState {
     isTTListMinimized:boolean;
     isEnabled:boolean;
     resetConfirmed:boolean;
-    subcorpTTStructure:TextTypes.ExportedSelection;
+    subcorpDefinition:TextTypes.ExportedSelection;
 }
 
 /**
@@ -169,7 +169,8 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                                     poscount: data.poscount,
                                     filterData: filterData,
                                     selectedTypes: selections,
-                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
+                                    bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute]),
+                                    isSubcorpDefinitionFilter: false,
                                 }
                             );
 
@@ -215,7 +216,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         })),
                         List.filter(item=>item.locked)
                     );
-                    this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
+                    if (!action.payload.isSubcorpDefinitionFilter) {
+                        this.updateSelectionSteps(state, action.payload.selectedTypes, action.payload.poscount);
+                    }
                     if (action.payload.bibAttrValsAreListed) {
                         this.attachBibData(state, action.payload.filterData);
                     }
@@ -252,6 +255,9 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     dispatch<typeof TTActions.UndoState>({
                         name: TTActions.UndoState.name
                     });
+                }
+                if (state.selectionSteps.length === 0) {
+                    this.reloadSizes(state, dispatch);
                 }
             }
         );
@@ -477,10 +483,6 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
     }
 
     private reloadSizes(state:LiveAttrsModelState, dispatch:SEDispatcher):void {
-        dispatch<typeof TTActions.LockSelected>({
-            name: TTActions.LockSelected.name
-        });
-
         rxOf(null).pipe(
             tap(
                 _ => {
@@ -495,7 +497,7 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                     this.pluginApi.createActionUrl('filter_attributes'),
                     {
                         corpname: this.pluginApi.getCorpusIdent().id||state.firstCorpus,
-                        attrs: JSON.stringify(state.subcorpTTStructure || {}),
+                        attrs: JSON.stringify(state.subcorpDefinition || {}),
                         aligned: JSON.stringify(pipe(
                             state.alignedCorpora,
                             List.filter(v =>  v.selected),
@@ -514,15 +516,18 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
                         total: data.poscount
                     }
                 );
-                dispatch(
-                    TTActions.FilterWholeSelection,
-                    {
-                        poscount: data.poscount,
-                        filterData: this.importFilter(data.attr_values, dispatch),
-                        selectedTypes: state.subcorpTTStructure,
-                        bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute])
-                    }
-                );
+                if (state.subcorpDefinition) {
+                    dispatch(
+                        TTActions.FilterWholeSelection,
+                        {
+                            poscount: data.poscount,
+                            filterData: this.importFilter(data.attr_values, dispatch),
+                            selectedTypes: state.subcorpDefinition,
+                            bibAttrValsAreListed: Array.isArray(data.attr_values[state.bibliographyAttribute]),
+                            isSubcorpDefinitionFilter: true,
+                        }
+                    );
+                }
             },
             error: error => {
                 this.pluginApi.showMessage('error', error);

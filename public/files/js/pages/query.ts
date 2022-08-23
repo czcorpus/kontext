@@ -108,7 +108,7 @@ export class QueryPage {
     }
 
     createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData, subcorpTTStructure:ExportedSelection):[QueryFormProps, Array<AnyTTSelection>] {
-        const attributes = importInitialTTData(textTypesData, subcorpTTStructure || {});
+        const attributes = importInitialTTData(textTypesData, {}, subcorpTTStructure || {});
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
@@ -185,7 +185,8 @@ export class QueryPage {
                 initialTTSelection,
                 bibIdAttr,
                 bibLabelAttr,
-                false
+                false,
+                true,
             )) > 0,
             queryContextModel: this.queryContextModel,
             qsPlugin: this.layoutModel.qsuggPlugin,

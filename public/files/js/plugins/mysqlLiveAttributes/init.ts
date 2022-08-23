@@ -126,7 +126,7 @@ const create:PluginInterfaces.LiveAttributes.Factory = (
             isTTListMinimized: false,
             isEnabled: isEnabled,
             resetConfirmed: false,
-            subcorpTTStructure: args.subcorpTTStructure,
+            subcorpDefinition: args.subcorpTTStructure,
         },
         controlsAlignedCorpora
     );

@@ -74,7 +74,7 @@ export class TTSelOps {
             return !!sel.textFieldValue;
 
         } else {
-            const hasSelected = List.some((item:TextTypes.AttributeValue) => item.selected === true, sel.values);
+            const hasSelected = List.some((item:TextTypes.AttributeValue) => item.selected === true && item.definesSubcorp === false, sel.values);
             if (sel.type === 'text') {
                 return hasSelected || !!sel.textFieldValue;
             }
@@ -82,17 +82,21 @@ export class TTSelOps {
         }
     }
 
-    static exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean):Array<string> {
+    static exportSelections(sel:TextTypes.AnyTTSelection, lockedOnesOnly:boolean, includeSubcorpDefinition:boolean):Array<string> {
         if (sel.type === 'regexp') {
             return [sel.textFieldValue];
         }
         const filter = lockedOnesOnly ?
             List.filter<TextTypes.AttributeValue>(item => item.locked) :
             List.filter<TextTypes.AttributeValue>(_ => true);
+        const filter2 = includeSubcorpDefinition ?
+            List.filter<TextTypes.AttributeValue>(_ => true) :
+            List.filter<TextTypes.AttributeValue>(item => item.definesSubcorp === false);
 
         return pipe(
             sel.values,
             filter,
+            filter2,
             List.filter(item => item.selected === true),
             List.map(item => item.ident),
             sel.type === 'text' && sel.textFieldValue !== '' ?
@@ -118,6 +122,7 @@ export class TTSelOps {
                         value: item,
                         selected: false,
                         locked: false,
+                        definesSubcorp: false,
                         ident: item, // TODO is this correct? (ident vs label problem)
                         numGrouped: 0
                     }),

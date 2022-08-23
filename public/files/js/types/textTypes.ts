@@ -41,6 +41,8 @@ export interface AttributeValue {
 
     locked:boolean;
 
+    definesSubcorp:boolean;
+
     /**
      * How many items are actually hidden behind the value (= have the same name).
      * Value 1 means there is a single unique value available (such a value should
