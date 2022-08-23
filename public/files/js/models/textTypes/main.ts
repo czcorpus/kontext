@@ -701,7 +701,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         data:TextTypesModelStatePreserve,
         corpora:Array<[string, string]>
     ):void {
-        if (corpora[0][0] === corpora[0][1]) { // main corp. is the same
+        if (corpora.length > 1 && corpora[0][0] === corpora[0][1]) { // main corp. is the same
             state.attributes = data.attributes;
             state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         }

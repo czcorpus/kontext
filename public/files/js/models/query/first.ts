@@ -488,10 +488,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     {ttSelections: false, contextData: false},
                     (action, syncData) => {
                         if (Actions.isQueryContextFormPrepareArgsDone(action)) {
-                            return syncData.ttSelections ? null : {...syncData, contextData: true};
+                            return syncData['ttSelections'] ? null : {...syncData, contextData: true};
 
                         } else if (TTActions.isTextTypesQuerySubmitReady(action)) {
-                            return syncData.contextData ? null : {...syncData, ttSelections: true};
+                            return syncData['contextData'] ? null : {...syncData, ttSelections: true};
                         }
                         return syncData;
                     }
