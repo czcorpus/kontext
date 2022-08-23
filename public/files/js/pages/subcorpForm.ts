@@ -95,7 +95,7 @@ export class SubcorpForm {
 
     private createTextTypesComponents(selectedTextTypes:TextTypes.ExportedSelection):TTInitData {
         const ttData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-        const ttSelections = importInitialTTData(ttData, {});
+        const ttSelections = importInitialTTData(ttData, {}, {});
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),

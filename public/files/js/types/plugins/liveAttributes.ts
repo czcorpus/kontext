@@ -127,6 +127,8 @@ export interface InitArgs {
      * accordingly)
      */
     manualAlignCorporaMode:boolean;
+
+    subcorpTTStructure:ExportedSelection;
 }
 
 export interface Factory {

@@ -23,12 +23,12 @@ import { List, Dict, HTTP, pipe, tuple } from 'cnc-tskit';
 
 import * as Kontext from '../../types/kontext';
 import { Actions } from './actions';
-import { Actions as QueryActions } from '../query/actions';
 import { Actions as GlobalActions } from '../common/actions';
 import { forkJoin } from 'rxjs';
 import { scan, tap } from 'rxjs/operators';
 import { IUnregistrable } from './common';
 import { AjaxConcResponse } from '../concordance/common';
+import { ExportedSelection } from '../../types/textTypes';
 
 
 interface UnregistrationGroup {
@@ -72,6 +72,7 @@ export interface CorpusSwitchResponse extends AjaxConcResponse {
     SimpleQueryDefaultAttrs:Array<string>;
     QSEnabled:boolean;
     ShuffleConcByDefault:number;
+    SubcorpTTStructure:ExportedSelection;
 }
 
 
@@ -191,6 +192,7 @@ export class CorpusSwitchModel extends StatefulModel<CorpusSwitchModelState> {
                             this.conf.setConf<Array<string>>('SimpleQueryDefaultAttrs', data.SimpleQueryDefaultAttrs);
                             this.conf.setConf<boolean>('QSEnabled', data.QSEnabled);
                             this.conf.setConf<number>('ShuffleConcByDefault', data.ShuffleConcByDefault);
+                            this.conf.setConf<ExportedSelection>('SubcorpTTStructure', data.SubcorpTTStructure);
                         }
                     )
 

@@ -838,7 +838,8 @@ export class ViewPage {
                 ttSelections,
                 bibIdAttr,
                 bibLabelAttr,
-                false
+                false,
+                true,
             )
         };
 
@@ -889,7 +890,7 @@ export class ViewPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {});
+        const attributes = importInitialTTData(ttData, {}, {});
         const textTypesModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),

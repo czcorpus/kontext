@@ -142,7 +142,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         attributes,
         readonlyMode,
         bibLabelAttr,
-        bibIdAttr
+        bibIdAttr,
     }:TextTypesModelArgs) {
         super(
             dispatcher,
@@ -182,7 +182,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 intervalChars: pluginApi.getConf<Array<string>>('ttIntervalChars'),
                 metaInfoHelpVisible: false,
                 firstDayOfWeek: pluginApi.getConf<'mo'|'su'|'sa'>('firstDayOfWeek'),
-                isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)
+                isLiveAttrsActive: pluginApi.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES),
             }
         );
         this.readonlyMode = readonlyMode;
@@ -381,7 +381,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 this.state.attributes,
                                 this.state.bibIdAttr,
                                 this.state.bibLabelAttr,
-                                false
+                                false,
+                                true,
                             )
                         }
                     );
@@ -399,7 +400,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             this.state.attributes,
                             this.state.bibIdAttr,
                             this.state.bibLabelAttr,
-                            false
+                            false,
+                            true,
                         )
                     }
                 );
@@ -419,7 +421,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             this.state.attributes,
                             this.state.bibIdAttr,
                             this.state.bibLabelAttr,
-                            false
+                            false,
+                            true,
                         ),
                         newSelections: this.getUnlockedSelections(this.state)
                     }
@@ -644,7 +647,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                             this.state.attributes,
                             this.state.bibIdAttr,
                             this.state.bibLabelAttr,
-                            false
+                            false,
+                            false,
                         )
                     }
                 })
@@ -657,7 +661,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 if (!action.error) {
                     const selection = action.payload.data.selections;
                     if (isTTSelection(selection)) {
-                        const attributes = importInitialTTData(action.payload.textTypes, selection);
+                        const attributes = importInitialTTData(action.payload.textTypes, selection, {});
                         this.changeState(state => {
                             state.attributes = attributes;
                             state.attributeWidgets = pipe(
@@ -701,7 +705,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         data:TextTypesModelStatePreserve,
         corpora:Array<[string, string]>
     ):void {
-        if (corpora[0][0] === corpora[0][1]) { // main corp. is the same
+        if (corpora.length > 1 && corpora[0][0] === corpora[0][1]) { // main corp. is the same
             state.attributes = data.attributes;
             state.hasSelectedItems = TextTypesModel.findHasSelectedItems(state.attributes);
         }
@@ -751,6 +755,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                                 bibMapping[checkedVal] : checkedVal,
                                             selected: true,
                                             locked: false,
+                                            definesSubcorp: false,
                                             numGrouped: 0
                                         }
                                     );
@@ -784,6 +789,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                             value: checkedVal,
                                             selected: true,
                                             locked: false,
+                                            definesSubcorp: false,
                                             numGrouped: 0
                                         }
                                     );
@@ -867,6 +873,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             value: label,
             selected: true,
             locked: false,
+            definesSubcorp: false,
             numGrouped: 1
         };
         state.attributes[attrIdx] = append ?
@@ -971,7 +978,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         attributes:Array<TextTypes.AnyTTSelection>,
         bibIdAttr:string,
         bibLabelAttr: string,
-        lockedOnesOnly:boolean
+        lockedOnesOnly:boolean,
+        includeSubcorpDefinition:boolean,
     ):TextTypes.ExportedSelection {
         const ans = {};
         List.forEach(
@@ -983,10 +991,10 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                         ans[trueAttr] = attrSel.textFieldValue;
 
                     } else if (attrSel.type === 'text') {
-                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
 
                     } else {
-                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly);
+                        ans[trueAttr] = TTSelOps.exportSelections(attrSel, lockedOnesOnly, includeSubcorpDefinition);
                     }
                 }
             },
@@ -1009,6 +1017,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                                 value: block[i].v,
                                 selected: attrVal.selected,
                                 locked: attrVal.locked,
+                                definesSubcorp: attrVal.definesSubcorp,
                                 numGrouped: block[i].numGrouped,
                                 availItems: block[i].availItems,
                                 extendedInfo: attrVal.extendedInfo
@@ -1082,6 +1091,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             value: item,
             selected: false,
             locked: false,
+            definesSubcorp: false,
             numGrouped: 1 // TODO is it always OK here?
         }));
         if (attrIdx > -1) {
@@ -1193,6 +1203,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
                 value: item.value,
                 locked: item.locked,
                 selected: item.selected,
+                definesSubcorp: item.definesSubcorp,
                 numGrouped: item.numGrouped
             };
             const interval = this.decodeRange(item.value);
@@ -1270,7 +1281,8 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             this.state.attributes,
             this.state.bibIdAttr,
             this.state.bibLabelAttr,
-            false
+            false,
+            true,
         );
         for (let p in attribArgs) {
             attrs[p] = attribArgs[p];

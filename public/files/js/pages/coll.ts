@@ -137,7 +137,8 @@ export class CollPage {
                 ttSelections,
                 ttData.id_attr,
                 ttData.bib_attr,
-                false
+                false,
+                true,
             )
         };
 
@@ -310,7 +311,7 @@ export class CollPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {});
+        const attributes = importInitialTTData(ttData, {}, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),

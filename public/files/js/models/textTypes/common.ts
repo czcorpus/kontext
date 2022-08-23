@@ -131,7 +131,7 @@ const typeIsSelected = (data:TextTypes.ExportedSelection, attr:string, v:string)
 }
 
 export function importInitialTTData(data:TTInitialData,
-        selectedItems:TextTypes.ExportedSelection):Array<TextTypes.AnyTTSelection> {
+        selectedItems:TextTypes.ExportedSelection, subcorpDefinition:TextTypes.ExportedSelection):Array<TextTypes.AnyTTSelection> {
     const mergedBlocks:Array<BlockLine> = List.foldl(
         (prev, curr) => prev.concat(curr.Line),
         [] as Array<BlockLine>,
@@ -177,9 +177,12 @@ export function importInitialTTData(data:TTInitialData,
                     valItem => ({
                         value: valItem.v,
                         ident: valItem.v, // TODO what about bib items?
-                        selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) ?
+                        selected: typeIsSelected(selectedItems, attrItem.name, valItem.v) || typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
                             true : false,
-                        locked:false,
+                        definesSubcorp: typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
+                            true : false,
+                        locked: typeIsSelected(subcorpDefinition, attrItem.name, valItem.v) ?
+                            true : false,
                         availItems:valItem.xcnt,
                         // TODO here we expect that initial data
                         // do not have any name duplicities

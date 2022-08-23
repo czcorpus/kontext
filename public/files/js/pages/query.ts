@@ -45,7 +45,7 @@ import { ConcFormArgs, QueryFormArgs } from '../models/query/formArgs';
 import { QuickSubcorpModel } from '../models/subcorp/quickSubcorp';
 import { importInitialTTData, TTInitialData } from '../models/textTypes/common';
 import { ConcServerArgs } from '../models/concordance/common';
-import { AnyTTSelection } from '../types/textTypes';
+import { AnyTTSelection, ExportedSelection } from '../types/textTypes';
 
 
 /**
@@ -107,8 +107,8 @@ export class QueryPage {
         );
     }
 
-    createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData):[QueryFormProps, Array<AnyTTSelection>] {
-        const attributes = importInitialTTData(textTypesData, {});
+    createTTViews(queryFormArgs:QueryFormArgs, textTypesData:TTInitialData, subcorpTTStructure:ExportedSelection):[QueryFormProps, Array<AnyTTSelection>] {
+        const attributes = importInitialTTData(textTypesData, {}, subcorpTTStructure || {});
         this.textTypesModel = new TextTypesModel({
                 dispatcher: this.layoutModel.dispatcher,
                 pluginApi: this.layoutModel.pluginApi(),
@@ -134,7 +134,8 @@ export class QueryPage {
                 refineEnabled: this.layoutModel.getConf<Array<string>>(
                     'alignedCorpora').length > 0 ||
                     Dict.keys(queryFormArgs.selected_text_types).length > 0,
-                manualAlignCorporaMode: false
+                manualAlignCorporaMode: false,
+                subcorpTTStructure,
             }
         );
 
@@ -184,7 +185,8 @@ export class QueryPage {
                 initialTTSelection,
                 bibIdAttr,
                 bibLabelAttr,
-                false
+                false,
+                true,
             )) > 0,
             queryContextModel: this.queryContextModel,
             qsPlugin: this.layoutModel.qsuggPlugin,
@@ -341,7 +343,8 @@ export class QueryPage {
             );
 
             const textTypesData = this.layoutModel.getConf<TTInitialData>('textTypesData');
-            const [ttAns, ttSelection] = this.createTTViews(queryFormArgs, textTypesData);
+            const subcorpTTStructure = this.layoutModel.getConf<ExportedSelection>('SubcorpTTStructure');
+            const [ttAns, ttSelection] = this.createTTViews(queryFormArgs, textTypesData, subcorpTTStructure);
 
             const tagBuilderCorpora = [
                 this.layoutModel.getCorpusIdent().id,

@@ -151,7 +151,7 @@ class FreqPage {
             ctminfreq: ctFormInputs.ctminfreq,
             ctminfreq_type: ctFormInputs.ctminfreq_type,
             usesAdHocSubcorpus: TextTypesModel.findHasSelectedItems(ttSelection),
-            selectedTextTypes: TextTypesModel.exportSelections(ttSelection, bibIdAttr, bibLabelAttr, false)
+            selectedTextTypes: TextTypesModel.exportSelections(ttSelection, bibIdAttr, bibLabelAttr, false, true)
         };
 
         this.cTFreqFormModel = new Freq2DFormModel(
@@ -475,7 +475,7 @@ class FreqPage {
             'ConcFormsArgs'
         );
         const queryFormArgs = fetchQueryFormArgs(concFormArgs);
-        const attributes = importInitialTTData(ttData, {});
+        const attributes = importInitialTTData(ttData, {}, {});
         const ttModel = new TextTypesModel({
             dispatcher: this.layoutModel.dispatcher,
             pluginApi: this.layoutModel.pluginApi(),

@@ -44,6 +44,7 @@ import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from '../cqleditor/attrs';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
+import { PluginName } from '../../app/plugin';
 
 
 export interface QueryFormUserEntries {
@@ -488,10 +489,10 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
                     {ttSelections: false, contextData: false},
                     (action, syncData) => {
                         if (Actions.isQueryContextFormPrepareArgsDone(action)) {
-                            return syncData.ttSelections ? null : {...syncData, contextData: true};
+                            return syncData['ttSelections'] ? null : {...syncData, contextData: true};
 
                         } else if (TTActions.isTextTypesQuerySubmitReady(action)) {
-                            return syncData.contextData ? null : {...syncData, ttSelections: true};
+                            return syncData['contextData'] ? null : {...syncData, ttSelections: true};
                         }
                         return syncData;
                     }
@@ -999,8 +1000,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
-    disableRestrictSearch(state:QueryFormModelState):boolean {
-        return !!state.currentSubcorp
+    disableRestrictSearch(state:FirstQueryFormModelState):boolean {
+        if (!!state.currentSubcorp) {
+            if (!!this.pageModel.getConf('SubcorpTTStructure') && this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
 }

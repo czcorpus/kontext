@@ -196,6 +196,7 @@ export class Actions {
         filterData:SelectionFilterMap;
         selectedTypes:TextTypes.ExportedSelection;
         bibAttrValsAreListed:boolean;
+        isSubcorpDefinitionFilter:boolean;
     }> = {
         name: 'TT_FILTER_WHOLE_SELECTION'
     };
