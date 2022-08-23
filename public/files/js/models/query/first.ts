@@ -44,6 +44,7 @@ import { ajaxErrorMapped } from '../../app/navigation';
 import { AttrHelper } from '../cqleditor/attrs';
 import { highlightSyntaxStatic } from '../cqleditor/parser';
 import { ConcFormArgs, QueryFormArgs, QueryFormArgsResponse, SubmitEncodedSimpleTokens } from './formArgs';
+import { PluginName } from '../../app/plugin';
 
 
 export interface QueryFormUserEntries {
@@ -999,8 +1000,14 @@ export class FirstQueryFormModel extends QueryFormModel<FirstQueryFormModelState
         );
     }
 
-    disableRestrictSearch(state:QueryFormModelState):boolean {
-        return !!state.currentSubcorp
+    disableRestrictSearch(state:FirstQueryFormModelState):boolean {
+        if (!!state.currentSubcorp) {
+            if (!!this.pageModel.getConf('SubcorpTTStructure') && this.pageModel.pluginTypeIsActive(PluginName.LIVE_ATTRIBUTES)) {
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
 }
