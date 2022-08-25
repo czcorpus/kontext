@@ -142,13 +142,13 @@ class SetupBgCalc(InstallationStep):
     def run(self, celery_worker):
         try:
             subprocess.check_call(['useradd', '-r', '-s', '/bin/false',
-                                   'celery'], stdout=self.stdout)
+                                   'bg-calc'], stdout=self.stdout)
         except:
             pass
 
         if celery_worker:
             print('Setting up Celery...')
-            subprocess.check_call(['adduser', 'celery', WEBSERVER_USER], stdout=self.stdout)
+            subprocess.check_call(['adduser', 'bg-calc', WEBSERVER_USER], stdout=self.stdout)
             create_directory('/etc/conf.d')
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/celery-conf.d'), '/etc/conf.d/celery'], stdout=self.stdout)
@@ -158,8 +158,8 @@ class SetupBgCalc(InstallationStep):
                                    '/opt/kontext', self.kontext_path)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/celery.tmpfiles'), '/usr/lib/tmpfiles.d/celery.conf'], stdout=self.stdout)
-            create_directory('/var/log/celery', 'celery', 'root')
-            create_directory('/var/run/celery', 'celery', 'root')
+            create_directory('/var/log/celery', 'bg-calc', 'root')
+            create_directory('/var/run/celery', 'bg-calc', 'root')
             subprocess.check_call(['systemctl', 'enable', 'celery'], stdout=self.stdout)
         else:
             print('Setting up Rq...')
@@ -171,7 +171,7 @@ class SetupBgCalc(InstallationStep):
                                    '/opt/kontext', self.kontext_path)
             subprocess.check_call(['cp', os.path.join(
                 self.kontext_path, 'scripts/install/conf/rqscheduler.service'), '/etc/systemd/system'], stdout=self.stdout)
-            create_directory('/var/log/rq', 'celery', 'root')
+            create_directory('/var/log/rq', 'bg-calc', 'root')
             subprocess.check_call(['systemctl', 'enable', 'rq-all.target'], stdout=self.stdout)
             subprocess.check_call(['systemctl', 'enable', 'rqscheduler'], stdout=self.stdout)
 

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=forking
-User=celery
+User=bg-calc
 Group=www-data
 EnvironmentFile=/etc/conf.d/celery
 WorkingDirectory=/opt/kontext
