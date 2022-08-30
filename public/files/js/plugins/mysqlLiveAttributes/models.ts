@@ -652,7 +652,10 @@ export class LiveAttrsModel extends StatelessModel<LiveAttrsModelState> implemen
             val => val.attributes,
             state.selectionSteps
         );
-        return Object.keys(selections).filter(v => used.indexOf(v) === -1);
+        const subcorpDefAttrs = Object.keys(state.subcorpDefinition||{});
+        return Object.keys(selections).filter(v =>
+            used.indexOf(v) === -1 && subcorpDefAttrs.indexOf(v) === -1
+        );
     }
 
     hasSelectedLanguages(state:LiveAttrsModelState):boolean {
