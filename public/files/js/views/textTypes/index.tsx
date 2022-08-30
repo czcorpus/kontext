@@ -131,7 +131,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                         widget={props.widget}
                         hasExtendedInfo={props.hasExtendedInfo}
                         isBusy={props.isBusy}
-                        hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj)} />;
+                        hasSelectedItems={TTSelOps.hasUserChanges(props.attrObj, true)} />;
 
             } else if (props.attrObj.type === 'regexp') {
                 if (props.widget.widget === 'days') {
@@ -303,7 +303,7 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
                 <S.AttribName>
                     <h3 title={props.attrObj.name !== props.attrObj.label ? props.attrObj.name : null}>
                         {props.attrObj.label}
-                        {props.isMinimized && TTSelOps.hasUserChanges(props.attrObj) ?
+                        {props.isMinimized && TTSelOps.hasUserChanges(props.attrObj, false) ?
                             <span title={he.translate('query__contains_selected_text_types')}>{'\u00a0\u2713'}</span> :
                             null
                         }

@@ -283,7 +283,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
                 validateSubcProps(
                     state,
                     true,
-                    state.ttAttributes.some(item => TTSelOps.hasUserChanges(item)),
+                    state.ttAttributes.some(item => TTSelOps.hasUserChanges(item, false)),
                     this.pluginApi
                 );
             },
@@ -447,7 +447,7 @@ export class SubcMixerModel extends StatelessModel<SubcMixerModelState> {
 
         return pipe(
             state.ttAttributes,
-            List.filter(item => TTSelOps.hasUserChanges(item)),
+            List.filter(item => TTSelOps.hasUserChanges(item, true)),
             List.flatMap(item => {
                 const attr = this.getTtAttribute(state, item.name);
                 const tmp = pipe(

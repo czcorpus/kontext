@@ -986,7 +986,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
             (attrSel:TextTypes.AnyTTSelection) => {
                 const trueAttr = attrSel.name !== bibLabelAttr ?
                         attrSel.name : bibIdAttr;
-                if (TTSelOps.hasUserChanges(attrSel)) {
+                if (TTSelOps.hasUserChanges(attrSel, includeSubcorpDefinition)) {
                     if (attrSel.type === 'regexp' && attrSel.widget === 'days') {
                         ans[trueAttr] = attrSel.textFieldValue;
 
@@ -1121,14 +1121,14 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         if (attrName !== undefined) {
             const attr = List.find((val) => val.name === attrName, attributes);
             if (attr) {
-                return TTSelOps.hasUserChanges(attr);
+                return TTSelOps.hasUserChanges(attr, false);
 
             } else {
                 throw new Error('Failed to find attribute ' + attrName);
             }
 
         } else {
-            return List.some(item => TTSelOps.hasUserChanges(item), attributes);
+            return List.some(item => TTSelOps.hasUserChanges(item, false), attributes);
         }
     }
 
@@ -1342,7 +1342,7 @@ export class TextTypesModel extends StatefulModel<TextTypesModelState>
         return pipe(
             state.attributes,
             List.filter(
-                (item:TextTypes.AnyTTSelection) => TTSelOps.hasUserChanges(item) &&
+                (item:TextTypes.AnyTTSelection) => TTSelOps.hasUserChanges(item, false) &&
                     (!TTSelOps.isLocked(item) || includeLocked)
             ),
             List.map((item:TextTypes.AnyTTSelection)=>item.name)
