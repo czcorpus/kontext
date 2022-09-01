@@ -392,7 +392,7 @@ export function init({
                         <ul>
                             {pipe(
                                 props.attributes,
-                                List.filter(attr => TTSelOps.hasUserChanges(attr)),
+                                List.filter(attr => TTSelOps.hasUserChanges(attr, true)),
                                 List.map(
                                     (attr, i) => (
                                         <li key={`${attr.name}:${i}`}>

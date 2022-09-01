@@ -265,7 +265,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
             return auth.is_anonymous(user_id)
 
     @staticmethod
-    def _uses_internal_user_pages():
+    def uses_internal_user_pages():
         return isinstance(plugins.runtime.AUTH.instance, AbstractInternalAuth)
 
     async def init_session(self) -> None:
@@ -398,7 +398,7 @@ class UserActionModel(BaseActionModel, AbstractUserModel):
         result['_anonymous'] = self.user_is_anonymous()
         result['anonymous_user_conc_login_prompt'] = settings.get_bool(
             'global', 'anonymous_user_conc_login_prompt', False)
-        result['supports_password_change'] = self._uses_internal_user_pages()
+        result['supports_password_change'] = self.uses_internal_user_pages()
         result['session_cookie_name'] = settings.get('plugins', 'auth').get('auth_cookie_name', '')
 
         result['app_bar'] = None

@@ -127,7 +127,8 @@ export class SubcorpForm {
                     'availableAlignedCorpora'
                 ),
                 refineEnabled: true,
-                manualAlignCorporaMode: true
+                manualAlignCorporaMode: true,
+                subcorpTTStructure: {},
             }
         );
 

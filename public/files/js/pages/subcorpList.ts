@@ -134,7 +134,8 @@ class SubcorpListPage {
                             bibAttr: null,
                             availableAlignedCorpora: [],
                             refineEnabled: false,
-                            manualAlignCorporaMode: false
+                            manualAlignCorporaMode: false,
+                            subcorpTTStructure: {},
                         }
                     );
                 }

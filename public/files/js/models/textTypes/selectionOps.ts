@@ -69,12 +69,15 @@ export class TTSelOps {
         return false;
     }
 
-    static hasUserChanges(sel:TextTypes.AnyTTSelection):boolean {
+    static hasUserChanges(sel:TextTypes.AnyTTSelection, includeSubcorpDefinition:boolean):boolean {
         if (sel.type === 'regexp') {
             return !!sel.textFieldValue;
 
         } else {
-            const hasSelected = List.some((item:TextTypes.AttributeValue) => item.selected === true && item.definesSubcorp === false, sel.values);
+            const hasSelected = List.some(
+                (item:TextTypes.AttributeValue) => includeSubcorpDefinition ? item.selected : item.selected && !item.definesSubcorp,
+                sel.values,
+            );
             if (sel.type === 'text') {
                 return hasSelected || !!sel.textFieldValue;
             }
@@ -91,13 +94,13 @@ export class TTSelOps {
             List.filter<TextTypes.AttributeValue>(_ => true);
         const filter2 = includeSubcorpDefinition ?
             List.filter<TextTypes.AttributeValue>(_ => true) :
-            List.filter<TextTypes.AttributeValue>(item => item.definesSubcorp === false);
+            List.filter<TextTypes.AttributeValue>(item => !item.definesSubcorp);
 
         return pipe(
             sel.values,
             filter,
             filter2,
-            List.filter(item => item.selected === true),
+            List.filter(item => item.selected),
             List.map(item => item.ident),
             sel.type === 'text' && sel.textFieldValue !== '' ?
                 List.push(sel.textFieldValue) : x => x
