@@ -114,8 +114,9 @@ export function init(
         return (
             <TabContentWrapper htmlClass="reuse">
                 <div className="info">
-                    <layoutViews.StatusIcon status="info" inline={true} htmlClass="" />
-                    <p className="note">{he.translate('subclist__changes_can_be_saved_info')}</p>
+                    <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
+                        {he.translate('subclist__changes_can_be_saved_info')}
+                    </layoutViews.InlineHelp>
                 </div>
                 {isCQLSelection(props.data.selections) ?
                     <RawCQL cql={props.data.selections} /> : null}
@@ -190,19 +191,13 @@ export function init(
     // ------------------------ <PublishSubmitButton /> --------------------------
 
     const PublishSubmitButton:React.FC<{
-        published:boolean;
         onSubmit:()=>void;
 
-    }> = (props) => {
-        return <button type="button" className="default-button"
-                onClick={props.onSubmit}>
-            {props.published ?
-                he.translate('subclist__update_public_desc_btn') :
-                he.translate('subclist__publish_now_btn')
-            }
-        </button>;
-    };
-
+    }> = (props) => (
+        <button type="button" className="default-button" onClick={props.onSubmit}>
+            {he.translate('subclist__update_public_desc_btn')}
+        </button>
+    );
 
     // ------------------------ <PublishingTab /> --------------------------
 
@@ -240,7 +235,10 @@ export function init(
         return (
             <TabContentWrapper>
                 <S.PublishingTab>
-                    <div className="preview-switch">
+                    <div className="header-bar">
+                        <layoutViews.InlineHelp noSuperscript={true} htmlClass="help-icon">
+                            {he.translate('subclist__public_description_note')}
+                        </layoutViews.InlineHelp>
                         <span>
                             {props.unsavedChanges ?
                                 <span>{he.translate('subcform__unsaved_changes') + '\u00a0|\u00a0'}</span> :
@@ -260,7 +258,7 @@ export function init(
                     }
                     <p className="markdown-note note">({he.translate('global__markdown_supported')})</p>
                     <div>
-                        <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} published={props.published} />
+                        <PublishSubmitButton onSubmit={handleSubmitUpdateDesc} />
                     </div>
                 </S.PublishingTab>
             </TabContentWrapper>

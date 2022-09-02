@@ -374,24 +374,24 @@ export function init(dispatcher:IActionDispatcher, he:Kontext.ComponentHelpers, 
     const TextTypesPanel:React.FC<TextTypesPanelProps & TextTypesModelState> = (props) => (
         <S.TextTypesPanel>
             <div className="tt-controls">
-            <div className="general-controls">
-                    {props.controls
-                        ? (
-                            <ul className="controls">
-                                {List.map(
-                                    (c, i) => <li key={`gc:${i}`}>{c}</li>,
-                                    props.controls,
-                                )}
-                            </ul>
-                        )
-                        : null
-                    }
+                <div className="la">
+                    <div className="general-controls">
+                        {props.controls
+                            ? (
+                                <ul className="controls">
+                                    {List.map(
+                                        (c, i) => <li key={`gc:${i}`}>{c}</li>,
+                                        props.controls,
+                                    )}
+                                </ul>
+                            )
+                            : null
+                        }
+                    </div>
+                    {props.LiveAttrsView
+                        ? <props.LiveAttrsView />
+                        : <div style={{gridRowStart: 1}} />}
                 </div>
-                {props.LiveAttrsView
-                    ? <props.LiveAttrsView />
-                    : <div style={{gridRowStart: 1}} />}
-            </div>
-            <div className="text-type-top-bar">
                 <TTAttribMinimizeSwitch hasSomeMaximized={Dict.hasValue(false, props.minimizedBoxes)} />
             </div>
             <div className="grid">

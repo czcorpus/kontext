@@ -620,7 +620,7 @@
         "subclist__publish_warning": "Ali ste prepričani, da želite dostop do podkorpusa omogočiti vsem?",
         "subclist__subc_actions_{subc}": "Podkorpus {subc}",
         "subclist__public_description_btn": "Public description UNTRANSLATED",
-        "subclist__publish_now_btn": "Objavi",
+        "subclist__public_description_note": "A subcorpus with a description can be found (by ID or author) in the 'Public subcorpora'. section UNTRANSLATED",
         "subclist__update_public_desc_btn": "Posodobi javni opis",
         "subclist__subc_desc_updated": "Opis podkorpusa je bil posodobljen",
         "subclist__archive_subcorp": "Archive UNTRANSLATED",

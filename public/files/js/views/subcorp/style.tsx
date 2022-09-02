@@ -352,7 +352,7 @@ export const PublishingTab = styled.div`
         padding: 0.3em;
     }
 
-    div.preview-switch {
+    div.header-bar {
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -361,6 +361,10 @@ export const PublishingTab = styled.div`
         label {
             display: flex;
             align-items: center;
+        }
+
+        .help-icon {
+            flex-grow: 1;
         }
     }
 
@@ -494,14 +498,9 @@ export const SubcorpusInfo = styled.div`
 export const SubcorpusEdit = styled.div`
 
     .reuse .info {
+
         display: flex;
-        align-items: center;
-        justify-content: center;
-
-
-        > span {
-            margin-right: 0.4em;
-        }
+        margin-bottom: 1em;
     }
 
 `;

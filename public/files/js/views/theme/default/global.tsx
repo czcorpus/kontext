@@ -439,11 +439,6 @@ export const GlobalStyle = createGlobalStyle`
         font-weight: normal;
     }
 
-    .text-type-top-bar {
-        padding: 5px 10px;
-        text-align: right;
-    }
-
     a.disabled,
     input.disabled,
     button.disabled {

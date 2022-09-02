@@ -67,12 +67,15 @@ export const TextTypesPanel = styled.div`
     }
 
     .tt-controls {
-        grid-template-columns: auto auto auto;
-        display: inline-grid;
+        display: flex;
 
         .general-controls {
             margin-right: 0.7em;
             grid-row-start: 1;
+        }
+
+        .la {
+            flex-grow: 1;
         }
 
         ul.controls {

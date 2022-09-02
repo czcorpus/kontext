@@ -45,6 +45,11 @@ export interface Props {
     customStyle?:{[key:string]:string};
 
     /**
+     * A custom class for the closed element (i.e. the component showing the question mark)
+     */
+    htmlClass?:string;
+
+    /**
      * If defined, then the widget also displays a clickable link
      * (typically for more detailed info)
      */

@@ -609,7 +609,7 @@
         "subclist__publish_warning": "Are you sure you want to make the subcorpus accessible by anyone?",
         "subclist__subc_actions_{subc}": "Subcorpus {subc}",
         "subclist__public_description_btn": "Public description",
-        "subclist__publish_now_btn": "Publish",
+        "subclist__public_description_note": "A subcorpus with a description can be found (by ID or author) in the 'Public subcorpora' section.",
         "subclist__update_public_desc_btn": "Update public description",
         "subclist__subc_desc_updated": "Subcorpus description has been updated",
         "subclist__archive_subcorp": "Archive",

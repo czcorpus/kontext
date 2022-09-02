@@ -405,7 +405,7 @@ export function init(
         };
 
         return (
-            <S.InlineHelp>
+            <S.InlineHelp className={props.htmlClass ? props.htmlClass : undefined}>
                 {props.noSuperscript ?
                     <span>{renderLink()}</span> :
                     <sup>{renderLink()}</sup>
