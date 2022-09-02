@@ -126,8 +126,6 @@ async def shared_freqs(amodel: ConcActionModel, req: KRequest[SharedFreqArgs], r
             freq_sort=req.mapped_args.freq_sort)
         ans['freq_type'] = req.mapped_args.freq_type
         ans['alpha_level'] = req.mapped_args.alpha_level
-
-        ans['alpha_level'] = req.mapped_args.alpha_level
         ans['fdefault_view'] = req.mapped_args.fdefault_view
         if req.mapped_args.fdefault_view == 'charts':
             ans['forced_params'] = {
@@ -358,11 +356,11 @@ async def _freqml(amodel: ConcActionModel, req: KRequest[MLFreqRequestArgs], res
         tmp['mlxctx'].append(getattr(args, 'ml{0}ctx'.format(i), '0'))
         tmp['mlxpos'].append(getattr(args, 'ml{0}pos'.format(i), 1))
         tmp['mlxicase'].append(getattr(args, 'ml{0}icase'.format(i), ''))
-        tmp['flimit'] = args.flimit
-        tmp['freq_sort'] = args.freq_sort
+        tmp['flimit'].append(args.flimit)
+        tmp['freq_sort'].append(args.freq_sort)
     result['freq_form_args'] = tmp
     result['freq_type'] = 'tokens'
-    result['alpha_level'] = None
+    result['alpha_level'] = '0.05'
     return result
 
 

@@ -23,7 +23,13 @@ import { ajaxErrorMapped } from '../../../app/navigation';
 import { PageModel } from '../../../app/page';
 import { Observable } from 'rxjs';
 import { ConcServerArgs } from '../../concordance/common';
-import { FreqChartsAvailableData, FreqChartsAvailableOrder, FreqChartsAvailableTypes, FreqResultResponse, FreqResultViews } from '../common';
+import {
+    FreqChartsAvailableData,
+    FreqChartsAvailableOrder,
+    FreqChartsAvailableTypes,
+    FreqResultResponse,
+    FreqResultViews
+} from '../common';
 import { AttrItem, BasicFreqModuleType } from '../../../types/kontext';
 import * as Kontext from '../../../types/kontext';
 
@@ -227,7 +233,6 @@ export class FreqDataLoader {
 export function recalculateConfIntervals(block:ResultBlock, alphaLevel:Maths.AlphaLevel):ResultBlock {
     block.Items = List.map(
         item => {
-            console.log('item: ', item)
             const [normLeftConfidence, normRightConfidence] = Maths.wilsonConfInterval(
                 item.freq, item.norm, alphaLevel);
             return {
