@@ -608,7 +608,7 @@
         "subclist__publish_warning": "Na isto chcesz zrobić korpus dostympny dlŏ wszyjskich?",
         "subclist__subc_actions_{subc}": "Podkorpus {subc}",
         "subclist__public_description_btn": "Public description UNTRANSLATED",
-        "subclist__publish_now_btn": "Publikuj",
+        "subclist__public_description_note": "A subcorpus with a description can be found (by ID or author) in the 'Public subcorpora' section. UNTRANSLATED",
         "subclist__update_public_desc_btn": "Ôdnōw publiczny ôpis",
         "subclist__subc_desc_updated": "Ôpis podkorpusu bōł ôpublikowany",
         "subclist__archive_subcorp": "Archive UNTRANSLATED",

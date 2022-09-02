@@ -609,7 +609,7 @@
         "subclist__publish_warning": "Skutečně chcete tento subkorpus zpřístupnit všem?",
         "subclist__subc_actions_{subc}": "Subkorpus {subc}",
         "subclist__public_description_btn": "Veřejný popis",
-        "subclist__publish_now_btn": "Publikovat",
+        "subclist__public_description_note": "Subkorpus s popisem lze dohledat (podle ID a autora) v sekci 'Veřejné subkorpusy'.",
         "subclist__update_public_desc_btn": "Aktualizovat veřejný popis",
         "subclist__subc_desc_updated": "Popis subkorpusu byl upraven.",
         "subclist__archive_subcorp": "Archivovat",

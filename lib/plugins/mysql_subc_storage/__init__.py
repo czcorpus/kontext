@@ -39,7 +39,7 @@ try:
             md.preprocessors.deregister('html_block')
             md.inlinePatterns.deregister('html')
 
-    def k_markdown(s): return markdown(s, extensions=[EscapeHtml()]) if s else ''
+    def k_markdown(s): return markdown(s, extensions=[EscapeHtml(), 'tables']) if s else ''
 
 except ImportError:
     import html
