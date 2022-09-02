@@ -143,7 +143,6 @@ export class WordlistFormModel extends StatelessModel<WordlistFormState> impleme
         structAttrList,
         initialArgs
     }:WordlistFormModelArgs) {
-        console.log('initial: ', initialArgs.wlposattrs)
         super(
             dispatcher,
             {
