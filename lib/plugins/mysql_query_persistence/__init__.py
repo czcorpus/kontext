@@ -274,6 +274,7 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                     ans = 0
                 else:
                     will_be_archived = await self.will_be_archived(None, conc_id)
+                    archived_rec = data
                     if will_be_archived is not None:
                         data_key = mk_key(conc_id)
                         await self.db.list_append(self._archive_queue_key, dict(key=data_key, revoke=will_be_archived))
@@ -287,7 +288,6 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
                             'INSERT IGNORE INTO kontext_conc_persistence (id, data, created, num_access) '
                             'VALUES (%s, %s, %s, %s)',
                             (conc_id, json.dumps(data), get_iso_datetime(), 0))
-                        archived_rec = data
                         ans = 1
             await cursor.connection.commit()
         return ans, archived_rec
@@ -298,8 +298,8 @@ class MySqlQueryPersistence(AbstractQueryPersistence):
 
     async def will_be_archived(self, plugin_ctx, conc_id: str):
         """
-        Please note that this operation is a bit costly due to need for
-        searching in items to be archived
+        Please note that this operation is a bit costly (O(n)) due to need for
+        sequential searching in items to be archived
         """
         waiting_items = await self.db.list_get(self._archive_queue_key)
         ident_prefix = 'concordance:'
