@@ -204,7 +204,6 @@ export function init(
     const PublishingTab:React.FC<{
         description:string;
         descriptionRaw:string;
-        published:boolean;
         publicCode:string;
         previewEnabled:boolean;
         unsavedChanges:boolean;
@@ -305,11 +304,11 @@ export function init(
                                 data={props.data}
                                 liveAttrsEnabled={props.liveAttrsEnabled}
                                 selectionType={getFormTypeFromSelection(props.data.selections)} />
-                            <PublishingTab key="publish" published={!!props.data.published}
+                            <PublishingTab key="publish"
                                 descriptionRaw={props.data.descriptionRaw}
                                 description={props.data.description}
                                 previewEnabled={props.previewEnabled}
-                                publicCode={props.data.published ? props.data.usesubcorp : null}
+                                publicCode={props.data.usesubcorp}
                                 unsavedChanges={props.prevRawDescription !== props.data.descriptionRaw} />
                         </layoutViews.TabView>
                         <div className="loader-wrapper">
