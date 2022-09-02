@@ -108,9 +108,12 @@ def is_compiled(corp: AbstractKCorpus, attr, method):
     else:
         attr = corp.get_attr(attr)
         last = attr.id_range() - 1
-    if getattr(attr, method)(last) != -1:
-        sys.stdout.write('%s already compiled, skipping.\n' % method)
-        return True
+    try:
+        if getattr(attr, method)(last) != -1:
+            sys.stdout.write('%s already compiled, skipping.\n' % method)
+            return True
+    except manatee.FileAccessError:
+        pass
     return False
 
 
