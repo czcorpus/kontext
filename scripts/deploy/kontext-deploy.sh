@@ -1,9 +1,7 @@
 #!/bin/bash
 
-export GLOBAL_CONF_PATH='/var/opt/install/kontext_configs/private/kontext-deploy.json'
-
-full_path=$(realpath $0)
-dir_path=$(dirname $full_path)
+dir_path=$(dirname $0)
+export GLOBAL_CONF_PATH="$dirname/kontext-deploy.json"
 python3 "$dir_path/kontext-update.py" "$@"
 ret=$?
 if [ $ret -eq 0 ]; then

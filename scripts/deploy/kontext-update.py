@@ -62,7 +62,7 @@ KONTEXT_CONF_ALIASES = 'kontextConfAliases'
 KONTEXT_CONF_CUSTOM = 'kontextConfCustom'
 TARGET_SYMLINKS = 'targetSymlinks'
 GLOBAL_CONF_PATH = os.environ.get('GLOBAL_CONF_PATH', '/usr/local/etc/kontext-deploy.json')
-KONTEXT_CONF_FILES = ('config.xml', 'gunicorn-conf.py', 'main-menu.json', 'tagsets.xml')
+KONTEXT_CONF_FILES = ('config.xml', 'main-menu.json', 'tagsets.xml')
 
 
 class InvalidatedArchiveException(Exception):
