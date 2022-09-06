@@ -115,7 +115,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         try:
             response = urllib.request.urlopen(request)
             data = json.loads(response.read().decode())
-            return data['Total']
+            return data['total']
         except HTTPError as ex:
             handle_http_error(ex)
 
