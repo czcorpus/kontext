@@ -1,0 +1,14 @@
+{
+    "appDir": "/opt/kontext",
+    "workingDir": "/var/opt/install/kontext/kontext.src",
+    "archiveDir": "/var/opt/install/kontext/deploy.archive",
+    "appConfigDir": "/var/opt/install/kontext_configs/private",
+    "gitUrl": "https://github.com/czcorpus/kontext.git",
+    "gitBranch": "master",
+    "gitRemote": "origin",
+    "kontextConfCustom": [
+        "rq-schedule.json",
+        "help_links.json",
+        "corplist.xml"
+    ]
+}

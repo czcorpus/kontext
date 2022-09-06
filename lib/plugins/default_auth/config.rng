@@ -43,13 +43,15 @@
                     </oneOrMore>
                 </element>
             </optional>
-            <element name="case_sensitive_corpora_names">
-                <a:documentation>By default, KonText converts all the corpora names to lowercase.
-                    Setting this to true (or 1) disables the conversion and allows having corpora.
-                    like 'Foo', 'FOO', 'foo' side by side.
-                </a:documentation>
-                <data type="boolean" />
-            </element>
+            <optional>
+                <element name="case_sensitive_corpora_names">
+                    <a:documentation>By default, KonText converts all the corpora names to lowercase.
+                        Setting this to true (or 1) disables the conversion and allows having corpora.
+                        like 'Foo', 'FOO', 'foo' side by side.
+                    </a:documentation>
+                    <data type="boolean" />
+                </element>
+            </optional>
         </element>
     </start>
 </grammar>
