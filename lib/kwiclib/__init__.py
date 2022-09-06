@@ -325,7 +325,7 @@ class Kwic:
             al_corpname = al_corp.get_conffile()
             if al_corpname in corps_with_colls:
                 self.conc.switch_aligned(al_corp.get_conffile())
-                al_lines.append(self.kwiclines(args), al_corpname)
+                al_lines.append(self.kwiclines(args, al_corpname))
             else:
                 self.conc.switch_aligned(self.conc.orig_corp.get_conffile())
                 self.conc.add_aligned(al_corp.get_conffile())
