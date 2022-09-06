@@ -2,7 +2,9 @@
 
 export GLOBAL_CONF_PATH='/var/opt/install/kontext_configs/private/kontext-deploy.json'
 
-/usr/local/bin/kontext-update "$@"
+full_path=$(realpath $0)
+dir_path=$(dirname $full_path)
+python3 "$dir_path/kontext-update.py" "$@"
 ret=$?
 if [ $ret -eq 0 ]; then
     echo "new version installed, now going to restart the services..."

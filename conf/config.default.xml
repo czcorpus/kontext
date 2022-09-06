@@ -8,6 +8,7 @@
         <logo_inline_css>width: 200px</logo_inline_css>
         <fonts/>
         <favicon>favicon.ico</favicon>
+        <favicon_type>image/x-icon</favicon_type>
     </theme>
     <global>
         <deployment_id>20151031_v4
@@ -51,7 +52,6 @@
         <type>rq</type>
         <conf>/opt/kontext/conf/rq-schedule-conf.json</conf>
     </job_scheduler>
-    <mailing/>
     <logging>
         <path>/var/log/kontext/application.log</path>
         <file_size>5000000</file_size>
@@ -64,6 +64,7 @@
         <freqs_precalc_dir>/var/local/corpora/freqs-precalc</freqs_precalc_dir> <!-- this is optional -->
         <freqs_cache_dir>/var/local/corpora/freqs-cache</freqs_cache_dir>
         <freqs_cache_ttl>3600</freqs_cache_ttl>
+        <freqs_cache_min_lines>100</freqs_cache_min_lines>
         <colls_cache_dir>/var/local/corpora/colls-cache</colls_cache_dir>
         <colls_cache_ttl>3600</colls_cache_ttl>
         <conc_dir>/var/local/corpora/conc</conc_dir>
