@@ -121,7 +121,7 @@ class MasmLiveAttributes(AbstractLiveAttributes):
         session = await self._get_session()
         async with session.post(f'/liveAttributes/{corpora[0]}/selectionSubcSize', json=json_body) as resp:
             data = await proc_masm_response(resp)
-        return data['Total']
+        return data['total']
 
     async def get_supported_structures(self, plugin_ctx, corpname):
         corpus_info = await self.corparch.get_corpus_info(plugin_ctx, corpname)
