@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-import imp
+import importlib
 import os
 import unittest
 
@@ -27,7 +27,7 @@ conf_path = os.path.join(os.path.dirname(__file__), '..', '..', 'conf', 'config.
 class SettingsMockedDataTest(unittest.TestCase):
 
     def setUp(self):
-        imp.reload(settings)
+        importlib.reload(settings)
         settings._conf = {
             'global': {
                 'foo': 'bar',
