@@ -42,7 +42,9 @@ import uuid
 from datetime import datetime
 from functools import wraps
 from io import IOBase
+from itertools import chain
 from textwrap import dedent
+from typing import Any, Dict, List, Optional, Tuple
 
 from lxml import etree
 
@@ -89,18 +91,18 @@ class JSAppVersionInfo(object):
     specification.
     """
 
-    def __init__(self, name, ver):
+    def __init__(self, name: str, ver):
         self._name = name
         self._prefix = ''
-        self._pre_release_id = None
+        self._pre_release_id: Optional[str] = None
         if type(ver) is tuple:
-            self._ver = ver
+            self._ver: Tuple[int, ...] = ver
         elif type(ver) is str:
             self._parse_ver(ver)
         else:
             raise VersionInfoException('Failed to use version info of type {0}'.format(ver))
 
-    def _parse_ver(self, s):
+    def _parse_ver(self, s: str):
         items = s.split('.', 2)
         if not items[0][0].isdigit():
             self._prefix = items[0][0]
@@ -115,23 +117,23 @@ class JSAppVersionInfo(object):
             self._pre_release_id = tmp[1]
         self._ver = (major, minor, patch)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '{5} {0}{1}.{2}.{3}{4}'.format(
             self._prefix, self._ver[0], self._ver[1], self._ver[2],
             '-{0}'.format(self._pre_release_id) if self._pre_release_id else '', self._name)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> int:
         return self._ver[item]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def is_prerelease(self):
+    def is_prerelease(self) -> bool:
         return self._pre_release_id is not None
 
-    def cmp(self, other_ver):
+    def cmp(self, other_ver: Optional['JSAppVersionInfo']):
         if other_ver is None:
             return 3
         for i in range(3):
@@ -155,38 +157,38 @@ class NPMPackageInfo(object):
     specification).
     """
 
-    def __init__(self, data):
+    def __init__(self, data: Any):
         if type(data) is dict:
-            self._data = data
+            self._data: Dict[str, Dict[str, Any]] = data
         elif type(data) is str:
-            self._data = json.loads(data)
+            self._data: Dict[str, Dict[str, Any]] = json.loads(data)
         elif isinstance(data, IOBase):
-            self._data = json.load(data)
+            self._data: Dict[str, Dict[str, Any]] = json.load(data)
         else:
             raise PackageInfoException('Unknown data source: {0}'.format(type(data)))
 
     @property
-    def dependencies(self):
-        return (JSAppVersionInfo(x[0], x[1]) for x in self._data['dependencies'].items())
+    def dependencies(self) -> Tuple[JSAppVersionInfo, ...]:
+        return (JSAppVersionInfo(dep, ver) for dep, ver in self._data['dependencies'].items())
 
     @property
-    def dev_dependencies(self):
-        return (JSAppVersionInfo(x[0], x[1]) for x in self._data['devDependencies'].items())
+    def dev_dependencies(self) -> Tuple[JSAppVersionInfo, ...]:
+        return (JSAppVersionInfo(dep, ver) for dep, ver in self._data['devDependencies'].items())
 
-    def get_dependency(self, name):
+    def get_dependency(self, name: str) -> Optional[str]:
         for d in self.dependencies:
             if d.name == name:
                 return d
         return None
 
-    def get_dev_dependency(self, name):
+    def get_dev_dependency(self, name: str) -> Optional[str]:
         for d in self.dev_dependencies:
             if d.name == name:
                 return d
         return None
 
 
-def get_required_npm_update(old_ver_path, new_ver_path):
+def get_required_npm_update(old_ver_path: str, new_ver_path: str) -> Optional[Tuple[str, ...]]:
     if not os.path.exists(old_ver_path):
         return ('npm', 'install')
     with open(old_ver_path, 'rb') as fr1, open(new_ver_path, 'rb') as fr2:
@@ -222,12 +224,12 @@ class Configuration(object):
     """
 
     @staticmethod
-    def _is_forbidden_dir(path):
+    def _is_forbidden_dir(path: str) -> bool:
         tmp = os.path.realpath(path).split('/')
         return len(tmp) == 2 and tmp[0] == ''
 
     @staticmethod
-    def _test_git_repo_url(url):
+    def _test_git_repo_url(url: str):
         try:
             ans = urllib.request.urlopen(url, timeout=GIT_URL_TEST_TIMEOUT)
             if ans.code != 200:
@@ -236,7 +238,7 @@ class Configuration(object):
             raise ConfigError(f'Unable to validate git repo url {url}')
 
     @staticmethod
-    def _is_abs_path(s):
+    def _is_abs_path(s: str) -> bool:
         # Windows detection is just for an internal testing
         # (the script is still only for Linux, BSD and the like)
         if platform.system() != 'Windows':
@@ -244,7 +246,7 @@ class Configuration(object):
         else:
             return re.match(r'[a-zA-Z]:\\', s) is not None
 
-    def __init__(self, data, skip_remote_checks=False):
+    def __init__(self, data: Dict[str, Any], skip_remote_checks=False):
         keys = [APP_CONFIG_DIR, WORKING_DIR, ARCHIVE_DIR, APP_DIR]
         for item in keys:
             p = os.path.realpath(data[item])
@@ -256,34 +258,37 @@ class Configuration(object):
                 raise ConfigError(f'Path {p} ({item}) does not exist.')
         if not skip_remote_checks:
             self._test_git_repo_url(data[GIT_URL])
-        self._kc_aliases = data.get(KONTEXT_CONF_ALIASES, {})
-        self._kc_custom = data.get(KONTEXT_CONF_CUSTOM, [])
-        self._target_symlinks = data.get(TARGET_SYMLINKS, {})
+        self._kc_aliases: Dict[str, str] = data.get(KONTEXT_CONF_ALIASES, {})
+        self._kc_custom: List[str] = data.get(KONTEXT_CONF_CUSTOM, [])
+        self._target_symlinks: Dict[str, str] = data.get(TARGET_SYMLINKS, {})
         self._data = data
 
     @property
-    def kontext_conf_files(self):
-        conf_files = KONTEXT_CONF_FILES + tuple(self._kc_custom)
-        return [self._kc_aliases[k] if k in self._kc_aliases else k for k in conf_files]
+    def kontext_conf_files(self) -> List[str]:
+        return [
+            self._kc_aliases[k]
+            if k in self._kc_aliases else k
+            for k in chain(KONTEXT_CONF_FILES, self._kc_custom)
+        ]
 
     @property
-    def app_dir(self):
+    def app_dir(self) -> str:
         return os.path.realpath(self._data[APP_DIR])
 
     @property
-    def working_dir(self):
+    def working_dir(self) -> str:
         return os.path.realpath(self._data[WORKING_DIR])
 
     @property
-    def archive_dir(self):
+    def archive_dir(self) -> str:
         return os.path.realpath(self._data[ARCHIVE_DIR])
 
     @property
-    def app_config_dir(self):
+    def app_config_dir(self) -> str:
         return os.path.realpath(self._data[APP_CONFIG_DIR])
 
     @property
-    def git_url(self):
+    def git_url(self) -> str:
         return self._data[GIT_URL]
 
     @property
@@ -291,11 +296,11 @@ class Configuration(object):
         return self._data[GIT_BRANCH]
 
     @property
-    def git_remote(self):
+    def git_remote(self) -> str:
         return self._data[GIT_REMOTE]
 
     @property
-    def target_symlinks(self):
+    def target_symlinks(self) -> Dict[str, str]:
         return self._target_symlinks
 
 
@@ -311,7 +316,7 @@ class InputError(Exception):
     pass
 
 
-def description(text):
+def description(text: str):
     def decor(fn):
         @wraps(fn)
         def wrapper(*args, **kw):
@@ -355,7 +360,7 @@ class Deployer(object):
         return p
 
     @description('Creating archive directory for the new version')
-    def create_archive(self, date):
+    def create_archive(self, date: datetime) -> str:
         """
 
         Args:
@@ -371,7 +376,7 @@ class Deployer(object):
         return arch_path
 
     @description('Copying built project to the archive')
-    def copy_app_to_archive(self, arch_path):
+    def copy_app_to_archive(self, arch_path: str):
         """
         Args:
             arch_path (str): path to archive subdirectory
@@ -387,7 +392,7 @@ class Deployer(object):
             self.shell_cmd('cp', '-r', '-p', src_path, arch_path)
 
     @description('Updating working config.xml')
-    def update_working_conf(self, update_confxml):
+    def update_working_conf(self, update_confxml: bool):
         """
         Raises:
             ShellCommandError
@@ -412,7 +417,7 @@ class Deployer(object):
         shutil.copy(source_conf, working_conf)
 
     @description('Copying configuration to the archive')
-    def copy_configuration(self, arch_path):
+    def copy_configuration(self, arch_path: str):
         """
         Args:
             arch_path (str): path to archive subdirectory
@@ -440,7 +445,7 @@ class Deployer(object):
                            f'{self._conf.git_remote}/{self._conf.git_branch}')
 
     @description('Writing information about used GIT commit')
-    def record_deployment_info(self, arch_path, message):
+    def record_deployment_info(self, arch_path: str, message: str):
         """
         Args:
             arch_path (str): path to an archive
@@ -462,12 +467,12 @@ class Deployer(object):
         self.shell_cmd('rm -rf {}'.format(os.path.join(self._conf.app_dir, '.[a-z]*')), shell=True)
 
     @description('Deploying new version')
-    def deploy_new_version(self, arch_path):
+    def deploy_new_version(self, arch_path: str):
         """
         Args:
             arch_path (str): path to an archive
         """
-        for item in FILES + (DEPLOY_MESSAGE_FILE, 'conf'):
+        for item in chain(FILES, (DEPLOY_MESSAGE_FILE, 'conf')):
             self.shell_cmd('cp', '-r', '-p', os.path.join(arch_path, item), self._conf.app_dir)
 
     @description('Validating actual config.xml')
@@ -496,7 +501,7 @@ class Deployer(object):
         for source, target in self._conf.target_symlinks.items():
             os.symlink(source, target)
 
-    def run_all(self, date, message, update_confxml: bool):
+    def run_all(self, date: datetime, message: str, update_confxml: bool):
         """
         Args:
             date (datetime): a date used to create a new archive
@@ -514,7 +519,7 @@ class Deployer(object):
         self.deploy_new_version(arch_path)
         self.create_custom_symlinks()
 
-    def from_archive(self, archive_id):
+    def from_archive(self, archive_id: str):
         """
         Args:
             archive_id (str): an ID of an archived item to be deployed
@@ -526,7 +531,7 @@ class Deployer(object):
             print('\nDeployment information:\n{}'.format(fr.read()))
 
 
-def list_archive(conf):
+def list_archive(conf: Configuration):
     """
     Args:
         conf (Configuration): script conf
@@ -537,7 +542,7 @@ def list_archive(conf):
         print('\t{0}'.format(item))
 
 
-def invalidate_archive(conf, archive_id, message):
+def invalidate_archive(conf: Configuration, archive_id: str, message: str):
     if not message:
         raise ValueError('A message must be specified (-m)')
     archive_id = find_matching_archive(conf, archive_id)
@@ -546,7 +551,7 @@ def invalidate_archive(conf, archive_id, message):
         fw.write(message + '\n')
 
 
-def _test_archive_validity(conf, archive_id):
+def _test_archive_validity(conf: Configuration, archive_id: str):
     flag_file_path = os.path.join(conf.archive_dir, archive_id, INVALIDATION_FILE)
     if os.path.isfile(flag_file_path):
         with open(flag_file_path, 'r') as fr:
@@ -554,7 +559,7 @@ def _test_archive_validity(conf, archive_id):
                 'Archive marked as invalid. Reason: {}'.format(fr.read()))
 
 
-def find_matching_archive(conf, arch_id):
+def find_matching_archive(conf: Configuration, arch_id: str) -> Optional[str]:
     """
     Args:
         conf (Configuration): script configuration
